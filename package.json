@@ -1,0 +1,30 @@
+{
+  "name": "xui-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.23.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "tokens": "node scripts/tokens.mjs",
+    "check:tokens": "node scripts/tokens.mjs --check",
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "node --test tests/*.test.mjs",
+    "test:consumer": "node scripts/consumers.mjs",
+    "test:browser": "playwright test",
+    "preview": "node scripts/serve.mjs",
+    "verify": "pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:consumer && pnpm test:browser"
+  },
+  "devDependencies": {
+    "@base-ui/react": "1.7.0",
+    "@playwright/test": "1.64.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "esbuild": "0.28.2",
+    "postcss": "8.5.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "5.9.3",
+    "yaml": "2.8.1"
+  }
+}

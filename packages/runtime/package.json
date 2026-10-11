@@ -1,0 +1,13 @@
+{
+  "name": "@coffeehc/xui-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": ["dist"],
+  "sideEffects": false,
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./init.js": "./dist/init.js"
+  },
+  "types": "./dist/index.d.ts"
+}

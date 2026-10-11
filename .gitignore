@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.artifacts/
+.consumers/
+test-results/
+playwright-report/
+*.log

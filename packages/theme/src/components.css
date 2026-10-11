@@ -1,0 +1,156 @@
+@layer xui-components {
+  :where(.xui, .xui-dialog, .xui-native-dialog) {
+    color: var(--foreground);
+    font: var(--font-weight-body) var(--font-size-body-sm) / var(--line-height-body-sm) var(--font-sans);
+    transition: color var(--motion-duration) var(--motion-easing), background-color var(--motion-duration) var(--motion-easing);
+  }
+  .xui { background: var(--layer-canvas); margin: 0; }
+  :where(.xui, .xui-dialog, .xui-native-dialog), :where(.xui, .xui-dialog, .xui-native-dialog) *,
+  :where(.xui, .xui-dialog, .xui-native-dialog) *::before, :where(.xui, .xui-dialog, .xui-native-dialog) *::after { box-sizing: border-box; }
+  .xui h1 { font: var(--font-weight-heading) var(--font-size-page-title) / var(--line-height-page-title) var(--font-heading); }
+  .xui h2, .xui-dialog-title { font: var(--font-weight-heading) var(--font-size-section-title) / var(--line-height-section-title) var(--font-heading); }
+  :where(.xui-button, .xui-nav-item, .xui-tab, .xui-input, .xui-textarea, .xui-select, .xui-choice):focus-visible {
+    outline: var(--focus-width) solid var(--interaction-focus);
+    outline-offset: var(--focus-offset);
+  }
+  .xui-button {
+    display: inline-flex; justify-content: center; align-items: center;
+    gap: var(--button-gap); min-height: var(--button-height); padding: var(--space-text-gap) var(--button-padding-inline);
+    border: var(--line-width-surface) solid transparent; border-radius: var(--button-radius);
+    background: var(--button-background); color: var(--button-foreground);
+    font: var(--font-weight-control) var(--font-size-body-sm) / var(--line-height-body-sm) var(--font-sans);
+    cursor: pointer; touch-action: manipulation; overflow-wrap: anywhere;
+    transition: background-color var(--motion-duration-fast) var(--motion-easing), color var(--motion-duration-fast) var(--motion-easing), transform var(--motion-duration-fast) var(--motion-easing);
+  }
+  .xui-button:where(:hover):not(:disabled) { background: var(--button-hover-background); }
+  .xui-button:where(:active, [data-pressed="true"]):not(:disabled) { background: var(--button-pressed-background); transform: scale(var(--motion-press-scale)); }
+  .xui-button[data-variant="secondary"] { background: var(--muted); color: var(--foreground); }
+  .xui-button[data-variant="outline"] { background: var(--layer-raised); color: var(--foreground); border-color: var(--surface-line); }
+  .xui-button[data-variant="ghost"] { background: transparent; color: var(--foreground); }
+  .xui-button:where([data-variant="secondary"], [data-variant="outline"], [data-variant="ghost"]):hover:not(:disabled) { background: var(--interaction-hover); }
+  .xui-button:where([data-variant="secondary"], [data-variant="outline"], [data-variant="ghost"]):where(:active, [data-pressed="true"]):not(:disabled) { background: var(--interaction-pressed); }
+  .xui-button[data-variant="destructive"] { background: var(--action-danger); color: var(--action-danger-foreground); }
+  .xui-button[data-variant="destructive"]:hover:not(:disabled) { background: color-mix(in oklab, var(--action-danger) 92%, var(--layer-raised)); }
+  .xui-button[data-variant="destructive"]:where(:active, [data-pressed="true"]):not(:disabled) { background: color-mix(in oklab, var(--action-danger) 88%, var(--foreground)); }
+  .xui-button[data-size="sm"] { min-height: var(--control-height-sm); padding-inline: calc(var(--spacing) * 2.5); }
+  .xui-button[data-size="xs"] { min-height: var(--control-height-xs); padding-inline: var(--space-control-gap); gap: var(--space-text-gap); }
+  .xui-button[data-size="lg"] { min-height: var(--control-height-lg); padding-inline: var(--space-section-gap); gap: var(--space-control-gap); }
+  .xui-button[data-icon="true"] { width: var(--button-height); height: var(--button-height); padding: 0; flex-shrink: 0; }
+  .xui-button[data-icon="true"][data-size="xs"] { width: var(--control-height-xs); height: var(--control-height-xs); }
+  .xui-button[data-icon="true"][data-size="sm"] { width: var(--control-height-sm); height: var(--control-height-sm); }
+  .xui-button[data-icon="true"][data-size="lg"] { width: var(--control-height-lg); height: var(--control-height-lg); }
+  .xui-button svg { width: var(--control-icon-size); height: var(--control-icon-size); flex-shrink: 0; }
+  .xui-button[data-size="xs"] svg { width: var(--control-icon-size-xs); height: var(--control-icon-size-xs); }
+  .xui-button:disabled { background: var(--button-disabled-background); color: var(--button-disabled-foreground); cursor: not-allowed; transform: none; }
+  .xui-button[aria-busy="true"] { border-color: var(--surface-line-strong); }
+  .xui-field { display: grid; gap: var(--space-text-gap); min-width: 0; align-content: start; }
+  .xui-label { font-weight: var(--font-weight-control); margin-bottom: var(--space-text-gap); }
+  .xui-help, .xui-error { margin: 0; font-size: var(--font-size-body-xs); line-height: var(--line-height-body-xs); overflow-wrap: anywhere; }
+  .xui-help { color: var(--muted-foreground); }
+  .xui-error { color: var(--status-error-foreground); animation: xui-feedback var(--motion-duration) var(--motion-easing); }
+  :where(.xui-input, .xui-textarea, .xui-select) {
+    display: block; width: 100%; min-width: 0; min-height: var(--input-height); padding: var(--space-text-gap) var(--space-control-gap);
+    border: var(--line-width-surface) solid var(--input-border-color); border-radius: var(--input-radius);
+    background: var(--input-background); color: var(--input-foreground);
+    font: var(--font-weight-body) var(--font-size-body-sm) / var(--line-height-body-sm) var(--font-sans);
+    transition: border-color var(--motion-duration-fast) var(--motion-easing), background-color var(--motion-duration-fast) var(--motion-easing), color var(--motion-duration-fast) var(--motion-easing);
+  }
+  :where(.xui-input, .xui-textarea)::placeholder { color: var(--muted-foreground); opacity: 1; }
+  .xui-textarea { min-height: calc(var(--input-height) * 2); resize: vertical; }
+  :where(.xui-input, .xui-textarea, .xui-select):focus { border-color: var(--interaction-focus); }
+  :where(.xui-input, .xui-textarea, .xui-select)[aria-invalid="true"] { border-color: var(--status-error-foreground); }
+  :where(.xui-input, .xui-textarea, .xui-select):disabled { background: var(--muted); color: var(--muted-foreground); cursor: not-allowed; }
+  .xui-choice-label { display: inline-flex; align-items: center; gap: var(--space-control-gap); min-height: var(--control-height); cursor: pointer; }
+  .xui-choice {
+    appearance: none; margin: 0; flex-shrink: 0; display: inline-grid; place-content: center;
+    width: var(--control-icon-size); height: var(--control-icon-size); position: relative;
+    border: var(--line-width-surface) solid var(--input-border-color); border-radius: var(--radius-sm);
+    background: var(--input-background); color: var(--action-primary-foreground); cursor: pointer;
+    transition: background-color var(--motion-duration) var(--motion-easing), border-color var(--motion-duration) var(--motion-easing);
+  }
+  .xui-choice[type="radio"] { border-radius: 50%; }
+  .xui-choice:checked { background: var(--action-primary); border-color: var(--action-primary); }
+  .xui-choice[type="checkbox"]:not([role="switch"])::after {
+    content: ""; width: calc(var(--spacing) * 1.5); height: calc(var(--spacing) * 2.5);
+    border: solid currentColor; border-width: 0 var(--line-width-emphasis) var(--line-width-emphasis) 0;
+    transform: rotate(45deg) scale(0); transition: transform var(--motion-duration) var(--motion-easing);
+  }
+  .xui-choice[type="checkbox"]:not([role="switch"]):checked::after { transform: rotate(45deg) scale(1); }
+  .xui-choice[type="radio"]::after { content: ""; width: var(--space-control-gap); height: var(--space-control-gap); border-radius: 50%; background: var(--action-primary-foreground); transform: scale(0); transition: transform var(--motion-duration) var(--motion-easing); }
+  .xui-choice[type="radio"]:checked::after { transform: scale(1); }
+  .xui-choice[role="switch"] { width: calc(var(--spacing) * 7); height: calc(var(--spacing) * 4.15); border-radius: var(--control-height); display: inline-block; }
+  .xui-choice[role="switch"]::before {
+    content: ""; position: absolute; inset-inline-start: 0; top: 0;
+    width: calc(var(--spacing) * 3.6); height: calc(var(--spacing) * 3.6); border-radius: 50%;
+    background: var(--muted-foreground); transition: transform var(--motion-duration) var(--motion-easing), background-color var(--motion-duration) var(--motion-easing);
+  }
+  .xui-choice[role="switch"]:checked::before { background: var(--action-primary-foreground); transform: translateX(calc(var(--spacing) * 2.9)); }
+  [dir="rtl"] .xui-choice[role="switch"]:checked::before { transform: translateX(calc(var(--spacing) * -2.9)); }
+  .xui-choice:disabled { border-color: var(--muted-foreground); background: var(--muted); color: var(--muted-foreground); cursor: not-allowed; }
+  .xui-choice[role="switch"]:disabled::before { background: var(--muted-foreground); }
+  .xui-choice[type="radio"]:disabled::after { background: var(--muted-foreground); }
+  .xui-nav { display: grid; gap: var(--space-text-gap); align-content: start; }
+  .xui-nav-item {
+    position: relative; display: inline-flex; align-items: center; gap: var(--nav-item-gap); text-decoration: none;
+    min-height: var(--nav-item-height); padding: var(--space-text-gap) var(--nav-item-padding-inline); border: 0; border-radius: var(--nav-item-radius);
+    background: var(--menu-item-background); color: var(--menu-item-foreground);
+    font: var(--font-weight-control) var(--font-size-body-sm) / var(--line-height-body-sm) var(--font-sans);
+    cursor: pointer; text-align: start;
+    transition: background-color var(--motion-duration) var(--motion-easing), color var(--motion-duration) var(--motion-easing);
+  }
+  .xui-nav-item:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--menu-item-hover-background); color: var(--menu-item-hover-foreground); }
+  .xui-nav-item[aria-current="page"] { background: var(--menu-item-selected-background); color: var(--menu-item-selected-foreground); }
+  .xui-nav-item::before {
+    content: ""; position: absolute; inset-inline-start: var(--nav-selected-indicator-inset); top: 50%; transform: translateY(-50%);
+    width: var(--nav-selected-indicator-width); height: var(--nav-selected-indicator-height); border-radius: var(--nav-selected-indicator-radius);
+    background: var(--nav-selected-indicator-color); opacity: 0; pointer-events: none;
+    transition: opacity var(--motion-duration) var(--motion-easing);
+  }
+  .xui-nav-item[aria-current="page"]::before { opacity: 1; }
+  .xui-nav-item[data-collapsed="true"] { width: var(--nav-collapsed-item-size); height: var(--nav-collapsed-item-size); justify-content: center; padding: 0; }
+  .xui-nav-item[data-collapsed="true"]::before { inset-inline-start: var(--nav-selected-indicator-inset-collapsed); }
+  .xui-nav-item:disabled, .xui-nav-item[aria-disabled="true"] { color: var(--menu-item-disabled-foreground); cursor: not-allowed; }
+  .xui-nav-item svg { width: var(--control-icon-size); height: var(--control-icon-size); flex-shrink: 0; }
+  .xui-tabs-list { display: flex; flex-wrap: wrap; gap: var(--space-text-gap); padding: calc(var(--spacing) * .75); background: var(--layer-support); border-radius: var(--radius-lg); }
+  .xui-tab { background: transparent; color: var(--foreground); min-height: var(--control-height-sm); padding: var(--space-text-gap) var(--space-control-gap); border: 0; border-radius: var(--radius-md); cursor: pointer; font: inherit; font-weight: var(--font-weight-control); transition: background-color var(--motion-duration) var(--motion-easing), color var(--motion-duration) var(--motion-easing); }
+  .xui-tab:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--interaction-hover); }
+  .xui-tab[aria-selected="true"] { background: var(--interaction-selected); color: var(--interaction-selected-foreground); }
+  .xui-tab:disabled, .xui-tab[aria-disabled="true"] { color: var(--muted-foreground); cursor: not-allowed; }
+  .xui-tab-panel { padding-block: var(--space-content-gap); animation: xui-feedback var(--motion-duration-enter) var(--motion-easing); }
+  .xui-tab-panel[data-ending-style] { display: none; animation: none; }
+  .xui-surface { background: var(--card-background); border: var(--line-width-surface) solid var(--card-border-color); border-radius: var(--card-radius); padding: var(--card-padding); box-shadow: var(--shadow-flat); min-width: 0; }
+  .xui-alert { padding: var(--space-content-gap); border: var(--line-width-surface) solid var(--status-info-line); border-radius: var(--radius-lg); color: var(--status-info-foreground); background: var(--status-info-soft); overflow-wrap: anywhere; animation: xui-feedback var(--motion-duration) var(--motion-easing); }
+  .xui-alert[data-tone="error"] { color: var(--status-error-foreground); background: var(--status-error-soft); border-color: var(--status-error-line); }
+  .xui-alert[data-tone="warning"] { color: var(--status-warning-foreground); background: var(--status-warning-soft); border-color: var(--status-warning-line); }
+  .xui-alert[data-tone="success"] { color: var(--status-success-foreground); background: var(--status-success-soft); border-color: var(--status-success-line); }
+  .xui-backdrop, .xui-native-dialog::backdrop { background: color-mix(in oklab, var(--foreground) 24%, transparent); }
+  .xui-backdrop { position: fixed; inset: 0; z-index: var(--z-overlay); opacity: 1; transition: opacity var(--motion-duration-exit) var(--motion-easing-exit); }
+  .xui-backdrop[data-starting-style], .xui-backdrop[data-ending-style] { opacity: 0; }
+  .xui-dialog, .xui-native-dialog {
+    width: min(var(--layout-dialog-width), calc(100vw - var(--layout-viewport-inset) * 2));
+    max-height: calc(100dvh - var(--layout-viewport-inset) * 2); padding: var(--space-section-gap);
+    border: var(--line-width-surface) solid var(--surface-line); border-radius: var(--radius-2xl);
+    background: var(--layer-overlay); box-shadow: var(--shadow-overlay);
+    overflow: hidden; opacity: 1;
+  }
+  .xui-dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: var(--z-overlay); display: flex; flex-direction: column; gap: var(--space-content-gap); transition: opacity var(--motion-duration-exit) var(--motion-easing-exit), scale var(--motion-duration-exit) var(--motion-easing-exit); }
+  .xui-dialog[data-starting-style], .xui-dialog[data-ending-style] { opacity: 0; scale: var(--motion-enter-scale); }
+  .xui-dialog[data-open] { transition-duration: var(--motion-duration-enter); transition-timing-function: var(--motion-easing); }
+  .xui-native-dialog[open] { display: flex; flex-direction: column; gap: var(--space-content-gap); }
+  .xui-native-dialog { transition: opacity var(--motion-duration-exit) var(--motion-easing-exit), display var(--motion-duration-exit) allow-discrete, overlay var(--motion-duration-exit) allow-discrete; }
+  .xui-native-dialog:not([open]) { opacity: 0; }
+  @starting-style { .xui-native-dialog[open] { opacity: 0; } }
+  .xui-dialog-title, .xui-dialog-description { margin: 0; }
+  .xui-dialog-description { color: var(--muted-foreground); }
+  .xui-dialog-body { overflow-y: auto; min-height: 0; overflow-wrap: anywhere; }
+  .xui-dialog-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-control-gap); flex-shrink: 0; }
+  @keyframes xui-feedback { from { opacity: .5; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .xui-choice::after { transition: none; }
+  }
+  @media (forced-colors: active) {
+    .xui-choice { appearance: auto; }
+    .xui-choice::before, .xui-choice::after { display: none; }
+    .xui-nav-item[aria-current="page"], .xui-tab[aria-selected="true"] { text-decoration: underline; }
+  }
+}

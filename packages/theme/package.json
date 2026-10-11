@@ -1,0 +1,13 @@
+{
+  "name": "@coffeehc/xui-theme",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": ["dist"],
+  "sideEffects": ["**/*.css"],
+  "exports": {
+    "./style.css": "./dist/style.css",
+    "./tokens.css": "./dist/tokens.css",
+    "./components.css": "./dist/components.css"
+  }
+}
