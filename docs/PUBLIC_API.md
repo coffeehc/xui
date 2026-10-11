@@ -58,6 +58,10 @@
 | `@coffeehc/xui-runtime/business-audit` <!-- public-entry: @coffeehc/xui-runtime/business-audit --> | [源码](../packages/runtime/src/business-audit.ts) | [合同](BUSINESS_AUDIT.md) | [示例](../examples/audit-vanilla/app.js) |
 | `@coffeehc/xui-runtime/business-audit-dom` <!-- public-entry: @coffeehc/xui-runtime/business-audit-dom --> | [源码](../packages/runtime/src/business-audit-dom.ts) | [合同](BUSINESS_AUDIT.md) | [示例](../examples/audit-vanilla/app.js) |
 | `@coffeehc/xui-react/business-audit` <!-- public-entry: @coffeehc/xui-react/business-audit --> | [源码](../packages/ui-react/src/business-audit.tsx) | [合同](BUSINESS_AUDIT.md) | [示例](../examples/audit-react/app.tsx) |
+| `@coffeehc/xui-theme/auth.css` <!-- public-entry: @coffeehc/xui-theme/auth.css --> | [源码](../packages/theme/src/auth.css) | [合同](AUTH.md) | [示例](../examples/login-vanilla/app.js) |
+| `@coffeehc/xui-runtime/auth` <!-- public-entry: @coffeehc/xui-runtime/auth --> | [源码](../packages/runtime/src/auth.ts) | [合同](AUTH.md) | [示例](../examples/shared/login-model.ts) |
+| `@coffeehc/xui-runtime/login-dom` <!-- public-entry: @coffeehc/xui-runtime/login-dom --> | [源码](../packages/runtime/src/login-dom.ts) | [合同](AUTH.md) | [示例](../examples/login-vanilla/app.js) |
+| `@coffeehc/xui-react/login` <!-- public-entry: @coffeehc/xui-react/login --> | [源码](../packages/ui-react/src/login.tsx) | [合同](AUTH.md) | [示例](../examples/login-react/app.tsx) |
 
 ## xui 自己定义的默认行为
 
@@ -79,6 +83,7 @@
 | webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list/total，未请求总数的 total 不代表真实零 |
 | API Key | 首次读取由宿主 refresh；默认可创建、仅 active 可撤销，unknown/null 须显式许可。权限/有效期/defaultExpiryId 必须宿主声明，默认权限集合为空；基础验证和单一写入 owner，无默认 HTTP route、生成或持久化；完整值仅瞬时结果 |
 | 业务审计 | 显式首次 refresh，page size=50（1–200），两个宿主 loader，无默认 endpoint/auth/scope；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
+| 登录页/auth | 一个已有 HTTP/auth/theme owner；固定 v1 cookie login/logout/session、严格 schema_version=1 user DTO、timeout=15000ms、no retry、no-store、ignore上下文401。页面挂载核会话，配置文本/logo，returnTo安全fallback `/`，没有callback则同源根路径导航；密码瞬时DOM，退出未知不假称成功，详见 AUTH |
 | 独立结构化错误 | 初始 groups、page size=50（1–200），host 显式 refresh；无隐式 endpoint/scope/排序/总记录数。v1/list/cursor、纳秒时间、uint64 字符串、三态、累计/命中/首次代表；详情只按记录 ID 读取，缓存仅当前链已访问摘要，刷新新快照 |
 
 ## 内容与扩展的真实边界

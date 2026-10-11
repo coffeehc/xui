@@ -1,0 +1,14 @@
+@layer xui-components {
+  .xui-login-page {min-block-size:100dvh;display:grid;place-items:center;padding:var(--layout-viewport-inset);}
+  .xui-login-card {inline-size:min(100%,calc(var(--layout-field-min)*2));max-block-size:calc(100dvh - var(--layout-viewport-inset)*2);display:flex;flex-direction:column;gap:var(--space-content-gap);padding:var(--space-section-gap);min-inline-size:0;}
+  .xui-login-brand {display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-content-gap);min-inline-size:0;flex-shrink:0;max-block-size:20dvh;overflow:auto;}
+  .xui-login-brand strong {flex:1;min-inline-size:0;overflow-wrap:anywhere;}
+  .xui-login-logo {inline-size:var(--control-height-lg);block-size:var(--control-height-lg);object-fit:contain;flex-shrink:0;}
+  .xui-login-theme {inline-size:calc(var(--control-height)*4);max-inline-size:100%;margin-inline-start:auto;}
+  .xui-login-form {display:contents;}
+  .xui-login-body {overflow:auto;min-block-size:0;display:grid;gap:var(--space-content-gap);overflow-wrap:anywhere;}
+  .xui-login-body h1,.xui-login-body p {margin:0;}
+  .xui-login-description {color:var(--muted-foreground);}
+  .xui-login-actions {display:flex;flex-wrap:wrap;gap:var(--space-control-gap);flex-shrink:0;min-inline-size:0;max-block-size:20dvh;overflow:auto;}
+  .xui-login-actions>.xui-button {flex:1;min-inline-size:0;max-block-size:20dvh;overflow:auto;align-items:safe center;}
+}

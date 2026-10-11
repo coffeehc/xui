@@ -87,6 +87,10 @@
     "./business-audit": {
       "types": "./dist/business-audit.d.ts",
       "import": "./dist/business-audit.js"
+    },
+    "./login": {
+      "types": "./dist/login.d.ts",
+      "import": "./dist/login.js"
     }
   },
   "types": "./dist/index.d.ts",

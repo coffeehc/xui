@@ -1,0 +1,16 @@
+{
+  "productName": "轻舟工作台",
+  "title": "登录工作台",
+  "description": "继续处理你的工作。",
+  "logo": {"src": "./mark.svg", "alt": "轻舟工作台"},
+  "fallbackReturnTo": "/workspace",
+  "labels": {
+    "username": "用户名", "password": "密码", "submit": "登录", "cancel": "取消等待",
+    "checking": "正在核对会话…", "signingIn": "正在登录…", "signingOut": "正在退出…", "continue": "进入应用", "logout": "退出登录",
+    "theme": "外观", "light": "浅色", "dark": "深色", "system": "跟随系统",
+    "usernameRequired": "请填写用户名。", "passwordRequired": "请填写密码。",
+    "credentialsError": "用户名或密码不正确。", "forbidden": "当前不允许登录。", "rateLimited": "尝试过于频繁，请稍后再试。",
+    "timeout": "登录结果尚未确认，请先核对会话再尝试。", "network": "连接失败，请先核对会话再尝试。", "error": "登录未完成。",
+    "cancelled": "已取消本地等待，服务端可能已完成操作。", "signedIn": "已登录", "checkSession": "核对会话"
+  }
+}

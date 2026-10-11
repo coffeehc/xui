@@ -41,6 +41,8 @@ export interface HttpRequestOptions<T=unknown>{
   method?:string;headers?:HeadersInit;body?:BodyInit|null;json?:unknown;signal?:AbortSignal;
   timeoutMs?:number;response?:ResponseMode;adapter?:ResponseAdapter<T>;endpointId?:string;
   retry?:ReadRetry;detectAjaxErrors?:boolean;credentials?:RequestCredentials;cache?:RequestCache;redirect?:RequestRedirect;
+  /** Login failures must not consume the shared session-expiry notification latch. */
+  unauthorized?:'notify'|'ignore';
 }
 export interface HttpClientOptions{
   baseURL:string;fetch?:typeof globalThis.fetch;headers?:HeadersInit;getHeaders?:()=>HeadersInit|Promise<HeadersInit>;
@@ -68,6 +70,8 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
     if(url.origin!==base.origin||url.username||url.password)throw new TypeError('Requests must use the configured origin without URL credentials');
     const method=(init.method??'GET').toUpperCase(),mode=init.response??options.response??'ajax',retry=init.retry,timeout=init.timeoutMs??options.timeoutMs;
     if(!['ajax','json','text','blob','empty'].includes(mode))throw new TypeError('Unsupported response mode');
+    if(init.unauthorized!==undefined&&!['notify','ignore'].includes(init.unauthorized))throw new TypeError('Unsupported unauthorized policy');
+    const notify401=init.unauthorized!=='ignore';
     if(init.endpointId!==undefined&&!/^[A-Za-z0-9._:-]{1,120}$/.test(init.endpointId))throw new TypeError('endpointId must be an opaque identifier, not a URL');
     if(timeout!==undefined)validMs(timeout,'timeoutMs');
     if(init.adapter&&['empty'].includes(mode))throw new TypeError('Empty mode does not use an adapter');
@@ -98,7 +102,7 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
           if(!headers.has('accept')&&['ajax','json'].includes(mode))headers.set('accept','application/json');if('json' in init&&!headers.has('content-type'))headers.set('content-type','application/json');
           const response=await send(url.href,{method,headers,body,signal:controller.signal,credentials:init.credentials??options.credentials??'same-origin',cache:init.cache,redirect:init.redirect});check();
           metadata={...metadata,status:response.status,headerRequestId:response.headers.get('X-Request-ID')??undefined,retryAfterMs:retryAfter(response.headers.get('Retry-After'))};
-          if(response.status===401)notifyUnauthorized(new HttpError('http',metadata),epoch);
+          if(response.status===401&&notify401)notifyUnauthorized(new HttpError('http',metadata),epoch);
           const context:HttpResponseContext={status:response.status,headerRequestId:metadata.headerRequestId,endpointId:init.endpointId,attempts:attempt};
           const adapter=init.adapter??(init.response===undefined||mode===(options.response??'ajax')?options.adapter:undefined)??(mode==='ajax'?ajaxResponseAdapter:undefined);let adapted:AdaptedResponse<unknown>;
           if(!response.ok){
@@ -127,7 +131,7 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
       }throw new HttpError('network',metadata);
     };
     try{return await Promise.race([run(),aborted]);}
-    catch(caught){const error=normalize(caught);if(error.status===401&&error.kind!=='cancel')notifyUnauthorized(error,epoch);if(!dead&&error.kind!=='cancel'&&!(error.status===401&&options.onUnauthorized))try{Promise.resolve(options.onError?.(error)).catch(()=>{});}catch{}throw error;}
+    catch(caught){const error=normalize(caught);if(error.status===401&&error.kind!=='cancel'&&notify401)notifyUnauthorized(error,epoch);if(!dead&&error.kind!=='cancel'&&!(error.status===401&&notify401&&options.onUnauthorized))try{Promise.resolve(options.onError?.(error)).catch(()=>{});}catch{}throw error;}
     finally{if(timer!==undefined)clearTimeout(timer);controller.signal.removeEventListener('abort',abort);init.signal?.removeEventListener('abort',external);active.delete(dispose);}
   }
   return {request,resetUnauthorized(){if(!dead){authEpoch++;unauthorized=false;}},destroy(){if(dead)return;dead=true;for(const stop of active)stop();active.clear();}};

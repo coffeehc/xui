@@ -20,7 +20,23 @@
 
 矩阵中的正式接口和参考组合均已实现；验证结果在 FOUNDATION_VALIDATION.md 按能力记录，源码存在不等于验证通过。复合选择的原生入口采用浏览器原生 select/datalist，而不是承诺两个宿主使用同一种面板实现。
 
-## 用户确认的框架扩展与分步状态
+## 组件层次与扩展原则
+
+xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与采用的架构准则；完整通用视觉/交互规则与默认 token 来源仍仅为 [DESIGN.md](DESIGN.md)，本节说明真实实现如何分层，不复制另一套皮肤规则。
+
+| 层次 | 当前公开实例 | 采用与扩展 |
+| --- | --- | --- |
+| 原子 | Button/IconButton、Input/Textarea、Checkbox/Radio/Switch、Field、Alert、公共 CSS | 直接采用公开 props/ref/render、标准元素和语义 token；图标按钮使用共享 IconButton，不新增竞争按钮/输入基础包 |
+| 组合 | MenuLayout/NavigationMenu、公共 Toolbar/Grid/Table/DataRegion、Dialog/详情布局、HTTP/query/controller | 组合原子提供通用键盘、状态、反馈和布局。Table 不抽查询引擎，query 不抽领域业务；状态与后端 adapter 通过明确公开合同连接 |
+| 页面 | ConfigurableLoginPage/createLoginPage、ApiKeyManager/createApiKeyManager、BusinessAuditExplorer/createBusinessAuditExplorer | 填文案/品牌数据、选项、adapter/loader 与 callbacks 即可整页使用；页面内部复用下层相同控件与皮肤，业务不必手写页面 CSS |
+
+普通需求优先完整页面或组合；特殊业务可用公开扩展点或组合基础控件。允许声明的 props/render/parts、受信任 renderer、数据配置和 callbacks；不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner；缺能力先反馈或补公开接口，再补验收。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
+
+统一 API 数据合同让 UI 与自动化消费同一业务能力，领域流程、权限/tenant与校验保持在可独立测试的业务 API/后端。xui 提供界面、通用请求及正式 DTO/adapter 接口；baseservice 独立提供后端能力，经版本化 HTTP facade 组合，不能向前端暴露数据库模型。登录已定义固定 v1 三路由，但后端适配未实施；API Key 和业务审计使用已声明宿主 adapter/loader，不猜新 route。不因等待后端阻塞 xui，也不自动改其它项目。
+
+后续逐页采用 xui，并行完善 baseservice，再逐项目替换后端 adapter，按版本/固定 SHA、DTO 与真实业务/页面回归小步升级。贡献验收须给出所属层次、复用下层的证据、实际公开扩展与构建消费；合成页面通过不能当作完整基础系统或产品迁移通过。此设计哲学由本节作为单一架构源，README、采用手册和 skill 引用这里。
+
+## 分步实施状态
 
 目标是引入 xui 后，通过公开组件与共享数据、状态、回调构建普通页面；特殊需求组合基础组件。内部结构、选中皮肤、motion、focus/a11y 由库默认提供，不要求产品复制伪元素或内部 CSS。主题、加载、导航接入和 HTTP 错误应有一致的公开契约；领域业务与可见菜单过滤由宿主负责。
 
@@ -31,9 +47,10 @@
 | HTTP 与共享列表契约 | 已实现，本步骤独立验证 | 零框架传输、显式模式/response adapter、错误/status/Abort/timeout、默认不重试；共享列表默认 Go ListData 的 list/total，HTTP 保留原样 payload；来源与实现同步记录 |
 | API Key 通用管理组件 | 已实现，本步骤独立验证 | 共享安全元数据、列表/创建/权限与有效期/一次性结果/明确复制/撤销确认；不生成真实密钥，不复制产品权限模型，后端生成与鉴权，默认脱敏与不持久化 |
 | 可扩展业务审计 | 已实现，两宿主独立消费 | 固定公共字段 + event_type/schema_version + 业务 JSON payload；list/detail loader、过滤/cursor/权限/安全回退/注册 renderer；后端 adapter 尚未落地，见 [BUSINESS_AUDIT](BUSINESS_AUDIT.md) |
+| 可配置登录页 | 已实现，本轮完整验收后交付 | ConfigurableLoginPage/createLoginPage +共享认证 client；固定 v1 cookie login/logout/session、公开品牌文案与safe returnTo；[AUTH](AUTH.md) 明确真实源差异与后端责任 |
 | 独立结构化错误观察 | 已实现，只读独立步骤 | 共享控制器、React/原生完整分组/观察/详情；依据固定 commons@b0bc0f9 的真实 filter/cursor，计数/首次代表/三态/保留期明确；[拟议 v1 facade](LOGS.md) 由宿主后端实现，不猜旧协议 |
 
-菜单/布局和 HTTP 是用户明确扩展的范围，替代此前不包含 HTTP 通用层的边界；本轮扩展已获全部功能、手册、skill 与统一验收完成后一次正常推送 main 的授权。HTTP/query、API Key、业务审计、独立错误观察及 [接入 skill](../.agents/skills/adopt-xui/SKILL.md) 已实现；最终交叉验收见 FINAL_REVIEW。框架不实现产品 endpoint、权限判断、登录路由或业务数据引擎。采用产品的业务 API 保持完整并可独立测试；UI 通过相同 API 提供观察、配置和介入，核心流程不放进组件。
+菜单/布局、HTTP、业务审计与配置登录都是用户明确扩展的范围；本轮全部功能、手册、skill 与统一验收完成后正常推送 main。HTTP/query、API Key、业务审计、登录页、独立错误观察及 [接入 skill](../.agents/skills/adopt-xui/SKILL.md) 已实现；最终交叉验收见 FINAL_REVIEW。框架不实现产品 endpoint 后端、权限判断、业务 router 或数据引擎。采用产品的业务 API 保持完整并可独立测试；UI 通过相同 API 提供观察、配置和介入，核心流程不放进组件。
 
 ## 加载与性能实施
 

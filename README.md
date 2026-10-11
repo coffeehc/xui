@@ -7,6 +7,8 @@
 - [使用与迁移手册](docs/ADOPTION.md)
 - [全部公开入口与默认行为](docs/PUBLIC_API.md)
 - [Codex 接入 skill](.agents/skills/adopt-xui/SKILL.md)
+- [原子→组合→页面的设计哲学](docs/FOUNDATION.md#组件层次与扩展原则)
+- [可配置登录页与统一认证接口](docs/AUTH.md)
 - [HTTP 与共享 query 接入](docs/HTTP.md)
 - [API Key 通用管理](docs/API_KEY.md)
 - [可扩展业务审计](docs/BUSINESS_AUDIT.md)

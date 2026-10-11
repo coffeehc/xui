@@ -11,3 +11,5 @@ export * from './structured-log.js';
 export * from './structured-log-dom.js';
 export * from './business-audit.js';
 export * from './business-audit-dom.js';
+export * from './auth.js';
+export * from './login-dom.js';

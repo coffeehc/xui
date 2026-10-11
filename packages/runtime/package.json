@@ -66,6 +66,14 @@
     "./business-audit-dom": {
       "types": "./dist/business-audit-dom.d.ts",
       "import": "./dist/business-audit-dom.js"
+    },
+    "./auth": {
+      "types": "./dist/auth.d.ts",
+      "import": "./dist/auth.js"
+    },
+    "./login-dom": {
+      "types": "./dist/login-dom.d.ts",
+      "import": "./dist/login-dom.js"
     }
   },
   "types": "./dist/index.d.ts"

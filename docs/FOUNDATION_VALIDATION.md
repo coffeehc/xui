@@ -108,3 +108,16 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 三项独立只读审查的实质发现、修复/旧代码失败证据、源码/正式声明核对，以及四个 skill 接入任务见 [FINAL_REVIEW.md](FINAL_REVIEW.md)。仓库 skill 具备正式 frontmatter 和 UI 提示，不装到用户电脑；手册强调 agent-ready、领域 API 独立测试，以及先接 xui/随后逐项目替换 baseservice 的螺旋升级，不新增后端或运行配置组件。
 
 真实后端 adapter、权限/tenant/脱敏/审计可靠性及产品迁移未实施，不承诺不可篡改或审计事务成功。真实移动 OS、读屏器、Firefox/Safari、SSR hydration、原生 browser zoom 和生产性能未跑；Clipboard/触屏/字号缩放限制保持。最终正常 push 与同 SHA CI 仅在本轮完整验收后执行；首次 CI 的三个浏览器失败及追加修正见 [FINAL_REVIEW.md](FINAL_REVIEW.md)。包仍 private、不部署不发布。
+
+
+## 配置登录与三层设计哲学收口
+
+追加步骤基线为已推送的46caeb75，首次CI三个浏览器失败的普通修复提交5c24fcd保留。新增runtime/auth、runtime/login-dom、React/login、theme/auth.css，统一严格cookie会话v1三路由与配置登录页；真实xAgent源协议差异与后端责任见[AUTH](AUTH.md)。两类合成示例共用品牌名称/logo/说明/文案配置和同一HTTP/auth模型，消费正式tarball，不复制私有页面CSS。
+
+原子→组合→页面设计哲学由[FOUNDATION的单一架构章节](FOUNDATION.md#组件层次与扩展原则)定义，README、手册、实施映射和仓库skill均引用该源。普通项目填数据和配置采用整页，特殊业务通过公开原子/组合及扩展接口，不修改组件内部渲染；业务API、权限/tenant和核心执行保持独立，xui不等待baseservice。
+
+新增9项认证逻辑检查和14项浏览器回归，涵盖严格DTO、固定方法/路径/body、共享401通知隔离、登录退出/currentUser一致、错误安全、防重复、不合作取消与超时/迟到、回跳规范化和已知凭据参数、三主题/键盘/focus/reduced-motion、390px/200%/后备字体/126字配置、pagehide/卸载清空保留密码节点。独立审查发现长品牌或动作压空正文P2；修复后增加同时126字品牌+120字动作配置回归，正文有可用空间、按钮在视口内、完整文字可滚动且登录可执行。品牌单独的正式tarball复核为正文326px/按钮bottom655≤720；同时长动作的dev预览复核为正文254px/同样bottom655，最终正式消费仍由整套verify确认。
+
+全套纳入96单测、1真实默认watch、140浏览器检查；52全部公开入口(theme14/runtime17/React21)和16正式页面的独立安装ESM/CSS/init/types/实际导出、peer/按需/体积门禁。watch真实启动同时验证登录CSS与审计参考资源，新增入口也排除在Button-only实际贡献之外。冻结SHA完整verify、正常推送和同SHA CI实际状态随交付报告；详细首次失败、定位器修正与复核见[FINAL_REVIEW](FINAL_REVIEW.md)。
+
+真实Cookie签发/撤销、安全属性、CSRF/CORS、鉴权、tenant与真实业务/审计后端均未实现或集成验证。注册、重置、SSO和完整用户管理是后续组合，不声称基础系统全部完成或任何产品已迁移；原有真实移动OS/读屏器/其它浏览器/原生zoom/SSR/生产性能未跑限制保持。包private，不发布不部署，不改许可证/可见性或其它仓库。

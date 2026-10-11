@@ -15,6 +15,7 @@ test('real watch rebuilds CSS, tokens, TSX, declarations and init; errors preser
   let current=await status(state=>state.state==='success');
   assert.match(await readFile(resolve(fixture,'dist/foundation-react/app.css'),'utf8'),/xui-shell/);
   assert.match(await readFile(resolve(fixture,'dist/vanilla/app.css'),'utf8'),/xui-nav/);
+  for(const kind of ['react','vanilla']){assert.match(await readFile(resolve(fixture,`dist/login-${kind}/app.css`),'utf8'),/xui-login-card/);assert.match(await readFile(resolve(fixture,`dist/audit-${kind}/reference.html`),'utf8'),/html/);}
   const edit=async(path,transform)=>{const full=resolve(fixture,path);await writeFile(full,transform(await readFile(full,'utf8')));const prior=current.sourceSha256;current=await status(state=>state.state==='success'&&state.sourceSha256!==prior);for(const name of ['theme','runtime','ui-react'])assert.equal(JSON.parse(await readFile(resolve(fixture,`packages/${name}/dist/build.json`))).sourceSha256,current.sourceSha256);};
   await edit('docs/DESIGN.md',text=>text.replace('<!-- design-default-css:start -->','<!-- design-default-css:start -->').replace(':root {',':root {\n  /* watch-token-proof */'));
   assert.match(await readFile(resolve(fixture,'packages/theme/dist/tokens.css'),'utf8'),/watch-token-proof/);
