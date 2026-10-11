@@ -15,6 +15,7 @@
 | P2：无效错误过滤重复 alert 且给旧查询 retry | 过滤区域单一归属，两宿主一个 alert、无错误 retry 入口；浏览器实测通过 |
 | P2：审计 fake loader 按 RFC3339 字符串排序错筛等价时区 | 纳秒比较，保留时区与半开边界；核心纯逻辑及两宿主实际过滤验证 |
 | P2：旧详情 Abort listener 新开详情，被 reset 关闭后仍存 payload | 审计与错误观察的关闭 patch 同时检查详情 generation，保留外层过滤与新详情；两条回归在旧产物失败、修复后独立 2/2 通过，源码/dist 匹配 |
+| P2：工具栏快照时间在窄屏、放大字号和较宽后备字体下撑出页面 | 工具栏文字允许必要换行；两宿主 390px/200%/monospace 回归在旧消费者失败，重新打包安装修复产物后 2/2 通过，保留完整文字与字号 |
 
 最后独立源码复核在该范围内无剩余 P1/P2。三个合成 skill 接入任务实际检查旧 JSON theme/HTTP owner、私有 CSS/菜单规则、response/query 猜测；追加审计任务确认旧 error samples 无法充当业务审计，已有领域 loader 可先接，不等待 HTTP route，也不重复调用已有批准 API 的审计写入。skill 的正式 YAML/frontmatter/UI 默认提示校验通过，所有相对引用存在；这是迁移判断检验，不是产品迁移。
 
@@ -26,10 +27,14 @@
 
 首轮针对性浏览器检查 38/40 通过，两个失败来自测试把格式化 JSON 转义引号当作原文；改为还原 JSON 核对原值，并继续验证无 DOM 图片/代码执行。没有加 sleep、retry 或跳过以掩盖失败。
 
+首次正常推送 `46caeb75f37e6a07cb39f1924039d046e468ce64` 的本地完整 verify 通过，但 [CI 38168147699](https://github.com/coffeehc/xui/actions/runs/38168147699) 浏览器检查为 123/126，两个窄屏溢出和一个主题切换后对比度采样失败（4.357762882141346）。溢出已用上述后备字体在本地复现并修正；对比度测试补全有效主题状态确认、逐帧跟随替换 transition 的结束，保留实际渲染色值测量和 4.5/3 阈值，失败时也保存色值附件。没有降低阈值、关掉动画或靠重复执行取得通过。本地 Chromium 154，CI 下载的 Chromium 156 在本地下载受限，首轮 CI 数值失败未直接在相同浏览器复现；最终追加修正的冻结 SHA、完整 verify 和同 SHA CI 结果在交付中明确报告。
+
+独立只读审查受控地在等待中替换 transition：旧动画取消后，单次 `.finished.catch` 提前返回，新动画仍运行，实际对比度 2.064439；新等待跟随替换后到最终 light，白字/蓝底恢复 6.701618。CPU 6 倍节流下两宿主六组合均无剩余动画、终态对比度达标。这证明旧等待存在取样缺口；没有把受控复现当作首轮 CI 的自然触发事件。
+
 详细入口见 [PUBLIC_API.md](PUBLIC_API.md)，接入过程见 [ADOPTION.md](ADOPTION.md) 与 [skill](../.agents/skills/adopt-xui/SKILL.md)。通用规则仍只在 [DESIGN.md](DESIGN.md)。此前各独立步骤的实际结果见 [FOUNDATION_VALIDATION.md](FOUNDATION_VALIDATION.md)。
 
 ## 未实施与未跑
 
 没有改其他产品仓库或实现审计后端 adapter/错误 HTTP facade，没有真实业务后端/Go/PostgreSQL/鉴权/tenant/审计可靠性集成验证。审计 typed loader 和安全视图已由 xui 自身定义，实际服务后续适配；不承诺不可篡改、恰好一次、写入成功或审计事务保证。Clipboard 为模拟，触屏为 Chromium 模拟，200%为根字体放大；真实移动 OS、读屏器、Firefox/Safari、浏览器原生 zoom、SSR hydration 与生产性能未跑。合成例子不代表产品已迁移或性能提高。
 
-用户已明确要求全部功能、文档、skill 与统一验收完成后一次正常推送 main。最终 push 前保护所有本地提交，正常 fetch 比较远端，保留历史；没有 force/reset/clean、文件树上传、秘密生成或发布部署授权。
+用户已明确要求全部功能、文档、skill 与统一验收完成后正常推送 main。首次正常 push 的 CI 暴露以上修正，需要完整复验后追加普通修正提交并验证新 SHA 的 CI，保留首次推送和所有已有提交。push 前正常 fetch 比较远端；没有 force/reset/clean、文件树上传、秘密生成或发布部署授权。

@@ -107,4 +107,4 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 
 三项独立只读审查的实质发现、修复/旧代码失败证据、源码/正式声明核对，以及四个 skill 接入任务见 [FINAL_REVIEW.md](FINAL_REVIEW.md)。仓库 skill 具备正式 frontmatter 和 UI 提示，不装到用户电脑；手册强调 agent-ready、领域 API 独立测试，以及先接 xui/随后逐项目替换 baseservice 的螺旋升级，不新增后端或运行配置组件。
 
-真实后端 adapter、权限/tenant/脱敏/审计可靠性及产品迁移未实施，不承诺不可篡改或审计事务成功。真实移动 OS、读屏器、Firefox/Safari、SSR hydration、原生 browser zoom 和生产性能未跑；Clipboard/触屏/字号缩放限制保持。最终一次正常 push 与同 SHA CI 仅在本轮完整验收后执行，包仍 private、不部署不发布。
+真实后端 adapter、权限/tenant/脱敏/审计可靠性及产品迁移未实施，不承诺不可篡改或审计事务成功。真实移动 OS、读屏器、Firefox/Safari、SSR hydration、原生 browser zoom 和生产性能未跑；Clipboard/触屏/字号缩放限制保持。最终正常 push 与同 SHA CI 仅在本轮完整验收后执行；首次 CI 的三个浏览器失败及追加修正见 [FINAL_REVIEW.md](FINAL_REVIEW.md)。包仍 private、不部署不发布。

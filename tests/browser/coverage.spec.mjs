@@ -35,11 +35,19 @@ for (const kind of ['vanilla','react']) {
   });
   test(`${kind}: semantic color contrast and product override in all modes`,async({page},testInfo)=>{
     await page.goto(`/${kind}/`);const results=[];
-    for (const product of ['default','example']) for (const mode of ['light','dark','system']) {
+    try { for (const product of ['default','example']) for (const mode of ['light','dark','system']) {
       await page.getByLabel('主题配方').selectOption(product);await page.getByLabel('外观').selectOption(mode);await page.emulateMedia({colorScheme:mode === 'system' ? 'dark' : mode});
-      // Wait for the actual CSS transition, then calculate rendered sRGB pairs.
-      await page.locator('.xui-button').first().evaluate(async el=>{await Promise.all(el.getAnimations().map(animation=>animation.finished.catch(()=>{})));});
-      const ratios=await page.evaluate(()=>{
+      await expect(page.locator('html')).toHaveAttribute('data-theme-effective',mode === 'system' ? 'dark' : mode);
+      // Flush styles after the media event and follow replacement transitions to completion.
+      await page.locator('.xui-button').first().evaluate(async el=>{
+        for (;;) {
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+          const animations=el.getAnimations().filter(animation=>!['finished','idle'].includes(animation.playState));
+          if(!animations.length)return;
+          await Promise.allSettled(animations.map(animation=>animation.finished));
+        }
+      });
+      const measurement=await page.evaluate(()=>{
         const canvas=document.createElement('canvas');canvas.width=canvas.height=1;const ctx=canvas.getContext('2d',{willReadFrequently:true});
         const sample=color=>{ctx.clearRect(0,0,1,1);ctx.fillStyle=color;ctx.fillRect(0,0,1,1);return Array.from(ctx.getImageData(0,0,1,1).data).slice(0,3);};
         const luminance=rgb=>rgb.map(channel=>{const value=channel/255;return value <= .04045 ? value/12.92 : ((value+.055)/1.055)**2.4;}).reduce((total,value,index)=>total+value*[.2126,.7152,.0722][index],0);
@@ -50,11 +58,10 @@ for (const kind of ['vanilla','react']) {
         const probe=document.createElement('span');document.body.append(probe);const resolved=name=>{probe.style.color=`var(--${name})`;return getComputedStyle(probe).color;};
         const pairs={body:contrast(resolved('foreground'),resolved('layer-canvas')),muted:contrast(resolved('muted-foreground'),resolved('layer-raised')),button:contrast(button.color,button.backgroundColor),inputBoundary:contrast(resolved('input-border-color'),resolved('input-background')),focus:contrast(resolved('interaction-focus'),resolved('layer-raised')),errorText:contrast(resolved('status-error-foreground'),resolved('layer-canvas')),errorBoundary:contrast(resolved('status-error-foreground'),resolved('input-background')),danger:contrast(resolved('action-danger'),resolved('action-danger-foreground')),selected:contrast(resolved('menu-item-selected-foreground'),resolved('menu-item-selected-background'))};
         for(const tone of ['info','warning','success','error']) pairs[`${tone}Text`]=contrast(resolved(`status-${tone}-foreground`),resolved(`status-${tone}-soft`));
-        probe.remove();return pairs;
+        const colors={foreground:button.color,background:button.backgroundColor};probe.remove();return {ratios:pairs,colors};
       });
-      for(const [name,value] of Object.entries(ratios)) expect(value,`${product}/${mode}/${name}`).toBeGreaterThanOrEqual(['inputBoundary','focus','errorBoundary'].includes(name) ? 3 : 4.5);
-      results.push({product,mode,ratios});
-    }
-    await testInfo.attach('contrast-results',{body:JSON.stringify(results,null,2),contentType:'application/json'});
+      results.push({product,mode,...measurement});
+      for(const [name,value] of Object.entries(measurement.ratios)) expect(value,`${product}/${mode}/${name}`).toBeGreaterThanOrEqual(['inputBoundary','focus','errorBoundary'].includes(name) ? 3 : 4.5);
+    }} finally { await testInfo.attach('contrast-results',{body:JSON.stringify(results,null,2),contentType:'application/json'}); }
   });
 }
