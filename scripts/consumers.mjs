@@ -58,6 +58,13 @@ for (const kind of ['vanilla','react']) {
     assert(Object.keys(foundationFixture.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Foundation fixture read outside packed consumer');
     execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','foundation-contract.tsx'],{cwd,stdio:'inherit'});
     await writeFile('dist/react/foundation-contract.html','<!doctype html><html><head><meta charset="utf-8"><link rel="icon" href="data:,"><link rel="stylesheet" href="./foundation-contract.css"></head><body class="xui"><div id="root"></div><script type="module" src="./foundation-contract.js"></script></body></html>');
+    await copyFile('tests/fixtures/nav-contract.tsx',`${cwd}/nav-contract.tsx`);
+    const navFixture=await build({entryPoints:[`${cwd}/nav-contract.tsx`],outfile:'dist/react/nav-contract.js',bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+    assert(Object.keys(navFixture.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Nav fixture read outside packed consumer');
+    for(const [name,entry] of [['react','navigation.js'],['theme','navigation.css']])assert.equal(await readFile(`${cwd}/node_modules/@coffeehc/xui-${name}/dist/${entry}`,'utf8'),await readFile(`packages/${name==='react'?'ui-react':name}/dist/${entry}`,'utf8'),'Nav fixture installed stale output');
+    execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','nav-contract.tsx'],{cwd,stdio:'inherit'});
+    await writeFile('dist/react/nav-contract.html','<!doctype html><html><head><meta charset="utf-8"><link rel="icon" href="data:,"><link rel="stylesheet" href="./nav-contract.css"></head><body class="xui"><div id="root"></div><script type="module" src="./nav-contract.js"></script></body></html>');
+    await writeFile('dist/react/nav-destination.html','<!doctype html><html><head><meta charset="utf-8"><title>Native link destination</title></head><body>Native link destination</body></html>');
   }
   await writeFile(`dist/${kind}/metafile.json`,JSON.stringify(result.metafile,null,2));
   const foundation=resolve(cwd,'foundation');await cp(`examples/foundation-${kind}`,foundation,{recursive:true});

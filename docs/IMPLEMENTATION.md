@@ -39,6 +39,8 @@ foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控
 
 ## React 公共组件
 
+宿主通过公开的数据、状态、内容与事件 props 使用 React 组件；xui 提供其默认内部结构、样式、motion、focus 与可访问性行为。采用时不要求产品修改内部伪元素或补写选中皮肤。扩展通过该组件已公开的 props、部件/slots 和 theme 变量进行，当前项、路由及业务事实仍由宿主决定。本轮仅修正 NavItem 状态透传，没有将全部组件重构为只接收数据的统一接口。
+
 | 能力 | API 与边界 |
 | --- | --- |
 | 布局 | AppShell、Container、Stack、Grid、PageHeader、Toolbar、Section。AppShell 有 skip link、桌面 sidebar、窄屏模态 drawer；一个 sidebar 树，resize 回到可见焦点。宿主拥有路由、选中、sidebarOpen/onSidebarOpenChange |
@@ -55,9 +57,17 @@ foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控
 
 Dialog 关闭不会自动保存；移除触发器时指定 finalFocus。浮层非模态时不 trap 焦点，模态与取消/回焦点按 peer。Tooltip.Content 内只有说明，交互内容用 Popover。动画使用统一 motion token；reduced-motion 下状态立即变化。
 
+NavItem 未提供 selected 时保留标准 aria-current；仅 aria-current="page" 默认匹配选中竖线、浅底与强调文字/图标。step/location/date/time/true/false 均保留各自 ARIA 语义，不自动转成 page 或选中样式。显式 selected 优先：true 输出 page，false 移除 aria-current，包括与传入 aria-current 矛盾时；这是原有 selected 调用的行为。宿主可只传 aria-current="page" 或 selected，不必同时提供，不需要手工设置 ::before。
+
+NavItem 默认渲染原生 a，也支持公开 render 元素或回调。例如 `render={<RouterLink to="/settings" />}` 或 `render={(props,state)=><RouterLink {...props} to="/settings" />}`；RouterLink 是宿主选用的组件，xui 不依赖路由包。它必须透传合并后的 props/ref 到一个链接元素，不能嵌套链接或丢弃 xui class/ARIA/事件。元素方式合并双方 ref、class 和事件；回调方式扩展事件/class 时用 Base UI 的公开 mergeProps，并保留 props.ref。render 回调 state 为 selected/disabled/collapsed；当前项与 disabled 的顶层 props 优先，disabled 在 capture 阶段阻止点击、中键与 Enter 导航。
+
+启用状态保留原生 href、修改键、中键、target 和 download 的浏览器语义。宿主路由链接必须先调用合并的 onClick，再检查 defaultPrevented，且只拦截自己支持的同源普通主键导航。xui 不把全部链接点击强制转换为客户端路由。正式最小消费者 tests/fixtures/nav-contract.tsx 演示这项接入；产品路由是否避免文档重载仍要由采用项目验证。
+
 ## 原生公共结构与 controllers
 
 body 使用 xui 类；portal/原生顶层弹层用 xui-layer。公共 layout/table/form 类与 React 对应，无示例私有布局要求。语义结构、label/name、aria-sort、区域名字、键和业务值由宿主提供。
+
+原生 JS 当前由宿主组合公开 HTML 结构、xui CSS 类及所需 controller；例如 a.xui-nav-item 设置 aria-current="page" 即获得同一默认选中样式。它与已封装的 React 组件有区别，不能据此声称全部原生控件只传数据即可生成完整结构。
 
 | `/dom` API | 输入和所有权 |
 | --- | --- |
@@ -89,4 +99,4 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 正式验收先 npm pack，再在独立目录安装、编译 types 和打包；foundation 不复制 shared/layout.css。dev 的包解析也仅指向正式 exports 的 dist，没有源码入口。生产接入固定已验证的提交/本地 tarball。双仓 watch 可让宿主链接 built dist，但 React/ReactDOM/Base UI 必须由宿主保留单实例；Vite 可使用 resolve.dedupe 与指向本地正式入口的 alias，或独立 tarball 安装。链接后检查实际解析路径、ESM/types/init 的当前 generation，并运行宿主构建/页面检查。这里没有更改任何产品仓库的配置。
 
-无业务路由、权限、认证、请求、会话、交易、表格引擎、图表/编辑器/3D 引擎或密度切换要求。未覆盖项和限制见覆盖矩阵与本轮验证记录。
+当前已实现的 API 不包含 HTTP 客户端或数据驱动菜单/布局组合。用户已确认这两项作为后续步骤；其 API、共享数据和可运行例子将随真实实现加入，不以规划代替可用性声明。领域路由、权限策略、身份凭据、产品 endpoint、会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。未覆盖项和限制见覆盖矩阵与本轮验证记录。

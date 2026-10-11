@@ -1,10 +1,24 @@
 import * as React from 'react';
+import { useRender } from '@base-ui/react/use-render';
 import { cx, branded } from './shared.js';
 export function Nav({className,...props}: React.ComponentProps<'nav'>) { return <nav {...props} className={cx('xui-nav',className)} />; }
-export type NavItemProps = React.ComponentProps<'a'> & { selected?: boolean; disabled?: boolean; collapsed?: boolean };
-export function NavItem({selected,disabled,collapsed,className,onClick,tabIndex,...props}: NavItemProps) {
-  return <a {...props} className={cx('xui-nav-item',className)} aria-current={selected ? 'page' : undefined} aria-disabled={disabled || undefined} data-collapsed={collapsed} tabIndex={disabled ? -1 : tabIndex}
-    href={disabled ? undefined : props.href} onClick={event => { if (disabled) { event.preventDefault(); return; } onClick?.(event); }} />;
+export type NavItemState = { selected:boolean; disabled:boolean; collapsed:boolean };
+export type NavItemProps = useRender.ComponentProps<'a',NavItemState,React.ComponentPropsWithRef<'a'>> & { selected?: boolean; disabled?: boolean; collapsed?: boolean };
+export function NavItem({selected,'aria-current':ariaCurrent,disabled,collapsed,className,render,ref,...props}: NavItemProps) {
+  const renderCurrent=React.isValidElement<React.ComponentProps<'a'>>(render)?render.props['aria-current']:undefined;
+  const current=selected === undefined ? ariaCurrent ?? renderCurrent : selected ? 'page' : undefined;
+  const state={selected:current==='page',disabled:!!disabled,collapsed:!!collapsed};
+  const element=useRender({defaultTagName:'a',render,ref,state,props:{...props,className:cx('xui-nav-item',className),'aria-current':current,'aria-disabled':disabled || undefined,'data-collapsed':collapsed}}) as React.ReactElement<React.ComponentProps<'a'> & {'data-collapsed'?:boolean}>;
+  const merged=element.props as React.ComponentProps<'a'>;
+  // Capture guards run before a composed link's router handler. Enabled links
+  // retain the browser's normal modifiers, target and download behavior.
+  return React.cloneElement(element,{
+    'aria-current':current,'aria-disabled':disabled || undefined,'data-collapsed':collapsed,
+    href:disabled?undefined:merged.href,tabIndex:disabled?-1:merged.tabIndex,
+    onClickCapture:(event:React.MouseEvent<HTMLAnchorElement>)=>{if(disabled){event.preventDefault();event.stopPropagation();}merged.onClickCapture?.(event);},
+    onAuxClickCapture:(event:React.MouseEvent<HTMLAnchorElement>)=>{if(disabled){event.preventDefault();event.stopPropagation();}merged.onAuxClickCapture?.(event);},
+    onKeyDownCapture:(event:React.KeyboardEvent<HTMLAnchorElement>)=>{if(disabled&&event.key==='Enter'){event.preventDefault();event.stopPropagation();}merged.onKeyDownCapture?.(event);},
+  });
 }
 
 export function Breadcrumbs({className,children,...props}:React.ComponentProps<'nav'>){return <nav aria-label="Breadcrumbs" {...props} className={cx('xui-breadcrumbs',className)}><ol>{children}</ol></nav>;}
