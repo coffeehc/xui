@@ -108,9 +108,10 @@ export function createToastController(viewport:HTMLElement,options:{limit?:numbe
   return {add(message:{id?:string;title:string;description?:string;tone?:'info'|'success'|'warning'|'error';timeoutMs?:number}){
     if(dead)return '';const id=message.id??crypto.randomUUID();close(id);while(toasts.size>=Math.max(1,options.limit??5))close(toasts.keys().next().value!);
     const doc=viewport.ownerDocument,node=doc.createElement('div'),title=doc.createElement('strong'),description=doc.createElement('p'),button=doc.createElement('button');node.className='xui-toast';node.dataset.tone=message.tone??'info';node.setAttribute('role',message.tone==='error'?'alert':'status');title.textContent=message.title;description.textContent=message.description??'';button.type='button';button.className='xui-button';button.textContent=options.dismissLabel??'Dismiss notification';const clicked=()=>close(id);button.addEventListener('click',clicked);node.append(title,description,button);viewport.append(node);
+    const now=()=>doc.defaultView!.performance.now();
     let remaining=message.timeoutMs,start=0;const item={node,timer:undefined as ReturnType<typeof setTimeout>|undefined,cleanup:()=>{button.removeEventListener('click',clicked);node.removeEventListener('pointerenter',pause);node.removeEventListener('pointerleave',resume);node.removeEventListener('focusin',pause);node.removeEventListener('focusout',focusOut);}};
-    const pause=()=>{if(item.timer){clearTimeout(item.timer);item.timer=undefined;if(remaining!==undefined)remaining=Math.max(0,remaining-(Date.now()-start));}};
-    const resume=()=>{if(remaining!==undefined&&!item.timer&&!node.matches(':hover')&&!node.contains(doc.activeElement)){start=Date.now();item.timer=setTimeout(()=>close(id),Math.max(0,remaining));}};
+    const pause=()=>{if(item.timer){clearTimeout(item.timer);item.timer=undefined;if(remaining!==undefined)remaining=Math.max(0,remaining-(now()-start));}};
+    const resume=()=>{if(remaining!==undefined&&!item.timer&&!node.matches(':hover')&&!node.contains(doc.activeElement)){start=now();item.timer=setTimeout(()=>close(id),Math.max(0,remaining));}};
     const focusOut=()=>queueMicrotask(()=>{if(toasts.get(id)===item)resume();});
     node.addEventListener('pointerenter',pause);node.addEventListener('pointerleave',resume);node.addEventListener('focusin',pause);node.addEventListener('focusout',focusOut);toasts.set(id,item);resume();return id;
   },close,destroy(){dead=true;Array.from(toasts.keys()).forEach(close);}};

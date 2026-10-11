@@ -71,6 +71,8 @@ body 使用 xui 类；portal/原生顶层弹层用 xui-layer。公共 layout/tab
 
 open/value 受控时仅发请求，宿主调用 syncOpen/syncValue 更新事实。onOpenChange/onValueChange details.cancel() 或取消可冒泡 xui:change 事件阻止请求。destroy 终止监听/定时器，宿主保管 controller。原生 menuitemcheckbox/radio 的 checked/value 由宿主更新，普通 menuitem 执行后关闭，检查项默认保留（data-close=true 可指定关闭）。
 
+原生 Toast 的 hover 与内部 focus 都会暂停宿主指定的 timeout；两者都离开才恢复剩余时长，内部焦点迁移不恢复。计时使用所属 window 的 performance.now()，不受系统墙钟调整影响。当前不因 document.hidden 单独暂停，后台定时器调度由浏览器决定；必要事实和错误不能只放在自动消失通知中。
+
 目标是支持 HTML dialog、Popover、matchMedia、AbortController、ESM dynamic import 的现代浏览器。原生 select/datalist 使用 OS 面板，datalist 允许自由输入且不是完整受控 Combobox；没有声明跨移动 OS 弹出实现一致。
 
 ## 加载 owner 与参考页
