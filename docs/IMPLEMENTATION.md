@@ -16,7 +16,7 @@
 
 `design-default-css` 是唯一受控原始值来源。生成器检查 271 个变量、全部模式依赖图、前言摘要、产品覆盖和提取字节一致性。浮层 CSS 只允许 peer 提供的四个测量变量：available-height、anchor-width、toast-swipe-movement-x/y；它们不是品牌默认值或泛化缺失变量白名单。
 
-层序为规范的 xui-tokens、xui-components、product-overrides。旧项目未分层 CSS 的普通声明高于所有分层声明，不能只靠导入顺序推断 xui 能覆盖旧样式。采用时显式决定旧 CSS 所在层或移除精确重复规则，再检查真实 computed style。产品覆盖在同一 document 根上，少量语义覆盖按规范定义；本版不支持子树独立主题。
+tokens.css 按规范声明 design-defaults → product-overrides → design-accessibility；组件声明位于独立的 xui-components 层。按 tokens.css 后组件样式的标准加载顺序，xui-components 首次出现于这三层之后。产品在 product-overrides 覆盖少量语义变量，design-accessibility 再落实 reduced-motion；本说明不另设 token 层或更改现有层契约。旧项目未分层 CSS 的普通声明高于所有分层声明，不能只靠导入顺序推断 xui 能覆盖旧样式。采用时显式决定旧 CSS 所在层或移除精确重复规则，再检查真实 computed style。产品覆盖在同一 document 根上；本版不支持子树独立主题。
 
 ## 主题单一所有者
 

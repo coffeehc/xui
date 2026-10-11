@@ -9,7 +9,7 @@
     cursor: pointer; text-align: start;
     transition: background-color var(--motion-duration) var(--motion-easing), color var(--motion-duration) var(--motion-easing);
   }
-  .xui-nav-item:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--menu-item-hover-background); color: var(--menu-item-hover-foreground); }
+  .xui-nav-item:where(:hover):not(:disabled, [aria-disabled="true"]) { background: var(--menu-item-hover-background); color: var(--menu-item-hover-foreground); }
   .xui-nav-item[aria-current="page"] { background: var(--menu-item-selected-background); color: var(--menu-item-selected-foreground); }
   .xui-nav-item::before {
     content: ""; position: absolute; inset-inline-start: var(--nav-selected-indicator-inset); top: 50%; transform: translateY(-50%);

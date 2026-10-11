@@ -1,7 +1,91 @@
 import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+
+async function navigationState(item) {
+  return item.evaluate(el=>{
+    const style=getComputedStyle(el),indicator=getComputedStyle(el,'::before'),icon=el.querySelector('svg'),bounds=el.getBoundingClientRect();
+    return {background:style.backgroundColor,color:style.color,icon:icon ? {color:getComputedStyle(icon).color,fill:getComputedStyle(icon).fill,stroke:getComputedStyle(icon).stroke} : null,
+      indicator:{opacity:indicator.opacity,color:indicator.backgroundColor,width:indicator.width,height:indicator.height},
+      border:style.borderWidth,padding:style.padding,rect:{x:bounds.x,y:bounds.y,width:bounds.width,height:bounds.height}};
+  });
+}
+async function navigationTokens(page,state) {
+  return page.locator('#token-probe').evaluate((el,state)=>{
+    el.style.backgroundColor=`var(--menu-item-${state === 'default' ? '' : state+'-'}background)`;
+    el.style.color=`var(--menu-item-${state === 'default' ? '' : state+'-'}foreground)`;
+    const style=getComputedStyle(el);return {background:style.backgroundColor,color:style.color};
+  },state);
+}
+
 const pageErrors = new WeakMap();
 test.beforeEach(({page})=>{ const errors=[];pageErrors.set(page,errors);page.on('pageerror',error=>errors.push(error.message)); });
 test.afterEach(({page})=>{ expect(pageErrors.get(page)).toEqual([]); });
+
+// Use formal exports from the fresh standalone tarball install. Comparing both
+// installed and built CSS to source prevents a stale consumer masking this bug.
+for (const entry of ['navigation','style']) for (const mode of ['light','dark']) {
+  test(`${entry}.css: ${mode} navigation selected hover, disabled and keyboard focus`,async({page})=>{
+    const {runDirectory}=JSON.parse(await readFile('.consumers/latest.json','utf8'));
+    const require=createRequire(resolve(runDirectory,'vanilla/package.json'));
+    const names=entry === 'navigation' ? ['tokens','base','navigation'] : ['style'];
+    const sourceNavigation=await readFile('packages/theme/src/navigation.css','utf8');
+    const builtNavigation=await readFile('packages/theme/dist/navigation.css','utf8');
+    expect(builtNavigation).toBe(sourceNavigation);
+    const css=await Promise.all(names.map(async name=>{
+      const installed=await readFile(require.resolve(`@coffeehc/xui-theme/${name}.css`),'utf8');
+      expect(installed).toBe(await readFile(`packages/theme/dist/${name}.css`,'utf8'));
+      if(name === 'navigation' || name === 'style') expect(installed).toContain(sourceNavigation);
+      return installed;
+    }));
+    const icon='<svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor"><path d="M2 2h16v16H2z"/></svg>';
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await page.setContent(`<html data-theme="${mode}"><head><style>${css.join('\n')}</style></head><body class="xui">
+      <nav class="xui-nav"><a id="selected" href="#selected" class="xui-nav-item" aria-current="page">菜单${icon}</a>
+      <a id="ordinary" href="#ordinary" class="xui-nav-item">普通菜单${icon}</a>
+      <a id="step" href="#step" class="xui-nav-item" aria-current="step">当前步骤${icon}</a>
+      <a id="current" href="#current" class="xui-nav-item" aria-current="true">当前链接${icon}</a>
+      <button id="disabled" class="xui-nav-item" disabled>不可用${icon}</button>
+      <button id="disabled-selected" class="xui-nav-item" disabled aria-current="page">选中不可用${icon}</button>
+      <a id="aria-disabled" href="#disabled" class="xui-nav-item" aria-disabled="true">不可用链接${icon}</a>
+      <a id="aria-disabled-selected" href="#disabled" class="xui-nav-item" aria-disabled="true" aria-current="page">选中不可用链接${icon}</a></nav>
+      <span id="token-probe" hidden></span></body></html>`);
+    const selected=page.locator('#selected'),ordinary=page.locator('#ordinary');
+    const selectedTokens=await navigationTokens(page,'selected'),defaultTokens=await navigationTokens(page,'default'),hoverTokens=await navigationTokens(page,'hover');
+    await page.mouse.move(1200,700);
+    const before=await navigationState(selected);
+    expect(before).toMatchObject({...selectedTokens,icon:{color:selectedTokens.color,fill:selectedTokens.color,stroke:selectedTokens.color},indicator:{opacity:'1'},border:'0px'});
+    expect(before.background).not.toBe(hoverTokens.background);expect(before.color).not.toBe(hoverTokens.color);
+    await selected.hover();expect(await navigationState(selected)).toEqual(before);
+    await ordinary.hover();expect(await navigationState(selected)).toEqual(before);
+    for(const id of ['ordinary','step','current']) {
+      const item=page.locator('#'+id);await page.mouse.move(1200,700);
+      const normal=await navigationState(item);expect(normal).toMatchObject({...defaultTokens,indicator:{opacity:'0'},border:'0px'});
+      await item.hover();const hovered=await navigationState(item);
+      expect(hovered).toMatchObject({...hoverTokens,icon:{color:hoverTokens.color,fill:hoverTokens.color,stroke:hoverTokens.color},indicator:{opacity:'0'}});
+      expect(hovered.rect).toEqual(normal.rect);expect(hovered.border).toBe(normal.border);expect(hovered.padding).toBe(normal.padding);
+    }
+    const disabledColor=await page.locator('#token-probe').evaluate(el=>{el.style.color='var(--menu-item-disabled-foreground)';return getComputedStyle(el).color;});
+    for(const id of ['disabled','disabled-selected','aria-disabled','aria-disabled-selected']) {
+      const item=page.locator('#'+id);await page.mouse.move(1200,700);
+      const disabled=await navigationState(item);
+      expect(disabled).toMatchObject({background:id.endsWith('-selected') ? selectedTokens.background : defaultTokens.background,color:disabledColor,
+        icon:{color:disabledColor,fill:disabledColor,stroke:disabledColor},indicator:{opacity:id.endsWith('-selected') ? '1' : '0'},border:'0px'});
+      expect(await item.evaluate(el=>getComputedStyle(el).cursor)).toBe('not-allowed');
+      await item.hover();expect(await navigationState(item)).toEqual(disabled);
+    }
+    await page.mouse.move(1200,700);await page.keyboard.press('Tab');await expect(selected).toBeFocused();
+    expect(await selected.evaluate(el=>el.matches(':focus-visible'))).toBe(true);
+    expect(await selected.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');
+    expect(await navigationState(selected)).toEqual(before);
+    await selected.hover();expect(await navigationState(selected)).toEqual(before);
+    await page.keyboard.press('Tab');await expect(ordinary).toBeFocused();
+    expect(await selected.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('solid');
+    expect(await ordinary.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');
+    expect(await navigationState(ordinary)).toMatchObject({...defaultTokens,indicator:{opacity:'0'},border:'0px'});
+  });
+}
 
 for (const kind of ['vanilla','react']) {
   test(`${kind}: modes, first paint, persistence, system changes, override and retained draft`,async({page})=>{
@@ -59,9 +143,15 @@ for (const kind of ['vanilla','react']) {
   });
   test(`${kind}: selected navigation, independent focus and stable positioning`,async({page})=>{
     await page.goto(`/${kind}/`);const item=page.getByRole('link',{name:'偏好',exact:true});const other=page.getByRole('link',{name:'详情',exact:true});
-    const before=await item.boundingBox();await item.hover();
-    const selected=await item.evaluate(el=>({background:getComputedStyle(el).backgroundColor,indicator:getComputedStyle(el,'::before').opacity,border:getComputedStyle(el).borderWidth,padding:getComputedStyle(el).paddingLeft}));
-    expect(selected.indicator).toBe('1');expect(selected.border).toBe('0px');
+    await page.emulateMedia({reducedMotion:'reduce'});
+    for(const mode of ['light','dark']) {
+      await page.getByLabel('外观').selectOption(mode);await page.mouse.move(1200,700);
+      const beforeHover=await navigationState(item);await item.hover();
+      expect(await navigationState(item)).toEqual(beforeHover);
+    }
+    const before=await item.boundingBox();
+    const selected=await navigationState(item);
+    expect(selected.indicator.opacity).toBe('1');expect(selected.border).toBe('0px');
     await other.hover();expect(await other.evaluate(el=>getComputedStyle(el,'::before').opacity)).toBe('0');
     await item.focus();await expect(item).toBeFocused();expect(await item.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');
     await other.focus();expect(await item.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('solid');
