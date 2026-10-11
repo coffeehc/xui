@@ -1,11 +1,11 @@
 # 第一版验证记录
 
-验证代码 SHA：`b8c790ee5936e64d2009abf53c5c0d13413fc263`。本报告及 evidence 作为后续文档提交补入，执行源码未变。
+首轮基线代码 SHA：`b8c790ee5936e64d2009abf53c5c0d13413fc263`。本报告及 evidence 最初作为后续文档提交补入。之后的限定独立复核发现并修复了打包入口和 Tabs 事件兼容问题；最新结论见 [REVIEW.md](REVIEW.md)。下表的 13+17 计数属于首轮基线，不作为修订后全流程重跑声明。
 日期：2026-10-11 UTC；环境为此独立云环境，Node 24.19.0、pnpm 11.25.0、Chromium 154.0.8037.57（Debian 13）。
 React 19.2.8、Base UI 1.7.0。另以包管理器固定版本 pnpm 11.23.0 成功执行 frozen-lockfile 安装。
 数据全部合成，不含真实业务内容或秘密。
 
-最终 `pnpm verify` 返回 0。构建指纹、原始测试统计和实际渲染的颜色对比结果记录在 [validation-evidence.json](validation-evidence.json)。
+首轮最终 `pnpm verify` 返回 0。构建指纹、原始测试统计和实际渲染的颜色对比结果记录在 [validation-evidence.json](validation-evidence.json)。
 
 | 检查 | 结果与范围 |
 | --- | --- |
@@ -35,7 +35,7 @@ pnpm verify
 pnpm preview
 ```
 
-原始证据保留在本次工作区的 `test-results/browser.json`、`test-results/*/*.png`、`.artifacts/verify.log`。
+首轮原始日志与截图保留在本次工作区的 `test-results/*/*.png`、`.artifacts/verify.log`。`test-results/browser.json` 是最近一次浏览器执行报告；首轮统计已保存在 `validation-evidence.json`，复核统计单独保存。
 构建与包在 `packages/*/dist`、`dist/{vanilla,react}`、`.artifacts/*.tgz`，独立安装目录由 `.consumers/latest.json` 指向。
 这些可再生成产物不进入 Git，避免保留第二套可编辑默认值或缓存。`validation-evidence.json` 保存此次代码 SHA、构建 SHA256、计数和颜色比值以便对照。
 
@@ -47,9 +47,9 @@ CI 配置已写入，但空远端尚未运行 GitHub Actions；本次通过结�
 - 未跑 Firefox/Safari、真实触屏设备、读屏器、移动 OS 原生 select 面板；触屏结论仅 Chromium 模拟。
 - 已测 200% 文字放大；未跑浏览器原生页面缩放。未穷举各系统字体/强制色或全部组件组合的对比。
 - 未测产品 SSR hydration、真实生产首屏/交互预算、产品网络等待/超时/业务竞态，也没有真实业务 API。本版不宣称性能提升。
-- Dialog 触发器被业务移除的回焦点需采用方提供 finalFocus；当前验证是触发器保留场景。
-- 垂直 Tabs 与 loopFocus=false 有接口支持，当前浏览器样本只覆盖水平 Tabs/RTL/default loop。未将未跑组合称为通过。
+- Dialog 触发器被业务移除的回焦点需采用方提供 finalFocus；首轮只验证触发器保留场景，后续限定复核补验显式 finalFocus 和取消关闭。
+- 首轮未跑垂直 Tabs 与 loopFocus=false；后续限定复核补验 orientation、no-loop 边界和 Base UI 事件契约。详见 REVIEW.md。
 - 没有迁移任何产品仓库，没有全控件库完成结论。LICENSE 仍未选定，包均 private。
 - 向 xui main 推送仍等待父任务获得具体授权；无推送、发布或部署。
 
-首轮失败都已明确处理：ESM 检查脚本误用 CommonJS 解析；导航 grid 拉伸；原生 Dialog 单按钮焦点边界；Base UI 1.7 禁用 Tab 可聚焦策略；测试对动画中间态及手动激活的错误假设。最终全流程重跑通过，没有删除失败检查或降低验收要求。
+首轮失败都已明确处理：ESM 检查脚本误用 CommonJS 解析；导航 grid 拉伸；原生 Dialog 单按钮焦点边界；Base UI 1.7 禁用 Tab 可聚焦策略；测试对动画中间态及手动激活的错误假设。首轮最终全流程重跑通过，没有删除失败检查或降低验收要求。

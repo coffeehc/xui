@@ -6,6 +6,7 @@
 - [范围、包接口与实施映射](docs/IMPLEMENTATION.md)
 - [来源与后续迁移计划](docs/MIGRATION.md)
 - [验证证据和限制](docs/VALIDATION.md)
+- [限定独立复核与修订证据](docs/REVIEW.md)
 
 ```sh
 pnpm install --frozen-lockfile

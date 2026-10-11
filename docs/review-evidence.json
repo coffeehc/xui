@@ -1,0 +1,180 @@
+{
+  "dateUTC": "2026-10-11",
+  "reviewedBaseline": "d2c7e91429a2436f3f9071adb1c9e2db6faba75e",
+  "correctedCodeCommit": "165d8a56daba379a3bc2634090ce0c04db5baa81",
+  "fullSuiteRerun": false,
+  "checks": {
+    "build": {
+      "passed": true,
+      "contractTokens": 271
+    },
+    "sourceTypes": {
+      "passed": true
+    },
+    "freshTarballConsumers": {
+      "passed": true,
+      "bareImportInitializerRetained": true,
+      "consumerTypes": true,
+      "consumers": [
+        {
+          "kind": "vanilla",
+          "inputCount": 5,
+          "allInputsInsideConsumer": true,
+          "vanillaHasNoReact": true,
+          "allXuiPackagesAreRealInstalls": true
+        },
+        {
+          "kind": "react",
+          "inputCount": 181,
+          "allInputsInsideConsumer": true,
+          "vanillaHasNoReact": null,
+          "allXuiPackagesAreRealInstalls": true
+        }
+      ]
+    },
+    "independentRuntime": {
+      "unitTestsPassed": 9,
+      "initializerAndRemountVM": "passed",
+      "logSha256": "2206f507b900c6abc3080e33de901ef1d07058db6a744ad7458a93f8ae96ca59"
+    },
+    "independentTabs": {
+      "scenariosPassed": 38,
+      "browserErrors": 0,
+      "sourceSha256": "e2f2d64861eebb24f78263bd12f5dacb86134b7220195552c4efbf8dc1ddb60f",
+      "logSha256": "ab59f74e2e138cf916a1d957fe5bb1af57a71ea567deac15968da0b78509a3f5"
+    },
+    "savedPackedBrowserRegression": {
+      "stats": {
+        "startTime": "2026-10-11T11:22:19.880Z",
+        "duration": 7102.1720000000005,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "title": "Tabs preserve event callbacks, cancellation and modified keys",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 1770,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "title": "Tabs preserve controlled/uncontrolled value changes and cancellable activation",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 1024,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "title": "Tabs obey direction context, DOM fallback, orientation and focus boundaries",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 812,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "title": "Dialog cancellation and explicit finalFocus survive removal of the trigger",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration": 2155,
+              "errors": []
+            }
+          ]
+        }
+      ]
+    },
+    "existingBrowserChecks": {
+      "passed": 3,
+      "titles": [
+        "vanilla: native input, keyboard/touch states, invalid focus, disabled and dialog lifecycle",
+        "react: native input, keyboard/touch states, invalid focus, disabled and dialog lifecycle",
+        "React tabs skip disabled item, connect panel and preserve native readOnly"
+      ],
+      "note": "Passed during the preceding 7-test run; its four new fixture checks stopped before interactions due to JSX revision setup, then those four were corrected and passed separately. Component implementation was unchanged between these runs."
+    }
+  },
+  "fingerprints": [
+    {
+      "path": "packages/runtime/package.json",
+      "bytes": 315,
+      "sha256": "570e1b34e1ba89e376eea0026b9baf2e7ecc83f4feaee185c73af5984cfadb40"
+    },
+    {
+      "path": "packages/runtime/dist/index.js",
+      "bytes": 2184,
+      "sha256": "353d6230aa6e437682e5e150fc994c0aefefb8199fda8c793a2a9ea600d89473"
+    },
+    {
+      "path": "packages/runtime/dist/init.js",
+      "bytes": 1153,
+      "sha256": "5765f8d965148de96ef38a062586dda05c0d315aa801be177f092c8f184f3dc8"
+    },
+    {
+      "path": "packages/ui-react/src/index.tsx",
+      "bytes": 9305,
+      "sha256": "e2f2d64861eebb24f78263bd12f5dacb86134b7220195552c4efbf8dc1ddb60f"
+    },
+    {
+      "path": "packages/ui-react/dist/index.js",
+      "bytes": 8379,
+      "sha256": "bb39070e38b01cb78099fc76b228fce99f8d1342a211c217668c482ebe14f127"
+    },
+    {
+      "path": "packages/ui-react/dist/index.d.ts",
+      "bytes": 4208,
+      "sha256": "b382e4831191d6871f7ea8d2064cc3cf25906d63c76929da8dc240c2b5f5a206"
+    },
+    {
+      "path": "packages/theme/dist/style.css",
+      "bytes": 33749,
+      "sha256": "0680b6d2089f2944c52c34935791672aa6dac6b3e6688d01de91b8a7944ae3f3"
+    },
+    {
+      "path": "tests/fixtures/peer-contract.tsx",
+      "bytes": 3471,
+      "sha256": "2ce2fd54cb60540ffbfadda399f2301b85d90cf750b0dfd3e208980d961d4e16"
+    },
+    {
+      "path": "tests/browser/peer-contract.spec.mjs",
+      "bytes": 5818,
+      "sha256": "a2a6b706897e6fce0f43716b97ad442de74ed26701f915995a88b5ff51328aee"
+    },
+    {
+      "path": ".artifacts/coffeehc-xui-theme-0.1.0.tgz",
+      "bytes": 11579,
+      "sha256": "a460a9f5053d53a06988ad4a0bc4b04bf44e9c6ea3fe7b7f22e70b7253dee5c3"
+    },
+    {
+      "path": ".artifacts/coffeehc-xui-runtime-0.1.0.tgz",
+      "bytes": 1866,
+      "sha256": "177aaddcd57c6e5f86d18ee180950beef4991689aa466f68e1d2741a49c05a04"
+    },
+    {
+      "path": ".artifacts/coffeehc-xui-react-0.1.0.tgz",
+      "bytes": 3400,
+      "sha256": "8c37a4f5f8d825c18312bbadf4ae078bdeed19ff013694f41dc755b70238ecd0"
+    }
+  ],
+  "remainingLimits": [
+    "Unchanged full suite was not rerun; 13 unit +17 browser remains baseline evidence.",
+    "Chromium synthetic fixtures only; no product migration, SSR hydration, actual touchscreen or screen reader.",
+    "Removed Dialog trigger requires explicit finalFocus for useful recovery; otherwise peer falls back to body.",
+    "No push, publishing, deployment, license choice or edits to product repositories."
+  ]
+}
