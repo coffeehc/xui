@@ -59,3 +59,15 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 本步骤标准 verify 覆盖 29 项单测、1 项真实默认 watch 和 76 项浏览器检查；最终受测提交和通过/失败状态在独立交付记录。日志位于 .artifacts/verify-menu-final.log，浏览器 JSON 位于 test-results/browser.json。前一版完整预提交验证通过，最终提交后仍须完整重跑，不用局部菜单检查代替全量结果。
 
 这是合成宿主验证，没有实施产品迁移，没有调用产品后端；HTTP/query 与 API Key 组件尚未实现。200%测试为根字号变化，触屏为 Chromium 模拟；真实移动 OS、读屏器、浏览器原生 zoom、Firefox/Safari 和 SSR hydration 未跑。本步骤未新增独立代理审查。断点转换时 React sidebar 可重挂载，布局保留菜单事实，不宣称任意宿主路由链接的私有状态跨断点保留。
+
+## HTTP/query 独立步骤
+
+本步骤基线为本地 0df5116f41600c7634177c06c07ce24589e9543c。通过正常 Git 读取固定 httpx/commons/xagent 来源，完整合同与 SHA 见 [HTTP.md](HTTP.md)。新增 runtime/http、runtime/query 公开 ESM/types 入口；两类正式 tarball 消费者复用同一 typed endpoint model，原生消费不加载 React。默认 Go AjaxResponse/ListData 精确字段；不猜 data/msg/items 别名，payload=null 合法，只有显式投影把 nil list 转为空数组。
+
+新增 14 项 HTTP 与 6 项 query 单测，覆盖模式、成功 code 适配、严格字段、request id、固定安全错误、provider/body 全程预算、非合作取消、已知失败状态读取异常、401 单 owner/epoch、403 与业务错误、销毁、默认无重试、写操作拒绝重试、有限幂等读重试与 Retry-After、显式页码基数/上限、白名单排序/过滤、编码、int64/时间、nullable list 和未请求总数。相对文档链接另有一项单测。
+
+新增 10 项浏览器检查，每类消费者 5 项。一个真实 loopback fetch 场景核对合成 Go 响应及 exact URL query、分页/筛选/排序；其余 route fixture 检查刷新失败保留旧数据、显式重试、取消/超时、迟到结果隔离、401/403/business 区分、nil list、unsafe total、恶意文本、窄屏主操作、无水平溢出与卸载。这些 fixture 不包含真实凭据、不连接产品后端。
+
+本步骤标准 verify 纳入 50 项单测、1 项默认 watch 和 86 项浏览器检查，并包含 token 一致性、根类型检查、独立打包消费及按需门禁。最终受测 SHA、退出状态和通过数量随独立提交交付，完整日志位于 .artifacts/verify-http-final.log；浏览器 JSON 位于 test-results/browser.json。断开通知后真实 shell、Git 对象检查和重新构建已成功，最终仍在同一提交完整验证。
+
+采用手册见 [ADOPTION.md](ADOPTION.md)，有实际入口、组件/数据/行为/扩展点、标准页面与保留业务功能后清理重复 owner 的迁移清单。API Key、结构化日志与接入 skill 继续独立步骤；本次没有实施产品迁移、真实后端集成、推送、部署或包发布。未新增独立代理审查；真实移动 OS、读屏器、浏览器原生 zoom、Firefox/Safari、SSR hydration 和生产性能仍未跑。

@@ -4,6 +4,8 @@
 
 - [完整通用规范](docs/DESIGN.md)
 - [范围、包接口与实施映射](docs/IMPLEMENTATION.md)
+- [使用与迁移手册](docs/ADOPTION.md)
+- [HTTP 与共享 query 接入](docs/HTTP.md)
 - [来源与后续迁移计划](docs/MIGRATION.md)
 - [能力覆盖与宿主边界](docs/FOUNDATION.md)
 - [本轮验证证据和限制](docs/FOUNDATION_VALIDATION.md)

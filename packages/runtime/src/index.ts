@@ -3,3 +3,5 @@ export * from './loading.js';
 export * from './dom.js';
 export * from './navigation.js';
 export * from './menu-layout.js';
+export * from './http.js';
+export * from './query.js';

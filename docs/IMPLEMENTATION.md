@@ -9,7 +9,7 @@
 | 包 | 正式入口 | 职责 |
 | --- | --- | --- |
 | `@coffeehc/xui-theme` | `style.css`、`tokens.css`、`components.css`、`critical.css`；`base/button/forms/navigation/feedback/dialog/layout/floating/table.css` | 无框架依赖，预构建 CSS。critical 包含 token 和除 floating 外的组件样式 |
-| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/navigation`、`/menu-layout`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
+| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/navigation`、`/menu-layout`、`/http`、`/query`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
 | `@coffeehc/xui-react` | 根；`/button/forms/navigation/menu-layout/tabs/dialog/feedback/layout/table/select/combobox/menu/popover/tooltip/toast/theme` | React、ReactDOM、Base UI、runtime 是 peers；不捆绑宿主实例，不隐式引入 CSS |
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
@@ -99,8 +99,8 @@ foundation-react/vanilla 提供列表、表单和详情，宿主仅有合成内�
 
 ## 本地与双仓联调
 
-pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本，每次启动新的构建进程；生成 CSS、ESM、types 和 init 后，构建六个预览。packages 和 examples 分别暂存、校验代际并回滚发布失败。watch-status.json 的 building/error/success 及 source/example SHA 是事实；错误时旧预览可能继续服务，不能称为新改动已生效。pnpm preview 另开本地服务，dev 不部署。
+pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本，每次启动新的构建进程；生成 CSS、ESM、types 和 init 后，构建八个预览。packages 和 examples 分别暂存、校验代际并回滚发布失败。watch-status.json 的 building/error/success 及 source/example SHA 是事实；错误时旧预览可能继续服务，不能称为新改动已生效。pnpm preview 另开本地服务，dev 不部署。
 
 正式验收先 npm pack，再在独立目录安装、编译 types 和打包；foundation 不复制 shared/layout.css。dev 的包解析也仅指向正式 exports 的 dist，没有源码入口。生产接入固定已验证的提交/本地 tarball。双仓 watch 可让宿主链接 built dist，但 React/ReactDOM/Base UI 必须由宿主保留单实例；Vite 可使用 resolve.dedupe 与指向本地正式入口的 alias，或独立 tarball 安装。链接后检查实际解析路径、ESM/types/init 的当前 generation，并运行宿主构建/页面检查。这里没有更改任何产品仓库的配置。
 
-当前已实现数据驱动菜单/布局组合，HTTP 客户端和共享 query 仍待后续步骤，不以规划代替可用性声明。领域路由、权限策略、身份凭据、产品 endpoint、会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。未覆盖项和限制见覆盖矩阵与本轮验证记录。
+当前已实现数据驱动菜单/布局、无框架 HTTP 和共享 query；完整采用见 [ADOPTION.md](ADOPTION.md)，响应与查询合同见 [HTTP.md](HTTP.md)。API Key、结构化日志查询和接入 skill 仍在后续步骤，不以规划代替可用性声明。领域路由、权限策略、身份凭据、产品 endpoint、会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。未覆盖项和限制见覆盖矩阵与本轮验证记录。
