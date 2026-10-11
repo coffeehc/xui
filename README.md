@@ -9,6 +9,8 @@
 
 ```sh
 pnpm install --frozen-lockfile
+# 没有系统 Chromium 的机器先安装测试浏览器：
+pnpm exec playwright install chromium
 pnpm verify
 pnpm preview
 ```
