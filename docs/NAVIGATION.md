@@ -59,4 +59,4 @@ MenuLayout 还提供 title/header、children（原生 content Node 或原有 roo
 
 原生 owner 的 update(partial) 合并选项，验证新数据后提交；无效数据保留旧菜单，匹配 id 的链接复用。getMenu()/getMain()/getSidebarOpen() 读取布局，菜单 owner 提供 getElement()/getState()/setCollapsed()/setExpanded()；布局选项统一通过 layout.update 更新。同一种 factory 不可在同一 root 重复创建活跃 owner，宿主只给该 root 一个所有者；destroy 后可以重建，更新已销毁 owner 无效。destroy 移除库监听、关闭 drawer，恢复创建前的 root 内容和属性；宿主自己的订阅/事件由宿主释放。原生 header/content 更新通过公开 Node，不复制内部菜单结构。
 
-正式消费者在 examples/menu-react 与 examples/menu-vanilla，共用 examples/shared/menu-data.json，独立 tarball 编译和打包。预览为 `/menu-react/` 与 `/menu-vanilla/`；测试入口仅用于合成验证，不访问产品后端。它们不用示例私有 CSS。HTTP/query 已实现，接入合同见 [HTTP.md](HTTP.md)；后续 API Key/结构化日志仍未实现。
+正式消费者在 examples/menu-react 与 examples/menu-vanilla，共用 examples/shared/menu-data.json，独立 tarball 编译和打包。预览为 `/menu-react/` 与 `/menu-vanilla/`；测试入口仅用于合成验证，不访问产品后端。它们不用示例私有 CSS。HTTP/query 已实现，接入合同见 [HTTP.md](HTTP.md)；API Key 通用管理见 [API_KEY.md](API_KEY.md)，结构化日志仍未实现。

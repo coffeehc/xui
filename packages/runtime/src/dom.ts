@@ -55,9 +55,11 @@ export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElem
   const click=(event:Event)=>request(true,'trigger',event);
   const cancel=(event:Event)=>{event.preventDefault();request(false,'escape',event);};
   const closeClick=(event:MouseEvent)=>{const button=(event.target as HTMLElement).closest<HTMLElement>('[data-xui-close]');if(button&&!disabled(button))request(false,'close',event);};
-  const closed=()=>{if(dead)return;trigger.setAttribute('aria-expanded','false');restore(dialog.ownerDocument,trigger,options.finalFocus);};
-  trigger.addEventListener('click',click);dialog.addEventListener('cancel',cancel);dialog.addEventListener('click',closeClick);dialog.addEventListener('close',closed);syncOpen(options.open??options.defaultOpen??false);
-  return {getOpen:()=>dialog.open,open:()=>request(true),close:()=>request(false),syncOpen,destroy(){if(dead)return;syncOpen(false);dead=true;trigger.removeEventListener('click',click);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',closeClick);dialog.removeEventListener('close',closed);}};
+  const key=(event:KeyboardEvent)=>{if(!dialog.open||event.defaultPrevented||event.key!=='Tab'||event.altKey||event.ctrlKey||event.metaKey)return;const targets=focusable(dialog),active=dialog.ownerDocument.activeElement;
+    if(!targets.length){event.preventDefault();dialog.focus();return;}if(event.shiftKey&&active===targets[0]||!event.shiftKey&&active===targets.at(-1)||!dialog.contains(active)){event.preventDefault();(event.shiftKey?targets.at(-1):targets[0])?.focus();}};
+  const closed=()=>{if(dead||dialog.open)return;trigger.setAttribute('aria-expanded','false');restore(dialog.ownerDocument,trigger,options.finalFocus);};
+  trigger.addEventListener('click',click);dialog.addEventListener('cancel',cancel);dialog.addEventListener('click',closeClick);dialog.addEventListener('keydown',key);dialog.addEventListener('close',closed);syncOpen(options.open??options.defaultOpen??false);
+  return {getOpen:()=>dialog.open,open:()=>request(true),close:()=>request(false),syncOpen,destroy(){if(dead)return;syncOpen(false);dead=true;trigger.removeEventListener('click',click);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',closeClick);dialog.removeEventListener('keydown',key);dialog.removeEventListener('close',closed);}};
 }
 
 const popupStacks=new WeakMap<Document,HTMLElement[]>();

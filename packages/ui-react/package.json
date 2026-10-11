@@ -75,6 +75,10 @@
     "./theme": {
       "types": "./dist/theme.d.ts",
       "import": "./dist/theme.js"
+    },
+    "./api-key": {
+      "types": "./dist/api-key.d.ts",
+      "import": "./dist/api-key.js"
     }
   },
   "types": "./dist/index.d.ts",

@@ -1,13 +1,13 @@
 # xui 使用与迁移手册
 
-这是接入入口，引用同一份规范、公开类型和已运行的例子，不另定义品牌默认值。当前包为 private 0.1.0；采用前固定 Git SHA/本地 tarball 并核对实际 exports。API Key、结构化日志查询与仓库接入 skill 仍在后续步骤，不作为可用 API 示例。
+这是接入入口，引用同一份规范、公开类型和已运行的例子，不另定义品牌默认值。当前包为 private 0.1.0；采用前固定 Git SHA/本地 tarball 并核对实际 exports。API Key 通用管理已实现；结构化日志查询与仓库接入 skill 仍在后续步骤，不作为可用 API 示例。
 
 ## 阅读顺序与架构职责
 
 1. 检查 git status、当前提交、包 manifests/exports，保护本地改动后按任务授权正常 fetch。读清版本差异，不 reset/clean/强推，不覆盖业务修改。
 2. [DESIGN.md](DESIGN.md)：唯一完整规则与默认 token 来源。
 3. [IMPLEMENTATION.md](IMPLEMENTATION.md)：入口、主题 owner、组件 props/部件、原生公共结构与 lifecycle。
-4. [NAVIGATION.md](NAVIGATION.md)：菜单数据、MenuLayout 与一次路由适配；[HTTP.md](HTTP.md)：传输/错误/Go 响应/query。
+4. [NAVIGATION.md](NAVIGATION.md)：菜单数据、MenuLayout 与一次路由适配；[HTTP.md](HTTP.md)：传输/错误/Go 响应/query；[API_KEY.md](API_KEY.md)：脱敏列表/创建/一次性结果/复制/撤销。
 5. 下方可运行源组装页面；能力、验收与未跑项见 [FOUNDATION.md](FOUNDATION.md)、[FOUNDATION_VALIDATION.md](FOUNDATION_VALIDATION.md)。规范权威迁移另见 [MIGRATION.md](MIGRATION.md)。
 
 theme 提供无框架预构建 CSS/tokens；runtime 提供主题、DOM、resource、菜单和 HTTP/query；ui-react 复用共享类型和 React/Base UI peers。产品保管可见菜单过滤、路由、身份、领域权限/数据与业务动作；xui 提供默认结构、交互、motion、focus/a11y。产品迁就统一标准，业务扩展通过公开 slots/render/adapters，公共能力不足反馈 xui。
@@ -23,9 +23,9 @@ pnpm test:consumer
 pnpm preview
 ```
 
-访问 /menu-react/、/menu-vanilla/ 最小菜单，/http-react/、/http-vanilla/ 标准查询页，/foundation-react/、/foundation-vanilla/ 列表/表单/详情与动态加载。浏览器检查使用已有 Chromium，或 pnpm exec playwright install chromium。没有部署/发布操作。
+访问 /menu-react/、/menu-vanilla/ 最小菜单，/http-react/、/http-vanilla/ 标准查询页，/api-key-react/、/api-key-vanilla/ 管理组件，/foundation-react/、/foundation-vanilla/ 列表/表单/详情与动态加载。浏览器检查使用已有 Chromium，或 pnpm exec playwright install chromium。没有部署/发布操作。
 
-test:consumer 将三个包 npm pack，在每次新目录安装 tarball，再从正式 ESM/CSS/types 编译和打包；原生不安装 React，React peers 单实例。生产接入也固定已验证提交，先构建并安装本地 tarball；包尚未发布，不默认填写不存在的 registry 版本。无 monorepo package src alias 或下游 Tailwind 扫描要求；菜单/HTTP/foundation 示例只消费公开 CSS，最初 vanilla/react 示例保留自身页面 layout.css，它不是库所需的样式依赖。
+test:consumer 将三个包 npm pack，在每次新目录安装 tarball，再从正式 ESM/CSS/types 编译和打包；原生不安装 React，React peers 单实例。生产接入也固定已验证提交，先构建并安装本地 tarball；包尚未发布，不默认填写不存在的 registry 版本。无 monorepo package src alias 或下游 Tailwind 扫描要求；菜单/HTTP/API Key/foundation 示例只消费公开 CSS，最初 vanilla/react 示例保留自身页面 layout.css，它不是库所需的样式依赖。
 
 完整可运行代码由正式 consumer/typecheck/browser 检查，直接参考公开调用：
 
@@ -34,6 +34,8 @@ test:consumer 将三个包 npm pack，在每次新目录安装 tarball，再从�
 | React | [app.tsx](../examples/menu-react/app.tsx) | [app.tsx](../examples/http-react/app.tsx) | [app.tsx](../examples/foundation-react/app.tsx) |
 | 原生 | [app.js](../examples/menu-vanilla/app.js) | [app.js](../examples/http-vanilla/app.js)/[HTML](../examples/http-vanilla/index.html) | [app.js](../examples/foundation-vanilla/app.js) |
 | 共享数据/协议 | [菜单 JSON](../examples/shared/menu-data.json) | [typed endpoint model](../examples/shared/http-model.ts) | 领域事实归宿主 |
+
+API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../examples/api-key-vanilla/app.js)，共用 [typed 假数据模型](../examples/shared/api-key-model.ts)，完整值只有一次性结果，不放进 metadata/resource/cache。
 
 ## 主题、CSS 与单 owner
 
@@ -59,6 +61,7 @@ test:consumer 将三个包 npm pack，在每次新目录安装 tarball，再从�
 | Table/TableContainer/TableCaption/TableHead/TableBody/TableRow/TableHeaderCell/TableCell/SortButton | 行/列/单元内容、scope/aria-sort/selected | 独立导出、原生 table 与命名滚动区域；排序/分页/选择由宿主，不是 rows/columns 引擎 |
 | Surface/Alert/Badge/Skeleton/Spinner/Progress | children/tone/标准元素状态 | 默认层级/role/status/motion，必要事实持续可见 |
 | DataRegion/LoadingState/EmptyState/ErrorState/RenderBoundary | busy/value、反馈、retry/cancel 与 render fallback | 刷新保留旧值，错误即时可见；render 异常与异步失败分开 |
+| ApiKeyManager/createApiKeyManager | 一个共享 controller、metadata/声明权限和有效期、领域 adapter | 脱敏列表、创建/一次性结果、明确复制/撤销确认、关闭竞态；labels/React headerActions |
 | theme/resource/HTTP/query | 单 owner、key/loader/Abort/预算、endpoint adapter/query contract | 共享类型/终止/迟到隔离，默认不重试，401/403 分开，list/total 和基数明确 |
 
 标准列表页为 MenuLayout→PageHeader 主操作→Toolbar/Field 筛选→DataRegion→TableContainer/Table→Pagination。筛选/排序重置该 endpoint 第一页并取消旧请求。表单页用 PageHeader/Fieldset/Field/公开控件，值、保存权限、防重复由宿主，必要错误关联并回焦点。详情页用 Breadcrumbs/Section/Surface/公开文本结构，敏感明细按授权加载，不执行 HTML。
@@ -81,4 +84,4 @@ test:consumer 将三个包 npm pack，在每次新目录安装 tarball，再从�
 
 验收必须仅调用固定产物公共 exports/props/slots/adapters，不补私有控件皮肤，不留竞争 owner。检查解析路径、peer 单实例、types/CSS/init generation、computed style 和实际业务行为；记录通过/未跑/失败与缺口。能力缺失反馈 xui，修改 xui/推送/发布/部署仍依具体任务授权，不由手册自授权。
 
-API Key、结构化日志和仓库接入 skill 完成后补真实接口，再整体交叉核对手册/skill/产物。日志另用 cursor 合同，不能套 webfacade offset query。SSR、真实移动 OS/读屏器/Firefox/Safari/生产性能等未跑项继续按验证记录保留。
+结构化日志和仓库接入 skill 完成后补真实接口，再整体交叉核对手册/skill/产物。日志另用 cursor 合同，不能套 webfacade offset query。SSR、真实移动 OS/读屏器/Firefox/Safari/生产性能等未跑项继续按验证记录保留。

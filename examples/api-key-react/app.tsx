@@ -1,0 +1,12 @@
+import * as React from 'react';
+import {createRoot} from 'react-dom/client';
+import {MenuLayout} from '@coffeehc/xui-react/menu-layout';
+import {Container} from '@coffeehc/xui-react/layout';
+import {ApiKeyManager} from '@coffeehc/xui-react/api-key';
+import {createApiKeyExample} from '../shared/api-key-model';
+import '@coffeehc/xui-theme/critical.css';
+const example=createApiKeyExample(),root=createRoot(document.getElementById('root')!);
+root.render(<React.StrictMode><MenuLayout title="xui" label="管理导航" items={[{id:'keys',label:'API Key',icon:'folder',href:location.pathname}]} activeId="keys"><Container><ApiKeyManager controller={example.controller} writeClipboard={example.writeClipboard}/></Container></MenuLayout></React.StrictMode>);
+void example.controller.refresh();
+Object.assign(window,{apiKeyDemo:{...example,destroy(){root.unmount();example.destroy();}}});
+window.addEventListener('pagehide',()=>example.destroy(),{once:true});

@@ -1,0 +1,8 @@
+{
+  "title":"API Key 管理","create":"创建 API Key","refresh":"刷新列表","empty":"没有 API Key","loading":"正在读取列表…","listError":"列表读取失败","retry":"重试读取",
+  "name":"名称","prefix":"前缀","permissions":"权限","expiry":"有效期","createdAt":"创建时间","lastUsedAt":"最近使用","status":"状态","unknown":"未知","active":"有效","revoked":"已撤销","expired":"已过期",
+  "revoke":"撤销","createTitle":"创建 API Key","nameRequired":"请填写名称。","permissionsInvalid":"请选择可用权限。","expiryInvalid":"请选择可用有效期。","submit":"确认创建","cancel":"取消","close":"关闭",
+  "creating":"正在创建…","createError":"创建结果尚未确认。请先检查列表，再决定是否重新提交。","creationPending":"关闭会取消本地等待，后端仍可能创建；一次性值可能无法取回。",
+  "resultTitle":"API Key 已创建","oneTime":"完整值只显示这一次，请在关闭前妥善保存。","secret":"一次性完整值","copy":"复制完整值","copying":"正在复制…","copied":"已复制","copyError":"复制失败，请选择完整值手动复制。",
+  "revokeTitle":"撤销 API Key","revokeWarning":"撤销后，此 Key 将不能继续使用，已接入的客户端可能停止工作。","confirmRevoke":"确认撤销","revoking":"正在撤销…","revokeError":"撤销结果尚未确认。请先刷新列表，再决定是否重新确认。","revokePending":"关闭会取消本地等待，后端仍可能完成撤销。"
+}

@@ -42,6 +42,14 @@
     "./dom": {
       "types": "./dist/dom.d.ts",
       "import": "./dist/dom.js"
+    },
+    "./api-key": {
+      "types": "./dist/api-key.d.ts",
+      "import": "./dist/api-key.js"
+    },
+    "./api-key-dom": {
+      "types": "./dist/api-key-dom.d.ts",
+      "import": "./dist/api-key-dom.js"
     }
   },
   "types": "./dist/index.d.ts"

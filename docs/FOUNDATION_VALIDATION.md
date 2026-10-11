@@ -71,3 +71,16 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 本步骤标准 verify 纳入 50 项单测、1 项默认 watch 和 86 项浏览器检查，并包含 token 一致性、根类型检查、独立打包消费及按需门禁。最终受测 SHA、退出状态和通过数量随独立提交交付，完整日志位于 .artifacts/verify-http-final.log；浏览器 JSON 位于 test-results/browser.json。断开通知后真实 shell、Git 对象检查和重新构建已成功，最终仍在同一提交完整验证。
 
 采用手册见 [ADOPTION.md](ADOPTION.md)，有实际入口、组件/数据/行为/扩展点、标准页面与保留业务功能后清理重复 owner 的迁移清单。API Key、结构化日志与接入 skill 继续独立步骤；本次没有实施产品迁移、真实后端集成、推送、部署或包发布。未新增独立代理审查；真实移动 OS、读屏器、浏览器原生 zoom、Firefox/Safari、SSR hydration 和生产性能仍未跑。
+
+
+## API Key 通用管理独立步骤
+
+本步骤基线为本地 beb63559fb1c832cd920e87abde56aaaf1fb3a81。共享 runtime/api-key 控制器、runtime/api-key-dom 原生完整工厂与 React/api-key 组件提供脱敏列表、宿主声明的创建选项、一次性结果、明确复制和撤销确认；类型、默认行为、宿主边界与安全限制见 [API_KEY.md](API_KEY.md)。两类正式 tarball 示例共用 typed 假数据模型及 labels，只消费公开 CSS，原生不安装 React。没有生成真实 key 或访问产品服务。
+
+新增 10 控制器单测，覆盖精确元数据 allowlist/nullable/不可变、配置/权限/有效期、读取失败保留与取消/替换/销毁、基础与宿主字段验证、重复提交防护、一次性引用与安全快照、无效结果/固定错误/默认不重放、关闭后不合作 producer 迟到隔离、撤销确认/失败/非 void 拒绝/取消/成功、明确复制/失败/迟到完成与销毁。新增 14 浏览器检查，每宿主 7 项：默认元数据与禁用、验证/键盘/声明选项、一次性结果/明确复制、不存 URL/storage、列表失败/空/重试、创建错误和关闭竞态、撤销确认/失败/取消/真实完成后状态/回焦点、剪贴板失败/关闭/卸载、恶意文本/长中文/窄屏/200%文字/浅深与 reduced-motion/Tab/Esc。
+
+初轮发现背景 aria-hidden 导致撤销用例错误查找，已改为弹层中查共享事实、关闭后查按钮；React peer 的 focus guard 需要等待焦点回到控件，不增加 sleep/retry。真实 shell 复现原生 Tab 到 body，公共 Dialog controller 增加边界循环与重开后迟到 close 防护；关闭后原生复制提示也清空。14 项组件浏览器检查已通过，最终仍在独立提交完整标准 verify。
+
+标准 verify 纳入 60 项单测、1 项真实默认 watch 与 100 项浏览器检查，另含 271 token 一致性/无循环、根类型、构建、十个正式预览及独立 tarball/types/按需门禁。最终受测 SHA、退出码和通过数量随独立提交交付；完整日志 .artifacts/verify-api-key-final.log，浏览器 JSON test-results/browser.json。
+
+这些是合成数据和模拟 Clipboard 检查，不证明真实后端鉴权/密钥安全/幂等或 OS 剪贴板行为；不声称 JS 安全擦除或剪贴板撤回。真实移动 OS、读屏器、原生浏览器 zoom、Firefox/Safari、SSR hydration、生产性能及新增独立代理审查未跑。没有产品迁移、推送、部署或包发布；结构化日志与最终手册/接入 skill 仍为后续独立步骤。

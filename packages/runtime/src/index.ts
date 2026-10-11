@@ -5,3 +5,5 @@ export * from './navigation.js';
 export * from './menu-layout.js';
 export * from './http.js';
 export * from './query.js';
+export * from './api-key.js';
+export * from './api-key-dom.js';

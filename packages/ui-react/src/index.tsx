@@ -14,3 +14,4 @@ export * from './popover.js';
 export * from './tooltip.js';
 export * from './toast.js';
 export * from './theme.js';
+export * from './api-key.js';
