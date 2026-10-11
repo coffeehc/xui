@@ -59,7 +59,7 @@ filters 只能用声明字段和显式 codec。queryCodecs 为 string/int64/numb
 
 existing params 复制后清除旧受管过滤/排序和无语义 field，保留宿主无关参数。page_size 是正 safe integer，page_index 不低于 endpoint offset，可选上限超限拒绝，不能默默改接口行为。
 
-parseListData 仅接受 list 数组/null、非负 safe integer total；不猜 items/data/result，拒绝 int64 精度丢失，可显式 decodeItem。toListPage(wire,{returnTotal}) 才把 null list→[]，未请求 total→null；占位 total=0 不能当“零条记录”。其他 payload/cursor 协议另设 adapter；未来结构化日志不能套此分页/排序。
+parseListData 仅接受 list 数组/null、非负 safe integer total；不猜 items/data/result，拒绝 int64 精度丢失，可显式 decodeItem。toListPage(wire,{returnTotal}) 才把 null list→[]，未请求 total→null；占位 total=0 不能当“零条记录”。其他 payload/cursor 协议另设 adapter；[结构化日志](LOGS.md) 使用独立 cursor 合同，不能套此分页/排序。
 
 ## 可运行接入与迁移
 

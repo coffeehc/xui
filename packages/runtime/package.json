@@ -50,6 +50,14 @@
     "./api-key-dom": {
       "types": "./dist/api-key-dom.d.ts",
       "import": "./dist/api-key-dom.js"
+    },
+    "./structured-log": {
+      "types": "./dist/structured-log.d.ts",
+      "import": "./dist/structured-log.js"
+    },
+    "./structured-log-dom": {
+      "types": "./dist/structured-log-dom.d.ts",
+      "import": "./dist/structured-log-dom.js"
     }
   },
   "types": "./dist/index.d.ts"

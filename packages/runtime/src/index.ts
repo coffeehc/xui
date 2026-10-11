@@ -7,3 +7,5 @@ export * from './http.js';
 export * from './query.js';
 export * from './api-key.js';
 export * from './api-key-dom.js';
+export * from './structured-log.js';
+export * from './structured-log-dom.js';

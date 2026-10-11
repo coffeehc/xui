@@ -7,6 +7,7 @@
 - [使用与迁移手册](docs/ADOPTION.md)
 - [HTTP 与共享 query 接入](docs/HTTP.md)
 - [API Key 通用管理](docs/API_KEY.md)
+- [结构化错误查询与拟议 facade 合同](docs/LOGS.md)
 - [来源与后续迁移计划](docs/MIGRATION.md)
 - [能力覆盖与宿主边界](docs/FOUNDATION.md)
 - [本轮验证证据和限制](docs/FOUNDATION_VALIDATION.md)

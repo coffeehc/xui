@@ -79,6 +79,10 @@
     "./api-key": {
       "types": "./dist/api-key.d.ts",
       "import": "./dist/api-key.js"
+    },
+    "./structured-log": {
+      "types": "./dist/structured-log.d.ts",
+      "import": "./dist/structured-log.js"
     }
   },
   "types": "./dist/index.d.ts",

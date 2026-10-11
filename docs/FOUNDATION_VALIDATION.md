@@ -84,3 +84,15 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 标准 verify 纳入 60 项单测、1 项真实默认 watch 与 100 项浏览器检查，另含 271 token 一致性/无循环、根类型、构建、十个正式预览及独立 tarball/types/按需门禁。最终受测 SHA、退出码和通过数量随独立提交交付；完整日志 .artifacts/verify-api-key-final.log，浏览器 JSON test-results/browser.json。
 
 这些是合成数据和模拟 Clipboard 检查，不证明真实后端鉴权/密钥安全/幂等或 OS 剪贴板行为；不声称 JS 安全擦除或剪贴板撤回。真实移动 OS、读屏器、原生浏览器 zoom、Firefox/Safari、SSR hydration、生产性能及新增独立代理审查未跑。没有产品迁移、推送、部署或包发布；结构化日志与最终手册/接入 skill 仍为后续独立步骤。
+
+## 结构化日志只读查询独立步骤
+
+本步骤基线为本地 6f2006614c626ca841416695ea00f63a54a93026。通过正常 Git 读取 commons@b0bc0f9 的 service/query/record/extension/README 完整合同；固定 SHA、拟议 DTO/HTTP facade 与宿主边界见 [LOGS.md](LOGS.md)。runtime/structured-log 控制器和类型被 React/structured-log、runtime/structured-log-dom 共用；两类完整正式 tarball 消费者共用 typed fake facade/labels，仅导入公开 CSS，不用源码 alias，原生不安装 React。只读分组/观察/精确详情，没有投递运维、删除、重放或全文系统。
+
+新增 10 项逻辑测试：严格 v1/list 与 uint64 字符串/nullable/三态/不可变投影；实际 filter/UTF-8/纳秒半开时间边界；四操作显式 Go envelope 请求；cursor/as_of/循环与已访问摘要段回退；失败下一段重试和刷新保留原事实；不合作 producer 的取消/替换/无效过滤/销毁；累计/命中/首次代表与 group_id；403/404/过期区分；详情 ID、关闭和迟到隔离；宿主安全对象映射及明确复制。返回上一段使用缓存，不重发空 cursor 创建新快照。
+
+新增 12 项浏览器检查，两宿主各 6 项：累计/过滤命中与首次代表、大整数完整显示；cursor 新提交排除/刷新和缓存上一段；真实 filter/时间区间/无假 request-id 搜索；单记录权限/缺失/过期与显式复制/对象映射/回焦点；读取失败保留、重试和取消/迟到隔离；自由文本不执行、长中文、窄屏主操作、dark/200%文字/reduced-motion/Tab/Esc 和卸载清除详情。详情默认显示 record/group ID、发生/记录时间、operation 和独立三态标记。
+
+标准 verify 纳入 70 项单测、1 项真实默认 watch 与 112 项浏览器检查，另含 271 token 单源/无循环、根类型、构建、十二个正式预览、独立 tarball/types/按需贡献门禁。最终受测 SHA、退出码和实际通过数量随独立提交交付；完整日志 .artifacts/verify-log-final.log，浏览器 JSON test-results/browser.json。文档链接检查与全部公开构建入口同步纳入验证。
+
+这些结果是合成 fetch/模拟 Clipboard 的展示合同与生命周期验证。未实现或验证生产后端 facade、Go/PostgreSQL、真实鉴权/tenant 隔离/脱敏、OS 剪贴板、产品迁移或新增独立代理审查；真实移动 OS、读屏器、原生浏览器 zoom、Firefox/Safari、SSR hydration 与生产性能仍未跑。没有推送、部署或包发布；最终手册与仓库接入 skill 继续独立收口。

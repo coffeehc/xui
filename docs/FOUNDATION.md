@@ -30,9 +30,9 @@
 | 数据驱动 Menu + Layout | 已实现；本步骤独立验证与提交 | NavigationMenu/MenuLayout 与 createNavigationMenu/createMenuLayout；React/原生同源数据，一次 activeId/location 与导航适配；分组/子项/展开/紧凑/窄屏、键盘、更新与生命周期、导航时 shell 身份稳定 |
 | HTTP 与共享列表契约 | 已实现，本步骤独立验证 | 零框架传输、显式模式/response adapter、错误/status/Abort/timeout、默认不重试；共享列表默认 Go ListData 的 list/total，HTTP 保留原样 payload；来源与实现同步记录 |
 | API Key 通用管理组件 | 已实现，本步骤独立验证 | 共享安全元数据、列表/创建/权限与有效期/一次性结果/明确复制/撤销确认；不生成真实密钥，不复制产品权限模型，后端生成与鉴权，默认脱敏与不持久化 |
-| 结构化日志查询 | 排在 API Key 后，尚未实现 | 以真实 commons/logservice 的记录/分组/过滤/cursor 为依据；新 DTO/HTTP 接入由产品后端明确实现，不猜旧 facade |
+| 结构化日志查询 | 已实现，只读独立步骤 | 共享控制器、React/原生完整分组/观察/详情；依据固定 commons@b0bc0f9 的真实 filter/cursor，计数/首次代表/三态/保留期明确；[拟议 v1 facade](LOGS.md) 由宿主后端实现，不猜旧协议 |
 
-菜单/布局和 HTTP 是用户明确扩展的范围，替代此前不包含 HTTP 通用层的边界；新范围的推送需单独授权。HTTP/query 与 API Key 已实现；结构化日志查询、完整手册与接入 skill 的最终交叉验收继续独立推进。框架不实现产品 endpoint、权限判断、登录路由或业务数据引擎。
+菜单/布局和 HTTP 是用户明确扩展的范围，替代此前不包含 HTTP 通用层的边界；新范围的推送需单独授权。HTTP/query、API Key 与结构化日志只读查询已实现；完整手册与接入 skill 的最终交叉验收继续独立推进。框架不实现产品 endpoint、权限判断、登录路由或业务数据引擎。
 
 ## 加载与性能实施
 
