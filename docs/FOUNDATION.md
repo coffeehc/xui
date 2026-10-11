@@ -7,7 +7,7 @@
 | 能力 | React 正式接口 | 原生宿主契约 | 验收 |
 | --- | --- | --- | --- |
 | 页面骨架 | AppShell、PageHeader、Toolbar、Section、Container、Stack、Grid | 同名 `.xui-*` 结构类、shell 控制器 | 列表/表单/详情组合；独立安装无需示例私有 layout.css；窄屏导航开关、Esc、回焦点 |
-| 基础操作与字段 | Button/IconButton、Field、原生输入/选择/checkbox/radio/switch、Fieldset | 真实 button/link/label/input/fieldset | render/nativeButton/link 兼容、ref、disabled 与 aria-busy 独立、单控件 id、错误关联、键盘 |
+| 基础操作与字段 | Button/IconButton、Field、原生输入/选择/checkbox/radio/switch、Fieldset | 真实 button/link/label/input/fieldset | render/nativeButton/link 支持、ref、disabled 与 aria-busy 独立、单控件 id、错误关联、键盘 |
 | 复合选择 | Select、Combobox，复用 Base UI | 原生 select；可搜索选择采用原生 datalist，限制写清 | controlled/uncontrolled、禁用、空选项、键盘选择与取消；不宣称原生 OS 面板由库控制 |
 | 导航 | Nav、Breadcrumbs、Pagination、Tabs、Disclosure | 原生链接/分页、tabs/disclosure 控制器 | 所属状态、独立 focus、RTL/Home/End、disabled 跳过、事件取消、controlled、无路由所有权 |
 | 弹层与帮助 | Dialog、Menu、Popover、Tooltip、Toast | dialog、popover/menu/tooltip 与通知控制器 | 取消、外点、焦点、命中、长内容、状态反馈；非模态不 trap，关键错误不能只在 tooltip |
@@ -42,7 +42,7 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 
 | 步骤 | 当前状态 | 接口与验收 |
 | --- | --- | --- |
-| NavItem 兼容与链接组合 | 本地实现，验证结果随提交交付 | 省略 selected 保留 aria-current，显式 selected 优先；公开 render 组合一个链接，默认选中样式；ref/事件合并、disabled、修改键/中键/target/download |
+| NavItem 语义与链接组合 | 本地实现，验证结果随提交交付 | 省略 selected 保留 aria-current，显式 selected 优先；公开 render 组合一个链接，默认选中样式；ref/事件合并、disabled、修改键/中键/target/download |
 | 数据驱动 Menu + Layout | 已实现；本步骤独立验证与提交 | NavigationMenu/MenuLayout 与 createNavigationMenu/createMenuLayout；React/原生同源数据，一次 activeId/location 与导航适配；分组/子项/展开/紧凑/窄屏、键盘、更新与生命周期、导航时 shell 身份稳定 |
 | HTTP 与共享列表契约 | 已实现，本步骤独立验证 | 零框架传输、显式模式/response adapter、错误/status/Abort/timeout、默认不重试；共享列表默认 Go ListData 的 list/total，HTTP 保留原样 payload；来源与实现同步记录 |
 | API Key 通用管理组件 | 已实现，本步骤独立验证 | 共享安全元数据、列表/创建/权限与有效期/一次性结果/明确复制/撤销确认；不生成真实密钥，不复制产品权限模型，后端生成与鉴权，默认脱敏与不持久化 |

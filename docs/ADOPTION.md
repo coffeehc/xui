@@ -39,7 +39,7 @@ test:consumer 将三个包 npm pack，在每次新目录安装 tarball，再从�
 
 API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../examples/api-key-vanilla/app.js)，共用 [typed 假数据模型](../examples/shared/api-key-model.ts)，完整值只有一次性结果，不放进 metadata/resource/cache。
 
-登录整页消费为 [React](../examples/login-react/app.tsx)/[原生](../examples/login-vanilla/app.js)，共用 [品牌与文案配置](../examples/shared/login-config.json) 和 [合成认证模型](../examples/shared/login-model.ts)。只接一个 theme、HTTP 与 auth owner；baseURL 由宿主传入，固定 v1 login/logout/session 合同见 [AUTH](AUTH.md)。现有 xAgent token/me/state 协议需要后端明确适配，不能直接把旧 bearer/JWT storage 搬进组件。缺facade的项目先保留既有认证并采用其它公开页面，真实后端合同就绪后再切完整登录页；改baseURL不能替代协议迁移。真实 Cookie、CSRF 和权限由服务负责；示例不会签发真实会话。
+登录整页消费为 [React](../examples/login-react/app.tsx)/[原生](../examples/login-vanilla/app.js)，共用 [品牌与文案配置](../examples/shared/login-config.json) 和 [合成认证模型](../examples/shared/login-model.ts)。只接一个 theme、HTTP 与 auth owner；baseURL 由宿主传入，固定 v1 login/logout/session 合同见 [AUTH](AUTH.md)。现有 xAgent token/me/state 协议需要后端明确适配，不能直接把旧 bearer/JWT storage 搬进组件。已上线xAgent缺facade时先保留既有认证并采用其它公开页面，真实后端合同就绪后按升级方案切完整登录页；未发布项目直接使用新合同，不增设旧认证兼容层。改baseURL不能替代协议迁移。真实 Cookie、CSRF 和权限由服务负责；示例不会签发真实会话。
 
 业务日志完整消费为 [React](../examples/business-log-react/app.tsx)/[原生](../examples/business-log-vanilla/app.js)，共用 [typed fake loader](../examples/shared/business-log-model.ts)。固定公共日志事实 + event_type/schema_version + 允许披露的业务 payload；按类型/版本注册 renderer，未知版本安全 JSON 回退。真实日志可靠性由服务负责，合同见 [BUSINESS_LOGS.md](BUSINESS_LOGS.md)。
 
@@ -78,6 +78,10 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 标准列表页为 MenuLayout→PageHeader 主操作→Toolbar/Field 筛选→DataRegion→TableContainer/Table→Pagination。筛选/排序重置该 endpoint 第一页并取消旧请求。cursor 业务日志/错误观察页使用各自完整公开组件，不套此 Pagination 页码或杜撰 total。表单页用 PageHeader/Fieldset/Field/公开控件，值、保存权限、防重复由宿主，必要错误关联并回焦点。详情页用 Breadcrumbs/Section/Surface/公开文本结构，敏感明细按授权加载，不执行 HTML。
 
 原生基础控件可使用公开 HTML 类与 controller；这不是随意复制 React 内部 DOM。数据驱动菜单通过 createMenuLayout/createNavigationMenu 生成，不手写内部皮肤/selected 伪元素或第二套键盘。
+
+## 发布状态与升级原则
+
+当前用户确认只有xAgent正式上线。未正式发布的项目按新设计直接演进，不为旧接口、旧配置或旧模型设置升级兼容分支/别名；xui本轮BusinessAudit旧入口已移除，仅有BusinessLog实现。正常props/render/loader/adapter扩展、权限校验和数据安全边界不是兼容层。对已上线xAgent，采用前单独评估协议、配置、会话与持久数据影响，按授权制定兼容升级方案；本轮不修改它的消费者或数据。代码清理不授权删除生产数据、重置运行或部署。
 
 ## 逐页迁移与清理
 

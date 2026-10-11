@@ -27,5 +27,5 @@ pnpm preview
 # 另一个终端：pnpm dev（构建成功/失败状态与自动恢复）
 ```
 
-主要参考页为 `http://localhost:4173/foundation-vanilla/` 和 `/foundation-react/`，通过公共 Layout/CSS 组合列表、表单与详情，附加工具真正按需加载。早期 `/vanilla/` 和 `/react/` 保留用于兼容回归。
+主要参考页为 `http://localhost:4173/foundation-vanilla/` 和 `/foundation-react/`，通过公共 Layout/CSS 组合列表、表单与详情，附加工具真正按需加载。`/vanilla/` 和 `/react/` 用于基础控件参考与回归。
 包均为 `private: true`，仅本地打包验证，不发布。许可证尚待仓库所有者决定。

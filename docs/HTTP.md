@@ -67,6 +67,6 @@ parseListData 仅接受 list 数组/null、非负 safe integer total；不猜 it
 
 根目录 pnpm build、pnpm test:consumer、pnpm preview 后访问 /http-react/ 或 /http-vanilla/；本地 /api/xui-example/records 是明确合成 fixture，页基数0/上限50不是产品默认合同，不访问真实后端。
 
-迁移先检查旧请求承载的 headers/credentials、权限、缓存/去重、认证、日志、取消、上传/下载及业务恢复；保留必要行为，再收敛一个 transport/auth/error/resource owner。采用默认协议的产品使用准确 Go envelope/list/query，不保留长期别名猜测链；暂不符合的接口只能用明确、有限、有移除计划的 adapter。
+迁移先检查旧请求承载的 headers/credentials、权限、缓存/去重、认证、日志、取消、上传/下载及业务恢复；保留必要行为，再收敛一个 transport/auth/error/resource owner。采用默认协议的产品使用准确 Go envelope/list/query，不保留长期别名猜测链；对已上线xAgent，暂不符合的接口须在升级方案采用明确、有限、有移除计划的adapter；未发布项目直接改用新合同，不增加旧字段/旧code兼容链。正常领域adapter按公开接口连接业务，详见[发布状态原则](ADOPTION.md#发布状态与升级原则)。
 
 删除精确重复的 fetch 拦截器/认证跳转/Toast/loading owner；保留领域 API 作为一次 endpoint adapter。移除私造 query AST、隐式页码/日期/object 转换和重复编码。按 [采用手册](ADOPTION.md) 逐页迁移、真实构建验收，不先盲删业务权限/功能。

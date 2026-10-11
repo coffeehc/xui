@@ -6,7 +6,7 @@
 
 已用正常 Git 读取 xAgent 提交 `29139f7843d9a79a9eca42892cb87da8f08f6320`，核对 [auth-service.ts](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/frontend/packages/business/src/services/auth-service.ts)、[http-service.ts](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/frontend/packages/business/src/services/http-service.ts)、[user_endpoint.go](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/user_endpoint.go) 和 [user_auth_endpoint.go](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/user_auth_endpoint.go)。现有密码登录为 `POST /api/v1/auth/token`，发送 password grant、username/password/client_id/channel_type/terminal_id，返回 access/refresh token；退出是 `POST /api/v1/auth/logout`，当前用户为 `GET /api/v1/me/state`。现有前端持有 bearer token，错误也有 HTTP 200 的业务 envelope。
 
-下面是 **xui 新定义的 cookie 会话 facade**，不是对上述协议的别名兼容，也不声称 xAgent 已可直接接入。产品或未来 baseservice 实现 adapter 后遵循它；本轮没有修改其他仓库、实现 cookie 后端或生成凭据。不等待 baseservice：xui 先通过可测试合同、合成 fetch 和两个正式消费者完成前端。采用旧协议的产品若尚无该facade，先保留已有认证owner并逐页采用主题/原子/其它页面，记录后端缺口；facade与真实契约验收就绪后再切完整登录页。createAuthClient只有http/timeoutMs配置，不支持靠改baseURL或猜route/adapter完成旧协议迁移。
+下面是 **xui 新定义的 cookie 会话 facade**，不是对上述协议的别名兼容，也不声称 xAgent 已可直接接入。产品或未来 baseservice 实现 adapter 后遵循它；本轮没有修改其他仓库、实现 cookie 后端或生成凭据。不等待 baseservice：xui 先通过可测试合同、合成 fetch 和两个正式消费者完成前端。对已正式上线的xAgent，若尚无该facade，先保留已有认证owner并逐页采用主题/原子/其它页面，记录后端缺口和升级影响；facade与真实契约验收就绪后再切完整登录页。未发布项目直接采用新合同，不为旧认证添加兼容层；本轮不改xAgent或生产数据。createAuthClient只有http/timeoutMs配置，不支持靠改baseURL或猜route/adapter完成旧协议迁移。
 
 ## 固定版本接口
 
@@ -27,7 +27,7 @@ interface AuthSession { schema_version: 1; user: Readonly<AuthUser> }
 
 这两层 DTO 是严格公共投影：缺字段、额外字段、其它版本和 token 字段被拒绝。id 为非空不透明字符串（最多256字符）；username 非空（最多128字符），display_name 为 null 或最多256字符。角色、权限、tenant、数据库模型与完整用户档案不放进这个 DTO，也不能根据 display_name 推导权限。用户名提交时去两端空白；密码保留原始字符，不 trim，最长4096字符，必须仅在 POST body 传递。
 
-401 之外的 403/429/5xx、业务失败、parse/network/timeout 保留为安全 `HttpError`。页面以本地文案反馈，不显示服务端原始 message、body、URL 或异常 cause。API 不将外层 redirect 用作登录跳转。固定 contract 接口负责其真实鉴权、状态码和脱敏；旧 bearer 协议由项目独立适配，不把 JWT 解码结果假装为服务端确认的 user。
+401 之外的 403/429/5xx、业务失败、parse/network/timeout 保留为安全 `HttpError`。页面以本地文案反馈，不显示服务端原始 message、body、URL 或异常 cause。API 不将外层 redirect 用作登录跳转。固定 contract 接口负责其真实鉴权、状态码和脱敏；已上线xAgent的旧 bearer 协议须在其授权升级方案独立适配，不把 JWT 解码结果假装为服务端确认的 user。
 
 ## 状态、取消与凭据生命周期
 
