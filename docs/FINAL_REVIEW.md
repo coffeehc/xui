@@ -1,6 +1,8 @@
 # 最终接入审查与验收
 
-本步骤基线为 `4ed5b9adea5ef857e7d48639e145b0bd7c3793c5`。覆盖本轮 NavItem、Menu/Layout、HTTP/query、API Key、可扩展业务审计，以及可配置登录页、认证合同、三层设计哲学与完整手册/仓库接入 skill。此前结构化错误观察代码和提交保留，明确是独立错误功能，不能作为业务审计交付。没有新增后端服务、运行配置组件、SSO/注册/重置/完整用户管理、Agent SDK、产品迁移、部署或包发布。
+本步骤基线为 `4ed5b9adea5ef857e7d48639e145b0bd7c3793c5`。覆盖本轮 NavItem、Menu/Layout、HTTP/query、API Key、可扩展业务日志，以及可配置登录页、认证合同、三层设计哲学与完整手册/仓库接入 skill。此前结构化错误观察代码和提交保留，明确是独立错误功能，不能作为业务日志交付。没有新增后端服务、运行配置组件、SSO/注册/重置/完整用户管理、Agent SDK、产品迁移、部署或包发布。
+
+最新用途澄清已在同一页面落实：BusinessLogExplorer/createBusinessLogExplorer与business-log入口取代早期BusinessAudit命名，提供业务记录查询与可扩展详情，不新增重复页面或正式审计体系。下方46caeb75等早期提交保留原命名和真实历史；baseservice日志能力收敛及取消独立auditservice属于后续后端范围。
 
 ## 审查范围
 
@@ -13,18 +15,18 @@
 | P2：撤销成功的通知中新建会话被旧操作关闭 | 只关闭仍属于本次 generation 的会话；旧代码复现失败，新会话名称和 phase 保留 |
 | P2：React 一次性 key 卸载后 textarea.value 仍有值 | 同步订阅/节点移除/pagehide 显式清空 value/defaultValue/textContent；两宿主三条退出路径独立 Chromium 复核通过 |
 | P2：无效错误过滤重复 alert 且给旧查询 retry | 过滤区域单一归属，两宿主一个 alert、无错误 retry 入口；浏览器实测通过 |
-| P2：审计 fake loader 按 RFC3339 字符串排序错筛等价时区 | 纳秒比较，保留时区与半开边界；核心纯逻辑及两宿主实际过滤验证 |
-| P2：旧详情 Abort listener 新开详情，被 reset 关闭后仍存 payload | 审计与错误观察的关闭 patch 同时检查详情 generation，保留外层过滤与新详情；两条回归在旧产物失败、修复后独立 2/2 通过，源码/dist 匹配 |
+| P2：日志 fake loader 按 RFC3339 字符串排序错筛等价时区 | 纳秒比较，保留时区与半开边界；核心纯逻辑及两宿主实际过滤验证 |
+| P2：旧详情 Abort listener 新开详情，被 reset 关闭后仍存 payload | 日志与错误观察的关闭 patch 同时检查详情 generation，保留外层过滤与新详情；两条回归在旧产物失败、修复后独立 2/2 通过，源码/dist 匹配 |
 | P2：工具栏快照时间在窄屏、放大字号和较宽后备字体下撑出页面 | 工具栏文字允许必要换行；两宿主 390px/200%/monospace 回归在旧消费者失败，重新打包安装修复产物后 2/2 通过，保留完整文字与字号 |
 | P2：长品牌或动作文字耗尽登录卡片正文 | 品牌及动作区自身滚动，按钮使用安全居中以保留首尾文字；新增两宿主390×720/200%/monospace下126字品牌+120字动作的真实配置回归，正文保留可用空间，按钮在视口内，全文可滚动并且登录可执行 |
 
-最后独立源码复核在该范围内无剩余 P1/P2。三个合成 skill 接入任务实际检查旧 JSON theme/HTTP owner、私有 CSS/菜单规则、response/query 猜测；追加审计任务确认旧 error samples 无法充当业务审计，已有领域 loader 可先接，不等待 HTTP route，也不重复调用已有批准 API 的审计写入。skill 的正式 YAML/frontmatter/UI 默认提示校验通过，所有相对引用存在；这是迁移判断检验，不是产品迁移。
+最后独立源码复核在该范围内无剩余 P1/P2。三个合成 skill 接入任务实际检查旧 JSON theme/HTTP owner、私有 CSS/菜单规则、response/query 猜测；追加日志任务确认旧 error samples 无法充当业务日志，已有领域 loader 可先接，不等待 HTTP route，也不重复调用已有批准 API 的日志写入。skill 的正式 YAML/frontmatter/UI 默认提示校验通过，所有相对引用存在；这是迁移判断检验，不是产品迁移。
 
 ## 统一验收
 
-公开入口索引与实际 manifests 的 **52 个入口**一一对应。正式消费逐个检查安装后的 ESM、CSS、经典 init 字节及声明，编译全部命名类型（完整声明检查不跳过 lib），核对运行时导出，打包全部 ESM/CSS；另编译真实 React/原生登录、审计、API Key、菜单、HTTP 和基础页面。原生不装 React，React/ReactDOM/Base UI 单实例；CSS、动态面板和 Button-only 实际贡献/体积门禁保留。
+公开入口索引与实际 manifests 的 **52 个入口**一一对应。正式消费逐个检查安装后的 ESM、CSS、经典 init 字节及声明，编译全部命名类型（完整声明检查不跳过 lib），核对运行时导出，打包全部 ESM/CSS；另编译真实 React/原生登录、日志、API Key、菜单、HTTP 和基础页面。原生不装 React，React/ReactDOM/Base UI 单实例；CSS、动态面板和 Button-only 实际贡献/体积门禁保留。
 
-本步骤新增 11 项业务审计逻辑测试与 12 项浏览器检查，覆盖固定公共事实、可扩展 JSON/版本/renderer、安全边界、过滤及纳秒时间、cursor/快照/缓存回退、取消/迟到/重入/销毁、权限/缺失/保留期/null、对象安全映射、键盘/focus、窄屏/长中文/200%文字及 reduced-motion。另加入 6 项既有控制器重入回归与 2 项保留 DOM 节点的浏览器回归。基础收口时全套为87单测、1真实默认watch、126浏览器检查。新增认证9项单测及14项登录浏览器回归后，全套数量为 **96 项单测、1 项真实默认 watch、140 项浏览器检查**；最终运行的通过/失败/未跑以交付中的冻结 SHA 和日志为准，不能用局部结果替代。完整日志 `.artifacts/verify-final.log` 首行记录受测 SHA，浏览器 JSON 位于 `test-results/browser.json`。
+本步骤新增 11 项业务日志逻辑测试与 12 项浏览器检查，覆盖固定公共事实、可扩展 JSON/版本/renderer、安全边界、过滤及纳秒时间、cursor/快照/缓存回退、取消/迟到/重入/销毁、权限/缺失/保留期/null、对象安全映射、键盘/focus、窄屏/长中文/200%文字及 reduced-motion。另加入 6 项既有控制器重入回归与 2 项保留 DOM 节点的浏览器回归。基础收口时全套为87单测、1真实默认watch、126浏览器检查。新增认证9项单测及14项登录浏览器回归后，全套数量为 **96 项单测、1 项真实默认 watch、140 项浏览器检查**；最终运行的通过/失败/未跑以交付中的冻结 SHA 和日志为准，不能用局部结果替代。完整日志 `.artifacts/verify-final.log` 首行记录受测 SHA，浏览器 JSON 位于 `test-results/browser.json`。
 
 首轮针对性浏览器检查 38/40 通过，两个失败来自测试把格式化 JSON 转义引号当作原文；改为还原 JSON 核对原值，并继续验证无 DOM 图片/代码执行。没有加 sleep、retry 或跳过以掩盖失败。
 
@@ -40,6 +42,8 @@
 
 ## 未实施与未跑
 
-没有改其他产品仓库或实现认证cookie后端/审计后端 adapter/错误 HTTP facade，没有真实业务后端/Cookie/CSRF/CORS/Go/PostgreSQL/鉴权/tenant/审计可靠性集成验证。审计 typed loader 和安全视图已由 xui 自身定义，实际服务后续适配；不承诺不可篡改、恰好一次、写入成功或审计事务保证。Clipboard 为模拟，触屏为 Chromium 模拟，200%为根字体放大；真实移动 OS、读屏器、Firefox/Safari、浏览器原生 zoom、SSR hydration 与生产性能未跑。合成例子不代表产品已迁移或性能提高。
+没有改其他产品仓库或实现认证cookie后端/日志后端 adapter/错误 HTTP facade，没有真实业务后端/Cookie/CSRF/CORS/Go/PostgreSQL/鉴权/tenant/日志可靠性集成验证。日志 typed loader 和安全视图已由 xui 自身定义，实际服务后续适配；不承诺不可篡改、恰好一次、写入成功或日志事务保证。Clipboard 为模拟，触屏为 Chromium 模拟，200%为根字体放大；真实移动 OS、读屏器、Firefox/Safari、浏览器原生 zoom、SSR hydration 与生产性能未跑。合成例子不代表产品已迁移或性能提高。
 
 用户已明确要求全部功能、文档、skill 与统一验收完成后正常推送 main。首次正常 push 的 CI 暴露以上修正，需要完整复验后追加普通修正提交并验证新 SHA 的 CI，保留首次推送和所有已有提交。push 前正常 fetch 比较远端；没有 force/reset/clean、文件树上传、秘密生成或发布部署授权。
+
+统一登录提交db3ea9f已保存并保留完整恢复bundle；用户追加业务日志用途澄清时，该SHA完整verify已过96单测、正运行watch，由主流程主动终止（143），不记为整套通过或测试失败。日志位于.artifacts/verify-db3ea9f-scope-interrupted.log。统一命名后的新冻结SHA重新运行全部verify并检查同SHA CI。

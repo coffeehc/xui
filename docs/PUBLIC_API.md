@@ -55,9 +55,9 @@
 | `@coffeehc/xui-react/theme` <!-- public-entry: @coffeehc/xui-react/theme --> | [源码](../packages/ui-react/src/theme.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/api-key` <!-- public-entry: @coffeehc/xui-react/api-key --> | [源码](../packages/ui-react/src/api-key.tsx) | [合同](API_KEY.md) | [示例](../examples/api-key-react/app.tsx) |
 | `@coffeehc/xui-react/structured-log` <!-- public-entry: @coffeehc/xui-react/structured-log --> | [源码](../packages/ui-react/src/structured-log.tsx) | [合同](LOGS.md) | [示例](../examples/log-react/app.tsx) |
-| `@coffeehc/xui-runtime/business-audit` <!-- public-entry: @coffeehc/xui-runtime/business-audit --> | [源码](../packages/runtime/src/business-audit.ts) | [合同](BUSINESS_AUDIT.md) | [示例](../examples/audit-vanilla/app.js) |
-| `@coffeehc/xui-runtime/business-audit-dom` <!-- public-entry: @coffeehc/xui-runtime/business-audit-dom --> | [源码](../packages/runtime/src/business-audit-dom.ts) | [合同](BUSINESS_AUDIT.md) | [示例](../examples/audit-vanilla/app.js) |
-| `@coffeehc/xui-react/business-audit` <!-- public-entry: @coffeehc/xui-react/business-audit --> | [源码](../packages/ui-react/src/business-audit.tsx) | [合同](BUSINESS_AUDIT.md) | [示例](../examples/audit-react/app.tsx) |
+| `@coffeehc/xui-runtime/business-log` <!-- public-entry: @coffeehc/xui-runtime/business-log --> | [源码](../packages/runtime/src/business-log.ts) | [合同](BUSINESS_LOGS.md) | [示例](../examples/business-log-vanilla/app.js) |
+| `@coffeehc/xui-runtime/business-log-dom` <!-- public-entry: @coffeehc/xui-runtime/business-log-dom --> | [源码](../packages/runtime/src/business-log-dom.ts) | [合同](BUSINESS_LOGS.md) | [示例](../examples/business-log-vanilla/app.js) |
+| `@coffeehc/xui-react/business-log` <!-- public-entry: @coffeehc/xui-react/business-log --> | [源码](../packages/ui-react/src/business-log.tsx) | [合同](BUSINESS_LOGS.md) | [示例](../examples/business-log-react/app.tsx) |
 | `@coffeehc/xui-theme/auth.css` <!-- public-entry: @coffeehc/xui-theme/auth.css --> | [源码](../packages/theme/src/auth.css) | [合同](AUTH.md) | [示例](../examples/login-vanilla/app.js) |
 | `@coffeehc/xui-runtime/auth` <!-- public-entry: @coffeehc/xui-runtime/auth --> | [源码](../packages/runtime/src/auth.ts) | [合同](AUTH.md) | [示例](../examples/shared/login-model.ts) |
 | `@coffeehc/xui-runtime/login-dom` <!-- public-entry: @coffeehc/xui-runtime/login-dom --> | [源码](../packages/runtime/src/login-dom.ts) | [合同](AUTH.md) | [示例](../examples/login-vanilla/app.js) |
@@ -82,7 +82,7 @@
 | HTTP | 默认 GET、response=ajax、same-origin credentials、Go successCode=1；没有默认 timeout 或重试。空/false/null payload 合法。响应模式、headers、认证/错误/重试适配与预算见 HTTP 合同，写操作不自动重放 |
 | webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list/total，未请求总数的 total 不代表真实零 |
 | API Key | 首次读取由宿主 refresh；默认可创建、仅 active 可撤销，unknown/null 须显式许可。权限/有效期/defaultExpiryId 必须宿主声明，默认权限集合为空；基础验证和单一写入 owner，无默认 HTTP route、生成或持久化；完整值仅瞬时结果 |
-| 业务审计 | 显式首次 refresh，page size=50（1–200），两个宿主 loader，无默认 endpoint/auth/scope；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
+| 业务日志 | 显式首次 refresh，page size=50（1–200），两个宿主 loader，无默认 endpoint/auth/scope；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
 | 登录页/auth | 一个已有 HTTP/auth/theme owner；固定 v1 cookie login/logout/session、严格 schema_version=1 user DTO、timeout=15000ms、no retry、no-store、ignore上下文401。页面挂载核会话，配置文本/logo，returnTo安全fallback `/`，没有callback则同源根路径导航；密码瞬时DOM，退出未知不假称成功，详见 AUTH |
 | 独立结构化错误 | 初始 groups、page size=50（1–200），host 显式 refresh；无隐式 endpoint/scope/排序/总记录数。v1/list/cursor、纳秒时间、uint64 字符串、三态、累计/命中/首次代表；详情只按记录 ID 读取，缓存仅当前链已访问摘要，刷新新快照 |
 
@@ -92,4 +92,4 @@ React 组合控件保留各自公开 props/ref/render/parts；Select/Combobox/Me
 
 低层 navigation helpers（indexNavigation、getNavigationActiveId、resolveNavigationIcon、navigateNavigationItem、createNavigationKeyboard、renderNavigationIcon）与 DTO parsers/codecs 也是公开入口中的导出，已纳入全部名字/types/运行时核对；普通页面优先完整菜单/控制器，只有宿主组合公共结构需要时使用它们。不要让 helper 变成第二套 selected/键盘或 response/query owner。
 
-业务流程、认证、权限、tenant、API 与审计仍由宿主拥有并独立测试；UI 消费同一能力。完整后台 facade、业务路由与产品迁移尚未实施。能力不足按采用手册反馈，不能以未验证的私有 CSS/内部 DOM/响应别名长期补丁补齐。
+业务流程、认证、权限、tenant、API 与日志仍由宿主拥有并独立测试；UI 消费同一能力。完整后台 facade、业务路由与产品迁移尚未实施。能力不足按采用手册反馈，不能以未验证的私有 CSS/内部 DOM/响应别名长期补丁补齐。

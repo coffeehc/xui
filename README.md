@@ -11,7 +11,7 @@
 - [可配置登录页与统一认证接口](docs/AUTH.md)
 - [HTTP 与共享 query 接入](docs/HTTP.md)
 - [API Key 通用管理](docs/API_KEY.md)
-- [可扩展业务审计](docs/BUSINESS_AUDIT.md)
+- [业务日志查询](docs/BUSINESS_LOGS.md)
 - [独立结构化错误查询与拟议 facade 合同](docs/LOGS.md)
 - [来源与后续迁移计划](docs/MIGRATION.md)
 - [能力覆盖与宿主边界](docs/FOUNDATION.md)

@@ -1,6 +1,6 @@
 # 结构化错误分组、观察与详情
 
-这是此前实现的独立错误观察功能，不能作为本轮业务审计交付。业务审计使用 [BusinessAuditExplorer 合同](BUSINESS_AUDIT.md)，不把 severity、错误分组或首次代表映射成 actor/action/result。既有代码和历史提交保留。
+这是此前实现的独立错误观察功能，不能作为本轮业务日志交付。业务日志使用 [BusinessLogExplorer 合同](BUSINESS_LOGS.md)，不把 severity、错误分组或首次代表映射成 actor/action/result。既有代码和历史提交保留。
 
 这是实现接口；完整通用规则只在 [DESIGN.md](DESIGN.md)。runtime/structured-log 提供无框架类型、DTO 校验、HTTP bridge 和单一查询/详情控制器；React/structured-log 的 StructuredLogExplorer 与 runtime/structured-log-dom 的 createStructuredLogExplorer 生成完整只读页面，复用公共布局、表格、字段、反馈与 Dialog。没有额外日志皮肤或下游 Tailwind 扫描要求。
 

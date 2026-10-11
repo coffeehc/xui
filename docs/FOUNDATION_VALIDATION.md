@@ -85,9 +85,9 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 
 这些是合成数据和模拟 Clipboard 检查，不证明真实后端鉴权/密钥安全/幂等或 OS 剪贴板行为；不声称 JS 安全擦除或剪贴板撤回。真实移动 OS、读屏器、原生浏览器 zoom、Firefox/Safari、SSR hydration、生产性能及新增独立代理审查未跑。没有产品迁移、推送、部署或包发布；结构化日志与最终手册/接入 skill 仍为后续独立步骤。
 
-## 独立结构化错误观察步骤（非业务审计）
+## 独立结构化错误观察步骤（非业务日志）
 
-用户后续明确日志目标是可审计业务日志。下面保留此前错误观察步骤的历史证据；这些结果不能当作业务审计交付。业务审计独立合同见 [BUSINESS_AUDIT.md](BUSINESS_AUDIT.md)。
+用户后续明确日志目标是可随时调取查阅的业务记录。下面保留此前错误观察步骤的历史证据；这些结果不能当作业务日志交付。业务日志独立合同见 [BUSINESS_LOGS.md](BUSINESS_LOGS.md)。
 
 本步骤基线为本地 6f2006614c626ca841416695ea00f63a54a93026。通过正常 Git 读取 commons@b0bc0f9 的 service/query/record/extension/README 完整合同；固定 SHA、拟议 DTO/HTTP facade 与宿主边界见 [LOGS.md](LOGS.md)。runtime/structured-log 控制器和类型被 React/structured-log、runtime/structured-log-dom 共用；两类完整正式 tarball 消费者共用 typed fake facade/labels，仅导入公开 CSS，不用源码 alias，原生不安装 React。只读分组/观察/精确详情，没有投递运维、删除、重放或全文系统。
 
@@ -99,15 +99,15 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 
 这些结果是合成 fetch/模拟 Clipboard 的展示合同与生命周期验证。未实现或验证生产后端 facade、Go/PostgreSQL、真实鉴权/tenant 隔离/脱敏、OS 剪贴板、产品迁移或新增独立代理审查；真实移动 OS、读屏器、原生浏览器 zoom、Firefox/Safari、SSR hydration 与生产性能仍未跑。没有推送、部署或包发布；最终手册与仓库接入 skill 继续独立收口。
 
-## 业务审计、手册与 skill 收口
+## 业务日志、手册与 skill 收口
 
-用户已纠正日志目标为可审计业务行为。本步骤在保留上述错误观察代码/历史的基础上新增 runtime/business-audit、runtime/business-audit-dom、React/business-audit。固定公共审计字段与 event_type/schema_version、独立领域 JSON payload、显式 list/detail loader；完整合同见 [BUSINESS_AUDIT.md](BUSINESS_AUDIT.md)。合成两宿主覆盖 user/agent/service、四种结果、已知/未知 payload 版本与安全回退，不强制 before/after 或把 severity 冒作业务结果。
+用户已纠正日志目标为可随时调取查阅的业务记录。本步骤在保留上述错误观察代码/历史的基础上新增 runtime/business-log、runtime/business-log-dom、React/business-log。固定公共日志字段与 event_type/schema_version、独立领域 JSON payload、显式 list/detail loader；完整合同见 [BUSINESS_LOGS.md](BUSINESS_LOGS.md)。合成两宿主覆盖 user/agent/service、四种结果、已知/未知 payload 版本与安全回退，不强制 before/after 或把 severity 冒作业务结果。
 
-新增 11 项审计单测和 12 项浏览器检查；既有 API Key/错误观察新增 6 条控制器重入回归及 2 条同步清空保留 DOM 节点的浏览器回归。全套 87 单测、1 默认真实 watch、126 浏览器检查，另含 token 单源/无循环、根 types、48 全部公开入口的独立安装 ESM/CSS/init/types/运行导出与14正式页面消费、peer/按需/体积门禁。实际冻结 SHA 标准 verify 的数量和状态随最终交付给出；完整日志 .artifacts/verify-final.log，未用预提交局部结果替代全量执行。
+新增 11 项日志单测和 12 项浏览器检查；既有 API Key/错误观察新增 6 条控制器重入回归及 2 条同步清空保留 DOM 节点的浏览器回归。全套 87 单测、1 默认真实 watch、126 浏览器检查，另含 token 单源/无循环、根 types、48 全部公开入口的独立安装 ESM/CSS/init/types/运行导出与14正式页面消费、peer/按需/体积门禁。实际冻结 SHA 标准 verify 的数量和状态随最终交付给出；完整日志 .artifacts/verify-final.log，未用预提交局部结果替代全量执行。
 
 三项独立只读审查的实质发现、修复/旧代码失败证据、源码/正式声明核对，以及四个 skill 接入任务见 [FINAL_REVIEW.md](FINAL_REVIEW.md)。仓库 skill 具备正式 frontmatter 和 UI 提示，不装到用户电脑；手册强调 agent-ready、领域 API 独立测试，以及先接 xui/随后逐项目替换 baseservice 的螺旋升级，不新增后端或运行配置组件。
 
-真实后端 adapter、权限/tenant/脱敏/审计可靠性及产品迁移未实施，不承诺不可篡改或审计事务成功。真实移动 OS、读屏器、Firefox/Safari、SSR hydration、原生 browser zoom 和生产性能未跑；Clipboard/触屏/字号缩放限制保持。最终正常 push 与同 SHA CI 仅在本轮完整验收后执行；首次 CI 的三个浏览器失败及追加修正见 [FINAL_REVIEW.md](FINAL_REVIEW.md)。包仍 private、不部署不发布。
+真实后端 adapter、权限/tenant/脱敏/日志可靠性及产品迁移未实施，不承诺不可篡改或日志事务成功。真实移动 OS、读屏器、Firefox/Safari、SSR hydration、原生 browser zoom 和生产性能未跑；Clipboard/触屏/字号缩放限制保持。最终正常 push 与同 SHA CI 仅在本轮完整验收后执行；首次 CI 的三个浏览器失败及追加修正见 [FINAL_REVIEW.md](FINAL_REVIEW.md)。包仍 private、不部署不发布。
 
 
 ## 配置登录与三层设计哲学收口
@@ -118,6 +118,8 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 
 新增9项认证逻辑检查和14项浏览器回归，涵盖严格DTO、固定方法/路径/body、共享401通知隔离、登录退出/currentUser一致、错误安全、防重复、不合作取消与超时/迟到、回跳规范化和已知凭据参数、三主题/键盘/focus/reduced-motion、390px/200%/后备字体/126字配置、pagehide/卸载清空保留密码节点。独立审查发现长品牌或动作压空正文P2；修复后增加同时126字品牌+120字动作配置回归，正文有可用空间、按钮在视口内、完整文字可滚动且登录可执行。品牌单独的正式tarball复核为正文326px/按钮bottom655≤720；同时长动作的dev预览复核为正文254px/同样bottom655，最终正式消费仍由整套verify确认。
 
-全套纳入96单测、1真实默认watch、140浏览器检查；52全部公开入口(theme14/runtime17/React21)和16正式页面的独立安装ESM/CSS/init/types/实际导出、peer/按需/体积门禁。watch真实启动同时验证登录CSS与审计参考资源，新增入口也排除在Button-only实际贡献之外。冻结SHA完整verify、正常推送和同SHA CI实际状态随交付报告；详细首次失败、定位器修正与复核见[FINAL_REVIEW](FINAL_REVIEW.md)。
+全套纳入96单测、1真实默认watch、140浏览器检查；52全部公开入口(theme14/runtime17/React21)和16正式页面的独立安装ESM/CSS/init/types/实际导出、peer/按需/体积门禁。watch真实启动同时验证登录CSS与日志参考资源，新增入口也排除在Button-only实际贡献之外。冻结SHA完整verify、正常推送和同SHA CI实际状态随交付报告；详细首次失败、定位器修正与复核见[FINAL_REVIEW](FINAL_REVIEW.md)。
 
-真实Cookie签发/撤销、安全属性、CSRF/CORS、鉴权、tenant与真实业务/审计后端均未实现或集成验证。注册、重置、SSO和完整用户管理是后续组合，不声称基础系统全部完成或任何产品已迁移；原有真实移动OS/读屏器/其它浏览器/原生zoom/SSR/生产性能未跑限制保持。包private，不发布不部署，不改许可证/可见性或其它仓库。
+真实Cookie签发/撤销、安全属性、CSRF/CORS、鉴权、tenant与真实业务/日志后端均未实现或集成验证。注册、重置、SSO和完整用户管理是后续组合，不声称基础系统全部完成或任何产品已迁移；原有真实移动OS/读屏器/其它浏览器/原生zoom/SSR/生产性能未跑限制保持。包private，不发布不部署，不改许可证/可见性或其它仓库。
+
+最新用户澄清：业务日志用于随时查询，早期BusinessAudit名称统一改为BusinessLog、business-log公开入口和两示例路径，原控制器/字段/payload安全与权限边界保持在同一实现内，不增加重复页或正式审计保证。独立程序错误观察仍为原LOGS用途。baseservice收敛日志能力及取消auditservice不在本轮实施范围，前端可先接现有typed loader；重新冻结提交与全套验收，以本轮最终交付为准。

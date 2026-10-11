@@ -84,9 +84,9 @@
       "types": "./dist/structured-log.d.ts",
       "import": "./dist/structured-log.js"
     },
-    "./business-audit": {
-      "types": "./dist/business-audit.d.ts",
-      "import": "./dist/business-audit.js"
+    "./business-log": {
+      "types": "./dist/business-log.d.ts",
+      "import": "./dist/business-log.js"
     },
     "./login": {
       "types": "./dist/login.d.ts",

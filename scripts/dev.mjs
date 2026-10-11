@@ -3,7 +3,7 @@ import {mkdir,mkdtemp,readFile,writeFile,copyFile,rename,rm,readdir} from 'node:
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {extract} from './tokens.mjs';
-const kinds=['vanilla','react','foundation-vanilla','foundation-react','menu-vanilla','menu-react','http-vanilla','http-react','api-key-vanilla','api-key-react','log-vanilla','log-react','audit-vanilla','audit-react','login-vanilla','login-react'];
+const kinds=['vanilla','react','foundation-vanilla','foundation-react','menu-vanilla','menu-react','http-vanilla','http-react','api-key-vanilla','api-key-react','log-vanilla','log-react','business-log-vanilla','business-log-react','login-vanilla','login-react'];
 const names={'@coffeehc/xui-theme':'theme','@coffeehc/xui-runtime':'runtime','@coffeehc/xui-react':'ui-react'};
 /** Development aliases target published-layout dist files, never package source. Formal verify uses installed tarballs. */
 export async function buildDevExamples(){
@@ -19,7 +19,7 @@ export async function buildDevExamples(){
       await build({entryPoints:foundation?{app:`examples/${kind}/app.${react?'tsx':'js'}`,'heavy-panel':`examples/${kind}/heavy-panel.${react?'tsx':'js'}`}:[`examples/${kind}/app.${react?'tsx':'js'}`],outdir:directory,bundle:true,splitting:foundation,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',plugins:[plugin],define:{'process.env.NODE_ENV':'"development"'}});
       await copyFile(`examples/${kind}/index.html`,`${directory}/index.html`);await copyFile('packages/runtime/dist/init.js',`${directory}/theme-init.js`);
       if(kind.startsWith('login-'))await copyFile('examples/shared/login-mark.svg',`${directory}/mark.svg`);
-      if(kind.startsWith('audit-'))await copyFile('examples/shared/audit-reference.html',`${directory}/reference.html`);
+      if(kind.startsWith('business-log-'))await copyFile('examples/shared/business-log-reference.html',`${directory}/reference.html`);
       if(kind.startsWith('log-'))await copyFile('examples/shared/log-reference.html',`${directory}/reference.html`);
       if(kind.startsWith('menu-'))await copyFile('examples/shared/menu-destination.html',`${directory}/destination.html`);
       if(foundation)await copyFile('packages/theme/dist/floating.css',`${directory}/optional.css`);

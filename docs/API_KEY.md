@@ -21,7 +21,7 @@
 | adapter.create | 接收冻结的 draft 与 {signal}，返回 CreatedApiKey；失败必须 reject |
 | adapter.revoke | 接收冻结的 metadata 与 {signal}，确认成功返回 void；失败必须 reject，false/null/对象不被当成成功 |
 
-parseApiKeyMetadata 验证精确公开字段并复制冻结 allowlist，剔除多余 secret/token/body 等字段；它不是通用脱敏引擎。prefix/name/日期/权限名和宿主提供的 labels 必须是可展示数据，不能把完整值伪装进元数据。nullable 字段必须明确为 null，不能用缺字段或别名猜测。后端鉴权、租户绑定、生成/保存/撤销、幂等、防泄漏和审计仍由后端负责；组件 disabled 不能代替鉴权。
+parseApiKeyMetadata 验证精确公开字段并复制冻结 allowlist，剔除多余 secret/token/body 等字段；它不是通用脱敏引擎。prefix/name/日期/权限名和宿主提供的 labels 必须是可展示数据，不能把完整值伪装进元数据。nullable 字段必须明确为 null，不能用缺字段或别名猜测。后端鉴权、租户绑定、生成/保存/撤销、幂等、防泄漏和日志仍由后端负责；组件 disabled 不能代替鉴权。
 
 options 声明 permissions、expiryOptions、defaultExpiryId/defaultPermissionIds、canCreate、canRevoke、同步 validateCreate 与 labels。默认可创建；默认仅 active 可撤销，null/unknown 需宿主显式许可，revoked/expired 不再撤销。canCreate=false 隐藏创建入口。默认要求非空名称、已声明且可选权限、有效期选项；业务约束由 validateCreate 返回已明确安全的 name/permissions/expiry 消息，不能绕过基础选择检查。宿主选项固定在 owner 中；身份/权限范围变化时先释放旧 owner，再建新 owner。
 
@@ -47,6 +47,6 @@ refresh 只有读取 callback；新读取取消旧读取，迟到元数据不覆
 
 可运行的 [React](../examples/api-key-react/app.tsx)/[原生](../examples/api-key-vanilla/app.js) 示例共用 [typed 假数据模型](../examples/shared/api-key-model.ts) 与 [同一 labels](../examples/shared/api-key-labels.json)。执行根 pnpm build、pnpm test:consumer、pnpm preview，访问 `/api-key-react/` 或 `/api-key-vanilla/`。模型明确为内存合成后端，权限/日期/完整值都以 demo/FAKE 命名，无真实密钥生成、产品请求或授权能力。测试模式 hold 故意不合作，用于迟到竞态检查。
 
-正式 consumer 从三个本地 tarball 独立安装，检查 ESM/types、无源码 alias、只用公开 CSS；原生不安装 React。采用真实项目时先盘点现有权限、授权、错误/幂等、分页和审计，再用一次 endpoint adapter 映射回调；不得默认旧 data/token/items 别名或擅自构造不存在的 API Key endpoint。后端若使用 Go AjaxResponse/ListData，则显式采用 HTTP/query 合同并在领域 adapter 返回 metadata 数组或 CreatedApiKey。
+正式 consumer 从三个本地 tarball 独立安装，检查 ESM/types、无源码 alias、只用公开 CSS；原生不安装 React。采用真实项目时先盘点现有权限、授权、错误/幂等、分页和日志，再用一次 endpoint adapter 映射回调；不得默认旧 data/token/items 别名或擅自构造不存在的 API Key endpoint。后端若使用 Go AjaxResponse/ListData，则显式采用 HTTP/query 合同并在领域 adapter 返回 metadata 数组或 CreatedApiKey。
 
 组件没有 edit/轮换/批量操作/导出/后台自动到期判断。真实服务端合同与鉴权、真实 OS 剪贴板、读屏器、Firefox/Safari/SSR 仍需产品验收。安全与交互检查见 [验证记录](FOUNDATION_VALIDATION.md)，整体接入见 [ADOPTION.md](ADOPTION.md)。

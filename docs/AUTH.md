@@ -67,10 +67,10 @@ React：`<ConfigurableLoginPage auth={auth} theme={theme} config={config} />`。
 
 cookie 的签发/轮换/有效期/服务端撤销、HttpOnly/Secure/SameSite、准确的 Path/Domain、no-store响应、限速及用户枚举防护由真正后端实施。包括登录在内的写操作必须有后端 CSRF 防护（准确 Origin/Fetch Metadata 和缺 header 策略，或项目既有 token 方案），拒绝不合适的 simple content-types 与宽松 CORS。前端仅 JSON、同源路径和 credentials 不能提供这些保证。[OWASP CSRF 指南](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#possible-csrf-vulnerabilities-in-login-forms)
 
-跨 origin 服务必须由宿主显式配置 HttpClient credentials=include 及准确服务端 CORS/CSRF/cookie策略；same-origin 默认不会自动发送跨 origin cookie。[MDN Request.credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) xui 不读取或创建 cookie、JWT/access/refresh token，也不引入 token 持久化。登录/退出是否写业务审计由宿主后端决定，页面不重复写入。
+跨 origin 服务必须由宿主显式配置 HttpClient credentials=include 及准确服务端 CORS/CSRF/cookie策略；same-origin 默认不会自动发送跨 origin cookie。[MDN Request.credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) xui 不读取或创建 cookie、JWT/access/refresh token，也不引入 token 持久化。登录/退出是否写业务日志由宿主后端决定，页面不重复写入。
 
 ## 验证与后续边界
 
 [共享配置](../examples/shared/login-config.json)、[合成 facade](../examples/shared/login-model.ts)、[React](../examples/login-react/app.tsx) 与 [原生](../examples/login-vanilla/app.js) 都经 fresh npm tarball 安装正式入口再打包，不读 monorepo 源码 alias，也不需要私有页面 CSS。[逻辑回归](../tests/auth.test.mjs) 与 [浏览器回归](../tests/browser/login.spec.mjs) 核对严格 DTO、共享401、固定请求、取消/超时/迟到/防重复、回跳、错误安全、theme、键盘/焦点/reduced-motion、390px/200%/后备字体和密码节点清空。
 
-合成 fetch 没有签发真实 cookie，不证明后端登录、CSRF、CORS、鉴权或审计可靠性通过。最终完整验收与同 SHA CI 随交付记录。注册、重置密码、SSO、完整用户管理 UI 和 baseservice 后端是后续组合计划；当前基础已有登录/API Key/业务审计，不声称完整基础系统或产品迁移已完成。
+合成 fetch 没有签发真实 cookie，不证明后端登录、CSRF、CORS、鉴权或日志可靠性通过。最终完整验收与同 SHA CI 随交付记录。注册、重置密码、SSO、完整用户管理 UI 和 baseservice 后端是后续组合计划；当前基础已有登录/API Key/业务日志，不声称完整基础系统或产品迁移已完成。

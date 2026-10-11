@@ -59,13 +59,13 @@
       "types": "./dist/structured-log-dom.d.ts",
       "import": "./dist/structured-log-dom.js"
     },
-    "./business-audit": {
-      "types": "./dist/business-audit.d.ts",
-      "import": "./dist/business-audit.js"
+    "./business-log": {
+      "types": "./dist/business-log.d.ts",
+      "import": "./dist/business-log.js"
     },
-    "./business-audit-dom": {
-      "types": "./dist/business-audit-dom.d.ts",
-      "import": "./dist/business-audit-dom.js"
+    "./business-log-dom": {
+      "types": "./dist/business-log-dom.d.ts",
+      "import": "./dist/business-log-dom.js"
     },
     "./auth": {
       "types": "./dist/auth.d.ts",
