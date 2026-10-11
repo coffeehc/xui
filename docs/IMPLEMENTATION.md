@@ -1,89 +1,90 @@
-# 第一版实施映射
+# 通用基础实施与采用接口
 
-完整通用规则仅在 [DESIGN.md](DESIGN.md)。这里记录本仓库如何实施、接口和范围，不重新定义品牌原始值。
+完整通用规则仅在 [DESIGN.md](DESIGN.md)，当前版本 0.5.0。范围与验收见 [FOUNDATION.md](FOUNDATION.md)；本文件记录实现映射，不维护另一套品牌默认值。
 
-## 包边界和消费
+## 包与正式入口
 
-| 包 | 输出 | 依赖与职责 |
+全部包 private、ESM；本地 npm pack 用于验证，不发布。没有 CommonJS、SSR hydration 或子树主题支持声明。
+
+| 包 | 正式入口 | 职责 |
 | --- | --- | --- |
-| `@coffeehc/xui-theme` | `style.css`、`tokens.css`、`components.css` | 无依赖、无框架；完整默认 token、可选择的 `.xui-*` 基础控件样式。无 Tailwind 扫描或运行时编译要求 |
-| `@coffeehc/xui-runtime` | ESM `index.js`、`index.d.ts`、经典同步 `init.js` | 无依赖；mode、storage、matchMedia、订阅/释放，无 JS 色板或业务状态 |
-| `@coffeehc/xui-react` | ESM `index.js`、`index.d.ts` | React/ReactDOM/Base UI 是 peerDependencies；原生组件薄封装，Tabs/Dialog 的完整交互复用 Base UI |
+| `@coffeehc/xui-theme` | `style.css`、`tokens.css`、`components.css`、`critical.css`；`base/button/forms/navigation/feedback/dialog/layout/floating/table.css` | 无框架依赖，预构建 CSS。critical 包含 token 和除 floating 外的组件样式 |
+| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
+| `@coffeehc/xui-react` | 根；`/button/forms/navigation/tabs/dialog/feedback/layout/table/select/combobox/menu/popover/tooltip/toast/theme` | React、ReactDOM、Base UI、runtime 是 peers；不捆绑宿主实例，不隐式引入 CSS |
 
-当前提供 ESM 和类型入口，没有声明 CommonJS 支持。包都为 private；`npm pack` 仅生成本地 tarball。CSS 要显式导入，不由 React 导入时暗中带入。
+优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
 
-runtime 的同步初始化脚本声明为有副作用，打包器须保留仅为执行初始化而导入的 `init.js`；ESM 控制器入口保持可 tree-shake。首屏时序仍以以下阻塞经典 script 示例为验收方式。
+`design-default-css` 是唯一受控原始值来源。生成器检查 271 个变量、全部模式依赖图、前言摘要、产品覆盖和提取字节一致性。浮层 CSS 只允许 peer 提供的四个测量变量：available-height、anchor-width、toast-swipe-movement-x/y；它们不是品牌默认值或泛化缺失变量白名单。
 
-```ts
-import '@coffeehc/xui-theme/style.css';
-import { createThemeController } from '@coffeehc/xui-runtime';
-```
+层序为规范的 xui-tokens、xui-components、product-overrides。旧项目未分层 CSS 的普通声明高于所有分层声明，不能只靠导入顺序推断 xui 能覆盖旧样式。采用时显式决定旧 CSS 所在层或移除精确重复规则，再检查真实 computed style。产品覆盖在同一 document 根上，少量语义覆盖按规范定义；本版不支持子树独立主题。
 
-静态页面可直接复制打包后的 CSS/JS，以 `<link>` 加载 CSS。运行时初始脚本放在样式和可见内容之前：
+## 主题单一所有者
+
+无受控 mode 时 runtime 可以持久化，默认 key 为 ui.theme.mode；persist:false 完全使用内存。传入 mode 则完全受控，不隐式读写 storage。setMode 只请求 onModeChange，宿主确认后调用 syncMode；state.mode 保留用户选择，state.effective 是当前浅深结果。显式浅深不被系统变更覆盖。
+
+首屏阻塞经典脚本置于 CSS 和可见内容之前；应用复用 window.xuiTheme。window.xuiThemeOptions 可在脚本前提供受控 mode/onModeChange 或 storageKey。data-storage-key 优先于 options key。重复 init 复用存活 owner；销毁后重新执行 init 才重建。宿主确认受控值时同时更新 options.mode，使以后重建使用最新事实。
 
 ```html
 <script src="./theme-init.js" data-storage-key="ui.theme.mode"></script>
 <link rel="stylesheet" href="./app.css">
 ```
 
-初始化器把唯一控制器保存到 `window.xuiTheme`。应用优先复用它：
-
 ```ts
-const theme = window.xuiTheme ?? createThemeController();
-theme.setMode('system');
-const modeSelect = document.querySelector<HTMLSelectElement>('select[data-theme-mode]');
-const unsubscribe = theme.subscribe(state => { if (modeSelect) modeSelect.value = state.mode; });
-// 应用卸载时 unsubscribe；文档级所有者销毁时 theme.destroy()。
+const theme = window.xuiTheme;
+const off = theme.subscribe(state => updateView(state));
+// 卸载视图时 off()，文档所有者终止时 theme.destroy()。
 ```
 
-应用自己创建控制器时同一 document 只创建一次。`storageKey` 可覆盖；首屏脚本与应用须使用同一 key。默认 `system`；无效值回退，存储拒绝保留内存选择，系统读取失败生效 light。显式主题不受系统改变影响。导入模块不访问 DOM，SSR 可以导入；当前消费样本是客户端页面，未验证产品 SSR hydration。
+foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控模式桥接；保留其他 JSON 字段，原始 ui.theme.mode 不被覆盖。storage/matchMedia 异常回退可用内存/light；系统变化有单一监听。React useTheme 只订阅外部 owner，在 StrictMode 中不创建或销毁它。ESM 导入本身不读 DOM。
 
-## 规范与生成流程
+## React 公共组件
 
-`docs/DESIGN.md` 的 `design-default-css` 是完整受控原始值来源。`scripts/tokens.mjs` 原样提取到忽略的构建目录，并检查全部引用、依赖循环、271 个根变量、浅深/system 配方、减少动效配方、YAML 颜色/文字/圆角/间距/组件摘要和消费样式引用。`pnpm check:tokens` 比较实际生成文件，不能通过手改 dist 维护一套默认值。
-
-示例蓝色覆盖也从规范的 `design-product-css` 提取，作用于同一根元素的 `product-overrides` 层。组件仅消费语义/必要组件变量；对源码 CSS 检查缺失 var、原始色值、基础 palette 回流和额外默认变量。产品覆盖只改变品牌操作对、按钮高和最大宽度，不改变状态或 document 色板。CSS 变量在根元素求值，子树主题不是本版接口。
-
-## 组件映射
-
-| React API / CSS | 实施职责 |
+| 能力 | API 与边界 |
 | --- | --- |
-| `Button` / `.xui-button` | 原生 button，默认 type=button；primary/secondary/outline/ghost/destructive、xs/sm/default/lg。真实 disabled、aria-busy 由使用者提供；不自行请求或猜业务防重 |
-| `IconButton` | 必须提供 aria-label，复用 Button 和统一图标尺寸 |
-| `Field` + `Input`/`Textarea`/`NativeSelect` | label→control→help→error；自动关联 id、required、invalid、describedby。每个 Field 一个控件；显式 id 用 Field 的 controlId 保持关联。保留 readOnly、原生选项和 ref |
-| `Checkbox`/`Radio`/`Switch` | 原生 input，包裹 label；checked/defaultChecked/name/onChange 全部由原生/调用方拥有。Switch 使用原生 checkbox 与 switch 语义 |
-| `Nav`/`NavItem` | 原生 nav/link；selected 映射 aria-current，左短竖线独立定位，不改变内距。disabled 去 href、退出 Tab 顺序并禁止 click；disabled+selected 保留归属 |
-| `Tabs.Root/List/Tab/Panel` | Base UI peer 管理激活和 panel 关联。1.7.0 原生策略允许 disabled tab 获得方向键焦点；List 仅适配方向键/Home/End 焦点以跳过 disabled，保留 RTL、orientation 和 loopFocus。默认手动激活，Enter/Space 确认；可传 activateOnFocus。旧 panel 立即隐藏，保留新 panel 淡入 |
-| `Alert` | 被动状态表面；error 默认 alert，其余默认 status，文字由调用方提供；不将业务错误改为空态 |
-| `Surface` | 被动 section，raised、一层边界，无 hover/焦点伪语义 |
-| `Dialog.Root/Trigger/Content/Title/Description/Body/Footer/Close` | Base UI 模态、portal、Esc/取消/回焦点；不自动保存，body 滚动、footer 可达。Content 提供公共 backdrop/popup 样式。移除触发器时调用者需指定 peer 的 finalFocus |
+| 布局 | AppShell、Container、Stack、Grid、PageHeader、Toolbar、Section。AppShell 有 skip link、桌面 sidebar、窄屏模态 drawer；一个 sidebar 树，resize 回到可见焦点。宿主拥有路由、选中、sidebarOpen/onSidebarOpenChange |
+| 操作 | Button/IconButton 复用 Base UI Button，支持 ref、render、nativeButton、className 函数、事件取消；默认 type=button。aria-busy 与 disabled 独立，不自动防重。render 为链接且希望链接语义时明确 role=link；nativeButton=false 保持 peer 默认按钮语义 |
+| 字段 | Field 每个一个 Input/Textarea/NativeSelect 或 choice。controlId 是显式 owner；未给 controlId 时识别直接或结构包装内已知控件的 id。自定义复合控件用 controlId 显式关联。help/error/required/invalid/describedby 自动关联；readOnly/ref 保留 |
+| 分组 | Fieldset 清除单字段上下文，独立 legend/help/error；Checkbox/Radio/Switch 各有自己的 label、name、checked/defaultChecked 和 onChange，不共用输入 id |
+| 导航 | Nav/NavItem、Breadcrumbs、Pagination、Disclosure。Pagination/Disclosure 受控与非受控，宿主负责导航/数据；NavItem disabled 去 href 并阻止激活 |
+| Tabs | Root/List/Tab/Panel 复用 peer；方向键/Home/End 仅适配跳过 disabled，保留手动/自动激活、loop、RTL/orientation、ref/render/className 函数和 Tab/List capture/bubble。preventBaseUIHandler 取消控件行为，preventDefault 仅取消浏览器默认 |
+| 复合选择 | Select/Combobox 复用 peer generic Root，样式部件、Content portal/positioner/popup；受控、禁用、搜索空结果和取消仍由 peer/宿主负责。Positioner 测量通过 CSS，无 JS 色板 |
+| 弹层 | Dialog、Menu、Popover、Tooltip。Root/Trigger/Content/部件延续 peer 生命周期。Menu disabled 项可在 peer roving 顺序获得焦点但不能执行；原生 menu 跳过 disabled。Tooltip 增加 role 和描述 id，Root.contentId 可指定关联 id；外部 handle 触发器由宿主显式 aria-describedby 关联 |
+| 通知 | Toast Provider/manager/Root/Content/Viewport/Close 等复用 peer。peer 支持 collapsed/expanded，关闭控件在展开状态可访问，宿主不能将必要错误仅放在消失通知中 |
+| 表格 | Table/Container/Caption/Head/Body/Row/HeaderCell/Cell/SortButton，真实 table，named overflow region，scope/aria-sort/selected 由宿主事实提供。无排序/选择/查询/虚拟化引擎 |
+| 状态 | Surface/Alert、Badge/Skeleton/Spinner/Progress、Loading/Empty/ErrorState、DataRegion、RenderBoundary、useResource。错误/重试文字由宿主；render exception 重置不重试 Promise |
 
-Base UI 的 `render`、ref、事件与 className 函数保持可传递。Dialog/Tab 的生命周期根据实际 transition 处理，不用计时器阻挡真实操作。[Dialog 官方交互 API](https://base-ui.com/react/components/dialog)、[Tabs 官方 API](https://base-ui.com/react/components/tabs)；实现以安装的 1.7.0 类型和浏览器结果为准。
+Dialog 关闭不会自动保存；移除触发器时指定 finalFocus。浮层非模态时不 trap 焦点，模态与取消/回焦点按 peer。Tooltip.Content 内只有说明，交互内容用 Popover。动画使用统一 motion token；reduced-motion 下状态立即变化。
 
-Tabs 的键盘适配在 List 冒泡阶段执行，保留 Tab/List 的 capture 和 bubble 回调。遵循 peer 的事件契约：在 `onKeyDown` 中调用 `preventBaseUIHandler()` 取消控件导航；`preventDefault()` 只阻止浏览器默认行为，方向键仍跳过 disabled。方向优先来自 Base UI `DirectionProvider`，无上下文时采用 DOM 的计算方向；Shift/Alt/Ctrl/Meta 不参与普通方向导航。上下文通过 peer 正式导出的 `internals/direction-context` 读取，升级 peer 时应重跑此契约回归。
+## 原生公共结构与 controllers
 
-Vanilla 示例用原生 dialog.showModal/close 与最小采用层绑定实现焦点循环和恢复；这些绑定在示例内，主题 runtime 不承担控件状态或业务。
+body 使用 xui 类；portal/原生顶层弹层用 xui-layer。公共 layout/table/form 类与 React 对应，无示例私有布局要求。语义结构、label/name、aria-sort、区域名字、键和业务值由宿主提供。
 
-## 操作反馈覆盖
+| `/dom` API | 输入和所有权 |
+| --- | --- |
+| bindPressFeedback(root) | 仅 Enter/Space 按压状态，不合成 click；返回释放函数 |
+| createDisclosureController(trigger,panel) | aria-controls/expanded、hidden；open/defaultOpen、onOpenChange 和 syncOpen |
+| createTabsController(tablist) | 原生 role=tab 的 data-value/aria-controls；手动默认、自动激活可选、RTL/Home/End、disabled 跳过、受控 value/syncValue |
+| createDialogController(dialog,trigger) | HTMLDialogElement showModal/close、Esc cancel、data-xui-close、可见 finalFocus；native 模态焦点由浏览器承担 |
+| createPopoverController(trigger,popup) | 浏览器 Popover API、位置测量、外点/Esc、可选 menu/tooltip、受控 open/syncOpen；非模态不 trap |
+| createShellController(root) | 查找 sidebar-toggle/sidebar-dialog/sidebar/sidebar-content/main，单一 sidebar 在窄屏移入 dialog，宽屏回原位置 |
+| createToastController(viewport) | 纯文本通知、去重/限额、关闭、可选宿主 timeout、hover/focus 暂停并恢复；无默认自动消失 |
 
-| 操作 | 本版反馈 | reduced-motion |
-| --- | --- | --- |
-| 鼠标/键盘/触屏按钮 | 按压色/小幅 scale；Enter/Space data-pressed；点击立即执行 | 时长0、scale1，真实结果文字即时更新 |
-| checkbox/radio/switch | checked 底色、勾选/圆点、已有轨道内拇指过渡 | 状态即时，必要指示保留 |
-| 导航 | 选中底色/文字、独立指示淡入；hover 不改变归属 | 指示立即显示；focus 独立 |
-| Tabs | focus 移动、确认 active、新 panel 淡入 | panel 即时替换 |
-| 输入/清除/错误 | 焦点/边线过渡，错误文字立即出现，清除立即更新值 | 即时错误、值和 focus |
-| Dialog 打开/取消/Esc | 进入/退出 opacity；React 可选微缩放，取消立即改变 open 并回焦点 | 无延迟完成及回焦点 |
-| 主题/配方选择 | 控件、页面语义色过渡，草稿保留 | 即时切色 |
+open/value 受控时仅发请求，宿主调用 syncOpen/syncValue 更新事实。onOpenChange/onValueChange details.cancel() 或取消可冒泡 xui:change 事件阻止请求。destroy 终止监听/定时器，宿主保管 controller。原生 menuitemcheckbox/radio 的 checked/value 由宿主更新，普通 menuitem 执行后关闭，检查项默认保留（data-close=true 可指定关闭）。
 
-原生 select 的弹出面板由浏览器/OS 负责；不声称 CSS 控制原生弹出动画。没有添加虚假异步等待：示例保存只写内存，等待同步按钮是明确的合成 disabled+busy 样本。
+目标是支持 HTML dialog、Popover、matchMedia、AbortController、ESM dynamic import 的现代浏览器。原生 select/datalist 使用 OS 面板，datalist 允许自由输入且不是完整受控 Combobox；没有声明跨移动 OS 弹出实现一致。
 
-## 消费示例的首屏声明
+## 加载 owner 与参考页
 
-两个示例都回答“如何调整并保存此工作空间偏好”：核心内容是名称、当前草稿/保存状态、外观和主要保存操作；更多设置和长说明次要。说明由“使用说明”打开、取消/Esc 关闭并回焦点，校验错误在字段位置可见。
+createResource({loader,isEmpty?,timeoutMs?}) 提供 idle/loading/refreshing/ready/empty/error/retrying、key/value/hasValue/error/busy/request。没有默认 timeout、请求/缓存或自动重试。load(key) 替换旧任务；同 key 刷新保留旧值，不同 key 清除旧对象；retry 是显式操作；cancel/destroy 即使生产者忽略 Abort，也结束本地等待并拒绝旧结果。回调重入以 generation 再检查，订阅异常不把数据成功改成错误。
 
-声明默认支持 1280×800 和 390×844；首屏关键标题、名称和“保存偏好”必须完全可见、无水平裁切且真实可点击。长中文输入保留完整值和原生水平浏览；长帮助在 dialog body 内滚动。200% 文字放大允许自然纵滚，操作仍可达。真实原生浏览器缩放与移动 OS 面板列在验证限制中。
+useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/销毁。loadStylesheet 创建的失败/取消 link 会清理，成功 link 由宿主拥有。
 
-## 范围
+foundation-react/vanilla 提供列表、表单和详情，宿主仅有合成内存记录。备注/通知草稿由宿主保存；标题和新建/保存动作先可用。附加工具实际分成另一 ESM entry，点击后并行动态 import 和加载 floating.css；初次失败显式重试，刷新失败保留组件实例及选择，取消不挂载晚到面板。示例 5 秒 timeout 是宿主预算，不是通用库默认值。import 失败的重试示例使用不同 attempt URL，真实构建部署应由宿主定义版本/失效恢复策略。
 
-这是基础端到端第一版，没有完整 Dropdown/Combobox/Calendar/Table/图表/编辑器实现，没有密度切换要求。没有产品路由、权限、API、会话或交易抽象，没有发布、部署或产品迁移。扩充控件与采用页面按 [迁移计划](MIGRATION.md) 继续。
+## 本地与双仓联调
+
+pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本，每次启动新的构建进程；生成 CSS、ESM、types 和 init 后，构建四个预览。packages 和 examples 分别暂存、校验代际并回滚发布失败。watch-status.json 的 building/error/success 及 source/example SHA 是事实；错误时旧预览可能继续服务，不能称为新改动已生效。pnpm preview 另开本地服务，dev 不部署。
+
+正式验收先 npm pack，再在独立目录安装、编译 types 和打包；foundation 不复制 shared/layout.css。dev 的包解析也仅指向正式 exports 的 dist，没有源码入口。生产接入固定已验证的提交/本地 tarball。双仓 watch 可让宿主链接 built dist，但 React/ReactDOM/Base UI 必须由宿主保留单实例；Vite 可使用 resolve.dedupe 与指向本地正式入口的 alias，或独立 tarball 安装。链接后检查实际解析路径、ESM/types/init 的当前 generation，并运行宿主构建/页面检查。这里没有更改任何产品仓库的配置。
+
+无业务路由、权限、认证、请求、会话、交易、表格引擎、图表/编辑器/3D 引擎或密度切换要求。未覆盖项和限制见覆盖矩阵与本轮验证记录。

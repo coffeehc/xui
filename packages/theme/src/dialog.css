@@ -1,0 +1,24 @@
+@layer xui-components {
+
+  .xui-backdrop, .xui-native-dialog::backdrop { background: color-mix(in oklab, var(--foreground) 24%, transparent); }
+  .xui-backdrop { position: fixed; inset: 0; z-index: var(--z-overlay); opacity: 1; transition: opacity var(--motion-duration-exit) var(--motion-easing-exit); }
+  .xui-backdrop[data-starting-style], .xui-backdrop[data-ending-style] { opacity: 0; }
+  .xui-dialog, .xui-native-dialog {
+    width: min(var(--layout-dialog-width), calc(100vw - var(--layout-viewport-inset) * 2));
+    max-height: calc(100dvh - var(--layout-viewport-inset) * 2); padding: var(--space-section-gap);
+    border: var(--line-width-surface) solid var(--surface-line); border-radius: var(--radius-2xl);
+    background: var(--layer-overlay); box-shadow: var(--shadow-overlay);
+    overflow: hidden; opacity: 1;
+  }
+  .xui-dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: var(--z-overlay); display: flex; flex-direction: column; gap: var(--space-content-gap); transition: opacity var(--motion-duration-exit) var(--motion-easing-exit), scale var(--motion-duration-exit) var(--motion-easing-exit); }
+  .xui-dialog[data-starting-style], .xui-dialog[data-ending-style] { opacity: 0; scale: var(--motion-enter-scale); }
+  .xui-dialog[data-open] { transition-duration: var(--motion-duration-enter); transition-timing-function: var(--motion-easing); }
+  .xui-native-dialog[open] { display: flex; flex-direction: column; gap: var(--space-content-gap); }
+  .xui-native-dialog { transition: opacity var(--motion-duration-exit) var(--motion-easing-exit), display var(--motion-duration-exit) allow-discrete, overlay var(--motion-duration-exit) allow-discrete; }
+  .xui-native-dialog:not([open]) { opacity: 0; }
+  @starting-style { .xui-native-dialog[open] { opacity: 0; } }
+  .xui-dialog-title, .xui-dialog-description { margin: 0; }
+  .xui-dialog-description { color: var(--muted-foreground); }
+  .xui-dialog-body { overflow-y: auto; min-height: 0; overflow-wrap: anywhere; }
+  .xui-dialog-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-control-gap); flex-shrink: 0; }
+}

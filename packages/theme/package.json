@@ -3,11 +3,25 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "files": ["dist"],
-  "sideEffects": ["**/*.css"],
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     "./style.css": "./dist/style.css",
     "./tokens.css": "./dist/tokens.css",
-    "./components.css": "./dist/components.css"
+    "./components.css": "./dist/components.css",
+    "./base.css": "./dist/base.css",
+    "./button.css": "./dist/button.css",
+    "./forms.css": "./dist/forms.css",
+    "./navigation.css": "./dist/navigation.css",
+    "./feedback.css": "./dist/feedback.css",
+    "./dialog.css": "./dist/dialog.css",
+    "./layout.css": "./dist/layout.css",
+    "./floating.css": "./dist/floating.css",
+    "./table.css": "./dist/table.css",
+    "./critical.css": "./dist/critical.css"
   }
 }

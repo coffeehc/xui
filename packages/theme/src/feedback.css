@@ -1,0 +1,21 @@
+@layer xui-components {
+
+  .xui-surface { background: var(--card-background); border: var(--line-width-surface) solid var(--card-border-color); border-radius: var(--card-radius); padding: var(--card-padding); box-shadow: var(--shadow-flat); min-width: 0; }
+  .xui-alert { padding: var(--space-content-gap); border: var(--line-width-surface) solid var(--status-info-line); border-radius: var(--radius-lg); color: var(--status-info-foreground); background: var(--status-info-soft); overflow-wrap: anywhere; animation: xui-feedback var(--motion-duration) var(--motion-easing); }
+  .xui-alert[data-tone="error"] { color: var(--status-error-foreground); background: var(--status-error-soft); border-color: var(--status-error-line); }
+  .xui-alert[data-tone="warning"] { color: var(--status-warning-foreground); background: var(--status-warning-soft); border-color: var(--status-warning-line); }
+  .xui-alert[data-tone="success"] { color: var(--status-success-foreground); background: var(--status-success-soft); border-color: var(--status-success-line); }
+}
+@layer xui-components {
+  .xui-state {display:flex;align-items:flex-start;flex-direction:column;gap:var(--space-control-gap);padding:var(--space-content-gap);overflow-wrap:anywhere;animation:xui-feedback var(--motion-duration) var(--motion-easing);}
+  .xui-state-error {color:var(--status-error-foreground);background:var(--status-error-soft);border-radius:var(--radius-lg);}
+  .xui-data-region {min-inline-size:0;min-block-size:calc(var(--control-height)*8);}
+  .xui-data-region[aria-busy='true'] {border-color:var(--surface-line-strong);}
+  .xui-skeleton {min-block-size:var(--control-height);inline-size:100%;background:var(--muted);border-radius:var(--radius-md);animation:xui-pulse calc(var(--motion-duration)*10) var(--motion-easing) infinite alternate;}
+  .xui-spinner {display:inline-block;inline-size:var(--control-icon-size);block-size:var(--control-icon-size);border:var(--line-width-emphasis) solid var(--surface-line-strong);border-inline-end-color:var(--action-primary);border-radius:50%;animation:xui-spin calc(var(--motion-duration)*8) linear infinite;}
+  .xui-progress {inline-size:100%;accent-color:var(--action-primary);}
+  .xui-badge {display:inline-flex;gap:var(--space-text-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);font-weight:var(--font-weight-control);}
+  @keyframes xui-pulse {from{opacity:.5;}to{opacity:1;}}
+  @keyframes xui-spin {to{transform:rotate(1turn);}}
+  @media(prefers-reduced-motion:reduce) {.xui-skeleton,.xui-spinner {animation:none;}}
+}

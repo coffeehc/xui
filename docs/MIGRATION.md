@@ -12,7 +12,7 @@
 - 角色表 `destructive / destructive-foreground` 改为已存在的 `action-danger / action-danger-foreground`，明确 destructive 是组件变体名称；轻量危险变体另映射 `status-error-soft / status-error-foreground`。
 - 按原规范的修订版本规则标为 0.4.1。全部标记的默认 CSS 原样保留，仍为 271 个变量；未加入不存在的 destructive CSS 变量，未更改默认品牌值。
 
-回归测试反向还原这三处文字修改并核对原始 SHA256，能证明此次迁入未靠摘要改写全文。提取 CSS 与规范逐字一致；前言摘要也有独立一致性检查。
+扩展版 0.5.0 另加入标记的兼容加载/所有权/构建消费段落，未改变默认 CSS。回归测试仅移除此新增段落、反向还原原三处文字修改并核对原始 SHA256，能证明此次迁入未靠摘要改写全文。提取 CSS 与规范逐字一致；前言摘要也有独立一致性检查。
 
 ## 分阶段采用
 
@@ -27,4 +27,4 @@
 
 初始核实：xui 公开、默认分支 `main`、远端无分支/提交；云环境本地是未出生的 `work` 分支。
 未创建 LICENSE，许可证由所有者决定；没有变更可见性。全部包 `private: true`，没有 npm/GitHub Packages 发布或站点部署。
-本地可以准备提交；向 xui `main` 推送仍需父任务取得具体授权，本次未 push。没有令牌生成、秘密写入、强推、reset、git clean 或文件树 API 上传。
+初版经明确授权已正常推送到 main（基线 06946db）。本轮扩展也已获得检查及独立复核通过后正常推送的具体授权；实际提交、远端 SHA 和 CI 以本轮验证记录为准。没有令牌生成、秘密写入、强推、reset、git clean 或文件树 API 上传。

@@ -1,0 +1,10 @@
+@layer xui-components {
+  :where(.xui,.xui-layer) { color:var(--foreground); font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans); transition:color var(--motion-duration) var(--motion-easing),background-color var(--motion-duration) var(--motion-easing); }
+  .xui {background:var(--layer-canvas);margin:0;}
+  :where(.xui,.xui-layer),:where(.xui,.xui-layer) *,:where(.xui,.xui-layer) *::before,:where(.xui,.xui-layer) *::after {box-sizing:border-box;}
+  .xui h1 {font:var(--font-weight-heading) var(--font-size-page-title)/var(--line-height-page-title) var(--font-heading);}
+  :where(.xui,.xui-layer) h2 {font:var(--font-weight-heading) var(--font-size-section-title)/var(--line-height-section-title) var(--font-heading);}
+  :where(.xui,.xui-layer) :where(button,a,input,textarea,select,[tabindex]):focus-visible {outline:var(--focus-width) solid var(--interaction-focus);outline-offset:var(--focus-offset);}
+  .xui [hidden],.xui-layer[hidden],.xui-layer [hidden] {display:none;}
+  @keyframes xui-feedback {from{opacity:.5;}to{opacity:1;}}
+}

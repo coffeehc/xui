@@ -89,28 +89,32 @@ export function checkContract(document) {
 }
 function varsOf(vars,key) { return vars[`--${key}`]; }
 
-export function checkStyles(styles, values) {
+export function checkStyles(styles, values, runtimeVariables = []) {
   postcss.parse(styles).walkDecls(decl => {
-    for (const m of decl.value.matchAll(/var\((--[\w-]+)/g)) assert(m[1] in values, `Component undefined ${m[1]}`);
+    for (const m of decl.value.matchAll(/var\((--[\w-]+)/g)) assert(m[1] in values || runtimeVariables.includes(m[1]), `Component undefined ${m[1]}`);
     assert(!/var\(--(?:palette|base)-/.test(decl.value),'Components must use semantic tokens');
     assert(!/(#[a-f\d]{3,8}\b|\b(?:rgb|hsl|oklch|oklab)\s*\()/i.test(decl.value),'Raw color outside contract');
     assert(!decl.prop.startsWith('--'),'Components cannot invent default values');
-    if (/color|background|border(?!-radius)|outline|shadow|fill|stroke/.test(decl.prop)) {
+    if (decl.prop !== 'border-collapse' && /color|background|border(?!-radius)|outline|shadow|fill|stroke/.test(decl.prop)) {
       const rest = decl.value.replace(/var\(--[\w-]+\)/g,'').replace(/color-mix\(|\bin\s+oklab\b|\b(?:transparent|currentcolor|none|solid|inherit|initial|unset|px|rem|em)\b|[-+\d.%\s(),]/gi,'');
       assert.equal(rest,'','Raw named or uncontrolled color outside contract');
     }
   });
 }
-export async function generate(check = false) {
+export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table'];
+export async function generate(check = false, outputDirectory='packages/theme/dist') {
   const doc = await readFile('docs/DESIGN.md','utf8');
   const { css, light } = checkContract(doc);
-  const component = await readFile('packages/theme/src/components.css','utf8');
-  checkStyles(component,light);
+  const source = await readFile('packages/theme/src/components.css','utf8');
+  assert.equal(source,styleParts.map(name=>`@import './${name}.css';`).join('\n')+'\n','Component source must contain the declared local parts only');
+  const parts={};
+  for(const name of styleParts){parts[name]=await readFile(`packages/theme/src/${name}.css`,'utf8');checkStyles(parts[name],light,name==='floating'?['--available-height','--anchor-width','--toast-swipe-movement-x','--toast-swipe-movement-y']:[]);}
+  const component=styleParts.map(name=>parts[name]).join('\n');
   checkStyles(await readFile('examples/shared/layout.css','utf8'),light);
-  const files = { 'tokens.css':css, 'components.css':component, 'style.css':css+'\n'+component };
-  await mkdir('packages/theme/dist',{recursive:true});
+  const files = { 'tokens.css':css, 'components.css':component, 'style.css':css+'\n'+component,'critical.css':css+'\n'+styleParts.filter(name=>name!=='floating').map(name=>parts[name]).join('\n'),...Object.fromEntries(styleParts.map(name=>[`${name}.css`,parts[name]])) };
+  await mkdir(outputDirectory,{recursive:true});
   for (const [name,value] of Object.entries(files)) {
-    const path = `packages/theme/dist/${name}`;
+    const path = `${outputDirectory}/${name}`;
     if (check) assert.equal(await readFile(path,'utf8'),value, `Generated CSS drift: ${path}`);
     else await writeFile(path,value);
   }

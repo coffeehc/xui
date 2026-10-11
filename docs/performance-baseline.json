@@ -1,0 +1,55 @@
+{
+  "budgets": {
+    "buttonMinified": 65536,
+    "buttonGzip": 16384,
+    "criticalCssGzip": 16384,
+    "reactInitialJsGzip": 131072,
+    "vanillaInitialJsGzip": 16384
+  },
+  "button": [
+    {
+      "entry": "root",
+      "minified": 17351,
+      "gzip": 6588
+    },
+    {
+      "entry": "/button",
+      "minified": 17351,
+      "gzip": 6588
+    }
+  ],
+  "consumers": [
+    {
+      "kind": "vanilla",
+      "initialJs": 20433,
+      "initialJsGzip": 8249,
+      "inlineJs": 1362,
+      "inlineJsGzip": 769,
+      "htmlGzip": 2720,
+      "criticalCss": 37269,
+      "criticalCssGzip": 6826,
+      "initialFiles": [
+        "app.js",
+        "chunks/chunk-GLGUCQYG.js",
+        "theme-init.js"
+      ],
+      "optionalPanel": 3857
+    },
+    {
+      "kind": "react",
+      "initialJs": 336317,
+      "initialJsGzip": 110662,
+      "inlineJs": 1362,
+      "inlineJsGzip": 769,
+      "htmlGzip": 1181,
+      "criticalCss": 37269,
+      "criticalCssGzip": 6826,
+      "initialFiles": [
+        "app.js",
+        "chunks/chunk-SYEUNNQJ.js",
+        "theme-init.js"
+      ],
+      "optionalPanel": 168036
+    }
+  ]
+}

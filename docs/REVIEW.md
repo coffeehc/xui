@@ -47,3 +47,18 @@ node --test tests/runtime.test.mjs
 规范权威引用迁移仍按 [MIGRATION.md](MIGRATION.md)：先交付 xui 唯一通用规范，再在取得各产品授权后核对规则差异、登记 xui 版本并改为指针，最后逐页采用和验收。xAgent 文件本轮未动。
 
 全部包保持 private，许可证未选定。没有 push、发布或部署。父任务此前询问的推送目标是旧 SHA `d2c7e91429a2436f3f9071adb1c9e2db6faba75e`；本次修订形成新 HEAD，最终推送目标需以父任务得到的具体授权为准。
+
+## 通用基础扩展的独立限定复核
+
+本轮两位独立只读审查者分别复核运行时/产物/watch，以及组件/布局/可访问性/参考页面。审查没有修改文件、提交或推送。以下实际复现均已修正并复验：
+
+- Field 显式 id 与 label 关联；Fieldset 不复制单字段 id；嵌套 LTR Switch 方向。
+- 移动 drawer 扩宽后的可见回焦点；React 备注和通知草稿导航往返保留。
+- Tooltip 稳定 role/id/aria-describedby、关闭时说明节点保留、键盘打开/取消与关联描述。
+- 原生触屏后键盘 tooltip、aria-disabled 关闭按钮、通知计时 focus 暂停恢复。
+- Resource Abort、订阅、isEmpty 回调重入，替代任务保留自己的 AbortController；销毁后拒绝结果。
+- watch 每轮重载构建逻辑，source/example 代际检查与失败回滚；Node 递归文件监听在原子保存后失效，改为逐实际目录监听。独立复测根配置/manifest/TSX 原子替换后二次保存、新增或替换子目录的保存均收到事件；根及包 dist 触发次数为0。
+
+最终限定复核未发现残留可复现阻塞。原生没有框架依赖；React peer 各单实例；正式消费者读取独立安装目录。两参考页在390px冷启动/就绪的主操作框完全相同，测得位移0；模块失败显式恢复、慢加载取消及真实键盘Tooltip检查无pageerror。
+
+这些结论有明确范围：不替代完整标准verify、真实产品迁移、全部peer高级用法、跨浏览器、真实移动OS、读屏器或SSR验收。标准执行证据见 FOUNDATION_VALIDATION.md 与交付提交；当前通用基础范围见 FOUNDATION.md。

@@ -14,7 +14,7 @@ test('checker rejects cycles, missing vars, drifted front matter and system reci
 });
 test('migration is exactly the recorded clarification, with original SHA256 verifiable',async()=>{
   const metadata=JSON.parse(await readFile('docs/design-source.json','utf8'));
-  const reconstructed=doc.replace('规范版本：0.4.1。','规范版本：0.4.0。').replace('| action-primary / action-primary-foreground |','| action-primary / foreground |').replace('| action-danger / action-danger-foreground | 危险操作成对填充与文字；destructive 是控件变体名称，映射到这对变量，不存在同名 CSS 变量。轻量危险变体使用 status-error-soft / status-error-foreground，不机械混用填充与错误文字 |','| destructive / destructive-foreground | 危险操作成对填充与文字，不机械等同错误文字 |');
+  const reconstructed=doc.replace(/\n<!-- foundation-lifecycle:start -->[\s\S]*<!-- foundation-lifecycle:end -->\n$/,'').replace('规范版本：0.5.0。','规范版本：0.4.0。').replace('| action-primary / action-primary-foreground |','| action-primary / foreground |').replace('| action-danger / action-danger-foreground | 危险操作成对填充与文字；destructive 是控件变体名称，映射到这对变量，不存在同名 CSS 变量。轻量危险变体使用 status-error-soft / status-error-foreground，不机械混用填充与错误文字 |','| destructive / destructive-foreground | 危险操作成对填充与文字，不机械等同错误文字 |');
   assert.equal(createHash('sha256').update(reconstructed).digest('hex'),metadata.sourceSha256);
 });
 test('source guard rejects raw/named colors, palette backflow and missing refs, accepts semantic/layout CSS',()=>{

@@ -4,11 +4,11 @@
   "path": "docs/DESIGN.md",
   "sourceVersion": "0.4.0",
   "sourceSha256": "2a66fb8762f62ae5a452ed25d9c1bd383443e637c3529fcf7df6e9f9c56cc56c",
-  "contractVersion": "0.4.1",
+  "contractVersion": "0.5.0",
   "defaultTokenCount": 271,
   "changes": [
     "Clarify action-primary-foreground in the role table.",
     "Map destructive component variant to existing action-danger/action-danger-foreground; distinguish soft danger.",
-    "Revision clarification only; all marked default CSS bytes preserved."
+    "Add a separately marked compatible lifecycle/build-consumption section; inverse reconstruction removes only that section and the recorded clarifications. All marked default CSS bytes preserved."
   ]
 }

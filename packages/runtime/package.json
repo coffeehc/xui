@@ -3,11 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "files": ["dist"],
-  "sideEffects": ["./dist/init.js"],
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "./dist/init.js"
+  ],
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
-    "./init.js": "./dist/init.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./init.js": "./dist/init.js",
+    "./theme": {
+      "types": "./dist/theme.d.ts",
+      "import": "./dist/theme.js"
+    },
+    "./loading": {
+      "types": "./dist/loading.d.ts",
+      "import": "./dist/loading.js"
+    },
+    "./dom": {
+      "types": "./dist/dom.d.ts",
+      "import": "./dist/dom.js"
+    }
   },
   "types": "./dist/index.d.ts"
 }

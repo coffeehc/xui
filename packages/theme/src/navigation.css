@@ -1,0 +1,46 @@
+@layer xui-components {
+
+  .xui-nav { display: grid; gap: var(--space-text-gap); align-content: start; }
+  .xui-nav-item {
+    position: relative; display: inline-flex; align-items: center; gap: var(--nav-item-gap); text-decoration: none;
+    min-height: var(--nav-item-height); padding: var(--space-text-gap) var(--nav-item-padding-inline); border: 0; border-radius: var(--nav-item-radius);
+    background: var(--menu-item-background); color: var(--menu-item-foreground);
+    font: var(--font-weight-control) var(--font-size-body-sm) / var(--line-height-body-sm) var(--font-sans);
+    cursor: pointer; text-align: start;
+    transition: background-color var(--motion-duration) var(--motion-easing), color var(--motion-duration) var(--motion-easing);
+  }
+  .xui-nav-item:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--menu-item-hover-background); color: var(--menu-item-hover-foreground); }
+  .xui-nav-item[aria-current="page"] { background: var(--menu-item-selected-background); color: var(--menu-item-selected-foreground); }
+  .xui-nav-item::before {
+    content: ""; position: absolute; inset-inline-start: var(--nav-selected-indicator-inset); top: 50%; transform: translateY(-50%);
+    width: var(--nav-selected-indicator-width); height: var(--nav-selected-indicator-height); border-radius: var(--nav-selected-indicator-radius);
+    background: var(--nav-selected-indicator-color); opacity: 0; pointer-events: none;
+    transition: opacity var(--motion-duration) var(--motion-easing);
+  }
+  .xui-nav-item[aria-current="page"]::before { opacity: 1; }
+  .xui-nav-item[data-collapsed="true"] { width: var(--nav-collapsed-item-size); height: var(--nav-collapsed-item-size); justify-content: center; padding: 0; }
+  .xui-nav-item[data-collapsed="true"]::before { inset-inline-start: var(--nav-selected-indicator-inset-collapsed); }
+  .xui-nav-item:disabled, .xui-nav-item[aria-disabled="true"] { color: var(--menu-item-disabled-foreground); cursor: not-allowed; }
+  .xui-nav-item svg { width: var(--control-icon-size); height: var(--control-icon-size); flex-shrink: 0; }
+  .xui-tabs-list { display: flex; flex-wrap: wrap; gap: var(--space-text-gap); padding: calc(var(--spacing) * .75); background: var(--layer-support); border-radius: var(--radius-lg); }
+  .xui-tab { background: transparent; color: var(--foreground); min-height: var(--control-height-sm); padding: var(--space-text-gap) var(--space-control-gap); border: 0; border-radius: var(--radius-md); cursor: pointer; font: inherit; font-weight: var(--font-weight-control); transition: background-color var(--motion-duration) var(--motion-easing), color var(--motion-duration) var(--motion-easing); }
+  .xui-tab:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--interaction-hover); }
+  .xui-tab[aria-selected="true"] { background: var(--interaction-selected); color: var(--interaction-selected-foreground); }
+  .xui-tab:disabled, .xui-tab[aria-disabled="true"] { color: var(--muted-foreground); cursor: not-allowed; }
+  .xui-tab-panel { padding-block: var(--space-content-gap); animation: xui-feedback var(--motion-duration-enter) var(--motion-easing); }
+  .xui-tab-panel[data-ending-style] { display: none; animation: none; }
+  @media (forced-colors: active) {
+    .xui-nav-item[aria-current="page"], .xui-tab[aria-selected="true"] { text-decoration: underline; }
+  }
+}
+@layer xui-components {
+  .xui-breadcrumbs ol {display:flex;flex-wrap:wrap;gap:var(--space-control-gap);list-style:none;padding:0;margin:0;}
+  .xui-breadcrumbs a {color:var(--action-primary);text-underline-offset:var(--space-text-gap);}
+  .xui-pagination {display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-control-gap);}
+  .xui-disclosure {border-block-end:var(--line-width-surface) solid var(--separator-line);}
+  .xui-disclosure-trigger {display:flex;justify-content:space-between;gap:var(--space-control-gap);inline-size:100%;min-block-size:var(--control-height);padding:var(--space-control-gap);border:0;background:transparent;color:var(--foreground);font:inherit;cursor:pointer;transition:background-color var(--motion-duration-fast) var(--motion-easing);}
+  .xui-disclosure-trigger:hover {background:var(--interaction-hover);}
+  .xui-disclosure-trigger:active {background:var(--interaction-pressed);}
+  .xui-disclosure-trigger:disabled {color:var(--muted-foreground);cursor:not-allowed;}
+  .xui-disclosure-body {padding:var(--space-content-gap);animation:xui-feedback var(--motion-duration-enter) var(--motion-easing);}
+}

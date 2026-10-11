@@ -1,3 +1,5 @@
+> 本文件保留早期基础版记录。本轮通用基础扩展见 [FOUNDATION_VALIDATION.md](FOUNDATION_VALIDATION.md)。
+
 # 第一版验证记录
 
 首轮基线代码 SHA：`b8c790ee5936e64d2009abf53c5c0d13413fc263`。本报告及 evidence 最初作为后续文档提交补入。之后的限定独立复核发现并修复了打包入口和 Tabs 事件兼容问题；最新结论见 [REVIEW.md](REVIEW.md)。下表的 13+17 计数属于首轮基线，不作为修订后全流程重跑声明。

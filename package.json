@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.23.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "tokens": "node scripts/tokens.mjs",
     "check:tokens": "node scripts/tokens.mjs --check",
@@ -13,7 +15,9 @@
     "test:consumer": "node scripts/consumers.mjs",
     "test:browser": "playwright test",
     "preview": "node scripts/serve.mjs",
-    "verify": "pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:consumer && pnpm test:browser"
+    "verify": "pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:watch && pnpm test:consumer && pnpm test:browser",
+    "dev": "node scripts/watch.mjs",
+    "test:watch": "node --test tests/watch/watch.test.mjs"
   },
   "devDependencies": {
     "@base-ui/react": "1.7.0",
@@ -25,6 +29,9 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "typescript": "5.9.3",
-    "yaml": "2.8.1"
+    "yaml": "2.8.1",
+    "@coffeehc/xui-runtime": "workspace:*",
+    "@coffeehc/xui-react": "workspace:*",
+    "@coffeehc/xui-theme": "workspace:*"
   }
 }
