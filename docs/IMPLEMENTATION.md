@@ -12,6 +12,8 @@
 
 当前提供 ESM 和类型入口，没有声明 CommonJS 支持。包都为 private；`npm pack` 仅生成本地 tarball。CSS 要显式导入，不由 React 导入时暗中带入。
 
+runtime 的同步初始化脚本声明为有副作用，打包器须保留仅为执行初始化而导入的 `init.js`；ESM 控制器入口保持可 tree-shake。首屏时序仍以以下阻塞经典 script 示例为验收方式。
+
 ```ts
 import '@coffeehc/xui-theme/style.css';
 import { createThemeController } from '@coffeehc/xui-runtime';
@@ -57,6 +59,8 @@ const unsubscribe = theme.subscribe(state => { if (modeSelect) modeSelect.value 
 | `Dialog.Root/Trigger/Content/Title/Description/Body/Footer/Close` | Base UI 模态、portal、Esc/取消/回焦点；不自动保存，body 滚动、footer 可达。Content 提供公共 backdrop/popup 样式。移除触发器时调用者需指定 peer 的 finalFocus |
 
 Base UI 的 `render`、ref、事件与 className 函数保持可传递。Dialog/Tab 的生命周期根据实际 transition 处理，不用计时器阻挡真实操作。[Dialog 官方交互 API](https://base-ui.com/react/components/dialog)、[Tabs 官方 API](https://base-ui.com/react/components/tabs)；实现以安装的 1.7.0 类型和浏览器结果为准。
+
+Tabs 的键盘适配在 List 冒泡阶段执行，保留 Tab/List 的 capture 和 bubble 回调。遵循 peer 的事件契约：在 `onKeyDown` 中调用 `preventBaseUIHandler()` 取消控件导航；`preventDefault()` 只阻止浏览器默认行为，方向键仍跳过 disabled。方向优先来自 Base UI `DirectionProvider`，无上下文时采用 DOM 的计算方向；Shift/Alt/Ctrl/Meta 不参与普通方向导航。上下文通过 peer 正式导出的 `internals/direction-context` 读取，升级 peer 时应重跑此契约回归。
 
 Vanilla 示例用原生 dialog.showModal/close 与最小采用层绑定实现焦点循环和恢复；这些绑定在示例内，主题 runtime 不承担控件状态或业务。
 

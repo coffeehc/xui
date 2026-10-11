@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "files": ["dist"],
-  "sideEffects": false,
+  "sideEffects": ["./dist/init.js"],
   "exports": {
     ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
     "./init.js": "./dist/init.js"

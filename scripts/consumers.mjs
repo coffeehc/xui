@@ -41,8 +41,17 @@ for (const kind of ['vanilla','react']) {
   assert(Object.keys(result.metafile.inputs).every(file => !file.startsWith('packages/')), 'Build read monorepo package source');
   await copyFile(`${cwd}/index.html`,`dist/${kind}/index.html`);
   await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`dist/${kind}/theme-init.js`);
+  const initializer = await build({stdin:{contents:"import '@coffeehc/xui-runtime/init.js';",resolveDir:cwd,sourcefile:'theme-init-consumer.js'},bundle:true,format:'iife',platform:'browser',target:'es2022',write:false,metafile:true});
+  assert(Object.values(initializer.metafile.outputs).some(output => Object.entries(output.inputs).some(([path,data]) => path.endsWith('/@coffeehc/xui-runtime/dist/init.js') && data.bytesInOutput > 0)), 'Theme initializer was tree-shaken from the packed consumer');
   await writeFile(`${cwd}/types.ts`,"import { createThemeController, type ThemeMode } from '@coffeehc/xui-runtime';\nconst mode: ThemeMode = 'system'; createThemeController().setMode(mode);\n");
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',kind === 'react' ? 'app.tsx' : 'types.ts'],{cwd,stdio:'inherit'});
+  if (kind === 'react') {
+    await copyFile('tests/fixtures/peer-contract.tsx',`${cwd}/peer-contract.tsx`);
+    const fixture = await build({entryPoints:[`${cwd}/peer-contract.tsx`],outfile:'dist/react/peer-contract.js',bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+    assert(Object.keys(fixture.metafile.inputs).every(file => resolve(file).startsWith(`${cwd}/`)), 'Peer fixture read outside the packed consumer');
+    execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','peer-contract.tsx'],{cwd,stdio:'inherit'});
+    await writeFile('dist/react/peer-contract.html','<!doctype html><html><head><meta charset="utf-8"><link rel="icon" href="data:,"><link rel="stylesheet" href="./peer-contract.css"></head><body><div id="root"></div><script type="module" src="./peer-contract.js"></script></body></html>');
+  }
   await writeFile(`dist/${kind}/metafile.json`,JSON.stringify(result.metafile,null,2));
   console.log(`${kind}: tarballs installed, built exports and types consumed; no source aliases.`);
 }
