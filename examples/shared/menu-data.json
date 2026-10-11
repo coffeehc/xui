@@ -1,0 +1,15 @@
+[
+  {"id":"overview","label":"总览","icon":"home","href":"?page=overview"},
+  {"id":"work","label":"工作空间","group":true,"children":[
+    {"id":"library","label":"资料库","icon":"folder","href":"?page=library","children":[
+      {"id":"notes","label":"项目资料与团队协作记录：这是一项需要完整显示的较长中文导航","icon":"document","href":"?page=notes"}
+    ]},
+    {"id":"tools","label":"工具","icon":"settings","children":[
+      {"id":"preferences","label":"偏好设置","icon":"settings","href":"?page=preferences"}
+    ]},
+    {"id":"archive","label":"归档（暂不可用）","icon":"folder","href":"?page=archive","disabled":true}
+  ]},
+  {"id":"new-tab","label":"新标签页","icon":"document","href":"?page=new-tab","target":"_blank","rel":"noopener"},
+  {"id":"download","label":"下载参考页","icon":"document","href":"./destination.html","download":"reference.html"},
+  {"id":"browser","label":"浏览器导航","icon":"document","href":"./destination.html"}
+]

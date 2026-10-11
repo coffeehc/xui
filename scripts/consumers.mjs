@@ -67,6 +67,16 @@ for (const kind of ['vanilla','react']) {
     await writeFile('dist/react/nav-destination.html','<!doctype html><html><head><meta charset="utf-8"><title>Native link destination</title></head><body>Native link destination</body></html>');
   }
   await writeFile(`dist/${kind}/metafile.json`,JSON.stringify(result.metafile,null,2));
+  const menu=resolve(cwd,'menu'),menuOutput=resolve(`dist/menu-${kind}`);
+  await cp(`examples/menu-${kind}`,menu,{recursive:true});await mkdir(`${cwd}/shared`,{recursive:true});await copyFile('examples/shared/menu-data.json',`${cwd}/shared/menu-data.json`);
+  const menuBuild=await build({entryPoints:[`${menu}/app.${kind==='react'?'tsx':'js'}`],outdir:menuOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(menuBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Menu consumer escaped its standalone install');
+  assert(!Object.keys(menuBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Menu consumer depends on private CSS');
+  await copyFile(`${menu}/index.html`,`${menuOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${menuOutput}/theme-init.js`);
+  await copyFile('examples/shared/menu-destination.html',`${menuOutput}/destination.html`);
+  await writeFile(`${menuOutput}/metafile.json`,JSON.stringify(menuBuild.metafile,null,2));
+  await writeFile(`${menu}/types.ts`,"import {type NavigationItem, type NavigationMenuOptions} from '@coffeehc/xui-runtime/navigation';\nimport {createMenuLayout} from '@coffeehc/xui-runtime/menu-layout';\nconst items:NavigationItem[]=[{id:'page',label:'页面',href:'/'}];const options:NavigationMenuOptions={items};createMenuLayout(document.createElement('div'),options).update({activeId:null});\n");
+  execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','--resolveJsonModule',kind==='react'?'menu/app.tsx':'menu/types.ts'],{cwd,stdio:'inherit'});
   const foundation=resolve(cwd,'foundation');await cp(`examples/foundation-${kind}`,foundation,{recursive:true});
   const output=resolve(`dist/foundation-${kind}`);
   const built=await build({entryPoints:{app:`${foundation}/app.${kind==='react'?'tsx':'js'}`,'heavy-panel':`${foundation}/heavy-panel.${kind==='react'?'tsx':'js'}`},outdir:output,chunkNames:'chunks/[name]-[hash]',bundle:true,splitting:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
@@ -88,7 +98,7 @@ for (const kind of ['vanilla','react']) {
   if(kind==='react')for(const entry of ['','/button']){
     const only=await build({stdin:{contents:`import {Button} from '@coffeehc/xui-react${entry}';window.xuiButton=Button;`,resolveDir:cwd,sourcefile:'button-only.js'},bundle:true,format:'esm',minify:true,write:false,metafile:true,platform:'browser',target:'es2022',define:{'process.env.NODE_ENV':'"production"'}});
     const contributing=Object.values(only.metafile.outputs).flatMap(file=>Object.entries(file.inputs).filter(([,data])=>data.bytesInOutput>0).map(([path,data])=>({path,bytesInOutput:data.bytesInOutput})));
-    assert(!contributing.some(file=>/\/(?:dialog|tabs|menu|popover|combobox|select|toast)\/|\/dist\/(?:dialog|tabs|menu|popover|combobox|select|toast)\.js/.test(file.path)),'Button-only includes unrelated component code');
+    assert(!contributing.some(file=>/\/(?:dialog|tabs|menu|popover|combobox|select|toast)\/|\/dist\/(?:dialog|tabs|menu|menu-layout|navigation|popover|combobox|select|toast)\.js/.test(file.path)),'Button-only includes unrelated component code');
     const bytes=only.outputFiles[0].contents,minified=bytes.length,gzip=gzipSync(bytes).length;assert(minified<=performance.budgets.buttonMinified&&gzip<=performance.budgets.buttonGzip,'Button-only size budget');
     performance.button.push({entry:entry||'root',minified,gzip,contributing:contributing.map(file=>({...file,path:file.path.replace(cwd+'/','')}))});
   }

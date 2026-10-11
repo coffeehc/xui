@@ -49,3 +49,13 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 本轮是通用基础及参考宿主验证，任何产品迁移均未实施。表格排序/查询/选择由宿主拥有，没有数据/虚拟化引擎；日期、复杂图表、富文本/代码编辑器、3D和业务流程不在范围。原生 datalist 允许自由输入；OS select面板、真实移动浏览器、读屏器、Firefox/Safari、SSR hydration、生产冷启动/LCP/INP仍未跑。200%测试改变根字号，不冒称全部原生浏览器zoom已测。
 
 产品重启采用前，固定本轮验证提交，核对公共布局/控件所需覆盖，选定主题单owner与旧CSS层级映射，检查peer单实例，并在该产品跑构建和真实页面验收。示例内存保存不证明业务请求、权限、幂等或失败恢复；那些由宿主另验。
+
+## 数据驱动菜单/布局独立步骤
+
+本步骤基线为本地 6fd20916da7d1d8681bf2bb744c3f9e0bad48c14。新增 runtime/navigation、runtime/menu-layout 与 React/menu-layout 公开入口；两个正式 tarball 消费者共用菜单 JSON、只导入公开组件/工厂与 CSS，不复制菜单内部结构或私有皮肤。原生安装中没有 React；ESM/types 真实编译，Button-only 门禁也排除新增菜单/导航模块的输出贡献。
+
+新增 6 项纯数据/导航适配单测与 16 项浏览器检查。覆盖选中默认皮肤与浅深 hover、分组/子项/独立展开、同址请求/前进后退、普通与修改键/中键/target/download/native bypass、禁用及继承、菜单和 shell/main/input 身份、键盘/Home/End/RTL/按压与独立 focus、受控确认、紧凑/更新/空菜单焦点回退、窄屏触屏/Esc/回焦点/变宽、长中文/200%根字号/reduced-motion，以及卸载销毁重建与无效数据更新保留旧状态。
+
+本步骤标准 verify 覆盖 29 项单测、1 项真实默认 watch 和 76 项浏览器检查；最终受测提交和通过/失败状态在独立交付记录。日志位于 .artifacts/verify-menu-final.log，浏览器 JSON 位于 test-results/browser.json。前一版完整预提交验证通过，最终提交后仍须完整重跑，不用局部菜单检查代替全量结果。
+
+这是合成宿主验证，没有实施产品迁移，没有调用产品后端；HTTP/query 与 API Key 组件尚未实现。200%测试为根字号变化，触屏为 Chromium 模拟；真实移动 OS、读屏器、浏览器原生 zoom、Firefox/Safari 和 SSR hydration 未跑。本步骤未新增独立代理审查。断点转换时 React sidebar 可重挂载，布局保留菜单事实，不宣称任意宿主路由链接的私有状态跨断点保留。

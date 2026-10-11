@@ -1,6 +1,7 @@
 export * from './button.js';
 export * from './forms.js';
 export * from './navigation.js';
+export * from './menu-layout.js';
 export * from './tabs.js';
 export * from './dialog.js';
 export * from './feedback.js';

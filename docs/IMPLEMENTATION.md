@@ -9,8 +9,8 @@
 | 包 | 正式入口 | 职责 |
 | --- | --- | --- |
 | `@coffeehc/xui-theme` | `style.css`、`tokens.css`、`components.css`、`critical.css`；`base/button/forms/navigation/feedback/dialog/layout/floating/table.css` | 无框架依赖，预构建 CSS。critical 包含 token 和除 floating 外的组件样式 |
-| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
-| `@coffeehc/xui-react` | 根；`/button/forms/navigation/tabs/dialog/feedback/layout/table/select/combobox/menu/popover/tooltip/toast/theme` | React、ReactDOM、Base UI、runtime 是 peers；不捆绑宿主实例，不隐式引入 CSS |
+| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/navigation`、`/menu-layout`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
+| `@coffeehc/xui-react` | 根；`/button/forms/navigation/menu-layout/tabs/dialog/feedback/layout/table/select/combobox/menu/popover/tooltip/toast/theme` | React、ReactDOM、Base UI、runtime 是 peers；不捆绑宿主实例，不隐式引入 CSS |
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
 
@@ -39,7 +39,7 @@ foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控
 
 ## React 公共组件
 
-宿主通过公开的数据、状态、内容与事件 props 使用 React 组件；xui 提供其默认内部结构、样式、motion、focus 与可访问性行为。采用时不要求产品修改内部伪元素或补写选中皮肤。扩展通过该组件已公开的 props、部件/slots 和 theme 变量进行，当前项、路由及业务事实仍由宿主决定。本轮仅修正 NavItem 状态透传，没有将全部组件重构为只接收数据的统一接口。
+宿主通过公开的数据、状态、内容与事件 props 使用 React 组件；xui 提供其默认内部结构、样式、motion、focus 与可访问性行为。采用时不要求产品修改内部伪元素或补写选中皮肤。扩展通过该组件已公开的 props、部件/slots 和 theme 变量进行，当前项、路由及业务事实仍由宿主决定。菜单/布局已提供数据驱动接口；其他基础组件继续采用各自公开的 props 与部件。
 
 | 能力 | API 与边界 |
 | --- | --- |
@@ -69,6 +69,8 @@ body 使用 xui 类；portal/原生顶层弹层用 xui-layer。公共 layout/tab
 
 原生 JS 当前由宿主组合公开 HTML 结构、xui CSS 类及所需 controller；例如 a.xui-nav-item 设置 aria-current="page" 即获得同一默认选中样式。它与已封装的 React 组件有区别，不能据此声称全部原生控件只传数据即可生成完整结构。
 
+数据驱动导航是单独的公开组合：createNavigationMenu/createMenuLayout 接收数据并生成整个菜单/布局，采用方无需拼装其内部菜单 HTML。下面说明该组合的契约。
+
 | `/dom` API | 输入和所有权 |
 | --- | --- |
 | bindPressFeedback(root) | 仅 Enter/Space 按压状态，不合成 click；返回释放函数 |
@@ -85,6 +87,8 @@ open/value 受控时仅发请求，宿主调用 syncOpen/syncValue 更新事实�
 
 目标是支持 HTML dialog、Popover、matchMedia、AbortController、ESM dynamic import 的现代浏览器。原生 select/datalist 使用 OS 面板，datalist 允许自由输入且不是完整受控 Combobox；没有声明跨移动 OS 弹出实现一致。
 
+菜单/布局的共享数据、导航适配、状态、键盘、生命周期与两类正式消费示例见 [NAVIGATION.md](NAVIGATION.md)。
+
 ## 加载 owner 与参考页
 
 createResource({loader,isEmpty?,timeoutMs?}) 提供 idle/loading/refreshing/ready/empty/error/retrying、key/value/hasValue/error/busy/request。没有默认 timeout、请求/缓存或自动重试。load(key) 替换旧任务；同 key 刷新保留旧值，不同 key 清除旧对象；retry 是显式操作；cancel/destroy 即使生产者忽略 Abort，也结束本地等待并拒绝旧结果。回调重入以 generation 再检查，订阅异常不把数据成功改成错误。
@@ -95,8 +99,8 @@ foundation-react/vanilla 提供列表、表单和详情，宿主仅有合成内�
 
 ## 本地与双仓联调
 
-pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本，每次启动新的构建进程；生成 CSS、ESM、types 和 init 后，构建四个预览。packages 和 examples 分别暂存、校验代际并回滚发布失败。watch-status.json 的 building/error/success 及 source/example SHA 是事实；错误时旧预览可能继续服务，不能称为新改动已生效。pnpm preview 另开本地服务，dev 不部署。
+pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本，每次启动新的构建进程；生成 CSS、ESM、types 和 init 后，构建六个预览。packages 和 examples 分别暂存、校验代际并回滚发布失败。watch-status.json 的 building/error/success 及 source/example SHA 是事实；错误时旧预览可能继续服务，不能称为新改动已生效。pnpm preview 另开本地服务，dev 不部署。
 
 正式验收先 npm pack，再在独立目录安装、编译 types 和打包；foundation 不复制 shared/layout.css。dev 的包解析也仅指向正式 exports 的 dist，没有源码入口。生产接入固定已验证的提交/本地 tarball。双仓 watch 可让宿主链接 built dist，但 React/ReactDOM/Base UI 必须由宿主保留单实例；Vite 可使用 resolve.dedupe 与指向本地正式入口的 alias，或独立 tarball 安装。链接后检查实际解析路径、ESM/types/init 的当前 generation，并运行宿主构建/页面检查。这里没有更改任何产品仓库的配置。
 
-当前已实现的 API 不包含 HTTP 客户端或数据驱动菜单/布局组合。用户已确认这两项作为后续步骤；其 API、共享数据和可运行例子将随真实实现加入，不以规划代替可用性声明。领域路由、权限策略、身份凭据、产品 endpoint、会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。未覆盖项和限制见覆盖矩阵与本轮验证记录。
+当前已实现数据驱动菜单/布局组合，HTTP 客户端和共享 query 仍待后续步骤，不以规划代替可用性声明。领域路由、权限策略、身份凭据、产品 endpoint、会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。未覆盖项和限制见覆盖矩阵与本轮验证记录。

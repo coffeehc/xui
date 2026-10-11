@@ -23,6 +23,14 @@
       "types": "./dist/loading.d.ts",
       "import": "./dist/loading.js"
     },
+    "./navigation": {
+      "types": "./dist/navigation.d.ts",
+      "import": "./dist/navigation.js"
+    },
+    "./menu-layout": {
+      "types": "./dist/menu-layout.d.ts",
+      "import": "./dist/menu-layout.js"
+    },
     "./dom": {
       "types": "./dist/dom.d.ts",
       "import": "./dist/dom.js"

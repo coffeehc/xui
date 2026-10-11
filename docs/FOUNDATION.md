@@ -27,10 +27,11 @@
 | 步骤 | 当前状态 | 接口与验收 |
 | --- | --- | --- |
 | NavItem 兼容与链接组合 | 本地实现，验证结果随提交交付 | 省略 selected 保留 aria-current，显式 selected 优先；公开 render 组合一个链接，默认选中样式；ref/事件合并、disabled、修改键/中键/target/download |
-| 数据驱动 Menu + Layout | 待实现，尚无可用 API 声明 | React/原生同源可序列化菜单核心数据；一次 activeId/location 与导航适配；分组/子项/展开/紧凑/窄屏、键盘、更新与生命周期、导航时 shell 身份稳定 |
+| 数据驱动 Menu + Layout | 已实现；本步骤独立验证与提交 | NavigationMenu/MenuLayout 与 createNavigationMenu/createMenuLayout；React/原生同源数据，一次 activeId/location 与导航适配；分组/子项/展开/紧凑/窄屏、键盘、更新与生命周期、导航时 shell 身份稳定 |
 | HTTP 与共享列表契约 | 待实现，尚无可用 API 声明 | 零框架传输、显式模式/response adapter、错误/status/Abort/timeout、默认不重试；共享列表默认 Go ListData 的 list/total，HTTP 保留原样 payload；来源与实现同步记录 |
+| API Key 通用管理组件 | 排在 HTTP/query 后，尚未实现 | 共享安全元数据、列表/创建/权限与有效期/一次性结果/明确复制/撤销确认；不生成真实密钥，不复制产品权限模型，后端生成与鉴权，默认脱敏与不持久化 |
 
-后两步是用户明确扩展的范围，替代此前不包含 HTTP 通用层的边界；新范围的推送需单独授权。框架不实现产品 endpoint、权限判断、登录路由或业务数据引擎。
+菜单/布局和 HTTP 是用户明确扩展的范围，替代此前不包含 HTTP 通用层的边界；新范围的推送需单独授权。HTTP 与 query 尚未实现，不影响菜单/布局独立交付。框架不实现产品 endpoint、权限判断、登录路由或业务数据引擎。
 
 ## 加载与性能实施
 
