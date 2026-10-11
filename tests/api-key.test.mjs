@@ -41,3 +41,12 @@ test('revocation requires confirmation, blocks duplicates and preserves failed o
 test('copy is explicit, failure is safe, and closing/destroying drops references and late feedback',async()=>{
  const manager=make();manager.openCreate();manager.setDraft({name:'New'});await manager.submitCreate();let writes=0;assert.equal(writes,0);await manager.copySecret(async text=>{writes++;assert.equal(text,value);throw Error(value);});assert.equal(writes,1);assert.equal(manager.getState().copyStatus,'error');assert.ok(!JSON.stringify(manager.getState()).includes(value));const held=deferred(),copy=manager.copySecret(()=>{writes++;return held.promise;});await manager.copySecret(async()=>{writes++;});assert.equal(writes,2);manager.close();held.resolve();await copy;assert.equal(manager.getState().copyStatus,'idle');assert.equal(manager.readSecret(),null);manager.subscribe(()=>manager.openCreate());manager.destroy();assert.equal(manager.getState().phase,'closed');assert.equal(manager.readSecret(),null);await manager.refresh();manager.openCreate();assert.equal(manager.getState().phase,'closed');
 });
+test('a revoke result cannot close a newer session opened by its subscriber',async()=>{
+ const manager=make();await manager.refresh();manager.openRevoke('demo-1');let reopened=false;
+ manager.subscribe(()=>{if(!reopened&&manager.getState().rows[0]?.status==='revoked'){reopened=true;manager.close();manager.openCreate();manager.setDraft({name:'New user session'});}});
+ await manager.confirmRevoke();assert.equal(reopened,true);assert.equal(manager.getState().rows[0].status,'revoked');assert.equal(manager.getState().phase,'create');assert.equal(manager.getState().draft.name,'New user session');manager.destroy();
+});
+test('API key subscription rebinding is deferred to the next notification',()=>{
+ const manager=make();let count=0,off=()=>{};const listener=()=>{count++;off();if(count<8)off=manager.subscribe(listener);};off=manager.subscribe(listener);
+ manager.openCreate();assert.equal(count,1);manager.setDraft({name:'New'});assert.equal(count,2);off();manager.destroy();
+});

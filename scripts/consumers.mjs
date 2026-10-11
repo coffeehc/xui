@@ -6,6 +6,7 @@ import { build } from 'esbuild';
 import assert from 'node:assert/strict';
 import { extract } from './tokens.mjs';
 import {gzipSync} from 'node:zlib';
+import {collectPublicAPI} from './public-api.mjs';
 const root = process.cwd(), archives = resolve('.artifacts');
 await mkdir(archives,{recursive:true});
 const tarballs = [];
@@ -16,6 +17,7 @@ for (const pkg of ['theme','runtime','ui-react']) {
   tarballs.push(resolve(archives,info.filename));
 }
 const config = JSON.parse(await readFile('package.json','utf8'));
+const publicAPI=await collectPublicAPI();await writeFile(`${archives}/public-api.json`,JSON.stringify({entries:publicAPI},null,2)+'\n');
 const performance={budgets:{buttonMinified:65536,buttonGzip:16384,criticalCssGzip:16384,reactInitialJsGzip:131072,vanillaInitialJsGzip:16384},button:[],consumers:[]};
 await mkdir('.consumers',{recursive:true});
 // A fresh directory prevents npm reusing an earlier tarball with the same version.
@@ -38,6 +40,20 @@ for (const kind of ['vanilla','react']) {
     assert.equal(await readFile(`${cwd}/node_modules/@coffeehc/xui-${name}/dist/${entry}`,'utf8'),await readFile(`packages/${localName}/dist/${entry}`,'utf8'),'Installed tarball is stale');
   }
   if (kind === 'vanilla') assert(!(await readdir(`${cwd}/node_modules`)).some(name => name === 'react' || name === 'react-dom'));
+  const available=publicAPI.filter(entry=>kind==='react'||entry.package!=='@coffeehc/xui-react'),esm=available.filter(entry=>entry.kind==='esm');
+  await writeFile(`${cwd}/public-exports.mjs`,esm.map((entry,index)=>`import * as Entry${index} from '${entry.specifier}';`).join('\n')+`\nconsole.log(JSON.stringify([${esm.map((entry,index)=>`Object.keys(Entry${index}).sort()`).join(',')}]));\n`);
+  const runtimeNames=JSON.parse(execFileSync('node',['public-exports.mjs'],{cwd,encoding:'utf8'}));
+  for(const entry of available){
+    const installed=resolve(cwd,'node_modules',entry.package,entry.target);
+    assert.equal(await readFile(installed,'utf8'),await readFile(resolve('packages',entry.directory,entry.target),'utf8'),`Stale public entry ${entry.specifier}`);
+    if(entry.types){assert.equal(await readFile(resolve(cwd,'node_modules',entry.package,entry.types),'utf8'),await readFile(resolve('packages',entry.directory,entry.types),'utf8'),`Stale declaration ${entry.specifier}`);assert.deepEqual(runtimeNames[esm.indexOf(entry)],entry.values,`Runtime/declaration export drift ${entry.specifier}`);}
+  }
+  const allTypes=esm.map((entry,index)=>`import type {${entry.symbols.map((name,n)=>`${name} as Entry${index}Symbol${n}`).join(',')}} from '${entry.specifier}';`).join('\n');await writeFile(`${cwd}/public-types.ts`,allTypes+'\n');
+  execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--target','es2022','--moduleResolution','bundler','--module','esnext','public-types.ts'],{cwd,stdio:'inherit'});
+  const allValues=esm.map((entry,index)=>`import * as Entry${index} from '${entry.specifier}';`).concat(available.filter(entry=>entry.kind==='css').map(entry=>`import '${entry.specifier}';`)).join('\n')+`\nglobalThis.xuiPublicEntries={${esm.map((entry,index)=>`${JSON.stringify(entry.specifier)}:Entry${index}`).join(',')}};`;
+  const allEntriesBuild=await build({stdin:{contents:allValues,resolveDir:cwd,sourcefile:'public-entries.js'},outdir:resolve(cwd,'public-entries'),bundle:true,format:'esm',platform:'browser',target:'es2022',write:false,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(allEntriesBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'All-entry consumer escaped its standalone install');
+  console.log(`${kind}: every installed public ESM/CSS entry, named type and runtime export checked.`);
   await mkdir(`dist/${kind}`,{recursive:true});
   const result = await build({entryPoints:[`${cwd}/app.${kind === 'react' ? 'tsx' : 'js'}`],outfile:`dist/${kind}/app.js`,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
   assert(Object.keys(result.metafile.inputs).every(file => !file.startsWith('packages/')), 'Build read monorepo package source');
@@ -94,6 +110,12 @@ for (const kind of ['vanilla','react']) {
   await copyFile(`${logs}/index.html`,`${logsOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${logsOutput}/theme-init.js`);await copyFile('examples/shared/log-reference.html',`${logsOutput}/reference.html`);await writeFile(`${logsOutput}/metafile.json`,JSON.stringify(logsBuild.metafile,null,2));
   await writeFile(`${logs}/types.ts`,"import {createStructuredLogExplorer} from '@coffeehc/xui-runtime/structured-log-dom';\nimport {createStructuredLogExample} from '../shared/log-model';\nconst owner=createStructuredLogExample('http://localhost/log-vanilla/');createStructuredLogExplorer(document.createElement('div'),{controller:owner.controller}).destroy();\n");
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','--resolveJsonModule',kind==='react'?'log/app.tsx':'log/types.ts'],{cwd,stdio:'inherit'});
+  const audit=resolve(cwd,'audit'),auditOutput=resolve(`dist/audit-${kind}`);await cp(`examples/audit-${kind}`,audit,{recursive:true});for(const file of ['audit-model.ts','audit-labels.json'])await copyFile(`examples/shared/${file}`,`${cwd}/shared/${file}`);
+  const auditBuild=await build({entryPoints:[`${audit}/app.${kind==='react'?'tsx':'js'}`],outdir:auditOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(auditBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Audit consumer escaped its standalone install');assert(!Object.keys(auditBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Audit consumer depends on private CSS');
+  await copyFile(`${audit}/index.html`,`${auditOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${auditOutput}/theme-init.js`);await copyFile('examples/shared/audit-reference.html',`${auditOutput}/reference.html`);await writeFile(`${auditOutput}/metafile.json`,JSON.stringify(auditBuild.metafile,null,2));
+  await writeFile(`${audit}/types.ts`,"import {createBusinessAuditExplorer} from '@coffeehc/xui-runtime/business-audit-dom';\nimport {createBusinessAuditExample} from '../shared/audit-model';\nconst owner=createBusinessAuditExample('http://localhost/audit-vanilla/');createBusinessAuditExplorer(document.createElement('div'),{controller:owner.controller,renderers:[{eventType:'order.approved',schemaVersion:1,render:detail=>document.createTextNode(owner.renderApproved(detail))}]}).destroy();\n");
+  execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','--resolveJsonModule',kind==='react'?'audit/app.tsx':'audit/types.ts'],{cwd,stdio:'inherit'});
   const foundation=resolve(cwd,'foundation');await cp(`examples/foundation-${kind}`,foundation,{recursive:true});
   const output=resolve(`dist/foundation-${kind}`);
   const built=await build({entryPoints:{app:`${foundation}/app.${kind==='react'?'tsx':'js'}`,'heavy-panel':`${foundation}/heavy-panel.${kind==='react'?'tsx':'js'}`},outdir:output,chunkNames:'chunks/[name]-[hash]',bundle:true,splitting:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
@@ -115,7 +137,7 @@ for (const kind of ['vanilla','react']) {
   if(kind==='react')for(const entry of ['','/button']){
     const only=await build({stdin:{contents:`import {Button} from '@coffeehc/xui-react${entry}';window.xuiButton=Button;`,resolveDir:cwd,sourcefile:'button-only.js'},bundle:true,format:'esm',minify:true,write:false,metafile:true,platform:'browser',target:'es2022',define:{'process.env.NODE_ENV':'"production"'}});
     const contributing=Object.values(only.metafile.outputs).flatMap(file=>Object.entries(file.inputs).filter(([,data])=>data.bytesInOutput>0).map(([path,data])=>({path,bytesInOutput:data.bytesInOutput})));
-    assert(!contributing.some(file=>/\/(?:dialog|tabs|menu|popover|combobox|select|toast)\/|\/dist\/(?:structured-log|structured-log-dom|api-key|api-key-dom|dialog|tabs|menu|menu-layout|navigation|popover|combobox|select|toast)\.js/.test(file.path)),'Button-only includes unrelated component code');
+    assert(!contributing.some(file=>/\/(?:dialog|tabs|menu|popover|combobox|select|toast)\/|\/dist\/(?:business-audit|business-audit-dom|structured-log|structured-log-dom|api-key|api-key-dom|dialog|tabs|menu|menu-layout|navigation|popover|combobox|select|toast)\.js/.test(file.path)),'Button-only includes unrelated component code');
     const bytes=only.outputFiles[0].contents,minified=bytes.length,gzip=gzipSync(bytes).length;assert(minified<=performance.budgets.buttonMinified&&gzip<=performance.budgets.buttonGzip,'Button-only size budget');
     performance.button.push({entry:entry||'root',minified,gzip,contributing:contributing.map(file=>({...file,path:file.path.replace(cwd+'/','')}))});
   }

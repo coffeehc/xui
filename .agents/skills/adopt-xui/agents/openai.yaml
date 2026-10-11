@@ -1,0 +1,4 @@
+interface:
+  display_name: "接入 xui"
+  short_description: "按公开 xui 规范、类型与构建产物接入页面并保留业务 API 能力"
+  default_prompt: "使用 $adopt-xui 将当前页面接入 xui，保留业务 API 与权限，验证后报告。"

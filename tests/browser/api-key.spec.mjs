@@ -42,4 +42,13 @@ for(const kind of ['react','vanilla']){
   await page.evaluate(()=>{window.xuiTheme.setMode('dark');document.documentElement.style.fontSize='200%';});await expect(page.locator('html')).toHaveAttribute('data-theme','dark');const action=page.getByRole('button',{name:'创建 API Key',exact:true}),box=await action.boundingBox();expect(box.y+box.height).toBeLessThan(720);await action.click();const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();const bounds=await dialog.boundingBox();expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(391);expect(bounds.y+bounds.height).toBeLessThanOrEqual(721);
   for(let i=0;i<12;i++){await page.keyboard.press('Tab');await expect.poll(()=>dialog.evaluate(element=>element.contains(document.activeElement))).toBe(true);}await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);await expect(action).toBeFocused();expect(await action.evaluate(element=>getComputedStyle(element).transitionDuration.split(',').every(value=>parseFloat(value)===0))).toBe(true);
  });
+ test(`${kind} one-time DOM values clear synchronously on close, pagehide and real unmount`,async({page})=>{
+  await prepare(page);
+  for(const action of ['close','pagehide','unmount']){
+   await page.goto(`/api-key-${kind}/`);await expect(page.getByRole('cell',{name:'资料读取',exact:true})).toBeVisible();await create(page);await expect(page.getByRole('textbox',{name:'一次性完整值'})).toHaveValue(oneTime);
+   const result=await page.evaluate(action=>{const node=document.querySelector('textarea');if(action==='close')window.apiKeyDemo.controller.close();else if(action==='pagehide')window.dispatchEvent(new Event('pagehide'));else window.apiKeyDemo.destroy();return {value:node.value,defaultValue:node.defaultValue,text:node.textContent,secret:window.apiKeyDemo.controller.readSecret(),connected:node.isConnected};},action);
+   expect(result.value).toBe('');expect(result.defaultValue).toBe('');expect(result.text).toBe('');expect(result.secret).toBeNull();if(action==='unmount')expect(result.connected).toBe(false);
+   await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
+ });
 }

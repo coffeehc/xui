@@ -58,6 +58,14 @@
     "./structured-log-dom": {
       "types": "./dist/structured-log-dom.d.ts",
       "import": "./dist/structured-log-dom.js"
+    },
+    "./business-audit": {
+      "types": "./dist/business-audit.d.ts",
+      "import": "./dist/business-audit.js"
+    },
+    "./business-audit-dom": {
+      "types": "./dist/business-audit-dom.d.ts",
+      "import": "./dist/business-audit-dom.js"
     }
   },
   "types": "./dist/index.d.ts"

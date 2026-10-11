@@ -66,7 +66,7 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
   let state:Readonly<ApiKeyManagerState>=Object.freeze({rows:Object.freeze([]),listBusy:false,hasLoaded:false,listError:null,phase:'closed',draft:freshDraft(),fieldErrors:Object.freeze({}),actionBusy:false,actionError:null,resultMetadata:null,revokeTarget:null,copyStatus:'idle'});
   let dead=false,secret:string|null=null,listGeneration=0,actionGeneration=0,copyGeneration=0,listAbort:AbortController|undefined,actionAbort:AbortController|undefined;
   const listeners=new Set<()=>void>();
-  const emit=(patch:Partial<ApiKeyManagerState>)=>{state=Object.freeze({...state,...patch});for(const listener of listeners)try{listener();}catch{/* View failures cannot replay a write. */}};
+  const emit=(patch:Partial<ApiKeyManagerState>)=>{state=Object.freeze({...state,...patch});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* View failures cannot replay a write. */}};
   const cancelList=()=>{if(dead)return;listGeneration++;listAbort?.abort();listAbort=undefined;emit({listBusy:false,listError:null});};
   const close=()=>{if(dead)return;actionGeneration++;copyGeneration++;secret=null;actionAbort?.abort();actionAbort=undefined;emit({phase:'closed',draft:freshDraft(),fieldErrors:Object.freeze({}),actionBusy:false,actionError:null,resultMetadata:null,revokeTarget:null,copyStatus:'idle'});};
   const wait=async<T>(operation:()=>Promise<T>,controller:AbortController)=>{
@@ -104,7 +104,7 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
     const target=state.revokeTarget;if(dead||state.phase!=='revoke'||state.actionBusy||!target||!canRevoke(target))return;
     const generation=++actionGeneration,controller=new AbortController();actionAbort=controller;emit({actionBusy:true,actionError:null});if(dead||generation!==actionGeneration)return;
     try{const result=await wait(()=>options.adapter.revoke(target,{signal:controller.signal}),controller);if(dead||generation!==actionGeneration)return;if(result!==undefined)throw new TypeError('A successful revoke callback returns void');
-      actionAbort=undefined;listGeneration++;listAbort?.abort();listAbort=undefined;emit({listBusy:false,rows:Object.freeze(state.rows.map(row=>row.id===target.id?Object.freeze({...row,status:'revoked' as const}):row))});close();
+      actionAbort=undefined;listGeneration++;listAbort?.abort();listAbort=undefined;emit({listBusy:false,rows:Object.freeze(state.rows.map(row=>row.id===target.id?Object.freeze({...row,status:'revoked' as const}):row))});if(!dead&&generation===actionGeneration)close();
     }catch{if(!dead&&generation===actionGeneration){actionAbort=undefined;emit({actionBusy:false,actionError:labels.revokeError});}}
   }
   async function copySecret(writeText:(value:string)=>Promise<void>){

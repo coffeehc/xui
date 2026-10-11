@@ -1,6 +1,6 @@
 # 通用前端基础能力与验收
 
-本轮基线为 `06946db8de1341c14960a1e5b9cc6252a56c37aa`。唯一完整视觉规则仍是 DESIGN.md；这里定义实施覆盖、宿主边界与可执行验收。本轮检查及独立审查通过后已获向 xui main 正常推送的明确授权；包发布与部署不在授权中。
+基础扩展历史基线为 `06946db8de1341c14960a1e5b9cc6252a56c37aa`；最终范围、审查和验收见 [FINAL_REVIEW.md](FINAL_REVIEW.md)。唯一完整视觉规则仍是 DESIGN.md；这里定义实施覆盖、宿主边界与可执行验收。本轮检查及独立审查通过后已获向 xui main 正常推送的明确授权；包发布与部署不在授权中。
 
 ## 能力覆盖矩阵
 
@@ -30,9 +30,10 @@
 | 数据驱动 Menu + Layout | 已实现；本步骤独立验证与提交 | NavigationMenu/MenuLayout 与 createNavigationMenu/createMenuLayout；React/原生同源数据，一次 activeId/location 与导航适配；分组/子项/展开/紧凑/窄屏、键盘、更新与生命周期、导航时 shell 身份稳定 |
 | HTTP 与共享列表契约 | 已实现，本步骤独立验证 | 零框架传输、显式模式/response adapter、错误/status/Abort/timeout、默认不重试；共享列表默认 Go ListData 的 list/total，HTTP 保留原样 payload；来源与实现同步记录 |
 | API Key 通用管理组件 | 已实现，本步骤独立验证 | 共享安全元数据、列表/创建/权限与有效期/一次性结果/明确复制/撤销确认；不生成真实密钥，不复制产品权限模型，后端生成与鉴权，默认脱敏与不持久化 |
-| 结构化日志查询 | 已实现，只读独立步骤 | 共享控制器、React/原生完整分组/观察/详情；依据固定 commons@b0bc0f9 的真实 filter/cursor，计数/首次代表/三态/保留期明确；[拟议 v1 facade](LOGS.md) 由宿主后端实现，不猜旧协议 |
+| 可扩展业务审计 | 已实现，两宿主独立消费 | 固定公共字段 + event_type/schema_version + 业务 JSON payload；list/detail loader、过滤/cursor/权限/安全回退/注册 renderer；后端 adapter 尚未落地，见 [BUSINESS_AUDIT](BUSINESS_AUDIT.md) |
+| 独立结构化错误观察 | 已实现，只读独立步骤 | 共享控制器、React/原生完整分组/观察/详情；依据固定 commons@b0bc0f9 的真实 filter/cursor，计数/首次代表/三态/保留期明确；[拟议 v1 facade](LOGS.md) 由宿主后端实现，不猜旧协议 |
 
-菜单/布局和 HTTP 是用户明确扩展的范围，替代此前不包含 HTTP 通用层的边界；新范围的推送需单独授权。HTTP/query、API Key 与结构化日志只读查询已实现；完整手册与接入 skill 的最终交叉验收继续独立推进。框架不实现产品 endpoint、权限判断、登录路由或业务数据引擎。
+菜单/布局和 HTTP 是用户明确扩展的范围，替代此前不包含 HTTP 通用层的边界；本轮扩展已获全部功能、手册、skill 与统一验收完成后一次正常推送 main 的授权。HTTP/query、API Key、业务审计、独立错误观察及 [接入 skill](../.agents/skills/adopt-xui/SKILL.md) 已实现；最终交叉验收见 FINAL_REVIEW。框架不实现产品 endpoint、权限判断、登录路由或业务数据引擎。采用产品的业务 API 保持完整并可独立测试；UI 通过相同 API 提供观察、配置和介入，核心流程不放进组件。
 
 ## 加载与性能实施
 

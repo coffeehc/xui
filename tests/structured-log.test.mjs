@@ -46,3 +46,19 @@ test('detail selection, closing and teardown isolate IDs and release sensitive r
 test('object links require host mapping and safe origins; identifier copy is explicit and scoped',async()=>{
  let target='/known',writes=0;const controller=make({baseURL:'https://host.invalid/logs/',resolveRef:ref=>ref.kind==='known'?target:null,referenceOrigins:['https://allowed.invalid'],adapter:{groups:async()=>groups(),records:async()=>records(),groupRecords:async()=>({...records(),group:group()}),record:async()=>detail({facts:facts({request_id:'fake-request',trace_id:null})})}});assert.equal(controller.resolveReference({kind:'unknown',id:'1'}),null);assert.equal(controller.resolveReference({kind:'known',id:'1'}),'https://host.invalid/known');for(const invalid of ['javascript:alert(1)','https://user:password@host.invalid/','https://other.invalid/']){target=invalid;assert.equal(controller.resolveReference({kind:'known',id:'1'}),null);}target='https://allowed.invalid/known';assert.equal(controller.resolveReference({kind:'known',id:'1'}),target);await controller.openRecord('demo:r1');assert.equal(writes,0);await controller.copyIdentifier('other',async()=>{writes++;});assert.equal(writes,0);await controller.copyIdentifier('fake-request',async()=>{writes++;throw Error(privateText);});assert.equal(controller.getState().copyStatus,'error');const held=deferred(),copy=controller.copyIdentifier('fake-request',()=>held.promise);controller.closeDetail();held.resolve();await copy;assert.equal(controller.getState().copyStatus,'idle');
 });
+test('a filter transition cannot overwrite a newer intent from a subscriber',async()=>{
+ const requests=[];const controller=make({adapter:{groups:async request=>{requests.push(request.filter.text);return groups();},records:async()=>records(),groupRecords:async()=>({...records(),group:group()}),record:async()=>detail()}});let replaced=false,nested;
+ controller.subscribe(()=>{if(!replaced){replaced=true;nested=controller.setFilter({text:'newer intent'});}});
+ await controller.setFilter({text:'older intent'});await nested;assert.equal(controller.getState().filter.text,'newer intent');assert.deepEqual(requests,['newer intent']);controller.destroy();
+});
+test('destroy during a filter notification leaves no old state or request behind',async()=>{
+ let calls=0;const controller=make({adapter:{groups:async()=>{calls++;return groups();},records:async()=>records(),groupRecords:async()=>({...records(),group:group()}),record:async()=>detail()}});controller.subscribe(()=>controller.destroy());
+ await controller.setFilter({text:'older intent'});assert.equal(controller.getState().filter.text,null);assert.equal(controller.getState().busy,false);assert.equal(controller.getState().data,null);assert.equal(calls,0);
+});
+test('log subscription rebinding is deferred to the next notification',()=>{
+ const controller=make();let count=0,off=()=>{};const listener=()=>{count++;off();if(count<8)off=controller.subscribe(listener);};off=controller.subscribe(listener);
+ controller.cancel();assert.equal(count,1);controller.cancel();assert.equal(count,2);off();controller.destroy();
+});
+test('a newer observation detail opened by an abort callback survives query reset',async()=>{
+ const old=deferred();let current;const controller=make({adapter:{groups:async()=>groups(),records:async()=>records(),groupRecords:async()=>({...records(),group:group()}),record:(id,{signal})=>{if(id==='demo:r1'){signal.addEventListener('abort',()=>{current=controller.openRecord('demo:r2');},{once:true});return old.promise;}return Promise.resolve(detail({id}));}}});const first=controller.openRecord('demo:r1');await tick();await controller.setFilter({text:'new'});await first;await current;assert.equal(controller.getState().detailOpen,true);assert.equal(controller.getState().detailId,'demo:r2');assert.equal(controller.getState().detail.id,'demo:r2');controller.destroy();
+});

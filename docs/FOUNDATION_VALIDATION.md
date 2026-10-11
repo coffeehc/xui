@@ -85,7 +85,9 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 
 这些是合成数据和模拟 Clipboard 检查，不证明真实后端鉴权/密钥安全/幂等或 OS 剪贴板行为；不声称 JS 安全擦除或剪贴板撤回。真实移动 OS、读屏器、原生浏览器 zoom、Firefox/Safari、SSR hydration、生产性能及新增独立代理审查未跑。没有产品迁移、推送、部署或包发布；结构化日志与最终手册/接入 skill 仍为后续独立步骤。
 
-## 结构化日志只读查询独立步骤
+## 独立结构化错误观察步骤（非业务审计）
+
+用户后续明确日志目标是可审计业务日志。下面保留此前错误观察步骤的历史证据；这些结果不能当作业务审计交付。业务审计独立合同见 [BUSINESS_AUDIT.md](BUSINESS_AUDIT.md)。
 
 本步骤基线为本地 6f2006614c626ca841416695ea00f63a54a93026。通过正常 Git 读取 commons@b0bc0f9 的 service/query/record/extension/README 完整合同；固定 SHA、拟议 DTO/HTTP facade 与宿主边界见 [LOGS.md](LOGS.md)。runtime/structured-log 控制器和类型被 React/structured-log、runtime/structured-log-dom 共用；两类完整正式 tarball 消费者共用 typed fake facade/labels，仅导入公开 CSS，不用源码 alias，原生不安装 React。只读分组/观察/精确详情，没有投递运维、删除、重放或全文系统。
 
@@ -96,3 +98,13 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 标准 verify 纳入 70 项单测、1 项真实默认 watch 与 112 项浏览器检查，另含 271 token 单源/无循环、根类型、构建、十二个正式预览、独立 tarball/types/按需贡献门禁。最终受测 SHA、退出码和实际通过数量随独立提交交付；完整日志 .artifacts/verify-log-final.log，浏览器 JSON test-results/browser.json。文档链接检查与全部公开构建入口同步纳入验证。
 
 这些结果是合成 fetch/模拟 Clipboard 的展示合同与生命周期验证。未实现或验证生产后端 facade、Go/PostgreSQL、真实鉴权/tenant 隔离/脱敏、OS 剪贴板、产品迁移或新增独立代理审查；真实移动 OS、读屏器、原生浏览器 zoom、Firefox/Safari、SSR hydration 与生产性能仍未跑。没有推送、部署或包发布；最终手册与仓库接入 skill 继续独立收口。
+
+## 业务审计、手册与 skill 收口
+
+用户已纠正日志目标为可审计业务行为。本步骤在保留上述错误观察代码/历史的基础上新增 runtime/business-audit、runtime/business-audit-dom、React/business-audit。固定公共审计字段与 event_type/schema_version、独立领域 JSON payload、显式 list/detail loader；完整合同见 [BUSINESS_AUDIT.md](BUSINESS_AUDIT.md)。合成两宿主覆盖 user/agent/service、四种结果、已知/未知 payload 版本与安全回退，不强制 before/after 或把 severity 冒作业务结果。
+
+新增 11 项审计单测和 12 项浏览器检查；既有 API Key/错误观察新增 6 条控制器重入回归及 2 条同步清空保留 DOM 节点的浏览器回归。全套 87 单测、1 默认真实 watch、126 浏览器检查，另含 token 单源/无循环、根 types、48 全部公开入口的独立安装 ESM/CSS/init/types/运行导出与14正式页面消费、peer/按需/体积门禁。实际冻结 SHA 标准 verify 的数量和状态随最终交付给出；完整日志 .artifacts/verify-final.log，未用预提交局部结果替代全量执行。
+
+三项独立只读审查的实质发现、修复/旧代码失败证据、源码/正式声明核对，以及四个 skill 接入任务见 [FINAL_REVIEW.md](FINAL_REVIEW.md)。仓库 skill 具备正式 frontmatter 和 UI 提示，不装到用户电脑；手册强调 agent-ready、领域 API 独立测试，以及先接 xui/随后逐项目替换 baseservice 的螺旋升级，不新增后端或运行配置组件。
+
+真实后端 adapter、权限/tenant/脱敏/审计可靠性及产品迁移未实施，不承诺不可篡改或审计事务成功。真实移动 OS、读屏器、Firefox/Safari、SSR hydration、原生 browser zoom 和生产性能未跑；Clipboard/触屏/字号缩放限制保持。最终一次正常 push 与同 SHA CI 仅在本轮完整验收后执行，包仍 private、不部署不发布。
