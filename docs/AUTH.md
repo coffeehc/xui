@@ -1,107 +1,93 @@
-# 可配置登录页与统一认证合同 v1
+# 可配置登录页与 Bearer 会话合同 v2
 
-`ConfigurableLoginPage` 和 `createLoginPage` 提供完整登录页：项目填写产品名称、标题、说明、可选 logo、文案与安全回跳目标，传入已有主题 owner 和认证 client，即可采用相同默认皮肤和交互。原子→组合→页面的设计哲学统一记录在 [FOUNDATION.md](FOUNDATION.md#组件层次与扩展原则)，通用视觉规则仍只在 [DESIGN.md](DESIGN.md)。
+`ConfigurableLoginPage` 和 `createLoginPage` 共享一个 `createAuthClient`，保持现有默认主题、布局、扩展、密码清理和安全回跳。这个自有应用合同配套 baseservice authenticationservice/webfacade；不是 OAuth/OIDC token endpoint，不替换第三方标准协议，不表示任何业务项目、生产登录链或部署已迁移。
 
-`createLoginPage` 的 label、错误说明和标题关联 ID 使用 runtime 共享 UI allocator，不调用 `crypto.randomUUID()`，因此内网 HTTP 中缺少该 API 不会阻止原生登录页构造；多实例与重建规则见[接入手册](ADOPTION.md#原生-ui-id-与内网-http)。这不改变以下认证协议、凭据和传输安全边界。
+## 固定 HTTP 合同
 
-## 真实参考与新合同的区别
+`createAuthClient({http, protectedPaths, timeoutMs})` 绑定宿主已有 `createHttpClient`。同一 transport 只能有一个认证 owner；不创建并行 fetch、token store 或第二个401拦截器。认证预算默认15秒。地址始终为根路径，不附加 baseURL 的路径、不猜 token/me/state 等旧路由。
 
-已用正常 Git 读取 xAgent 提交 `29139f7843d9a79a9eca42892cb87da8f08f6320`，核对 [auth-service.ts](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/frontend/packages/business/src/services/auth-service.ts)、[http-service.ts](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/frontend/packages/business/src/services/http-service.ts)、[user_endpoint.go](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/user_endpoint.go) 和 [user_auth_endpoint.go](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/user_auth_endpoint.go)。现有密码登录为 `POST /api/v1/auth/token`，发送 password grant、username/password/client_id/channel_type/terminal_id，返回 access/refresh token；退出是 `POST /api/v1/auth/logout`，当前用户为 `GET /api/v1/me/state`。现有前端持有 bearer token，错误也有 HTTP 200 的业务 envelope。
+| 操作 | 固定端点 | 请求凭据 | 成功 payload |
+| --- | --- | --- | --- |
+| login | POST /api/v1/auth/login，JSON username/password | 无 Authorization，credentials:same-origin | IssuedSessionV2 |
+| refresh | POST /api/v1/auth/refresh，JSON {} | 无 Authorization，仅恢复 Cookie，credentials:same-origin | IssuedSessionV2 |
+| currentUser 的 session 核对 | GET /api/v1/auth/session | session access Bearer，credentials:omit | AuthSessionV2 |
+| logout | POST /api/v1/auth/logout，JSON {} | 无 Authorization，仅恢复 Cookie，credentials:same-origin | null |
 
-下面是 **xui 新定义的 cookie 会话 facade**，不是对上述协议的别名兼容，也不声称 xAgent 已可直接接入。登录、会话和用户管理由宿主产品或身份提供方实现；baseservice不实现这些服务，API Key/业务日志facade也不拥有用户生命周期。xui保留当前登录API，通过可测试合同、合成 fetch 和两个正式消费者完成前端；本次对齐没有实现cookie后端或生成凭据。对已正式上线的xAgent，若尚无该facade，先保留已有认证owner并逐页采用主题/原子/其它页面，记录后端缺口和升级影响；facade与真实契约验收就绪后再切完整登录页。未发布项目直接采用新合同，不为旧认证添加兼容层；本轮不改xAgent或生产数据。createAuthClient只有http/timeoutMs配置，不支持靠改baseURL或猜route/adapter完成旧协议迁移。
+以上请求统一 `Accept:application/json`、写入 `Content-Type:application/json`、`cache:no-store`、`redirect:error`，无自动重试。成功外层严格采用 httpx `AjaxResponse`：success/message/payload/request_id/code；业务成功仍由 success=true 决定，code 为安全整数。HTTP状态与业务码分开，不猜 data/msg 等别名。
 
-## 固定版本接口
+AuthSessionV2 = `{schema_version:2,user:{id,username,display_name}}`。
+IssuedSessionV2 在上述字段之外恰有 `access_token`、`token_type:"Bearer"`、`expires_at`。该含秘密 DTO 的解析器不公开；login/refresh 返回值只有 user。`parseAuthSession` 只接受无 token 的 session DTO。
 
-同一共享 `HttpClient` 的 `baseURL` 指定服务 origin；请求固定根路径 `/api/v1/auth/*`，不会附加 baseURL 的路径或自动尝试旧路由。默认 credentials 为 same-origin，登录与退出无 retry，三个请求 cache=no-store、redirect=error。默认整段预算 15,000ms，可在 `createAuthClient({http, timeoutMs})` 配置，覆盖 header provider、fetch 和读取响应 body。
+用户 id 为正十进制 int64 字符串，无前导零且不超过9223372036854775807；不能转JS number。username 非空、最多128 UTF-16单元；display_name 为null或最多256单元。拒绝额外字段、getter、旧版本、角色/权限/tenant投影。`access_token` 为47字符规范 `bss_` + 43字符无padding base64url；客户端只校验形状，不凭相同前缀猜 access/refresh purpose。expires_at 为尚未到期的UTC RFC3339；服务器默认access寿命5分钟，可由后端显式配置，不将JWT解码结果当作服务端权限。
 
-| 操作 | 方法与固定路径 | 请求 | 成功响应 payload | HTTP 401 |
-| --- | --- | --- | --- | --- |
-| 登录 | POST `/api/v1/auth/login` | JSON `{username:string,password:string}` | `AuthSession`，后端同时签发/轮换 cookie | 登录拒绝；保留此前服务端确认的用户状态，不广播全局过期 |
-| 当前用户 | GET `/api/v1/auth/session` | 无 body/query | `AuthSession` | anonymous、user=null，无错误提示；未登录是正常事实 |
-| 退出 | POST `/api/v1/auth/logout` | JSON `{}` | null；后端撤销会话并清 cookie | 已无有效会话，视为已退出 |
+用户名提交前trim；密码不trim且最多4096字符，只在POST body使用，不进入回调、URL、storage、日志或state。返回的 identity 不是授权决策依据。
 
-成功外层必须为现有 [HTTP](HTTP.md) 的 Go `AjaxResponse`：`success:true`、`code:安全整数`（不要求固定成功码）、`message:string`、`request_id:string`、`payload` 必须存在；非2xx HTTP status 与 success=false 业务失败分开。不接受 data/msg/access_token/user_id 等猜测别名。
+## 一个内存 owner 与显式保护端点
 
-```ts
-interface AuthUser { id: string; username: string; display_name: string | null }
-interface AuthSession { schema_version: 1; user: Readonly<AuthUser> }
-```
-
-这两层 DTO 是严格公共投影：缺字段、额外字段、其它版本和 token 字段被拒绝。id 为非空不透明字符串（最多256字符）；username 非空（最多128字符），display_name 为 null 或最多256字符。角色、权限、tenant、数据库模型与完整用户档案不放进这个 DTO，也不能根据 display_name 推导权限。用户名提交时去两端空白；密码保留原始字符，不 trim，最长4096字符，必须仅在 POST body 传递。
-
-401 之外的 403/429/5xx、业务失败、parse/network/timeout 保留为安全 `HttpError`。页面以本地文案反馈，不显示服务端原始 message、body、URL 或异常 cause。API 不将外层 redirect 用作登录跳转。固定 contract 接口负责其真实鉴权、状态码和脱敏；已上线xAgent的旧 bearer 协议须在其授权升级方案独立适配，不把 JWT 解码结果假装为服务端确认的 user。
-
-## 状态、取消与凭据生命周期
-
-认证 client 是同一宿主的一个状态 owner：`getState/subscribe/currentUser/login/logout/cancel/expire/destroy`。初始 unknown；页面挂载时显式核对会话。登录成功/currentUser成功→authenticated；session401/退出成功/退出401→anonymous。重复写操作在 client 和页面两层阻止，不自动重放。另一次读取、过期或销毁用 generation 排除迟到结果，订阅使用快照。
-
-取消/超时/网络失败只停止本地等待，不能撤回已执行的登录、Set-Cookie 或服务端撤销。写操作结果不明时清 user、标记 unknown，页面显示必要反馈和“核对会话”，重新读取后再确认；不宣布已经安全退出，也不尝试从 JS 删除 HttpOnly cookie。当前用户读取取消保留此前确认状态，其它读取失败则标记 unknown、清 user，不将旧身份当作当前确认。退出等待开始即清本地 user，失败仍不恢复旧身份。宿主订阅身份变化，清理所属缓存、私密草稿、连接和领域资源；组件不替代这些业务生命周期。
-
-三个 auth 请求使用显式 `unauthorized:'ignore'`，在认证 owner 内解释401，不消耗共享 HTTP 的全局过期 latch。其它 protected API 的 `onUnauthorized` 可调用 `auth.expire()`；认证成功和退出确认调用 `http.resetUnauthorized()`，防止旧 HTTP epoch 的401污染新会话。业务错误全局反馈若存在，按 endpointId 将 auth.* 交由页面反馈，避免两个提示 owner。
-
-页面不在 React state、client state、URL、storage、缓存或日志保存密码；密码是 transient input，提交前清 DOM，成功/错误、pagehide、卸载时清 value/defaultValue/textContent，迟到结果不触发跳转。传输必然短暂持有请求 body/字符串；不承诺 JS 字符串内存擦除或浏览器密码管理器行为。
-
-## 配置与公开扩展
+先创建共享HTTP，再创建auth，例如：
 
 ```ts
-import {createHttpClient} from '@coffeehc/xui-runtime/http';
-import {createAuthClient} from '@coffeehc/xui-runtime/auth';
-const http = createHttpClient({
-  baseURL: location.origin,
-  onUnauthorized: () => auth.expire(),
-  // getHeaders: 项目既有受信任 CSRF header provider；不要在源码填真实秘密。
-});
-const auth = createAuthClient({http});
-const config = {
-  layout: 'fullscreen', // 默认值；只有明确需要旧居中卡片时选 'card'。
-  productName: '工作台', title: '登录工作台', description: '继续处理你的工作。',
-  logo: {src: '/assets/logo.svg', alt: '工作台'}, returnTo: '/work',
-  // labels: 本地化字符串；没有结构/HTML/内部 CSS override。
-};
+const http = createHttpClient({baseURL: location.origin});
+const auth = createAuthClient({http, protectedPaths: ['/api/v1/orders/', '/api/v1/profile']});
+await auth.currentUser();
 ```
 
-React：`<ConfigurableLoginPage auth={auth} theme={theme} config={config} />`。原生：`createLoginPage(root,{auth,theme,config})`；factory 返回 `getElement/destroy`，不销毁共享 auth/theme。先加载公共 CSS 与同步 init，复用 `window.xuiTheme`，不新建竞争主题 owner。
+protectedPaths是精确路径，或以斜杠结尾的子树前缀；只接受规范根相对路径，不能带query/hash/URL/百分号。`/api/v1/orders/`不会匹配`/api/v1/orders-other`。HTTP首先规范化请求URL并校验同配置origin；认证owner拒绝歧义编码路径与直接绕过owner调用固定auth端点。前端路径表只是防止发送凭据到错误端点，后端仍必须独立校验route policy、身份、资源和权限。
 
-公共登录页默认 `config.layout="fullscreen"`，左右面板覆盖整个动态视口：宽屏左侧品牌、右侧标题/字段/操作，保留中间分隔线，没有居中卡片外框、圆角或四周大留白。表单内容使用 `--login-form-inline-size` 保持可读宽度，面板内距仍来自公共 token；不能用消费方固定像素或重复页面皮肤补偿。窄屏改为紧凑品牌在上、表单在下；长品牌限制于品牌滚动区，不抢占全部表单空间。视口高度很短（包括软键盘压缩的情形）时允许文档滚动，不把输入困在不足一个控件高的内部区域。`dvh` 随浏览器可用视口变化，真实移动 OS/输入法仍需产品验收。
+声明的业务端点集中注入 `Authorization: Bearer <access>`，强制 `credentials:omit`、`redirect:error`，拒绝调用方覆盖或generic retry。已有静态headers/getHeaders/单请求headers若混入Authorization、Cookie或X-API-Key，发送前报安全错误，不静默覆盖第二凭据。CSRF及其他非秘密宿主header仍合并。未声明公共端点不会收到本owner的access。请求及非空Response.url都校验目标origin；自定义fetch必须真正遵守redirect:error，不能在内部透明改目标。
 
-`LoginPageLayout` 从 runtime auth/root 和 React login/root 导出，值为 `fullscreen | card`。显式 `config.layout="card"` 保留旧居中受限卡片；未设置即为新的全屏默认，升级只涉及公开展示布局，消费者如果要暂时保留旧观感必须明确选 card。两种布局共用主题、字段、状态、防重、取消与认证 owner，不使用不同协议或额外请求。旧 login-card 尺寸 token 仅控制 card，不能限制默认全屏。这里没有升级、部署或改变 xAgent 生产代码。
+本owner只持有session access。API Key供Agent/集成使用，不从登录页签发或保存为会话；不要把API Key注入这个session owner。后端session scope是当前用户权限；API Key scope是当前用户权限∩key grants，受固定namespace用途和host资源策略约束。相同Bearer语法不意味着相同scope，session endpoint只接受session credential。
 
-可选 `brandVisual` 是正式装饰图片区 slot：React 接收 `ReactNode`，原生接收 `HTMLElement`。例如 React 可传 `<img src="/assets/login-illustration.svg" alt="" />`，原生构造同样的 img 传入；无需复制内部 DOM/CSS。slot 使用公共尺寸约束，`aria-hidden` 与 `inert` 使其不参与朗读或键盘顺序，窄屏收起以优先保留字段。不要放交互、关键说明或唯一产品名称；产品标识/名称/说明继续用 `logo/productName/description`，始终保留。宿主负责传入可信、安全的图资源；xui 不内置业务宣传、远端追踪图片或产品专属插画。
+access和expiry只存在闭包内存，public AuthState、login/refresh/currentUser返回值、广播、日志和缓存没有token。禁止localStorage/sessionStorage/URL/共享channel存token。owner销毁后原managed routes继续失败关闭；新owner使用新HTTP实例。销毁auth不等于服务器logout。
 
-正文和操作滚动区在各自内部保留 `--focus-width + --focus-offset` 的四边安全空间，并提供 scroll-padding/scroll-margin。不能仅在外层 form 加 padding，也不能把所有 overflow 改为 visible，或更改全局焦点 token 来隐藏裁切。表单反馈有稳定的单行状态占位，首次会话检查、匿名可输入和普通错误不重新居中整组字段；长错误可以增长并滚动，未删除错误信息。成功确认用户及宿主导航行为保持现有合同。
+## 恢复、401与并发
 
-登录页不再展示主题选择器。它沿用宿主已有主题 owner 与首屏初始化；默认 owner 读取 `localStorage["ui.theme.mode"]`，有效值仅 `light/dark/system`，未保存、未知值或读取失败默认 `system`。不将生效的浅/深色写回偏好，不创建另一份 sessionStorage，也不更改认证会话或凭据存储。宿主已有受控主题/自定义 key 保持原合同，主题入口由登录后的应用设置提供；`theme` 参数和已有本地化字段保留公开接口兼容，但页面不再订阅或改变选择器状态。
+公开接口为 `getState/subscribe/currentUser/refresh/login/logout/cancel/expire/destroy`。state仅有status、user、busy、safe HttpError和 `reauthenticationRequired`，不暴露secret/expiry。
 
-可选 `onAuthenticated(user,returnTo)` 将导航交给宿主 router；没有回调时登录成功和“Continue”采用安全的根相对 `location.assign`。已有有效会话显示确认用户、进入与退出操作。配置均以文本/普通 img 渲染，logo 只接受 HTTP(S)或相对资源且不能带 URL credentials；不注入 HTML、脚本或内部皮肤。尽量简短标题/说明；过长品牌与动作文字各自可滚动并保留正文空间，品牌区与表单正文必要时独立滚动，底部主操作保持可达，不裁切关键文字或缩小字号。
+- 新页面第一次currentUser先进行一次cookie refresh，再以新access调用session核对。缺失/过期恢复凭据401是正常anonymous，后续不会循环bootstrap。这支持现有默认整页location.assign；目标页同样先连接owner并currentUser。没有把默认导航强制改SPA。
+- access到期或将到期时，只在业务请求需求发生后refresh，不做后台keepalive。
+- 已发送业务请求的401只对它使用的access generation失效，合并一个refresh；原业务请求仍拒绝401，绝不自动重放写入。旧代迟到401不会清掉较新login/refresh结果。403不触发refresh，不变成“未登录”。若宿主要重读，必须明确是幂等读，由该领域owner最多重试一次；该auth owner禁止generic retry。
+- 同tab refresh和session核对singleflight。取消一个调用者的signal仅撤销该等待者，不取消其他等待者共享的刷新。显式auth.cancel/destroy才取消owner执行并抛弃迟到结果。
+- login/refresh/logout按本地队列串行；支持Web Locks的浏览器还按同origin锁跨tab串行。logout先清本地access，等待已在途refresh完成后使用浏览器最新恢复cookie撤销整个family。新login/退出意图阻止旧请求恢复旧identity。
+- BroadcastChannel只发 `{kind:login|refresh|logout,epoch}`，不发token或user；localStorage的`xui.auth.v2:<origin>:epoch`仅保存epoch/identityEpoch/kind安全排序元数据，拒绝迟到旧广播覆盖较新登录，不保存任何用户或凭据。login/logout通知清理其他tab旧身份；refresh不废掉有效兄弟access。无Web Locks/广播、同源其他非xui客户端、网络丢响应和延迟Set-Cookie不承诺无缝恢复，由后端非破坏性409和显式重新登录处理。
 
-`resolveLoginReturnTo` 只保留根相对同源路径，规范化和重复解码后再拒绝双斜杠、反斜杠/控制字符、默认 `/login` 循环、无效转义与不安全 fallback。去掉整个 fragment 和 password/access_token/refresh_token/token/auth_token/authorization/code/api_key/client_secret/secret query；安全 fallback 默认 `/`。其它自定义登录路由和业务 query 由宿主另验，不承诺任意参数都识别为秘密；标准页面不会把密码构造成 returnTo。目标页面及任何后续业务重定向仍须后端自行验证，不把同源中转路由当开放跳转豁免。
+不要保留旧 `onUnauthorized:()=>auth.expire()` 作为第二个失效owner。managed Bearer由auth按generation处理401；宿主订阅认证变化并清理所属resource、私密草稿、连接和业务缓存。HTTP onUnauthorized可观察事实，但不要在其中再次清理/触发refresh或重放。
 
-## Cookie、CSRF 与后端责任
+## 不确定结果与重新登录
 
-cookie 的签发/轮换/有效期/服务端撤销、HttpOnly/Secure/SameSite、准确的 Path/Domain、no-store响应、限速及用户枚举防护由真正后端实施。包括登录在内的写操作必须有后端 CSRF 防护（准确 Origin/Fetch Metadata 和缺 header 策略，或项目既有 token 方案），拒绝不合适的 simple content-types 与宽松 CORS。前端仅 JSON、同源路径和 credentials 不能提供这些保证。[OWASP CSRF 指南](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#possible-csrf-vulnerabilities-in-login-forms)
+| HTTP / code | 含义 | 前端行为 |
+| --- | --- | --- |
+| 400 / 40001 | 无效认证请求 | 显示安全错误 |
+| 401 / 40101 | 无效/过期/撤销/错误用途/登录拒绝 | session/refresh匿名；login拒绝可保留之前已确认会话 |
+| 403 / 40301 | 已认证但kind/scope/resource被拒绝 | 不刷新、不重放 |
+| 409 / 40901 | 旧恢复凭据已消费，refresh竞争 | 不清cookie、不撤family，要求重新登录验证 |
+| 429 / 42901 | 限速 | 不自动重试 |
+| 503 / 50301 | mutation提交结果未知 | 不重发、不签发、不清cookie、不假称退出 |
+| 503 / 50302 | 已提交但后续失败 | 不假称回滚，同样要求重新登录验证 |
+| 503 / 50300 | 依赖不可用 | 保留失败事实 |
 
-跨 origin 服务必须由宿主显式配置 HttpClient credentials=include 及准确服务端 CORS/CSRF/cookie策略；same-origin 默认不会自动发送跨 origin cookie。[MDN Request.credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) xui 不读取或创建 cookie、JWT/access/refresh token，也不引入 token 持久化。登录/退出是否写业务日志由宿主后端决定，页面不重复写入。
+任何refresh失败（除明确401）、不确定login/logout、网络丢响应、执行取消或超时都会清access并设unknown + reauthenticationRequired。此时currentUser/refresh/业务请求不会再盲试cookie；页面显示“请重新登录验证”，不提供会触发重复rotation的“核对会话”。新的显式login才能建立安全新会话。取消一个共享等待者不等于执行取消，不能污染成功的其他等待者。
 
-## 验证与后续边界
+本轮不实现KMS/加密秘密重放回执，网络丢失rotation响应可能必须重新登录。JS不能撤回已执行Set-Cookie，不能从HttpOnly cookie读取秘密，不能将失败logout宣称安全退出；也不使用logout作为refresh失败的补救动作。服务端的current family/revocation事实才是最终依据。
 
-[共享配置](../examples/shared/login-config.json)、[合成 facade](../examples/shared/login-model.ts)、[React](../examples/login-react/app.tsx) 与 [原生](../examples/login-vanilla/app.js) 都经 fresh npm tarball 安装正式入口再打包，不读 monorepo 源码 alias，也不需要私有页面 CSS。[逻辑回归](../tests/auth.test.mjs) 与 [浏览器回归](../tests/browser/login.spec.mjs) 核对严格 DTO、共享401、固定请求、取消/超时/迟到/防重复、回跳、错误安全、theme、键盘/焦点/reduced-motion、390px/200%/后备字体和密码节点清空。[登录布局与首屏回归](../tests/browser/login-layout.spec.mjs)另检查桌面左右/窄屏上下、已保存主题/无值/system变化、主包未到达时同步 init 和首个可见帧、刷新、owner 复用及无主题选择器，并留存浅深/system 两种视口截图。
+## Cookie、CSRF与后端责任
 
-合成 fetch 没有签发真实 cookie，不证明后端登录、CSRF、CORS、鉴权或日志可靠性通过。最终完整验收与同 SHA CI 随交付记录。注册、重置密码、SSO和用户管理属于宿主/身份提供方责任，不是baseservice后续计划；当前基础已有登录/API Key/业务日志，不声称完整基础系统或产品迁移已完成。
+恢复cookie名 `__Host-baseservice-refresh`：HttpOnly、Secure、SameSite=Strict、Path=/、无Domain；只有后端明确development-only insecure模式才使用 `baseservice_refresh`。重复/替代名cookie、Cookie/Header混用、legacy会话cookie、错误purpose或API Key不能作为session/refresh fallback。
 
-固定cookie facade显式Accept:application/json，POST显式Content-Type:application/json；保留宿主CSRF/鉴权/tenant header，不继承旧protobuf/form编码。该标准与页面API索引一致，真实后端仍须提供cookie、CSRF/CORS与鉴权。
+Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unknown/postcommit失败不得签发或清cookie。logout缺cookie幂等成功；已消费旧cookie409不得清cookie或撤销仍有效family。family默认绝对8小时、空闲30分钟；账户禁用、密码变更/会话撤销必须使family失效，重新启用不能复活旧family。
 
-行业标准优先：标准OAuth2/OIDC/SAML入口保留标准请求、状态和错误合同；第三方认证按其API，宿主在内部边界明确转换。这里的固定cookie facade用于自有应用会话，不替代标准OAuth2 token endpoint，也不强制第三方AjaxResponse。公共非2xx扩展见[HTTP](HTTP.md)，更多登录slots仍未实现，不把协议边界澄清当新增SSO/slots授权。
+包括login在内的所有cookie写入需要后端严格CSRF：baseservice由宿主Options.CSRF精确校验Origin，可结合Fetch Metadata和缺header策略；JSON Content-Type仅为辅助，配套准确CORS、限速及枚举防护。本合同不新增自定义CSRF token/header。前端same-origin credentials和JSON并不提供完整CSRF保证。当前默认owner只支持同源cookie恢复；不自动开启跨origin include，也不读取/制造CSRF token。标准OAuth/OIDC/SAML仍由宿主按标准流程集成。
 
-## 完整登录页的正式扩展
+## 完整页面与扩展保持不变
 
-ConfigurableLoginPage和createLoginPage接受同一个extensions={beforeSubmit?,actions?,errorLabel?}，以及beforeFields/afterFields（ReactNode或原生HTMLElement）。配置区位于提交前，公共页负责Field排版、忙碌fieldsets、动作、防重复、取消、当前错误、焦点和密码清理；扩展仍通过传入的同一auth/theme owner，不创建第二套认证状态。基础登录字段/固定cookie facade保持现有合同。
+配置产品名称、标题、说明、可选logo、文案、safe returnTo；默认fullscreen与显式card沿用[DESIGN](DESIGN.md)。主题复用已有owner，登录页不增主题选择器或持久化副本。React和原生布局保持已有的窄屏/200%文字/焦点安全空间与错误区；不改主题、DataTable、菜单或业务页面。
 
-beforeSubmit与actions[{id,label,disabled?,run}]接收只含username和AbortSignal的context，不传密码/HTTP响应/令牌。宿主明确验证服务地址、账户来源及权限，并在已授权边界配置既有认证owner/transport；切换真实服务必须由产品按自身安全策略实现，不能把任意跨origin URL交给默认HTTP。动作可启动OAuth/OIDC/SAML等行业标准流程，xui只负责本地动作等待，既不实现provider协议也不伪造成功会话。产品使用其已验证的认证方式/transport后再确认会话。
+没有onAuthenticated时，登录成功和Continue仍用经过 `resolveLoginReturnTo` 的根相对location.assign。回跳拒绝规范化及多次解码后的外部路径、控制字符、双斜杠、默认/login循环；去fragment与明确密码/token/code/api_key等query。其它自定义登录路由或含秘密业务query仍由宿主验证。
 
-公共页等待扩展时同时禁用配置/重复动作，可取消不合作Promise的本地等待；generation拒绝迟到登录/回跳，pagehide/unmount释放。扩展开始即清DOM密码，credential对象在结束时清空；扩展失败显示固定errorLabel（默认“登录配置或认证方式暂不可用，请检查后重试。”），不透出异常body，也不让先前认证错误遮盖当前扩展失败。回调自己的外部副作用/标准跳转仍须服从signal，取消本地等待不保证外部服务回滚。
+`extensions.beforeSubmit/actions/errorLabel` 和beforeFields/afterFields仍只接收username与AbortSignal，不接收密码/token/原始响应。宿主标准SSO、服务地址与账户来源保留同一认证owner。重复提交、扩展取消、迟到导航和密码节点清空仍受页面generation控制；修改真实服务由产品安全策略决定。
 
-正式两宿主示例加`?extensions`，分别演示服务地址输入、本地/LDAP来源和企业OIDC/SAML动作，仅用[合成模型](../examples/shared/login-extensions.ts)。其测试证明slot与共享owner/取消边界，不证明真实LDAP、SSO、Cookie/CSRF或Desktop认证链已迁移。
+## 验证与采用
 
-## 布局与焦点绘制回归
+[共享wire fixture](../tests/fixtures/contracts/auth.v2.json)与[baseservice a10b291](https://github.com/coffeehc/baseservice/blob/a10b291b4d562b9e282399c0e3fa89dbb02bf7c8/docs/contracts/auth.v2.json)固定字节一致（配套[后端合同](https://github.com/coffeehc/baseservice/blob/a10b291b4d562b9e282399c0e3fa89dbb02bf7c8/docs/bearer-auth-v2.md)），含issued/session/logout和8类错误。unit覆盖严格DTO/凭据隔离/恢复/多401/旧代响应/取消等待者/refresh-logout排序/不确定结果/不重放。正式React与原生消费者只用公开入口和tarball。浏览器测试覆盖原生整页导航恢复、Cookie/Authorization隔离、跨tab锁与安全通知；是否真正执行成功看[本轮验证记录](AUTH_V2_VALIDATION.md)。
 
-`tests/browser/login-layout.spec.mjs` 在正式 tarball 两个消费者上覆盖 1280/1600 宽屏、390 窄屏、三主题、200% 文字、短视口、显式 card、装饰 slot、会话检查与普通错误的字段位置。焦点回归对用户名、密码、首个服务配置、SSO/提交及错误反馈逐一截取真实浏览器画面，读取四条 outline 中段像素与真实颜色比较；只断言 computed outline 不算通过。页面和框架没有私有登录皮肤，长错误/LDAP/SSO/取消与安全回跳继续由既有 auth/extension 用例覆盖。截图与绘制测试只有在真实浏览器执行成功后才能作为通过证据；浏览器不可启动、未跑或 CI 被阻塞必须单独披露，源码/SSR 检查不能替代视觉验收。
+xAgent旧token/me/state协议不会仅改baseURL就兼容；已上线消费者需要单独授权迁移，未发布项目直接采用明确新合同。产品对外hex ID等不同协议需要明确合同适配，不自动接受双格式。注册、密码重置、用户生命周期和业务资源策略由实际后端/身份提供方负责。本轮不改业务项目、不部署、不生成真实凭据。

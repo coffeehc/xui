@@ -1,3 +1,4 @@
+import {registerHttp,inspectHttp,authOperation,type AccessLease} from './http-auth-internal.js';
 /** JSON contract of coffeehc/httpx/httpxcommons. success is the business outcome; code remains required metadata. No data/msg aliases. */
 export interface AjaxResponse<T=unknown>{success:boolean;message:string;payload:T;request_id:string;code:number;redirect?:string}
 export type HttpErrorKind='cancel'|'network'|'timeout'|'http'|'parse'|'business';
@@ -116,7 +117,9 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
       if(retry.delayMs!==undefined)validMs(retry.delayMs,'delayMs');if(retry.maxDelayMs!==undefined)validMs(retry.maxDelayMs,'maxDelayMs');
       if(retry.statuses?.some(status=>!Number.isInteger(status)||status<400||status>599))throw new TypeError('Invalid retry statuses');}
     let body=init.body;if('json' in init){try{body=JSON.stringify(init.json);}catch{throw new TypeError('JSON body must be serializable');}if(body===undefined)throw new TypeError('JSON body must be serializable');}
-    const controller=new AbortController(),epoch=authEpoch;let stopKind:'cancel'|'timeout'='cancel',timer:ReturnType<typeof setTimeout>|undefined;
+    const binding=inspectHttp(client)?.binding,managed=binding?.mode(url.pathname,method,authOperation(init));
+    if(managed&&(init.credentials!==undefined&&init.credentials!==(managed==='cookie'?'same-origin':'omit')||init.redirect!==undefined&&init.redirect!=='error'||retry))throw new TypeError('Managed authentication forbids credential overrides, redirects and generic retries');
+    const controller=new AbortController();let epoch=authEpoch,lease:AccessLease|undefined;let stopKind:'cancel'|'timeout'='cancel',timer:ReturnType<typeof setTimeout>|undefined;
     let metadata:HttpMetadata={attempts:0,endpointId:init.endpointId};
     const stopped=()=>{const knownFailure=stopKind==='timeout'&&(metadata.status??0)>=400;return new HttpError(knownFailure?'http':stopKind,{...metadata,...(knownFailure?{readFailure:'timeout' as const}:{})});};
     const stop=(kind:'cancel'|'timeout')=>{if(controller.signal.aborted)return;stopKind=kind;controller.abort();};
@@ -134,11 +137,12 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
         metadata={attempts:attempt,endpointId:init.endpointId};check();
         try{
           const headers=new Headers(options.headers);const provided=await options.getHeaders?.();check();if(provided)new Headers(provided).forEach((value,key)=>headers.set(key,value));if(init.headers)new Headers(init.headers).forEach((value,key)=>headers.set(key,value));
+          if(managed){if(headers.has('authorization')||headers.has('cookie')||headers.has('x-api-key'))throw new HttpError('parse',{attempts:0,endpointId:init.endpointId});if(managed==='bearer'){lease=await binding!.acquire(controller.signal);check();epoch=authEpoch;headers.set('Authorization',`Bearer ${lease.value}`);}}
           if(!headers.has('accept')&&(['ajax','json'].includes(mode)||mode==='blob'&&init.detectAjaxErrors))headers.set('accept','application/json');if('json' in init&&!headers.has('content-type'))headers.set('content-type','application/json');
-          const response=await send(url.href,{method,headers,body,signal:controller.signal,credentials:init.credentials??options.credentials??'same-origin',cache:init.cache,redirect:native?'error':init.redirect});check();
-          if(native&&response.url){let final:URL;try{final=new URL(response.url);}catch{throw new HttpError('network',{...metadata,status:response.status});}if(!sameOrigin(final)||final.username||final.password)throw new HttpError('network',{...metadata,status:response.status});}
+          const response=await send(url.href,{method,headers,body,signal:controller.signal,credentials:managed?(managed==='cookie'?'same-origin':'omit'):init.credentials??options.credentials??'same-origin',cache:init.cache,redirect:native||managed?'error':init.redirect});check();
+          if((native||managed)&&response.url){let final:URL;try{final=new URL(response.url);}catch{throw new HttpError('network',{...metadata,status:response.status});}if(!sameOrigin(final)||final.username||final.password)throw new HttpError('network',{...metadata,status:response.status});}
           metadata={...metadata,status:response.status,headerRequestId:response.headers.get('X-Request-ID')??undefined,retryAfterMs:retryAfter(response.headers.get('Retry-After'))};
-          if(response.status===401&&notify401)notifyUnauthorized(new HttpError('http',metadata),epoch);
+          if(response.status===401&&notify401){if(lease)binding!.unauthorized(lease.generation);notifyUnauthorized(new HttpError('http',metadata),epoch);}
           const context:HttpResponseContext={status:response.status,headerRequestId:metadata.headerRequestId,endpointId:init.endpointId,attempts:attempt};
           const adapter=init.adapter??(init.response===undefined||mode===(options.response??'ajax')?options.adapter:undefined)??(mode==='ajax'?ajaxResponseAdapter:undefined);let adapted:AdaptedResponse<unknown>;
           if(!response.ok){
@@ -168,8 +172,9 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
       }throw new HttpError('network',metadata);
     };
     try{return await Promise.race([run(),aborted]);}
-    catch(caught){const error=normalize(caught);if(error.status===401&&error.kind!=='cancel'&&notify401)notifyUnauthorized(error,epoch);if(!dead&&error.kind!=='cancel'&&!(error.status===401&&notify401&&options.onUnauthorized))try{Promise.resolve(options.onError?.(error)).catch(()=>{});}catch{}throw error;}
+    catch(caught){const error=normalize(caught);if(metadata.status===401&&error.kind!=='cancel'&&notify401)notifyUnauthorized(error,epoch);if(!dead&&error.kind!=='cancel'&&!(metadata.status===401&&notify401&&options.onUnauthorized))try{Promise.resolve(options.onError?.(error)).catch(()=>{});}catch{}throw error;}
     finally{if(timer!==undefined)clearTimeout(timer);controller.signal.removeEventListener('abort',abort);init.signal?.removeEventListener('abort',external);active.delete(dispose);}
   }
-  return {request,resetUnauthorized(){if(!dead){authEpoch++;unauthorized=false;}},destroy(){if(dead)return;dead=true;for(const stop of active)stop();active.clear();}};
+  const client:HttpClient={request,resetUnauthorized(){if(!dead){authEpoch++;unauthorized=false;}},destroy(){if(dead)return;dead=true;inspectHttp(client)?.binding?.dispose();for(const stop of active)stop();active.clear();}};
+  registerHttp(client,base.origin);return client;
 }

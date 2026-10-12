@@ -112,6 +112,8 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 
 ## 配置登录与三层设计哲学收口
 
+以下是当时v1里程碑的历史记录；当前认证已升级为[Bearer v2](AUTH.md)，本轮证据及未验证项见[AUTH_V2_VALIDATION](AUTH_V2_VALIDATION.md)，不将原cookie合成验收视为新后端生产验收。
+
 追加步骤基线为已推送的46caeb75，首次CI三个浏览器失败的普通修复提交5c24fcd保留。新增runtime/auth、runtime/login-dom、React/login、theme/auth.css，统一严格cookie会话v1三路由与配置登录页；真实xAgent源协议差异与后端责任见[AUTH](AUTH.md)。两类合成示例共用品牌名称/logo/说明/文案配置和同一HTTP/auth模型，消费正式tarball，不复制私有页面CSS。
 
 原子→组合→页面设计哲学由[FOUNDATION的单一架构章节](FOUNDATION.md#组件层次与扩展原则)定义，README、手册、实施映射和仓库skill均引用该源。普通项目填数据和配置采用整页，特殊业务通过公开原子/组合及扩展接口，不修改组件内部渲染；业务API、权限/tenant和核心执行保持独立，xui不等待baseservice。

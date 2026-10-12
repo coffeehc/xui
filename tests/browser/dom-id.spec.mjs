@@ -65,7 +65,7 @@ async function exerciseRepeatedMounts(page){
       await login.locator('input[name="username"]').fill(`demo-${iteration}-${index}`);
       await login.locator('input[name="password"]').fill('SYNTHETIC_DOM_ID_TEST_PASSWORD');
       await submit.click();
-      await expect.poll(()=>page.evaluate(index=>window.domIdOwners[index].getLoginDestinations(),index)).toEqual([{userId:'demo:user',path:'/workspace'}]);
+      await expect.poll(()=>page.evaluate(index=>window.domIdOwners[index].getLoginDestinations(),index)).toEqual([{userId:'42',path:'/workspace'}]);
     }
     const desktop=await page.evaluate(()=>window.domIdOwners.map(owner=>owner.layoutTarget()));
     expect(desktop.every(target=>target.belongs&&target.tag==='ASIDE')).toBe(true);

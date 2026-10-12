@@ -18,7 +18,7 @@ xui 的目的包括统一品牌、前端体系与通用前后端接口。采用�
 
 | 页面/组合 | 公共接入与标准路径 | 原生协议与业务前置 |
 | --- | --- | --- |
-| ConfigurableLoginPage/createLoginPage | createAuthClient；POST /api/v1/auth/login，GET /api/v1/auth/session，POST /api/v1/auth/logout | 原生 AjaxResponse；严格 AuthSession v1 与 cookie 会话，由宿主/身份提供方实现，baseservice不提供登录或用户管理；xui现有API保留，详情见 [AUTH](AUTH.md)。xAgent现有bearer/token/me/state尚不满足，不能说登录页没有合同，也不能直接换baseURL假装已集成 |
+| ConfigurableLoginPage/createLoginPage | createAuthClient；POST /api/v1/auth/login、refresh、logout，GET /api/v1/auth/session | 原生 AjaxResponse；严格 Bearer v2，access仅内存，恢复Cookie只用于refresh/logout，session只接受session Bearer；baseservice authenticationservice/webfacade配套，宿主注册route与CSRF/资源策略，详情见 [AUTH](AUTH.md)。xAgent现有bearer/token/me/state尚不满足，不能说登录页没有合同，也不能直接换baseURL假装已集成 |
 | ApiKeyManager/createApiKeyManager | createApiKeyHttpAdapter；GET /api/v1/api-keys/capabilities，GET/POST /api/v1/api-keys，POST /api/v1/api-keys/{id}/revoke，DELETE /api/v1/api-keys/{id}/record | 原生 ListData + AjaxResponse、webfacade页查询；配置/权限/有效期/独立授权确认、metadata/可选访问待保存bool与一次性secret、明确操作确认；未知写入跨视图保护，恢复须新list及宿主权威终态，默认adapter不猜核对endpoint。后端须真正提供访问密钥管理，不能把上游供应商凭据配置改名接入。详见 [API_KEY](API_KEY.md) |
 | BusinessLogExplorer/createBusinessLogExplorer | createBusinessLogHttpLoader；GET /api/v1/business-logs，GET /api/v1/business-logs/{id} | 默认原生webfacade offset查询/ListData；公共业务记录字段与授权payload，真实服务负责权限/tenant/脱敏。没有强制或伪造snapshot。不存在业务日志接口时记录前置缺口，不把程序故障记录当业务行为。详见 [BUSINESS_LOGS](BUSINESS_LOGS.md) |
 | StructuredLogExplorer/createStructuredLogExplorer | 已声明四操作DTO/facade，endpoints由宿主明确 | 独立程序错误观察，仍按 [LOGS](LOGS.md)；不能用它代替业务日志，也不宣称对应后端已存在 |

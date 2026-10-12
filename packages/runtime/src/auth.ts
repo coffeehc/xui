@@ -1,19 +1,29 @@
 import {HttpError,createAjaxResponseAdapter,ajaxErrorResponseAdapter,isHttpError,type HttpClient} from './http.js';
+import {authRequest,bindHttpAuth,inspectHttp,type AccessLease,type AuthOperation} from './http-auth-internal.js';
+import {createAuthCoordination} from './auth-coordination.js';
 
-/** The xui v1 cookie-session facade. Product backends adapt to these routes and DTOs. */
-export const authEndpoints=Object.freeze({login:'/api/v1/auth/login',logout:'/api/v1/auth/logout',session:'/api/v1/auth/session'});
+/** First-party Bearer/session v2; these are not OAuth token endpoints. */
+export const authEndpoints=Object.freeze({login:'/api/v1/auth/login',refresh:'/api/v1/auth/refresh',logout:'/api/v1/auth/logout',session:'/api/v1/auth/session'});
+export const authErrorCodes=Object.freeze({invalidRequest:40001,required:40101,forbidden:40301,refreshConflict:40901,rateLimited:42901,unavailable:50300,outcomeUnknown:50301,committedFollowupFailed:50302});
 export interface AuthUser {id:string;username:string;display_name:string|null}
-export interface AuthSession {schema_version:1;user:Readonly<AuthUser>}
+export interface AuthSession {schema_version:2;user:Readonly<AuthUser>}
 export interface LoginCredentials {username:string;password:string}
 export interface AuthRequestOptions {signal?:AbortSignal}
 export interface AuthState {
   status:'unknown'|'anonymous'|'authenticated';user:Readonly<AuthUser>|null;
-  busy:'session'|'login'|'logout'|null;error:HttpError|null;
+  busy:'session'|'login'|'refresh'|'logout'|null;error:HttpError|null;
+  /** A cookie mutation was unconfirmed; only a fresh login can establish a safe new session. */
+  reauthenticationRequired:boolean;
 }
-export interface AuthClientOptions {http:HttpClient;timeoutMs?:number}
+export interface AuthClientOptions {
+  http:HttpClient;timeoutMs?:number;
+  /** Explicit same-origin business routes: exact paths, or slash-terminated subtree prefixes. */
+  protectedPaths?:readonly string[];
+}
 export interface AuthClient {
   getState:()=>Readonly<AuthState>;subscribe:(listener:()=>void)=>()=>void;
   currentUser:(options?:AuthRequestOptions)=>Promise<Readonly<AuthUser>|null>;
+  refresh:(options?:AuthRequestOptions)=>Promise<Readonly<AuthUser>|null>;
   login:(credentials:LoginCredentials,options?:AuthRequestOptions)=>Promise<Readonly<AuthUser>>;
   logout:(options?:AuthRequestOptions)=>Promise<void>;
   cancel:()=>void;expire:()=>void;destroy:()=>void;
@@ -24,10 +34,22 @@ function object(value:unknown,keys:readonly string[]):Record<string,unknown>{
   if(Object.keys(descriptors).length!==keys.length||keys.some(key=>!descriptors[key]||!('value'in descriptors[key])))throw new TypeError('Invalid auth contract');
   return value as Record<string,unknown>;
 }
+function parseUser(value:unknown):Readonly<AuthUser>{
+  const user=object(value,['id','username','display_name']);
+  if(typeof user.id!=='string'||!/^[1-9][0-9]{0,18}$/.test(user.id)||BigInt(user.id)>9223372036854775807n||typeof user.username!=='string'||!user.username||user.username.length>128||user.display_name!==null&&(typeof user.display_name!=='string'||user.display_name.length>256))throw new TypeError('Invalid auth contract');
+  return Object.freeze({id:user.id,username:user.username,display_name:user.display_name as string|null});
+}
 export function parseAuthSession(value:unknown):Readonly<AuthSession>{
-  const session=object(value,['schema_version','user']),user=object(session.user,['id','username','display_name']);
-  if(session.schema_version!==1||typeof user.id!=='string'||!user.id||user.id.length>256||typeof user.username!=='string'||!user.username||user.username.length>128||user.display_name!==null&&(typeof user.display_name!=='string'||user.display_name.length>256))throw new TypeError('Invalid auth contract');
-  return Object.freeze({schema_version:1,user:Object.freeze({id:user.id,username:user.username,display_name:user.display_name as string|null})});
+  const session=object(value,['schema_version','user']);if(session.schema_version!==2)throw new TypeError('Invalid auth contract');
+  return Object.freeze({schema_version:2,user:parseUser(session.user)});
+}
+// This secret-bearing DTO deliberately has no public parser, return value, snapshot or cache entry.
+function parseIssued(value:unknown){
+  const issued=object(value,['schema_version','user','access_token','token_type','expires_at']);
+  if(issued.schema_version!==2||issued.token_type!=='Bearer'||typeof issued.access_token!=='string'||!/^bss_[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/.test(issued.access_token)||typeof issued.expires_at!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/.test(issued.expires_at))throw new TypeError('Invalid auth contract');
+  const expiry=Date.parse(issued.expires_at);
+  if(!Number.isFinite(expiry)||expiry<=Date.now()||new Date(expiry).toISOString().slice(0,19)!==issued.expires_at.slice(0,19))throw new TypeError('Invalid auth contract');
+  return {user:parseUser(issued.user),value:issued.access_token,expiry};
 }
 
 /** Root-relative same-origin navigation only. Validate again after URL normalization. */
@@ -53,65 +75,145 @@ export function resolveLoginReturnTo(value:string|null|undefined,fallback='/'):s
   return safe(value)??safe(fallback)??'/';
 }
 
-/** One session-state owner atop the host's one HTTP owner; no token/cookie/storage access. */
-export function createAuthClient({http,timeoutMs=15000}:AuthClientOptions):AuthClient{
-  if(!http||typeof http.request!=='function'||typeof http.resetUnauthorized!=='function')throw new TypeError('Provide the shared HTTP client');
+/** One private access-token owner attached to the existing transport. No persistent token storage. */
+export function createAuthClient({http,timeoutMs=15000,protectedPaths=[]}:AuthClientOptions):AuthClient{
+  if(!http||!inspectHttp(http)||inspectHttp(http)!.binding)throw new TypeError('Provide one unbound shared xui HTTP client');
   if(!Number.isFinite(timeoutMs)||timeoutMs<=0||timeoutMs>2147483647)throw new RangeError('Invalid auth timeout');
-  const envelope=createAjaxResponseAdapter(),sessionAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseAuthSession(result.payload)};};
+  const paths=protectedPaths.map(path=>{
+    if(typeof path!=='string'||!path.startsWith('/')||path.startsWith('//')||/[\\?#%\u0000-\u0020\u007f]/.test(path)||new URL(path,'https://xui.invalid').pathname!==path)throw new TypeError('Declare normalized root-relative protected paths');
+    return path;
+  });
+  const envelope=createAjaxResponseAdapter();
+  const sessionAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseAuthSession(result.payload)};};
+  const issuedAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseIssued(result.payload)};};
   const logoutAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);if(result.payload!==null)throw new TypeError('Invalid logout contract');return {...result,payload:null};};
-  let state:Readonly<AuthState>=Object.freeze({status:'unknown',user:null,busy:null,error:null}),dead=false,version=0;
-  type Ticket={version:number;operation:NonNullable<AuthState['busy']>;controller:AbortController;prior:Readonly<AuthState>;dispose:()=>void};
-  let active:Ticket|undefined;const listeners=new Set<()=>void>();
-  const emit=(patch:Partial<AuthState>)=>{state=Object.freeze({...state,...patch});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* A view cannot replay credentials. */}};
-  const current=(ticket:Ticket)=>!dead&&ticket.version===version;
-  const stop=(status?:AuthState['status'])=>{
-    const ticket=active,revision=++version;active=undefined;ticket?.dispose();ticket?.controller.abort();
-    if(dead||revision!==version)return;
-    if(status)emit({status,user:null,busy:null,error:null});
-    else if(ticket)emit({status:ticket.operation==='session'?ticket.prior.status:'unknown',user:ticket.operation==='session'?ticket.prior.user:null,busy:null,error:new HttpError('cancel',{attempts:0,endpointId:`auth.${ticket.operation}`})});
+  let state:Readonly<AuthState>=Object.freeze({status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:false});
+  let dead=false,version=0,generation=0,access:{value:string;expiry:number;generation:number}|undefined,bootstrapped=false;
+  const listeners=new Set<()=>void>();
+  let active:{operation:'login'|'logout';controller:AbortController;version:number}|undefined;
+  let refreshFlight:Promise<Readonly<AuthUser>|null>|undefined,refreshController:AbortController|undefined;
+  let sessionFlight:Promise<Readonly<AuthUser>|null>|undefined,sessionController:AbortController|undefined;
+  const errorFor=(kind:'cancel'|'http'='cancel',operation?:AuthOperation)=>new HttpError(kind,{attempts:0,endpointId:operation?`auth.${operation}`:undefined,...(kind==='http'?{status:401,code:'AUTH_REAUTHENTICATION_REQUIRED'}:{})});
+  const normalize=(error:unknown,operation:AuthOperation)=>isHttpError(error)?new HttpError(error.kind,error.metadata):new HttpError('parse',{attempts:0,endpointId:`auth.${operation}`});
+  const emit=(patch:Partial<AuthState>)=>{state=Object.freeze({...state,...patch});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* Views cannot change credential handling. */}};
+  const clear=()=>{access=undefined;generation++;};
+  const current=(revision:number)=>!dead&&revision===version;
+  const invalidate=(status:AuthState['status'],required=false,error:HttpError|null=null)=>{version++;clear();sessionController?.abort();refreshController?.abort();active?.controller.abort();active=undefined;emit({status,user:null,busy:null,error,reauthenticationRequired:required});};
+  const coordination=createAuthCoordination(inspectHttp(http)!.origin,event=>{
+    if(dead||event.kind==='refresh')return; // Rotation preserves live sibling access tokens.
+    invalidate(event.kind==='logout'?'anonymous':'unknown');bootstrapped=event.kind==='logout';
+  });
+  const wait=<T>(promise:Promise<T>,signal?:AbortSignal):Promise<T>=>{
+    if(!signal)return promise;if(signal.aborted)return Promise.reject(errorFor());
+    return new Promise((resolve,reject)=>{const abort=()=>{signal.removeEventListener('abort',abort);reject(errorFor());};signal.addEventListener('abort',abort,{once:true});promise.then(value=>{signal.removeEventListener('abort',abort);if(!signal.aborted)resolve(value);},error=>{signal.removeEventListener('abort',abort);if(!signal.aborted)reject(error);});});
   };
-  const begin=(operation:Ticket['operation'],options:AuthRequestOptions):Ticket=>{
-    if(dead||state.busy==='login'||state.busy==='logout')throw new HttpError('cancel');
-    const revision=++version,previous=active;active=undefined;previous?.dispose();previous?.controller.abort();
-    if(dead||revision!==version)throw new HttpError('cancel');
-    const controller=new AbortController(),prior=state,ticket:Ticket={version:revision,operation,controller,prior,dispose:()=>{}};
-    const external=()=>{if(current(ticket))stop();};ticket.dispose=()=>options.signal?.removeEventListener('abort',external);
-    active=ticket;
-    if(options.signal?.aborted){stop();throw new HttpError('cancel');}
-    options.signal?.addEventListener('abort',external,{once:true});
-    emit({busy:operation,error:null,...(operation==='logout'?{status:'unknown' as const,user:null}:{})});
-    if(!current(ticket))throw new HttpError('cancel');return ticket;
+  const check=(revision:number,signal?:AbortSignal)=>{if(!current(revision)||signal?.aborted)throw errorFor();};
+  const received=(issued:ReturnType<typeof parseIssued>,revision:number)=>{
+    check(revision);const acceptedGeneration=++generation;access={value:issued.value,expiry:issued.expiry,generation:acceptedGeneration};bootstrapped=true;http.resetUnauthorized();
+    emit({status:'authenticated',user:issued.user,busy:null,error:null,reauthenticationRequired:false});check(revision);if(access?.generation!==acceptedGeneration||state.user!==issued.user)throw errorFor();return issued.user;
   };
-  const finish=(ticket:Ticket,patch:Partial<AuthState>)=>{if(!current(ticket))throw new HttpError('cancel');active=undefined;ticket.dispose();emit({...patch,busy:null});};
-  const send=async(operation:Ticket['operation'],json:unknown,options:AuthRequestOptions)=>{
-    const ticket=begin(operation,options);
-    try{
-      const response=await http.request<AuthSession|null>(authEndpoints[operation],{method:operation==='session'?'GET':'POST',headers:{Accept:'application/json',...(operation==='session'?{}:{'Content-Type':'application/json'})},...(operation==='session'?{}:{json}),signal:ticket.controller.signal,timeoutMs,response:'ajax',errorAdapter:ajaxErrorResponseAdapter,adapter:operation==='logout'?logoutAdapter:sessionAdapter,endpointId:`auth.${operation}`,cache:'no-store',redirect:'error',unauthorized:'ignore'});
-      if(!current(ticket))throw new HttpError('cancel');
-      const user=operation==='logout'?null:(response.payload as AuthSession).user;
-      http.resetUnauthorized();finish(ticket,{status:user?'authenticated':'anonymous',user,error:null});if(!current(ticket))throw new HttpError('cancel');return user;
-    }catch(value){
-      const error=isHttpError(value)?value:new HttpError('parse',{attempts:1,endpointId:`auth.${operation}`});
-      if(!current(ticket))throw new HttpError('cancel');
-      if(error.status===401&&operation!=='login'){http.resetUnauthorized();finish(ticket,{status:'anonymous',user:null,error:null});if(!current(ticket))throw new HttpError('cancel');return null;}
-      // Wrong credentials do not expire a previously confirmed cookie session.
-      const known=operation==='login'&&error.status!==undefined&&error.status>=400&&error.status<500;
-      finish(ticket,{status:known?ticket.prior.status:'unknown',user:known?ticket.prior.user:null,error});throw error;
+  const cookieRequest=(operation:'login'|'refresh'|'logout',json:unknown,signal:AbortSignal)=>authRequest(http,operation,authEndpoints[operation],{method:'POST',json,headers:{Accept:'application/json','Content-Type':'application/json'},signal,timeoutMs,response:'ajax',errorAdapter:ajaxErrorResponseAdapter,adapter:operation==='logout'?logoutAdapter:issuedAdapter,endpointId:`auth.${operation}`,cache:'no-store',credentials:'same-origin',redirect:'error',unauthorized:'ignore'});
+  const coordinatedRequest=<T>(operation:'login'|'refresh'|'logout',json:unknown,controller:AbortController,revision:number,accept:(payload:unknown)=>T)=>{
+    let timedOut=false;
+    const timer=setTimeout(()=>{timedOut=true;controller.abort();},timeoutMs);
+    let stop:()=>void=()=>{};
+    const cancelled=new Promise<never>((_,reject)=>{stop=()=>reject(timedOut?new HttpError('timeout',{attempts:0,endpointId:`auth.${operation}`}):errorFor('cancel',operation));if(controller.signal.aborted)stop();else controller.signal.addEventListener('abort',stop,{once:true});});
+    const request=coordination.run(async()=>{check(revision,controller.signal);const result=await cookieRequest(operation,json,controller.signal);check(revision,controller.signal);const accepted=accept(result.payload);coordination.publish(operation);return accepted;});
+    return Promise.race([request,cancelled]).finally(()=>{clearTimeout(timer);controller.signal.removeEventListener('abort',stop);});
+  };
+  const recover=():Promise<Readonly<AuthUser>|null>=>{
+    if(dead||active)return Promise.reject(errorFor());
+    if(state.reauthenticationRequired)return Promise.reject(state.error??errorFor('http','refresh'));
+    if(refreshFlight)return refreshFlight;
+    const revision=version,controller=new AbortController();refreshController=controller;bootstrapped=true;clear();
+    const flight=Promise.resolve().then(async()=>{
+      check(revision,controller.signal);
+      return coordinatedRequest('refresh',{},controller,revision,payload=>received(payload as ReturnType<typeof parseIssued>,revision));
+    }).catch(value=>{
+      const error=normalize(value,'refresh');if(!current(revision))throw errorFor();clear();
+      if(error.status===401){http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});return null;}
+      // Never retry an unknown rotation or destroy the recovery family as cleanup.
+      emit({status:'unknown',user:null,busy:null,error,reauthenticationRequired:true});throw error;
+    }).finally(()=>{if(refreshFlight===flight){refreshFlight=undefined;refreshController=undefined;}});
+    refreshFlight=flight;emit({status:'unknown',user:null,busy:'refresh',error:null});return flight;
+  };
+  const acquire=async(signal:AbortSignal):Promise<AccessLease>=>{
+    if(dead||active||signal.aborted)throw errorFor();
+    if(!access||access.expiry<=Date.now()+1000){
+      if(!access&&bootstrapped&&state.status==='anonymous')throw new HttpError('http',{attempts:0,status:401,code:authErrorCodes.required});
+      await wait(recover(),signal);
     }
+    if(dead||active||signal.aborted)throw errorFor();
+    if(!access||access.expiry<=Date.now())throw new HttpError('http',{attempts:0,status:401,code:authErrorCodes.required});
+    return {value:access.value,generation:access.generation};
   };
-  return {
-    getState:()=>state,subscribe(listener){if(dead)return()=>{};listeners.add(listener);return()=>{listeners.delete(listener);};},
-    currentUser:options=>send('session',undefined,options??{}),
+  bindHttpAuth(http,{
+    mode(path,method,operation){
+      let decoded:string;try{decoded=decodeURIComponent(path);}catch{throw new TypeError('Invalid authentication path');}
+      const reserved=decoded.toLowerCase()==='/api/v1/auth'||decoded.toLowerCase().startsWith('/api/v1/auth/');
+      if(operation){if(path!==authEndpoints[operation]||method!==(operation==='session'?'GET':'POST'))throw new TypeError('Invalid authentication endpoint');return operation==='session'?'bearer':'cookie';}
+      if(reserved)throw new TypeError('Use the auth owner for authentication endpoints');
+      if(paths.some(prefix=>path===prefix||prefix.endsWith('/')&&path.startsWith(prefix))){if(/%(?:2f|5c|25)/i.test(path)||/[\\\u0000-\u0020\u007f]/.test(decoded))throw new TypeError('Ambiguous protected path');return 'bearer';}
+      return undefined;
+    },acquire,
+    unauthorized(observed){if(dead||!access||access.generation!==observed||active)return;clear();void recover().catch(()=>{});},
+    dispose(){client.destroy();},
+  });
+  const currentUser=(options:AuthRequestOptions={}):Promise<Readonly<AuthUser>|null>=>{
+    if(dead||active)return Promise.reject(errorFor());
+    if(sessionFlight)return wait(sessionFlight,options.signal);
+    if(options.signal?.aborted)return Promise.reject(errorFor());
+    if(state.reauthenticationRequired)return Promise.reject(state.error??errorFor('http','session'));
+    if(!access&&bootstrapped&&state.status==='anonymous')return Promise.resolve(null);
+    const revision=version,controller=new AbortController();let observedGeneration:number|undefined;sessionController=controller;
+    const flight=Promise.resolve().then(async()=>{
+      try{
+        const lease=await acquire(controller.signal);observedGeneration=lease.generation;check(revision,controller.signal);emit({busy:'session',error:null});
+        const result=await authRequest(http,'session',authEndpoints.session,{method:'GET',headers:{Accept:'application/json'},signal:controller.signal,timeoutMs,response:'ajax',adapter:sessionAdapter,errorAdapter:ajaxErrorResponseAdapter,endpointId:'auth.session',cache:'no-store',credentials:'omit',redirect:'error',unauthorized:'ignore'});
+        check(revision,controller.signal);if(!access||access.generation!==lease.generation)throw errorFor();
+        http.resetUnauthorized();emit({status:'authenticated',user:result.payload.user,busy:null,error:null,reauthenticationRequired:false});check(revision);return state.user;
+      }catch(value){const error=normalize(value,'session');if(!current(revision)||observedGeneration!==undefined&&observedGeneration!==generation)throw errorFor();
+        if(error.status===401&&!state.reauthenticationRequired){clear();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});return null;}
+        if(!state.reauthenticationRequired){if(error.status!==403)clear();emit({status:'unknown',user:null,busy:null,error});}throw error;
+      }
+    }).finally(()=>{if(sessionFlight===flight){sessionFlight=undefined;sessionController=undefined;}});
+    sessionFlight=flight;return wait(flight,options.signal);
+  };
+  const mutate=async(operation:'login'|'logout',json:unknown,options:AuthRequestOptions)=>{
+    if(dead||active||options.signal?.aborted)throw errorFor();
+    const prior=state,priorAccess=access,revision=++version,controller=new AbortController();
+    sessionController?.abort();clear();active={operation,controller,version:revision};
+    const cancel=()=>controller.abort();options.signal?.addEventListener('abort',cancel,{once:true});
+    emit({status:'unknown',user:null,busy:operation,error:null});
+    try{
+      return await coordinatedRequest(operation,json,controller,revision,payload=>{
+        active=undefined;
+        if(operation==='login')return received(payload as ReturnType<typeof parseIssued>,revision);
+        bootstrapped=true;http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});check(revision);return null;
+      });
+    }catch(value){const error=normalize(value,operation);if(!current(revision)||active?.version!==revision)throw errorFor();active=undefined;
+      const denied=operation==='login'&&error.status!==undefined&&error.status>=400&&error.status<500&&error.status!==409;
+      if(denied){access=priorAccess;emit({...prior,busy:null,error});}
+      else {clear();emit({status:'unknown',user:null,busy:null,error,reauthenticationRequired:true});}
+      throw error;
+    }finally{options.signal?.removeEventListener('abort',cancel);if(operation==='login')(json as LoginCredentials).password='';}
+  };
+  const client:AuthClient={
+    getState:()=>state,subscribe(listener){if(dead)return()=>{};listeners.add(listener);return()=>{listeners.delete(listener);};},currentUser,
+    refresh:options=>options?.signal?.aborted?Promise.reject(errorFor()):wait(recover(),options?.signal),
     async login(credentials,options={}){
       if(!credentials||typeof credentials.username!=='string'||!credentials.username.trim()||credentials.username.trim().length>128||typeof credentials.password!=='string'||!credentials.password||credentials.password.length>4096)throw new HttpError('parse',{attempts:0,endpointId:'auth.login'});
-      return (await send('login',{username:credentials.username.trim(),password:credentials.password},options))!;
+      return (await mutate('login',{username:credentials.username.trim(),password:credentials.password},options))!;
     },
-    async logout(options={}){await send('logout',{},options);},cancel:()=>stop(),expire:()=>stop('anonymous'),
-    destroy(){if(dead)return;dead=true;version++;const previous=active;active=undefined;previous?.dispose();previous?.controller.abort();emit({status:'unknown',user:null,busy:null,error:null});listeners.clear();},
+    async logout(options={}){await mutate('logout',{},options);},
+    cancel(){if(dead)return;invalidate('unknown',true,errorFor());},
+    expire(){if(dead)return;bootstrapped=true;invalidate('anonymous');},
+    destroy(){if(dead)return;dead=true;invalidate('unknown');coordination.close();listeners.clear();},
   };
+  return client;
 }
 
-export const loginPageDefaultLabels={username:'Username',password:'Password',submit:'Sign in',cancel:'Cancel request',checking:'Checking session…',signingIn:'Signing in…',signingOut:'Signing out…',continue:'Continue',logout:'Sign out',theme:'Appearance',light:'Light',dark:'Dark',system:'System',usernameRequired:'Enter your username.',passwordRequired:'Enter your password.',credentialsError:'The username or password is incorrect.',forbidden:'Sign in is not allowed.',rateLimited:'Too many attempts. Try again later.',timeout:'The result is unconfirmed. Check the session before trying again.',network:'The service could not be reached. Check the session before trying again.',error:'Sign in could not be completed.',cancelled:'Waiting cancelled. The server may have completed the request.',signedIn:'Signed in',checkSession:'Check session'} as const;
+export const loginPageDefaultLabels={username:'Username',password:'Password',submit:'Sign in',cancel:'Cancel request',checking:'Checking session…',signingIn:'Signing in…',signingOut:'Signing out…',continue:'Continue',logout:'Sign out',theme:'Appearance',light:'Light',dark:'Dark',system:'System',usernameRequired:'Enter your username.',passwordRequired:'Enter your password.',credentialsError:'The username or password is incorrect.',forbidden:'Sign in is not allowed.',rateLimited:'Too many attempts. Try again later.',timeout:'The result is unconfirmed. Check the session before trying again.',network:'The service could not be reached. Check the session before trying again.',error:'Sign in could not be completed.',cancelled:'Waiting cancelled. The server may have completed the request.',signedIn:'Signed in',checkSession:'Check session',reauthenticate:'The session state is unconfirmed. Sign in again to verify it.'} as const;
 export type LoginPageLabels={ [Key in keyof typeof loginPageDefaultLabels]:string };
 export type LoginPageLayout='fullscreen'|'card';
 export interface LoginPageConfig {layout?:LoginPageLayout;productName:string;title?:string;description?:string;logo?:{src:string;alt?:string};returnTo?:string;fallbackReturnTo?:string;labels?:Partial<LoginPageLabels>}
@@ -124,7 +226,7 @@ export function resolveLoginPageConfig(input:LoginPageConfig){
   return Object.freeze({layout,productName:string(input.productName,128),title:string(input.title??labels.submit,200),description:input.description===undefined?undefined:string(input.description,600),logo,returnTo:resolveLoginReturnTo(input.returnTo,input.fallbackReturnTo),labels});
 }
 export function getLoginPageError(error:HttpError,labels:Readonly<LoginPageLabels>):string{
-  return error.kind==='cancel'?labels.cancelled:error.status===401?labels.credentialsError:error.status===403?labels.forbidden:error.status===429?labels.rateLimited:error.kind==='timeout'?labels.timeout:error.kind==='network'?labels.network:labels.error;
+  return [authErrorCodes.refreshConflict,authErrorCodes.outcomeUnknown,authErrorCodes.committedFollowupFailed,'AUTH_REAUTHENTICATION_REQUIRED'].some(code=>code===error.code)?labels.reauthenticate:error.kind==='cancel'?labels.cancelled:error.status===401?labels.credentialsError:error.status===403?labels.forbidden:error.status===429?labels.rateLimited:error.kind==='timeout'?labels.timeout:error.kind==='network'?labels.network:labels.error;
 }
 
 /** Host-owned service/source validation and standards-based actions; no password in callbacks. */

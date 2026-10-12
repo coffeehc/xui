@@ -50,7 +50,7 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 | 可扩展业务日志 | 已实现，两宿主独立消费 | 固定公共字段 + event_type/schema_version + 业务 JSON payload；list/detail loader、过滤/cursor/权限/安全回退/注册 renderer；默认原生HTTP adapter已实现，真实后端未集成，见 [BUSINESS_LOGS](BUSINESS_LOGS.md) |
 | Sheet/AlertDialog/ContextMenu与表格扩展 | 已实现，最终统一验证见交付 | 复用Dialog/Menu/表格原子，公开逻辑side、cancel/focus、条纹/展开/sticky，见[COMPOSITIONS](COMPOSITIONS.md) |
 | 下载与默认页面HTTP | 已实现，最终统一验证见交付 | safe headers/filename、显式保存、原生JSON协商与正式API Key/业务日志facade |
-| 可配置登录页 | 已实现，本轮完整验收后交付 | ConfigurableLoginPage/createLoginPage +共享认证 client；固定 v1 cookie login/logout/session、公开品牌文案与safe returnTo；[AUTH](AUTH.md) 明确真实源差异与后端责任 |
+| 可配置登录页 | 已实现，本轮完整验收后交付 | ConfigurableLoginPage/createLoginPage +共享认证 client；固定Bearer v2 login/refresh/logout/session、内存access与Cookie恢复、显式protectedPaths、公开品牌文案与safe returnTo；[AUTH](AUTH.md) 明确真实源差异与后端责任 |
 | 独立结构化错误观察 | 已实现，只读独立步骤 | 共享控制器、React/原生完整分组/观察/详情；依据固定 commons@b0bc0f9 的真实 filter/cursor，计数/首次代表/三态/保留期明确；[拟议 v1 facade](LOGS.md) 由宿主后端实现，不猜旧协议 |
 
 菜单/布局、HTTP、业务日志与配置登录都是用户明确扩展的范围；本轮全部功能、手册、skill 与统一验收完成后正常推送 main。HTTP/query、API Key、业务日志、登录页、独立错误观察及 [接入 skill](../.agents/skills/adopt-xui/SKILL.md) 已实现；最终交叉验收见 FINAL_REVIEW。框架不实现产品 endpoint 后端、权限判断、业务 router 或数据引擎。采用产品的业务 API 保持完整并可独立测试；UI 通过相同 API 提供观察、配置和介入，核心流程不放进组件。

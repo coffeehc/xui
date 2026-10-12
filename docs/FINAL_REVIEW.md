@@ -55,7 +55,7 @@
 
 本步骤基线为已推送5adbf5c。依据xAgent/xLead接入反馈补公共能力，不改任何产品后端；已保存普通WIP提交c45939d及完整本地恢复bundle，继续普通提交保留历史。原始DESIGN来源与271默认值保持，新增CSS只引用已有token。真实源SHA及原生协议在[PAGE_APIS](PAGE_APIS.md)，项目目标同步到README、手册、skill：统一品牌与前端体系，采用项目在自己的授权范围主动标准化commons/webfacade/httpx，旧协议adapter仅作为有目标和移除条件的临时桥梁。
 
-交付包括HTTP安全三字段headers、filename/显式下载、非2xx结构化错误；Sheet/AlertDialog/ContextMenu；条纹/展开/逻辑sticky表格；默认API Key与业务日志HTTP facade。密钥required与独立confirmed、capability授权、过期撤销与撤销后删除管理记录分别保留；未知写入结果禁止同会话重复。默认日志使用真实offset/ListData，领域cursor允许可选真实snapshot且不丢已知基准。登录已有固定cookie v1合同，xAgent旧bearer协议仍须另项后端升级，不能仅换baseURL。供应商凭据和程序错误观察不冒充密钥/业务日志服务。
+交付包括HTTP安全三字段headers、filename/显式下载、非2xx结构化错误；Sheet/AlertDialog/ContextMenu；条纹/展开/逻辑sticky表格；默认API Key与业务日志HTTP facade。密钥required与独立confirmed、capability授权、过期撤销与撤销后删除管理记录分别保留；未知写入结果禁止同会话重复。默认日志使用真实offset/ListData，领域cursor允许可选真实snapshot且不丢已知基准。此处登录原为固定cookie v1，后续已按[Bearer v2](AUTH.md)升级为内存access与Cookie恢复；xAgent旧bearer协议仍须另项后端升级，不能仅换baseURL。供应商凭据和程序错误观察不冒充密钥/业务日志服务。
 
 两项独立只读审查实际复现5个P2：JSON media type大小写绕过下载错误、可选snapshot抹掉链基准、默认facade继承protobuf/form headers、同步宿主回调关闭后仍发写入/恢复secret、空草稿关闭留下不可见native modal。全部修正并补最小回归。JSON协商由endpoint覆盖，其他宿主header保留；回调后再次核generation/phase/target/draft；确认trigger仅在有草稿时显式打开。PUBLIC_API旧默认timeout/授权描述同步，不留另一份冲突默认规则。
 

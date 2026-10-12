@@ -16,7 +16,7 @@ xui用于统一品牌、前端体系和通用前后端接口。采用项目应�
 
 theme 提供无框架预构建 CSS/tokens；runtime 提供主题、DOM、resource、菜单、HTTP/query、认证与共享页面控制器；ui-react 复用共享类型和 React/Base UI peers。按上述三层准则，普通页面通过数据、配置和公开扩展接口使用完整页面/组合，特殊业务组合基础控件；不修改组件内部渲染。产品保管可见菜单过滤、路由、身份、领域权限/数据与业务动作；xui 提供默认结构、交互、motion、focus/a11y。产品迁就统一标准，业务扩展通过公开 slots/render/adapters，公共能力不足反馈 xui。
 
-采用产品以 agent-ready 为优先：业务 API 完整、明确且可独立测试，UI 消费同一能力，只作为用户观察、配置和介入的入口。领域执行、权限、租户隔离、校验与核心业务流程属于宿主服务/领域层，不藏在组件内部，也不因组件替换而消失。xui 提供表现、交互和通用请求接入，不能成为业务 API 能力的唯一入口。这是接入职责，不增加本轮后端改造、Agent SDK 或其他产品仓库修改范围。BusinessLogExplorer是调取业务记录的查询页。baseservice的apikeyservice/webfacade与bizlogservice/webfacade通过版本化HTTP DTO和共享fixture与xui配套，数据库模型不直接暴露；实际边界与宿主接入前置见[PAGE_APIS](PAGE_APIS.md)。登录/会话/用户管理由宿主或身份提供方负责，baseservice不实现它们。领域扩展保留typed adapter入口，本次不新增运行配置组件。
+采用产品以 agent-ready 为优先：业务 API 完整、明确且可独立测试，UI 消费同一能力，只作为用户观察、配置和介入的入口。领域执行、权限、租户隔离、校验与核心业务流程属于宿主服务/领域层，不藏在组件内部，也不因组件替换而消失。xui 提供表现、交互和通用请求接入，不能成为业务 API 能力的唯一入口。这是接入职责，不增加本轮后端改造、Agent SDK 或其他产品仓库修改范围。BusinessLogExplorer是调取业务记录的查询页。baseservice的apikeyservice/webfacade与bizlogservice/webfacade通过版本化HTTP DTO和共享fixture与xui配套，数据库模型不直接暴露；实际边界与宿主接入前置见[PAGE_APIS](PAGE_APIS.md)。baseservice authenticationservice/webfacade 配套 Bearer v2 登录/恢复/session/退出和鉴权中间件；宿主负责注册route、用户身份来源、CSRF与资源策略，真实产品迁移另验。领域扩展保留typed adapter入口，本次不新增运行配置组件。
 
 ## 最小运行与固定产物
 
@@ -138,7 +138,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 两宿主[React](../examples/capabilities-react/app.tsx)/[原生](../examples/capabilities-vanilla/app.js)消费正式产物，展示[公开组合](COMPOSITIONS.md)、safe filename下载及原生页面facade。合成fetch只验证合同，不证明产品具备API Key/业务日志后端。普通程序故障和供应商凭据不得改名替代这些业务。
 
-已上线xAgent的bearer/token/me/state与固定cookie登录合同不同，须单独升级评估；临时桥梁保留旧鉴权/业务、明确目标与移除条件。未发布项目直接向原生commons/webfacade/httpx标准化，由该项目自身授权实施。这里不授权修改后端、baseservice/commons、删除业务数据或部署。
+已上线xAgent的bearer/token/me/state与固定Bearer v2登录合同不同，须单独升级评估；临时桥梁保留旧鉴权/业务、明确目标与移除条件。未发布项目直接向原生commons/webfacade/httpx标准化，由该项目自身授权实施。这里不授权修改后端、baseservice/commons、删除业务数据或部署。
 
 Vite开发接入还须核[冷启动与依赖优化](NAVIGATION.md#vite开发模式的已复现依赖优化刷新)：初始扫描看不到的lazy deep imports可在首次访问触发重新优化/full-reload；提前include实际正式入口并保留peer dedupe，分别验冷/暖cache。不把参考生产消费者无刷新当dev验收，也不靠等待、禁HMR或吞错解决。
 

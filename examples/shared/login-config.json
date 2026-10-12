@@ -11,6 +11,6 @@
     "usernameRequired": "请填写用户名。", "passwordRequired": "请填写密码。",
     "credentialsError": "用户名或密码不正确。", "forbidden": "当前不允许登录。", "rateLimited": "尝试过于频繁，请稍后再试。",
     "timeout": "登录结果尚未确认，请先核对会话再尝试。", "network": "连接失败，请先核对会话再尝试。", "error": "登录未完成。",
-    "cancelled": "已取消本地等待，服务端可能已完成操作。", "signedIn": "已登录", "checkSession": "核对会话"
+    "cancelled": "已取消本地等待，服务端可能已完成操作。", "signedIn": "已登录", "checkSession": "核对会话", "reauthenticate": "会话安全状态尚未确认，请重新登录验证。"
   }
 }
