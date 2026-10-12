@@ -70,4 +70,26 @@ navigation adapter必须在第一个可操作菜单呈现时已连接，并保�
 
 本轮六组正式tarball消费者在冷缓存、资源延迟和已命中三份资源的暖缓存下，0/30/60/120/180秒共360菜单点击、60次前进/后退，只有每组初始一个Document请求，document/timeOrigin/shell/theme与草稿保持，无pageerror。移除adapter或canNavigate=false的两宿主受控对照均复现document导航，随后已连接adapter的点击保持SPA；这证明合同边界，不证明任何产品使用了错误gating。完整本地记录在.artifacts/cold-start/与cold-start-probe.log。
 
-线上产品已登录菜单及其实际部署bundle尚未完成现场取证：本云环境访问xagent.51apis.com返回ERR_TUNNEL_CONNECTION_FAILED；父任务匿名根页跳登录并记录React #418/client-CmZD9ipx.js，仅证明登录启动hydration错误，不能认定与菜单reload同根，也不能假设当前Git main就是该线上产物。产品需在合法会话的云浏览器按上述Document/路由/重挂指标补冷暖对照，核首次adapter/ready状态和实际资源版本；不索取或记录真实凭据、响应body或cookie。
+用户后续更正：问题发生在本地新接入版本，尚未部署，未访问用户本机。此前匿名线上根页跳登录、旧client-CmZD9ipx.js的React #418仅为独立旧版本事实，不能用于归因本地新版本，线上取证已停止。本地具体dev命令、两个watch/HMR日志、路由ready状态和初始资源版本尚未提供；需要用户后续提供安全日志或由采用任务在对应云环境取证，不收集真实凭据、响应body或cookie。云端独立dev对照须另记录实际optimizer/HMR因果，不能用生产消费者未复现就排除dev问题，也不能笼统归因“未就绪”。
+
+
+### Vite开发模式的已复现依赖优化刷新
+
+Vite8.2.2独立安装xui tarballs的合成宿主，以运行时生成的路径懒加载Select/Combobox/ContextMenu。首次依次加载三个deep import时，终端三次记录dependency optimized与optimized dependencies changed. reloading，HMR三次full-reload，主Document从1到4且document identity改变；相同页面再次点击稳定。暖依赖缓存同代码为1个Document/0 reload；冷缓存显式include相同依赖也为1/0。按钮触发而非anchor默认导航，未注入认证/SSR/主题跳转，未关HMR/优化或吞错误。实际记录见.artifacts/vite-cold/results.json与vite-cold-probe.log。
+
+这证明当前库深入口与不可静态发现的懒加载组合能够触发Vite dev重新优化，不能据此声称已确认用户本地的相同原因。[Vite原生说明](https://vite.dev/guide/dep-pre-bundling)与[optimizeDeps选项](https://vite.dev/config/dep-optimization-options)明确这是dev机制。生产tarball打包消费者的360次点击没有该机制；xui watch只构建dist与记录状态，不提供浏览器HMR/reload客户端。产品框架、插件和真实本地命令需要分别核对。
+
+接入项目在自己的Vite配置中提前声明实际会由懒页面导入的公开入口；不能把canNavigate=false当ready veto，也不能靠等几分钟或禁止reload掩盖optimizer缺口。例如已验证的这三个页面：
+
+```ts
+export default defineConfig({
+  resolve: {dedupe: ['react', 'react-dom', '@base-ui/react']},
+  optimizeDeps: {include: [
+    'react', 'react-dom/client', '@coffeehc/xui-react/button',
+    '@coffeehc/xui-react/select', '@coffeehc/xui-react/combobox',
+    '@coffeehc/xui-react/context-menu',
+  ]},
+});
+```
+
+include清单按宿主实际正式入口扩展，特殊第三方/CJS依赖保持自身协议和interop；不把此清单当所有产品固定依赖或新增runtime API。保留framework插件/已有配置，在隔离冷cache和暖cache分别核optimizer日志、HMR packet与Document请求，并确认peer单实例和正常懒加载。没有在xAgent、用户本机或其他产品改配置；其真实本地日志仍待提供。

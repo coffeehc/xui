@@ -71,3 +71,7 @@
 
 
 用户追加冷启动重复页面/菜单刷新排查已独立取证，未扩展附件功能。正式tarball字节的两宿主各三条件在0–180秒共360菜单点击/60回退前进均无额外Document请求或外壳重挂；缺adapter和canNavigate=false受控对照复现完整导航，后续正常adapter恢复SPA，接入指引见[NAVIGATION](NAVIGATION.md#冷启动与路由ready边界)。本库范围未复现自发reload，不据此宣布产品问题已修复。产品现场因匿名无合法会话及本云环境ERR_TUNNEL_CONNECTION_FAILED受限；父任务登录页#418独立保留，真实部署版本未核，SSR/hydration与菜单问题不合并归因。最终文档提交继续全verify与同SHA CI，原8241e56完整绿色证据保留。
+
+用户后续更正冷启动问题发生在本地新接入版本、尚未部署；停止线上取证，旧线上#418不再参与归因。未访问用户本机，本地dev/watch命令与日志尚未提供；继续云端独立dev模块初始化对照，区分生产字节与Vite依赖优化/HMR，不以“未就绪”代替因果证据。
+
+进一步独立Vite8.2.2 dev宿主复现：三个不可静态发现的lazy xui deep imports对应三次dependency optimized→optimized dependencies changed. reloading→HMR full-reload→Document1→4；后续点击稳定。暖optimizer cache和冷cache预声明实际include均1 Document/0 reload，无pageerror。因果与配置指引同步NAVIGATION、ADOPTION、skill；不改库runtime协议或产品配置，不认定用户实际本地已确认此根因。具体本地命令/日志仍待用户提供，生产、dev和旧线上hydration证据分开。
