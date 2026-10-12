@@ -86,7 +86,7 @@ export function createAuthClient({http,timeoutMs=15000}:AuthClientOptions):AuthC
   const send=async(operation:Ticket['operation'],json:unknown,options:AuthRequestOptions)=>{
     const ticket=begin(operation,options);
     try{
-      const response=await http.request<AuthSession|null>(authEndpoints[operation],{method:operation==='session'?'GET':'POST',...(operation==='session'?{}:{json}),signal:ticket.controller.signal,timeoutMs,response:'ajax',errorAdapter:ajaxErrorResponseAdapter,adapter:operation==='logout'?logoutAdapter:sessionAdapter,endpointId:`auth.${operation}`,cache:'no-store',redirect:'error',unauthorized:'ignore'});
+      const response=await http.request<AuthSession|null>(authEndpoints[operation],{method:operation==='session'?'GET':'POST',headers:{Accept:'application/json',...(operation==='session'?{}:{'Content-Type':'application/json'})},...(operation==='session'?{}:{json}),signal:ticket.controller.signal,timeoutMs,response:'ajax',errorAdapter:ajaxErrorResponseAdapter,adapter:operation==='logout'?logoutAdapter:sessionAdapter,endpointId:`auth.${operation}`,cache:'no-store',redirect:'error',unauthorized:'ignore'});
       if(!current(ticket))throw new HttpError('cancel');
       const user=operation==='logout'?null:(response.payload as AuthSession).user;
       http.resetUnauthorized();finish(ticket,{status:user?'authenticated':'anonymous',user,error:null});if(!current(ticket))throw new HttpError('cancel');return user;

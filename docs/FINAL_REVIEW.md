@@ -64,3 +64,5 @@
 统一验收现在包括59公开入口(theme15/runtime20/React24)、18个正式消费者、116单测、1真实默认watch、152浏览器检查。最终冻结SHA的整条verify、普通推送与同SHA CI仍以交付事实及.artifacts/verify-capabilities-final.log为准；局部通过不冒整套通过。旧5adbf5c验收证据原样保留，早期失败和修复记录不改写。
 
 真实产品后端、Cookie/CSRF/CORS/鉴权/tenant、业务日志脱敏/可靠性与生产API Key生成未集成。模拟数据不代表xAgent/xLead或其它产品迁移；真实移动OS/长按/读屏器/Firefox/Safari/浏览器原生zoom/SSR/生产性能未跑。无密钥生成、许可证/可见性变更、发布或部署。
+
+最后合同复核在Auth固定facade发现同类JSON协商遗漏；三请求补明确Accept、POST明确Content-Type，并以实际旧client headers+保留CSRF扩展已有auth合同回归。1b1cdce的整条verify在116单测通过、watch运行时主动中止以实施此修正，退出信号日志保留于.artifacts/verify-1b1cdce-auth-interrupted.log，不计整套通过或测试失败。新普通提交重新冻结全verify和同SHA CI。

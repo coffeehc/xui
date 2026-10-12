@@ -26,12 +26,12 @@ test('explicit ignored 401 does not consume the shared HTTP latch or suppress it
   await assert.rejects(http.request('/invalid',{unauthorized:'guessed'}),TypeError);
 });
 test('auth facade uses fixed paths, one HTTP owner, strict Go envelope and body-only credentials',async()=>{
-  const requests=[],{auth,http}=owner(async(url,init)=>{requests.push({url,init});return json(wire(new URL(url).pathname===authEndpoints.logout?null:session));},{credentials:'include',getHeaders:()=>({'X-CSRF-Token':'FAKE_CSRF_HEADER'})});
+  const requests=[],{auth,http}=owner(async(url,init)=>{requests.push({url,init});return json(wire(new URL(url).pathname===authEndpoints.logout?null:session));},{credentials:'include',headers:{Accept:'application/x-protobuf','Content-Type':'application/x-www-form-urlencoded'},getHeaders:()=>({'X-CSRF-Token':'FAKE_CSRF_HEADER'})});
   const signedIn=await auth.login({username:' demo ',password:' FAKE_PASSWORD '});assert.deepEqual(signedIn,user);assert.equal(auth.getState().status,'authenticated');assert.equal(JSON.stringify(auth.getState()).includes('FAKE_PASSWORD'),false);
   assert.equal(await auth.currentUser(),auth.getState().user);await auth.logout();assert.equal(auth.getState().status,'anonymous');assert.equal(auth.getState().user,null);
   assert.deepEqual(requests.map(({url,init})=>[url,init.method]),[[`https://auth.example${authEndpoints.login}`,'POST'],[`https://auth.example${authEndpoints.session}`,'GET'],[`https://auth.example${authEndpoints.logout}`,'POST']]);
   assert.deepEqual(JSON.parse(requests[0].init.body),{username:'demo',password:' FAKE_PASSWORD '});assert.equal(requests[1].init.body,undefined);assert.equal(requests[2].init.body,'{}');
-  for(const {url,init} of requests){assert.equal(new URL(url).search,'');assert.equal(init.cache,'no-store');assert.equal(init.redirect,'error');assert.equal(init.credentials,'include');assert.equal(init.headers.get('X-CSRF-Token'),'FAKE_CSRF_HEADER');}
+  for(const {url,init} of requests){assert.equal(new URL(url).search,'');assert.equal(init.cache,'no-store');assert.equal(init.redirect,'error');assert.equal(init.credentials,'include');assert.equal(init.headers.get('X-CSRF-Token'),'FAKE_CSRF_HEADER');assert.equal(init.headers.get('Accept'),'application/json');if(init.method==='POST')assert.equal(init.headers.get('Content-Type'),'application/json');}
   auth.destroy();http.destroy();
 });
 test('login 401 keeps confirmed user, session 401 clears it and logout uncertainty never claims success',async()=>{

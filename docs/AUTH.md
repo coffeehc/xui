@@ -74,3 +74,5 @@ cookie 的签发/轮换/有效期/服务端撤销、HttpOnly/Secure/SameSite、�
 [共享配置](../examples/shared/login-config.json)、[合成 facade](../examples/shared/login-model.ts)、[React](../examples/login-react/app.tsx) 与 [原生](../examples/login-vanilla/app.js) 都经 fresh npm tarball 安装正式入口再打包，不读 monorepo 源码 alias，也不需要私有页面 CSS。[逻辑回归](../tests/auth.test.mjs) 与 [浏览器回归](../tests/browser/login.spec.mjs) 核对严格 DTO、共享401、固定请求、取消/超时/迟到/防重复、回跳、错误安全、theme、键盘/焦点/reduced-motion、390px/200%/后备字体和密码节点清空。
 
 合成 fetch 没有签发真实 cookie，不证明后端登录、CSRF、CORS、鉴权或日志可靠性通过。最终完整验收与同 SHA CI 随交付记录。注册、重置密码、SSO、完整用户管理 UI 和 baseservice 后端是后续组合计划；当前基础已有登录/API Key/业务日志，不声称完整基础系统或产品迁移已完成。
+
+固定cookie facade显式Accept:application/json，POST显式Content-Type:application/json；保留宿主CSRF/鉴权/tenant header，不继承旧protobuf/form编码。该标准与页面API索引一致，真实后端仍须提供cookie、CSRF/CORS与鉴权。
