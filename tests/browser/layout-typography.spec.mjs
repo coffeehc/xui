@@ -133,7 +133,10 @@ for(const kind of kinds){
     const appearance=locator=>locator.evaluate(node=>{const s=getComputedStyle(node),i=getComputedStyle(node,'::before'),r=node.getBoundingClientRect();return {background:s.backgroundColor,color:s.color,border:s.borderWidth,indicator:{opacity:i.opacity,width:i.width,height:i.height,left:i.left,color:i.backgroundColor},x:r.x,width:r.width};});
     await page.mouse.move(1200,760);const initial=await appearance(selected);expect(initial.indicator).toMatchObject({opacity:'1',width:'2px',height:'16px',left:'2px'});expect(initial.border).toBe('0px');
     await selected.hover();expect(await appearance(selected)).toEqual(initial);await other.hover();expect((await appearance(other)).indicator.opacity).toBe('0');
-    await page.getByRole('button',{name:'展开导航',exact:true}).focus();await page.keyboard.press('Tab');await expect(selected).toBeFocused();
+    await page.getByRole('button',{name:'展开导航',exact:true}).focus();
+    // The single toggle is now in the header. Follow its ordinary links/actions
+    // before entering the sidebar's one roving tab stop.
+    for(let step=0;step<8&&!await selected.evaluate(node=>node===document.activeElement);step++)await page.keyboard.press('Tab');await expect(selected).toBeFocused();
     expect(await selected.evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle==='solid')).toBe(true);expect(await appearance(selected)).toEqual(initial);
     await page.keyboard.press('ArrowDown');await expect(other).toBeFocused();await expect(selected).toHaveAttribute('aria-current','page');await capture(page,info,'compact-keyboard-focus');
   });

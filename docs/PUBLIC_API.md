@@ -131,3 +131,16 @@ API Key入口追加公开 `createApiKeyWriteGuard`、`ApiKeyPendingWrite`/`ApiKe
 - `@coffeehc/xui-runtime/menu-layout` 及根入口：`MenuLayoutHeaderSlots`、`MenuLayoutOptions.headerSlots`，同名Node/null角色，支持DocumentFragment与稳定的非头部更新。完整替换/回退/生命周期见[NAVIGATION](NAVIGATION.md#应用头部角色与紧凑侧栏迁移)。
 - `Menu.Icon` / `ContextMenu.Icon` 以及公开 `.xui-menu-icon` 图标类，显式16px语义图标，不处理任意嵌套插图；菜单项与label字号合同见[COMPOSITIONS](COMPOSITIONS.md#菜单文字图标与字段标签)。
 - 公开theme/style.css与layout.css默认共用DESIGN新增的四个派生token：nav-sidebar-width、nav-sidebar-padding、nav-collapsed-width、layout-header-primary-min；不会覆盖整个Portal文字角色，也没有新增尺寸/密度开关。正式types/ESM全名字仍由public-api脚本与独立消费者验证。
+
+## 侧栏底部公开插槽
+
+- React `MenuLayoutProps.sidebarFooter` 与 `AppShellProps.sidebarFooter` 接收 `ReactNode`，默认无底部区域；`undefined`/`null`/`false` 不占位。`headerSlots` 四角色仍只属于顶栏。
+- `@coffeehc/xui-react/layout` 与根入口导出 `SidebarFooterContent`、`SidebarFooterContentProps`，支持 span props/ref、`icon?: ReactNode`、`children`。它只组合图标/文字，动作使用既有 Button 或链接、状态使用宿主语义；没有业务动作默认值。
+- 原生 `MenuLayoutOptions.sidebarFooter?: Node | null` 与 `update` 同型，接收 Node 或 DocumentFragment。未指定该字段的更新保留原 Node；同一 Node/已消费 Fragment 不重复挂载，null/undefined 清空。footer内容 Node 不能同时用于header或其它slot。
+- 原生公开内容结构：`.xui-sidebar-footer-content`，其子 `.xui-sidebar-footer-icon[aria-hidden=true]` 和 `.xui-sidebar-footer-label`，与 React 同构。库生成 `.xui-shell-sidebar-menu` / `.xui-shell-sidebar-footer`；消费者不查询或修补它们来安排位置。
+- `Dialog.Content.keepMounted?: boolean` 默认为false；底部模式的 AppShell 为复用同一侧栏而启用它，关闭时仍隐藏并保持模态隔离，普通Dialog默认不变。
+- [接入及迁移](NAVIGATION.md#侧栏底部接入与迁移)、[专项覆盖矩阵](SIDEBAR_FOOTER_VALIDATION.md)。每个正式类型及ESM导出纳入全部exports/tarball检查。
+
+## 顶栏单一导航开关
+
+`MenuLayout` / `createMenuLayout` 在顶栏统一控制桌面collapsed与窄屏sidebarOpen，内部菜单不重复生成开关；原有受控props/update/callback保留。`AppShellProps`公开同型collapsed/defaultCollapsed/onCollapsedChange与compactLabel/expandLabel。独立NavigationMenuOptions追加showCollapseToggle（默认true，MenuLayout固定false/所属AppShell自动关闭）；共享键盘及原生菜单第三参数可选fallbackFocus供公开组合处理空菜单焦点。默认字号/按钮尺寸/动效沿既有token，不要求消费方CSS。[状态及迁移](NAVIGATION.md#顶栏唯一菜单开关)。

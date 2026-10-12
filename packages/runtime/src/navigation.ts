@@ -16,7 +16,7 @@ export interface NavigationNode {item:NavigationItem;parentId:string|null;ancest
 export interface NavigationMenuState {activeId:string|null;collapsed:boolean;expandedIds:readonly string[]}
 export interface NavigationMenuOptions extends NavigationSelection {
   items:readonly NavigationItem[];navigation?:NavigationAdapter;resolveIcon?:NavigationIconResolver;
-  label?:string;emptyLabel?:string;compactLabel?:string;expandLabel?:string;
+  showCollapseToggle?:boolean;label?:string;emptyLabel?:string;compactLabel?:string;expandLabel?:string;
   collapsed?:boolean;defaultCollapsed?:boolean;expandedIds?:readonly string[];defaultExpandedIds?:readonly string[];
   onCollapsedChange?:(collapsed:boolean)=>void;onExpandedChange?:(ids:readonly string[])=>void;
 }
@@ -60,12 +60,12 @@ export function navigateNavigationItem(item:NavigationItem,event:NavigationClick
   event.preventDefault();options.navigation.navigate(request);return true;
 }
 
-export function createNavigationKeyboard(root:HTMLElement,options:{activeId:()=>string|null;node:(id:string)=>NavigationNode|undefined;expanded:(id:string)=>boolean;setExpanded:(id:string,open:boolean)=>void;listen?:boolean}){
+export function createNavigationKeyboard(root:HTMLElement,options:{activeId:()=>string|null;node:(id:string)=>NavigationNode|undefined;expanded:(id:string)=>boolean;setExpanded:(id:string,open:boolean)=>void;listen?:boolean;fallbackFocus?:()=>HTMLElement|null}){
   let lastFocused:HTMLElement|null=null;
-  const controls=()=>Array.from(root.querySelectorAll<HTMLElement>('[data-menu-control]')).filter(node=>!node.closest('[hidden]')&&!node.matches(':disabled,[aria-disabled="true"]'));
+  const controls=()=>Array.from(root.querySelectorAll<HTMLElement>('[data-menu-control]')).filter(node=>{const hidden=node.closest('[hidden]');return (!hidden||hidden===root||!root.contains(hidden))&&!node.matches(':disabled,[aria-disabled="true"]');});
   const focus=(node:HTMLElement|undefined)=>{if(!node)return;controls().forEach(item=>{item.tabIndex=item===node?0:-1;});lastFocused=node;node.focus();};
   const refresh=()=>{const all=controls(),active=root.ownerDocument.activeElement;const lost=lastFocused&&(!lastFocused.isConnected||!all.includes(lastFocused))&&(active===root.ownerDocument.body||active===lastFocused);
-    const chosen=all.find(node=>node===active)??all.find(node=>node.dataset.menuId===options.activeId()&&node.dataset.menuControl==='primary')??all[0];root.querySelectorAll<HTMLElement>('[data-menu-control]').forEach(node=>{node.tabIndex=node===chosen?0:-1;});if(lost)focus(chosen??root.querySelector<HTMLElement>('.xui-menu-compact-toggle')??undefined);};
+    const chosen=all.find(node=>node===active)??all.find(node=>node.dataset.menuId===options.activeId()&&node.dataset.menuControl==='primary')??all[0];root.querySelectorAll<HTMLElement>('[data-menu-control]').forEach(node=>{node.tabIndex=node===chosen?0:-1;});if(lost)focus(chosen??root.querySelector<HTMLElement>('.xui-menu-compact-toggle:not([hidden])')??options.fallbackFocus?.()??undefined);};
   const released=()=>{root.querySelectorAll<HTMLElement>('[data-menu-control][data-pressed]').forEach(node=>{delete node.dataset.pressed;});};
   const key=(event:KeyboardEvent)=>{
     if(event.defaultPrevented||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey)return;
@@ -87,7 +87,7 @@ export function renderNavigationIcon(doc:Document,icon:NavigationIcon):SVGSVGEle
 }
 const menuOwners=new WeakMap<HTMLElement,unknown>();
 /** Owns the menu structure and listeners; update never replaces the host root. */
-export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuOptions){
+export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuOptions,behavior:{fallbackFocus?:()=>HTMLElement|null}={}){
   if(menuOwners.has(root))throw new Error('This root already owns a navigation menu');
   let options={...initial},nodes=indexNavigation(options.items),dead=false,collapsed=options.defaultCollapsed??false,expanded=new Set(options.defaultExpandedIds),activeSignature='';
   const doc=root.ownerDocument,original=Array.from(root.childNodes),nav=doc.createElement('nav'),list=doc.createElement('ul'),compact=doc.createElement('button'),empty=doc.createElement('p');
@@ -97,12 +97,12 @@ export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuOpti
   const snapshot=():NavigationMenuState=>Object.freeze({activeId:getNavigationActiveId(nodes,options),collapsed:options.collapsed??collapsed,expandedIds:Object.freeze([...(options.expandedIds??expanded)])});
   const arrange=(parent:HTMLElement,children:HTMLElement[])=>{children.forEach((child,index)=>{if(parent.children[index]!==child)parent.insertBefore(child,parent.children[index]??null);});for(const child of Array.from(parent.children))if(!children.includes(child as HTMLElement))child.remove();};
   const requestExpanded=(id:string,open:boolean)=>{if(dead||nodes.get(id)?.disabled)return;const next=new Set(snapshot().expandedIds);open?next.add(id):next.delete(id);if(options.expandedIds===undefined)expanded=next;options.onExpandedChange?.([...next]);render();};
-  const keyboard=createNavigationKeyboard(nav,{activeId:()=>snapshot().activeId,node:id=>nodes.get(id),expanded:id=>snapshot().expandedIds.includes(id),setExpanded:requestExpanded});
+  const keyboard=createNavigationKeyboard(nav,{activeId:()=>snapshot().activeId,node:id=>nodes.get(id),expanded:id=>snapshot().expandedIds.includes(id),setExpanded:requestExpanded,fallbackFocus:behavior.fallbackFocus});
   const render=()=>{
     if(dead)return;const active=getNavigationActiveId(nodes,options),signature=JSON.stringify([active,nodes.get(active??'')?.ancestors]);
     if(signature!==activeSignature&&options.expandedIds===undefined){for(const id of nodes.get(active??'')?.ancestors??[])expanded.add(id);activeSignature=signature;}
     const state=snapshot(),focused=doc.activeElement as HTMLElement|null,focusId=focused?.dataset.menuId,focusControl=focused?.dataset.menuControl;
-    nav.setAttribute('aria-label',options.label??'Navigation');nav.dataset.collapsed=String(state.collapsed);compact.setAttribute('aria-label',state.collapsed?options.expandLabel??'Expand navigation':options.compactLabel??'Compact navigation');compact.setAttribute('aria-pressed',String(state.collapsed));compact.textContent=state.collapsed?'›':'‹';empty.textContent=options.emptyLabel??'No navigation items';empty.hidden=options.items.length>0;
+    compact.hidden=options.showCollapseToggle===false;nav.setAttribute('aria-label',options.label??'Navigation');nav.dataset.collapsed=String(state.collapsed);compact.setAttribute('aria-label',state.collapsed?options.expandLabel??'Expand navigation':options.compactLabel??'Compact navigation');compact.setAttribute('aria-pressed',String(state.collapsed));compact.textContent=state.collapsed?'›':'‹';empty.textContent=options.emptyLabel??'No navigation items';empty.hidden=options.items.length>0;
     const used=new Set<string>();
     const build=(items:readonly NavigationItem[],parent:HTMLElement)=>{
       const children:HTMLElement[]=[];
@@ -119,7 +119,7 @@ export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuOpti
       }arrange(parent,children);
     };build(options.items,list);for(const [id,entry] of records)if(!used.has(id)){entry.li.remove();records.delete(id);}
     keyboard.refresh();if(focusId&&(!focused?.isConnected||doc.activeElement!==focused)){const entry=records.get(focusId),target=focusControl==='toggle'?entry?.toggle:entry?.primary;if(target&&!target.closest('[hidden]')&&!target.matches(':disabled,[aria-disabled="true"]'))target.focus();else nav.querySelector<HTMLElement>('[data-menu-control][tabindex="0"]')?.focus();}
-    if(nav.closest('[data-scroll-mode="viewport"]'))nav.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});
+    if(nav.closest('[data-scroll-mode="viewport"],.xui-shell-sidebar-with-footer'))nav.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});
   };
   const click=(event:MouseEvent)=>{const control=(event.target as HTMLElement).closest<HTMLElement>('[data-menu-control]');if(!control)return;const node=nodes.get(control.dataset.menuId!);if(!node||node.disabled){event.preventDefault();return;}if(control.dataset.menuControl==='toggle'||!node.item.href){requestExpanded(node.item.id,!snapshot().expandedIds.includes(node.item.id));return;}navigateNavigationItem(node.item,event,{...options,location:options.location??doc.location?.href,baseURL:options.baseURL??doc.baseURI});};
   const compactClick=()=>{const next=!snapshot().collapsed;if(options.collapsed===undefined)collapsed=next;options.onCollapsedChange?.(next);render();};

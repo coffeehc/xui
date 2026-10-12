@@ -6,6 +6,7 @@
 
 | 能力 | React 正式接口 | 原生宿主契约 | 验收 |
 | --- | --- | --- | --- |
+| 侧栏底部 | MenuLayout/AppShell.sidebarFooter、SidebarFooterContent | createMenuLayout.sidebarFooter、公开content/icon/label类 | 独立menu滚动、紧凑完整名称、同一抽屉与Node生命周期；[专项覆盖](SIDEBAR_FOOTER_VALIDATION.md) |
 | 页面骨架 | AppShell、PageHeader、Toolbar、Section、Container、Stack、Grid | 同名 `.xui-*` 结构类、shell 控制器 | 列表/表单/详情组合；独立安装无需示例私有 layout.css；窄屏导航开关、Esc、回焦点 |
 | 基础操作与字段 | Button/IconButton、Field、原生输入/选择/checkbox/radio/switch、Fieldset | 真实 button/link/label/input/fieldset | render/nativeButton/link 支持、ref、disabled 与 aria-busy 独立、单控件 id、错误关联、键盘 |
 | 复合选择 | Select、Combobox，复用 Base UI | 原生 select；可搜索选择采用原生 datalist，限制写清 | controlled/uncontrolled、禁用、空选项、键盘选择与取消；不宣称原生 OS 面板由库控制 |

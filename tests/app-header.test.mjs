@@ -35,3 +35,16 @@ test('compact sidebar derives exactly one item plus symmetric insets from DESIGN
   assert.equal(number('--nav-collapsed-width'),60);
   assert.equal(number('--nav-collapsed-width'),number('--nav-collapsed-item-size')+2*number('--nav-sidebar-padding'));
 });
+
+test('AppShell owns one header toggle and limits collapsed state to its sidebar navigation',async()=>{
+  const {NavigationMenu}=await import('../packages/ui-react/dist/menu-layout.js');
+  const items=[{id:'one',label:'First',href:'/one'}];
+  const markup=renderToStaticMarkup(React.createElement(AppShell,{collapsed:true,compactLabel:'收起侧栏',expandLabel:'展开侧栏',sidebar:React.createElement(NavigationMenu,{items,label:'Sidebar menu'})},React.createElement(NavigationMenu,{items,label:'Independent menu',defaultCollapsed:false})));
+  assert.equal((markup.match(/class="xui-button xui-shell-toggle"/g)??[]).length,1);
+  const header=/<header[\s\S]*?<\/header>/.exec(markup)[0];assert.match(header,/aria-label="展开侧栏"/);assert.match(header,/aria-expanded="false"/);
+  const sidebar=/<aside[\s\S]*?<\/aside>/.exec(markup)[0],main=/<main[\s\S]*?<\/main>/.exec(markup)[0];
+  assert.doesNotMatch(sidebar,/xui-menu-compact-toggle/);
+  assert.match(sidebar,/aria-label="Sidebar menu" data-collapsed="true"/);
+  assert.match(main,/xui-menu-compact-toggle/);
+  assert.match(main,/aria-label="Independent menu" data-collapsed="false"/);
+});

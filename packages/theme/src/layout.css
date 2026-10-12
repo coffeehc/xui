@@ -7,6 +7,7 @@
   .xui-app-header-primary {display:flex;align-items:center;flex:1 1 var(--layout-header-primary-min);min-inline-size:min(100%,var(--layout-header-primary-min));gap:var(--space-control-gap);}
   .xui-app-header-navigation {display:flex;flex:none;}
   .xui-app-header-navigation:has(>.xui-shell-toggle) {display:none;}
+  .xui-app-header-navigation:has(>.xui-shell-toggle[data-xui-menu-toggle]) {display:flex;}
   .xui-app-header-brand {flex:0 1 auto;min-inline-size:0;max-inline-size:100%;font-weight:var(--font-weight-heading);}
   .xui-app-header-brand,.xui-app-header-brand>* {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .xui-app-header-brand>* {display:block;max-inline-size:100%;}
@@ -24,10 +25,34 @@
   .xui-app-header-actions>.xui-toolbar {justify-content:flex-end;}
   .xui-app-header-actions :is(button,a),.xui-app-header-legacy :is(button,a) {white-space:normal;overflow-wrap:anywhere;}
   .xui-shell-sidebar {grid-area:sidebar;min-inline-size:0;padding:var(--nav-sidebar-padding);background:var(--layer-shell);}
+  .xui-shell-sidebar-host {display:contents;}
+  .xui-shell-sidebar-with-footer {display:flex;flex-direction:column;min-block-size:0;overflow:hidden;}
+  .xui-shell[data-scroll-mode='viewport'] .xui-shell-sidebar-with-footer {overflow:hidden;}
+  .xui-shell[data-scroll-mode='document'] .xui-shell-sidebar-with-footer {position:sticky;inset-block-start:0;align-self:start;}
+  .xui-shell-sidebar-menu {flex:1 1 0;min-block-size:0;min-inline-size:0;overflow:auto;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
+  .xui-shell-sidebar-footer {display:flex;flex-direction:column;flex:0 1 auto;min-block-size:0;min-inline-size:0;max-block-size:50%;overflow:auto;overscroll-behavior:contain;gap:var(--space-text-gap);padding-block-start:var(--space-control-gap);margin-block-start:var(--space-control-gap);border-block-start:var(--line-width-surface) solid var(--separator-line);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+  .xui-shell-sidebar-footer>* {min-inline-size:0;max-inline-size:100%;flex-shrink:0;}
+  .xui-shell-sidebar-footer .xui-button {inline-size:100%;justify-content:flex-start;min-inline-size:0;white-space:normal;font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+  .xui-shell-sidebar-footer :is(button,a):focus-visible,.xui-shell-sidebar-menu :is(button,a):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
+  .xui-sidebar-footer-content {display:flex;align-items:center;gap:var(--space-control-gap);min-inline-size:0;max-inline-size:100%;overflow-wrap:anywhere;text-align:start;}
+  .xui-sidebar-footer-icon {display:inline-flex;align-items:center;justify-content:center;flex:none;min-inline-size:var(--control-icon-size);min-block-size:var(--control-icon-size);}
+  .xui-sidebar-footer-icon>svg {inline-size:var(--control-icon-size);block-size:var(--control-icon-size);flex:none;}
+  .xui-sidebar-footer-label {min-inline-size:0;overflow-wrap:anywhere;}
+  .xui-shell-drawer:has(.xui-shell-sidebar-with-footer) {block-size:calc(100dvh - var(--layout-viewport-inset) * 2);}
+  .xui-shell-drawer .xui-shell-sidebar-body {display:flex;flex-direction:column;flex:1 1 0;min-block-size:0;overflow:hidden;}
+  .xui-shell-drawer .xui-shell-sidebar-body>.xui-shell-sidebar-with-footer {position:static;align-self:stretch;flex:1 1 0;min-inline-size:0;inline-size:100%;}
+  @media(min-width:48rem) {
+    .xui-shell-sidebar-with-footer:has(.xui-navigation-menu[data-collapsed='true']) .xui-sidebar-footer-content:has(>.xui-sidebar-footer-icon) {justify-content:center;inline-size:100%;gap:0;}
+    .xui-shell-sidebar-with-footer:has(.xui-navigation-menu[data-collapsed='true']) .xui-sidebar-footer-content:has(>.xui-sidebar-footer-icon)>.xui-sidebar-footer-label {position:absolute;inline-size:1px;block-size:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+    .xui-shell-sidebar-with-footer:has(.xui-navigation-menu[data-collapsed='true']) .xui-shell-sidebar-footer .xui-button {padding-inline:0;justify-content:center;}
+  }
   .xui-shell-main {grid-area:main;min-inline-size:0;padding:var(--layout-content-inset);}
-  .xui-menu-layout[data-collapsed='true'] {grid-template-columns:var(--nav-collapsed-width) minmax(0,1fr);}
-  .xui-menu-layout {transition:grid-template-columns var(--motion-duration) var(--motion-easing);}
-  .xui-shell-toggle {display:none;}
+  .xui-shell[data-collapsed='true'] {grid-template-columns:var(--nav-collapsed-width) minmax(0,1fr);}
+  .xui-shell {transition:grid-template-columns var(--motion-duration) var(--motion-easing);}
+  .xui-shell-toggle {display:none;flex:none;}
+  .xui-shell-toggle[data-xui-menu-toggle] {display:inline-flex;}
+  .xui-shell-toggle-arrow {transform-origin:60% 50%;transition:transform var(--motion-duration) var(--motion-easing);}
+  .xui-shell-toggle[data-collapsed='true'] .xui-shell-toggle-arrow {transform:rotate(180deg);}
   .xui-skip-link {position:fixed;inset-block-start:var(--space-text-gap);inset-inline-start:var(--space-text-gap);transform:translateY(-200%);z-index:var(--z-notice);background:var(--layer-overlay);color:var(--action-primary);padding:var(--space-control-gap);}
   .xui-skip-link:focus {transform:none;}
   .xui-shell-drawer {inset-block-start:var(--layout-viewport-inset);inset-inline-start:var(--layout-viewport-inset);inset-block-end:var(--layout-viewport-inset);top:var(--layout-viewport-inset);left:var(--layout-viewport-inset);transform:none;max-inline-size:calc(var(--nav-item-height)*8);}
@@ -44,7 +69,7 @@
   .xui-details dd {margin:0;overflow-wrap:anywhere;}
   @media(max-width:47.999rem) {
     .xui-shell {grid-template-columns:minmax(0,1fr);grid-template-areas:'header' 'main';}
-    .xui-menu-layout[data-collapsed='true'] {grid-template-columns:minmax(0,1fr);}
+    .xui-shell[data-collapsed='true'] {grid-template-columns:minmax(0,1fr);}
     .xui-navigation-menu .xui-nav-item[data-collapsed='true'] {width:auto;height:auto;min-height:var(--nav-item-height);justify-content:flex-start;padding:var(--space-text-gap) var(--nav-item-padding-inline);}
     .xui-shell>.xui-shell-sidebar {display:none;}
     .xui-shell-toggle {display:inline-flex;}

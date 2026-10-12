@@ -51,9 +51,9 @@ navigation 是显式 opt-in。只接管未取消、无修改键的普通主键�
 
 collapsed/defaultCollapsed/onCollapsedChange、expandedIds/defaultExpandedIds/onExpandedChange 支持受控与非受控。受控操作只发请求，React 更新 props 或原生 update 确认后才改变事实；default 值仅初始化。MenuLayout 保管非受控菜单状态，使桌面与窄屏转换后仍保留展开/紧凑状态。桌面紧凑状态保留可访问名称与图标，窄屏抽屉显示完整标签；分组和长中文不裁切关键内容。
 
-键盘采用普通 nav/link 语义与单一菜单项 tab stop，方向键/Home/End 跳过隐藏和 disabled；左右展开/收起及回父节点，RTL 反转左右。展开按钮的 Enter/Space、链接 Enter 和修改键沿用原生语义。focus 独立可见；移除/隐藏焦点项时回退可用项，空菜单回退紧凑按钮。
+键盘采用普通 nav/link 语义与单一菜单项 tab stop，方向键/Home/End 跳过隐藏和 disabled；左右展开/收起及回父节点，RTL 反转左右。展开按钮的 Enter/Space、链接 Enter 和修改键沿用原生语义。focus 独立可见；移除/隐藏焦点项时回退可用项，空菜单在桌面回退顶栏唯一开关，打开的模态抽屉内回退关闭按钮；独立NavigationMenu才回退自身紧凑按钮。
 
-MenuLayout 还提供 title/header、children（原生 content Node 或原有 root 内容）、sidebarOpen/defaultSidebarOpen/onSidebarOpenChange、label/emptyLabel/compactLabel/expandLabel/skipLabel/closeLabel。窄屏使用现有模态 drawer，Esc/关闭/成功 adapter 导航请求关闭并回可见触发器；变宽关闭 drawer。受控 sidebar 仍须宿主确认。菜单导航不替换 shell/main 或未变更的链接节点；同一组件持续挂载时保留页面输入。React 的内容状态由宿主正常保管，不给布局添加路由 key。断点切换时 React sidebar 部件可重挂载，布局保管菜单事实；不承诺任意 renderLink 私有状态跨断点保留。
+MenuLayout 还提供 title/header、children（原生 content Node 或原有 root 内容）、sidebarOpen/defaultSidebarOpen/onSidebarOpenChange、label/emptyLabel/compactLabel/expandLabel/skipLabel/closeLabel。窄屏使用现有模态 drawer，Esc/关闭/成功 adapter 导航请求关闭并回可见触发器；变宽关闭 drawer。受控 sidebar 仍须宿主确认。菜单导航不替换 shell/main 或未变更的链接节点；同一组件持续挂载时保留页面输入。React 的内容状态由宿主正常保管，不给布局添加路由 key。未提供footer时断点切换的React sidebar部件仍可重挂载，布局保管菜单事实；提供footer时复用同一侧栏树（详见下方底部接入），不按route重建。
 
 ## 原生生命周期与正式消费者
 
@@ -145,3 +145,61 @@ layout.update({headerSlots:{...headerSlots, actions:null}});
 紧凑侧栏默认216px展开、60px收起；这些数值是根16px下的 CSS 像素，非设备像素。公开token `--nav-sidebar-width`、`--nav-sidebar-padding`、`--nav-collapsed-width` 与 `--nav-collapsed-item-size` 在 DESIGN 中定义，默认36px项+左右各12px；图标仍16px，选中短竖线/hover/独立focus不改变宽度。独立支路开关收起时移到所属链接下一行，窄屏抽屉恢复完整标签与既有键盘/路由合同。独立使用 NavigationMenu 的外层宽度由宿主布局决定，MenuLayout 才拥有完整侧栏宽度。
 
 迁移顺序：先固定新SHA并重新构建正式包；把原 header 中品牌/路径/状态/动作内容分别送入公开角色；删除消费方仅用于通用 header flex/grid/gap、长中文截断、紧凑栏宽度和图标对齐的 CSS。保留领域内容布局、授权判断、事件、路由和有明确理由的产品token覆盖。不要删除业务规则来套入公共布局，不再叠加第二条rail。新合成验收与覆盖矩阵见[布局与文字验收](LAYOUT_TYPOGRAPHY_VALIDATION.md)。
+
+## 侧栏底部接入与迁移
+
+`sidebarFooter` 是 MenuLayout/原生 createMenuLayout 的侧栏底部内容插槽，AppShell也可组合；`headerSlots` 保持顶栏用途。没有返回、授权状态、版本/账号、服务地址等内置领域规则。业务传现有内容/回调和真实disabled/busy状态，不复制定位、尺寸或底部容器内部DOM。
+
+```tsx
+import {MenuLayout} from '@coffeehc/xui-react/menu-layout';
+import {SidebarFooterContent} from '@coffeehc/xui-react/layout';
+import {Button} from '@coffeehc/xui-react/button';
+<MenuLayout items={items} scrollMode="viewport" sidebarFooter={<>
+  <Button variant="ghost" disabled={busy} aria-busy={busy} onClick={onReturn}>
+    <SidebarFooterContent icon={<ReturnIcon/>}>返回工作空间</SidebarFooterContent>
+  </Button>
+  <SidebarFooterContent icon={<span>v1</span>} title="版本 1.0（由宿主提供）">版本 1.0（由宿主提供）</SidebarFooterContent>
+</>}>{pageContent}</MenuLayout>
+```
+
+图标/短表示为装饰，完整名称留在label。图标可为任意React内容；直接SVG采用公共control-icon-size。名称长时展开/窄屏换行；紧凑栏只对有icon的部件视觉隐藏label。没有icon时仍显示文字，不要求消费者自写隐藏CSS；需要更具体紧凑表示时提供icon。真实交互语义、tooltip/解释入口及权限由内容所属组件决定。
+
+```js
+const action = document.createElement('button');
+action.type = 'button';
+action.className = 'xui-button';
+action.dataset.variant = 'ghost';
+const content = document.createElement('span');
+content.className = 'xui-sidebar-footer-content';
+const icon = document.createElement('span');
+icon.className = 'xui-sidebar-footer-icon';
+icon.setAttribute('aria-hidden', 'true');
+icon.textContent = '←';
+const label = document.createElement('span');
+label.className = 'xui-sidebar-footer-label';
+label.textContent = '返回工作空间';
+content.append(icon, label);
+action.append(content);
+action.addEventListener('click', onReturn);
+const footer = document.createDocumentFragment();
+footer.append(action);
+const layout = createMenuLayout(root, {items, sidebarFooter: footer, scrollMode: 'viewport'});
+layout.update({location: nextURL}); // 不重建footer，不重复绑定
+// 宿主保留action引用更新真实状态，不查询库内部DOM。
+action.disabled = busy;
+action.setAttribute('aria-busy', String(busy));
+```
+
+原生同一Node/Fragment赋回保留节点；替换内容须传新的Node/Fragment，传null/undefined移除。不要重用已被替换的空Fragment来恢复旧子节点；保留内容Node引用或新建Fragment。React按常规key/type协调，改变内容组件key或有意移除footer属于宿主重建。
+
+有footer时，短菜单通过flex可用空间将footer置底，长菜单只在公共menu区域滚动，不覆盖末项；footer自身超出侧栏一半时独立滚动保留全部内容。document模式正文仍文档滚动，侧栏由库测量实际头高后有界sticky；viewport模式包括公开Root blockSize固定窗口。无footer时保留已有侧栏滚动区域。紧凑默认宽度不变，窄屏复用原抽屉；React常量portal目标与原生移动Node都保持同一侧栏树，开关抽屉不重复挂载footer业务状态。SSR/hydration仍未作为本轮支持声明。
+
+迁移：固定包含本节的已验证提交并重新构建正式包（具体SHA见对应提交/交付记录）；将原本位于侧栏尾部的内容送入sidebarFooter，顶栏内容继续headerSlots；删除消费方底部absolute/fixed/margin-top、侧栏height/overflow与compact宽度补丁，保留业务回调/权限/状态。不要以route key重挂MenuLayout或添加第二个drawer。完整无私有CSS例子见[React](../examples/sidebar-footer-react/app.tsx)/[原生](../examples/sidebar-footer-vanilla/app.js)，正式构建、watch和独立tarball类型检查都包含它们；真实产品迁移另按产品授权实施。
+
+## 顶栏唯一菜单开关
+
+MenuLayout及原生createMenuLayout只生成顶栏一个菜单开关。桌面点击/Enter/Space请求收起或展开侧栏；窄屏同一入口请求已有导航抽屉。侧栏顶部不再生成第二个开关，不改变正文导航adapter或单模态owner。开关采用公共icon按钮尺寸、motion与focus，桌面可访问名取compactLabel/expandLabel，aria-expanded表示侧栏展开事实；窄屏名取label（AppShell为navigationLabel），aria-expanded表示抽屉事实且有aria-haspopup=dialog。aria-controls对应当前受控区域。缩放/断点切换保持collapsed，变宽关闭抽屉；受控回调仍只请求，等宿主回传才改变事实。
+
+React AppShell新增collapsed/defaultCollapsed/onCollapsedChange、compactLabel/expandLabel（同MenuLayout默认）；所属NavigationMenu自动接其非显式紧凑状态并移除内部开关。普通页面只使用MenuLayout传数据和状态；无需另传开关内容或尺寸。独立NavigationMenu/createNavigationMenu仍可显示自己的紧凑按钮，新增showCollapseToggle=false可关闭；该选项不能在MenuLayout中重新添加重复按钮。原生createNavigationMenu第三参数的可选fallbackFocus与共享createNavigationKeyboard同名回调仅供公共结构组合的空菜单焦点退路，普通宿主无需连接。
+
+迁移时删除产品自行实现的侧栏顶部/顶栏菜单按钮及其宽度、位置、媒体监听和点击绑定，继续传collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange及原标签配置。不要把sidebarOpen当桌面compact状态。顶栏DOM先于侧栏，Tab依次经过顶栏已有链接/动作，再进入菜单的单一tab停靠点；测试不应再假设旧侧栏开关之后立即是菜单。

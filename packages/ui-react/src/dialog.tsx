@@ -3,8 +3,8 @@ import { cx, branded } from './shared.js';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
 export const Dialog = {
   Root: BaseDialog.Root, Trigger: BaseDialog.Trigger, Close: BaseDialog.Close,
-  Content: function Content({className,...props}: React.ComponentProps<typeof BaseDialog.Popup>) {
-    return <BaseDialog.Portal><BaseDialog.Backdrop className="xui-backdrop" /><BaseDialog.Popup {...props} className={branded('xui-layer xui-dialog',className)} /></BaseDialog.Portal>;
+  Content: function Content({className,keepMounted,...props}: React.ComponentProps<typeof BaseDialog.Popup> & {keepMounted?:boolean}) {
+    return <BaseDialog.Portal keepMounted={keepMounted}><BaseDialog.Backdrop className="xui-backdrop" /><BaseDialog.Popup {...props} className={branded('xui-layer xui-dialog',className)} /></BaseDialog.Portal>;
   },
   Title: function Title({className,...props}: React.ComponentProps<typeof BaseDialog.Title>) { return <BaseDialog.Title {...props} className={branded('xui-dialog-title',className)} />; },
   Description: function Description({className,...props}: React.ComponentProps<typeof BaseDialog.Description>) { return <BaseDialog.Description {...props} className={branded('xui-dialog-description',className)} />; },
