@@ -38,9 +38,11 @@ Tab按真实DOM顺序经过primary（leading、导航、品牌、路径、contex
 
 - document：页面随文档自然滚动，适合普通列表/表单/文章。
 - viewport：外壳默认100dvh，sidebar/main各自滚动；content仍为自然文档高度，不承诺把业务的100%高度解析为剩余窗口。
-- workspace：外壳有界，顶栏按真实内容自然增高/换行；main内部pageHeader→pageToolbar→content→pageFooter，标题/工具条/底部占自然高度，content获得明确的剩余高度并允许收缩到零。库拥有这条min-block-size:0链，不要求宿主测量顶栏、减固定头高或定位发送框。
+- workspace：外壳有界，顶栏按真实内容自然增高/换行；main内部pageHeader→pageToolbar→content→pageFooter，标题/工具条/底部占自然高度，content获得明确的剩余高度，默认允许收缩到零。公开token `--layout-workspace-content-min-block-size` 默认0px，库拥有这条可收缩链，不要求宿主测量顶栏、减固定头高或定位发送框。
 
 workspace的顶栏和page slots不覆盖正文；主内容的业务布局通常使用height/blockSize:100%、flex/grid、min-block-size:0，再让指定历史/编辑器/检查器区域overflow:auto。发送区保持业务正常流、不收缩，历史区吃剩余空间。main/content的overflow:auto只作为无法拆分内容或页头/页尾过大的可达性兜底；正常可容纳的业务布局只有指定内部区域产生滚动。过大的固定业务内容仍需要可访问的滚动，模式不是把任意页面强行塞进首屏的裁切开关。不要叠加另一套body overflow锁、复制库内部CSS或绝对定位composer。
+
+需要非零正文视口的组合可在shell公开style绑定 `--layout-workspace-content-min-block-size`，库把下限限制在100dvh内。DataTable正式范例显式绑定 `var(--data-table-min-block-size)`，该组合不是自动推断；超高标题/筛选时main自然滚动，而非把内容困在零高的内部滚动口。普通workspace默认值保持0，已有聊天/编辑器不增加强制留白。宿主拥有自己的style值，原生销毁时由宿主恢复原值，React按正常style生命周期更新/卸载。完整双端范例见[DataTable](DATA_TABLE.md#页面标题筛选与滚动)。
 
 公开Root style可以提供宿主已有的明确blockSize来嵌入非全窗口；否则以100dvh为界。若宿主使用百分比高度，它必须先提供可解析的祖先高度。改变scrollMode、页内槽或leading不会重建main/content，保留正文输入、焦点与宿主状态。短内容占满可用工作区但不产生多余文档滚动；自然高度页面继续选择document。完整两栏长/短历史示例：[React](../examples/workspace-react/app.tsx)（`?direct`直接AppShell）、[原生](../examples/workspace-vanilla/app.js)。示例仅在自有业务元素上提供布局，不读取或改写库内部元素。
 

@@ -60,7 +60,7 @@ function App(){
     {!state.busy&&state.status==='ready'&&!state.rows.length&&<EmptyState title={state.filtered?tableLabels.noMatches:tableLabels.empty}/>}
     <Grid>{state.rows.map(row=><Surface key={row.id} aria-label={`记录卡片 ${row.id}`}><h2>{row.name}</h2><p>{row.kind} · {row.scope} · {row.source}</p><Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button></Surface>)}</Grid>
   </ScrollArea.Content></ScrollArea.Viewport></ScrollArea.Root>;
-  const common={scrollMode:'workspace' as const,headerSlots:{brand:<strong>公共列表组合</strong>},pageHeader,pageToolbar:internal?undefined:toolbar};
+  const common={style:{'--layout-workspace-content-min-block-size':'var(--data-table-min-block-size)'} as React.CSSProperties,scrollMode:'workspace' as const,headerSlots:{brand:<strong>公共列表组合</strong>},pageHeader,pageToolbar:internal?undefined:toolbar};
   return query.has('direct')?<AppShell {...common} sidebar={<NavigationMenu items={items} activeId="records" label="示例导航"/>}>{cards?cardView:table}</AppShell>:<MenuLayout {...common} items={items} activeId="records" label="示例导航">{cards?cardView:table}</MenuLayout>;
 }
 root.render(<App/>);

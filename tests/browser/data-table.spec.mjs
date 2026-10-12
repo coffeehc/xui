@@ -31,6 +31,7 @@ async function setup(page,kind,{query='',theme='light',viewport=viewports[0],mot
   await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),theme);
   await page.goto(`/data-table-${kind}/${query}`);await page.waitForFunction(()=>!!window.dataTableDemo);if(wait)await ready(page);else await settle(page);
   await expect(page.locator('.xui-shell')).toHaveAttribute('data-scroll-mode','workspace');
+  expect(await page.locator('.xui-shell').evaluate(node=>node.style.getPropertyValue('--layout-workspace-content-min-block-size'))).toBe('var(--data-table-min-block-size)');
   await expect(page.locator('html')).toHaveAttribute('data-theme',theme);
   await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);
 }
@@ -179,7 +180,7 @@ for(const kind of kinds){
     await setup(page,kind);await page.evaluate(()=>{window.retainedAction=document.querySelector('[data-row-id="1"]');window.savedTheme=window.xuiTheme;window.dataTableDemo.owner.planNext({delayMs:500,ignoreAbort:true});window.dataTableDemo.owner.refresh();});
     await expect(page.locator('#records-table')).toHaveAttribute('aria-busy','true');const count=await requestCount(page);
     await page.evaluate(()=>{window.dataTableDemo.destroy();window.dataTableDemo.destroy();window.retainedAction.click();window.dataTableDemo.owner.load();});await page.waitForTimeout(560);
-    await expect(page.locator('#records-table')).toHaveCount(0);expect(await requestCount(page)).toBe(count);expect(await page.evaluate(()=>window.dataTableDemo.getActions())).toEqual([]);
+    await expect(page.locator('#records-table')).toHaveCount(0);expect(await page.locator('#root').evaluate(node=>node.style.getPropertyValue('--layout-workspace-content-min-block-size'))).toBe('');expect(await requestCount(page)).toBe(count);expect(await page.evaluate(()=>window.dataTableDemo.getActions())).toEqual([]);
     expect(await page.evaluate(()=>window.xuiTheme===window.savedTheme&&!window.savedTheme.isDestroyed())).toBe(true);
   });
 
@@ -201,13 +202,24 @@ for(const kind of kinds){
     await setup(page,kind,{query:'?long',viewport});await assertWorkspace(page);await scrollToEnd(page);await reachable(page.getByRole('button',{name:'刷新',exact:true}));await reachable(search(page));await capture(page,info,`long-title-${viewport.width}`);
   });
 
+  test(`${kind}: the public minimum token updates without remounting and host teardown releases it`,async({page})=>{
+    await setup(page,kind);await saveIdentity(page);await search(page).focus();
+    await page.locator('.xui-shell').evaluate(node=>node.style.setProperty('--layout-workspace-content-min-block-size','var(--control-height)'));
+    await page.evaluate(()=>window.dataTableDemo.owner.refresh());await ready(page);await assertIdentity(page);await expect(search(page)).toBeFocused();
+    expect(await page.locator('.xui-shell').evaluate(node=>node.style.getPropertyValue('--layout-workspace-content-min-block-size'))).toBe('var(--control-height)');
+    await page.locator('.xui-shell').evaluate(node=>node.style.setProperty('--layout-workspace-content-min-block-size','var(--data-table-min-block-size)'));
+    await assertWorkspace(page);await page.evaluate(()=>window.dataTableDemo.destroy());
+    expect(await page.locator('#root').evaluate(node=>node.style.getPropertyValue('--layout-workspace-content-min-block-size'))).toBe('');
+  });
+
   for(const condition of ['tall','text-200'])test(`${kind} ${condition}: oversized page chrome retains a reachable scroll fallback`,async({page},info)=>{
     await setup(page,kind,{query:condition==='tall'?'?tall':'?long',viewport:viewports[1]});
     if(condition==='text-200'){await page.evaluate(()=>document.documentElement.style.fontSize='200%');await settle(page);}
+    await capture(page,info,`${condition}-before-focus`);expect((await metrics(page)).content.clientHeight,'explicit public minimum keeps the content viewport reachable').toBeGreaterThan(0);
     expect(await page.evaluate(()=>document.scrollingElement.scrollWidth<=innerWidth+1.5),'no document horizontal overflow').toBe(true);
     await reachable(page.getByRole('button',{name:'刷新',exact:true}));await reachable(search(page));await reachable(page.getByRole('combobox',{name:'来源',exact:true}));await reachable(size(page));await reachable(next(page));
     const m=await metrics(page);expect(m.main.scrollHeight>m.main.clientHeight||m.content.scrollHeight>m.content.clientHeight,'oversized chrome has a real fallback scroll range').toBe(true);
-    await body(page).evaluate(node=>{node.scrollTop=node.scrollHeight;});await expect.poll(()=>body(page).evaluate(node=>node.scrollHeight-node.clientHeight-node.scrollTop)).toBeLessThanOrEqual(1.5);await capture(page,info,condition);
+    await body(page).evaluate(node=>{node.scrollTop=node.scrollHeight;});await expect.poll(()=>body(page).evaluate(node=>node.scrollHeight-node.clientHeight-node.scrollTop)).toBeLessThanOrEqual(1.5);await reachable(size(page));await reachable(next(page));await capture(page,info,condition);
   });
 }
 

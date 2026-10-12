@@ -98,3 +98,9 @@ test('source audit accepts the declared compressed login viewport height breakpo
   await fixture({'packages/theme/src/sample.css':'@media(max-width:30rem){.x{width:100%}}'},async root=>assert.rejects(auditDesignSources({root}),/Undeclared media breakpoint/));
   await fixture({'packages/theme/src/sample.css':'@media(max-height:30rem){.xui-login-card{block-size:auto;min-block-size:100dvh}}'},async root=>assert.doesNotReject(auditDesignSources({root})));
 });
+
+test('the public workspace table minimum permits only its documented semantic alias',()=>{
+  assert.doesNotThrow(()=>checkDesignDeclaration('--layout-workspace-content-min-block-size','var(--data-table-min-block-size)'));
+  for(const value of ['144px','0px','var(--control-height)','var(--data-table-min-block-size, 144px)'])assert.throws(()=>checkDesignDeclaration('--layout-workspace-content-min-block-size',value),/central token contract/);
+  assert.throws(()=>checkDesignDeclaration('--data-table-min-block-size','var(--control-height)'),/central token contract/);
+});

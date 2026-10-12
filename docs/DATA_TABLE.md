@@ -19,6 +19,7 @@
 
 ```tsx
 <MenuLayout scrollMode="workspace" items={navigation}
+  style={{'--layout-workspace-content-min-block-size': 'var(--data-table-min-block-size)'} as React.CSSProperties}
   pageHeader={<PageHeader title="记录" meta={<span>业务说明</span>}
     actions={<Button onClick={createRecord}>新增</Button>}/>}
   pageToolbar={<DataTableToolbar aria-label="筛选记录">
@@ -42,7 +43,22 @@
 
 pageToolbar 容器原本就没有常驻下边框，和下方正文之间已有 `--layout-section-gap`。不要额外包整行 border-b；迁移时清理产品重复分隔及 footer/表体定位 CSS。表头、行和底栏必要边界保留。
 
-默认最小块尺度 `--data-table-min-block-size` 是组件的低高度下限，不是固定表体高度。已有 main/content 保留自然滚动兜底，但极端超高 pageHeader/pageToolbar 可能把 workspace content 压到零；单独的组件最小高度不能证明跨越零高父滚动视口可达。本轮保留真实浏览器的超高标题/200%可达性测试，结果未确认前不宣称所有控件在此极端组合已通过。不承诺任何屏幕都塞进首屏。无边界文档页显式选择 `layout='document'`。卡片列表直接用相同 pageHeader/pageToolbar，正文复用 ScrollArea/Grid/Surface，参见消费者 cards 模式；不用另造页面骨架。
+`--layout-workspace-content-min-block-size` 是既有 shell 的公开内容区下限，默认 `0px`，不自动探测 DataTable。采用本组合时，必须如上通过 shell 的公开 style 显式绑定为 `var(--data-table-min-block-size)`。普通高度仍由正文吃满剩余空间；超高页头/200%文字时保留非零正文视口，main可自然滚到表格，内容区可继续滚动到完整 footer。该下限按 rem 随字号变化并受 100dvh 约束，极短窗口允许 main 滚动，不承诺所有内容同屏。DataTable 自身的最小高度不能跨越零高父视口解决可达性。
+
+原生同样只设置宿主 root 的公开 token，在生命周期结束时恢复宿主原值；不要查找或改写 `.xui-shell-content`：
+
+```ts
+const token = '--layout-workspace-content-min-block-size';
+const oldValue = root.style.getPropertyValue(token);
+const oldPriority = root.style.getPropertyPriority(token);
+root.style.setProperty(token, 'var(--data-table-min-block-size)');
+const shell = createMenuLayout(root, {scrollMode:'workspace', items, pageHeader, pageToolbar, content:tableRoot});
+// On host cleanup, after table.destroy() and shell.destroy():
+if (oldValue) root.style.setProperty(token, oldValue, oldPriority);
+else root.style.removeProperty(token);
+```
+
+无边界文档页显式选择 `layout='document'`。卡片列表直接用相同 pageHeader/pageToolbar，正文复用 ScrollArea/Grid/Surface，参见消费者 cards 模式；不用另造页面骨架。
 
 ## 分页事实与未知总数边界
 

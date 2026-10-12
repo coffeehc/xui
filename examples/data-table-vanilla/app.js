@@ -10,6 +10,9 @@ const cards=query.has('cards'),internal=query.has('internal')&&!cards;
 const title=query.has('tall')?'超高页面标题与全部操作仍应可以通过滚动和键盘到达。'.repeat(60):query.has('long')?'合成记录：用于检查长中文标题、页内筛选与独立表体滚动的公共组合':'合成记录';
 const element=(tag,text,className)=>{const node=doc.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;};
 const button=(text,action,variant)=>{const node=element('button',text,'xui-button');node.type='button';if(variant)node.dataset.variant=variant;node.onclick=action;return node;};
+// Explicit public shell sizing contract; no internal element lookup or private CSS.
+const contentMinimum='--layout-workspace-content-min-block-size',oldMinimum=root.style.getPropertyValue(contentMinimum),oldPriority=root.style.getPropertyPriority(contentMinimum);
+root.style.setProperty(contentMinimum,'var(--data-table-min-block-size)');
 const actions=[];
 const result=element('output','尚未查看');result.setAttribute('aria-label','查看结果');
 const inspect=row=>{actions.push(row.id);result.textContent=`已查看 ${row.id}`;};
@@ -76,7 +79,7 @@ function render(){
 const shell=createMenuLayout(root,{items:[{id:'records',label:'合成记录',href:'#records',icon:'list'}],activeId:'records',label:'示例导航',scrollMode:'workspace',headerSlots:{brand:element('strong','公共列表组合')},pageHeader,pageToolbar:internal?undefined:toolbar,content:cards?cardRoot:tableRoot});
 const unsubscribe=owner.subscribe(render);render();
 let dead=false;
-function destroy(){if(dead)return;dead=true;unsubscribe();owner.destroy();table?.destroy();shell.destroy();for(const control of Object.values(controls)){control.oninput=null;control.onchange=null;}for(const control of [refresh,fail,restoreButton,cancel,clear])control.onclick=null;for(const card of retainedCards.values())card.action.onclick=null;retainedCards.clear();}
+function destroy(){if(dead)return;dead=true;unsubscribe();owner.destroy();table?.destroy();shell.destroy();if(oldMinimum)root.style.setProperty(contentMinimum,oldMinimum,oldPriority);else root.style.removeProperty(contentMinimum);for(const control of Object.values(controls)){control.oninput=null;control.onchange=null;}for(const control of [refresh,fail,restoreButton,cancel,clear])control.onclick=null;for(const card of retainedCards.values())card.action.onclick=null;retainedCards.clear();}
 window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions]};
 if(!query.has('manual'))owner.load();
 window.addEventListener('pagehide',destroy,{once:true});

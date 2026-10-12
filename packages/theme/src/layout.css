@@ -6,7 +6,7 @@
      Overflow is a safety fallback for unsplittable host content or overlarge chrome. */
   .xui-shell[data-scroll-mode='workspace'] .xui-shell-main {display:flex;flex-direction:column;}
   .xui-shell[data-scroll-mode='workspace'] :is(.xui-shell-page-header,.xui-shell-page-toolbar,.xui-shell-page-footer) {flex:none;}
-  .xui-shell[data-scroll-mode='workspace'] .xui-shell-content {flex:1 1 0;min-block-size:0;overflow:auto;overscroll-behavior:contain;}
+  .xui-shell[data-scroll-mode='workspace'] .xui-shell-content {flex:1 1 0;min-block-size:min(var(--layout-workspace-content-min-block-size),100dvh);overflow:auto;overscroll-behavior:contain;}
   .xui-shell-header {grid-area:header;min-inline-size:0;min-block-size:var(--layout-header-height);display:flex;align-items:center;gap:var(--space-content-gap);padding:var(--space-text-gap) var(--layout-content-inset);background:var(--layer-shell);border-block-end:var(--line-width-surface) solid var(--separator-line);}
   .xui-app-header {display:flex;align-items:center;flex-wrap:wrap;inline-size:100%;min-inline-size:0;gap:var(--space-control-gap) var(--space-section-gap);}
   .xui-app-header-primary {display:flex;align-items:center;flex:1 1 var(--layout-header-primary-min);min-inline-size:min(100%,var(--layout-header-primary-min));gap:var(--space-control-gap);}

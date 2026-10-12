@@ -529,6 +529,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --login-brand-max-block-size: 20dvh;
     --sheet-max-block-size: 80dvh;
     --tabs-padding: calc(var(--spacing) * .75);
+    --layout-workspace-content-min-block-size: 0px;
     --data-table-filter-min: 9rem;
     --data-table-min-block-size: calc(var(--control-height) * 4);
     --table-min-inline-size: calc(var(--control-height) * 12);
@@ -1189,7 +1190,7 @@ AppHeader/AppShell/MenuLayout与原生createMenuLayout在右侧默认提供一�
 
 ### 有界工作区与平台前置安全区
 
-公共scrollMode保留document默认自然滚动与viewport独立main滚动，新增workspace显式工作区模式：shell默认100dvh，header自然换行，main按自然pageHeader/pageToolbar/pageFooter占用分配剩余确定高度给content；库维护min-block-size:0与弹性收缩链，业务区域通过公开内容组合选择内部滚动owner。不得要求消费者减固定header高度、修私有selector或绝对定位发送区。大于可用高度且不可拆分的内容保留滚动可达兜底，不把文字或操作裁掉。公开root尺寸可由已知宿主窗口大小覆盖，不更改既有默认尺度。
+公共scrollMode保留document默认自然滚动与viewport独立main滚动，新增workspace显式工作区模式：shell默认100dvh，header自然换行，main按自然pageHeader/pageToolbar/pageFooter占用分配剩余确定高度给content；库默认维护min-block-size:0与弹性收缩链，layout-workspace-content-min-block-size是显式可覆盖的内容下限（默认0px、受100dvh约束），业务区域通过公开内容组合选择内部滚动owner。不得要求消费者减固定header高度、修私有selector或绝对定位发送区。大于可用高度且不可拆分的内容保留滚动可达兜底，不把文字或操作裁掉。公开root尺寸可由已知宿主窗口大小覆盖，不更改既有默认尺度。
 
 headerSlots.leading是可选、默认空且不收缩的最前区域，位于自动导航按钮之前；品牌继续独立。库负责顺序与窄屏布局，不内置macOS窗口控件尺寸或平台检测。平台/全屏状态、安全区真实尺寸、drag/no-drag由宿主集成提供，不把业务/OS规则带入默认皮肤。完整合同及两端正式消费者见[布局插槽](LAYOUT_SLOTS.md)。
 
@@ -1202,7 +1203,7 @@ headerSlots.leading是可选、默认空且不收缩的最前区域，位于自�
 
 ### 公共表格整体与紧凑顶栏工具
 
-完整DataTable复用Table/Toolbar/Field/Pagination/DataRegion原语。标题/主操作和筛选可分别置于既有pageHeader/pageToolbar；表格在workspace正文自然占剩余高度，只有表体滚动，真实计数、唯一每页条数和分页留在同一正常流底栏。整表只有一层外框，保留列头、行和底栏信息边界；不得复制额外工具条下边框、测量header或定位分页。筛选采用data-table-filter-min，搜索可沿长字段尺度增长，窄屏自然换行。data-table-min-block-size只提供极端低高度可达性兜底，不是固定表体高度。
+完整DataTable复用Table/Toolbar/Field/Pagination/DataRegion原语。标题/主操作和筛选可分别置于既有pageHeader/pageToolbar；表格在workspace正文自然占剩余高度，只有表体滚动，真实计数、唯一每页条数和分页留在同一正常流底栏。整表只有一层外框，保留列头、行和底栏信息边界；不得复制额外工具条下边框、测量header或定位分页。筛选采用data-table-filter-min，搜索可沿长字段尺度增长，窄屏自然换行。data-table-min-block-size是组件最小尺度，不是固定表体高度。workspace的layout-workspace-content-min-block-size默认0px保留旧收缩语义，公共DataTable组合须在shell公开style显式绑定为var(--data-table-min-block-size)，为极端超高页头保留非零正文滚动视口；该下限受100dvh约束，main可自然滚动。库不通过父级:has探测表格，不测量或固定页头高度。设计门禁仅允许这个精确语义alias赋值，不放宽任意token重定义、裸尺寸或fallback。
 
 空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。完整API与双端公共消费见[DataTable](DATA_TABLE.md)。
 
