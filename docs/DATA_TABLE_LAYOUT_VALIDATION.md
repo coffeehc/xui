@@ -43,3 +43,12 @@
 浏览器矩阵补上所有 frame 的四边包含，极端字号下 footer 必须真正留框内，首末行操作必须 elementFromPoint 命中后以真实指针点击且产生唯一业务回调；新增字号恢复、隐藏期间字号/宽度变化后显示、同 DOM 身份、短内容再收缩，以及 workspace 的 auto-height 父级。全量收集为 638 例，其中布局文件 50 例；收集不是执行。候选的 build/tokens/typecheck/326 单元检查与双端正式 tarball 已通过（含独立类型、公开入口、React 单实例、原生零 React 和 gzip 门禁）。独立复核另发现 React 从 frame 查询 table 可能误取 feedback/toolbar 内嵌表格，已改为真实 TableContainer/Table 的直接 ref，并将内嵌反馈表格加入极端用例；最后引用修补后的 build/tokens/typecheck/326 单元已再次通过，构建指纹 `8c1693948732`。该最后修补没有再次重复本地全 tarball；最终新 SHA CI 必须重新验证完整 tarball 与真实浏览器，不能使用修补前的打包结果代替。本段不以旧 SHA 成功代替新修复验收。
 
 已知边界：任意自定义的中间行可能比首末行更高，不保证每行都能完整同屏；通过表体滚动访问操作，长文档可用既有 document 或关闭 stickyHeader。用户电脑、真实产品、其它浏览器与生产部署仍未测试。
+
+
+### 1764080 的真实 CI 回归与最小纠正
+
+[CI 38302846000](https://github.com/coffeehc/xui/actions/runs/38302846000) 对 `176408042d602d178bc9b2dc64332d0c902db0fe` 执行了完整前置 build/tokens/types/326 单元/watch/双端 tarball/冷启动；浏览器 638 例中 602 通过、36 失败。失败全部来自 natural 布局：frame/footer 包含关系已成立，但列向 flex 根的 min-content 将完整表格高度作为最小值，压过 100% 上限，导致长表不再由 body 滚动。artifact 的默认桌面 20 行证据为父 content 高 558px、root/frame 高 1153px、body clientHeight 与 scrollHeight 同为 1098px；极端 200% 的 root/frame 高 17745px，body clientHeight 与 scrollHeight 同为 16620px。对照已通过的 workspace 同数据是 root/frame 558px、body clientHeight 503px 与 scrollHeight 1098px，footer bottom 779px 位于 frame bottom 780px 内。trace 同时记录了实测表体轨道下限 318px（实际列头 121px、边缘行 165px、scroll-padding 合计 32px），说明测量 owner 已正确输出，未收缩发生在列向 flex 根的内在尺寸传播。workspace/document、既有列宽和其它组件浏览器回归通过。
+
+这是真实布局回归，不能修改断言掩盖。最小纠正仅将 natural 根切换为单列 Grid，保留自动行、100% 上限和内在下限；与已通过的 workspace 根约束路径一致，但不添加 workspace 的 token 伪元素，因此短内容仍由真实内容决定。原有 50 例几何/可交互矩阵保持不减弱，结构单测追加 natural 的 Grid 根门禁。新的源码检查与完整浏览器验收仍须跟随本次提交的 SHA，未通过前不关闭极端问题。
+
+本次 Grid 根纠正已随共同工作树通过 build/tokens/typecheck/332 项单元（0 fail/skip），构建指纹 `8a60cd76d5b4`；其中包含由独立 owner 尚待提交的身份编码扩展，不将其变更或额外测试数误归入本表格提交。表格提交仅包含 CSS 根规则、对应结构门禁和本记录，完整 tarball/浏览器结果仍按精确提交 SHA 验收。

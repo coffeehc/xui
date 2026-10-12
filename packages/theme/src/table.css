@@ -22,7 +22,7 @@
 }
 @layer xui-components {
   .xui-data-table {display:flex;flex-direction:column;min-inline-size:0;min-block-size:0;}
-  .xui-data-table[data-layout='natural'] {max-block-size:100%;min-block-size:min-content;}
+  .xui-data-table[data-layout='natural'] {display:grid;grid-template-columns:minmax(0,1fr);max-block-size:100%;min-block-size:min-content;}
   .xui-data-table[data-layout='document'] {flex:none;min-block-size:0;}
   .xui-data-table[data-layout='workspace'] {display:grid;grid-template-columns:minmax(0,1fr);block-size:100%;min-block-size:min-content;}
   .xui-data-table-tools,.xui-data-table-feedback {flex:none;min-inline-size:0;}
