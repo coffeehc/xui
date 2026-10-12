@@ -8,6 +8,8 @@
 
 `Accordion.Root` 会建立另一份 CompositeList，影响 Item 注册；一个 Root 下放两个 List 又会竞争 listElement/listRef。两种写法均不在支持合同里。消费者不应添加 stopPropagation、穿透内部 DOM 或覆写 option 角色来补救。若需要每组内自由交互的表单/工具按钮，使用普通搜索和相应列表/表格语义，另设计键盘模式。
 
+开发预览：运行 `pnpm dev`，待构建成功后在另一终端运行 `pnpm preview`；分别打开 `http://127.0.0.1:4173/grouped-search-react/` 与 `http://127.0.0.1:4173/grouped-search-vanilla/`。正式独立安装仍由 `pnpm test:consumer` 验证，完整回归为 `pnpm verify`。
+
 ## 最小公开组合
 
 两端加载正式 `@coffeehc/xui-theme/style.css`；React 不隐式导入 CSS。
