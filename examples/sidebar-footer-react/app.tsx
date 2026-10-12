@@ -13,7 +13,7 @@ import {copy,fixtureOptions,shortItems,longItems,createActionModel,type ActionMo
 
 declare global {interface Window {sidebarFooterDemo:FixtureOwner}}
 const config=fixtureOptions(location.search),model=createActionModel();
-function Symbol(){return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M12 3 4 6v6c0 4 4 7 8 9 4-2 8-5 8-9V6Z"/><path d="m8 12 3 3 5-6"/></svg>;}
+function Symbol(){return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)" aria-hidden="true"><path d="M12 3 4 6v6c0 4 4 7 8 9 4-2 8-5 8-9V6Z"/><path d="m8 12 3 3 5-6"/></svg>;}
 function cycleTheme(){const modes=['light','dark','system'] as const;const current=window.xuiTheme!.getState().mode;window.xuiTheme!.setMode(modes[(modes.indexOf(current)+1)%modes.length]);}
 function Footer({owner,versionRef}:{owner:ActionModel;versionRef:React.Ref<HTMLSpanElement>}){
   const state=React.useSyncExternalStore(owner.subscribe,owner.getState,owner.getState);

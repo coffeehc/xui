@@ -6,5 +6,13 @@
   :where(.xui,.xui-layer) h2 {font:var(--font-weight-heading) var(--font-size-section-title)/var(--line-height-section-title) var(--font-heading);}
   :where(.xui,.xui-layer) :where(button,a,input,textarea,select,[tabindex]):focus-visible {outline:var(--focus-width) solid var(--interaction-focus);outline-offset:var(--focus-offset);}
   .xui [hidden],.xui-layer[hidden],.xui-layer [hidden] {display:none;}
-  @keyframes xui-feedback {from{opacity:.5;}to{opacity:1;}}
+  @keyframes xui-feedback {from{opacity:var(--motion-feedback-opacity-start);}to{opacity:1;}}
+}
+
+@layer xui-components {
+  .xui-illustration-icon {inline-size:var(--illustration-icon-size);block-size:var(--illustration-icon-size);}
+  .xui-text {margin:0;font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);}
+  .xui-strong {font-weight:var(--font-weight-heading);}
+  .xui-detail-heading {margin:var(--space-content-gap) 0 var(--space-control-gap);font:var(--font-weight-heading) var(--font-size-section-title)/var(--line-height-section-title) var(--font-heading);}
+  .xui-code {margin:var(--space-control-gap) 0;font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere;}
 }

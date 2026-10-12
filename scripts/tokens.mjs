@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
 import postcss from 'postcss';
 import { parse } from 'yaml';
+import { checkDesignDeclaration, auditDesignSources } from './design-value-guard.mjs';
 
 export function extract(document, marker) {
   const part = document.split(`<!-- ${marker}:start -->`)[1]?.split(`<!-- ${marker}:end -->`)[0];
@@ -33,10 +34,10 @@ export function expand(value, values) {
 }
 function normalize(value) { return String(value).replace(/\s+/g, '').replace(/(^|[^\d])0\./g, '$1.').toLowerCase(); }
 function number(value, values) {
-  const expr = expand(value, values).replace(/calc\((.*)\)/, '$1').replace(/rem/g, '').trim();
-  assert(/^[\d.\s*/+()-]+$/.test(expr));
-  // The input is a verified arithmetic expression from the controlled contract.
-  return Function(`return (${expr})`)();
+  const expr = expand(value, values).replace(/calc\(/g, '(').replace(/rem/g, '').trim();
+  assert(/^[\d.\s*/+(),-]+$/.test(expr.replace(/\b(?:min|max|clamp)\b/g,'')), 'Invalid controlled token arithmetic');
+  // Only verified arithmetic and these three CSS math functions are evaluable.
+  return Function('min','max','clamp',`return (${expr})`)(Math.min,Math.max,(lo,value,hi)=>Math.max(lo,Math.min(value,hi)));
 }
 export function checkContract(document) {
   const css = extract(document, 'design-default-css');
@@ -44,7 +45,14 @@ export function checkContract(document) {
   const rules = [];
   tree.walkRules(rule => rules.push(rule));
   const light = declarations(rules.find(rule => rule.selector === ':root'));
-  assert.equal(Object.keys(light).length, 275, 'Default token count');
+  assert.equal(Object.keys(light).length, 343, 'Default token count');
+  for (const name of ['--font-scale','--line-height-scale']) {
+    const registration=tree.nodes.find(node=>node.type==='atrule'&&node.name==='property'&&node.params===name);
+    assert(registration, `Missing typed ${name} registration`);
+    assert.deepEqual(Object.fromEntries(registration.nodes.map(node=>[node.prop,node.value])),{syntax:'"<number>"',inherits:'true','initial-value':'1'});
+  }
+  assert.equal(light['--font-scale'],'1');
+  assert.equal(light['--line-height-scale'],'var(--font-scale)');
   const darkRule = rules.find(rule => rule.selector === ':root[data-theme="dark"]');
   const dark = { ...light, ...declarations(darkRule) };
   const systemRule = rules.find(rule => rule.selector.includes(':not([data-theme="light"])'));
@@ -91,6 +99,7 @@ function varsOf(vars,key) { return vars[`--${key}`]; }
 
 export function checkStyles(styles, values, runtimeVariables = []) {
   postcss.parse(styles).walkDecls(decl => {
+    checkDesignDeclaration(decl.prop,decl.value,{line:decl.source.start.line,selector:decl.parent.selector});
     for (const m of decl.value.matchAll(/var\((--[\w-]+)/g)) assert(m[1] in values || runtimeVariables.includes(m[1]), `Component undefined ${m[1]}`);
     assert(!/var\(--(?:palette|base)-/.test(decl.value),'Components must use semantic tokens');
     assert(!/(#[a-f\d]{3,8}\b|\b(?:rgb|hsl|oklch|oklab)\s*\()/i.test(decl.value),'Raw color outside contract');
@@ -103,6 +112,8 @@ export function checkStyles(styles, values, runtimeVariables = []) {
 }
 export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets'];
 export async function generate(check = false, outputDirectory='packages/theme/dist') {
+  const audit = await auditDesignSources();
+  console.log(`Design values: ${audit.files} files, ${audit.declarations} declarations and explicit structural/runtime exceptions checked.`);
   const doc = await readFile('docs/DESIGN.md','utf8');
   const { css, light } = checkContract(doc);
   const source = await readFile('packages/theme/src/components.css','utf8');
@@ -118,6 +129,6 @@ export async function generate(check = false, outputDirectory='packages/theme/di
     if (check) assert.equal(await readFile(path,'utf8'),value, `Generated CSS drift: ${path}`);
     else await writeFile(path,value);
   }
-  console.log('Contract: 275 tokens, complete acyclic graphs, light/dark/system/reduced, YAML and extracted CSS agree.');
+  console.log('Contract: 343 tokens, complete acyclic graphs, light/dark/system/reduced, YAML and extracted CSS agree.');
 }
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) await generate(process.argv.includes('--check'));

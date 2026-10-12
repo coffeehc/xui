@@ -72,3 +72,10 @@ export function createThemeController(options: ThemeOptions = {}): ThemeControll
     destroy() { if(destroyed)return;destroyed = true; listeners.clear(); try { unsubscribeMedia(); } catch { /* No retained subscriptions. */ } },
   };
 }
+
+// The bootstrap and all default header views share this document-scoped owner.
+declare global {interface Window {xuiTheme?:ThemeController;xuiThemeOptions?:ThemeOptions}}
+export function getThemeController(win:Window):ThemeController {
+  if(!win.xuiTheme||win.xuiTheme.isDestroyed())win.xuiTheme=createThemeController({...win.xuiThemeOptions,window:win});
+  return win.xuiTheme;
+}

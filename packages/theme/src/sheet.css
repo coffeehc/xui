@@ -1,7 +1,7 @@
 @layer xui-components {
   .xui-sheet {width:min(var(--layout-drawer-width),100vw);height:100dvh;max-height:100dvh;max-width:100vw;margin:0;border-radius:0;transform:none;top:auto;left:auto;inset-block:0;inset-inline:auto 0;scale:1;transition:opacity var(--motion-duration-exit) var(--motion-easing-exit),translate var(--motion-duration-exit) var(--motion-easing-exit);}
   .xui-sheet[data-side='start'] {inset-inline:0 auto;}
-  .xui-sheet[data-side='top'],.xui-sheet[data-side='bottom'] {width:100vw;height:min(var(--layout-drawer-width),80dvh);inset-inline:0;}
+  .xui-sheet[data-side='top'],.xui-sheet[data-side='bottom'] {width:100vw;height:min(var(--layout-sheet-block-size),var(--sheet-max-block-size));inset-inline:0;}
   .xui-sheet[data-side='top'] {inset-block:0 auto;}
   .xui-sheet[data-side='bottom'] {inset-block:auto 0;}
   .xui-sheet .xui-dialog-body {flex:1;}

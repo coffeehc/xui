@@ -17,11 +17,11 @@
   .xui-button:where([data-variant="secondary"], [data-variant="outline"], [data-variant="ghost"]):hover:not(:disabled,[aria-disabled="true"],[data-disabled]) { background: var(--interaction-hover); }
   .xui-button:where([data-variant="secondary"], [data-variant="outline"], [data-variant="ghost"]):where(:active, [data-pressed="true"]):not(:disabled,[aria-disabled="true"],[data-disabled]) { background: var(--interaction-pressed); }
   .xui-button[data-variant="destructive"] { background: var(--action-danger); color: var(--action-danger-foreground); }
-  .xui-button[data-variant="destructive"]:hover:not(:disabled,[aria-disabled="true"],[data-disabled]) { background: color-mix(in oklab, var(--action-danger) 92%, var(--layer-raised)); }
-  .xui-button[data-variant="destructive"]:where(:active, [data-pressed="true"]):not(:disabled,[aria-disabled="true"],[data-disabled]) { background: color-mix(in oklab, var(--action-danger) 88%, var(--foreground)); }
+  .xui-button[data-variant="destructive"]:hover:not(:disabled,[aria-disabled="true"],[data-disabled]) { background: var(--button-danger-hover-background); }
+  .xui-button[data-variant="destructive"]:where(:active, [data-pressed="true"]):not(:disabled,[aria-disabled="true"],[data-disabled]) { background: var(--button-danger-pressed-background); }
   .xui-button[data-variant="link"] {background:transparent;border-color:transparent;color:var(--action-primary);text-decoration-line:underline;text-underline-offset:var(--space-text-gap);}
   .xui-button[data-variant="link"]:hover {background:var(--interaction-hover);}
-  .xui-button[data-size="sm"] { min-height: var(--control-height-sm); padding-inline: calc(var(--spacing) * 2.5); }
+  .xui-button[data-size="sm"] { min-height: var(--control-height-sm); padding-inline: var(--button-padding-inline-sm); }
   .xui-button[data-size="xs"] { min-height: var(--control-height-xs); padding-inline: var(--space-control-gap); gap: var(--space-text-gap); }
   .xui-button[data-size="lg"] { min-height: var(--control-height-lg); padding-inline: var(--space-section-gap); gap: var(--space-control-gap); }
   .xui-button[data-icon="true"] { width: var(--button-height); height: var(--button-height); padding: 0; flex-shrink: 0; }

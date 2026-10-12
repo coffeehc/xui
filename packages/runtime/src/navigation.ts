@@ -82,7 +82,7 @@ export function createNavigationKeyboard(root:HTMLElement,options:{activeId:()=>
 }
 
 export function renderNavigationIcon(doc:Document,icon:NavigationIcon):SVGSVGElement{
-  const svg=doc.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox',icon.viewBox??'0 0 20 20');svg.setAttribute('aria-hidden','true');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.5');
+  const svg=doc.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox',icon.viewBox??'0 0 20 20');svg.setAttribute('aria-hidden','true');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','var(--nav-icon-stroke-width)');
   for(const d of icon.paths){const path=doc.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',d);svg.append(path);}return svg;
 }
 const menuOwners=new WeakMap<HTMLElement,unknown>();

@@ -1,6 +1,6 @@
 # 通用基础实施与采用接口
 
-完整通用规则仅在 [DESIGN.md](DESIGN.md)，当前版本 0.6.0。架构分层仅在 [原子→组合→页面](FOUNDATION.md#组件层次与扩展原则)；本文件记录真实入口与实现映射，不维护另一套品牌默认值或架构哲学。
+完整通用规则仅在 [DESIGN.md](DESIGN.md)，当前版本 0.7.0。架构分层仅在 [原子→组合→页面](FOUNDATION.md#组件层次与扩展原则)；本文件记录真实入口与实现映射，不维护另一套品牌默认值或架构哲学。
 
 ## 包与正式入口
 
@@ -14,7 +14,7 @@
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
 
-`design-default-css` 是唯一受控原始值来源。生成器检查 275 个变量、全部模式依赖图、前言摘要、产品覆盖和提取字节一致性。0.6.0仅新增四个由既有尺度派生的头部/侧栏语义token，来源元数据保留原271变量与原始文件逆向校验。浮层 CSS 只允许 peer 提供的四个测量变量：available-height、anchor-width、toast-swipe-movement-x/y；它们不是品牌默认值或泛化缺失变量白名单。
+`design-default-css` 是唯一受控原始值来源。生成器检查 343 个变量、全部模式依赖图、前言摘要、产品覆盖和提取字节一致性。0.6.0新增四个头部/侧栏token；0.7.0增加68个公共文字根与集中设计参数，七组rem字号/行高由font-scale/line-height-scale派生，文字默认与0.6.0一致；用户追加的Dialog/Confirm/Sheet响应式宽度默认单列记录。来源元数据记录原文字CSS与每项规范变更，继续逆向核验原始文件SHA256。浮层 CSS 只允许 peer 提供的四个测量变量：available-height、anchor-width、toast-swipe-movement-x/y；它们不是品牌默认值或泛化缺失变量白名单。
 
 tokens.css 按规范声明 design-defaults → product-overrides → design-accessibility；组件声明位于独立的 xui-components 层。按 tokens.css 后组件样式的标准加载顺序，xui-components 首次出现于这三层之后。产品在 product-overrides 覆盖少量语义变量，design-accessibility 再落实 reduced-motion；本说明不另设 token 层或更改现有层契约。旧项目未分层 CSS 的普通声明高于所有分层声明，不能只靠导入顺序推断 xui 能覆盖旧样式。采用时显式决定旧 CSS 所在层或移除精确重复规则，再检查真实 computed style。产品覆盖在同一 document 根上；本版不支持子树独立主题。
 
@@ -78,7 +78,7 @@ body 使用 xui 类；portal/原生顶层弹层用 xui-layer。公共 layout/tab
 | bindPressFeedback(root) | 仅 Enter/Space 按压状态，不合成 click；返回释放函数 |
 | createDisclosureController(trigger,panel) | aria-controls/expanded、hidden；open/defaultOpen、onOpenChange 和 syncOpen |
 | createTabsController(tablist) | 原生 role=tab 的 data-value/aria-controls；手动默认、自动激活可选、RTL/Home/End、disabled 跳过、受控 value/syncValue |
-| createDialogController(dialog,trigger) | HTMLDialogElement showModal/close、Esc cancel、data-xui-close、可见 finalFocus；显式初始焦点在showModal前快照并由dialog暂接原生焦点后交付；浏览器模态加库 Tab 边界循环，迟到 close 事件不改变已重开弹层焦点 |
+| createDialogController(dialog,trigger) | HTMLDialogElement showModal/close、Esc cancel、data-xui-close、可见 finalFocus；显式初始焦点在showModal前快照并临时拥有autofocus，兼容Chromium legacy与新算法；属性在finally完整恢复；浏览器模态加库 Tab 边界循环，迟到 close 事件不改变已重开弹层焦点 |
 | createSheetController(dialog,trigger)/createAlertDialogController(dialog,trigger) | 复用原生Dialog lifecycle，Sheet逻辑side、AlertDialog角色与显式/安全初始焦点；最上层取消/Tab，不以确认关闭当业务成功 |
 | createContextMenuController(trigger,popup) | 复用Popover/menu，rightclick、Shift+F10/ContextMenu、坐标与focus/取消；触屏长按无通用保证 |
 | createPopoverController(trigger,popup) | 浏览器 Popover API、位置测量、外点/Esc、可选 menu/tooltip、受控 open/syncOpen；非模态不 trap |
@@ -108,3 +108,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 正式验收先 npm pack，再在独立目录安装、编译 types 和打包；foundation 不复制 shared/layout.css。dev 的包解析也仅指向正式 exports 的 dist，没有源码入口。生产接入固定已验证的提交/本地 tarball。双仓 watch 可让宿主链接 built dist，但 React/ReactDOM/Base UI 必须由宿主保留单实例；Vite 可使用 resolve.dedupe 与指向本地正式入口的 alias，或独立 tarball 安装。链接后检查实际解析路径、ESM/types/init 的当前 generation，并运行宿主构建/页面检查。这里没有更改任何产品仓库的配置。
 
 当前已实现数据驱动菜单/布局、无框架 HTTP、共享 query 和 [配置登录页](AUTH.md)；完整采用见 [ADOPTION.md](ADOPTION.md)，响应与查询合同见 [HTTP.md](HTTP.md)。API Key 通用管理见 [API_KEY.md](API_KEY.md)；可扩展业务日志见 [BUSINESS_LOGS.md](BUSINESS_LOGS.md)，默认原生HTTP loader已实现，真实服务未集成；独立结构化错误查询见 [LOGS.md](LOGS.md)，其 v1 facade 是宿主后端待实现合同；[仓库接入 skill](../.agents/skills/adopt-xui/SKILL.md) 与 [公开入口索引](PUBLIC_API.md) 可直接使用。领域路由、权限策略、身份凭据、产品 endpoint 后端、服务端会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。未覆盖项和限制见覆盖矩阵与本轮验证记录。
+
+## 公共顶栏和布局区域
+
+[布局slot矩阵](LAYOUT_SLOTS.md)固定context/auxiliary/account、sidebarHeader/Footer、pageHeader/Toolbar/content/Footer的角色、顺序和响应式合同。默认主题按钮复用runtime/theme owner与既有按钮；可选语言选择复用宿主i18n事实，不引入词典或持久化owner。React/native通过相同类型/表现配置，独立header-controls tarball消费者验证正式入口。CSS部件只用DESIGN语义var；无消费方定位尺寸补丁。

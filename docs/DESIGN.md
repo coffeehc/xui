@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.6.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.7.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -166,7 +166,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
 | 文字 | font-sans/mono/heading/document、font-weight-body/control/heading、font-size-*、line-height-* | 字体栈别名；400/500/600；七个角色的默认字号/行高。图表轴和图例引用文字角色 |
 | 共享尺度 | spacing、space-*、control-height[-xs/-sm/-lg]、control-icon-size[-xs]、radius-*、line-width-*、focus-* | gap4/8/12/16及图文6；高36/24/32/40；图标16/12；圆角4.8/6.4/8/11.2/14.4；线1/1/2；焦点2+2px |
 | 层级 | shadow-flat/subtle/surface/raised/overlay、z-shell/sticky/overlay/menu/notice | 普通none、浮层成对阴影；z为10/20/50/70/80。只在公共portal/层级适配中消费 |
-| 布局 | layout-content-inset[-narrow]/max、section/toolbar/field-gap、field[-long]-min、header-height、dialog/confirm/drawer-width、viewport-inset | 横20/16px，max none，gap16/8/16，字段240/288，顶栏48，弹层512/384/736，视口边16；是可覆盖默认约束，不强制所有产品同一页面骨架 |
+| 布局 | layout-content-inset[-narrow]/max、section/toolbar/field-gap、field[-long]-min、header-height、dialog/confirm/drawer-width、viewport-inset | 横20/16px，max none，gap16/8/16，字段240/288，顶栏48，弹层宽度按40%/30%/60%及各自rem上下限，视口边16；是可覆盖默认约束，不强制所有产品同一页面骨架 |
 | 动效 | motion-duration[-fast/-enter/-exit]、motion-easing[-exit]、motion-distance-small、motion-press/enter-scale | 150/100/180/120ms，进入/状态与退出曲线，4px、0.98；减少动效为0ms/0px/1，保留即时反馈 |
 | 必要组件 | button-*、input-*、card-*、menu-*、nav-*、floating-offset、popover-*、tooltip-max-width、table-*、metric-* | 共用语义和尺度；只有确实需要独立调整的组件参数另设入口，不给每个属性或每页建立变量 |
 | 图形 | chart-color-1…6、chart-axis/grid/tooltip-*、chart-*-font-size、chart-line-width[-emphasis]、chart-min-block-size、diagram-* | 默认六序列、语义轴/网格/浮层，轴12/图例13、线2/2.5px、图高默认224；diagram引用选中/文字/边线 |
@@ -184,6 +184,10 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
 
 <!-- design-default-css:start -->
 ~~~css
+/* typography-registration:start */
+@property --font-scale { syntax: "<number>"; inherits: true; initial-value: 1; }
+@property --line-height-scale { syntax: "<number>"; inherits: true; initial-value: 1; }
+/* typography-registration:end */
 @layer design-defaults, product-overrides, design-accessibility;
 @layer design-defaults {
   :root {
@@ -308,20 +312,22 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --font-weight-body: var(--base-weight-regular);
     --font-weight-control: var(--base-weight-medium);
     --font-weight-heading: var(--base-weight-semibold);
-    --font-size-caption: .75rem;
-    --line-height-caption: 1.125rem;
-    --font-size-body-xs: .8125rem;
-    --line-height-body-xs: 1.25rem;
-    --font-size-body-sm: .875rem;
-    --line-height-body-sm: 1.375rem;
-    --font-size-section-title: 1rem;
-    --line-height-section-title: 1.625rem;
-    --font-size-secondary-value: 1.125rem;
-    --line-height-secondary-value: 1.75rem;
-    --font-size-page-title: 1.25rem;
-    --line-height-page-title: 1.75rem;
-    --font-size-metric: 1.5rem;
-    --line-height-metric: 1.75rem;
+    /* typography-scale:start */
+    --font-size-caption: max(.75rem, calc(.75rem * clamp(.5, var(--font-scale), 2)));
+    --line-height-caption: max(calc(var(--font-size-caption) * 1.125 / .75), calc(1.125rem * clamp(.5, var(--line-height-scale), 2)));
+    --font-size-body-xs: max(.75rem, calc(.8125rem * clamp(.5, var(--font-scale), 2)));
+    --line-height-body-xs: max(calc(var(--font-size-body-xs) * 1.25 / .8125), calc(1.25rem * clamp(.5, var(--line-height-scale), 2)));
+    --font-size-body-sm: max(.75rem, calc(.875rem * clamp(.5, var(--font-scale), 2)));
+    --line-height-body-sm: max(calc(var(--font-size-body-sm) * 1.375 / .875), calc(1.375rem * clamp(.5, var(--line-height-scale), 2)));
+    --font-size-section-title: max(.75rem, calc(1rem * clamp(.5, var(--font-scale), 2)));
+    --line-height-section-title: max(calc(var(--font-size-section-title) * 1.625 / 1), calc(1.625rem * clamp(.5, var(--line-height-scale), 2)));
+    --font-size-secondary-value: max(.75rem, calc(1.125rem * clamp(.5, var(--font-scale), 2)));
+    --line-height-secondary-value: max(calc(var(--font-size-secondary-value) * 1.75 / 1.125), calc(1.75rem * clamp(.5, var(--line-height-scale), 2)));
+    --font-size-page-title: max(.75rem, calc(1.25rem * clamp(.5, var(--font-scale), 2)));
+    --line-height-page-title: max(calc(var(--font-size-page-title) * 1.75 / 1.25), calc(1.75rem * clamp(.5, var(--line-height-scale), 2)));
+    --font-size-metric: max(.75rem, calc(1.5rem * clamp(.5, var(--font-scale), 2)));
+    --line-height-metric: max(calc(var(--font-size-metric) * 1.75 / 1.5), calc(1.75rem * clamp(.5, var(--line-height-scale), 2)));
+    /* typography-scale:end */
     --spacing: var(--base-spacing);
     --space-text-gap: calc(var(--spacing) * 1);
     --space-control-gap: calc(var(--spacing) * 2);
@@ -402,9 +408,9 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --layout-field-min: 15rem;
     --layout-field-long-min: 18rem;
     --layout-header-height: calc(var(--spacing) * 12);
-    --layout-dialog-width: 32rem;
-    --layout-confirm-width: 24rem;
-    --layout-drawer-width: 46rem;
+    --layout-dialog-width: clamp(var(--layout-dialog-min-width), var(--layout-dialog-width-ratio), var(--layout-dialog-max-width));
+    --layout-confirm-width: clamp(var(--layout-confirm-min-width), var(--layout-confirm-width-ratio), var(--layout-confirm-max-width));
+    --layout-drawer-width: clamp(var(--layout-drawer-min-width), var(--layout-drawer-width-ratio), var(--layout-drawer-max-width));
     --layout-viewport-inset: var(--space-section-gap);
     /* Component: only independent, reusable adjustment points. */
     --button-height: var(--control-height);
@@ -469,6 +475,76 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --nav-collapsed-width: calc(var(--nav-collapsed-item-size) + var(--nav-sidebar-padding) * 2);
     --layout-header-primary-min: var(--layout-field-min);
     /* shell-role-tokens:end */
+    /* centralized-component-tokens:start */
+    --font-scale: 1;
+    --line-height-scale: var(--font-scale);
+    --radius-full: 50%;
+    --icon-stroke-width: 2;
+    --nav-icon-stroke-width: 1.5;
+    --illustration-icon-size: 1.5rem;
+    --nav-sidebar-header-max: 50%;
+    --a11y-hidden-size: 1px;
+    --a11y-hidden-offset: calc(var(--a11y-hidden-size) * -1);
+    --a11y-skip-hidden-offset: -200%;
+    --motion-feedback-opacity-start: .5;
+    --motion-duration-pulse: calc(var(--motion-duration) * 10);
+    --motion-duration-spin: calc(var(--motion-duration) * 8);
+    --motion-disclosure-rotation: 180deg;
+    --motion-spin-rotation: 1turn;
+    --button-padding-inline-sm: calc(var(--spacing) * 2.5);
+    --button-danger-hover-background: color-mix(in oklab, var(--action-danger) 92%, var(--layer-raised));
+    --button-danger-pressed-background: color-mix(in oklab, var(--action-danger) 88%, var(--foreground));
+    --backdrop-background: color-mix(in oklab, var(--foreground) 24%, transparent);
+    --data-region-min-block-size: calc(var(--control-height) * 8);
+    --textarea-min-block-size: calc(var(--input-height) * 2);
+    --choice-check-width: calc(var(--spacing) * 1.5);
+    --choice-check-height: calc(var(--spacing) * 2.5);
+    --choice-check-rotation: 45deg;
+    --switch-width: calc(var(--spacing) * 7);
+    --switch-height: calc(var(--spacing) * 4.15);
+    --switch-thumb-size: calc(var(--spacing) * 3.6);
+    --switch-travel: calc(var(--spacing) * 2.9);
+    --switch-width-sm: calc(var(--spacing) * 6);
+    --switch-height-sm: calc(var(--spacing) * 3.5);
+    --switch-thumb-size-sm: calc(var(--spacing) * 3);
+    --switch-travel-sm: calc(var(--spacing) * 2.5);
+    --switch-width-lg: calc(var(--spacing) * 9);
+    --switch-height-lg: calc(var(--spacing) * 5);
+    --switch-thumb-size-lg: calc(var(--spacing) * 4.5);
+    --switch-travel-lg: calc(var(--spacing) * 4);
+    --layout-header-brand-max: 50%;
+    --nav-sidebar-footer-max: 50%;
+    --nav-sidebar-min-height: calc(var(--nav-item-height) * 4);
+    --nav-drawer-max-inline-size: calc(var(--nav-item-height) * 8);
+    --nav-toggle-transform-origin: 60% 50%;
+    --login-card-inline-size: calc(var(--layout-field-min) * 4);
+    --login-card-block-size: calc(var(--layout-field-min) * 2.5);
+    --login-panel-padding: calc(var(--space-section-gap) * 3);
+    --login-logo-size: calc(var(--control-height-lg) * 2);
+    --login-actions-max-block-size: 20dvh;
+    --login-brand-max-block-size: 20dvh;
+    --sheet-max-block-size: 80dvh;
+    --tabs-padding: calc(var(--spacing) * .75);
+    --table-min-inline-size: calc(var(--control-height) * 12);
+    --z-sticky-intersection: calc(var(--z-sticky) + 1);
+    --avatar-size-lg: calc(var(--control-height) * 1.5);
+    --calendar-max-inline-size: calc(var(--control-height) * 9);
+    --layout-scroll-area-height: 10rem;
+    --layout-table-viewport-height: 15rem;
+    --layout-embedded-shell-height: 30rem;
+    --layout-demo-sidebar-width: 10rem;
+    --layout-demo-max: 64rem;
+    --layout-dialog-width-ratio: 40%;
+    --layout-dialog-min-width: 24rem;
+    --layout-dialog-max-width: 48rem;
+    --layout-confirm-width-ratio: 30%;
+    --layout-confirm-min-width: 20rem;
+    --layout-confirm-max-width: 32rem;
+    --layout-drawer-width-ratio: 60%;
+    --layout-drawer-min-width: 24rem;
+    --layout-drawer-max-width: 64rem;
+    --layout-sheet-block-size: 46rem;
+    /* centralized-component-tokens:end */
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
@@ -837,14 +913,14 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 | Card / Section / Item | 独立raised、1px边界、radius-lg、padding14（小10），无阴影；内部组none；连续Item只底线 | 被动仅default/busy/error；交互才有hover/selected/focus/disabled，hover不浮起。两主题默认均能辨大区块 |
 | Table / DataTable | header body-xs/500、cell body-sm、padding8、1px行线、不透明条纹；动作gap4，宽度容纳全部按钮 | 排序/分页/动作沿原语义；sticky随整行背景，default/条纹/hover/selected/expanded均不透字；局部横滚最左/中/末端与产品支持的尺寸配置检查，不删业务列 |
 | Badge / Metadata / Status / Alert | 元数据body-xs普通可读文字；有限筛选chip；状态文字+点/图标；Alert语义soft底与line | 被动不套hover/focus/disabled；交互筛选才有selected等；长值在列内限制并有完整入口，换主色不改状态含义 |
-| Dialog / AlertDialog / Drawer / Sheet | opaque overlay+单套shadow；普通Dialog最大512、确认384px，viewport边距≥16，radius-2xl；header section-title/600。复杂详情可保留明确的736px变体 | 焦点限制和恢复，业务取消/确认不变；body内滚footer可达，窄屏抽屉全宽；不普通嵌套dialog/drawer |
+| Dialog / AlertDialog / Drawer / Sheet | opaque overlay+单套shadow；普通Dialog宽40%（24–48rem）、确认30%（20–32rem），再受viewport边距≥16封顶，radius-2xl；header section-title/600。侧向Sheet宽60%（24–64rem）并封顶视口，上下Sheet高度独立 | 焦点限制和恢复，业务取消/确认不变；body内滚footer可达，窄屏抽屉全宽；不普通嵌套dialog/drawer |
 | Popover / Tooltip / Calendar | Popover bottom/center、offset4、宽288、padding12、gap16；Tooltip top/center、offset4、最大320、body-xs；Calendar保留日期范围/locale | 辅助Tooltip不承载必要动作或唯一错误；键盘可达，Esc关闭；碰撞、portal主题与日期方向键实测 |
 | 统计 / Chart / Progress | label body-xs/muted、value metric/600/tabular、单位body-xs；gap4、padding12。指标轻框或汇总单框+内部线；axis≥12、legend13、line2/2.5px；Tooltip overlay | 被动default/busy/error；hover仅Tooltip，selected仅范围控件，不用disabled假装未知。保留原列数/图高、数据口径，图例可换行 |
 | Shell / Sidebar / PageHeader / Toolbar | 顶栏48px；标题page-title/600；导航body-sm；操作gap8、区域gap16 | 控件真实状态，导航selected无额外框、失焦focus消失；宽窄往返入口可点击，不改变信息架构 |
 
 ### 逐组件外观与状态映射
 
-变量只提供值，下表同时规定如何使用。尺寸由spacing及control-height/icon-size、radius、文字角色或必要组件变量表达：例如Switch宽calc(spacing×7)、高calc(spacing×4.15)，Tabs内距calc(spacing×0.75)；不为每个常量另建一层变量。D=默认，H=hover，P=pressed，S=持续selected/checked/expanded，F=keyboard focus，X=disabled，B=busy/loading，E=invalid/error。每个组件只实现其适用状态；被动内容不为了凑表增加交互。F与S独立，H不能盖掉S，E与F可同时可见。
+变量只提供值，下表同时规定如何使用。尺寸由spacing及control-height/icon-size、radius、文字角色或必要组件变量表达；设计倍率仅在集中token定义中计算，例如switch-width、switch-height、tabs-padding，组件直接消费对应var。结构常量与实时测量例外见公共设计值验收边界。D=默认，H=hover，P=pressed，S=持续selected/checked/expanded，F=keyboard focus，X=disabled，B=busy/loading，E=invalid/error。每个组件只实现其适用状态；被动内容不为了凑表增加交互。F与S独立，H不能盖掉S，E与F可同时可见。
 
 | 组件/适用状态 | 默认尺寸和外观 | 状态到变量的映射及交互 |
 | --- | --- | --- |
@@ -859,7 +935,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 | 表格/列表 D/H/S/F/B/E；X属于行控件 | cell padding8、动作gap4，表头body-xs/500、正文body-sm，分隔separator-line；opaque条纹 | H用interaction-hover，S/expanded用interaction-selected背景；sticky与整行不透明底一致。F只归焦点控件/确有键盘行，不给被动行造焦点。B/空/E保留所属状态和恢复入口，排序/分页真实禁用 |
 | Card/Section/连续Item | card-background=raised、border-color=surface-line、radius8、padding14/小10，shadow-flat | 被动仅D/B/E，H/P/S/F/X不适用；交互卡才用H/S/F/X。H轻底不浮起，S浅底无额外框，F独立。内部组无重复框，连续Item仅末端分隔 |
 | 统计/指标 D/B/E；H/S仅已有tooltip或范围控件 | metric-padding12/gap4，label13/muted，主值24/600/tabular、单位13 | 0/未知/无数据/B/E分开，核心统计才进首屏；不以disabled表达缺数据。范围S沿选择器，tooltip H/F使用overlay；指标本体无按钮hover、焦点或选中 |
-| Dialog/Drawer/Sheet D/F/X/B/E；容器H/P/S不适用 | overlay+surface-line+shadow-overlay，radius14.4；宽layout-dialog/confirm/drawer-width512/384/736，边距16 | header/body/footer归属明确，body滚动footer可达；F限制/恢复按模态语义，X/B/E属于内部控件/反馈。取消不自动保存，危险确认保留，不普通嵌套同类模态 |
+| Dialog/Drawer/Sheet D/F/X/B/E；容器H/P/S不适用 | overlay+surface-line+shadow-overlay，radius14.4；宽layout-dialog/confirm/drawer-width按40%/30%/60%与各自min/max合成；Dialog/Confirm边距16，侧向Sheet封顶视口 | header/body/footer归属明确，body滚动footer可达；F限制/恢复按模态语义，X/B/E属于内部控件/反馈。取消不自动保存，危险确认保留，不普通嵌套同类模态 |
 | Tooltip/Popover/Calendar D/F；H/S/X/B/E按角色 | Tooltip最大320、body-xs；Popover宽288/padding12/gap16；floating-offset4 | 辅助Tooltip不可承载唯一重要错误或必要动作；按需帮助须键盘/触屏可打开关闭。Calendar真实日期S/disabled与方向键/locale保留，定位和回焦点见下文；不要求所有浮层本体有hover |
 | Badge/元数据/状态/Alert/通知 | 元数据body-xs普通文字，不泛胶囊；状态用status-*-foreground/soft/line及文字/图标 | 被动D/E，H/S/F/X不适用；可交互筛选chip才有H/S/F/X。错误/风险/必要反馈即时在相关位置可见，不收进普通解释；B有可理解文案，不只转圈 |
 | 图表/Progress D/B/E；H/F用于tooltip，S用于范围/确有数据选择 | chart-color-1…6、axis/legend字体12/13、grid=separator、line2/2.5、tooltip=overlay，默认plot224 | 数据系列身份稳定；H/F tooltip显示原值和声明时区，S归范围/真实选择不改变聚合；X不用于未知采样。图例可换行，0/缺样本/B/E不互换，实际PNG另验独立document-* |
@@ -1081,4 +1157,28 @@ DropdownMenu/ContextMenu及共用菜单项角色显式绑定body-xs字号/行高
 关键 CSS 预先构建并随首屏加载；非关键模块可以真正按需 import，并为模块或样式失败提供显式恢复入口。等待与失败期间关键内容和操作仍可读、可用；状态区域避免无必要位移。首屏预算必须统计实际同步初始化、静态依赖和必要 CSS。组件按需消费检查最终输出贡献与压缩字节，不以源文件 imports 或 sideEffects 声明替代证明。
 
 公共产物须能在独立安装中消费正式 exports 和类型，不能暗依赖 monorepo 源码别名或下游扫描依赖目录。框架 peer 保持宿主单实例；原生宿主不加载框架运行时。本地 watch 覆盖规范、样式、控件、类型、初始化脚本、包入口和构建逻辑，失败明确记录，修复后重建；旧产物不能标记为本次成功。参考消费者的体积、受控延迟和布局证据仅证明该消费者，产品采用仍须在真实页面验收。
+
+### 公共文字比例与设计值验收边界
+
+--font-scale 是统一文字比例，默认1；--line-height-scale 默认引用 --font-scale，可单独增加行距。两者均为无单位number，正常支持0.5至2，超范围数值按此范围夹取；支持@property的浏览器中非数字或带单位值回退1，遵循[CSS Properties and Values API](https://www.w3.org/TR/css-properties-values-api-1/)的类型与初值规则。旧浏览器仍可消费有效number，宿主不得提供非法输入；不宣称未验证旧引擎也有类型回退。覆盖必须在同一:root的product-overrides层，不能只改子树根并假定祖先派生别名重算。
+
+七组字号按原rem尺度乘比例并保留0.75rem阅读下限，即默认16px根字号下12px；七组行高同步派生，且不低于该角色原有行高/字号比。仅改font-scale会连同行高调整；只增line-height-scale会增加行高，不改变字号。字号缩小不改变spacing、控件最小高度、图标、边框或圆角；文字放大时内容可自然增高/换行，不能承诺控件实际盒子永远固定。保持html根字号由浏览器/用户偏好决定，rem下限与文字随用户放大，不用固定px上限压制200%文字。此入口不增加密度UI或本地持久化，不更换默认品牌；默认1的既有文字与布局值不变。实际浏览器zoom与根字号200%测试分别报告。
+
+设计值只在design-default-css集中声明，组件CSS及库自建行内样式必须消费语义var。范围包括字体/字号/行高/字重、留白/尺寸/边框/圆角、颜色与混色权重、层级、动效时间与中间透明度；不能在var后混入局部设计倍率或fallback设计值。新增必要组件参数保留既有默认值，不以复用数值为由错误绑定其它组件的语义。
+
+结构例外不是第二套设计尺度：0、auto/none/inherit/currentColor/transparent、占满容器或视口的100%/100vw/100dvh、flex伸缩0/1、grid分列数量与fr、居中50%/translate(-50%)、正负号反转、视口减去两侧边距的乘2、显隐端点0/1属于结构/几何。SVG的viewBox/path坐标与独立品牌图片资产是图形内容；实际呈现的图标尺寸/线宽继续使用语义变量。原生CSS media查询不支持var，48rem/47.999rem导航断点与40rem或等价640px示例断点作为显式查询例外；JS匹配同一断点。getBoundingClientRect等实际测量值、日历日期位置与宿主显式style/stickyOffset参数是运行时事实，不得借此注入静态默认设计值。无障碍隐藏技术尺寸有独立a11y token。宿主Markdown/代码/领域阅读内容不做全局UA重置；库自建文本用明确角色，外部内容由宿主拥有。
+
+源码门禁扫描theme分片、公开示例和库源码中的静态设计值，负例覆盖不含var的值以及夹带倍率/fallback的伪token化。独立正式包消费者验证默认值、0.95/0.9、小字下限、独立行距、浅深/system、窄屏/菜单/键盘与文字放大；扫描通过不替代浏览器视觉证据。
+
+
+### 响应式Dialog与侧向Sheet宽度
+
+Dialog偏好layout-dialog-width-ratio=40%，min/max分别24rem/48rem；Confirm偏好30%，min/max为20rem/32rem；侧向Sheet偏好60%，min/max为24rem/64rem。layout-dialog/confirm/drawer-width仍是公开组合结果，可单独覆盖；比例与rem边界均集中定义。普通Dialog/Confirm最后用视口减去两侧layout-viewport-inset封顶，min下限不能让320px视口溢出。原生dialog显式使用同一最大宽度以覆盖浏览器UA额外max-width。侧向Sheet紧贴边缘、窄屏封顶完整视口；上下Sheet只使用独立layout-sheet-block-size与sheet-max-block-size，绝不把横向百分比再用作纵向尺寸。
+
+1280px宽、16px根字号下，Dialog/Confirm仍为512/384px，侧向Sheet改为768px；1920px时分别768/512/1024px上限。窄屏由各自最终视口约束决定，不能只验证字符串。导航drawer继续由nav-drawer-max-inline-size限制为默认288px，独立于这些详情面板；展开216px/紧凑60px侧栏不变。本段是用户追加的响应式宽度默认变更，不能并入“其余设计token迁移默认不变”的声明。
+
+### 公共布局插槽与默认顶栏工具
+
+AppHeader/AppShell/MenuLayout与原生createMenuLayout在右侧默认提供一个主题图标按钮，light→dark→system→light循环；复用文档现有theme owner，不另建存储。语言入口只在locale.enabled显式true时显示，语言value/options/onValueChange与词典均由宿主现有i18n owner提供。顶栏主区域、工具组与独立账号区，以及sidebarHeader/sidebarFooter、pageHeader/pageToolbar/content/pageFooter的顺序和所有权见[公共布局插槽](LAYOUT_SLOTS.md)。这些槽只消费公共var及布局原语，不授予产品动作、不放新业务内容默认值；空槽无视觉占位，更新保留正文与导航实例，导航抽屉仍只拥有一份侧栏。默认登录页继续仅继承外观，不新增这些顶栏工具。
+
 <!-- foundation-lifecycle:end -->

@@ -4,14 +4,53 @@
   "path": "docs/DESIGN.md",
   "sourceVersion": "0.4.0",
   "sourceSha256": "2a66fb8762f62ae5a452ed25d9c1bd383443e637c3529fcf7df6e9f9c56cc56c",
-  "contractVersion": "0.6.0",
-  "defaultTokenCount": 275,
+  "contractVersion": "0.7.0",
+  "defaultTokenCount": 343,
   "changes": [
     "Clarify action-primary-foreground in the role table.",
     "Map destructive component variant to existing action-danger/action-danger-foreground; distinguish soft danger.",
     "Add a separately marked compatible lifecycle/build-consumption section; inverse reconstruction removes only that section and the recorded clarifications. All marked default CSS bytes preserved.",
     "Clarify first-party API scope and industry-standard/third-party precedence in a separately marked paragraph. Inverse reconstruction removes exactly this recorded paragraph; default CSS unchanged.",
-    "Add four derived shell/header semantic tokens in the marked shell-role-tokens block and role composition rules in the removable lifecycle section; inverse reconstruction removes that token block and preserves the original 271 default token bytes."
+    "Add four derived shell/header semantic tokens in the marked shell-role-tokens block and role composition rules in the removable lifecycle section; inverse reconstruction removes that token block and preserves the original 271 default token bytes.",
+    "Add separately marked typed typography scaling and centralized component design tokens. Inverse reconstruction removes only the recorded new token/registration blocks and restores typographyOriginalCss and the exact component scale clarification, retaining the original source SHA256.",
+    "Adopt authorized responsive overlay width ratios and independent vertical-sheet height; inverse reconstruction restores the recorded width definitions and exact descriptive clarifications."
   ],
-  "protocolBoundarySha256": "b4cdac2b00638046c4f76d2a303c9095de6cef969eb1cfc133b3c750dc3ac4de"
+  "protocolBoundarySha256": "b4cdac2b00638046c4f76d2a303c9095de6cef969eb1cfc133b3c750dc3ac4de",
+  "typographyOriginalCss": "    --font-size-caption: .75rem;\n    --line-height-caption: 1.125rem;\n    --font-size-body-xs: .8125rem;\n    --line-height-body-xs: 1.25rem;\n    --font-size-body-sm: .875rem;\n    --line-height-body-sm: 1.375rem;\n    --font-size-section-title: 1rem;\n    --line-height-section-title: 1.625rem;\n    --font-size-secondary-value: 1.125rem;\n    --line-height-secondary-value: 1.75rem;\n    --font-size-page-title: 1.25rem;\n    --line-height-page-title: 1.75rem;\n    --font-size-metric: 1.5rem;\n    --line-height-metric: 1.75rem;\n",
+  "componentScaleClarification": {
+    "before": "尺寸由spacing及control-height/icon-size、radius、文字角色或必要组件变量表达：例如Switch宽calc(spacing×7)、高calc(spacing×4.15)，Tabs内距calc(spacing×0.75)；不为每个常量另建一层变量。",
+    "after": "尺寸由spacing及control-height/icon-size、radius、文字角色或必要组件变量表达；设计倍率仅在集中token定义中计算，例如switch-width、switch-height、tabs-padding，组件直接消费对应var。结构常量与实时测量例外见公共设计值验收边界。"
+  },
+  "responsiveWidthChanges": [
+    {
+      "before": "    --layout-dialog-width: 32rem;",
+      "after": "    --layout-dialog-width: clamp(var(--layout-dialog-min-width), var(--layout-dialog-width-ratio), var(--layout-dialog-max-width));"
+    },
+    {
+      "before": "    --layout-confirm-width: 24rem;",
+      "after": "    --layout-confirm-width: clamp(var(--layout-confirm-min-width), var(--layout-confirm-width-ratio), var(--layout-confirm-max-width));"
+    },
+    {
+      "before": "    --layout-drawer-width: 46rem;",
+      "after": "    --layout-drawer-width: clamp(var(--layout-drawer-min-width), var(--layout-drawer-width-ratio), var(--layout-drawer-max-width));"
+    }
+  ],
+  "responsiveContractClarifications": [
+    {
+      "before": "弹层512/384/736，视口边16；是可覆盖默认约束",
+      "after": "弹层宽度按40%/30%/60%及各自rem上下限，视口边16；是可覆盖默认约束"
+    },
+    {
+      "before": "普通Dialog最大512、确认384px，viewport边距≥16",
+      "after": "普通Dialog宽40%（24–48rem）、确认30%（20–32rem），再受viewport边距≥16封顶"
+    },
+    {
+      "before": "复杂详情可保留明确的736px变体",
+      "after": "侧向Sheet宽60%（24–64rem）并封顶视口，上下Sheet高度独立"
+    },
+    {
+      "before": "宽layout-dialog/confirm/drawer-width512/384/736，边距16",
+      "after": "宽layout-dialog/confirm/drawer-width按40%/30%/60%与各自min/max合成；Dialog/Confirm边距16，侧向Sheet封顶视口"
+    }
+  ]
 }

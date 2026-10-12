@@ -14,17 +14,17 @@ test('AppHeader owns role groups without inventing business semantics',()=>{
   assert.ok(markup.indexOf('新建')<markup.indexOf('旧header'));
 });
 
-test('AppHeader omits empty secondary roles and preserves zero-valued content',()=>{
+test('AppHeader keeps the default theme action, omits empty host roles and preserves zero-valued content',()=>{
   const empty=renderToStaticMarkup(React.createElement(AppHeader,{brand:'工作台',status:null,actions:false}));
-  assert.ok(!empty.includes('xui-app-header-secondary'));
+  assert.ok(empty.includes('xui-app-header-secondary'));assert.ok(empty.includes('xui-theme-mode-toggle'));assert.ok(!empty.includes('xui-app-header-status'));assert.ok(!empty.includes('xui-app-header-actions'));
   const zero=renderToStaticMarkup(React.createElement(AppHeader,{status:0}));
   assert.match(zero,/xui-app-header-status">0</);
 });
 
-test('AppShell preserves legacy header markup when role slots are not opted into',()=>{
+test('AppShell preserves legacy header markup and adds the default right theme control',()=>{
   const markup=renderToStaticMarkup(React.createElement(AppShell,{sidebar:'Navigation',header:React.createElement('strong',null,'Legacy brand')},'Content'));
   assert.match(markup,/<strong>Legacy brand<\/strong>/);
-  assert.ok(!markup.includes('xui-app-header'));
+  assert.ok(markup.includes('xui-app-header'));assert.ok(markup.includes('xui-theme-mode-toggle'));
 });
 
 test('compact sidebar derives exactly one item plus symmetric insets from DESIGN',async()=>{

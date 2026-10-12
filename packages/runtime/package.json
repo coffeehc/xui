@@ -94,6 +94,14 @@
     "./widgets-dom": {
       "types": "./dist/widgets-dom.d.ts",
       "import": "./dist/widgets-dom.js"
+    },
+    "./theme-control": {
+      "types": "./dist/theme-control.d.ts",
+      "import": "./dist/theme-control.js"
+    },
+    "./header-controls": {
+      "types": "./dist/header-controls.d.ts",
+      "import": "./dist/header-controls.js"
     }
   },
   "types": "./dist/index.d.ts"

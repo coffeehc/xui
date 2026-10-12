@@ -1,10 +1,11 @@
 @layer xui-components {
 
-  .xui-backdrop, .xui-native-dialog::backdrop { background: color-mix(in oklab, var(--foreground) 24%, transparent); }
+  .xui-backdrop, .xui-native-dialog::backdrop { background: var(--backdrop-background); }
   .xui-backdrop { position: fixed; inset: 0; z-index: var(--z-overlay); opacity: 1; transition: opacity var(--motion-duration-exit) var(--motion-easing-exit); }
   .xui-backdrop[data-starting-style], .xui-backdrop[data-ending-style] { opacity: 0; }
   .xui-dialog, .xui-native-dialog {
     width: min(var(--layout-dialog-width), calc(100vw - var(--layout-viewport-inset) * 2));
+    min-inline-size: 0; max-inline-size: calc(100vw - var(--layout-viewport-inset) * 2);
     max-height: calc(100dvh - var(--layout-viewport-inset) * 2); padding: var(--space-section-gap);
     border: var(--line-width-surface) solid var(--surface-line); border-radius: var(--radius-2xl);
     background: var(--layer-overlay); box-shadow: var(--shadow-overlay);

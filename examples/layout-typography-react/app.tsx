@@ -16,7 +16,7 @@ type FixtureOwner={updateHeader:(kind:string)=>void;navigate:(id:string)=>void;s
 declare global {interface Window {layoutTypography:FixtureOwner}}
 const config=fixtureOptions(location.search);
 function Symbol({illustration=false}:{illustration?:boolean}) {
-  return <svg className="lucide lucide-folder" data-menu-symbol={!illustration||undefined} data-illustration={illustration||undefined} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M3 7h7l2 2h9v11H3Z"/><path d="M3 7V4h6l3 3"/></svg>;
+  return <svg className={illustration?"lucide lucide-folder xui-illustration-icon":"lucide lucide-folder"} data-menu-symbol={!illustration||undefined} data-illustration={illustration||undefined} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)" aria-hidden="true"><path d="M3 7h7l2 2h9v11H3Z"/><path d="M3 7V4h6l3 3"/></svg>;
 }
 function Dropdown(){
   return <Menu.Root><Menu.Trigger render={<Button variant="outline"/>}>打开操作菜单</Menu.Trigger><Menu.Content data-testid="ordinary-popup">

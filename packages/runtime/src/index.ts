@@ -1,4 +1,6 @@
 export * from './theme.js';
+export * from './theme-control.js';
+export * from './header-controls.js';
 export * from './loading.js';
 export * from './dom.js';
 export * from './navigation.js';

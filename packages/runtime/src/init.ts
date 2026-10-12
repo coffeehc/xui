@@ -1,6 +1,5 @@
-import { createThemeController, type ThemeOptions } from './theme.js';
+import { createThemeController } from './theme.js';
 
-declare global { interface Window { xuiTheme?: ReturnType<typeof createThemeController>; xuiThemeOptions?: ThemeOptions } }
 // Build as a small synchronous classic script. Put before CSS and visible body.
 // data-storage-key on the script customizes the same preference owner.
 if (typeof window !== 'undefined' && (!window.xuiTheme || window.xuiTheme.isDestroyed())) {

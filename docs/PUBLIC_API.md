@@ -26,6 +26,8 @@
 | `@coffeehc/xui-runtime` <!-- public-entry: @coffeehc/xui-runtime --> | [源码](../packages/runtime/src/index.ts) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-vanilla/app.js) |
 | `@coffeehc/xui-runtime/init.js` <!-- public-entry: @coffeehc/xui-runtime/init.js --> | [源码](../packages/runtime/src/init.ts) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-vanilla/app.js) |
 | `@coffeehc/xui-runtime/theme` <!-- public-entry: @coffeehc/xui-runtime/theme --> | [源码](../packages/runtime/src/theme.ts) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-vanilla/app.js) |
+| `@coffeehc/xui-runtime/theme-control` <!-- public-entry: @coffeehc/xui-runtime/theme-control --> | [源码](../packages/runtime/src/theme-control.ts) | [顶栏合同](LAYOUT_SLOTS.md) | [示例](../examples/header-controls-vanilla/app.js) |
+| `@coffeehc/xui-runtime/header-controls` <!-- public-entry: @coffeehc/xui-runtime/header-controls --> | [源码](../packages/runtime/src/header-controls.ts) | [语言合同](LAYOUT_SLOTS.md) | [示例](../examples/header-controls-vanilla/app.js) |
 | `@coffeehc/xui-runtime/loading` <!-- public-entry: @coffeehc/xui-runtime/loading --> | [源码](../packages/runtime/src/loading.ts) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-vanilla/app.js) |
 | `@coffeehc/xui-runtime/navigation` <!-- public-entry: @coffeehc/xui-runtime/navigation --> | [源码](../packages/runtime/src/navigation.ts) | [合同](NAVIGATION.md) | [示例](../examples/menu-vanilla/app.js) |
 | `@coffeehc/xui-runtime/http` <!-- public-entry: @coffeehc/xui-runtime/http --> | [源码](../packages/runtime/src/http.ts) | [合同](HTTP.md) | [示例](../examples/http-vanilla/app.js) |
@@ -144,3 +146,9 @@ API Key入口追加公开 `createApiKeyWriteGuard`、`ApiKeyPendingWrite`/`ApiKe
 ## 顶栏单一导航开关
 
 `MenuLayout` / `createMenuLayout` 在顶栏统一控制桌面collapsed与窄屏sidebarOpen，内部菜单不重复生成开关；原有受控props/update/callback保留。`AppShellProps`公开同型collapsed/defaultCollapsed/onCollapsedChange与compactLabel/expandLabel。独立NavigationMenuOptions追加showCollapseToggle（默认true，MenuLayout固定false/所属AppShell自动关闭）；共享键盘及原生菜单第三参数可选fallbackFocus供公开组合处理空菜单焦点。默认字号/按钮尺寸/动效沿既有token，不要求消费方CSS。[状态及迁移](NAVIGATION.md#顶栏唯一菜单开关)。
+
+## 顶栏默认控件与语义插槽
+
+完整[布局矩阵/迁移](LAYOUT_SLOTS.md)与[React](../examples/header-controls-react/app.tsx)/[原生](../examples/header-controls-vanilla/app.js)为正式独立消费者。AppHeaderSlots/MenuLayoutHeaderSlots追加context（左中）、auxiliary（工具组）、account（最右独立区）；原brand/breadcrumb/status/actions和legacy header继续保留。AppShell/MenuLayout及原生createMenuLayout追加sidebarHeader、pageHeader、pageToolbar、pageFooter，使用现有sidebarFooter/正文组合，不创建同义PageLayout。
+
+AppHeader/AppShell/MenuLayout与原生MenuLayoutOptions同型theme?:ThemeController、themeLabels?:Partial<ThemeModeLabels>、locale?:HeaderLocaleOptions。主题入口默认始终存在，locale只有enabled:true才显示，辅助槽不依赖locale。ThemeModeButton/ThemeModeButtonProps从React/theme和根导出；runtime/theme的getThemeController(win)复用文档owner；runtime/theme-control导出ThemeModeLabels、getThemeModePresentation、bindThemeModeButton；runtime/header-controls导出HeaderLocaleOption/HeaderLocaleOptions、isHeaderLocaleEnabled、bindHeaderLocaleSelect。低层bind只绑定视图，清理不销毁theme/i18n owner。所有声明与新增名字由正式public-api/消费者检查自动取证。

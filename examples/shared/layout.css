@@ -1,6 +1,6 @@
 .demo-header { display: flex; align-items: center; gap: var(--space-control-gap); padding: var(--space-control-gap) var(--layout-content-inset); min-height: var(--layout-header-height); background: var(--layer-shell); border-bottom: var(--line-width-separator) solid var(--separator-line); }
-.demo-header span { color: var(--muted-foreground); font-size: var(--font-size-body-xs); }
-.demo-layout { display: grid; grid-template-columns: 10rem minmax(0,1fr); gap: var(--space-section-gap); padding: var(--layout-content-inset); max-width: 64rem; margin-inline: auto; }
+.demo-header span { color: var(--muted-foreground); font-size: var(--font-size-body-xs); line-height: var(--line-height-body-xs); }
+.demo-layout { display: grid; grid-template-columns: var(--layout-demo-sidebar-width) minmax(0,1fr); gap: var(--space-section-gap); padding: var(--layout-content-inset); max-width: var(--layout-demo-max); margin-inline: auto; }
 .demo-main { min-width: 0; }
 .demo-main h1 { margin: 0 0 var(--space-control-gap); }
 .demo-main h2 { margin: 0 0 var(--space-control-gap); }
