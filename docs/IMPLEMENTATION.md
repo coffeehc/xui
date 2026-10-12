@@ -78,7 +78,7 @@ body 使用 xui 类；portal/原生顶层弹层用 xui-layer。公共 layout/tab
 | bindPressFeedback(root) | 仅 Enter/Space 按压状态，不合成 click；返回释放函数 |
 | createDisclosureController(trigger,panel) | aria-controls/expanded、hidden；open/defaultOpen、onOpenChange 和 syncOpen |
 | createTabsController(tablist) | 原生 role=tab 的 data-value/aria-controls；手动默认、自动激活可选、RTL/Home/End、disabled 跳过、受控 value/syncValue |
-| createDialogController(dialog,trigger) | HTMLDialogElement showModal/close、Esc cancel、data-xui-close、可见 finalFocus；浏览器模态加库 Tab 边界循环，迟到 close 事件不改变已重开弹层焦点 |
+| createDialogController(dialog,trigger) | HTMLDialogElement showModal/close、Esc cancel、data-xui-close、可见 finalFocus；显式初始焦点在showModal前快照并由dialog暂接原生焦点后交付；浏览器模态加库 Tab 边界循环，迟到 close 事件不改变已重开弹层焦点 |
 | createSheetController(dialog,trigger)/createAlertDialogController(dialog,trigger) | 复用原生Dialog lifecycle，Sheet逻辑side、AlertDialog角色与显式/安全初始焦点；最上层取消/Tab，不以确认关闭当业务成功 |
 | createContextMenuController(trigger,popup) | 复用Popover/menu，rightclick、Shift+F10/ContextMenu、坐标与focus/取消；触屏长按无通用保证 |
 | createPopoverController(trigger,popup) | 浏览器 Popover API、位置测量、外点/Esc、可选 menu/tooltip、受控 open/syncOpen；非模态不 trap |

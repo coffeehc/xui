@@ -51,9 +51,35 @@ export function createTabsController(root:HTMLElement,options:{value?:string;def
 
 const dialogStacks=new WeakMap<Document,HTMLDialogElement[]>();
 export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElement,options:OpenOptions={}){
-  let dead=false,opened=false,shouldRestore=true,closeDetails:DialogCloseDetails={reason:'native'};const controlled=options.open!==undefined;trigger.setAttribute('aria-haspopup','dialog');if(dialog.id)trigger.setAttribute('aria-controls',dialog.id);
+  let dead=false,opened=false,shouldRestore=true,focusVersion=0,closeDetails:DialogCloseDetails={reason:'native'};const controlled=options.open!==undefined;trigger.setAttribute('aria-haspopup','dialog');if(dialog.id)trigger.setAttribute('aria-controls',dialog.id);
   const stack=dialogStacks.get(dialog.ownerDocument)??[];dialogStacks.set(dialog.ownerDocument,stack);const remove=()=>{const index=stack.indexOf(dialog);if(index>=0)stack.splice(index,1);};
-  const syncOpen=(next:boolean,details:DialogCloseDetails={reason:'imperative'})=>{if(dead)return;if(next&&!dialog.open){if(disabled(trigger))return;remove();stack.push(dialog);opened=true;shouldRestore=true;closeDetails={reason:'native'};try{dialog.showModal();}catch(error){opened=false;remove();throw error;}const initial=typeof options.initialFocus==='function'?options.initialFocus():options.initialFocus;if(!dead&&dialog.open&&initial&&dialog.contains(initial)&&!disabled(initial))initial.focus();}else if(!next&&dialog.open){closeDetails=details;const active=dialog.ownerDocument.activeElement;shouldRestore=dialog.contains(active)||active===dialog.ownerDocument.body;remove();dialog.close();}trigger.setAttribute('aria-expanded',String(dialog.open));};
+  const syncOpen=(next:boolean,details:DialogCloseDetails={reason:'imperative'})=>{
+    if(dead)return;
+    if(next&&!dialog.open){
+      if(disabled(trigger))return;
+      // Resolve before showModal: its synchronous focusin can otherwise replace a
+      // navigation owner's roving target before initialFocus gets to read it.
+      const version=++focusVersion;
+      const requested=typeof options.initialFocus==='function'?options.initialFocus():options.initialFocus;
+      if(dead||dialog.open||version!==focusVersion)return;
+      const initial=requested&&dialog.contains(requested)&&!disabled(requested)?requested:null;
+      const autofocus=dialog.getAttribute('autofocus');
+      remove();stack.push(dialog);opened=true;shouldRestore=true;closeDetails={reason:'native'};
+      // Let native modal setup focus this neutral owner, never an incidental
+      // first descendant. Do not leave an autofocus attribute on host markup.
+      if(initial)dialog.setAttribute('autofocus','');
+      try{dialog.showModal();}catch(error){opened=false;remove();throw error;}
+      finally{if(initial){if(autofocus===null)dialog.removeAttribute('autofocus');else dialog.setAttribute('autofocus',autofocus);}}
+      // A focus handler may close/reopen, destroy, or hand focus to another owner.
+      if(initial&&!dead&&dialog.open&&version===focusVersion&&stack.at(-1)===dialog&&dialog.ownerDocument.activeElement===dialog){
+        const target=dialog.contains(initial)&&!disabled(initial)&&initial.getClientRects().length>0?initial:focusable(dialog)[0]??dialog;
+        target.focus();
+      }
+    }else if(!next&&dialog.open){
+      ++focusVersion;closeDetails=details;const active=dialog.ownerDocument.activeElement;shouldRestore=dialog.contains(active)||active===dialog.ownerDocument.body;remove();dialog.close();
+    }
+    trigger.setAttribute('aria-expanded',String(dialog.open));
+  };
   const request=(next:boolean,reason='imperative',event?:Event)=>{if(dead||next===dialog.open||(next&&disabled(trigger)))return;if(change(dialog,next,reason,event,details=>options.onOpenChange?.(next,details))&&!controlled)syncOpen(next,{reason,event});};
   const click=(event:Event)=>request(true,'trigger',event);
   const cancel=(event:Event)=>{event.preventDefault();if(event.target===dialog&&stack.at(-1)===dialog)request(false,'escape',event);};
@@ -112,8 +138,21 @@ export function createContextMenuController(trigger:HTMLElement,popup:HTMLElemen
 export function createShellController(root:HTMLElement,options:OpenOptions={}){
   const trigger=root.querySelector<HTMLElement>('[data-xui-sidebar-toggle]')!,dialog=root.querySelector<HTMLDialogElement>('[data-xui-sidebar-dialog]')!,sidebar=root.querySelector<HTMLElement>('[data-xui-sidebar]')!,main=root.querySelector<HTMLElement>('main')!,slot=dialog.querySelector<HTMLElement>('[data-xui-sidebar-content]')!;
   if(!trigger||!dialog||!sidebar||!main||!slot)throw new Error('AppShell requires toggle, dialog, sidebar, content slot and main');
-  const media=root.ownerDocument.defaultView!.matchMedia('(max-width: 47.999rem)');
-  const control=createDialogController(dialog,trigger,{...options,finalFocus:options.finalFocus??(()=>media.matches?trigger:main)});
+  const doc=root.ownerDocument,media=doc.defaultView!.matchMedia('(max-width: 47.999rem)');
+  // Closed dialog descendants have no client rects. Snapshot structural menu
+  // eligibility now; the dialog owner validates visibility after modal setup.
+  const initialFocus=()=>{
+    const eligible=(node:HTMLElement|null):node is HTMLElement=>!!node&&sidebar.contains(node)&&!disabled(node)&&!node.closest('[hidden],[inert]');
+    const active=doc.activeElement as HTMLElement|null;
+    if(eligible(active))return active;
+    const menu=Array.from(sidebar.querySelectorAll<HTMLElement>('[data-menu-control]')).filter(eligible);
+    const navigation=Array.from(sidebar.querySelectorAll<HTMLElement>('nav a[href],nav button,nav input,nav select,nav textarea,nav [tabindex]')).filter(eligible);
+    return menu.find(node=>node.tabIndex===0)??menu.find(node=>node.getAttribute('aria-current')==='page')??menu[0]??navigation.find(node=>node.getAttribute('aria-current')==='page')??navigation.find(node=>node.tabIndex>=0)??dialog.querySelector<HTMLElement>('[data-xui-close]:not(:disabled):not([aria-disabled="true"])')??dialog;
+  };
+  // Initial controlled/default-open must see the same sidebar tree as a later
+  // trigger opening, not an empty drawer while the sidebar is still outside.
+  if(media.matches&&sidebar.parentNode!==slot)slot.append(sidebar);
+  const control=createDialogController(dialog,trigger,{...options,initialFocus:options.initialFocus??initialFocus,finalFocus:options.finalFocus??(()=>media.matches?trigger:main)});
   const update=()=>{if(media.matches){if(sidebar.parentNode!==slot)slot.append(sidebar);}else{control.syncOpen(false);if(sidebar.parentNode!==root||sidebar.nextSibling!==main)root.insertBefore(sidebar,main);}};
   media.addEventListener('change',update);update();let dead=false;return {...control,destroy(){if(dead)return;dead=true;media.removeEventListener('change',update);control.destroy();root.insertBefore(sidebar,main);}};
 }

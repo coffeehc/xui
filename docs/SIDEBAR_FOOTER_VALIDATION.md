@@ -31,6 +31,14 @@
 
 实现提交为 `9eb66c929cfcfbdace96b08d852ab814490acc9c`；迁移可从该提交的正式接口和[React示例](https://github.com/coffeehc/xui/blob/9eb66c929cfcfbdace96b08d852ab814490acc9c/examples/sidebar-footer-react/app.tsx)/[原生示例](https://github.com/coffeehc/xui/blob/9eb66c929cfcfbdace96b08d852ab814490acc9c/examples/sidebar-footer-vanilla/app.js)核对，再固定最终通过Verify的提交。
 
-[首轮Verify](https://github.com/coffeehc/xui/actions/runs/38238584137)在2026-10-12完成：build、token、typecheck、168单测、watch、正式consumer及cold-start通过；浏览器268/271通过、3项失败，故该轮完整verify不通过。截图/trace确认3项为新增测试假设：React finish后须等待disabled DOM提交再同任务双击；modal打开后背景trigger从可访问树隐藏，应通过稳定DOM定位检查属性，开前/关后仍验名称与焦点；原生showModal可首先聚焦overview而将单一roving停靠移到它，selected=settings仍保留，不应要求两状态相同。
+[首轮Verify](https://github.com/coffeehc/xui/actions/runs/38238584137)在2026-10-12完成：build、token、typecheck、168单测、watch、正式consumer及cold-start通过；浏览器268/271通过、3项失败，故该轮完整verify不通过。React两项确为测试同步/查询问题：finish后须等待disabled DOM提交再同任务双击；modal打开后背景trigger从可访问树隐藏，应通过稳定DOM定位检查属性，开前/关后仍验名称与焦点。这两项修正继续保留。
 
-修正保留全部验收：同tick双击仍须只执行一次；模态前后可访问名/aria-expanded/回焦点仍断言；关闭期间更新选中项必须先变为tabindex=0，打开后仍只有一个停靠点，从关闭按钮Tab回该点，同时保留aria-current。没有改生产代码来迁就测试，没有删除用例或降低门禁。后续提交的CI终态从[Verify历史](https://github.com/coffeehc/xui/actions)按SHA核对。
+`775b9fd`曾把原生showModal首先聚焦overview、覆盖已有settings tab停靠点视为可接受，并把断言改为读取打开后的任意roving id。该判断错误；该提交浏览器271项全绿不足以证明原生焦点合同正确。随后独立macOS Chromium在正式包/官方原生示例、390×844、collapsed=true下复现：关闭期间update(activeId=settings)本已形成settings停靠点，打开时浏览器先focus overview触发focusin/refresh，把该停靠点覆写。selected仍为settings不能使这一副作用合法化。
+
+### 原生初始焦点修复与回归
+
+修复归属公共shell/dialog：打开前快照合法目标，showModal期间由dialog暂接焦点，随后仅在同一次有效打开且焦点未被新owner接管时交付目标；完整恢复原autofocus属性。菜单与footer不重建，既有Tab循环/模态隔离/关闭恢复继续使用原owner；初始open时先移入sidebar，长菜单打开后滚动优先保留实际焦点。未添加消费者CSS/focus补丁或新接口。
+
+可执行顺序回归`tests/dialog-focus.test.mjs`对修复前正式dist运行：5项中2项失败，包含候选在showModal后才求值而返回overview；这是同步焦点算法的模拟单测，不冒充真实浏览器。修复后同一断言检查候选先解析、无overview中途focus、既有autofocus恢复、打开失败恢复、重新打开与宿主同步焦点转移。Playwright固定断言settings，另覆盖已存在library停靠优先于settings选中、无footer、长菜单、空菜单关闭退路、Tab循环、反复开关、关闭回入口及宿主新标题/新模态不被夺焦点。
+
+当前提交的完整浏览器/watch/cold-start结果以[标准Verify](https://github.com/coffeehc/xui/actions)对应SHA终态为准；源码检查、单测和收集数均不能替代。此修复不证明历史hydration错误或任何产品接入状态。

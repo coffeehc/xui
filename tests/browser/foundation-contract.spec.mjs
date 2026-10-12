@@ -1,6 +1,24 @@
 import {test,expect} from '@playwright/test';
 async function setup(page,config={}){await page.goto('/react/foundation-contract.html');await page.waitForFunction(()=>typeof window.renderFoundationCase==='function');const id=await page.evaluate(config=>window.renderFoundationCase(config),config);await expect(page.locator('[data-foundation-case]')).toHaveAttribute('data-foundation-case',String(id));}
 async function freezeClock(page){await page.clock.install({time:0});await page.clock.pauseAt(1000);}
+for(const option of ['defaultOpen','open'])test(`native generic shell ${option} moves its sidebar before resolving initial focus`,async({page})=>{
+ await page.setViewportSize({width:390,height:844});await setup(page);
+ await page.evaluate(option=>{
+   const frame=document.createElement('div');frame.id='initial-shell';frame.className='xui-shell';
+   frame.innerHTML='<header class="xui-shell-header"><button type="button" data-xui-sidebar-toggle>Open navigation</button></header><aside class="xui-shell-sidebar" data-xui-sidebar><nav aria-label="Initial navigation"><a href="#overview" data-menu-control="primary" data-menu-id="overview" tabindex="-1">Overview</a><a href="#settings" data-menu-control="primary" data-menu-id="settings" aria-current="page" tabindex="0">Settings</a></nav></aside><main tabindex="-1">Main content</main><dialog class="xui-native-dialog" data-xui-sidebar-dialog aria-labelledby="initial-shell-title"><h2 id="initial-shell-title">Initial navigation</h2><div data-xui-sidebar-content></div><button type="button" data-xui-close>Close navigation</button></dialog>';
+   // The controlled case also covers ordinary public nav/link markup without
+   // data-menu-control or roving tabindex, as used by foundation-vanilla.
+   if(option==='open')for(const link of frame.querySelectorAll('nav a')){link.removeAttribute('data-menu-control');link.removeAttribute('tabindex');}
+   document.body.append(frame);frame.querySelector('[data-xui-sidebar-toggle]').focus();window.initialShellFocus=[];
+   frame.addEventListener('focusin',event=>{if(event.target.matches('nav a'))window.initialShellFocus.push(event.target.dataset.menuId);});
+   window.initialShell=window.foundationTools.createShellController(frame,{[option]:true});
+ },option);
+ const frame=page.locator('#initial-shell'),dialog=frame.locator('dialog'),target=frame.locator('[data-menu-id="settings"]'),trigger=frame.locator('[data-xui-sidebar-toggle]');
+ await expect(dialog).toBeVisible();await expect(target).toBeFocused();await expect(dialog.locator('[data-xui-sidebar]')).toHaveCount(1);expect(await page.evaluate(()=>window.initialShellFocus)).toEqual(['settings']);
+ await page.evaluate(()=>window.initialShell.syncOpen(false));await expect(dialog).toBeHidden();await expect(trigger).toBeFocused();
+ await page.evaluate(()=>window.initialShell.syncOpen(true));await expect(dialog).toBeVisible();await expect(target).toBeFocused();
+ await page.evaluate(()=>window.initialShell.destroy());await expect(dialog).toBeHidden();await expect(frame.locator(':scope > [data-xui-sidebar]')).toHaveCount(1);
+});
 test('formal Button peer contract preserves ref, render, class function, busy enabled and single activation',async({page})=>{
  await setup(page);const busy=page.getByRole('button',{name:'Busy enabled',exact:true});await expect(busy).toHaveAttribute('data-forwarded-ref','true');await expect(busy).toHaveClass(/host-button/);await expect(busy).toBeEnabled();await busy.focus();await page.keyboard.press('Enter');await page.keyboard.press('Space');expect(await page.evaluate(()=>window.foundationEvents)).toEqual(['button-click','button-click']);
  await page.getByRole('link',{name:'Link action',exact:true}).focus();await page.keyboard.press('Enter');expect(await page.evaluate(()=>window.foundationEvents)).toEqual(['button-click','button-click','link-click']);await page.getByText('Disabled link',{exact:true}).click({force:true});expect(await page.evaluate(()=>window.foundationEvents)).not.toContain('disabled-click');

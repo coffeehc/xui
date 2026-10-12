@@ -45,7 +45,12 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   const syncLabels=()=>{syncFooter();root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport'||options.sidebarFooter)menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});syncToggle();title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';syncHeader();};syncLabels();
   const measureSidebar=()=>{sidebar.style.blockSize=options.sidebarFooter&&!media.matches&&options.scrollMode!=='viewport'?`max(calc(var(--nav-item-height) * 4), calc(100dvh - ${header.getBoundingClientRect().height}px))`:'';body.classList.toggle('xui-shell-sidebar-body',!!options.sidebarFooter);};
   const headerObserver=new ResizeObserver(measureSidebar);headerObserver.observe(header);measureSidebar();
-  const syncSidebar=(details?:DialogCloseDetails)=>{shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);syncToggle();if((options.scrollMode==='viewport'||options.sidebarFooter)&&(!media.matches||shell?.getOpen()))menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});};
+  const syncSidebar=(details?:DialogCloseDetails)=>{shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);syncToggle();if((options.scrollMode==='viewport'||options.sidebarFooter)&&(!media.matches||shell?.getOpen())){
+    const active=doc.activeElement,target=active&&menuRoot.contains(active)?active:menuRoot.querySelector('[aria-current="page"]');
+    // Opening preserves the roving target, which can differ from selection.
+    // Do not immediately scroll that newly focused control out of view.
+    target?.scrollIntoView({block:'nearest',inline:'nearest'});
+  }};
   shell=createShellController(root,{open:false,restoreFocus:details=>details.reason!=='navigation',onOpenChange:(open,details)=>{if(options.sidebarOpen===undefined)internalOpen=open;options.onSidebarOpenChange?.(open);syncSidebar(details);}});
   let wasNarrow=media.matches;
   const viewport=()=>{measureSidebar();if(wasNarrow&&!media.matches){if(options.sidebarOpen===undefined)internalOpen=false;options.onSidebarOpenChange?.(false);}wasNarrow=media.matches;syncSidebar();};

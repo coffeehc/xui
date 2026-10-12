@@ -13,6 +13,8 @@ const menu=page=>page.locator('.xui-shell-sidebar-menu');
 const footer=page=>page.locator('.xui-shell-sidebar-footer');
 const sidebar=page=>page.locator('.xui-shell-sidebar-with-footer');
 const drawer=page=>page.getByRole('dialog',{name:'工作导航',exact:true});
+const roving=page=>page.locator('nav[aria-label="工作导航"] [data-menu-control][tabindex="0"]');
+async function assertMenuTarget(page,id){await expect(roving(page)).toHaveCount(1);await expect(roving(page)).toHaveAttribute('data-menu-id',id);await expect(nav(page,id)).toBeFocused();}
 const bounds=node=>node.evaluate(element=>{const r=element.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,clientWidth:element.clientWidth,scrollWidth:element.scrollWidth,clientHeight:element.clientHeight,scrollHeight:element.scrollHeight,scrollTop:element.scrollTop};});
 const within=(inner,outer)=>{expect(inner.x).toBeGreaterThanOrEqual(outer.x-1);expect(inner.right).toBeLessThanOrEqual(outer.right+1);expect(inner.y).toBeGreaterThanOrEqual(outer.y-1);expect(inner.bottom).toBeLessThanOrEqual(outer.bottom+1);};
 async function settle(page){await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});}
@@ -104,12 +106,12 @@ for(const kind of ['react','vanilla']){
       const label=await bounds(action(page).locator('.xui-sidebar-footer-label'));expect(label.width).toBeGreaterThan(80);within(await bounds(action(page)),await bounds(drawer(page)));
       await action(page).focus();await page.keyboard.press('Tab');await expect(page.getByTestId('footer-theme')).toBeFocused();await page.keyboard.press('Escape');await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(trigger).toHaveAttribute('aria-expanded','false');await assertIdentity(page);
     }
-    await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));await expect(nav(page,'settings')).toHaveAttribute('tabindex','0');await trigger.click();await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');const roving=page.locator('nav[aria-label="工作导航"] [data-menu-control][tabindex="0"]');await expect(roving).toHaveCount(1);const rovingId=await roving.getAttribute('data-menu-id');await page.getByRole('button',{name:'关闭导航',exact:true}).focus();await page.keyboard.press('Tab');await expect(nav(page,rovingId)).toBeFocused();await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await nav(page,'library').click();await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(trigger).toHaveAttribute('aria-expanded','false');await assertIdentity(page);
+    await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));await expect(nav(page,'settings')).toHaveAttribute('tabindex','0');await expect(nav(page,'overview')).toHaveAttribute('tabindex','-1');await trigger.click();await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await assertMenuTarget(page,'settings');await page.getByRole('button',{name:'关闭导航',exact:true}).focus();await page.keyboard.press('Tab');await assertMenuTarget(page,'settings');await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await nav(page,'library').click();await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(trigger).toHaveAttribute('aria-expanded','false');await assertIdentity(page);
     await trigger.click();await capture(page,info,'single-narrow-drawer');await page.setViewportSize({width:1280,height:800});await expect(drawer(page)).toBeHidden();await expect(action(page)).toBeVisible();await assertIdentity(page);expect((await bounds(sidebar(page))).width).toBeCloseTo(60,1);
   });
 
   for(const target of ['main','dialog'])test(`${kind} closing drawer does not steal the host's new ${target} focus`,async({page},info)=>{
-    await setup(page,kind,'','dark',{width:390,height:844});await page.evaluate(target=>window.sidebarFooterDemo.setHostFocus(target),target);await page.getByRole('button',{name:'工作导航',exact:true}).click();await nav(page,'library').click();await expect(drawer(page)).toBeHidden();
+    await setup(page,kind,'?page=settings','dark',{width:390,height:844});await page.evaluate(target=>window.sidebarFooterDemo.setHostFocus(target),target);await page.getByRole('button',{name:'工作导航',exact:true}).click();await assertMenuTarget(page,'settings');await nav(page,'library').click();await expect(drawer(page)).toBeHidden();
     const destination=page.getByTestId(target==='main'?'page-heading':'host-dialog-action');await expect(destination).toBeFocused();await settle(page);await expect(destination).toBeFocused();
     if(target==='dialog'){await expect(page.getByTestId('host-dialog')).toBeVisible();await page.keyboard.press('Tab');expect(await page.evaluate(()=>document.activeElement.closest('[data-testid="host-dialog"]')!==null)).toBe(true);}
     await capture(page,info,`host-${target}-focus`);
@@ -133,6 +135,58 @@ for(const kind of ['react','vanilla']){
     await page.evaluate(()=>window.sidebarFooterDemo.repeatFooter());await expect(page.getByTestId('footer-replacement')).toHaveCount(1);await page.evaluate(()=>window.sidebarFooterDemo.setFooter('none'));await expect(page.getByTestId('footer-replacement')).toHaveCount(0);await expect(footer(page)).toBeHidden();await nav(page,'settings').click();await expect(page.getByTestId('current-route')).toHaveText('settings');await expect(page.getByRole('textbox',{name:'草稿',exact:true})).toHaveValue('替换底部也保留');await capture(page,info,'footer-cleared');await page.evaluate(()=>window.sidebarFooterDemo.setFooter('original'));await expect(action(page)).toHaveAccessibleName(actionName);await expect(page.getByTestId('footer-version')).toHaveCount(1);await action(page).click();expect(await page.evaluate(()=>window.sidebarFooterDemo.snapshot().calls)).toBe(1);for(let count=0;count<2;count++){await page.evaluate(()=>window.sidebarFooterDemo.setFooter('none'));await expect(page.locator('.xui-shell-sidebar')).toHaveCount(1);await page.evaluate(()=>window.sidebarFooterDemo.setFooter('original'));await expect(sidebar(page)).toHaveCount(1);await expect(page.locator('.xui-shell-sidebar')).toHaveCount(1);await expect(page.locator('nav[aria-label="工作导航"]')).toHaveCount(1);}
   });
 }
+
+for(const footerKind of ['original','none'])test(`vanilla opening ${footerKind==='original'?'a footer':'a menu-only'} drawer preserves its non-first selected target`,async({page})=>{
+  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});
+  if(footerKind==='none')await page.evaluate(()=>window.sidebarFooterDemo.setFooter('none'));
+  // This is the public update/trigger sequence reported in Chromium. No menu
+  // control has had real focus, so selection supplies the pre-open tab stop.
+  await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));
+  await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await expect(nav(page,'settings')).toHaveAttribute('tabindex','0');await expect(nav(page,'overview')).toHaveAttribute('tabindex','-1');
+  await page.evaluate(()=>{window.drawerMenuFocus=[];document.addEventListener('focusin',event=>{if(event.target.matches('[data-menu-control]'))window.drawerMenuFocus.push(event.target.dataset.menuId);});});
+  const trigger=page.locator('.xui-shell-header .xui-shell-toggle');
+  for(let count=0;count<2;count++){
+    await page.evaluate(()=>{window.drawerMenuFocus=[];});await trigger.click();await expect(drawer(page)).toBeVisible();await assertMenuTarget(page,'settings');await expect(nav(page,'overview')).toHaveAttribute('tabindex','-1');
+    // Even transient focus of overview corrupts roving state and can run host
+    // focus handlers. A snapshot followed by refocusing is not sufficient.
+    await settle(page);expect(await page.evaluate(()=>window.drawerMenuFocus)).toEqual(['settings']);
+    // Tab cycles back to the same target, not whatever showModal happened to
+    // focus first. Read the expected id before opening, never from the result.
+    await page.getByRole('button',{name:'关闭导航',exact:true}).focus();await page.keyboard.press('Tab');await assertMenuTarget(page,'settings');
+    await page.keyboard.press('Escape');await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await settle(page);await expect(trigger).toBeFocused();
+  }
+});
+
+test('vanilla live navigation focus takes priority over selection and survives drawer reopening',async({page})=>{
+  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});const trigger=page.locator('.xui-shell-header .xui-shell-toggle');await trigger.click();await assertMenuTarget(page,'overview');
+  await page.keyboard.press('ArrowDown');await assertMenuTarget(page,'library');
+  await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));
+  await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await expect(nav(page,'settings')).toHaveAttribute('tabindex','-1');await assertMenuTarget(page,'library');
+  for(let count=0;count<2;count++){
+    await page.keyboard.press('Escape');await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(nav(page,'library')).toHaveAttribute('tabindex','0');
+    await trigger.click();await expect(drawer(page)).toBeVisible();await assertMenuTarget(page,'library');await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await expect(nav(page,'settings')).toHaveAttribute('tabindex','-1');
+  }
+  await page.getByRole('button',{name:'关闭导航',exact:true}).click();await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();
+});
+
+test('vanilla an initially empty drawer focuses its close fallback and restores the trigger',async({page})=>{
+  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});await page.evaluate(()=>window.sidebarFooterDemo.update({items:[],activeId:null}));const trigger=page.locator('.xui-shell-header .xui-shell-toggle');
+  for(let count=0;count<2;count++){
+    await trigger.click();await expect(drawer(page)).toBeVisible();await expect(roving(page)).toHaveCount(0);await expect(action(page)).toBeVisible();
+    const close=page.getByRole('button',{name:'关闭导航',exact:true});await expect(close).toBeFocused();await page.keyboard.press('Tab');await expect(action(page)).toBeFocused();await page.keyboard.press('Shift+Tab');await expect(close).toBeFocused();
+    await close.click();await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();
+  }
+});
+
+test('vanilla reopening a long drawer keeps the focused first item visible instead of scrolling to selection',async({page})=>{
+  await setup(page,'vanilla','?list=long&collapsed=true','light',{width:390,height:844});const trigger=page.locator('.xui-shell-header .xui-shell-toggle');await trigger.click();await assertMenuTarget(page,'record-79');
+  await page.keyboard.press('Home');await assertMenuTarget(page,'record-0');await expect(nav(page,'record-79')).toHaveAttribute('aria-current','page');within(await bounds(nav(page,'record-0')),await bounds(menu(page)));
+  for(let count=0;count<2;count++){
+    await page.keyboard.press('Escape');await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(nav(page,'record-0')).toHaveAttribute('tabindex','0');
+    await trigger.click();await expect(drawer(page)).toBeVisible();await assertMenuTarget(page,'record-0');await expect(nav(page,'record-79')).toHaveAttribute('aria-current','page');
+    await settle(page);await assertMenuTarget(page,'record-0');within(await bounds(nav(page,'record-0')),await bounds(menu(page)));
+  }
+});
 
 test('direct React AppShell consumes the same public footer on desktop and mobile',async({page},info)=>{
   await setup(page,'react','?composition=shell&collapsed=true','system');await expect(action(page)).toBeVisible();expect((await bounds(sidebar(page))).width).toBeCloseTo(60,1);await remember(page);await action(page).focus();await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'library'}));await expect(action(page)).toBeFocused();await assertIdentity(page);

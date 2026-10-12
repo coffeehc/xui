@@ -53,6 +53,8 @@ collapsed/defaultCollapsed/onCollapsedChange、expandedIds/defaultExpandedIds/on
 
 键盘采用普通 nav/link 语义与单一菜单项 tab stop，方向键/Home/End 跳过隐藏和 disabled；左右展开/收起及回父节点，RTL 反转左右。展开按钮的 Enter/Space、链接 Enter 和修改键沿用原生语义。focus 独立可见；移除/隐藏焦点项时回退可用项，空菜单在桌面回退顶栏唯一开关，打开的模态抽屉内回退关闭按钮；独立NavigationMenu才回退自身紧凑按钮。
 
+当前页`aria-current`不等于必须获得焦点：真实菜单焦点优先于activeId更新；焦点不在菜单时，更新会以可用当前页或首个可用项确定tab停靠点。原生抽屉打开优先保留当前侧栏真实焦点/已有合法menu停靠点，再回退当前页、首个可用导航项、关闭按钮和dialog。该选择由shell在`showModal()`之前快照；dialog短暂采用自身autofocus来避免浏览器先把首项写成roving target，再在同一次有效打开中交付焦点并恢复原属性。空菜单不把footer业务动作当默认起点。反复开关保留独立的选中与键盘停靠；长菜单滚动保持实际焦点可见。显式`initialFocus`仍优先，初始open/defaultOpen在侧栏移入后执行，宿主同步转移焦点或新模态优先于旧owner。
+
 MenuLayout 还提供 title/header、children（原生 content Node 或原有 root 内容）、sidebarOpen/defaultSidebarOpen/onSidebarOpenChange、label/emptyLabel/compactLabel/expandLabel/skipLabel/closeLabel。窄屏使用现有模态 drawer，Esc/关闭/成功 adapter 导航请求关闭并回可见触发器；变宽关闭 drawer。受控 sidebar 仍须宿主确认。菜单导航不替换 shell/main 或未变更的链接节点；同一组件持续挂载时保留页面输入。React 的内容状态由宿主正常保管，不给布局添加路由 key。未提供footer时断点切换的React sidebar部件仍可重挂载，布局保管菜单事实；提供footer时复用同一侧栏树（详见下方底部接入），不按route重建。
 
 ## 原生生命周期与正式消费者
