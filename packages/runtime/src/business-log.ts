@@ -75,7 +75,7 @@ export function createBusinessLogController(input:BusinessLogOptions):BusinessLo
     const query:BusinessLogQuery={filter:state.filter,page:options.loader.pagination==='offset'?{size,cursor:null,index}:{size,cursor:history[index]??null}};
     try{const raw=await wait(()=>options.loader.list(query,{signal:controller.signal}),controller);if(dead||current!==generation)return;const parsed=parseBusinessLogPage(raw);if(parsed.list.length>size)throw invalid();
       if(options.loader.pagination==='offset'){if(!('page_index'in parsed.page)||parsed.page.page_index!==index||parsed.page.page_size!==size)throw invalid();}
-      else{if(!('next_cursor'in parsed.page)||index>0&&snapshot!==null&&getBusinessLogSnapshot(parsed)!==null&&getBusinessLogSnapshot(parsed)!==snapshot||parsed.page.next_cursor&&history.slice(0,index+1).includes(parsed.page.next_cursor))throw invalid();snapshot=getBusinessLogSnapshot(parsed);}
+      else{if(!('next_cursor'in parsed.page)||index>0&&snapshot!==null&&getBusinessLogSnapshot(parsed)!==null&&getBusinessLogSnapshot(parsed)!==snapshot||parsed.page.next_cursor&&history.slice(0,index+1).includes(parsed.page.next_cursor))throw invalid();snapshot=getBusinessLogSnapshot(parsed)??snapshot;}
       visited.set(index,parsed);active=undefined;emit({data:parsed,busy:false,error:null,pageIndex:index,canNext:hasNext(parsed),canPrevious:visited.has(index-1)});}
     catch(error){if(!dead&&current===generation){active=undefined;emit({busy:false,error:feedback(error)});}}
   }

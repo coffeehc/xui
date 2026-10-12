@@ -32,7 +32,7 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 
 普通需求优先完整页面或组合；特殊业务可用公开扩展点或组合基础控件。允许声明的 props/render/parts、受信任 renderer、数据配置和 callbacks；不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner；缺能力先反馈或补公开接口，再补验收。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
 
-统一 API 数据合同让 UI 与自动化消费同一业务能力，领域流程、权限/tenant与校验保持在可独立测试的业务 API/后端。xui 提供界面、通用请求及正式 DTO/adapter 接口；baseservice 独立提供后端能力，经版本化 HTTP facade 组合，不能向前端暴露数据库模型。登录已定义固定 v1 三路由，但后端适配未实施；API Key 和业务日志使用已声明宿主 adapter/loader，不猜新 route。不因等待后端阻塞 xui，也不自动改其它项目。
+统一 API 数据合同让 UI 与自动化消费同一业务能力，领域流程、权限/tenant与校验保持在可独立测试的业务 API/后端。xui 提供界面、通用请求及正式 DTO/adapter 接口；baseservice 独立提供后端能力，经版本化 HTTP facade 组合，不能向前端暴露数据库模型。登录已定义固定 v1 三路由，但后端适配未实施；API Key和业务日志定义固定原生HTTP facade与默认adapter/loader，索引见[PAGE_APIS](PAGE_APIS.md)，真实服务未集成。不因等待后端阻塞 xui，也不自动改其它项目。
 
 后续逐页采用 xui，并行完善 baseservice，再逐项目替换后端 adapter，按版本/固定 SHA、DTO 与真实业务/页面回归小步升级。贡献验收须给出所属层次、复用下层的证据、实际公开扩展与构建消费；合成页面通过不能当作完整基础系统或产品迁移通过。此设计哲学由本节作为单一架构源，README、采用手册和 skill 引用这里。
 
@@ -46,7 +46,9 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 | 数据驱动 Menu + Layout | 已实现；本步骤独立验证与提交 | NavigationMenu/MenuLayout 与 createNavigationMenu/createMenuLayout；React/原生同源数据，一次 activeId/location 与导航适配；分组/子项/展开/紧凑/窄屏、键盘、更新与生命周期、导航时 shell 身份稳定 |
 | HTTP 与共享列表契约 | 已实现，本步骤独立验证 | 零框架传输、显式模式/response adapter、错误/status/Abort/timeout、默认不重试；共享列表默认 Go ListData 的 list/total，HTTP 保留原样 payload；来源与实现同步记录 |
 | API Key 通用管理组件 | 已实现，本步骤独立验证 | 共享安全元数据、列表/创建/权限与有效期/一次性结果/明确复制/撤销确认；不生成真实密钥，不复制产品权限模型，后端生成与鉴权，默认脱敏与不持久化 |
-| 可扩展业务日志 | 已实现，两宿主独立消费 | 固定公共字段 + event_type/schema_version + 业务 JSON payload；list/detail loader、过滤/cursor/权限/安全回退/注册 renderer；后端 adapter 尚未落地，见 [BUSINESS_LOGS](BUSINESS_LOGS.md) |
+| 可扩展业务日志 | 已实现，两宿主独立消费 | 固定公共字段 + event_type/schema_version + 业务 JSON payload；list/detail loader、过滤/cursor/权限/安全回退/注册 renderer；默认原生HTTP adapter已实现，真实后端未集成，见 [BUSINESS_LOGS](BUSINESS_LOGS.md) |
+| Sheet/AlertDialog/ContextMenu与表格扩展 | 已实现，最终统一验证见交付 | 复用Dialog/Menu/表格原子，公开逻辑side、cancel/focus、条纹/展开/sticky，见[COMPOSITIONS](COMPOSITIONS.md) |
+| 下载与默认页面HTTP | 已实现，最终统一验证见交付 | safe headers/filename、显式保存、原生JSON协商与正式API Key/业务日志facade |
 | 可配置登录页 | 已实现，本轮完整验收后交付 | ConfigurableLoginPage/createLoginPage +共享认证 client；固定 v1 cookie login/logout/session、公开品牌文案与safe returnTo；[AUTH](AUTH.md) 明确真实源差异与后端责任 |
 | 独立结构化错误观察 | 已实现，只读独立步骤 | 共享控制器、React/原生完整分组/观察/详情；依据固定 commons@b0bc0f9 的真实 filter/cursor，计数/首次代表/三态/保留期明确；[拟议 v1 facade](LOGS.md) 由宿主后端实现，不猜旧协议 |
 

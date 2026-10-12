@@ -49,3 +49,18 @@
 统一登录提交db3ea9f已保存并保留完整恢复bundle；用户追加业务日志用途澄清时，该SHA完整verify已过96单测、正运行watch，由主流程主动终止（143），不记为整套通过或测试失败。日志位于.artifacts/verify-db3ea9f-scope-interrupted.log。统一命名后的新冻结SHA重新运行全部verify并检查同SHA CI。
 
 发布状态原则同步到手册和skill：用户确认只有xAgent已正式上线，未发布项目直接使用新设计，无旧接口/配置/模型升级兼容层。当前xui没有旧auth路由/response猜测或BusinessAudit别名；公开扩展、状态失败回退和数据安全不是兼容层。基础控件参考页仍有覆盖用途，dev中的例子CSS解析仅消费已声明的示例资源，不是旧产品升级分支。9dce712的96单测通过后，主流程为同步此原则主动终止尚未完成的全verify（143）；最终新SHA重新完整验证，不把中断算通过。
+
+
+## 公共能力与原生页面API补齐
+
+本步骤基线为已推送5adbf5c。依据xAgent/xLead接入反馈补公共能力，不改任何产品后端；已保存普通WIP提交c45939d及完整本地恢复bundle，继续普通提交保留历史。原始DESIGN来源与271默认值保持，新增CSS只引用已有token。真实源SHA及原生协议在[PAGE_APIS](PAGE_APIS.md)，项目目标同步到README、手册、skill：统一品牌与前端体系，采用项目在自己的授权范围主动标准化commons/webfacade/httpx，旧协议adapter仅作为有目标和移除条件的临时桥梁。
+
+交付包括HTTP安全三字段headers、filename/显式下载、非2xx结构化错误；Sheet/AlertDialog/ContextMenu；条纹/展开/逻辑sticky表格；默认API Key与业务日志HTTP facade。密钥required与独立confirmed、capability授权、过期撤销与撤销后删除管理记录分别保留；未知写入结果禁止同会话重复。默认日志使用真实offset/ListData，领域cursor允许可选真实snapshot且不丢已知基准。登录已有固定cookie v1合同，xAgent旧bearer协议仍须另项后端升级，不能仅换baseURL。供应商凭据和程序错误观察不冒充密钥/业务日志服务。
+
+两项独立只读审查实际复现5个P2：JSON media type大小写绕过下载错误、可选snapshot抹掉链基准、默认facade继承protobuf/form headers、同步宿主回调关闭后仍发写入/恢复secret、空草稿关闭留下不可见native modal。全部修正并补最小回归。JSON协商由endpoint覆盖，其他宿主header保留；回调后再次核generation/phase/target/draft；确认trigger仅在有草稿时显式打开。PUBLIC_API旧默认timeout/授权描述同步，不留另一份冲突默认规则。
+
+定向20项HTTP/页面逻辑测试通过；完整116单测与类型检查通过；两类正式tarball消费通过。新增浏览器首轮10/12通过，两失败是React Disclosure文本包含隐藏加号导致精确getByText定位不匹配；改按button/summary选择后12/12通过，未关闭motion/降低断言/添加重试。实际浏览器下载核filename与完整bytes、取消不合作迟到请求；嵌套取消/确认/空草稿关闭再开/可见focus、context键盘和检查项、条纹/展开/sticky滚动、密钥确认/撤销/删除、日志offset/无假snapshot、dark/390px/200%根字体/reduced-motion均覆盖。
+
+统一验收现在包括59公开入口(theme15/runtime20/React24)、18个正式消费者、116单测、1真实默认watch、152浏览器检查。最终冻结SHA的整条verify、普通推送与同SHA CI仍以交付事实及.artifacts/verify-capabilities-final.log为准；局部通过不冒整套通过。旧5adbf5c验收证据原样保留，早期失败和修复记录不改写。
+
+真实产品后端、Cookie/CSRF/CORS/鉴权/tenant、业务日志脱敏/可靠性与生产API Key生成未集成。模拟数据不代表xAgent/xLead或其它产品迁移；真实移动OS/长按/读屏器/Firefox/Safari/浏览器原生zoom/SSR/生产性能未跑。无密钥生成、许可证/可见性变更、发布或部署。

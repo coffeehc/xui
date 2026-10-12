@@ -8,9 +8,9 @@
 
 | 包 | 正式入口 | 职责 |
 | --- | --- | --- |
-| `@coffeehc/xui-theme` | `style.css`、`tokens.css`、`components.css`、`critical.css`；`base/button/forms/navigation/feedback/dialog/layout/floating/table/auth.css` | 无框架依赖，预构建 CSS。critical 包含 token 和除 floating 外的组件样式 |
-| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/navigation`、`/menu-layout`、`/http`、`/query`、`/auth`、`/login-dom`、`/api-key`、`/api-key-dom`、`/structured-log`、`/structured-log-dom`、`/business-log`、`/business-log-dom`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
-| `@coffeehc/xui-react` | 根；`/button/forms/navigation/menu-layout/tabs/dialog/feedback/layout/table/select/combobox/menu/popover/tooltip/toast/theme/login/api-key/structured-log/business-log` | React、ReactDOM、Base UI、runtime 是 peers；不捆绑宿主实例，不隐式引入 CSS |
+| `@coffeehc/xui-theme` | `style.css`、`tokens.css`、`components.css`、`critical.css`；`base/button/forms/navigation/feedback/dialog/layout/floating/table/auth/sheet.css` | 无框架依赖，预构建 CSS。critical 包含 token 和除 floating 外的组件样式 |
+| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/navigation`、`/menu-layout`、`/http`、`/download`、`/api-key-http`、`/business-log-http`、`/query`、`/auth`、`/login-dom`、`/api-key`、`/api-key-dom`、`/structured-log`、`/structured-log-dom`、`/business-log`、`/business-log-dom`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
+| `@coffeehc/xui-react` | 根；`/button/forms/navigation/menu-layout/tabs/dialog/sheet/alert-dialog/context-menu/feedback/layout/table/select/combobox/menu/popover/tooltip/toast/theme/login/api-key/structured-log/business-log` | React、ReactDOM、Base UI、runtime 是 peers；不捆绑宿主实例，不隐式引入 CSS |
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
 
@@ -50,9 +50,9 @@ foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控
 | 导航 | Nav/NavItem、Breadcrumbs、Pagination、Disclosure。Pagination/Disclosure 受控与非受控，宿主负责导航/数据；NavItem disabled 去 href 并阻止激活 |
 | Tabs | Root/List/Tab/Panel 复用 peer；方向键/Home/End 仅适配跳过 disabled，保留手动/自动激活、loop、RTL/orientation、ref/render/className 函数和 Tab/List capture/bubble。preventBaseUIHandler 取消控件行为，preventDefault 仅取消浏览器默认 |
 | 复合选择 | Select/Combobox 复用 peer generic Root，样式部件、Content portal/positioner/popup；受控、禁用、搜索空结果和取消仍由 peer/宿主负责。Positioner 测量通过 CSS，无 JS 色板 |
-| 弹层 | Dialog、Menu、Popover、Tooltip。Root/Trigger/Content/部件延续 peer 生命周期。Menu disabled 项可在 peer roving 顺序获得焦点但不能执行；原生 menu 跳过 disabled。Tooltip 增加 role 和描述 id，Root.contentId 可指定关联 id；外部 handle 触发器由宿主显式 aria-describedby 关联 |
+| 弹层 | Dialog、Sheet、AlertDialog、ContextMenu、Menu、Popover、Tooltip。Root/Trigger/Content/部件延续 peer 生命周期。Menu disabled 项可在 peer roving 顺序获得焦点但不能执行；原生 menu 跳过 disabled。Tooltip 增加 role 和描述 id，Root.contentId 可指定关联 id；外部 handle 触发器由宿主显式 aria-describedby 关联 |
 | 通知 | Toast Provider/manager/Root/Content/Viewport/Close 等复用 peer。peer 支持 collapsed/expanded，关闭控件在展开状态可访问，宿主不能将必要错误仅放在消失通知中 |
-| 表格 | Table/Container/Caption/Head/Body/Row/HeaderCell/Cell/SortButton，真实 table，named overflow region，scope/aria-sort/selected 由宿主事实提供。无排序/选择/查询/虚拟化引擎 |
+| 表格 | Table/Container/Caption/Head/Body/Row/HeaderCell/Cell/SortButton，真实 table，striped/expandedRow、TableExpandedRow/ExpandButton、sticky start/end及显式stickyOffset，named overflow region，scope/aria-sort/selected 由宿主事实提供。无排序/选择/查询/虚拟化引擎 |
 | 组合管理页 | ApiKeyManager、BusinessLogExplorer、StructuredLogExplorer 使用 runtime 共享 controller；原生 createApiKeyManager/createBusinessLogExplorer/createStructuredLogExplorer 生成完整结构。领域回调、日志拟议 facade、详情权限由宿主，详见 [API_KEY.md](API_KEY.md)、[BUSINESS_LOGS.md](BUSINESS_LOGS.md)、[LOGS.md](LOGS.md) |
 | 配置登录页 | ConfigurableLoginPage 与原生 createLoginPage 使用同一 auth/theme owner，公开品牌文案/logo/labels/安全回跳；内部复用基础控件/CSS。固定 v1 cookie 三路由与 DTO、15 秒预算和密码清理见 [AUTH.md](AUTH.md)，实际后端尚未实施 |
 | 状态 | Surface/Alert、Badge/Skeleton/Spinner/Progress、Loading/Empty/ErrorState、DataRegion、RenderBoundary、useResource。错误/重试文字由宿主；render exception 重置不重试 Promise |
@@ -79,6 +79,8 @@ body 使用 xui 类；portal/原生顶层弹层用 xui-layer。公共 layout/tab
 | createDisclosureController(trigger,panel) | aria-controls/expanded、hidden；open/defaultOpen、onOpenChange 和 syncOpen |
 | createTabsController(tablist) | 原生 role=tab 的 data-value/aria-controls；手动默认、自动激活可选、RTL/Home/End、disabled 跳过、受控 value/syncValue |
 | createDialogController(dialog,trigger) | HTMLDialogElement showModal/close、Esc cancel、data-xui-close、可见 finalFocus；浏览器模态加库 Tab 边界循环，迟到 close 事件不改变已重开弹层焦点 |
+| createSheetController(dialog,trigger)/createAlertDialogController(dialog,trigger) | 复用原生Dialog lifecycle，Sheet逻辑side、AlertDialog角色与显式/安全初始焦点；最上层取消/Tab，不以确认关闭当业务成功 |
+| createContextMenuController(trigger,popup) | 复用Popover/menu，rightclick、Shift+F10/ContextMenu、坐标与focus/取消；触屏长按无通用保证 |
 | createPopoverController(trigger,popup) | 浏览器 Popover API、位置测量、外点/Esc、可选 menu/tooltip、受控 open/syncOpen；非模态不 trap |
 | createShellController(root) | 查找 sidebar-toggle/sidebar-dialog/sidebar/sidebar-content/main，单一 sidebar 在窄屏移入 dialog，宽屏回原位置 |
 | createToastController(viewport) | 纯文本通知、去重/限额、关闭、可选宿主 timeout、hover/focus 暂停并恢复；无默认自动消失 |
@@ -105,4 +107,4 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 正式验收先 npm pack，再在独立目录安装、编译 types 和打包；foundation 不复制 shared/layout.css。dev 的包解析也仅指向正式 exports 的 dist，没有源码入口。生产接入固定已验证的提交/本地 tarball。双仓 watch 可让宿主链接 built dist，但 React/ReactDOM/Base UI 必须由宿主保留单实例；Vite 可使用 resolve.dedupe 与指向本地正式入口的 alias，或独立 tarball 安装。链接后检查实际解析路径、ESM/types/init 的当前 generation，并运行宿主构建/页面检查。这里没有更改任何产品仓库的配置。
 
-当前已实现数据驱动菜单/布局、无框架 HTTP、共享 query 和 [配置登录页](AUTH.md)；完整采用见 [ADOPTION.md](ADOPTION.md)，响应与查询合同见 [HTTP.md](HTTP.md)。API Key 通用管理见 [API_KEY.md](API_KEY.md)；可扩展业务日志见 [BUSINESS_LOGS.md](BUSINESS_LOGS.md)，真实后端仅接显式 loader，未实现服务；独立结构化错误查询见 [LOGS.md](LOGS.md)，其 v1 facade 是宿主后端待实现合同；[仓库接入 skill](../.agents/skills/adopt-xui/SKILL.md) 与 [公开入口索引](PUBLIC_API.md) 可直接使用。领域路由、权限策略、身份凭据、产品 endpoint 后端、服务端会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。未覆盖项和限制见覆盖矩阵与本轮验证记录。
+当前已实现数据驱动菜单/布局、无框架 HTTP、共享 query 和 [配置登录页](AUTH.md)；完整采用见 [ADOPTION.md](ADOPTION.md)，响应与查询合同见 [HTTP.md](HTTP.md)。API Key 通用管理见 [API_KEY.md](API_KEY.md)；可扩展业务日志见 [BUSINESS_LOGS.md](BUSINESS_LOGS.md)，默认原生HTTP loader已实现，真实服务未集成；独立结构化错误查询见 [LOGS.md](LOGS.md)，其 v1 facade 是宿主后端待实现合同；[仓库接入 skill](../.agents/skills/adopt-xui/SKILL.md) 与 [公开入口索引](PUBLIC_API.md) 可直接使用。领域路由、权限策略、身份凭据、产品 endpoint 后端、服务端会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。未覆盖项和限制见覆盖矩阵与本轮验证记录。

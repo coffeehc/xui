@@ -138,7 +138,7 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
             if(mode==='empty'){if(response.body)await read(()=>response.body!.cancel());adapted={payload:undefined};}
             else if(mode==='blob'){
               const payload=await read(()=>response.blob());check();adapted={payload};
-              if(init.detectAjaxErrors&&response.headers.get('content-type')?.includes('json')&&!/^\s*attachment\b/i.test(response.headers.get('content-disposition')??'')){let value:unknown;try{value=JSON.parse(await payload.text());}catch{}check();if(looksLikeAjax(value)){const wire=parseAjaxResponse(value);if(!wire.success||wire.code!==1)throw new HttpError('business',{...context,code:wire.code,bodyRequestId:wire.request_id},ajaxErrorResponseAdapter(wire,context));}}
+              if(init.detectAjaxErrors&&/^application\/(?:[a-z0-9!#$&^_.+-]+\+)?json(?:\s*;|\s*$)/i.test(response.headers.get('content-type')??'')&&!/^\s*attachment\b/i.test(response.headers.get('content-disposition')??'')){let value:unknown;try{value=JSON.parse(await payload.text());}catch{}check();if(looksLikeAjax(value)){const wire=parseAjaxResponse(value);if(!wire.success||wire.code!==1)throw new HttpError('business',{...context,code:wire.code,bodyRequestId:wire.request_id},ajaxErrorResponseAdapter(wire,context));}}
               if(adapter)adapted=adapter(payload,context);
             }else{
               const text=await read(()=>response.text());check();const value=mode==='text'?text:JSON.parse(text);if(mode==='ajax'&&looksLikeAjax(value)){const wire=parseAjaxResponse(value);metadata={...metadata,code:wire.code,bodyRequestId:wire.request_id};}adapted=adapter?adapter(value,context):{payload:value};

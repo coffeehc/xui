@@ -1,6 +1,6 @@
 # xui 使用与迁移手册
 
-这是接入入口，引用同一份规范、公开类型和已运行的例子，不另定义品牌默认值。当前包为 private 0.1.0；采用前固定 Git SHA/本地 tarball 并核对 [全部公开入口与默认行为](PUBLIC_API.md)。菜单布局、HTTP/query、可配置登录页、API Key 管理和可扩展业务日志已实现；认证后端与日志 adapter 尚未落地。此前结构化错误查询是独立错误观察能力，不是业务日志。Codex 流程见 [adopt-xui](../.agents/skills/adopt-xui/SKILL.md)，随仓库 checkout 使用，没有安装到用户电脑或全局 skill 工作区。
+这是接入入口，引用同一份规范、公开类型和已运行的例子，不另定义品牌默认值。当前包为 private 0.1.0；采用前固定 Git SHA/本地 tarball 并核对 [全部公开入口与默认行为](PUBLIC_API.md)。菜单布局、HTTP/query、可配置登录页、API Key 管理和可扩展业务日志已实现；默认API Key/业务日志HTTP adapters已实现；真实认证、密钥、业务日志服务尚未集成。此前结构化错误查询是独立错误观察能力，不是业务日志。Codex 流程见 [adopt-xui](../.agents/skills/adopt-xui/SKILL.md)，随仓库 checkout 使用，没有安装到用户电脑或全局 skill 工作区。
 
 xui用于统一品牌、前端体系和通用前后端接口。采用项目应在自身授权范围主动使用原生commons/webfacade和httpx标准化前端API；旧协议adapter仅作注明来源、映射、目标与移除条件的临时桥梁。必须遵循的协议、默认HTTP adapters和领域扩展边界见[页面API总索引](PAGE_APIS.md)。不能以保留旧协议为长期架构目标，也不能因此削减业务能力、鉴权或已上线xAgent的升级保护。
 
@@ -9,12 +9,12 @@ xui用于统一品牌、前端体系和通用前后端接口。采用项目应�
 1. 检查 git status、当前提交、包 manifests/exports，保护本地改动后按任务授权正常 fetch。读清版本差异，不 reset/clean/强推，不覆盖业务修改。
 2. [DESIGN.md](DESIGN.md)：唯一完整规则与默认 token 来源。
 3. [原子→组合→页面的设计哲学](FOUNDATION.md#组件层次与扩展原则)：单一架构源；[IMPLEMENTATION.md](IMPLEMENTATION.md)：入口、主题 owner、组件 props/部件、原生公共结构与 lifecycle。
-4. [NAVIGATION.md](NAVIGATION.md)：菜单数据、MenuLayout 与一次路由适配；[HTTP.md](HTTP.md)：传输/错误/Go 响应/query；[AUTH.md](AUTH.md)：固定认证合同与配置登录页；[API_KEY.md](API_KEY.md)：脱敏列表/创建/一次性结果/复制/撤销；[BUSINESS_LOGS.md](BUSINESS_LOGS.md)：业务日志公共 DTO/loader 与扩展 payload；[LOGS.md](LOGS.md)：独立错误分组/观察/详情与拟议 facade。
+4. [NAVIGATION.md](NAVIGATION.md)：菜单数据、MenuLayout 与一次路由适配；[PAGE_APIS.md](PAGE_APIS.md)：页面默认合同与原生标准；[HTTP.md](HTTP.md)：传输/错误/下载/Go 响应/query；[AUTH.md](AUTH.md)：固定认证合同与配置登录页；[API_KEY.md](API_KEY.md)：脱敏列表/创建/一次性结果/复制/授权确认/撤销/删除管理记录；[BUSINESS_LOGS.md](BUSINESS_LOGS.md)：业务日志公共 DTO/loader 与扩展 payload；[LOGS.md](LOGS.md)：独立错误分组/观察/详情与拟议 facade。
 5. 下方可运行源组装页面；能力、验收与未跑项见 [FOUNDATION.md](FOUNDATION.md)、[FOUNDATION_VALIDATION.md](FOUNDATION_VALIDATION.md)。规范权威迁移另见 [MIGRATION.md](MIGRATION.md)。
 
 theme 提供无框架预构建 CSS/tokens；runtime 提供主题、DOM、resource、菜单、HTTP/query、认证与共享页面控制器；ui-react 复用共享类型和 React/Base UI peers。按上述三层准则，普通页面通过数据、配置和公开扩展接口使用完整页面/组合，特殊业务组合基础控件；不修改组件内部渲染。产品保管可见菜单过滤、路由、身份、领域权限/数据与业务动作；xui 提供默认结构、交互、motion、focus/a11y。产品迁就统一标准，业务扩展通过公开 slots/render/adapters，公共能力不足反馈 xui。
 
-采用产品以 agent-ready 为优先：业务 API 完整、明确且可独立测试，UI 消费同一能力，只作为用户观察、配置和介入的入口。领域执行、权限、租户隔离、校验与核心业务流程属于宿主服务/领域层，不藏在组件内部，也不因组件替换而消失。xui 提供表现、交互和通用请求接入，不能成为业务 API 能力的唯一入口。这是接入职责，不增加本轮后端改造、Agent SDK 或其他产品仓库修改范围。按最新用途，BusinessLogExplorer是调取业务记录的查询页；baseservice后续将业务日志收敛到日志能力并取消独立auditservice，本轮不修改后端或等待这次改造。未来 baseservice 的 API Key、业务日志与运行配置通过版本化 HTTP DTO 和契约测试配套，数据库模型不直接暴露；现有 API_KEY 与 BUSINESS_LOGS 合同是适配输入。本轮没有运行配置组件或后端实现。
+采用产品以 agent-ready 为优先：业务 API 完整、明确且可独立测试，UI 消费同一能力，只作为用户观察、配置和介入的入口。领域执行、权限、租户隔离、校验与核心业务流程属于宿主服务/领域层，不藏在组件内部，也不因组件替换而消失。xui 提供表现、交互和通用请求接入，不能成为业务 API 能力的唯一入口。这是接入职责，不增加本轮后端改造、Agent SDK 或其他产品仓库修改范围。按最新用途，BusinessLogExplorer是调取业务记录的查询页；baseservice后续将业务日志收敛到日志能力并取消独立auditservice，本轮不修改后端或等待这次改造。未来 baseservice 的 API Key、业务日志与运行配置通过版本化 HTTP DTO 和契约测试配套，数据库模型不直接暴露；API_KEY与BUSINESS_LOGS已定义固定HTTP facade及默认client，领域扩展保留typed adapter入口。本轮没有运行配置组件或后端实现。
 
 ## 最小运行与固定产物
 
@@ -27,7 +27,7 @@ pnpm test:consumer
 pnpm preview
 ```
 
-访问 /menu-react/、/menu-vanilla/ 最小菜单，/http-react/、/http-vanilla/ 标准查询页，/login-react/、/login-vanilla/ 配置登录页，/api-key-react/、/api-key-vanilla/ 管理组件，/business-log-react/、/business-log-vanilla/ 业务日志，/log-react/、/log-vanilla/ 独立结构化错误查询，/foundation-react/、/foundation-vanilla/ 列表/表单/详情与动态加载。浏览器检查使用已有 Chromium，或 pnpm exec playwright install chromium。没有部署/发布操作。
+访问 /capabilities-react/、/capabilities-vanilla/ 侧栏/确认/右键菜单/表格/下载与默认页面HTTP，/menu-react/、/menu-vanilla/ 最小菜单，/http-react/、/http-vanilla/ 标准查询页，/login-react/、/login-vanilla/ 配置登录页，/api-key-react/、/api-key-vanilla/ 管理组件，/business-log-react/、/business-log-vanilla/ 业务日志，/log-react/、/log-vanilla/ 独立结构化错误查询，/foundation-react/、/foundation-vanilla/ 列表/表单/详情与动态加载。浏览器检查使用已有 Chromium，或 pnpm exec playwright install chromium。没有部署/发布操作。
 
 test:consumer 将三个包 npm pack，在每次新目录安装 tarball，再从正式 ESM/CSS/types 编译和打包；原生不安装 React，React peers 单实例。生产接入也固定已验证提交，先构建并安装本地 tarball；包尚未发布，不默认填写不存在的 registry 版本。无 monorepo package src alias 或下游 Tailwind 扫描要求；菜单/HTTP/登录/API Key/日志/错误观察/foundation 示例只消费公开 CSS，最初 vanilla/react 示例保留自身页面 layout.css，它不是库所需的样式依赖。
 
@@ -67,7 +67,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 | Field/Input/Textarea/NativeSelect/Fieldset/Checkbox/Radio/Switch | label/controlId/name/value/checked、help/error/required/readOnly | 单 id/描述与分组关联；复合输入显式 controlId，保留标准事件 |
 | Select/Combobox | peer generic items/value、受控回调、公开 Root/Trigger/Input/List/Item/Content | peer 选择/搜索/键盘/取消，xui 皮肤；原生 select/datalist 的 OS 差异明确 |
 | NavItem/Breadcrumbs/Pagination/Disclosure/Tabs | 当前项/页码/open/value 与内容 | page 选中、受控确认、disabled/RTL/方向键；Tabs 为实际 Root/List/Tab/Panel 部件 |
-| Dialog/Menu/Popover/Tooltip/Toast | open/value、内容/执行回调、finalFocus，Toast manager | 公开部件/Content/positionerProps；模态/外点/Esc/回焦点；Tooltip 只放说明 |
+| Dialog/Sheet/AlertDialog/ContextMenu/Menu/Popover/Tooltip/Toast | open/value、内容/执行回调、finalFocus，Toast manager | 公开部件/Content/positionerProps；模态/外点/Esc/回焦点；Tooltip 只放说明 |
 | Table/TableContainer/TableCaption/TableHead/TableBody/TableRow/TableHeaderCell/TableCell/SortButton | 行/列/单元内容、scope/aria-sort/selected | 独立导出、原生 table 与命名滚动区域；排序/分页/选择由宿主，不是 rows/columns 引擎 |
 | Surface/Alert/Badge/Skeleton/Spinner/Progress | children/tone/标准元素状态 | 默认层级/role/status/motion，必要事实持续可见 |
 | DataRegion/LoadingState/EmptyState/ErrorState/RenderBoundary | busy/value、反馈、retry/cancel 与 render fallback | 刷新保留旧值，错误即时可见；render 异常与异步失败分开 |
@@ -108,3 +108,12 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 未来按螺旋升级：先逐页采用 xui，baseservice 并行完成后逐项目替换后端 adapter。每次公共合同版本变化，都同步核对消费方包依赖/固定 SHA、HTTP DTO adapter、类型声明与独立业务/页面回归；只在该项目的明确授权中实施。不等待后端才接前端，也不要求一次同时切换全部产品。
 
 最短 Codex 接入请求：`阅读 xui/.agents/skills/adopt-xui/SKILL.md，按其引用的规范和手册接入当前页面；保留业务 API/权限，使用公开产物，运行实际构建并报告通过、未跑和缺口。` 请用实际 checkout 路径替换 xui；这段请求不包含发布或其他仓库变更授权。
+
+
+## 默认接口与业务能力映射
+
+先核[页面API总索引](PAGE_APIS.md)，使用同一个HTTP/auth owner连接createApiKeyHttpAdapter与createBusinessLogHttpLoader。配置失败不得给默认权限；required/read、可选write和独立confirmed不合并；过期未撤销的key按真实capability允许撤销，已经撤销记录的删除是另一个确认操作。取消/未知结果不能重放写入，服务端仍负责鉴权、幂等和业务数据保留。
+
+两宿主[React](../examples/capabilities-react/app.tsx)/[原生](../examples/capabilities-vanilla/app.js)消费正式产物，展示[公开组合](COMPOSITIONS.md)、safe filename下载及原生页面facade。合成fetch只验证合同，不证明产品具备API Key/业务日志后端。普通程序故障和供应商凭据不得改名替代这些业务。
+
+已上线xAgent的bearer/token/me/state与固定cookie登录合同不同，须单独升级评估；临时桥梁保留旧鉴权/业务、明确目标与移除条件。未发布项目直接向原生commons/webfacade/httpx标准化，由该项目自身授权实施。这里不授权修改后端、baseservice/commons、删除业务数据或部署。

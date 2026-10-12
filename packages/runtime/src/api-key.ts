@@ -92,17 +92,19 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
       listAbort=undefined;emit({rows:Object.freeze(parsed),hasLoaded:true,listBusy:false});
     }catch{if(!dead&&generation===listGeneration){listAbort=undefined;emit({listBusy:false,listError:labels.listError});}}
   }
-  const canRevoke=(key:Readonly<ApiKeyMetadata>)=>{if(dead||key.status==='revoked'||key.capabilities?.revoke===false)return false;try{return options.canRevoke?.(key)??key.capabilities?.revoke??false;}catch{return false;}};
-  const canDeleteRecord=(key:Readonly<ApiKeyMetadata>)=>{if(dead||key.status!=='revoked'||!options.adapter.deleteRecord||key.capabilities?.deleteRecord===false)return false;try{return options.canDeleteRecord?.(key)??key.capabilities?.deleteRecord??false;}catch{return false;}};
+  const canRevoke=(key:Readonly<ApiKeyMetadata>)=>{const session=actionGeneration;if(dead||key.status==='revoked'||key.capabilities?.revoke===false)return false;try{const allowed=options.canRevoke?.(key)??key.capabilities?.revoke??false;return !dead&&session===actionGeneration&&allowed;}catch{return false;}};
+  const canDeleteRecord=(key:Readonly<ApiKeyMetadata>)=>{const session=actionGeneration;if(dead||key.status!=='revoked'||!options.adapter.deleteRecord||key.capabilities?.deleteRecord===false)return false;try{const allowed=options.canDeleteRecord?.(key)??key.capabilities?.deleteRecord??false;return !dead&&session===actionGeneration&&allowed;}catch{return false;}};
   const uncertain=(error:unknown)=>!isHttpError(error)||!(error.kind==='business'||error.kind==='http'&&error.status!==undefined&&error.status>=400&&error.status<500);
   async function submitCreate(){
     if(dead||state.phase!=='create'||state.actionBusy||state.actionUncertain||options.canCreate!==true)return;
+    const session=actionGeneration,originalDraft=state.draft;const current=()=>!dead&&actionGeneration===session&&state.phase==='create'&&state.draft===originalDraft&&!state.actionBusy&&!state.actionUncertain;
     const draft=Object.freeze({...state.draft,name:state.draft.name.trim(),permissionIds:Object.freeze([...state.draft.permissionIds])});
     let fieldErrors:ApiKeyFieldErrors={};if(!draft.name)fieldErrors.name=labels.nameRequired;
     if(new Set(draft.permissionIds).size!==draft.permissionIds.length||draft.permissionIds.some(id=>!permissionIds.has(id)||permissions.find(item=>item.id===id)?.disabled)||permissions.some(item=>item.required&&!draft.permissionIds.includes(item.id)))fieldErrors.permissions=labels.permissionsInvalid;
     if(!expiryIds.has(draft.expiryId))fieldErrors.expiry=labels.expiryInvalid;
     if(options.confirmationLabel&&draft.confirmed!==true)fieldErrors.confirmation=labels.confirmationRequired;
-    try{const hostErrors=options.validateCreate?.(draft),safeErrors:ApiKeyFieldErrors={};for(const key of ['name','permissions','expiry','confirmation'] as const){const message=hostErrors?.[key];if(message!==undefined&&typeof message!=='string')throw new TypeError('Field errors must be display-safe strings');if(message)safeErrors[key]=message;}fieldErrors={...safeErrors,...fieldErrors};}catch{emit({actionError:labels.createError});return;}
+    try{const hostErrors=options.validateCreate?.(draft),safeErrors:ApiKeyFieldErrors={};for(const key of ['name','permissions','expiry','confirmation'] as const){const message=hostErrors?.[key];if(message!==undefined&&typeof message!=='string')throw new TypeError('Field errors must be display-safe strings');if(message)safeErrors[key]=message;}fieldErrors={...safeErrors,...fieldErrors};}catch{if(current())emit({actionError:labels.createRejected});return;}
+    if(!current())return;
     if(Object.values(fieldErrors).some(Boolean)){emit({fieldErrors:Object.freeze(fieldErrors),actionError:null});return;}
     const generation=++actionGeneration,controller=new AbortController();actionAbort=controller;emit({draft,actionBusy:true,fieldErrors:Object.freeze({}),actionError:null});
     if(dead||generation!==actionGeneration)return;
@@ -113,7 +115,8 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
     }catch(error){if(!dead&&generation===actionGeneration){secret=null;actionAbort=undefined;const unknown=uncertain(error);emit({actionBusy:false,actionUncertain:unknown,actionError:unknown?labels.createError:labels.createRejected});}}
   }
   async function confirmAction(operation:'revoke'|'delete'){
-    const target=state.revokeTarget;if(dead||state.phase!==operation||state.actionBusy||state.actionUncertain||!target||!(operation==='revoke'?canRevoke(target):canDeleteRecord(target)))return;
+    const target=state.revokeTarget,session=actionGeneration;if(dead||state.phase!==operation||state.actionBusy||state.actionUncertain||!target)return;
+    const permitted=operation==='revoke'?canRevoke(target):canDeleteRecord(target);if(!permitted||dead||session!==actionGeneration||state.phase!==operation||state.revokeTarget!==target||state.actionBusy||state.actionUncertain)return;
     const generation=++actionGeneration,controller=new AbortController();actionAbort=controller;emit({actionBusy:true,actionError:null});if(dead||generation!==actionGeneration)return;
     try{const result=await wait(()=>operation==='revoke'?options.adapter.revoke(target,{signal:controller.signal}):options.adapter.deleteRecord!(target,{signal:controller.signal}),controller);if(dead||generation!==actionGeneration)return;if(result!==undefined)throw new TypeError('A successful management callback returns void');
       actionAbort=undefined;listGeneration++;listAbort?.abort();listAbort=undefined;emit({listBusy:false,rows:Object.freeze(operation==='delete'?state.rows.filter(row=>row.id!==target.id):state.rows.map(row=>row.id===target.id?Object.freeze({...row,status:'revoked' as const,...(row.capabilities?{capabilities:Object.freeze({...row.capabilities,revoke:false})}:{})}):row))});if(!dead&&generation===actionGeneration)close();

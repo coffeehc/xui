@@ -17,9 +17,9 @@
 
 createHttpClient 配置 baseURL、fetch、headers/getHeaders、默认 response/adapter、timeoutMs/credentials、onUnauthorized/onError。baseURL 必须无 URL 凭据、为绝对 HTTP(S)；request 必须同源，各后端可各建客户端。ESM 导入不发请求、不读 DOM。库不保存 token、storage、cache 或路由；headers/provider 来自宿主。
 
-request(path,options) 接收 method、headers、body 或 json、signal、timeoutMs、response/adapter、endpointId、retry、detectAjaxErrors、credentials/cache/redirect。json:null 合法，json/body 不同时指定。默认 GET/same-origin credentials；Ajax/JSON 缺省 Accept: application/json，避免不明确的 protobuf 协商；json 补 Content-Type，FormData 不补 boundary。headers 合并顺序为 client→provider→endpoint。endpointId 是短逻辑标识，只含字母数字/点/下划线/冒号/连字符，不能传 URL。
+request(path,options) 接收 method、headers、body 或 json、signal、timeoutMs、response/adapter/errorAdapter、endpointId、retry、detectAjaxErrors、credentials/cache/redirect。json:null 合法，json/body 不同时指定。默认 GET/same-origin credentials；Ajax/JSON 缺省 Accept: application/json，避免不明确的 protobuf 协商；json 补 Content-Type，FormData 不补 boundary。headers 合并顺序为 client→provider→endpoint。endpointId 是短逻辑标识，只含字母数字/点/下划线/冒号/连字符，不能传 URL。
 
-没有默认 timeout，宿主明确预算；预算包含 provider、fetch、完整 body、adapter 和重试等待。取消/超时即使遇不合作 producer 也结束本地等待，不能证明服务端已停止，因此不能据此重放写操作。destroy 取消在途任务，销毁后 request 为 cancel；宿主同步释放 resource 与订阅。
+按DESIGN，普通请求默认30秒、blob下载默认120秒；宿主可以明确覆盖预算。预算包含 provider、fetch、完整 body、adapter 和重试等待。取消/超时即使遇不合作 producer 也结束本地等待，不能证明服务端已停止，因此不能据此重放写操作。destroy 取消在途任务，销毁后 request 为 cancel；宿主同步释放 resource 与订阅。
 
 ## 模式与响应
 
@@ -35,13 +35,13 @@ JSON 空 body/HTML/缺字段为 parse 错误，不默认为成功；204 在 ajax
 
 createAjaxResponseAdapter({successCode}) 明确采用其他成功 code。ResponseAdapter 接收未知解码值和 status/headerRequestId/endpointId/attempts，返回 payload 和可选 code/bodyRequestId/redirect；缺 payload 的结果被拒绝。客户端 adapter 属于默认模式，endpoint 明确换 response 模式时不继承不同模式的 adapter，也可提供 endpoint adapter。
 
-响应为 payload/status/code/requestId/bodyRequestId/headerRequestId/redirect；非空 body id 优先 header，两者都保留，不伪造 traceId。redirect 只是数据，不触发应用导航。默认没有原始 Response/完整 headers/请求对象。领域校验只在一次声明的 endpoint adapter；标准请求不把 null 改成其他字段。
+响应为 payload/status/code/requestId/bodyRequestId/headerRequestId/redirect；非空 body id 优先 header，两者都保留，不伪造 traceId。redirect 只是数据，不触发应用导航。成功响应headers仅为冻结的contentType/contentDisposition/contentLength，超过长度或含控制字符的值为null；没有原始Response、完整Headers或请求对象，Authorization/Set-Cookie/WWW-Authenticate不会暴露。领域校验只在一次声明的 endpoint adapter；标准请求不把 null 改成其他字段。
 
-下载若可能用 HTTP 200 Go envelope 返回失败，显式 detectAjaxErrors:true 检查完整失败形状；普通 JSON 文件不会被猜成错误。无流式/SSE/WebSocket/protobuf、上传进度、断点续传或文件安全校验支持声明，这些协议另行明确接入。
+requestDownload默认120秒与detectAjaxErrors:true，保留HTTP200原生Go失败envelope检测；明确attachment的JSON文件保持文件，不猜为错误。resolveDownloadFileName优先UTF-8 filename*，处理引号/重复参数/无效编码并清理路径、控制字符与方向控制字符；不是文件内容安全检查。saveDownload只在宿主明确用户动作中调用，临时link和URL释放且不改焦点。下载不是JS读取认证头的理由。无流式/SSE/WebSocket/protobuf、上传进度、断点续传或文件安全校验支持声明，这些协议另行明确接入。
 
 ## 安全错误、认证与重试
 
-HttpError.kind 为 cancel/network/timeout/http/parse/business；metadata 仅保存 status/code、两种 request id、endpointId、attempts、retryAfterMs/readFailure。默认 message/getHttpErrorMessage 是安全固定文字，不包含 native fetch 敏感 URL、后端 message、body、headers 或 cause。领域反馈按 code 显式映射，不能直接把未知 Error.message 放入 Toast；后端仍须保证 request id 可公开展示。
+HttpError.kind 为 cancel/network/timeout/http/parse/business；metadata保存status、number/string业务code、两种request id、endpointId、attempts、retryAfterMs/readFailure。HttpError.business提供显式结构化code/message/requestId，details仅在声明安全投影时存在；它不进入默认Error.message、toJSON或JSON.stringify，界面仍默认用固定安全文案。默认 message/getHttpErrorMessage 是安全固定文字，不包含 native fetch 敏感 URL、后端 message、body、headers 或 cause。领域反馈按 code 显式映射，不能直接把未知 Error.message 放入 Toast；后端仍须保证 request id 可公开展示。
 
 onError 可一次绑定宿主反馈，cancel 不调用；交给 onUnauthorized 的 401 不重复调用 onError。同步抛错/异步拒绝不改变 HTTP 事实。必要错误同时在页面 ErrorState 可见，不能只放消失通知。
 
@@ -70,3 +70,11 @@ parseListData 仅接受 list 数组/null、非负 safe integer total；不猜 it
 迁移先检查旧请求承载的 headers/credentials、权限、缓存/去重、认证、日志、取消、上传/下载及业务恢复；保留必要行为，再收敛一个 transport/auth/error/resource owner。采用默认协议的产品使用准确 Go envelope/list/query，不保留长期别名猜测链；对已上线xAgent，暂不符合的接口须在升级方案采用明确、有限、有移除计划的adapter；未发布项目直接改用新合同，不增加旧字段/旧code兼容链。正常领域adapter按公开接口连接业务，详见[发布状态原则](ADOPTION.md#发布状态与升级原则)。
 
 删除精确重复的 fetch 拦截器/认证跳转/Toast/loading owner；保留领域 API 作为一次 endpoint adapter。移除私造 query AST、隐式页码/日期/object 转换和重复编码。按 [采用手册](ADOPTION.md) 逐页迁移、真实构建验收，不先盲删业务权限/功能。
+
+## 非2xx结构化错误与临时迁移桥梁
+
+本轮只读核对xLead@e766fb2a67d11880fd5f1db4d3b693511219017c的[http.go](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/plugin/api/http.go)与[api.js](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/web/api.js)：其非2xx为`{error:{code:string,message:string,request_id:string}}`，没有已声明details字段。临时使用createJsonApiErrorAdapter精确映射该对象；不支持猜测顶层code/msg或JSON:API errors数组。长期目标是由采用项目在自身授权范围改成原生httpx，不把桥梁当第二套永久通用合同。
+
+ErrorResponseAdapter可在client或单request明确配置；原生默认adapter保留Go字段，页面默认adapters显式选原生解析，并固定Accept:application/json及JSON写入Content-Type:application/json；保留其他宿主headers，不继承临时旧编码协议。HTTP status与业务code分开；任何body解析/投影失败保持HTTP事实和readFailure，不伪造成功。解码后结构化投影上限为64KiB JSON响应（当前先完整读取，非流式读取上限），message最多2048字符；details需显式allowlist投影，最多16KiB/depth8/512节点，拒绝函数/getter/prototype/cycle/unsafe整数。投影限制不等于后端脱敏；不能全量日志或直接弹出原始敏感响应。
+
+401仍在收到响应头时按现有epoch通知，不能依赖该早期回调取得body code。需要按旧宿主业务码判断失效的临时桥梁，显式unauthorized:ignore并由已有认证owner处理最终HttpError，不另造认证owner或吞掉401。跨origin下载需后端准确CORS与Expose-Headers允许Content-Disposition等所需字段；库不会绕过浏览器策略。

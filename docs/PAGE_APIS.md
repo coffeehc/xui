@@ -21,7 +21,7 @@ xui 的目的包括统一品牌、前端体系与通用前后端接口。采用�
 | StructuredLogExplorer/createStructuredLogExplorer | 已声明四操作DTO/facade，endpoints由宿主明确 | 独立程序错误观察，仍按 [LOGS](LOGS.md)；不能用它代替业务日志，也不宣称对应后端已存在 |
 | MenuLayout、公共布局、表格、字段与弹层 | 公开数据/props/parts/controllers，无业务路由默认值 | 普通需求组合公开能力；业务API、授权、筛选范围和执行属于业务层，不用组件内部DOM或私有皮肤接入 |
 
-新默认 HTTP adapters 正在本轮补齐；其可调用性以最终提交的 [PUBLIC_API](PUBLIC_API.md)、声明及正式打包消费为准。本文不把开发中源码或合成成功当作生产集成通过。
+默认HTTP adapters已实现；其可调用性和实测结果以最终提交的 [PUBLIC_API](PUBLIC_API.md)、声明及正式打包消费为准。合成合同通过不代表生产后端已集成。
 
 ## 必须遵循与允许扩展
 

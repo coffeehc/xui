@@ -123,3 +123,10 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 真实Cookie签发/撤销、安全属性、CSRF/CORS、鉴权、tenant与真实业务/日志后端均未实现或集成验证。注册、重置、SSO和完整用户管理是后续组合，不声称基础系统全部完成或任何产品已迁移；原有真实移动OS/读屏器/其它浏览器/原生zoom/SSR/生产性能未跑限制保持。包private，不发布不部署，不改许可证/可见性或其它仓库。
 
 最新用户澄清：业务日志用于随时查询，早期BusinessAudit名称统一改为BusinessLog、business-log公开入口和两示例路径，原控制器/字段/payload安全与权限边界保持在同一实现内，不增加重复页或正式审计保证。独立程序错误观察仍为原LOGS用途。baseservice收敛日志能力及取消auditservice不在本轮实施范围，前端可先接现有typed loader；重新冻结提交与全套验收，以本轮最终交付为准。
+
+
+## 公共能力与默认原生页面API
+
+阶段基线为5adbf5c，源合同与逐项范围见[PAGE_APIS](PAGE_APIS.md)、[COMPOSITIONS](COMPOSITIONS.md)及[最终审查](FINAL_REVIEW.md#公共能力与原生页面api补齐)。不改DESIGN受控271变量或其它仓库。已实现默认API Key/业务日志HTTP适配、下载与安全结构化错误、三种弹层组合和条纹/展开/sticky表格，两类新消费者只消费正式包与公开CSS。
+
+定向20/20、全部116单测、typecheck、正式tarballs/types/ESM/CSS/init检查通过；新增浏览器初轮10/12的两个定位器问题按公开button/summary语义纠正后12/12通过。五个独立可复现P2修复与回归详见FINAL_REVIEW。当前完整门禁为59入口/18消费者/116单测/1默认watch/152浏览器；最终SHA全verify和CI结果由实际交付记录，不拿合成消费者当产品迁移或后端集成。真实Cookie/CSRF/CORS/tenant/鉴权/生产日志与密钥服务、其他浏览器/读屏器/真实移动OS/原生zoom/SSR/生产性能仍未跑。

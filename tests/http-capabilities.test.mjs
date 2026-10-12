@@ -32,7 +32,7 @@ test('filenames prefer UTF-8 extended values, handle quoted separators and rejec
 });
 test('download defaults retain JSON API failures while allowing explicitly attached JSON files',async()=>{
   const body=wire(null,{success:false,code:1234,message:'FAKE_PRIVATE_ERROR'});let accept;
-  await assert.rejects(requestDownload(owner(async(_,init)=>{accept=init.headers.get('accept');return json(body);}),'/file'),error=>error.kind==='business'&&error.code===1234);assert.equal(accept,'application/json');
+  for(const mediaType of ['application/json','Application/JSON; charset=utf-8','application/problem+json'])await assert.rejects(requestDownload(owner(async(_,init)=>{accept=init.headers.get('accept');return json(body,200,{'Content-Type':mediaType});}),'/file'),error=>error.kind==='business'&&error.code===1234);assert.equal(accept,'application/json');
   const result=await requestDownload(owner(async()=>json(body,200,{'Content-Disposition':"attachment; filename*=UTF-8''%E6%95%B0%E6%8D%AE.json"})),'/file');assert.equal(result.fileName,'数据.json');assert.equal(await result.blob.text(),JSON.stringify(body));
 });
 test('download cancellation cannot expose a late file or turn a server error into success',async()=>{
