@@ -101,7 +101,7 @@ export function checkStyles(styles, values, runtimeVariables = []) {
     }
   });
 }
-export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth'];
+export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet'];
 export async function generate(check = false, outputDirectory='packages/theme/dist') {
   const doc = await readFile('docs/DESIGN.md','utf8');
   const { css, light } = checkContract(doc);

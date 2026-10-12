@@ -5,7 +5,7 @@ const value='FAKE_UNIT_TEST_ONE_TIME_VALUE';
 const row=(extra={})=>({id:'demo-1',name:'示例',prefix:'FAKE',permissionIds:['demo.read'],createdAt:null,expiresAt:null,lastUsedAt:null,status:'active',...extra});
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
 const tick=async()=>{await Promise.resolve();await Promise.resolve();};
-const make=(overrides={})=>createApiKeyManagerController({permissions:[{id:'demo.read',label:'读取'},{id:'demo.disabled',label:'禁用',disabled:true}],expiryOptions:[{id:'host.never',label:'宿主声明：无到期'}],defaultExpiryId:'host.never',adapter:{list:async()=>[row()],create:async()=>({metadata:row(),secret:value}),revoke:async()=>{}},...overrides});
+const make=(overrides={})=>createApiKeyManagerController({canCreate:true,canRevoke:key=>key.status==='active',permissions:[{id:'demo.read',label:'读取'},{id:'demo.disabled',label:'禁用',disabled:true}],expiryOptions:[{id:'host.never',label:'宿主声明：无到期'}],defaultExpiryId:'host.never',adapter:{list:async()=>[row()],create:async()=>({metadata:row(),secret:value}),revoke:async()=>{}},...overrides});
 test('API key metadata is a strict immutable allowlist, with null and unknown preserved',()=>{
  const parsed=parseApiKeyMetadata(row({status:null,prefix:null,secret:value,token:value,privateBody:value}));assert.equal(parsed.status,null);assert.equal(parsed.prefix,null);assert.equal(parsed.createdAt,null);assert.ok(Object.isFrozen(parsed));assert.ok(Object.isFrozen(parsed.permissionIds));assert.ok(!JSON.stringify(parsed).includes(value));
  for(const extra of [{status:'guessed'},{permissionIds:'read'},{createdAt:undefined},{prefix:undefined},{id:''}])assert.throws(()=>parseApiKeyMetadata(row(extra)),TypeError);

@@ -23,6 +23,7 @@
     "./floating.css": "./dist/floating.css",
     "./table.css": "./dist/table.css",
     "./critical.css": "./dist/critical.css",
-    "./auth.css": "./dist/auth.css"
+    "./auth.css": "./dist/auth.css",
+    "./sheet.css": "./dist/sheet.css"
   }
 }

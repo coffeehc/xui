@@ -91,6 +91,18 @@
     "./login": {
       "types": "./dist/login.d.ts",
       "import": "./dist/login.js"
+    },
+    "./sheet": {
+      "types": "./dist/sheet.d.ts",
+      "import": "./dist/sheet.js"
+    },
+    "./alert-dialog": {
+      "types": "./dist/alert-dialog.d.ts",
+      "import": "./dist/alert-dialog.js"
+    },
+    "./context-menu": {
+      "types": "./dist/context-menu.d.ts",
+      "import": "./dist/context-menu.js"
     }
   },
   "types": "./dist/index.d.ts",

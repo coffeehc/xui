@@ -1,23 +1,28 @@
+import {isHttpError} from './http.js';
 /** Public metadata only. The host supplies a display-safe prefix, never the full key. */
 export interface ApiKeyMetadata {
   id:string; name:string; prefix:string|null; permissionIds:readonly string[];
   createdAt:string|null; expiresAt:string|null; lastUsedAt:string|null;
   status:'active'|'revoked'|'expired'|'unknown'|null;
+  capabilities?:Readonly<{revoke:boolean;deleteRecord:boolean}>;
 }
-export interface ApiKeyPermission {id:string;label:string;description?:string;disabled?:boolean}
+export interface ApiKeyPermission {id:string;label:string;description?:string;disabled?:boolean;required?:boolean}
 export interface ApiKeyExpiry {id:string;label:string}
-export interface ApiKeyDraft {name:string;permissionIds:readonly string[];expiryId:string}
+export interface ApiKeyDraft {name:string;permissionIds:readonly string[];expiryId:string;confirmed?:boolean}
 export interface CreatedApiKey {metadata:ApiKeyMetadata;secret:string}
-export interface ApiKeyFieldErrors {name?:string;permissions?:string;expiry?:string}
+export interface ApiKeyFieldErrors {name?:string;permissions?:string;expiry?:string;confirmation?:string}
 export interface ApiKeyAdapter {
   list:(context:{signal:AbortSignal})=>Promise<readonly ApiKeyMetadata[]>;
   create:(draft:Readonly<ApiKeyDraft>,context:{signal:AbortSignal})=>Promise<CreatedApiKey>;
   revoke:(key:Readonly<ApiKeyMetadata>,context:{signal:AbortSignal})=>Promise<void>;
+  /** Deletes an already revoked management record; it does not revoke a credential or delete business data. */
+  deleteRecord?:(key:Readonly<ApiKeyMetadata>,context:{signal:AbortSignal})=>Promise<void>;
 }
 export interface ApiKeyManagerOptions {
   adapter:ApiKeyAdapter;permissions:readonly ApiKeyPermission[];expiryOptions:readonly ApiKeyExpiry[];
   defaultExpiryId:string;defaultPermissionIds?:readonly string[];canCreate?:boolean;
   canRevoke?:(key:Readonly<ApiKeyMetadata>)=>boolean;
+  canDeleteRecord?:(key:Readonly<ApiKeyMetadata>)=>boolean;confirmationLabel?:string;
   validateCreate?:(draft:Readonly<ApiKeyDraft>)=>ApiKeyFieldErrors|void;
   labels?:Partial<ApiKeyLabels>;
 }
@@ -29,12 +34,13 @@ export const apiKeyDefaultLabels={
   creationPending:'Closing cancels local waiting. The server may still create the key; its one-time value may be lost.',
   resultTitle:'Key created',oneTime:'This value is shown once. Save it securely before closing.',secret:'One-time key value',copy:'Copy key',copying:'Copying…',copied:'Copied',copyError:'Copy failed. Select and copy the value manually.',
   revokeTitle:'Revoke API key',revokeWarning:'Revoking this key prevents its future use. Existing clients may stop working.',confirmRevoke:'Confirm revocation',revoking:'Revoking key…',revokeError:'The revocation result is unconfirmed. Refresh the list before confirming again.',revokePending:'Closing cancels local waiting. The server may still revoke this key.',
+  createRejected:'The key creation was rejected.',revokeRejected:'The key revocation was rejected.',deleteRejected:'The record deletion was rejected.',actions:'Actions',confirmation:'Authorization confirmation',confirmationRequired:'Confirm the declared permissions before creating the key.',deleteRecord:'Delete record',deleteTitle:'Delete revoked key record',deleteWarning:'This permanently removes the revoked key management record. Existing business records are retained.',confirmDelete:'Confirm record deletion',deleting:'Deleting record…',deleteError:'The deletion result is unconfirmed. Refresh the list before confirming again.',deletePending:'Closing cancels local waiting. The server may still delete this management record.',
 } as const;
 export type ApiKeyLabels={ [Key in keyof typeof apiKeyDefaultLabels]:string };
 export interface ApiKeyManagerState {
   rows:readonly Readonly<ApiKeyMetadata>[];listBusy:boolean;hasLoaded:boolean;listError:string|null;
-  phase:'closed'|'create'|'result'|'revoke';draft:Readonly<ApiKeyDraft>;fieldErrors:Readonly<ApiKeyFieldErrors>;
-  actionBusy:boolean;actionError:string|null;resultMetadata:Readonly<ApiKeyMetadata>|null;revokeTarget:Readonly<ApiKeyMetadata>|null;
+  phase:'closed'|'create'|'result'|'revoke'|'delete';draft:Readonly<ApiKeyDraft>;fieldErrors:Readonly<ApiKeyFieldErrors>;
+  actionBusy:boolean;actionError:string|null;actionUncertain:boolean;resultMetadata:Readonly<ApiKeyMetadata>|null;revokeTarget:Readonly<ApiKeyMetadata>|null;
   copyStatus:'idle'|'copying'|'copied'|'error';
 }
 export interface ApiKeyManagerController {
@@ -42,6 +48,7 @@ export interface ApiKeyManagerController {
   getState:()=>Readonly<ApiKeyManagerState>;subscribe:(listener:()=>void)=>()=>void;
   refresh:()=>Promise<void>;cancelList:()=>void;openCreate:()=>void;setDraft:(draft:Partial<ApiKeyDraft>)=>void;
   submitCreate:()=>Promise<void>;openRevoke:(id:string)=>void;confirmRevoke:()=>Promise<void>;canRevoke:(key:Readonly<ApiKeyMetadata>)=>boolean;
+  openDeleteRecord:(id:string)=>void;confirmDeleteRecord:()=>Promise<void>;canDeleteRecord:(key:Readonly<ApiKeyMetadata>)=>boolean;
   /** Only a transient view should read this; it is never included in a state snapshot. */
   readSecret:()=>string|null;copySecret:(writeText:(value:string)=>Promise<void>)=>Promise<void>;close:()=>void;destroy:()=>void;
 }
@@ -50,25 +57,27 @@ export function parseApiKeyMetadata(value:unknown):Readonly<ApiKeyMetadata>{
   const row=value as Record<string,unknown>;
   if(typeof row.id!=='string'||!row.id||typeof row.name!=='string'||!Array.isArray(row.permissionIds)||row.permissionIds.some(id=>typeof id!=='string')||![null,'active','revoked','expired','unknown'].includes(row.status as null))throw new TypeError('Invalid API key metadata');
   for(const key of ['prefix','createdAt','expiresAt','lastUsedAt'])if(row[key]!==null&&typeof row[key]!=='string')throw new TypeError('Invalid nullable API key metadata');
-  return Object.freeze({id:row.id,name:row.name,prefix:row.prefix as string|null,permissionIds:Object.freeze([...row.permissionIds] as string[]),createdAt:row.createdAt as string|null,expiresAt:row.expiresAt as string|null,lastUsedAt:row.lastUsedAt as string|null,status:row.status as ApiKeyMetadata['status']});
+  let capabilities:ApiKeyMetadata['capabilities'];if(row.capabilities!==undefined){const data=row.capabilities as Record<string,unknown>;if(!data||typeof data!=='object'||Object.values(Object.getOwnPropertyDescriptors(data)).some(field=>!('value'in field))||typeof data.revoke!=='boolean'||typeof data.deleteRecord!=='boolean')throw new TypeError('Invalid API key capabilities');capabilities=Object.freeze({revoke:data.revoke,deleteRecord:data.deleteRecord});}
+  return Object.freeze({id:row.id,name:row.name,prefix:row.prefix as string|null,permissionIds:Object.freeze([...row.permissionIds] as string[]),createdAt:row.createdAt as string|null,expiresAt:row.expiresAt as string|null,lastUsedAt:row.lastUsedAt as string|null,status:row.status as ApiKeyMetadata['status'],...(capabilities?{capabilities}:{})});
 }
 /** One owner for metadata, writes and a transient result. No HTTP, credentials store or key generation. */
 export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKeyManagerController {
   const ids=(items:readonly {id:string;label:string}[])=>{const seen=new Set<string>();for(const item of items){if(typeof item.id!=='string'||!item.id||seen.has(item.id)||typeof item.label!=='string')throw new TypeError('Invalid or duplicate API key option');seen.add(item.id);}return seen;};
-  const permissions=Object.freeze(input.permissions.map(item=>Object.freeze({id:item.id,label:item.label,description:item.description,disabled:item.disabled}))),expiryOptions=Object.freeze(input.expiryOptions.map(item=>Object.freeze({id:item.id,label:item.label})));
+  const permissions=Object.freeze(input.permissions.map(item=>{if(item.required&&item.disabled)throw new TypeError('A required permission cannot be unavailable');return Object.freeze({id:item.id,label:item.label,description:item.description,disabled:item.disabled,required:item.required});})),expiryOptions=Object.freeze(input.expiryOptions.map(item=>Object.freeze({id:item.id,label:item.label})));
   const permissionIds=ids(permissions),expiryIds=ids(expiryOptions);
   if(!expiryIds.has(input.defaultExpiryId))throw new TypeError('Declare a default expiry from the host options');
   if(new Set(input.defaultPermissionIds??[]).size!==(input.defaultPermissionIds??[]).length||(input.defaultPermissionIds??[]).some(id=>!permissionIds.has(id)||permissions.find(item=>item.id===id)?.disabled))throw new TypeError('Invalid default permission');
   if(!input.adapter||['list','create','revoke'].some(key=>typeof input.adapter[key as keyof ApiKeyAdapter]!=='function'))throw new TypeError('Declare list, create and revoke callbacks');
   const labels=Object.freeze(Object.fromEntries(Object.entries(apiKeyDefaultLabels).map(([key,value])=>{const override=input.labels?.[key as keyof ApiKeyLabels];if(override!==undefined&&typeof override!=='string')throw new TypeError('Labels must be strings');return [key,override??value];}))) as Readonly<ApiKeyLabels>;
-  const options=Object.freeze({adapter:Object.freeze({list:input.adapter.list,create:input.adapter.create,revoke:input.adapter.revoke}),permissions,expiryOptions,defaultExpiryId:input.defaultExpiryId,defaultPermissionIds:Object.freeze([...(input.defaultPermissionIds??[])]),canCreate:input.canCreate,canRevoke:input.canRevoke,validateCreate:input.validateCreate,labels});
-  const freshDraft=()=>Object.freeze({name:'',permissionIds:options.defaultPermissionIds,expiryId:options.defaultExpiryId});
-  let state:Readonly<ApiKeyManagerState>=Object.freeze({rows:Object.freeze([]),listBusy:false,hasLoaded:false,listError:null,phase:'closed',draft:freshDraft(),fieldErrors:Object.freeze({}),actionBusy:false,actionError:null,resultMetadata:null,revokeTarget:null,copyStatus:'idle'});
+  if(input.confirmationLabel!==undefined&&(typeof input.confirmationLabel!=='string'||!input.confirmationLabel.trim()))throw new TypeError('Declare a confirmation label');if(input.adapter.deleteRecord!==undefined&&typeof input.adapter.deleteRecord!=='function')throw new TypeError('Invalid delete record callback');
+  const options=Object.freeze({adapter:Object.freeze({list:input.adapter.list,create:input.adapter.create,revoke:input.adapter.revoke,deleteRecord:input.adapter.deleteRecord}),permissions,expiryOptions,defaultExpiryId:input.defaultExpiryId,defaultPermissionIds:Object.freeze([...new Set([...(input.defaultPermissionIds??[]),...permissions.filter(item=>item.required).map(item=>item.id)])]),canCreate:input.canCreate,canRevoke:input.canRevoke,canDeleteRecord:input.canDeleteRecord,confirmationLabel:input.confirmationLabel,validateCreate:input.validateCreate,labels});
+  const freshDraft=()=>Object.freeze({name:'',permissionIds:options.defaultPermissionIds,expiryId:options.defaultExpiryId,...(options.confirmationLabel?{confirmed:false}:{})});
+  let state:Readonly<ApiKeyManagerState>=Object.freeze({rows:Object.freeze([]),listBusy:false,hasLoaded:false,listError:null,phase:'closed',draft:freshDraft(),fieldErrors:Object.freeze({}),actionBusy:false,actionError:null,actionUncertain:false,resultMetadata:null,revokeTarget:null,copyStatus:'idle'});
   let dead=false,secret:string|null=null,listGeneration=0,actionGeneration=0,copyGeneration=0,listAbort:AbortController|undefined,actionAbort:AbortController|undefined;
   const listeners=new Set<()=>void>();
   const emit=(patch:Partial<ApiKeyManagerState>)=>{state=Object.freeze({...state,...patch});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* View failures cannot replay a write. */}};
   const cancelList=()=>{if(dead)return;listGeneration++;listAbort?.abort();listAbort=undefined;emit({listBusy:false,listError:null});};
-  const close=()=>{if(dead)return;actionGeneration++;copyGeneration++;secret=null;actionAbort?.abort();actionAbort=undefined;emit({phase:'closed',draft:freshDraft(),fieldErrors:Object.freeze({}),actionBusy:false,actionError:null,resultMetadata:null,revokeTarget:null,copyStatus:'idle'});};
+  const close=()=>{if(dead)return;actionGeneration++;copyGeneration++;secret=null;actionAbort?.abort();actionAbort=undefined;emit({phase:'closed',draft:freshDraft(),fieldErrors:Object.freeze({}),actionBusy:false,actionError:null,actionUncertain:false,resultMetadata:null,revokeTarget:null,copyStatus:'idle'});};
   const wait=async<T>(operation:()=>Promise<T>,controller:AbortController)=>{
     if(controller.signal.aborted)throw new DOMException('Cancelled','AbortError');
     let abort=()=>{};const cancelled=new Promise<never>((_,reject)=>{abort=()=>reject(new DOMException('Cancelled','AbortError'));controller.signal.addEventListener('abort',abort,{once:true});});
@@ -83,14 +92,17 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
       listAbort=undefined;emit({rows:Object.freeze(parsed),hasLoaded:true,listBusy:false});
     }catch{if(!dead&&generation===listGeneration){listAbort=undefined;emit({listBusy:false,listError:labels.listError});}}
   }
-  const canRevoke=(key:Readonly<ApiKeyMetadata>)=>{if(dead||key.status==='revoked'||key.status==='expired')return false;try{return options.canRevoke?.(key)??key.status==='active';}catch{return false;}};
+  const canRevoke=(key:Readonly<ApiKeyMetadata>)=>{if(dead||key.status==='revoked'||key.capabilities?.revoke===false)return false;try{return options.canRevoke?.(key)??key.capabilities?.revoke??false;}catch{return false;}};
+  const canDeleteRecord=(key:Readonly<ApiKeyMetadata>)=>{if(dead||key.status!=='revoked'||!options.adapter.deleteRecord||key.capabilities?.deleteRecord===false)return false;try{return options.canDeleteRecord?.(key)??key.capabilities?.deleteRecord??false;}catch{return false;}};
+  const uncertain=(error:unknown)=>!isHttpError(error)||!(error.kind==='business'||error.kind==='http'&&error.status!==undefined&&error.status>=400&&error.status<500);
   async function submitCreate(){
-    if(dead||state.phase!=='create'||state.actionBusy||options.canCreate===false)return;
+    if(dead||state.phase!=='create'||state.actionBusy||state.actionUncertain||options.canCreate!==true)return;
     const draft=Object.freeze({...state.draft,name:state.draft.name.trim(),permissionIds:Object.freeze([...state.draft.permissionIds])});
     let fieldErrors:ApiKeyFieldErrors={};if(!draft.name)fieldErrors.name=labels.nameRequired;
-    if(new Set(draft.permissionIds).size!==draft.permissionIds.length||draft.permissionIds.some(id=>!permissionIds.has(id)||permissions.find(item=>item.id===id)?.disabled))fieldErrors.permissions=labels.permissionsInvalid;
+    if(new Set(draft.permissionIds).size!==draft.permissionIds.length||draft.permissionIds.some(id=>!permissionIds.has(id)||permissions.find(item=>item.id===id)?.disabled)||permissions.some(item=>item.required&&!draft.permissionIds.includes(item.id)))fieldErrors.permissions=labels.permissionsInvalid;
     if(!expiryIds.has(draft.expiryId))fieldErrors.expiry=labels.expiryInvalid;
-    try{const hostErrors=options.validateCreate?.(draft),safeErrors:ApiKeyFieldErrors={};for(const key of ['name','permissions','expiry'] as const){const message=hostErrors?.[key];if(message!==undefined&&typeof message!=='string')throw new TypeError('Field errors must be display-safe strings');if(message)safeErrors[key]=message;}fieldErrors={...safeErrors,...fieldErrors};}catch{emit({actionError:labels.createError});return;}
+    if(options.confirmationLabel&&draft.confirmed!==true)fieldErrors.confirmation=labels.confirmationRequired;
+    try{const hostErrors=options.validateCreate?.(draft),safeErrors:ApiKeyFieldErrors={};for(const key of ['name','permissions','expiry','confirmation'] as const){const message=hostErrors?.[key];if(message!==undefined&&typeof message!=='string')throw new TypeError('Field errors must be display-safe strings');if(message)safeErrors[key]=message;}fieldErrors={...safeErrors,...fieldErrors};}catch{emit({actionError:labels.createError});return;}
     if(Object.values(fieldErrors).some(Boolean)){emit({fieldErrors:Object.freeze(fieldErrors),actionError:null});return;}
     const generation=++actionGeneration,controller=new AbortController();actionAbort=controller;emit({draft,actionBusy:true,fieldErrors:Object.freeze({}),actionError:null});
     if(dead||generation!==actionGeneration)return;
@@ -98,14 +110,14 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
       const metadata=parseApiKeyMetadata(result.metadata);if(typeof result.secret!=='string'||!result.secret)throw new TypeError('Expected a one-time value');
       secret=result.secret;actionAbort=undefined;listGeneration++;listAbort?.abort();listAbort=undefined;
       emit({phase:'result',actionBusy:false,resultMetadata:metadata,copyStatus:'idle',listBusy:false,rows:Object.freeze([...state.rows.filter(row=>row.id!==metadata.id),metadata])});
-    }catch{if(!dead&&generation===actionGeneration){secret=null;actionAbort=undefined;emit({actionBusy:false,actionError:labels.createError});}}
+    }catch(error){if(!dead&&generation===actionGeneration){secret=null;actionAbort=undefined;const unknown=uncertain(error);emit({actionBusy:false,actionUncertain:unknown,actionError:unknown?labels.createError:labels.createRejected});}}
   }
-  async function confirmRevoke(){
-    const target=state.revokeTarget;if(dead||state.phase!=='revoke'||state.actionBusy||!target||!canRevoke(target))return;
+  async function confirmAction(operation:'revoke'|'delete'){
+    const target=state.revokeTarget;if(dead||state.phase!==operation||state.actionBusy||state.actionUncertain||!target||!(operation==='revoke'?canRevoke(target):canDeleteRecord(target)))return;
     const generation=++actionGeneration,controller=new AbortController();actionAbort=controller;emit({actionBusy:true,actionError:null});if(dead||generation!==actionGeneration)return;
-    try{const result=await wait(()=>options.adapter.revoke(target,{signal:controller.signal}),controller);if(dead||generation!==actionGeneration)return;if(result!==undefined)throw new TypeError('A successful revoke callback returns void');
-      actionAbort=undefined;listGeneration++;listAbort?.abort();listAbort=undefined;emit({listBusy:false,rows:Object.freeze(state.rows.map(row=>row.id===target.id?Object.freeze({...row,status:'revoked' as const}):row))});if(!dead&&generation===actionGeneration)close();
-    }catch{if(!dead&&generation===actionGeneration){actionAbort=undefined;emit({actionBusy:false,actionError:labels.revokeError});}}
+    try{const result=await wait(()=>operation==='revoke'?options.adapter.revoke(target,{signal:controller.signal}):options.adapter.deleteRecord!(target,{signal:controller.signal}),controller);if(dead||generation!==actionGeneration)return;if(result!==undefined)throw new TypeError('A successful management callback returns void');
+      actionAbort=undefined;listGeneration++;listAbort?.abort();listAbort=undefined;emit({listBusy:false,rows:Object.freeze(operation==='delete'?state.rows.filter(row=>row.id!==target.id):state.rows.map(row=>row.id===target.id?Object.freeze({...row,status:'revoked' as const,...(row.capabilities?{capabilities:Object.freeze({...row.capabilities,revoke:false})}:{})}):row))});if(!dead&&generation===actionGeneration)close();
+    }catch(error){if(!dead&&generation===actionGeneration){actionAbort=undefined;const unknown=uncertain(error);emit({actionBusy:false,actionUncertain:unknown,actionError:operation==='revoke'?(unknown?labels.revokeError:labels.revokeRejected):(unknown?labels.deleteError:labels.deleteRejected)});}}
   }
   async function copySecret(writeText:(value:string)=>Promise<void>){
     if(dead||state.phase!=='result'||secret===null||state.copyStatus==='copying')return;const generation=++copyGeneration;emit({copyStatus:'copying'});
@@ -114,9 +126,10 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
     catch{if(!dead&&generation===copyGeneration)emit({copyStatus:'error'});}
   }
   return {options,labels,getState:()=>state,subscribe(listener){if(dead)return()=>{};listeners.add(listener);return()=>{listeners.delete(listener);};},refresh,cancelList,
-    openCreate(){if(dead||state.phase!=='closed'||options.canCreate===false)return;emit({phase:'create',draft:freshDraft(),fieldErrors:Object.freeze({}),actionError:null});},
-    setDraft(patch){if(dead||state.phase!=='create'||state.actionBusy)return;const draft={...state.draft,...patch};emit({draft:Object.freeze({name:draft.name,expiryId:draft.expiryId,permissionIds:Object.freeze([...draft.permissionIds])}),fieldErrors:Object.freeze({}),actionError:null});},
-    submitCreate,openRevoke(id){if(dead||state.phase!=='closed')return;const target=state.rows.find(row=>row.id===id);if(target&&canRevoke(target))emit({phase:'revoke',revokeTarget:target,actionError:null});},confirmRevoke,canRevoke,
-    readSecret:()=>!dead&&state.phase==='result'?secret:null,copySecret,close,destroy(){if(dead)return;dead=true;actionGeneration++;listGeneration++;copyGeneration++;secret=null;actionAbort?.abort();listAbort?.abort();actionAbort=undefined;listAbort=undefined;emit({phase:'closed',rows:Object.freeze([]),hasLoaded:false,listBusy:false,listError:null,draft:freshDraft(),fieldErrors:Object.freeze({}),actionBusy:false,actionError:null,resultMetadata:null,revokeTarget:null,copyStatus:'idle'});listeners.clear();},
+    openCreate(){if(dead||state.phase!=='closed'||options.canCreate!==true)return;emit({phase:'create',draft:freshDraft(),fieldErrors:Object.freeze({}),actionError:null});},
+    setDraft(patch){if(dead||state.phase!=='create'||state.actionBusy||state.actionUncertain)return;const draft={...state.draft,...patch};emit({draft:Object.freeze({name:draft.name,expiryId:draft.expiryId,permissionIds:Object.freeze([...draft.permissionIds]),...(options.confirmationLabel?{confirmed:draft.confirmed===true}:{})}),fieldErrors:Object.freeze({}),actionError:null});},
+    submitCreate,openRevoke(id){if(dead||state.phase!=='closed')return;const target=state.rows.find(row=>row.id===id);if(target&&canRevoke(target))emit({phase:'revoke',revokeTarget:target,actionError:null});},confirmRevoke:()=>confirmAction('revoke'),canRevoke,
+    openDeleteRecord(id){if(dead||state.phase!=='closed')return;const target=state.rows.find(row=>row.id===id);if(target&&canDeleteRecord(target))emit({phase:'delete',revokeTarget:target,actionError:null});},confirmDeleteRecord:()=>confirmAction('delete'),canDeleteRecord,
+    readSecret:()=>!dead&&state.phase==='result'?secret:null,copySecret,close,destroy(){if(dead)return;dead=true;actionGeneration++;listGeneration++;copyGeneration++;secret=null;actionAbort?.abort();listAbort?.abort();actionAbort=undefined;listAbort=undefined;emit({phase:'closed',rows:Object.freeze([]),hasLoaded:false,listBusy:false,listError:null,draft:freshDraft(),fieldErrors:Object.freeze({}),actionBusy:false,actionError:null,actionUncertain:false,resultMetadata:null,revokeTarget:null,copyStatus:'idle'});listeners.clear();},
   };
 }

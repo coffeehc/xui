@@ -2,6 +2,8 @@
 
 这是接入入口，引用同一份规范、公开类型和已运行的例子，不另定义品牌默认值。当前包为 private 0.1.0；采用前固定 Git SHA/本地 tarball 并核对 [全部公开入口与默认行为](PUBLIC_API.md)。菜单布局、HTTP/query、可配置登录页、API Key 管理和可扩展业务日志已实现；认证后端与日志 adapter 尚未落地。此前结构化错误查询是独立错误观察能力，不是业务日志。Codex 流程见 [adopt-xui](../.agents/skills/adopt-xui/SKILL.md)，随仓库 checkout 使用，没有安装到用户电脑或全局 skill 工作区。
 
+xui用于统一品牌、前端体系和通用前后端接口。采用项目应在自身授权范围主动使用原生commons/webfacade和httpx标准化前端API；旧协议adapter仅作注明来源、映射、目标与移除条件的临时桥梁。必须遵循的协议、默认HTTP adapters和领域扩展边界见[页面API总索引](PAGE_APIS.md)。不能以保留旧协议为长期架构目标，也不能因此削减业务能力、鉴权或已上线xAgent的升级保护。
+
 ## 阅读顺序与架构职责
 
 1. 检查 git status、当前提交、包 manifests/exports，保护本地改动后按任务授权正常 fetch。读清版本差异，不 reset/clean/强推，不覆盖业务修改。

@@ -11,6 +11,10 @@ description: 接入、迁移或评审采用 xui 的 React/原生前端页面，�
 2. 从本文件所在目录向上三级定位 xui 根。先读 [采用手册](../../../docs/ADOPTION.md)、[唯一完整规范](../../../docs/DESIGN.md)、[公开入口与默认行为](../../../docs/PUBLIC_API.md) 和 [实施映射](../../../docs/IMPLEMENTATION.md)。以当前提交的正式声明和源码核对 API，不能把计划或其他版本写成可调用能力。
 3. 读 [原子→组合→页面的单一架构源](../../../docs/FOUNDATION.md#组件层次与扩展原则)，为页面选择实际公开层次与扩展点；按需要读 [导航](../../../docs/NAVIGATION.md)、[HTTP/query](../../../docs/HTTP.md)、[登录/认证](../../../docs/AUTH.md)、[API Key](../../../docs/API_KEY.md) 或 [业务日志](../../../docs/BUSINESS_LOGS.md)；确有错误观察需求再读 [独立错误 facade](../../../docs/LOGS.md)；读 [能力边界](../../../docs/FOUNDATION.md) 与 [实际验证和限制](../../../docs/FOUNDATION_VALIDATION.md)。不要复制完整规范、默认品牌值或另造组件合同。
 
+## 统一品牌、前端体系与通用API
+
+xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/PAGE_APIS.md)，按实际commons/webfacade与httpx原生request/query/response/error定义指导采用项目在自身授权范围主动标准化后端。旧协议adapter仅为明确临时迁移：列来源SHA、准确映射、保留能力/鉴权、目标合同与移除条件；不能长期另造通用协议。xui任务本身不授权改产品后端、baseservice或commons，也不授权删除生产数据、重置或部署。已上线xAgent另评估升级兼容。
+
 ## 先保留业务能力，再接入表现层
 
 - 盘点页面的领域 API、权限/租户范围、导航条件、输入保留、认证/日志、查询/缓存、上传下载与失败恢复。记录旧行为到新公开能力的映射，先保留必要功能再删重复实现。按[发布状态原则](../../../docs/ADOPTION.md#发布状态与升级原则)处理：未发布项目不保留仅为旧接口/配置/模型服务的兼容分支；已上线xAgent单独评估升级影响，不自动改消费者、数据或部署。正常扩展和安全校验保留。

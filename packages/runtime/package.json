@@ -74,6 +74,18 @@
     "./login-dom": {
       "types": "./dist/login-dom.d.ts",
       "import": "./dist/login-dom.js"
+    },
+    "./download": {
+      "types": "./dist/download.d.ts",
+      "import": "./dist/download.js"
+    },
+    "./api-key-http": {
+      "types": "./dist/api-key-http.d.ts",
+      "import": "./dist/api-key-http.js"
+    },
+    "./business-log-http": {
+      "types": "./dist/business-log-http.d.ts",
+      "import": "./dist/business-log-http.js"
     }
   },
   "types": "./dist/index.d.ts"

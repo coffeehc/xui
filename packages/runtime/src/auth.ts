@@ -1,4 +1,4 @@
-import {HttpError,createAjaxResponseAdapter,isHttpError,type HttpClient} from './http.js';
+import {HttpError,createAjaxResponseAdapter,ajaxErrorResponseAdapter,isHttpError,type HttpClient} from './http.js';
 
 /** The xui v1 cookie-session facade. Product backends adapt to these routes and DTOs. */
 export const authEndpoints=Object.freeze({login:'/api/v1/auth/login',logout:'/api/v1/auth/logout',session:'/api/v1/auth/session'});
@@ -86,7 +86,7 @@ export function createAuthClient({http,timeoutMs=15000}:AuthClientOptions):AuthC
   const send=async(operation:Ticket['operation'],json:unknown,options:AuthRequestOptions)=>{
     const ticket=begin(operation,options);
     try{
-      const response=await http.request<AuthSession|null>(authEndpoints[operation],{method:operation==='session'?'GET':'POST',...(operation==='session'?{}:{json}),signal:ticket.controller.signal,timeoutMs,response:'ajax',adapter:operation==='logout'?logoutAdapter:sessionAdapter,endpointId:`auth.${operation}`,cache:'no-store',redirect:'error',unauthorized:'ignore'});
+      const response=await http.request<AuthSession|null>(authEndpoints[operation],{method:operation==='session'?'GET':'POST',...(operation==='session'?{}:{json}),signal:ticket.controller.signal,timeoutMs,response:'ajax',errorAdapter:ajaxErrorResponseAdapter,adapter:operation==='logout'?logoutAdapter:sessionAdapter,endpointId:`auth.${operation}`,cache:'no-store',redirect:'error',unauthorized:'ignore'});
       if(!current(ticket))throw new HttpError('cancel');
       const user=operation==='logout'?null:(response.payload as AuthSession).user;
       http.resetUnauthorized();finish(ticket,{status:user?'authenticated':'anonymous',user,error:null});if(!current(ticket))throw new HttpError('cancel');return user;

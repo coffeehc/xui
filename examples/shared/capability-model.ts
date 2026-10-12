@@ -1,0 +1,28 @@
+import {createHttpClient} from '@coffeehc/xui-runtime/http';
+import {createApiKeyHttpAdapter,type ApiKeyWireMetadata} from '@coffeehc/xui-runtime/api-key-http';
+import {createApiKeyManagerController} from '@coffeehc/xui-runtime/api-key';
+import {createBusinessLogHttpLoader} from '@coffeehc/xui-runtime/business-log-http';
+import {createBusinessLogController,type BusinessLogEvent} from '@coffeehc/xui-runtime/business-log';
+/** Synthetic native facade. It creates no real credentials and never calls a product service. */
+export async function createCapabilityExample(baseURL:string){
+  const modes=new Map<string,string>(),requests:{path:string;method:string;body:unknown;query:string}[]=[],held=new Map<string,(()=>void)[]>();
+  let keys:ApiKeyWireMetadata[]=[{id:'demo-expired',name:'示例过期令牌',prefix:'FAKE',permission_ids:['read'],created_at:null,expires_at:'2026-01-01T00:00:00Z',last_used_at:null,status:'expired',capabilities:{revoke:true,delete_record:true}}],serial=0;
+  const events:BusinessLogEvent[]=[1,2,3].map(id=>({id:`demo-event-${id}`,event_type:'demo.operation',schema_version:1,occurred_at:'2026-10-12T01:00:00.000000001Z',recorded_at:'2026-10-12T01:00:01Z',actor:{kind:'user',id:'demo:user',display_name:'示例用户'},object:null,action:'read',result:'succeeded',summary:`业务记录 ${id}`,correlation_id:null,request_id:null}));
+  const wire=(payload:unknown,success=true)=>({success,code:success?1:42201,message:success?'':'FAKE_PRIVATE_MESSAGE',payload,request_id:'demo:request'});
+  const fetch:typeof globalThis.fetch=async(input,init)=>{const url=new URL(String(input)),path=url.pathname,method=init?.method??'GET',body=init?.body?JSON.parse(String(init.body)):undefined;requests.push({path,method,body:body??null,query:url.search});
+    const operation=path.endsWith('/capabilities')?'configuration':path.endsWith('/revoke')?'revoke':path.endsWith('/record')?'delete':path==='/api/v1/api-keys'&&method==='POST'?'create':path.includes('/business-logs')?'logs':path==='/demo/download'?'download':'list';
+    if(modes.get(operation)==='hold')await new Promise<void>(resolve=>held.set(operation,[...(held.get(operation)??[]),resolve]));if(modes.get(operation)==='network')throw Error('FAKE_PRIVATE_NETWORK');
+    if(modes.get(operation)==='missing')return new Response(JSON.stringify(wire(null,false)),{status:404,headers:{'Content-Type':'application/json'}});
+    if(modes.get(operation)==='rejected')return new Response(JSON.stringify(wire(null,false)),{status:422,headers:{'Content-Type':'application/json'}});
+    if(operation==='download')return new Response('FAKE_DOWNLOAD_CONTENT',{headers:{'Content-Type':'text/plain','Content-Disposition':"attachment; filename*=UTF-8''%E6%8A%A5%E5%91%8A.txt",Authorization:'FAKE_NEVER_EXPOSE'}});
+    let payload:unknown;
+    if(operation==='configuration')payload={schema_version:1,can_create:true,permissions:[{id:'read',label:'读取资料（服务要求）',description:null,disabled:false,required:true},{id:'write',label:'写入资料',description:null,disabled:false,required:false}],expiry_options:[{id:'30d',label:'30 天'}],default_expiry_id:'30d',default_permission_ids:[],confirmation_label:'我确认授予以上访问权限'};
+    else if(operation==='create'){const metadata:ApiKeyWireMetadata={prefix:'FAKE',created_at:null,last_used_at:null,id:`demo-key-${++serial}`,name:body.name,status:'active',expires_at:null,permission_ids:body.permission_ids,capabilities:{revoke:true,delete_record:true}};keys.push(metadata);payload={schema_version:1,metadata,secret:`FAKE_ONE_TIME_VALUE_${serial}`};}
+    else if(operation==='revoke'||operation==='delete'){const id=decodeURIComponent(path.split('/').at(-2)!);keys=operation==='revoke'?keys.map(key=>key.id===id?{...key,status:'revoked',capabilities:{...key.capabilities,revoke:false}}:key):keys.filter(key=>key.id!==id);payload={schema_version:1,id,operation:operation==='revoke'?'revoke':'delete_record',completed:true};}
+    else if(operation==='logs'){const id=path.split('/').at(-1);if(id==='business-logs'){const index=Number(url.searchParams.get('page_index')),size=Number(url.searchParams.get('page_size'));payload={list:events.slice(index*size,index*size+size),total:events.length};}else payload={event:events.find(event=>event.id===id),state:'available',payload:{domain:{value:'允许披露的示例详情'}}};}
+    else{const index=Number(url.searchParams.get('page_index')),size=Number(url.searchParams.get('page_size'));payload={list:keys.slice(index*size,index*size+size),total:keys.length};}
+    return new Response(JSON.stringify(wire(payload)),{headers:{'Content-Type':'application/json'}});
+  };
+  const http=createHttpClient({baseURL,fetch}),api=createApiKeyHttpAdapter({http}),config=await api.getConfiguration({}),keyController=createApiKeyManagerController({...config,adapter:api,labels:{title:'访问密钥示例',create:'创建访问密钥',name:'名称',permissions:'权限',expiry:'有效期',confirmation:'授权确认',submit:'确认创建',cancel:'取消',revoke:'撤销',confirmRevoke:'确认撤销',deleteRecord:'删除记录',confirmDelete:'确认删除记录',refresh:'刷新密钥',confirmationRequired:'请确认授予的权限。'}}),logController=createBusinessLogController({loader:createBusinessLogHttpLoader({http}),pageSize:2,labels:{title:'业务日志示例',refresh:'刷新日志',next:'下一页',previous:'上一页',detail:'查看详情'}});
+  return {http,keyController,logController,setMode(operation:string,mode:string){modes.set(operation,mode);},release(operation:string){const pending=held.get(operation)??[];held.delete(operation);pending.forEach(resolve=>resolve());},getRequests:()=>requests,destroy(){keyController.destroy();logController.destroy();http.destroy();}};
+}
