@@ -20,7 +20,7 @@
 | 当前用户 | GET `/api/v1/auth/session` | 无 body/query | `AuthSession` | anonymous、user=null，无错误提示；未登录是正常事实 |
 | 退出 | POST `/api/v1/auth/logout` | JSON `{}` | null；后端撤销会话并清 cookie | 已无有效会话，视为已退出 |
 
-成功外层必须为现有 [HTTP](HTTP.md) 的 Go `AjaxResponse`：`success:true`、`code:1`、`message:string`、`request_id:string`、`payload` 必须存在；失败 HTTP status 与 success/code 业务失败分开。不接受 data/msg/access_token/user_id 等猜测别名。
+成功外层必须为现有 [HTTP](HTTP.md) 的 Go `AjaxResponse`：`success:true`、`code:安全整数`（不要求固定成功码）、`message:string`、`request_id:string`、`payload` 必须存在；非2xx HTTP status 与 success=false 业务失败分开。不接受 data/msg/access_token/user_id 等猜测别名。
 
 ```ts
 interface AuthUser { id: string; username: string; display_name: string | null }

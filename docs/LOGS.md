@@ -19,7 +19,7 @@
 
 ## 四个显式只读操作
 
-createStructuredLogHttpAdapter(client,endpoints) 接收宿主给定的 groups、records、groupRecords、record 四个路径，向同源 HTTP client 发送 POST JSON，使用 [HTTP.md](HTTP.md) 的 Go AjaxResponse envelope；默认成功 code=1，采用其他 code 时在 client 明确配置 adapter。POST 在这里是明确定义的查询，客户端不自动重试；页面上的重试由用户触发。也可直接提供符合 StructuredLogAdapter 的四个回调。
+createStructuredLogHttpAdapter(client,endpoints) 接收宿主给定的 groups、records、groupRecords、record 四个路径，向同源 HTTP client 发送 POST JSON，使用 [HTTP.md](HTTP.md) 的 Go AjaxResponse envelope；默认以 success=true 判定业务成功，code 保留为必填安全整数元数据，不要求固定值或额外 adapter。POST 在这里是明确定义的查询，客户端不自动重试；页面上的重试由用户触发。也可直接提供符合 StructuredLogAdapter 的四个回调。
 
 | adapter | Go Reader | 请求 JSON | envelope.payload |
 | --- | --- | --- | --- |

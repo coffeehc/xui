@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createHttpClient,HttpError,createAjaxResponseAdapter,getHttpErrorMessage} from '../packages/runtime/dist/http.js';
+import {createHttpClient,HttpError,createAjaxResponseAdapter,ajaxResponseAdapter,parseAjaxResponse,getHttpErrorMessage} from '../packages/runtime/dist/http.js';
 const wire=(payload=null,extra={})=>({success:true,message:'',payload,request_id:'',code:1,...extra});
 const json=(value,status=200,headers={})=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json',...headers}});
 const client=(fetch,options={})=>createHttpClient({baseURL:'https://fixture.example/api/',fetch,...options});
@@ -11,9 +11,49 @@ test('AjaxResponse preserves legal null, exact fields, body/header ids and safe 
   const result=await http.request('records',{endpointId:'records:list'});assert.equal(result.payload,null);assert.equal(result.code,1);assert.equal(result.requestId,'body-id');assert.equal(result.bodyRequestId,'body-id');assert.equal(result.headerRequestId,'header-id');assert.equal(result.redirect,'/later');assert.equal(fetched.init.headers.get('accept'),'application/json');assert.equal(fetched.init.credentials,'same-origin');assert(Object.isFrozen(result));
   const emptyId=await client(async()=>json(wire(0),200,{'X-Request-ID':'header-id'})).request('zero');assert.equal(emptyId.payload,0);assert.equal(emptyId.requestId,'header-id');assert.equal(emptyId.bodyRequestId,'');
 });
-test('strict Go envelope rejects missing payload/aliases and contradictory success/code',async()=>{
-  for(const value of [{success:true,code:1,data:[],message:'',request_id:''},{code:1,payload:[],message:'',request_id:''},wire(null,{code:9007199254740992})])await assert.rejects(client(async()=>json(value)).request('records'),error=>error.kind==='parse');
-  for(const value of [wire(null,{success:false,code:400001}),wire(null,{code:0}),wire(null,{code:-1})])await assert.rejects(client(async()=>json(value)).request('records'),error=>error.kind==='business'&&error.status===200&&error.code===value.code);
+test('default AjaxResponse success depends only on success and preserves arbitrary safe integer codes',async()=>{
+  const context={status:200,headerRequestId:'header-id',endpointId:'records:list',attempts:1};
+  for(const code of [0,1,2,-1,Number.MIN_SAFE_INTEGER,Number.MAX_SAFE_INTEGER]){
+    const value=wire(false,{code,request_id:'body-id',redirect:'/later'});
+    for(const adapt of [ajaxResponseAdapter,createAjaxResponseAdapter(),createAjaxResponseAdapter({}),createAjaxResponseAdapter({successCode:undefined})])assert.deepEqual(adapt(value,context),{payload:false,code,bodyRequestId:'body-id',redirect:'/later'});
+    const result=await client(async()=>json(value,200,{'X-Request-ID':'header-id'})).request('records');
+    assert.equal(result.payload,false);assert.equal(result.code,code);assert.equal(result.requestId,'body-id');assert.equal(result.headerRequestId,'header-id');
+    await assert.rejects(client(async()=>json({...value,success:false,message:'Business rejection'},200,{'X-Request-ID':'header-id'})).request('records'),error=>error.kind==='business'&&error.status===200&&error.code===code&&error.requestId==='body-id'&&error.metadata.headerRequestId==='header-id'&&error.business.code===code&&error.business.message==='Business rejection');
+  }
+});
+test('strict Go envelope still requires exact fields and safe integer code metadata',async()=>{
+  const invalid=[null,[],{success:true,code:1,data:[],message:'',request_id:''}];
+  for(const field of ['success','message','payload','request_id','code']){const value=wire();delete value[field];invalid.push(value);}
+  for(const code of ['1',null,1.5,9007199254740992])invalid.push(wire(null,{code}));
+  for(const extra of [{success:'true'},{message:null},{request_id:1},{redirect:false}])invalid.push(wire(null,extra));
+  for(const value of invalid){assert.throws(()=>parseAjaxResponse(value),TypeError);await assert.rejects(client(async()=>json(value)).request('records'),error=>error.kind==='parse');}
+});
+test('successCode is an explicit strict opt-in and never overrides success=false',async()=>{
+  for(const successCode of [0,1,2]){
+    const adapter=createAjaxResponseAdapter({successCode});
+    for(const code of [0,1,2]){
+      const http=client(async()=>json(wire(null,{code})),{adapter});
+      if(code===successCode)assert.equal((await http.request('strict')).code,code);
+      else await assert.rejects(http.request('strict'),error=>error.kind==='business'&&error.code===code);
+    }
+    await assert.rejects(client(async()=>json(wire(null,{success:false,code:successCode})),{adapter}).request('strict'),error=>error.kind==='business'&&error.code===successCode);
+  }
+  for(const successCode of [null,'1',NaN,Infinity,1.5,9007199254740992])assert.throws(()=>createAjaxResponseAdapter({successCode}),TypeError);
+});
+test('non-2xx remains an HTTP error regardless of success or code and preserves both request ids',async()=>{
+  for(const response of ['ajax','blob'])for(const status of [400,401,403,500])for(const success of [true,false])for(const code of [0,1,2]){
+    const value=wire(null,{success,code,request_id:'body-id',message:'Server detail'});
+    await assert.rejects(client(async()=>json(value,status,{'X-Request-ID':'header-id'})).request('records',{response,detectAjaxErrors:true}),error=>error.kind==='http'&&error.status===status&&error.code===code&&error.requestId==='body-id'&&error.metadata.bodyRequestId==='body-id'&&error.metadata.headerRequestId==='header-id'&&error.business.message==='Server detail');
+  }
+});
+test('blob AjaxResponse detection shares the default success contract without unwrapping the file',async()=>{
+  for(const code of [0,1,2,-1]){
+    const value=wire({file:true},{code,request_id:'body-id'});
+    const result=await client(async()=>json(value,200,{'X-Request-ID':'header-id'})).request('file',{response:'blob',detectAjaxErrors:true});
+    assert(result.payload instanceof Blob);assert.equal(await result.payload.text(),JSON.stringify(value));assert.equal(result.code,code);assert.equal(result.requestId,'body-id');assert.equal(result.headerRequestId,'header-id');
+    await assert.rejects(client(async()=>json({...value,success:false},200,{'X-Request-ID':'header-id'})).request('file',{response:'blob',detectAjaxErrors:true}),error=>error.kind==='business'&&error.code===code&&error.requestId==='body-id'&&error.metadata.headerRequestId==='header-id');
+  }
+  for(const extra of [{code:'1'},{code:1.5},{code:9007199254740992},{success:'true'},{message:null},{request_id:1}])await assert.rejects(client(async()=>json(wire(null,extra))).request('file',{response:'blob',detectAjaxErrors:true}),error=>error.kind==='parse');
 });
 test('explicit raw JSON, text, empty, blob and alternate adapter do not guess aliases',async()=>{
   const raw=wire(null,{success:false,code:-1});assert.deepEqual((await client(async()=>json(raw)).request('raw',{response:'json'})).payload,raw);

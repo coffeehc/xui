@@ -30,6 +30,14 @@ test('filenames prefer UTF-8 extended values, handle quoted separators and rejec
   assert.equal(resolveDownloadFileName('attachment; filename="a;b.csv"'),'a;b.csv');assert.equal(resolveDownloadFileName('attachment; filename="one.csv"; filename="two.csv"','fallback.csv'),'fallback.csv');
   assert.equal(resolveDownloadFileName("attachment; filename*=UTF-8''%FF; filename=plain.csv"),'plain.csv');assert.equal(resolveDownloadFileName('attachment; filename="../a\\\\b.csv"'),'.._a_b.csv');assert.equal(resolveDownloadFileName(null,'..'),'download');
 });
+test('download success is independent of code and keeps the successful JSON file intact',async()=>{
+  for(const code of [0,1,2])for(const mediaType of ['application/json','Application/JSON; charset=utf-8','application/problem+json']){
+    const value=wire({file:true},{code});
+    const result=await requestDownload(owner(async()=>json(value,200,{'Content-Type':mediaType})),'/file');
+    assert.equal(await result.blob.text(),JSON.stringify(value));assert.equal(result.requestId,'demo:body');
+    await assert.rejects(requestDownload(owner(async()=>json({...value,success:false},200,{'Content-Type':mediaType})),'/file'),error=>error.kind==='business'&&error.code===code&&error.requestId==='demo:body');
+  }
+});
 test('download defaults retain JSON API failures while allowing explicitly attached JSON files',async()=>{
   const body=wire(null,{success:false,code:1234,message:'FAKE_PRIVATE_ERROR'});let accept;
   for(const mediaType of ['application/json','Application/JSON; charset=utf-8','application/problem+json'])await assert.rejects(requestDownload(owner(async(_,init)=>{accept=init.headers.get('accept');return json(body,200,{'Content-Type':mediaType});}),'/file'),error=>error.kind==='business'&&error.code===1234);assert.equal(accept,'application/json');

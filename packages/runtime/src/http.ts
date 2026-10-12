@@ -1,4 +1,4 @@
-/** JSON contract of coffeehc/httpx/httpxcommons. No data/msg aliases. */
+/** JSON contract of coffeehc/httpx/httpxcommons. success is the business outcome; code remains required metadata. No data/msg aliases. */
 export interface AjaxResponse<T=unknown>{success:boolean;message:string;payload:T;request_id:string;code:number;redirect?:string}
 export type HttpErrorKind='cancel'|'network'|'timeout'|'http'|'parse'|'business';
 export interface HttpMetadata{
@@ -49,10 +49,11 @@ export function parseAjaxResponse<T=unknown>(value:unknown):AjaxResponse<T>{
 export interface HttpResponseContext{status:number;headerRequestId?:string;endpointId?:string;attempts:number}
 export interface AdaptedResponse<T>{payload:T;code?:number;bodyRequestId?:string;redirect?:string}
 export type ResponseAdapter<T>=(value:unknown,context:HttpResponseContext)=>AdaptedResponse<T>;
-export function createAjaxResponseAdapter<T=unknown>({successCode=1}:{successCode?:number}={}):ResponseAdapter<T>{
-  if(!Number.isSafeInteger(successCode))throw new TypeError('successCode must be a safe integer');
+/** Defaults to success=true for any valid code. successCode explicitly opts into an additional endpoint-specific code check. */
+export function createAjaxResponseAdapter<T=unknown>({successCode}:{successCode?:number}={}):ResponseAdapter<T>{
+  if(successCode!==undefined&&!Number.isSafeInteger(successCode))throw new TypeError('successCode must be a safe integer');
   return (value,context)=>{const wire=parseAjaxResponse<T>(value);const metadata={...context,code:wire.code,bodyRequestId:wire.request_id};
-    if(!wire.success||wire.code!==successCode)throw new HttpError('business',metadata,ajaxErrorResponseAdapter(wire,context));
+    if(!wire.success||successCode!==undefined&&wire.code!==successCode)throw new HttpError('business',metadata,ajaxErrorResponseAdapter(wire,context));
     return {payload:wire.payload,code:wire.code,bodyRequestId:wire.request_id,redirect:wire.redirect};};
 }
 export const ajaxResponseAdapter=createAjaxResponseAdapter();
@@ -149,7 +150,7 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
             if(mode==='empty'){if(response.body)await read(()=>response.body!.cancel());adapted={payload:undefined};}
             else if(mode==='blob'){
               const payload=await read(()=>response.blob());check();adapted={payload};
-              if(init.detectAjaxErrors&&/^application\/(?:[a-z0-9!#$&^_.+-]+\+)?json(?:\s*;|\s*$)/i.test(response.headers.get('content-type')??'')&&!/^\s*attachment\b/i.test(response.headers.get('content-disposition')??'')){let value:unknown;try{value=JSON.parse(await payload.text());}catch{}check();if(looksLikeAjax(value)){const wire=parseAjaxResponse(value);if(!wire.success||wire.code!==1)throw new HttpError('business',{...context,code:wire.code,bodyRequestId:wire.request_id},ajaxErrorResponseAdapter(wire,context));}}
+              if(init.detectAjaxErrors&&/^application\/(?:[a-z0-9!#$&^_.+-]+\+)?json(?:\s*;|\s*$)/i.test(response.headers.get('content-type')??'')&&!/^\s*attachment\b/i.test(response.headers.get('content-disposition')??'')){let value:unknown;try{value=JSON.parse(await payload.text());}catch{}check();if(looksLikeAjax(value))adapted={...ajaxResponseAdapter(value,context),payload};}
               if(adapter)adapted=adapter(payload,context);
             }else{
               const text=await read(()=>response.text());check();const value=mode==='text'?text:JSON.parse(text);if(mode==='ajax'&&looksLikeAjax(value)){const wire=parseAjaxResponse(value);metadata={...metadata,code:wire.code,bodyRequestId:wire.request_id};}adapted=adapter?adapter(value,context):{payload:value};

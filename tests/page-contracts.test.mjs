@@ -39,6 +39,20 @@ test('shared Go/TypeScript fixtures pass through default page HTTP adapters with
  assert.equal(pending.length,0);assert.equal(seen.length,8);assert(!JSON.stringify(rows).includes(created.secret));
 });
 
+test('default page HTTP adapters accept native success independently of the fixture example code',async()=>{
+ for(const code of [0,1,2]){
+  const http=client(async(input,init)=>{
+   const expected=Object.values(cases).find(item=>item.request.method===init.method&&item.request.path===new URL(input).pathname&&item.response.body.success);
+   assert(expected,'Only a successful fixture endpoint is permitted');return response({...expected.response,body:{...expected.response.body,code}});
+  });
+  const keys=createApiKeyHttpAdapter({http});assert.equal((await keys.getConfiguration({signal})).canCreate,true);
+  const rows=await keys.list({signal});assert.equal(rows.length,1);assert.equal((await keys.create(draft,{signal})).secret,'FAKE_CONTRACT_ONE_TIME_VALUE');
+  await keys.revoke(rows[0],{signal});await keys.deleteRecord({...rows[0],status:'revoked'},{signal});
+  const logs=createBusinessLogHttpLoader({http});const page=await logs.list({filter:{},page:{index:0,size:20,cursor:null}},{signal});assert.equal(page.list.length,1);
+  assert.deepEqual(JSON.parse(JSON.stringify(await logs.detail(page.list[0].id,{signal}))),cases.business_log_detail.response.body.payload);http.destroy();
+ }
+});
+
 test('explicit 50301/50302 writes stay blocked through business/4xx responses, recreation and fresh lists',async()=>{
  for(const code of [50301,50302])for(const status of [200,400,403,409,503])for(const operation of ['create','revoke','delete']){
   let writes=0;

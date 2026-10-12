@@ -34,6 +34,13 @@ test('auth facade uses fixed paths, one HTTP owner, strict Go envelope and body-
   for(const {url,init} of requests){assert.equal(new URL(url).search,'');assert.equal(init.cache,'no-store');assert.equal(init.redirect,'error');assert.equal(init.credentials,'include');assert.equal(init.headers.get('X-CSRF-Token'),'FAKE_CSRF_HEADER');assert.equal(init.headers.get('Accept'),'application/json');if(init.method==='POST')assert.equal(init.headers.get('Content-Type'),'application/json');}
   auth.destroy();http.destroy();
 });
+test('auth default adapters accept success=true for every valid success code without host configuration',async()=>{
+  for(const code of [0,1,2]){
+    const {auth,http}=owner(async url=>json(wire(new URL(url).pathname===authEndpoints.logout?null:session,{code})));
+    assert.deepEqual(await auth.login({username:'demo',password:'FAKE_PASSWORD'}),user);assert.equal(auth.getState().status,'authenticated');
+    assert.deepEqual(await auth.currentUser(),user);await auth.logout();assert.equal(auth.getState().status,'anonymous');auth.destroy();http.destroy();
+  }
+});
 test('login 401 keeps confirmed user, session 401 clears it and logout uncertainty never claims success',async()=>{
   let status=200,route='login',unauthorized=0;const {auth}=owner(async(url)=>json(wire(new URL(url).pathname===authEndpoints.logout?null:session,{success:status===200}),status),{onUnauthorized:()=>unauthorized++});
   await auth.login({username:'demo',password:'FAKE_PASSWORD'});const before=auth.getState().user;status=401;await assert.rejects(auth.login({username:'demo',password:'FAKE_WRONG'}),error=>error.status===401);assert.equal(auth.getState().user,before);assert.equal(auth.getState().status,'authenticated');assert.equal(unauthorized,0);
@@ -42,7 +49,7 @@ test('login 401 keeps confirmed user, session 401 clears it and logout uncertain
   status=401;await auth.logout();assert.equal(auth.getState().status,'anonymous');assert.equal(auth.getState().error,null);assert.equal(unauthorized,0);
 });
 test('auth does not guess legacy responses, replay writes or expose raw server feedback',async()=>{
-  for(const body of [wire({access_token:'FAKE_PRIVATE_TOKEN'}),wire(session,{code:0}),wire(session,{success:false,message:'FAKE_PRIVATE_ERROR'}),{success:true,data:session}]){let sends=0;const {auth}=owner(async()=>{sends++;return json(body);});await assert.rejects(auth.login({username:'demo',password:'FAKE_PASSWORD'}),HttpError);assert.equal(sends,1);assert.equal(auth.getState().status,'unknown');assert.equal(JSON.stringify(auth.getState()).includes('FAKE_PRIVATE'),false);auth.destroy();}
+  for(const body of [wire({access_token:'FAKE_PRIVATE_TOKEN'}),wire(session,{code:'0'}),wire(session,{success:false,message:'FAKE_PRIVATE_ERROR'}),{success:true,data:session}]){let sends=0;const {auth}=owner(async()=>{sends++;return json(body);});await assert.rejects(auth.login({username:'demo',password:'FAKE_PASSWORD'}),HttpError);assert.equal(sends,1);assert.equal(auth.getState().status,'unknown');assert.equal(JSON.stringify(auth.getState()).includes('FAKE_PRIVATE'),false);auth.destroy();}
 });
 test('auth duplicate writes, cancel and uncooperative late results retain the latest intent',async()=>{
   let calls=0;const late=deferred(),{auth}=owner(async()=>{calls++;return late.promise;});const pending=auth.login({username:'demo',password:'FAKE_PASSWORD'}),failure=assert.rejects(pending,error=>error.kind==='cancel');await flush();

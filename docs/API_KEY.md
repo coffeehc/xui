@@ -22,7 +22,7 @@ ApiKeyAdapter为list/create/revoke及可选deleteRecord。revoke使凭据失效�
 
 ## 固定v1 facade与默认adapter
 
-createApiKeyHttpAdapter({http,timeoutMs?,pageSize?,maxRecords?})使用同一个HttpClient。baseURL只确定origin，下面是固定根路径；不尝试旧route。全部使用原生httpx AjaxResponse，success=true/code=1为xui应用合同；错误保留HTTP事实和原生code。详情见[真实原生定义](PAGE_APIS.md#已读取的真实原生定义)。
+createApiKeyHttpAdapter({http,timeoutMs?,pageSize?,maxRecords?})使用同一个HttpClient。baseURL只确定origin，下面是固定根路径；不尝试旧route。全部使用原生httpx AjaxResponse，以success=true判定业务成功，code保留为必填安全整数元数据，不要求固定值；错误保留HTTP事实和原生code。详情见[真实原生定义](PAGE_APIS.md#已读取的真实原生定义)。
 
 | 操作 | 方法/路径 | 请求和payload |
 | --- | --- | --- |
