@@ -39,3 +39,6 @@ Cookie、Bearer 隔离、memory-only access、CSRF、跨标签协调、取消/�
 
 
 整合提交 `b539c043b3c578df26075b16b836d6a51541ec77` 的 [CI 38305391325](https://github.com/coffeehc/xui/actions/runs/38305391325) 已完成：332 单元、watch、双端正式 tarball/types/exports、cold-start 全过；浏览器 602 过、36 项 DataTable natural 布局失败，因此整体 CI 为 failure。身份编码阶段未出现失败，不将整体状态宣称为绿色；表格实测证据、修复尝试与后续验收见 [DataTable 布局验证](DATA_TABLE_LAYOUT_VALIDATION.md)，最终整体验收以包含两项变更的最新 SHA 为准。
+
+
+后续整合代码 `57c61272a63b0607087598054594eae6db92c2b5` 的 [完整 CI 38307875113](https://github.com/coffeehc/xui/actions/runs/38307875113) 已为 success：334 单元、watch、双端独立正式 tarball、cold-start 和全部 638 Chromium 用例通过。该 SHA 保留本身份编码扩展，修复了前述表格阻塞；身份及表格的整体验收现已闭环，真实产品/部署限制仍然适用。

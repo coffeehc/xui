@@ -12,7 +12,7 @@
 | 最后一行与 footer 相邻时重复边线 | 表格单元默认末端边线与 footer 顶部线叠加 | 仅 DataTable 末行取消单元末端线；表头/行间线和 footer 信息边界保留 |
 | document 作为有界 column-flex 的子项可能被压缩 | 代码评审发现根 `min-block-size:0` 与默认 flex-shrink 会削弱无界合同 | document 明确 `flex:none`；正常/column-flex 有界宿主的实际增高与底栏滚动可达案例已在 CI 通过 |
 | 分片 CSS 次序可能恢复 DataRegion 的通用最小高度 | `.xui-data-region` 与原根选择器同优先级；feedback.css 后加载可覆盖自然高度的零最小值 | natural/document 在带 layout 属性的更高优先级选择器覆盖通用值；后续内在高度修复把 natural 改为 min-content、document 仍为零。CSS 结构门禁通过，未单独执行浏览器分片反序载入用例 |
-| 极端高工具条/200%文字下，sticky 表头可能遮住最低表体中的行 | 保留的表体最小值为 control-height；自定义/换行表头可能比它更高。CI 38297151612 的 geometry 附件已确认 390px、内部 toolbar、200% 时 outer/frame 高 288px、内容高 1146px、body 高 72px、footer 高 377px；footer 实际越过 frame 下边界。旧 workspace 同样沿用该最低表体值 | 旧测试仅验证祖先滚动、表体非零、末行几何交集和 footer 焦点/命中，漏掉 footer/frame 包含与行操作命中，CI 绿色不能证明完整需求。正在补真实首末操作点击/命中和 frame 包含断言，并修复内在最小高度；未获新 SHA 浏览器通过前保持未解决 |
+| 极端高工具条/200%文字下，sticky 表头可能遮住最低表体中的行 | 保留的表体最小值为 control-height；自定义/换行表头可能比它更高。CI 38297151612 的 geometry 附件已确认 390px、内部 toolbar、200% 时 outer/frame 高 288px、内容高 1146px、body 高 72px、footer 高 377px；footer 实际越过 frame 下边界。旧 workspace 同样沿用该最低表体值 | 旧测试漏掉 footer/frame 包含与行操作命中，旧绿色不能证明完整需求。经下述两轮失败定位，最终实测组件下限方案在 `57c6127` 的完整 CI 38307875113 通过，包含 footer 四边、首末操作命中和真实点击；本问题已按公共组件范围关闭 |
 
 ## 已完成的本地检查
 
@@ -63,3 +63,17 @@
 独立几何单测使用可变真实输入替身验证：内容封顶时不补短表空白；chrome 增减时 C 同步增减而不累计已有输出高度；替换输入节点后释放旧观察目标；layout 切换、隐藏恢复、RAF 去重、无变化不写和销毁恢复仍成立。数据、分页、宽度 API/probe/colgroup 不变。50 项真实浏览器矩阵不删减；仅 workspace auto 父级的下限读取改为根计算值，不依赖已移除的实现伪元素。仍需新提交 SHA 的完整 CI 验证普通长表仅 body 滚动、短表无空白、极端 footer 留框与实际首末操作点击。
 
 本次实测组件下限候选已通过独立几何/设计门禁 19 项，以及 build/tokens/typecheck/334 项全量单元（0 fail/skip），构建指纹 `ff6cec46af27`。未再重复已知不允许的本地浏览器；本轮未重复本地完整 tarball，后续精确 SHA 的完整 CI 负责重验正式双端消费和全部 638 项真实浏览器。
+
+
+## 最终代码验收：57c6127
+
+代码提交 `57c61272a63b0607087598054594eae6db92c2b5` 的 [完整 CI 38307875113](https://github.com/coffeehc/xui/actions/runs/38307875113) 为 **success**。构建指纹 `ff6cec46af27` 与本地一致；334 项单元、1 项 watch、React/原生双端独立正式 tarball、1 项 cold-start、638 项真实 Chromium 全过（浏览器 12.4 分钟），其中 50 项严格布局矩阵全部通过。身份编码扩展亦包含在该精确 SHA 的整体验收中。
+
+已读取该 run 的 validation artifact（11773369066）中的实际矩形与命中附件，而非仅看绿色状态：
+
+- 默认桌面：空表 outer/frame 高 156px，body/table 同为 101px；单条 outer/frame 高 146px，body/table 同为 91px。父 content 高 558px，无强制填满空白。
+- 默认桌面 20 行：outer/frame 与父 content 同为 558px；body 可视高 503px，scrollHeight 1098px，父 content 没有竞争滚动；恢复长数据后数值一致。
+- React 与原生的 390px、200% 字体、内部工具条及内嵌反馈表格：root/frame 高 1443px，body 可视高 318px、scrollHeight 16620px；footer bottom 2283px，frame bottom 2284px，footer 真正位于完整边框内。content 可视高 288px，通过祖先滚动到各区域，不强求全部 chrome 同屏。
+- 两端首行“查看记录 1”与末行“查看记录 100”的 elementFromPoint 均实际命中 BUTTON；真实指针点击与唯一 action-log 回调断言通过。字号恢复、隐藏期间调整字体/宽度后显示、DOM 身份保留、再收缩到 1/0 行均通过。
+
+因此本公共布局修复已验收，前述失败尝试保留为可追溯证据。此最终补记只更新验证文档，不改变已验收的源码或测试；产品迁移、其它浏览器/OS、真实服务、SSR hydration、生产性能和部署等边界仍按上文限制处理。
