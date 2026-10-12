@@ -68,3 +68,6 @@
 最后合同复核在Auth固定facade发现同类JSON协商遗漏；三请求补明确Accept、POST明确Content-Type，并以实际旧client headers+保留CSRF扩展已有auth合同回归。1b1cdce的整条verify在116单测通过、watch运行时主动中止以实施此修正，退出信号日志保留于.artifacts/verify-1b1cdce-auth-interrupted.log，不计整套通过或测试失败。新普通提交重新冻结全verify和同SHA CI。
 
 8241e563c08f1e435313593bb0fd4924aaa0f7e7本地完整verify通过116单测/1watch/152浏览器、59入口/18消费者，并正常推送；[同SHA CI 38195855434](https://github.com/coffeehc/xui/actions/runs/38195855434)首次执行成功。之后用户仅授权行业标准/第三方边界文档澄清：DESIGN修订0.5.1、README/ADOPTION/skill/API合同同步；271默认CSS值和库实现不变，AjaxResponse/HTTP双层协议保持。附件XUI-03/04/05及其它新增组合仍仅只读评审，无新功能授权。新文档提交继续正常验收与同SHA CI。
+
+
+用户追加冷启动重复页面/菜单刷新排查已独立取证，未扩展附件功能。正式tarball字节的两宿主各三条件在0–180秒共360菜单点击/60回退前进均无额外Document请求或外壳重挂；缺adapter和canNavigate=false受控对照复现完整导航，后续正常adapter恢复SPA，接入指引见[NAVIGATION](NAVIGATION.md#冷启动与路由ready边界)。本库范围未复现自发reload，不据此宣布产品问题已修复。产品现场因匿名无合法会话及本云环境ERR_TUNNEL_CONNECTION_FAILED受限；父任务登录页#418独立保留，真实部署版本未核，SSR/hydration与菜单问题不合并归因。最终文档提交继续全verify与同SHA CI，原8241e56完整绿色证据保留。

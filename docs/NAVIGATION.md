@@ -60,3 +60,14 @@ MenuLayout 还提供 title/header、children（原生 content Node 或原有 roo
 原生 owner 的 update(partial) 合并选项，验证新数据后提交；无效数据保留旧菜单，匹配 id 的链接复用。getMenu()/getMain()/getSidebarOpen() 读取布局，菜单 owner 提供 getElement()/getState()/setCollapsed()/setExpanded()；布局选项统一通过 layout.update 更新。同一种 factory 不可在同一 root 重复创建活跃 owner，宿主只给该 root 一个所有者；destroy 后可以重建，更新已销毁 owner 无效。destroy 移除库监听、关闭 drawer，恢复创建前的 root 内容和属性；宿主自己的订阅/事件由宿主释放。原生 header/content 更新通过公开 Node，不复制内部菜单结构。
 
 正式消费者在 examples/menu-react 与 examples/menu-vanilla，共用 examples/shared/menu-data.json，独立 tarball 编译和打包。预览为 `/menu-react/` 与 `/menu-vanilla/`；测试入口仅用于合成验证，不访问产品后端。它们不用示例私有 CSS。HTTP/query 已实现，接入合同见 [HTTP.md](HTTP.md)；API Key 通用管理见 [API_KEY.md](API_KEY.md)，结构化日志只读查询见 [LOGS.md](LOGS.md)，拟议 facade 由宿主后端实现。
+
+
+## 冷启动与路由ready边界
+
+navigation adapter必须在第一个可操作菜单呈现时已连接，并保持同一个宿主router owner。canNavigate=false的正式含义是保留原生document导航，不能把它当“router/鉴权/动态路由尚未ready，暂不执行”的阻止开关；缺少adapter也有相同原生行为。必要的未就绪状态由宿主提供真实disabled/状态，或在已经接管preventDefault的navigate内部明确处理，不以几分钟定时等待掩盖初始化问题。真实权限仍由服务端校验。
+
+冷启动取证区分主frame的Document请求/新document identity、history同文档路由，以及旧shell DOM是否重新挂载；单看“页面重新显示”不能确认reload。菜单更新保留同一shell/main/主题owner，不能因route key重挂整个外壳；非SPA链接、修改键、target/download的原生行为保留。初始化、主题订阅与watch构建本身不自动发reload；参考页的界面重载按钮是明确用户动作，登录默认location.assign也是确认登录/继续的宿主导航边界，不与菜单routing混用。
+
+本轮六组正式tarball消费者在冷缓存、资源延迟和已命中三份资源的暖缓存下，0/30/60/120/180秒共360菜单点击、60次前进/后退，只有每组初始一个Document请求，document/timeOrigin/shell/theme与草稿保持，无pageerror。移除adapter或canNavigate=false的两宿主受控对照均复现document导航，随后已连接adapter的点击保持SPA；这证明合同边界，不证明任何产品使用了错误gating。完整本地记录在.artifacts/cold-start/与cold-start-probe.log。
+
+线上产品已登录菜单及其实际部署bundle尚未完成现场取证：本云环境访问xagent.51apis.com返回ERR_TUNNEL_CONNECTION_FAILED；父任务匿名根页跳登录并记录React #418/client-CmZD9ipx.js，仅证明登录启动hydration错误，不能认定与菜单reload同根，也不能假设当前Git main就是该线上产物。产品需在合法会话的云浏览器按上述Document/路由/重挂指标补冷暖对照，核首次adapter/ready状态和实际资源版本；不索取或记录真实凭据、响应body或cookie。
