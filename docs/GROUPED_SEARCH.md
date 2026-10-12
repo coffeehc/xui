@@ -70,3 +70,11 @@
 - [纯合同测试](../tests/grouped-search.test.mjs)：跨组唯一 ID、隐藏组、disabled、分页边界、无业务过滤。
 - [浏览器矩阵](../tests/browser/grouped-search.spec.mjs)：两端查询/独立分页/关闭取消/恢复、Enter/Space隔离、Arrow导航、唯一 ARIA 引用、受控/默认展开、disabled、长中文窄屏、主题/reduced-motion、移除分页回焦点与原生销毁重建。
 - 本地检查及 CI 的实际结果另见提交说明。不能把测试已编写称作真实浏览器已通过；读屏器、SSR hydration、真实后端与产品集成需另验。
+
+## 富业务分组导航与简单选择的边界
+
+GroupedCombobox 继续服务简单 `{id,label,disabled?}` 选择，分页只有已知 page/pageCount；不扩成带按钮、链接、子树和上下文菜单的 option。未知 total/cursor 不能虚构 pageCount。
+
+需要子层级、自定义图标、富标签、配置按钮或 ContextMenu 的业务条目，使用公开 Input + Section/Disclosure + 两个 NavigationMenu + 组外加载按钮。一个 query 驱动两个宿主读取状态，各自拥有 cursor/hasMore/busy/error，无需 total。关闭组取消所属读取，查询变化使旧 generation 失效，宿主必须丢弃取消后迟到结果；写动作不进入导航 adapter。导航仍是普通 nav 的单 roving 停靠，与输入/分组开关/加载按钮的正常 Tab 顺序相接，不是 listbox，也不需要 stopPropagation。
+
+NavigationMenu 原已支持 children/resolveIcon/renderLabel/renderLink；本轮补齐单 button 的 renderButton、独立 sibling renderAction，以及原生等价 slots/decorator 生命周期。完整 API 与键盘规则见[导航富条目合同](NAVIGATION.md#富条目独立行尾动作与上下文菜单)。正式[React](../examples/rich-navigation-react/app.tsx)/[原生](../examples/rich-navigation-vanilla/app.js)消费者包含项目/成员合成数据、独立 cursor、异步配置防重复、关闭取消及上下文菜单，未接真实产品服务。

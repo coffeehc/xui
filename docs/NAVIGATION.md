@@ -207,3 +207,76 @@ MenuLayout及原生createMenuLayout只生成顶栏一个菜单开关。桌面点
 React AppShell新增collapsed/defaultCollapsed/onCollapsedChange、compactLabel/expandLabel（同MenuLayout默认）；所属NavigationMenu自动接其非显式紧凑状态并移除内部开关。普通页面只使用MenuLayout传数据和状态；无需另传开关内容或尺寸。独立NavigationMenu/createNavigationMenu仍可显示自己的紧凑按钮，新增showCollapseToggle=false可关闭；该选项不能在MenuLayout中重新添加重复按钮。原生createNavigationMenu第三参数的可选fallbackFocus与共享createNavigationKeyboard同名回调仅供公共结构组合的空菜单焦点退路，普通宿主无需连接。
 
 迁移时删除产品自行实现的侧栏顶部/顶栏菜单按钮及其宽度、位置、媒体监听和点击绑定，继续传collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange及原标签配置。不要把sidebarOpen当桌面compact状态。顶栏DOM先于侧栏，Tab依次经过顶栏已有链接/动作，再进入菜单的单一tab停靠点；测试不应再假设旧侧栏开关之后立即是菜单。
+
+## 富条目、独立行尾动作与上下文菜单
+
+`children`、`resolveIcon`、`renderLabel` 和 `renderLink` 原已支持子层级、自定义图标、非交互富标签与单链接适配。新增 `renderButton(item)` 与 `renderAction(item)`，不将业务数据塞进 Combobox option，也不引入另一份查询或路由 owner。
+
+React `renderButton` 仅用于没有 href 的分支，返回一个透传全部 props/ref、最终生成单一原生 button 的元素；`renderLink` 同理生成单一 a。库提供 children、disabled、展开 aria、路由、键盘与皮肤。renderer 必须保留这些属性及 children，不额外包按钮/链接。可以在自定义组件内组合公开 ContextMenu：
+
+```tsx
+function ContextBranch({ref, ...props}: React.ComponentPropsWithRef<'button'>) {
+  return <ContextMenu.Root disabled={props.disabled}>
+    <ContextMenu.Trigger render={<button {...props} ref={ref}/>}/>
+    <ContextMenu.Content><ContextMenu.Item onClick={onInspect}>查看配置</ContextMenu.Item></ContextMenu.Content>
+  </ContextMenu.Root>;
+}
+<NavigationMenu items={items}
+  renderButton={() => <ContextBranch/>}
+  renderAction={item => <button aria-label={`配置 ${item.label}`}
+    disabled={busy || !canConfigure(item)} aria-busy={busy}
+    onClick={() => configure(item)}>⚙</button>}/>
+```
+
+`onInspect/configure/canConfigure/busy` 为宿主已有动作和事实。链接的 ContextLink 用 `ComponentPropsWithRef<'a'>` 和单一 `<a {...props} ref={ref}/>` 同样组合；禁用 ContextMenu.Root 必须接继承后的 disabled/aria-disabled。ContextMenu 内容通过公开 Portal，不放进主标签。`renderLabel` 仅提供描述性、非交互的 phrasing content（如 span、图标、Badge），不嵌套 button/link/input。任意表单或多按钮工具组应放在菜单外的 Section/Toolbar，不伪装一条导航主控件。
+
+`renderAction` 返回 null 表示无动作，否则返回一个原生 button 或透传 props/ref 的单 button 组件。库将它作为主链接/分支按钮和独立展开按钮的 sibling，接入 `.xui-menu-row-action`、单一 roving 停靠和继承禁用；不要求宿主 stopPropagation。宿主提供明确 aria-label（省略回退 Actions for + item.label）、非交互内容、事件、aria-busy 与自身 disabled。busy 只陈述事实；防重复与权限由宿主明确禁用并在动作入口同步拦截。图标按钮尺寸和 compact 布局消费现有 control/nav/space tokens；compact 中动作另起一行，不增宽侧栏，窄屏恢复正常行布局。
+
+键盘采用普通 nav/link/button，绝非 listbox/option。每个 NavigationMenu 保留一个 Tab 停靠；ArrowUp/Down、Home/End 按 DOM 顺序遍历可见可用的主项、独立展开按钮、行尾动作与子项。左右键只在主项/展开按钮处理树展开与父子移动（RTL 反转），在行尾动作上不改变树。动作 Enter/Space 只激活自己，链接 Enter 保留原生语义；Tab 离开整个菜单。搜索框、Disclosure 和组外加载按钮按正常 Tab 顺序独立可达。公开 ContextMenu 的键盘/回焦点由它自己拥有；Portal 内事件不会被导航 roving 接管。焦点项移除、隐藏或禁用时由库回到可用停靠/公开 fallback；宿主已经转移的新焦点不应被旧操作夺回。
+
+### 原生 slots 与 lifecycle
+
+`createNavigationMenu` 与 `createMenuLayout` 的 `MenuLayoutOptions` 支持 `NavigationMenuDOMOptions`；共享 JSON 仍是 `NavigationItem`，不加入 Node/函数。原生新增：
+
+- `renderLabel(item,state) => NavigationDOMSlot | null`：非交互 Node。null 使用原始 label。
+- `renderAction(item,state) => NavigationDOMSlot<HTMLButtonElement> | null`：单个原生 button，库检查无内嵌交互内容并提供 sibling 布局/键盘/继承 disabled。可直接保存引用，不穿透私有 DOM。
+- `decorateItem(element,item,state) => NavigationDOMLifecycle | void`：取得库生成的主 a/button，可绑定公开 `createContextMenuController`，无需替换元素。分组标题不调用 decorator。
+- `NavigationRowState` 是 `{disabled,collapsed,expanded,active}`；`NavigationDOMSlot` 是 `{element,update?(item,state),destroy?()}`，`NavigationDOMLifecycle` 是后两项。`update` 在创建及每次同步时调用，负责用最新 item/state 更新内容、事件读取的值及宿主自身 disabled/busy。不能在 update 中重新注册未清理的监听。
+
+相同 id、主项种类及 factory 引用保留已有 slot/decorator 和 DOM；换 factory、id 被移除、link/button/group 种类改变或 owner.destroy 时释放旧 lifecycle 各一次。null slot 会在后续同步重试 factory；已挂载 slot 的显示/状态交给 update（需改变槽形态时传新的 factory）。destroy 幂等，update 不重新绑定；同时释放宿主请求与订阅。MenuLayout 转入同一窄屏 drawer 不重建内容。默认 label、icon、展开箭头由库维护；宿主不重建主控件或写私有选择器。
+
+```ts
+const menu = createNavigationMenu(root, {items,
+  renderAction(item, state) {
+    const button = document.createElement('button');
+    let current = item;
+    button.textContent = '⚙';
+    const click = () => configure(current);
+    button.addEventListener('click', click);
+    return {element:button,
+      update(next, facts) {
+        current = next;
+        button.setAttribute('aria-label', `配置 ${next.label}`);
+        button.disabled = facts.disabled || busy || !canConfigure(next);
+        button.setAttribute('aria-busy', String(busy));
+      },
+      destroy() {button.removeEventListener('click', click);},
+    };
+  },
+  decorateItem(element, item) {
+    const popup = makePublicContextMenu(item); // 宿主用公开 menu 结构创建的内容
+    const context = createContextMenuController(element, popup);
+    return {destroy() {context.destroy(); popup.remove();}};
+  },
+});
+```
+
+原生 ContextMenu 不接管触发器已有 aria-controls/aria-expanded，因而分支展开事实保持独立；只添加菜单 aria-haspopup 并在销毁时恢复自身仍拥有的属性。普通 Popover/Menu 的 aria-expanded/controls 合同不变。Escape/菜单动作关闭只在焦点仍属于该浮层时回触发器，已经聚焦新标题/新弹层的动作不会被旧菜单抢回。
+
+一个共享 query、两路独立 cursor/未知 total 的完整业务组合见[富导航 React](../examples/rich-navigation-react/app.tsx)、[富导航原生](../examples/rich-navigation-vanilla/app.js)和[宿主模型](../examples/shared/rich-navigation-model.ts)。以 Input + Section/Disclosure + 两个 NavigationMenu + 组外 Load more 组合；查询、权限、取消/迟到丢弃、写动作仍在宿主，库不猜 total 或 cursor。GroupedCombobox 的简单选择合同保持不变，选择指南见[分组搜索](GROUPED_SEARCH.md#富业务分组导航与简单选择的边界)。
+
+### 原生完整自组 sidebar
+
+原生 `MenuLayoutOptions.sidebar?: Node | null` 与 React `AppShell.sidebar` 都可以承载上述两组自组导航。原生 sidebar 替换完整的默认菜单内容区域；没有传值或传 null 时显示原数据菜单，不占 sidebarHeader 的限定高度。sidebarHeader/sidebarFooter 仍是各自独立的上下槽，不将整份导航塞到顶部槽。一个 shell 继续拥有顶栏开关、主题、桌面 collapsed 与窄屏 drawer；多个自组 NavigationMenu 的 collapsed 和实际 navigation/关闭回调由宿主用现有 update 连接，不再创建另一个 shell/drawer。
+
+同一 Node/Fragment 重传保留节点，普通 location/slot 更新不重建自组菜单；Fragment 首次转移后保留其内容，不重用已经移除的空 Fragment 恢复旧内容。替换/移除 sidebar 时只在旧焦点仍归该区域的情况下回到新可用控件，空菜单回顶栏开关或已打开 drawer 的关闭按钮。被暂时替换的自组内容生命周期仍归宿主，最终分别 destroy 其 NavigationMenu/Disclosure/ContextMenu 和订阅；createMenuLayout 不销毁自己未创建的 owner。

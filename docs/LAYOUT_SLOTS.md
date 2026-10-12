@@ -19,7 +19,7 @@ React 的 AppShell/MenuLayout 接收 ReactNode；原生 createMenuLayout 接收 
 | 可选语言 | locale | 同名HeaderLocaleOptions | auxiliary之后、主题之前；未启用不生成控件 | 宿主i18n owner提供事实/列表/回调 |
 | 独立账号区 | headerSlots.account | 同名Node | secondary最末，工具组之外；窄屏自然换行 | 账号菜单/认证/权限完全由宿主拥有 |
 | 侧栏顶 | sidebarHeader | sidebarHeader | 菜单之前；与底部一起限制高度并可滚动；compact仍受公共栏宽约束 | 同一个侧栏树随响应式进入导航抽屉，不加第二个菜单开关 |
-| 导航正文 | AppShell.sidebar / MenuLayout.items | items | 长菜单自身滚动，保留至少一项可用高度 | 库拥有一个导航/键盘/抽屉owner，宿主提供数据 |
+| 导航正文 | AppShell.sidebar / MenuLayout.items | items / sidebar Node | 长菜单自身滚动；sidebar替换完整默认菜单区，null恢复items | 一个shell/drawer owner；每个NavigationMenu拥有自身键盘，宿主保管自组内容生命周期 |
 | 侧栏底 | sidebarFooter | sidebarFooter | 短菜单贴底；极长内容自身滚动 | 返回/授权/版本只是可选业务内容，无默认内置意义 |
 | 页面标题与操作 | pageHeader内组合PageHeader(title/description/meta/actions) | pageHeader Node，使用公开xui-page-header/xui-toolbar结构 | 正文滚动流开头，标题右侧actions窄屏换行 | 复用现有PageHeader，不增加同义标题API |
 | 页内工具条 | pageToolbar | pageToolbar | 标题下、主内容前；正文滚动流 | 过滤器/页内tabs/提示等宿主内容，不做数据owner |
@@ -27,6 +27,8 @@ React 的 AppShell/MenuLayout 接收 ReactNode；原生 createMenuLayout 接收 
 | 页面底部 | pageFooter | pageFooter | 主内容后、同一正文滚动流，非悬浮覆盖层 | 页面说明/操作，与sidebarFooter独立 |
 
 空的可选槽不占位；React undefined/null/boolean、空字符串/数组/Fragment不产生内容包装，数值0保留；自定义组件渲染结果由React决定，实际空DOM包装用:empty消除视觉占位。原生空槽不占视觉/键盘空间。同一个Node/已消费Fragment传回不重建内容、不重复绑定；需要替换内容传新Node/Fragment，清空传null/undefined。移除后恢复已消费Fragment须重新填入内容或保留Node引用。React遵循正常key/type协调，宿主有意移除某槽会卸载该槽内容，不影响其他槽、正文和导航owner。
+
+富业务自组导航使用完整sidebar区域，不能把整份导航塞进sidebarHeader的限高槽。原生新增sidebar的节点保留、null恢复、替换焦点与清理边界见[导航合同](NAVIGATION.md#原生完整自组-sidebar)。
 
 Tab按真实DOM顺序经过primary（leading、导航、品牌、路径、context）、secondary（状态、actions、旧header、auxiliary、语言、主题、account），然后侧栏/正文；不使用正tabindex重排。打开抽屉仍采用原模态焦点限制；关闭回同一个顶栏菜单开关。关闭当前聚焦的语言入口会把焦点移到相邻主题按钮。槽自身交互语义/disabled/busy由其组件或宿主拥有。
 

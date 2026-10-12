@@ -1187,4 +1187,11 @@ AppHeader/AppShell/MenuLayout与原生createMenuLayout在右侧默认提供一�
 
 headerSlots.leading是可选、默认空且不收缩的最前区域，位于自动导航按钮之前；品牌继续独立。库负责顺序与窄屏布局，不内置macOS窗口控件尺寸或平台检测。平台/全屏状态、安全区真实尺寸、drag/no-drag由宿主集成提供，不把业务/OS规则带入默认皮肤。完整合同及两端正式消费者见[布局插槽](LAYOUT_SLOTS.md)。
 
+
+### 富导航行与独立辅助动作
+
+带层级、图标和描述的业务导航保持普通nav/link/button语义。主要导航/展开控件与行尾辅助button必须为sibling，标签只包含非交互描述，不能嵌入button/link/input或伪装成listbox option。库维护单一roving停靠：上下/Home/End遍历可见可用控件，左右只处理主控件的层级，辅助动作Enter/Space不触发导航。ContextMenu的浮层键盘和回焦点保持独立，不能借事件穿透要求消费方stopPropagation。库提供公开单元素renderer/原生稳定slot生命周期；disabled继承，busy和业务防重复由宿主明确提供。
+
+行尾按钮和紧凑排列复用现有control/nav/space语义变量，根据可用窗口自适应；紧凑辅助按钮在同项下一行，不写产品固定宽高或加宽轨道。共享查询、各组独立cursor/hasMore、关闭取消与迟到丢弃属于宿主，不在通用组件猜total/pageCount或内置领域请求与写入。可用Input、Section/Disclosure、独立NavigationMenu与组外加载按钮组成富分组导航，简单选择仍采用原有listbox合同。
+
 <!-- foundation-lifecycle:end -->

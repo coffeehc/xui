@@ -3,14 +3,16 @@ import {getThemeController,type ThemeController} from './theme.js';
 import {bindHeaderLocaleSelect,isHeaderLocaleEnabled,type HeaderLocaleOptions} from './header-controls.js';
 import {bindThemeModeButton,type ThemeModeLabels} from './theme-control.js';
 import {bindPressFeedback,createShellController,type DialogCloseDetails} from './dom.js';
-import {createNavigationMenu,indexNavigation,renderNavigationIcon,type NavigationMenuOptions,type NavigationAdapter} from './navigation.js';
+import {createNavigationMenu,indexNavigation,renderNavigationIcon,type NavigationMenuDOMOptions,type NavigationAdapter} from './navigation.js';
 
 /** document: natural page; viewport: main scrolls; workspace: content fills the remaining viewport. */
 export type ShellScrollMode='document'|'viewport'|'workspace';
 export interface MenuLayoutHeaderSlots {
   leading?:Node|null;brand?:Node|null;breadcrumb?:Node|null;status?:Node|null;actions?:Node|null;auxiliary?:Node|null;context?:Node|null;account?:Node|null;
 }
-export interface MenuLayoutOptions extends NavigationMenuOptions {
+export interface MenuLayoutOptions extends NavigationMenuDOMOptions {
+  /** Replaces the default menu region with a host-composed sidebar; null restores it. */
+  sidebar?:Node|null;
   theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:ShellScrollMode;title?:string;header?:Node;headerSlots?:MenuLayoutHeaderSlots;sidebarHeader?:Node|null;sidebarFooter?:Node|null;pageHeader?:Node|null;pageToolbar?:Node|null;pageFooter?:Node|null;content?:Node;skipLabel?:string;closeLabel?:string;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
 }
@@ -53,17 +55,27 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   const syncContent=()=>{const tools=options.pageToolbar??null,head=options.pageHeader??null,foot=options.pageFooter??null;pageToolbar.hidden=!tools;if(tools!==pageToolbarInput){pageToolbar.replaceChildren(...(tools?[tools]:[]));pageToolbarInput=tools;}pageHeader.hidden=!head;pageFooter.hidden=!foot;if(head!==pageHeaderInput){pageHeader.replaceChildren(...(head?[head]:[]));pageHeaderInput=head;}if(foot!==pageFooterInput){pageFooter.replaceChildren(...(foot?[foot]:[]));pageFooterInput=foot;}pageToolbar.hidden=!hasSlotContent(pageToolbar);pageHeader.hidden=!hasSlotContent(pageHeader);pageFooter.hidden=!hasSlotContent(pageFooter);if(options.content!==contentInput){content.replaceChildren(...(options.content?[options.content]:original));contentInput=options.content;}};
   let shell:ReturnType<typeof createShellController>|undefined;
   const syncToggle=()=>{if(dead)return;const collapsed=menu.getState().collapsed;toggle.setAttribute('aria-label',media.matches?options.label??'Navigation':collapsed?options.expandLabel??'Expand navigation':options.compactLabel??'Compact navigation');toggle.setAttribute('aria-expanded',String(media.matches?shell?.getOpen()??false:!collapsed));toggle.setAttribute('aria-controls',media.matches?dialog.id:sidebar.id);media.matches?toggle.setAttribute('aria-haspopup','dialog'):toggle.removeAttribute('aria-haspopup');toggle.dataset.collapsed=String(!media.matches&&collapsed);};
-  const menuOptions=():NavigationMenuOptions=>({...options,showCollapseToggle:false,location:options.location??doc.location?.href,baseURL:options.baseURL??doc.baseURI,
+  const menuOptions=():NavigationMenuDOMOptions=>({...options,showCollapseToggle:false,location:options.location??doc.location?.href,baseURL:options.baseURL??doc.baseURI,
     onCollapsedChange:next=>{options.onCollapsedChange?.(next);root.dataset.collapsed=String(menu.getState().collapsed);syncToggle();},
     navigation:options.navigation?{canNavigate:request=>options.navigation?.canNavigate?.(request)!==false,navigate:request=>{shell?.close('navigation');options.navigation!.navigate(request);}} satisfies NavigationAdapter:undefined});
   const menu=createNavigationMenu(menuRoot,menuOptions(),{fallbackFocus:()=>shell?.getOpen()?close:toggle});
+  const customSidebar=doc.createElement('div');let sidebarInput:Node|null=null;
+  const navigationRegion=()=>options.sidebar?customSidebar:menu.getElement();
+  const syncCustomSidebar=()=>{const node=options.sidebar??null,active=doc.activeElement,hadFocus=!!active&&menuRoot.contains(active);
+    if(node!==sidebarInput){customSidebar.replaceChildren(...(node?[node]:[]));sidebarInput=node;}
+    menu.getElement().hidden=!!node;if(node){if(customSidebar.parentNode!==menuRoot)menuRoot.append(customSidebar);}else customSidebar.remove();
+    if(hadFocus&&!navigationRegion().contains(active)&&(doc.activeElement===active||doc.activeElement===doc.body)){
+      const targets=Array.from(navigationRegion().querySelectorAll<HTMLElement>('[data-menu-control],button,a[href],input,select,textarea,[tabindex]')).filter(element=>!element.matches(':disabled,[aria-disabled="true"]')&&!element.closest('[hidden]'));
+      (targets.find(element=>element.tabIndex===0)??targets[0]??(shell?.getOpen()?close:toggle)).focus();
+    }
+  };syncCustomSidebar();
   const toggleDesktop=(event:Event)=>{if(!media.matches&&!dead){event.stopImmediatePropagation();menu.setCollapsed(!menu.getState().collapsed);}};toggle.addEventListener('click',toggleDesktop,true);
   root.classList.add('xui','xui-shell','xui-menu-layout');root.replaceChildren(skip,header,sidebar,main,dialog);if(!options.content)content.append(...original);syncContent();
-  const syncLabels=()=>{syncFooter();root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport'||options.scrollMode==='workspace'||sidebarHasSections)menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});syncToggle();title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';syncHeader();};syncLabels();
+  const syncLabels=()=>{syncFooter();syncCustomSidebar();root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport'||options.scrollMode==='workspace'||sidebarHasSections)navigationRegion().querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});syncToggle();title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';syncHeader();};syncLabels();
   const measureSidebar=()=>{sidebar.style.blockSize=sidebarHasSections&&!media.matches&&(options.scrollMode??'document')==='document'?`max(var(--nav-sidebar-min-height), calc(100dvh - ${header.getBoundingClientRect().height}px))`:'';body.classList.toggle('xui-shell-sidebar-body',!!sidebarHasSections);};
   const headerObserver=new ResizeObserver(measureSidebar);headerObserver.observe(header);measureSidebar();
   const syncSidebar=(details?:DialogCloseDetails)=>{shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);syncToggle();if((options.scrollMode==='viewport'||options.scrollMode==='workspace'||sidebarHasSections)&&(!media.matches||shell?.getOpen())){
-    const active=doc.activeElement,target=active&&menuRoot.contains(active)?active:menuRoot.querySelector('[aria-current="page"]');
+    const active=doc.activeElement,target=active&&navigationRegion().contains(active)?active:navigationRegion().querySelector('[aria-current="page"]');
     // Opening preserves the roving target, which can differ from selection.
     // Do not immediately scroll that newly focused control out of view.
     target?.scrollIntoView({block:'nearest',inline:'nearest'});

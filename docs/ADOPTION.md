@@ -29,6 +29,8 @@ pnpm test:consumer
 pnpm preview
 ```
 
+富条目双端示例 /rich-navigation-react/、/rich-navigation-vanilla/ 使用公开搜索 + 两组导航 + sibling 配置动作；共享查询与独立未知 total 游标由宿主拥有，详见 [导航扩展](NAVIGATION.md#富条目独立行尾动作与上下文菜单)。
+
 新增 /workspace-react/、/workspace-vanilla/ 验证公开有界工作区（?direct直接AppShell、?short、?plain、?platform、?wrapped），不需要内部样式补丁。
 
 访问 /capabilities-react/、/capabilities-vanilla/ 侧栏/确认/右键菜单/表格/下载与默认页面HTTP，/menu-react/、/menu-vanilla/ 最小菜单，/http-react/、/http-vanilla/ 标准查询页，/login-react/、/login-vanilla/ 配置登录页，/api-key-react/、/api-key-vanilla/ 管理组件，/business-log-react/、/business-log-vanilla/ 业务日志，/log-react/、/log-vanilla/ 独立结构化错误查询，/foundation-react/、/foundation-vanilla/ 列表/表单/详情与动态加载。浏览器检查使用已有 Chromium，或 pnpm exec playwright install chromium。没有部署/发布操作。
@@ -71,7 +73,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 | 公开能力 | 数据与状态 | 默认行为/扩展 |
 | --- | --- | --- |
-| MenuLayout/NavigationMenu | NavigationItem[]、activeId/location、一次 navigation/matchLocation、header/children | 默认菜单、选中/展开/紧凑/键盘/drawer；renderLink/renderLabel 与受控回调 |
+| MenuLayout/NavigationMenu | NavigationItem[]、activeId/location、一次 navigation/matchLocation、header/children | 默认菜单、选中/展开/紧凑/键盘/drawer；renderLink/renderButton/renderLabel、独立renderAction 与受控回调 |
 | AppShell/Container/Stack/Grid/Toolbar/PageHeader/Section | sidebar/header/children、title/description/actions/meta | skip link/响应布局；低层 AppShell 用于自组 sidebar，不叠加第二个 MenuLayout owner |
 | Button/IconButton | 标准 props、disabled/aria-busy、onClick、图标按钮名字 | type=button、键盘/focus/motion；公开 render/ref，busy 与防重复分别控制 |
 | Field/Input/Textarea/NativeSelect/Fieldset/Checkbox/Radio/Switch | label/controlId/name/value/checked、help/error/required/readOnly | 单 id/描述与分组关联；复合输入显式 controlId，保留标准事件 |

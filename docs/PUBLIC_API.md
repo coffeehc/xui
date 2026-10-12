@@ -164,3 +164,9 @@ AppHeader/AppShell/MenuLayout与原生MenuLayoutOptions同型theme?:ThemeControl
 `ShellScrollMode`从runtime/menu-layout及根导出，并由React/layout及根重新导出；AppShellProps/MenuLayoutProps/MenuLayoutOptions.scrollMode接受document（默认）/viewport（旧main滚动）/workspace（content填满剩余高度）。workspace以库内flex/min-block-size链分配真实header和page slots以外的空间，不强制业务滚动区域、窗口集成或路由恢复策略。
 
 AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null）；独立AppHeader直接接受leading。顺序为leading→自动navigation→brand→breadcrumb→context，默认空；同Node/Fragment与普通React协调保持稳定。宿主提供平台/全屏事实、尺寸和drag/no-drag语义，库没有OS默认像素。完整[合同](LAYOUT_SLOTS.md)、[React正式消费者](../examples/workspace-react/app.tsx)、[原生正式消费者](../examples/workspace-vanilla/app.js)及[验证记录](WORKSPACE_VALIDATION.md)。
+
+## 富导航行扩展
+
+`@coffeehc/xui-react/menu-layout` / 根的 `NavigationMenuProps`（及 `MenuLayoutProps`）追加 `renderButton(item)`、`renderAction(item)`：单 button 分支 renderer 与独立 sibling 辅助动作。保留已有 `children/resolveIcon/renderLabel/renderLink`，不是 listbox。`@coffeehc/xui-runtime/navigation` / 根追加类型 `NavigationRowState`、`NavigationDOMLifecycle`、`NavigationDOMSlot`、`NavigationMenuDOMOptions`；`createNavigationMenu` 和原生 `MenuLayoutOptions` 接受 renderLabel/renderAction/decorateItem 公共生命周期。默认无扩展时保持原菜单；busy 不自动等于 disabled。API、键盘、内容限制和清理见[富条目合同](NAVIGATION.md#富条目独立行尾动作与上下文菜单)，[双端正式消费者](GROUPED_SEARCH.md#富业务分组导航与简单选择的边界)。
+
+原生 `MenuLayoutOptions.sidebar?:Node|null` 可替换完整菜单区域，省略/null恢复默认数据菜单；稳定节点、替换焦点和清理边界见[原生自组sidebar](NAVIGATION.md#原生完整自组-sidebar)。它复用同一个shell，不占sidebarHeader限定高度。React使用现有AppShell.sidebar组合。
