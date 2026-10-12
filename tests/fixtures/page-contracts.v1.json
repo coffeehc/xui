@@ -1,0 +1,302 @@
+{
+  "fixture_version": 1,
+  "cases": {
+    "api_key_capabilities": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys/capabilities"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 1,
+            "can_create": true,
+            "permissions": [
+              {
+                "id": "read",
+                "label": "Read",
+                "description": null,
+                "disabled": false,
+                "required": true
+              },
+              {
+                "id": "write",
+                "label": "Write",
+                "description": "Synthetic write permission",
+                "disabled": false,
+                "required": false
+              }
+            ],
+            "expiry_options": [
+              {
+                "id": "30d",
+                "label": "30 days"
+              }
+            ],
+            "default_expiry_id": "30d",
+            "default_permission_ids": [],
+            "confirmation_label": "Confirm these permissions"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_list": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys",
+        "query": {
+          "page_index": "0",
+          "page_size": "100",
+          "return_total": "true",
+          "sort": "id",
+          "sort_id": "asc"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "list": [
+              {
+                "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "name": "Synthetic key",
+                "prefix": "FAKE",
+                "permission_ids": [
+                  "read"
+                ],
+                "created_at": "2026-10-12T01:00:00Z",
+                "expires_at": null,
+                "last_used_at": null,
+                "status": "active",
+                "capabilities": {
+                  "revoke": true,
+                  "delete_record": false
+                }
+              }
+            ],
+            "total": 1
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_create": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys",
+        "body": {
+          "name": "Synthetic key",
+          "permission_ids": [
+            "read"
+          ],
+          "expiry_id": "30d",
+          "confirmed": true
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 1,
+            "metadata": {
+              "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "name": "Synthetic key",
+              "prefix": "FAKE",
+              "permission_ids": [
+                "read"
+              ],
+              "created_at": "2026-10-12T01:00:00Z",
+              "expires_at": null,
+              "last_used_at": null,
+              "status": "active",
+              "capabilities": {
+                "revoke": true,
+                "delete_record": false
+              }
+            },
+            "secret": "FAKE_CONTRACT_ONE_TIME_VALUE"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_revoke": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/revoke",
+        "body": {}
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 1,
+            "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "revoke",
+            "completed": true
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_delete_record": {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/v1/api-keys/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/record"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 1,
+            "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "delete_record",
+            "completed": true
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_write_outcome_unknown": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys",
+        "body": {
+          "name": "Synthetic key",
+          "permission_ids": [
+            "read"
+          ],
+          "expiry_id": "30d",
+          "confirmed": true
+        }
+      },
+      "response": {
+        "status": 503,
+        "body": {
+          "success": false,
+          "message": "API key write outcome is unknown",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 50301
+        }
+      }
+    },
+    "business_log_list": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/business-logs",
+        "query": {
+          "page_index": "0",
+          "page_size": "20",
+          "return_total": "true",
+          "since": "2026-10-12T01:00:00.000000001Z",
+          "until": "2026-10-12T02:00:00.000000001Z",
+          "actor_kind": "user",
+          "actor_id": "fixture:user",
+          "sort": "recorded_at,id",
+          "sort_recorded_at": "desc",
+          "sort_id": "desc"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "list": [
+              {
+                "id": "bl_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "event_type": "order.approved",
+                "schema_version": 3,
+                "occurred_at": "2026-10-12T01:00:00.000001Z",
+                "recorded_at": "2026-10-12T01:00:01Z",
+                "actor": {
+                  "kind": "user",
+                  "id": "fixture:user",
+                  "display_name": null
+                },
+                "object": {
+                  "kind": "order",
+                  "id": "fixture:order",
+                  "display_name": "Synthetic order"
+                },
+                "action": "approve",
+                "result": "succeeded",
+                "summary": "Synthetic approval",
+                "correlation_id": "fixture:correlation",
+                "request_id": "fixture:source-request"
+              }
+            ],
+            "total": 1
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "business_log_detail": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/business-logs/bl_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "event": {
+              "id": "bl_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "event_type": "order.approved",
+              "schema_version": 3,
+              "occurred_at": "2026-10-12T01:00:00.000001Z",
+              "recorded_at": "2026-10-12T01:00:01Z",
+              "actor": {
+                "kind": "user",
+                "id": "fixture:user",
+                "display_name": null
+              },
+              "object": {
+                "kind": "order",
+                "id": "fixture:order",
+                "display_name": "Synthetic order"
+              },
+              "action": "approve",
+              "result": "succeeded",
+              "summary": "Synthetic approval",
+              "correlation_id": "fixture:correlation",
+              "request_id": "fixture:source-request"
+            },
+            "state": "available",
+            "payload": {
+              "approval": {
+                "decision": "approved"
+              },
+              "note": "Synthetic fixture only"
+            }
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    }
+  }
+}

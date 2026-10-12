@@ -32,7 +32,7 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 
 普通需求优先完整页面或组合；特殊业务可用公开扩展点或组合基础控件。允许声明的 props/render/parts、受信任 renderer、数据配置和 callbacks；不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner；缺能力先反馈或补公开接口，再补验收。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
 
-统一 API 数据合同让 UI 与自动化消费同一业务能力，领域流程、权限/tenant与校验保持在可独立测试的业务 API/后端。xui 提供界面、通用请求及正式 DTO/adapter 接口；baseservice 独立提供后端能力，经版本化 HTTP facade 组合，不能向前端暴露数据库模型。登录已定义固定 v1 三路由，但后端适配未实施；API Key和业务日志定义固定原生HTTP facade与默认adapter/loader，索引见[PAGE_APIS](PAGE_APIS.md)，真实服务未集成。不因等待后端阻塞 xui，也不自动改其它项目。
+统一 API 数据合同让 UI 与自动化消费同一业务能力，领域流程、权限/tenant与校验保持在可独立测试的业务 API/后端。xui 提供界面、通用请求及正式 DTO/adapter 接口；baseservice 独立提供后端能力，经版本化 HTTP facade 组合，不能向前端暴露数据库模型。登录已定义固定v1三路由，其实现与用户管理归宿主/身份提供方，不是baseservice职责；API Key和业务日志定义固定原生HTTP facade与默认adapter/loader，并与baseservice配套HTTP边界共享fixture，索引见[PAGE_APIS](PAGE_APIS.md)，产品集成仍单独验收。不因等待后端阻塞 xui，也不自动改其它项目。
 
 后续逐页采用 xui，并行完善 baseservice，再逐项目替换后端 adapter，按版本/固定 SHA、DTO 与真实业务/页面回归小步升级。贡献验收须给出所属层次、复用下层的证据、实际公开扩展与构建消费；合成页面通过不能当作完整基础系统或产品迁移通过。此设计哲学由本节作为单一架构源，README、采用手册和 skill 引用这里。
 

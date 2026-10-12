@@ -6,7 +6,7 @@
 
 已用正常 Git 读取 xAgent 提交 `29139f7843d9a79a9eca42892cb87da8f08f6320`，核对 [auth-service.ts](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/frontend/packages/business/src/services/auth-service.ts)、[http-service.ts](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/frontend/packages/business/src/services/http-service.ts)、[user_endpoint.go](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/user_endpoint.go) 和 [user_auth_endpoint.go](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/user_auth_endpoint.go)。现有密码登录为 `POST /api/v1/auth/token`，发送 password grant、username/password/client_id/channel_type/terminal_id，返回 access/refresh token；退出是 `POST /api/v1/auth/logout`，当前用户为 `GET /api/v1/me/state`。现有前端持有 bearer token，错误也有 HTTP 200 的业务 envelope。
 
-下面是 **xui 新定义的 cookie 会话 facade**，不是对上述协议的别名兼容，也不声称 xAgent 已可直接接入。产品或未来 baseservice 实现 adapter 后遵循它；本轮没有修改其他仓库、实现 cookie 后端或生成凭据。不等待 baseservice：xui 先通过可测试合同、合成 fetch 和两个正式消费者完成前端。对已正式上线的xAgent，若尚无该facade，先保留已有认证owner并逐页采用主题/原子/其它页面，记录后端缺口和升级影响；facade与真实契约验收就绪后再切完整登录页。未发布项目直接采用新合同，不为旧认证添加兼容层；本轮不改xAgent或生产数据。createAuthClient只有http/timeoutMs配置，不支持靠改baseURL或猜route/adapter完成旧协议迁移。
+下面是 **xui 新定义的 cookie 会话 facade**，不是对上述协议的别名兼容，也不声称 xAgent 已可直接接入。登录、会话和用户管理由宿主产品或身份提供方实现；baseservice不实现这些服务，API Key/业务日志facade也不拥有用户生命周期。xui保留当前登录API，通过可测试合同、合成 fetch 和两个正式消费者完成前端；本次对齐没有实现cookie后端或生成凭据。对已正式上线的xAgent，若尚无该facade，先保留已有认证owner并逐页采用主题/原子/其它页面，记录后端缺口和升级影响；facade与真实契约验收就绪后再切完整登录页。未发布项目直接采用新合同，不为旧认证添加兼容层；本轮不改xAgent或生产数据。createAuthClient只有http/timeoutMs配置，不支持靠改baseURL或猜route/adapter完成旧协议迁移。
 
 ## 固定版本接口
 
@@ -73,7 +73,7 @@ cookie 的签发/轮换/有效期/服务端撤销、HttpOnly/Secure/SameSite、�
 
 [共享配置](../examples/shared/login-config.json)、[合成 facade](../examples/shared/login-model.ts)、[React](../examples/login-react/app.tsx) 与 [原生](../examples/login-vanilla/app.js) 都经 fresh npm tarball 安装正式入口再打包，不读 monorepo 源码 alias，也不需要私有页面 CSS。[逻辑回归](../tests/auth.test.mjs) 与 [浏览器回归](../tests/browser/login.spec.mjs) 核对严格 DTO、共享401、固定请求、取消/超时/迟到/防重复、回跳、错误安全、theme、键盘/焦点/reduced-motion、390px/200%/后备字体和密码节点清空。
 
-合成 fetch 没有签发真实 cookie，不证明后端登录、CSRF、CORS、鉴权或日志可靠性通过。最终完整验收与同 SHA CI 随交付记录。注册、重置密码、SSO、完整用户管理 UI 和 baseservice 后端是后续组合计划；当前基础已有登录/API Key/业务日志，不声称完整基础系统或产品迁移已完成。
+合成 fetch 没有签发真实 cookie，不证明后端登录、CSRF、CORS、鉴权或日志可靠性通过。最终完整验收与同 SHA CI 随交付记录。注册、重置密码、SSO和用户管理属于宿主/身份提供方责任，不是baseservice后续计划；当前基础已有登录/API Key/业务日志，不声称完整基础系统或产品迁移已完成。
 
 固定cookie facade显式Accept:application/json，POST显式Content-Type:application/json；保留宿主CSRF/鉴权/tenant header，不继承旧protobuf/form编码。该标准与页面API索引一致，真实后端仍须提供cookie、CSRF/CORS与鉴权。
 

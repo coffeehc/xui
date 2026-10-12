@@ -1,6 +1,6 @@
 # xui 使用与迁移手册
 
-这是接入入口，引用同一份规范、公开类型和已运行的例子，不另定义品牌默认值。当前包为 private 0.1.0；采用前固定 Git SHA/本地 tarball 并核对 [全部公开入口与默认行为](PUBLIC_API.md)。菜单布局、HTTP/query、可配置登录页、API Key 管理和可扩展业务日志已实现；默认API Key/业务日志HTTP adapters已实现；真实认证、密钥、业务日志服务尚未集成。此前结构化错误查询是独立错误观察能力，不是业务日志。Codex 流程见 [adopt-xui](../.agents/skills/adopt-xui/SKILL.md)，随仓库 checkout 使用，没有安装到用户电脑或全局 skill 工作区。
+这是接入入口，引用同一份规范、公开类型和已运行的例子，不另定义品牌默认值。当前包为 private 0.1.0；采用前固定 Git SHA/本地 tarball 并核对 [全部公开入口与默认行为](PUBLIC_API.md)。菜单布局、HTTP/query、可配置登录页、API Key 管理和可扩展业务日志已实现；默认API Key/业务日志HTTP adapters已实现；产品真实认证、密钥、业务日志服务尚未集成。此前结构化错误查询是独立错误观察能力，不是业务日志。Codex 流程见 [adopt-xui](../.agents/skills/adopt-xui/SKILL.md)，随仓库 checkout 使用，没有安装到用户电脑或全局 skill 工作区。
 
 xui用于统一品牌、前端体系和通用前后端接口。采用项目应在自身授权范围主动使用原生commons/webfacade和httpx标准化自有普通业务API；旧协议adapter仅作注明来源、映射、目标与移除条件的临时桥梁。必须遵循的协议、默认HTTP adapters和领域扩展边界见[页面API总索引](PAGE_APIS.md)。不能以保留旧协议为长期架构目标，也不能因此削减业务能力、鉴权或已上线xAgent的升级保护。
 
@@ -16,7 +16,7 @@ xui用于统一品牌、前端体系和通用前后端接口。采用项目应�
 
 theme 提供无框架预构建 CSS/tokens；runtime 提供主题、DOM、resource、菜单、HTTP/query、认证与共享页面控制器；ui-react 复用共享类型和 React/Base UI peers。按上述三层准则，普通页面通过数据、配置和公开扩展接口使用完整页面/组合，特殊业务组合基础控件；不修改组件内部渲染。产品保管可见菜单过滤、路由、身份、领域权限/数据与业务动作；xui 提供默认结构、交互、motion、focus/a11y。产品迁就统一标准，业务扩展通过公开 slots/render/adapters，公共能力不足反馈 xui。
 
-采用产品以 agent-ready 为优先：业务 API 完整、明确且可独立测试，UI 消费同一能力，只作为用户观察、配置和介入的入口。领域执行、权限、租户隔离、校验与核心业务流程属于宿主服务/领域层，不藏在组件内部，也不因组件替换而消失。xui 提供表现、交互和通用请求接入，不能成为业务 API 能力的唯一入口。这是接入职责，不增加本轮后端改造、Agent SDK 或其他产品仓库修改范围。按最新用途，BusinessLogExplorer是调取业务记录的查询页；baseservice后续将业务日志收敛到日志能力并取消独立auditservice，本轮不修改后端或等待这次改造。未来 baseservice 的 API Key、业务日志与运行配置通过版本化 HTTP DTO 和契约测试配套，数据库模型不直接暴露；API_KEY与BUSINESS_LOGS已定义固定HTTP facade及默认client，领域扩展保留typed adapter入口。本轮没有运行配置组件或后端实现。
+采用产品以 agent-ready 为优先：业务 API 完整、明确且可独立测试，UI 消费同一能力，只作为用户观察、配置和介入的入口。领域执行、权限、租户隔离、校验与核心业务流程属于宿主服务/领域层，不藏在组件内部，也不因组件替换而消失。xui 提供表现、交互和通用请求接入，不能成为业务 API 能力的唯一入口。这是接入职责，不增加本轮后端改造、Agent SDK 或其他产品仓库修改范围。BusinessLogExplorer是调取业务记录的查询页。baseservice的apikeyservice/webfacade与bizlogservice/webfacade通过版本化HTTP DTO和共享fixture与xui配套，数据库模型不直接暴露；实际边界与宿主接入前置见[PAGE_APIS](PAGE_APIS.md)。登录/会话/用户管理由宿主或身份提供方负责，baseservice不实现它们。领域扩展保留typed adapter入口，本次不新增运行配置组件。
 
 ## 最小运行与固定产物
 
@@ -105,9 +105,9 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 验收必须仅调用固定产物公共 exports/props/slots/adapters，不补私有控件皮肤，不留竞争 owner。检查解析路径、peer 单实例、types/CSS/init generation、computed style 和实际业务行为；记录通过/未跑/失败与缺口。能力缺失反馈 xui，修改 xui/推送/发布/部署仍依具体任务授权，不由手册自授权。
 
-业务日志与独立错误观察已有可运行公开消费，但真实后端 adapter/facade 与产品迁移未实施。手册、skill 与公开入口由同一次验证交叉核对；独立审查范围和发现见 [最终审查](FINAL_REVIEW.md)。日志和错误观察各用独立 cursor 合同，不能套 webfacade offset query。SSR、真实移动 OS/读屏器/Firefox/Safari/生产性能等未跑项继续按验证记录保留。
+业务日志与独立错误观察已有可运行公开消费；API Key/业务日志配套baseservice facade与共享fixture见[PAGE_APIS](PAGE_APIS.md)，产品迁移和独立错误观察后端未实施。手册、skill 与公开入口由同一次验证交叉核对；独立审查范围和发现见 [最终审查](FINAL_REVIEW.md)。业务日志默认使用原生webfacade offset合同；领域cursor与独立错误观察仍遵循各自明确合同，不混用分页语义。SSR、真实移动 OS/读屏器/Firefox/Safari/生产性能等未跑项继续按验证记录保留。
 
-未来按螺旋升级：先逐页采用 xui，baseservice 并行完成后逐项目替换后端 adapter。每次公共合同版本变化，都同步核对消费方包依赖/固定 SHA、HTTP DTO adapter、类型声明与独立业务/页面回归；只在该项目的明确授权中实施。不等待后端才接前端，也不要求一次同时切换全部产品。
+未来按螺旋升级：先逐页采用 xui，按产品授权逐项目接入baseservice facade或替换后端 adapter。每次公共合同版本变化，都同步核对消费方包依赖/固定 SHA、HTTP DTO adapter、类型声明与独立业务/页面回归；只在该项目的明确授权中实施。不等待后端才接前端，也不要求一次同时切换全部产品。
 
 最短 Codex 接入请求：`阅读 xui/.agents/skills/adopt-xui/SKILL.md，按其引用的规范和手册接入当前页面；保留业务 API/权限，使用公开产物，运行实际构建并报告通过、未跑和缺口。` 请用实际 checkout 路径替换 xui；这段请求不包含发布或其他仓库变更授权。
 

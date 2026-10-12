@@ -10,7 +10,7 @@ required权限在初始draft中明确选中且不可取消；disabled权限不�
 
 ApiKeyAdapter为list/create/revoke及可选deleteRecord。revoke使凭据失效；过期状态不再硬编码禁止，必须由实际capability/宿主授权允许。deleteRecord仅针对已经revoked的管理记录，需独立能力和callback；不撤销活动凭据、不删除已有业务记录。两操作都有目标、风险、确认/取消，确认回调成功返回void后才更新/移除。服务端无能力时保留业务原入口，不削减功能，也不默认放权。
 
-写操作无自动重放。网络/超时/parse/5xx等结果未知使 `actionUncertain=true`，`writeBlock` 保留操作种类与目标ID，创建、撤销和删除均失败关闭。实际发出后取消、关闭、pagehide、视图卸载或controller销毁只终止本地等待和清除一次性值，不能回滚服务端或解除保护。发出前的取消可释放尚未执行的操作；HTTP4xx及原生明确business拒绝区分为安全拒绝反馈。迟到结果不恢复弹层、密钥或修改行。
+写操作无自动重放。网络/超时/parse/5xx等结果未知使 `actionUncertain=true`，`writeBlock` 保留操作种类与目标ID，创建、撤销和删除均失败关闭。实际发出后取消、关闭、pagehide、视图卸载或controller销毁只终止本地等待和清除一次性值，不能回滚服务端或解除保护。发出前的取消可释放尚未执行的操作；HTTP4xx及原生明确business拒绝区分为安全拒绝反馈，但应用错误码 `50301`（`API_KEY_WRITE_OUTCOME_UNKNOWN`）始终表示结果未知，即使错误地通过HTTP200或4xx返回，也不能解除保护。迟到结果不恢复弹层、密钥或修改行。
 
 ### 写入保护的所有者与恢复
 
@@ -18,7 +18,7 @@ ApiKeyAdapter为list/create/revoke及可选deleteRecord。revoke使凭据失效�
 
 `recoverUncertainWrite()` 是明确只读核对动作：先发起新的list并严格验证完整脱敏metadata，再调用宿主可选 `adapter.reconcileWrite(write,{rows,signal})`。写回调context携带可选 `write` 关联事实，宿主可在自己的领域边界关联真实请求。只有权威终态 `applied` 或 `not-applied` 才解除当前操作的保护；`not-applied` 必须确认原请求已经终结且未来不会迟到应用，不能因为当前列表没有同名记录就作判断。`applied` 不恢复一次性完整值；只按原操作归属关闭create/revoke/delete确认弹层，另一视图已成功result的一次性值保持到其明确关闭，更新列表仍只用刚读到的公共事实。`pending`、失败、非法结果、取消、销毁、较新查询或较新guard都保留保护；两owner并行核对时，旧等待不会清除新的写入或残留busy。核对完成从不自动发出写操作，用户须表达新意图。
 
-普通 `refresh()`、重新打开弹层和卸载重建均不解除保护。默认 `createApiKeyHttpAdapter` 没有猜测核对endpoint或实现 `reconcileWrite`：此时核对可刷新列表并明确提示服务缺口，写入继续被阻止。只有真实服务提供权威请求结果时，宿主才扩展该回调；前端不提供事务保证。
+普通 `refresh()`、重新打开弹层和卸载重建均不解除保护。默认 `createApiKeyHttpAdapter` 没有猜测核对endpoint或实现 `reconcileWrite`：此时核对可刷新列表并明确提示服务缺口，写入继续被阻止。只有真实服务提供权威请求结果时，宿主才扩展该回调；前端不提供事务保证。baseservice 当前facade没有持久化operation receipt或核对endpoint，不能将一次List读到/没读到某条记录当作权威核对；宿主没有额外真实核对能力时，未知写入继续保持阻止状态。
 
 ## 固定v1 facade与默认adapter
 
@@ -32,9 +32,17 @@ createApiKeyHttpAdapter({http,timeoutMs?,pageSize?,maxRecords?})使用同一个H
 | 撤销 | POST /api/v1/api-keys/{id}/revoke | JSON{}；payload{schema_version:1,id,operation:revoke,completed:true} |
 | 删除管理记录 | DELETE /api/v1/api-keys/{id}/record | 无body；payload{schema_version:1,id,operation:delete_record,completed:true} |
 
-wire metadata为id/name/prefix/permission_ids/created_at/expires_at/last_used_at/可选last_used_at_pending/status/capabilities{revoke,delete_record}；nullable字段必须明确null，status为active/revoked/expired/unknown/null。时间由后端提供，UI不根据本机时钟猜授权状态。capability是服务确认的操作授权，状态规则仍由前端和后端共同校验。列表/metadata不允许secret/token等额外凭据字段。内部公开metadata使用camelCase，adapter做一次精确映射，不猜别名。可选 `last_used_at_pending:boolean` 精确映射为 `lastUsedAtPending`：true在最近使用时间旁显示“待保存”，false保留明确false，缺失保留缺失，不从nullable时间、状态或前端时钟推断是否已持久化。两者都不改变授权/有效期或替代后端事实。
+wire metadata为id/name/prefix/permission_ids/created_at/expires_at/last_used_at/可选last_used_at_pending/status/capabilities{revoke,delete_record}；nullable字段必须明确null，status为active/revoked/expired/unknown/null。时间由后端提供，UI不根据本机时钟猜授权状态。capability是服务确认的操作授权，状态规则仍由前端和后端共同校验。列表/metadata不允许secret/token等额外凭据字段。内部公开metadata使用camelCase，adapter做一次精确映射，不猜别名。可选 `last_used_at_pending:boolean` 精确映射为 `lastUsedAtPending`：true在最近使用时间旁显示“待保存”，false保留明确false，缺失保留缺失，不从nullable时间、状态或前端时钟推断是否已持久化。两者都不改变授权/有效期或替代后端事实。访问元数据的“待保存”不是事务Pending或写入结果未知；baseservice当前默认metadata没有此待保存事实时省略该字段，不能为配合界面伪造false/true。
 
 getConfiguration读取真实配置后，createApiKeyManagerController({...config,adapter})。配置404/403/无效DTO即错误，不能填默认授权或假配置。列表adapter按原生页查询收集完整列表，30秒整体预算、每页最多200、默认最多5000(显式可配置至100000)，拒绝变动total/重复ID/缺页/超限，不悄悄丢弃后续记录；不承诺跨页原子快照。写操作无自动重试，所有请求no-store/redirect:error。实际服务必须实现路径、DTO、鉴权/tenant、CSRF、限速、幂等与安全存储。
+
+## baseservice 对齐与共享验收
+
+baseservice 的 [apikeyservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/apikeyservice/webfacade) 提供上述版本化HTTP边界，复用apikeyservice领域操作；宿主仍负责鉴权/tenant、配置与权限投影、CSRF及路由注册。登录、会话和用户管理归宿主或身份提供方，不由baseservice实现；xui现有登录API保持不变。
+
+后端 `ErrOutcomeUnknown` 必须返回HTTP503以及原生 `AjaxResponse{success:false,code:50301,payload:null,message,request_id}`，不能返回secret、成功确认或伪造确定拒绝。`50301` 是双方约定的应用码，不是httpx包级常量；只按该明确数字码识别，不猜错误文案。前端同时防御该码被HTTP200/4xx传递的情况，不自动重试、不从列表或access pending推断提交结果。
+
+[共享fixture](../tests/fixtures/page-contracts.v1.json) 与baseservice的 `docs/contracts/page-contracts.v1.json` 保持逐字节一致，均为合成数据。[HTTP合同测试](../tests/page-contracts.test.mjs) 经默认adapter消费配置、列表、创建、撤销、删除和未知结果，并验证HTTP200/4xx/503的未知写入跨视图仍受保护。Go侧通过真实handler消费相同fixture。库级合同验证不等于宿主路由、鉴权或生产集成已完成。
 
 ## 一次性值与临时接入
 

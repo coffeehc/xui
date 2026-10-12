@@ -6,7 +6,7 @@ runtime/business-log 的 DTO、严格解析、loader 和单一 controller 被 Re
 
 ## 固定公共字段与可扩展 payload
 
-以下是 xui 自己明确声明的最小接入合同，以 [源码](../packages/runtime/src/business-log.ts) 和正式 declarations 为准；没有声称任何后端接口已上线。采用方可以直接实现 typed loader，未来通过版本化 HTTP DTO adapter 与 baseservice 对接，不直接暴露数据库模型。
+以下是 xui 自己明确声明的最小接入合同，以 [源码](../packages/runtime/src/business-log.ts) 和正式 declarations 为准；没有声称任何后端接口已上线。采用方可以直接实现 typed loader，或通过默认HTTP loader对接baseservice的版本化facade，不直接暴露数据库模型。
 
 | 类型 | 字段与事实 |
 | --- | --- |
@@ -17,7 +17,7 @@ runtime/business-log 的 DTO、严格解析、loader 和单一 controller 被 Re
 | BusinessLogPage | list和明确page：原生offset的page_index/page_size/total，或领域cursor的next_cursor（末段null）与可选真实snapshot_id；不混用或造假 |
 | BusinessLogDetail | event、state（available/expired/unavailable）、payload（JSONValue）。后两种 state 的 payload 必须为 null；available 的 null 是合法业务值 |
 
-schema_version 是 **对应 event_type 的业务 payload 版本**，正安全整数；未知类型/版本仍展示公共事实及安全 JSON。公共字段的变更需同步升级 xui 接入合同与采用方，不能因这个字段任意改掉公共摘要。HTTP 外层协议版本、服务 route 和业务事件词表由后续 adapter 明确，默认HTTP facade的route与应用成功code在下方和PAGE_APIS明确声明，领域loader不另猜协议。记录和关联 ID 保持字符串；整数超过 JS 安全范围必须在 payload 编码为字符串，不能经过 Number 舍入。
+schema_version 是 **对应 event_type 的业务 payload 版本**，正安全整数；未知类型/版本仍展示公共事实及安全 JSON。公共字段的变更需同步升级 xui 接入合同与采用方，不能因这个字段任意改掉公共摘要。默认HTTP facade的route与应用成功code在下方和PAGE_APIS明确声明；业务事件词表与payload版本由宿主明确，领域loader不另猜协议。记录和关联 ID 保持字符串；整数超过 JS 安全范围必须在 payload 编码为字符串，不能经过 Number 舍入。
 
 occurred_at 为事件实际发生时间，recorded_at 为服务记录时间，均须完整 RFC3339（允许 1–9 位小数）。不同事件可定义审批意见、工具执行结果、允许披露的变更字段或其他 JSON 对象；不强制一份通用 before/after 结构。Go 端可用 any 或按事件类型定义接口，但网络返回前必须明确版本、JSON 编码、权限和脱敏。
 
@@ -43,16 +43,22 @@ controller 的列表与详情各有取消/generation；替换、关闭、卸载�
 
 ## 服务边界与实际采用
 
-业务服务记录日志，并负责权限/tenant、脱敏、查询顺序/快照与保留政策。xui 提供只读查询与详情展示，不实施日志写入或正式审计保证。baseservice 的规划是将业务日志收敛到日志能力并取消独立auditservice；这是后续后端范围，本轮没有修改服务或预设其HTTP路由。已有typed loader可以立即接入，前端不等待后端重构。
+业务服务记录日志，并负责权限/tenant、脱敏、查询顺序/快照与保留政策。xui 提供只读查询与详情展示，不实施日志写入或正式审计保证。baseservice已将业务日志放在bizlogservice；[bizlogservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/bizlogservice/webfacade) 提供下述固定只读列表/详情HTTP边界，不引入独立auditservice。宿主注册路由，提供真实身份/tenant、授权与脱敏投影；xui不实现日志写入或用户管理。已有typed loader仍可在领域边界接入。
 
-已实现 [共享合成模型](../examples/shared/business-log-model.ts)、[React](../examples/business-log-react/app.tsx)、[原生](../examples/business-log-vanilla/app.js) 两类消费者，先本地打包再独立安装正式 ESM/types/CSS。pnpm build/test:consumer/preview 后访问 /business-log-react/ 和 /business-log-vanilla/。示例只注入 typed fake loader，没有访问真实业务、创建后端路由或生成秘密。未来 baseservice 后端 adapter 尚未落地，这不阻塞先使用当前 typed loader。
+已实现 [共享合成模型](../examples/shared/business-log-model.ts)、[React](../examples/business-log-react/app.tsx)、[原生](../examples/business-log-vanilla/app.js) 两类消费者，先本地打包再独立安装正式 ESM/types/CSS。pnpm build/test:consumer/preview 后访问 /business-log-react/ 和 /business-log-vanilla/。示例只注入 typed fake loader，没有访问真实业务、创建后端路由或生成秘密。baseservice已有配套facade，但示例仍使用合成数据，不代表任一产品已接入真实服务。
 
-按 [采用手册](ADOPTION.md) 先逐页接入 xui；baseservice 并行完成后逐个替换后端 adapter，通过公共合同版本、消费方依赖、类型和回归联动升级。没有要求全部产品同时切换，也不在本轮修改任何产品或后端。 [测试](../tests/business-log.test.mjs) 与 [浏览器检查](../tests/browser/business-log.spec.mjs) 仅证明当前展示合同/生命周期，真实业务服务与权限/脱敏集成仍须采用项目另验。
+按 [采用手册](ADOPTION.md) 先逐页接入 xui；按产品授权逐个接入baseservice facade或既有领域adapter，通过公共合同版本、消费方依赖、类型和回归联动升级。没有要求全部产品同时切换，也不因库级对齐自动修改任何产品或部署服务。 [测试](../tests/business-log.test.mjs) 与 [浏览器检查](../tests/browser/business-log.spec.mjs) 仅证明当前展示合同/生命周期，真实业务服务与权限/脱敏集成仍须采用项目另验。
 
 ## 原生默认HTTP facade
 
 createBusinessLogHttpLoader({http,timeoutMs?})固定GET /api/v1/business-logs与GET /api/v1/business-logs/{id}。原生AjaxResponse success=true/code=1（xui应用选择，不是httpx包全局常量）；列表payload原生ListData{list,total}，null list显式投影空数组，unsafe总数拒绝。默认offset query为page_index基数0/page_size最大200/return_total=true/sort=recorded_at,id与两个sort_* desc；filters为since/until、actor_kind/actor_id、object_kind/object_id、event_type/action/result/correlation_id/request_id，单次URL编码。后端明确FieldDefined和半开时间边界，用原生Convert/GetTimeFormQuery处理RFC3339Nano，不改commons或降精度。
 
-请求no-store/redirect:error、默认30秒、无自动重试。详情使用现有BusinessLogDetail DTO，403/404/expired/unavailable分别处理；没有默认写入或删除API。页面实际后端缺失须报告前置条件，不能将程序故障记录、供应商凭据配置或假snapshot映射成业务日志成功。[共享默认adapter示例](../examples/shared/capability-model.ts)和[合同回归](../tests/page-api.test.mjs)使用合成原生fetch；真实服务/权限/脱敏仍未集成。
+请求no-store/redirect:error、默认30秒、无自动重试。详情使用现有BusinessLogDetail DTO，403/404/expired/unavailable分别处理；没有默认写入或删除API。页面实际后端缺失须报告前置条件，不能将程序故障记录、供应商凭据配置或假snapshot映射成业务日志成功。[共享默认adapter示例](../examples/shared/capability-model.ts)和[合同回归](../tests/page-api.test.mjs)使用合成原生fetch；产品真实服务/权限/脱敏仍须单独集成验收。
 
 此合同用于自有业务记录，不把第三方响应或程序故障当作业务日志。第三方日志/审计API按第三方字段、分页和错误格式，宿主在内部边界投影允许披露的真实业务事实；不要求第三方AjaxResponse。行业标准/第三方优先边界见[DESIGN](DESIGN.md#规范强度与职责)。
+
+## 跨库合同验证
+
+[共享fixture](../tests/fixtures/page-contracts.v1.json) 在baseservice的 `docs/contracts/page-contracts.v1.json` 有逐字节一致副本；xui的 [合同测试](../tests/page-contracts.test.mjs) 经默认HTTP loader验证请求/响应，Go通过真实handler验证相同边界。事件 `schema_version` 表示宿主实际业务payload版本，不是facade版本，也不能默认填1；fixture使用3以验证原样保留。fixture记录时间使用真实PG事实支持的微秒精度，而since/until查询保留纳秒边界；服务须明确投影与半开区间，不声称存储保留不存在的精度。
+
+共享测试只证明合成DTO与HTTP边界一致；真实宿主权限/tenant、详情脱敏、保留政策及生产集成仍需产品验收。
