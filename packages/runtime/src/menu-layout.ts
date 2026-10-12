@@ -1,8 +1,11 @@
 import {bindPressFeedback,createShellController,type DialogCloseDetails} from './dom.js';
 import {createNavigationMenu,indexNavigation,type NavigationMenuOptions,type NavigationAdapter} from './navigation.js';
 
+export interface MenuLayoutHeaderSlots {
+  brand?:Node|null;breadcrumb?:Node|null;status?:Node|null;actions?:Node|null;
+}
 export interface MenuLayoutOptions extends NavigationMenuOptions {
-  scrollMode?:'document'|'viewport';title?:string;header?:Node;content?:Node;skipLabel?:string;closeLabel?:string;
+  scrollMode?:'document'|'viewport';title?:string;header?:Node;headerSlots?:MenuLayoutHeaderSlots;content?:Node;skipLabel?:string;closeLabel?:string;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
 }
 const owners=new WeakMap<HTMLElement,unknown>();
@@ -13,7 +16,18 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   // Validate and render the menu before changing the host's content.
   const sidebar=doc.createElement('aside'),menuRoot=doc.createElement('div');sidebar.className='xui-shell-sidebar';sidebar.dataset.xuiSidebar='';sidebar.append(menuRoot);
   const header=doc.createElement('header'),brand=doc.createElement('strong'),toggle=doc.createElement('button'),skip=doc.createElement('a'),main=doc.createElement('main'),dialog=doc.createElement('dialog'),title=doc.createElement('h2'),body=doc.createElement('div'),footer=doc.createElement('div'),close=doc.createElement('button');
-  header.className='xui-shell-header';toggle.type='button';toggle.className='xui-button xui-shell-toggle';toggle.dataset.variant='ghost';toggle.dataset.xuiSidebarToggle='';toggle.textContent='☰';brand.textContent=options.title??'';header.append(toggle,brand);if(options.header)header.append(options.header);
+  header.className='xui-shell-header';toggle.type='button';toggle.className='xui-button xui-shell-toggle';toggle.dataset.variant='ghost';toggle.dataset.xuiSidebarToggle='';toggle.textContent='☰';
+  const headerPart=(name:string)=>{const node=doc.createElement('div');node.className=`xui-app-header${name?'-'+name:''}`;return node;};
+  const headerLayout=headerPart(''),primary=headerPart('primary'),secondary=headerPart('secondary'),navigationSlot=headerPart('navigation');
+  const slots={brand:headerPart('brand'),breadcrumb:headerPart('breadcrumb'),status:headerPart('status'),actions:headerPart('actions'),legacy:headerPart('legacy')};
+  const slotInputs:Partial<Record<keyof typeof slots,Node|null>>={};
+  navigationSlot.append(toggle);primary.append(navigationSlot,slots.brand,slots.breadcrumb);secondary.append(slots.status,slots.actions,slots.legacy);headerLayout.append(primary,secondary);header.append(headerLayout);
+  const syncHeader=()=>{
+    if(brand.textContent!==(options.title??''))brand.textContent=options.title??'';brand.title=options.title??'';
+    const nodes={...options.headerSlots,brand:options.headerSlots?.brand===undefined?(options.title?brand:null):options.headerSlots.brand,legacy:options.header};
+    for(const role of ['brand','breadcrumb','status','actions','legacy'] as const){const node=nodes[role]??null,slot=slots[role];slot.hidden=!node;if(slotInputs[role]!==node){slot.replaceChildren(...(node?[node]:[]));slotInputs[role]=node;}}
+    secondary.hidden=!nodes.status&&!nodes.actions&&!nodes.legacy;
+  };syncHeader();
   main.className='xui-shell-main';main.id=`xui-main-${crypto.randomUUID()}`;main.tabIndex=-1;skip.className='xui-skip-link';skip.href='#'+main.id;skip.textContent=options.skipLabel??'Skip to content';
   dialog.className='xui-native-dialog xui-shell-drawer xui-layer';dialog.dataset.xuiSidebarDialog='';title.className='xui-dialog-title';title.id=`xui-navigation-${crypto.randomUUID()}`;dialog.setAttribute('aria-labelledby',title.id);body.className='xui-dialog-body';body.dataset.xuiSidebarContent='';footer.className='xui-dialog-footer';close.type='button';close.className='xui-button';close.dataset.variant='outline';close.dataset.xuiClose='';footer.append(close);dialog.append(title,body,footer);
   let shell:ReturnType<typeof createShellController>|undefined;
@@ -22,7 +36,7 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
     navigation:options.navigation?{canNavigate:request=>options.navigation?.canNavigate?.(request)!==false,navigate:request=>{shell?.close('navigation');options.navigation!.navigate(request);}} satisfies NavigationAdapter:undefined});
   const menu=createNavigationMenu(menuRoot,menuOptions());
   root.classList.add('xui','xui-shell','xui-menu-layout');root.replaceChildren(skip,header,sidebar,main,dialog);if(options.content)main.append(options.content);else main.append(...original);
-  const syncLabels=()=>{root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport')menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});toggle.setAttribute('aria-label',options.label??'Navigation');title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';brand.textContent=options.title??'';};syncLabels();
+  const syncLabels=()=>{root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport')menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});toggle.setAttribute('aria-label',options.label??'Navigation');title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';syncHeader();};syncLabels();
   const media=doc.defaultView!.matchMedia('(max-width: 47.999rem)');
   const syncSidebar=(details?:DialogCloseDetails)=>shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);
   shell=createShellController(root,{open:false,restoreFocus:details=>details.reason!=='navigation',onOpenChange:(open,details)=>{if(options.sidebarOpen===undefined)internalOpen=open;options.onSidebarOpenChange?.(open);syncSidebar(details);}});
@@ -31,7 +45,7 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   media.addEventListener('change',viewport);syncSidebar();
   const releasePress=bindPressFeedback(root);
   const owner={getMenu:()=>menu,getMain:()=>main,getSidebarOpen:()=>shell!.getOpen(),
-    update(next:Partial<MenuLayoutOptions>){if(dead)return;const candidate={...options,...next};indexNavigation(candidate.items);options=candidate;menu.update(menuOptions());if('header' in next){header.replaceChildren(toggle,brand);if(options.header)header.append(options.header);}if('content' in next)main.replaceChildren(...(options.content?[options.content]:original));syncLabels();if('sidebarOpen' in next)syncSidebar();},
+    update(next:Partial<MenuLayoutOptions>){if(dead)return;const candidate={...options,...next};indexNavigation(candidate.items);options=candidate;menu.update(menuOptions());if('content' in next)main.replaceChildren(...(options.content?[options.content]:original));syncLabels();if('sidebarOpen' in next)syncSidebar();},
     destroy(){if(dead)return;dead=true;releasePress();media.removeEventListener('change',viewport);shell!.destroy();menu.destroy();root.replaceChildren(...original);if(oldClass===null)root.removeAttribute('class');else root.setAttribute('class',oldClass);if(oldCollapsed===null)root.removeAttribute('data-collapsed');else root.setAttribute('data-collapsed',oldCollapsed);if(oldScroll===null)root.removeAttribute('data-scroll-mode');else root.setAttribute('data-scroll-mode',oldScroll);owners.delete(root);},
   };owners.set(root,owner);return owner;
 }

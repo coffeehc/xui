@@ -119,6 +119,7 @@ export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuOpti
       }arrange(parent,children);
     };build(options.items,list);for(const [id,entry] of records)if(!used.has(id)){entry.li.remove();records.delete(id);}
     keyboard.refresh();if(focusId&&(!focused?.isConnected||doc.activeElement!==focused)){const entry=records.get(focusId),target=focusControl==='toggle'?entry?.toggle:entry?.primary;if(target&&!target.closest('[hidden]')&&!target.matches(':disabled,[aria-disabled="true"]'))target.focus();else nav.querySelector<HTMLElement>('[data-menu-control][tabindex="0"]')?.focus();}
+    if(nav.closest('[data-scroll-mode="viewport"]'))nav.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});
   };
   const click=(event:MouseEvent)=>{const control=(event.target as HTMLElement).closest<HTMLElement>('[data-menu-control]');if(!control)return;const node=nodes.get(control.dataset.menuId!);if(!node||node.disabled){event.preventDefault();return;}if(control.dataset.menuControl==='toggle'||!node.item.href){requestExpanded(node.item.id,!snapshot().expandedIds.includes(node.item.id));return;}navigateNavigationItem(node.item,event,{...options,location:options.location??doc.location?.href,baseURL:options.baseURL??doc.baseURI});};
   const compactClick=()=>{const next=!snapshot().collapsed;if(options.collapsed===undefined)collapsed=next;options.onCollapsedChange?.(next);render();};

@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.5.1。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.6.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -463,6 +463,12 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --nav-item-padding-inline: calc(var(--nav-selected-indicator-inset) + var(--nav-selected-indicator-width) + var(--nav-selected-indicator-gap));
     --nav-collapsed-item-size: 2.25rem;
     --nav-selected-indicator-inset-collapsed: 2px;
+    /* shell-role-tokens:start */
+    --nav-sidebar-width: calc(var(--nav-item-height) * 6);
+    --nav-sidebar-padding: var(--space-content-gap);
+    --nav-collapsed-width: calc(var(--nav-collapsed-item-size) + var(--nav-sidebar-padding) * 2);
+    --layout-header-primary-min: var(--layout-field-min);
+    /* shell-role-tokens:end */
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
@@ -1042,6 +1048,14 @@ SSR/预渲染和客户端首次hydration必须给出相同文本与结构；轻�
 规范更新先写问题、前后规则、影响角色/组件/页面、迁移顺序、兼容与验证计划，经适当授权后修改实现；同步本文件前言、运行时映射、引用和检查。审计只记事实，不定义另一套品牌值；旧代码是已记录存量，不能成为新增代码复制违规写法的理由。
 
 <!-- foundation-lifecycle:start -->
+### 公共应用头部与紧凑导航
+
+应用头部按brand、breadcrumb、status、actions角色组合。导航入口和品牌/路径为左侧主组，状态和动作在右侧；采用方提供内容、名称、链接语义及实际动作，不在公共库写入产品权限或版本规则。主组保留layout-header-primary-min的合理宽度，窄屏优先完整保留导航入口，品牌与路径各在所属空间省略长文字；链接可聚焦，完整名称保留可访问语义，宿主可提供title或明确详情入口。状态/动作空间不足时整组换到下一行，动作组内部按需换行，不能盖住品牌、互相重叠或令整页横向溢出。不静默隐藏状态或重要动作，不用缩小字体解决空间问题；没有动作时不预留空白占位。旧任意header内容继续支持，迁移后通用排列由公共组合负责。
+
+展开侧栏用nav-sidebar-width，默认216px；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。焦点环和短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
+
+DropdownMenu/ContextMenu及共用菜单项角色显式绑定body-xs字号/行高和font-weight-control，不继承浮层正文body-sm；浮层本身仍保留body-sm。菜单图标通过公开icon部件或xui-menu-icon语义类采用control-icon-size，非收缩并沿用menu-item-gap；只作用于声明的图标及其直接SVG，不把任意嵌套插图强制当图标。label与choice-label显式用body-xs/500，label→control→help→error间距保持8/4/4px；choice-label的文字角色变化不缩小默认控件点击区。错误关联与原输入语义保持。
+
 ### 通用加载、主题所有权与构建消费
 
 本节补充兼容的通用验收要求，不改变默认品牌值或业务职责。

@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { Menu as Base } from '@base-ui/react/menu';
-import {branded} from './shared.js';
+import {branded,cx} from './shared.js';
 export const Menu = {
  ...Base,
+ /** Decorative icon slot. Its direct SVG child follows the shared control icon size. */
+ Icon: function Icon({className,...props}:React.ComponentProps<'span'>){return <span aria-hidden="true" {...props} className={cx('xui-menu-icon',className)}/>;},
  SubmenuTrigger:function SubmenuTrigger({className,...props}:React.ComponentProps<typeof Base.SubmenuTrigger>){return <Base.SubmenuTrigger {...props} className={branded('xui-menu-item',className)}/>;},
  Item: function Item({className,...props}:React.ComponentProps<typeof Base.Item>){return <Base.Item {...props} className={branded('xui-menu-item',className)}/>;},
  LinkItem: function LinkItem({className,...props}:React.ComponentProps<typeof Base.LinkItem>){return <Base.LinkItem {...props} className={branded('xui-menu-item',className)}/>;},

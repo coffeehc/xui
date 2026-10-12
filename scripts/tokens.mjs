@@ -44,7 +44,7 @@ export function checkContract(document) {
   const rules = [];
   tree.walkRules(rule => rules.push(rule));
   const light = declarations(rules.find(rule => rule.selector === ':root'));
-  assert.equal(Object.keys(light).length, 271, 'Default token count');
+  assert.equal(Object.keys(light).length, 275, 'Default token count');
   const darkRule = rules.find(rule => rule.selector === ':root[data-theme="dark"]');
   const dark = { ...light, ...declarations(darkRule) };
   const systemRule = rules.find(rule => rule.selector.includes(':not([data-theme="light"])'));
@@ -95,7 +95,7 @@ export function checkStyles(styles, values, runtimeVariables = []) {
     assert(!/var\(--(?:palette|base)-/.test(decl.value),'Components must use semantic tokens');
     assert(!/(#[a-f\d]{3,8}\b|\b(?:rgb|hsl|oklch|oklab)\s*\()/i.test(decl.value),'Raw color outside contract');
     assert(!decl.prop.startsWith('--'),'Components cannot invent default values');
-    if (decl.prop !== 'border-collapse' && /color|background|border(?!-radius)|outline|shadow|fill|stroke/.test(decl.prop)) {
+    if (decl.prop !== 'border-collapse' && decl.prop !== 'outline-offset' && /color|background|border(?!-radius)|outline|shadow|fill|stroke/.test(decl.prop)) {
       const rest = decl.value.replace(/var\(--[\w-]+\)/g,'').replace(/color-mix\(|linear-gradient\(|\bin\s+oklab\b|\b(?:transparent|currentcolor|none|solid|inherit|initial|unset|px|rem|em)\b|[-+\d.%\s(),]/gi,'');
       assert.equal(rest,'','Raw named or uncontrolled color outside contract');
     }
@@ -118,6 +118,6 @@ export async function generate(check = false, outputDirectory='packages/theme/di
     if (check) assert.equal(await readFile(path,'utf8'),value, `Generated CSS drift: ${path}`);
     else await writeFile(path,value);
   }
-  console.log('Contract: 271 tokens, complete acyclic graphs, light/dark/system/reduced, YAML and extracted CSS agree.');
+  console.log('Contract: 275 tokens, complete acyclic graphs, light/dark/system/reduced, YAML and extracted CSS agree.');
 }
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) await generate(process.argv.includes('--check'));

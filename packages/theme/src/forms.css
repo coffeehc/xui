@@ -1,7 +1,8 @@
 @layer xui-components {
 
   .xui-field { display: grid; gap: var(--space-text-gap); min-width: 0; align-content: start; }
-  .xui-label { font-weight: var(--font-weight-control); margin-bottom: var(--space-text-gap); }
+  /* The field gap plus label margin gives label/control/help/error spacing of 8/4/4. */
+  .xui-label { font: var(--font-weight-control) var(--font-size-body-xs) / var(--line-height-body-xs) var(--font-sans); margin-bottom: var(--space-text-gap); }
   .xui-help, .xui-error { margin: 0; font-size: var(--font-size-body-xs); line-height: var(--line-height-body-xs); overflow-wrap: anywhere; }
   .xui-help { color: var(--muted-foreground); }
   .xui-error { color: var(--status-error-foreground); animation: xui-feedback var(--motion-duration) var(--motion-easing); }
@@ -17,7 +18,7 @@
   :where(.xui-input, .xui-textarea, .xui-select):focus { border-color: var(--interaction-focus); }
   :where(.xui-input, .xui-textarea, .xui-select)[aria-invalid="true"] { border-color: var(--status-error-foreground); }
   :where(.xui-input, .xui-textarea, .xui-select):disabled { background: var(--muted); color: var(--muted-foreground); cursor: not-allowed; }
-  .xui-choice-label { display: inline-flex; align-items: center; gap: var(--space-control-gap); min-height: var(--control-height); cursor: pointer; }
+  .xui-choice-label { display: inline-flex; align-items: center; gap: var(--space-control-gap); min-height: var(--control-height); font: var(--font-weight-control) var(--font-size-body-xs) / var(--line-height-body-xs) var(--font-sans); cursor: pointer; }
   .xui-choice {
     appearance: none; margin: 0; flex-shrink: 0; display: inline-grid; place-content: center;
     width: var(--control-icon-size); height: var(--control-icon-size); position: relative;

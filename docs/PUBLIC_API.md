@@ -124,3 +124,10 @@ React 组合控件保留各自公开 props/ref/render/parts；Select/Combobox/Me
 既有button/forms/table/layout/menu-layout/login/http入口增加明确props与slots，默认兼容：link、controlSize/readOnly/InputGroup、stickyHeader、不透明状态、scrollMode默认document、登录extensions、HTTP显式nativeOrigin。所有新增名字从构建声明自动核对，默认与控制事实见WIDGETS/AUTH/NAVIGATION/HTTP，不仅是新增入口名。
 
 API Key入口追加公开 `createApiKeyWriteGuard`、`ApiKeyPendingWrite`/`ApiKeyWriteGuard`/`ApiKeyWriteResolution`/`ApiKeyWriteContext` 和controller的 `recoverUncertainWrite`，类型与范围见[API_KEY](API_KEY.md#写入保护的所有者与恢复)。保护所有者放在视图之外，guard没有任意清除方法；默认HTTP不新增推测核对路由。`lastUsedAtPending`/wire `last_used_at_pending` 都是可选明确bool。
+
+## 应用头部与菜单文字角色补齐
+
+- `@coffeehc/xui-react/layout` 及根入口：`AppHeader`、`AppHeaderProps`、`AppHeaderSlots`；`AppShellProps.headerSlots`。四角色为 brand/breadcrumb/status/actions，独立组合另有 navigation/children。`@coffeehc/xui-react/menu-layout` 的 `MenuLayoutProps.headerSlots` 同型，title作未指定brand的回退，旧header继续支持。
+- `@coffeehc/xui-runtime/menu-layout` 及根入口：`MenuLayoutHeaderSlots`、`MenuLayoutOptions.headerSlots`，同名Node/null角色，支持DocumentFragment与稳定的非头部更新。完整替换/回退/生命周期见[NAVIGATION](NAVIGATION.md#应用头部角色与紧凑侧栏迁移)。
+- `Menu.Icon` / `ContextMenu.Icon` 以及公开 `.xui-menu-icon` 图标类，显式16px语义图标，不处理任意嵌套插图；菜单项与label字号合同见[COMPOSITIONS](COMPOSITIONS.md#菜单文字图标与字段标签)。
+- 公开theme/style.css与layout.css默认共用DESIGN新增的四个派生token：nav-sidebar-width、nav-sidebar-padding、nav-collapsed-width、layout-header-primary-min；不会覆盖整个Portal文字角色，也没有新增尺寸/密度开关。正式types/ESM全名字仍由public-api脚本与独立消费者验证。

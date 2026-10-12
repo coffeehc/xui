@@ -111,3 +111,37 @@ viewport更新选中项以nearest进入所属侧栏可视区域；焦点依靠�
 固定高度宿主可使用 React `MenuLayout` 的公开 `style={{blockSize:480}}`（或 AppShell 的同一 Root style），原生给传入的 root 设置 `style.blockSize`，并显式选 `scrollMode='viewport'`。这时侧栏和正文分别滚动，选中菜单滚动到可见范围；不靠子元素私有选择器修补，也不把滚动恢复策略移入库。
 
 抽屉关闭先释放本次模态，再调用宿主 `navigation.navigate`。默认回焦点仅在当前焦点仍属于关闭的抽屉或没有有效焦点时执行；宿主已将焦点放到新路由标题、外部控件或新模态时保持它。React `restoreSidebarFocus={false}` 可显式关闭恢复；原生 `createDialogController`/Sheet/AlertDialog 的 `restoreFocus` 可用布尔值或接收 `DialogCloseDetails.reason` 的函数，`close(reason)` 与受控 `syncOpen(false, details)` 保留原因。原生 MenuLayout 的导航关闭原因是 `navigation`，取消/Escape 仍按普通关闭处理。旧 owner 的延迟 close 事件或重复 destroy 不得夺取新 owner 焦点。
+
+## 应用头部角色与紧凑侧栏迁移
+
+`AppShell`、`MenuLayout` 的 `headerSlots: AppHeaderSlots` 接收 `brand`、`breadcrumb`、`status`、`actions` 四个 React 内容角色；`AppHeader` / `AppHeaderProps` 从 `@coffeehc/xui-react/layout`（及根入口）导出，可独立组合，直接接收这四个 props，另有 `navigation` 和兼容内容 `children`。`AppShell` 持有抽屉触发器，宿主不要再添加一套菜单开关。
+
+`AppShell` 未传 `headerSlots` 时保留旧header直接排列，显式传角色对象才启用新组合。`MenuLayout` 的 `title` 仍可用：未提供 `headerSlots.brand` 时作为品牌回退；显式 `null` 隐藏回退。旧 `header` 仍渲染在兼容区域，可和新角色并存。品牌/面包屑组成左侧主组，状态/动作在右侧；窄屏先保留主组，再将状态和动作换行。长中文品牌和 breadcrumb 在自己的空间省略，不挤散另一组；完整文本不从 DOM/可访问名称删除。动作只换行，不自动隐藏。必要业务反馈仍由宿主决定放置，库没有授权、版本、返回等业务规则。
+
+```tsx
+import {MenuLayout} from '@coffeehc/xui-react/menu-layout';
+import {Breadcrumbs} from '@coffeehc/xui-react/navigation';
+<MenuLayout title="团队工作台" items={items} headerSlots={{
+  breadcrumb: <Breadcrumbs aria-label="当前位置"><li><a href="/projects" title="项目资料">项目资料</a></li><li aria-current="page" title="当前记录">当前记录</li></Breadcrumbs>,
+  status: <span role="status">已连接</span>,
+  actions: <><Button variant="outline">帮助</Button><Button>新建</Button></>,
+}}>{pageContent}</MenuLayout>
+```
+
+原生 `MenuLayoutHeaderSlots` 从 `@coffeehc/xui-runtime/menu-layout`（及根入口）导出；同名角色接收 `Node | null`，支持 `DocumentFragment` 组合，已有 Node 由布局移动而非复制。宿主保留这些 Node 引用修改内容/注册业务事件，无需查询库内部 DOM。`headerSlots` 是一个完整值：`update({headerSlots: nextSlots})` 替换整份角色配置；仅更新 `location` / 菜单状态不会替换头部内容或已消费的 fragment，不丢失控件焦点。一个 Node 只能归属于一个 slot。
+
+```js
+const actions = document.createDocumentFragment();
+actions.append(helpButton, createButton);
+const headerSlots = {breadcrumb: breadcrumbNode, status: statusNode, actions};
+const layout = createMenuLayout(root, {items, title:'团队工作台', headerSlots});
+layout.update({location: nextURL});
+// 清除动作，保留其他角色；brand未指定仍使用title。
+layout.update({headerSlots:{...headerSlots, actions:null}});
+```
+
+公开 CSS 结构为 `xui-app-header`、`xui-app-header-primary/secondary` 和 `xui-app-header-navigation/brand/breadcrumb/status/actions/legacy`。React 与原生使用相同 `theme/layout.css`；普通采用应使用 props/Node，不穿透结构改排列。`AppHeader` 是 div 组合，独立使用时由宿主提供所属语义 header。breadcrumb 内容可以使用公开 `Breadcrumbs` / `.xui-breadcrumbs` 的 nav/ol/li/a 结构；链接的焦点轮廓保持在截断边界内。
+
+紧凑侧栏默认216px展开、60px收起；这些数值是根16px下的 CSS 像素，非设备像素。公开token `--nav-sidebar-width`、`--nav-sidebar-padding`、`--nav-collapsed-width` 与 `--nav-collapsed-item-size` 在 DESIGN 中定义，默认36px项+左右各12px；图标仍16px，选中短竖线/hover/独立focus不改变宽度。独立支路开关收起时移到所属链接下一行，窄屏抽屉恢复完整标签与既有键盘/路由合同。独立使用 NavigationMenu 的外层宽度由宿主布局决定，MenuLayout 才拥有完整侧栏宽度。
+
+迁移顺序：先固定新SHA并重新构建正式包；把原 header 中品牌/路径/状态/动作内容分别送入公开角色；删除消费方仅用于通用 header flex/grid/gap、长中文截断、紧凑栏宽度和图标对齐的 CSS。保留领域内容布局、授权判断、事件、路由和有明确理由的产品token覆盖。不要删除业务规则来套入公共布局，不再叠加第二条rail。新合成验收与覆盖矩阵见[布局与文字验收](LAYOUT_TYPOGRAPHY_VALIDATION.md)。
