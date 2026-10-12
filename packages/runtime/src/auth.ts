@@ -1,6 +1,7 @@
 import {HttpError,createAjaxResponseAdapter,ajaxErrorResponseAdapter,isHttpError,type HttpClient} from './http.js';
 import {authRequest,bindHttpAuth,inspectHttp,type AccessLease,type AuthOperation} from './http-auth-internal.js';
 import {createAuthCoordination} from './auth-coordination.js';
+import {parseEntityId,type EntityIdEncoding} from './entity-id.js';
 
 /** First-party Bearer/session v2; these are not OAuth token endpoints. */
 export const authEndpoints=Object.freeze({login:'/api/v1/auth/login',refresh:'/api/v1/auth/refresh',logout:'/api/v1/auth/logout',session:'/api/v1/auth/session'});
@@ -17,6 +18,8 @@ export interface AuthState {
 }
 export interface AuthClientOptions {
   http:HttpClient;timeoutMs?:number;
+  /** 显式身份编码，默认 decimal；配置后不可自动接受另一种格式。 */
+  idEncoding?:EntityIdEncoding;
   /** Explicit same-origin business routes: exact paths, or slash-terminated subtree prefixes. */
   protectedPaths?:readonly string[];
 }
@@ -34,22 +37,23 @@ function object(value:unknown,keys:readonly string[]):Record<string,unknown>{
   if(Object.keys(descriptors).length!==keys.length||keys.some(key=>!descriptors[key]||!('value'in descriptors[key])))throw new TypeError('Invalid auth contract');
   return value as Record<string,unknown>;
 }
-function parseUser(value:unknown):Readonly<AuthUser>{
+function parseUser(value:unknown,idEncoding:EntityIdEncoding):Readonly<AuthUser>{
   const user=object(value,['id','username','display_name']);
-  if(typeof user.id!=='string'||!/^[1-9][0-9]{0,18}$/.test(user.id)||BigInt(user.id)>9223372036854775807n||typeof user.username!=='string'||!user.username||user.username.length>128||user.display_name!==null&&(typeof user.display_name!=='string'||user.display_name.length>256))throw new TypeError('Invalid auth contract');
-  return Object.freeze({id:user.id,username:user.username,display_name:user.display_name as string|null});
+  const id=parseEntityId(user.id,idEncoding);
+  if(typeof user.username!=='string'||!user.username||user.username.length>128||user.display_name!==null&&(typeof user.display_name!=='string'||user.display_name.length>256))throw new TypeError('Invalid auth contract');
+  return Object.freeze({id,username:user.username,display_name:user.display_name as string|null});
 }
-export function parseAuthSession(value:unknown):Readonly<AuthSession>{
+export function parseAuthSession(value:unknown,idEncoding:EntityIdEncoding='decimal'):Readonly<AuthSession>{
   const session=object(value,['schema_version','user']);if(session.schema_version!==2)throw new TypeError('Invalid auth contract');
-  return Object.freeze({schema_version:2,user:parseUser(session.user)});
+  return Object.freeze({schema_version:2,user:parseUser(session.user,idEncoding)});
 }
 // This secret-bearing DTO deliberately has no public parser, return value, snapshot or cache entry.
-function parseIssued(value:unknown){
+function parseIssued(value:unknown,idEncoding:EntityIdEncoding){
   const issued=object(value,['schema_version','user','access_token','token_type','expires_at']);
   if(issued.schema_version!==2||issued.token_type!=='Bearer'||typeof issued.access_token!=='string'||!/^bss_[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/.test(issued.access_token)||typeof issued.expires_at!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/.test(issued.expires_at))throw new TypeError('Invalid auth contract');
   const expiry=Date.parse(issued.expires_at);
   if(!Number.isFinite(expiry)||expiry<=Date.now()||new Date(expiry).toISOString().slice(0,19)!==issued.expires_at.slice(0,19))throw new TypeError('Invalid auth contract');
-  return {user:parseUser(issued.user),value:issued.access_token,expiry};
+  return {user:parseUser(issued.user,idEncoding),value:issued.access_token,expiry};
 }
 
 /** Root-relative same-origin navigation only. Validate again after URL normalization. */
@@ -76,7 +80,8 @@ export function resolveLoginReturnTo(value:string|null|undefined,fallback='/'):s
 }
 
 /** One private access-token owner attached to the existing transport. No persistent token storage. */
-export function createAuthClient({http,timeoutMs=15000,protectedPaths=[]}:AuthClientOptions):AuthClient{
+export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncoding='decimal'}:AuthClientOptions):AuthClient{
+  parseEntityId('1',idEncoding);
   if(!http||!inspectHttp(http)||inspectHttp(http)!.binding)throw new TypeError('Provide one unbound shared xui HTTP client');
   if(!Number.isFinite(timeoutMs)||timeoutMs<=0||timeoutMs>2147483647)throw new RangeError('Invalid auth timeout');
   const paths=protectedPaths.map(path=>{
@@ -84,8 +89,8 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[]}:AuthCl
     return path;
   });
   const envelope=createAjaxResponseAdapter();
-  const sessionAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseAuthSession(result.payload)};};
-  const issuedAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseIssued(result.payload)};};
+  const sessionAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseAuthSession(result.payload,idEncoding)};};
+  const issuedAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseIssued(result.payload,idEncoding)};};
   const logoutAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);if(result.payload!==null)throw new TypeError('Invalid logout contract');return {...result,payload:null};};
   let state:Readonly<AuthState>=Object.freeze({status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:false});
   let dead=false,version=0,generation=0,access:{value:string;expiry:number;generation:number}|undefined,bootstrapped=false;

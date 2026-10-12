@@ -50,6 +50,8 @@ for (const kind of ['vanilla','react']) {
   }
   const allTypes=esm.map((entry,index)=>`import type {${entry.symbols.map((name,n)=>`${name} as Entry${index}Symbol${n}`).join(',')}} from '${entry.specifier}';`).join('\n');await writeFile(`${cwd}/public-types.ts`,allTypes+'\n');
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--target','es2022','--moduleResolution','bundler','--module','esnext','public-types.ts'],{cwd,stdio:'inherit'});
+  await copyFile('tests/fixtures/identity-contract.ts',`${cwd}/identity-contract.ts`);
+  execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--target','es2022','--moduleResolution','bundler','--module','esnext','identity-contract.ts'],{cwd,stdio:'inherit'});
   const allValues=esm.map((entry,index)=>`import * as Entry${index} from '${entry.specifier}';`).concat(available.filter(entry=>entry.kind==='css').map(entry=>`import '${entry.specifier}';`)).join('\n')+`\nglobalThis.xuiPublicEntries={${esm.map((entry,index)=>`${JSON.stringify(entry.specifier)}:Entry${index}`).join(',')}};`;
   const allEntriesBuild=await build({stdin:{contents:allValues,resolveDir:cwd,sourcefile:'public-entries.js'},outdir:resolve(cwd,'public-entries'),bundle:true,format:'esm',platform:'browser',target:'es2022',write:false,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
   assert(Object.keys(allEntriesBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'All-entry consumer escaped its standalone install');

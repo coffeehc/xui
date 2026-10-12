@@ -1,0 +1,123 @@
+{
+  "description": "公开合成 fixture；token 不对应任何真实凭据，用户 ID 显式使用 hex。",
+  "session": {
+    "success": true,
+    "message": "",
+    "payload": {
+      "schema_version": 2,
+      "user": {
+        "id": "20000000000001",
+        "username": "fixture",
+        "display_name": null
+      }
+    },
+    "request_id": "",
+    "code": 200
+  },
+  "issued": {
+    "success": true,
+    "message": "",
+    "payload": {
+      "schema_version": 2,
+      "user": {
+        "id": "20000000000001",
+        "username": "fixture",
+        "display_name": null
+      },
+      "access_token": "bss_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "token_type": "Bearer",
+      "expires_at": "2099-10-12T12:00:00Z"
+    },
+    "request_id": "",
+    "code": 200
+  },
+  "logout": {
+    "success": true,
+    "message": "",
+    "payload": null,
+    "request_id": "",
+    "code": 200
+  },
+  "errors": [
+    {
+      "http_status": 400,
+      "response": {
+        "success": false,
+        "message": "invalid_authentication_request",
+        "payload": null,
+        "request_id": "",
+        "code": 40001
+      }
+    },
+    {
+      "http_status": 401,
+      "response": {
+        "success": false,
+        "message": "authentication_required",
+        "payload": null,
+        "request_id": "",
+        "code": 40101
+      }
+    },
+    {
+      "http_status": 403,
+      "response": {
+        "success": false,
+        "message": "permission_denied",
+        "payload": null,
+        "request_id": "",
+        "code": 40301
+      }
+    },
+    {
+      "http_status": 409,
+      "response": {
+        "success": false,
+        "message": "refresh_conflict",
+        "payload": null,
+        "request_id": "",
+        "code": 40901
+      }
+    },
+    {
+      "http_status": 429,
+      "response": {
+        "success": false,
+        "message": "too_many_attempts",
+        "payload": null,
+        "request_id": "",
+        "code": 42901
+      }
+    },
+    {
+      "http_status": 503,
+      "response": {
+        "success": false,
+        "message": "authentication_outcome_unknown",
+        "payload": null,
+        "request_id": "",
+        "code": 50301
+      }
+    },
+    {
+      "http_status": 503,
+      "response": {
+        "success": false,
+        "message": "committed_followup_failed",
+        "payload": null,
+        "request_id": "",
+        "code": 50302
+      }
+    },
+    {
+      "http_status": 503,
+      "response": {
+        "success": false,
+        "message": "authentication_unavailable",
+        "payload": null,
+        "request_id": "",
+        "code": 50300
+      }
+    }
+  ]
+}

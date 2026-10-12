@@ -14,6 +14,7 @@ export * from './structured-log-dom.js';
 export * from './business-log.js';
 export * from './business-log-dom.js';
 export * from './auth.js';
+export * from './entity-id.js';
 export * from './login-dom.js';
 export * from './download.js';
 export * from './api-key-http.js';

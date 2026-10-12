@@ -1,0 +1,202 @@
+{
+  "fixture_version": 1,
+  "cases": {
+    "api_key_capabilities": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys/capabilities"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 1,
+            "can_create": true,
+            "permissions": [
+              {
+                "id": "read",
+                "label": "Read",
+                "description": null,
+                "disabled": false,
+                "required": true
+              },
+              {
+                "id": "write",
+                "label": "Write",
+                "description": "Synthetic write permission",
+                "disabled": false,
+                "required": false
+              }
+            ],
+            "expiry_options": [
+              {
+                "id": "30d",
+                "label": "30 days"
+              }
+            ],
+            "default_expiry_id": "30d",
+            "default_permission_ids": [],
+            "confirmation_label": "Confirm these permissions"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_list": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys",
+        "query": {
+          "page_index": "0",
+          "page_size": "100",
+          "return_total": "true",
+          "sort": "id",
+          "sort_id": "asc"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "list": [
+              {
+                "id": "20000000000001",
+                "name": "Synthetic key",
+                "prefix": "FAKE",
+                "permission_ids": [
+                  "read"
+                ],
+                "created_at": "2026-10-12T01:00:00Z",
+                "expires_at": null,
+                "last_used_at": null,
+                "status": "active",
+                "capabilities": {
+                  "revoke": true,
+                  "delete_record": false
+                }
+              }
+            ],
+            "total": 1
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_create": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys",
+        "body": {
+          "name": "Synthetic key",
+          "permission_ids": [
+            "read"
+          ],
+          "expiry_id": "30d",
+          "confirmed": true
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 1,
+            "metadata": {
+              "id": "20000000000001",
+              "name": "Synthetic key",
+              "prefix": "FAKE",
+              "permission_ids": [
+                "read"
+              ],
+              "created_at": "2026-10-12T01:00:00Z",
+              "expires_at": null,
+              "last_used_at": null,
+              "status": "active",
+              "capabilities": {
+                "revoke": true,
+                "delete_record": false
+              }
+            },
+            "secret": "FAKE_CONTRACT_ONE_TIME_VALUE"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_revoke": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/20000000000001/revoke",
+        "body": {}
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 1,
+            "id": "20000000000001",
+            "operation": "revoke",
+            "completed": true
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_delete_record": {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/v1/api-keys/20000000000001/record"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 1,
+            "id": "20000000000001",
+            "operation": "delete_record",
+            "completed": true
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_write_outcome_unknown": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys",
+        "body": {
+          "name": "Synthetic key",
+          "permission_ids": [
+            "read"
+          ],
+          "expiry_id": "30d",
+          "confirmed": true
+        }
+      },
+      "response": {
+        "status": 503,
+        "body": {
+          "success": false,
+          "message": "API key write outcome is unknown",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 50301
+        }
+      }
+    }
+  }
+}

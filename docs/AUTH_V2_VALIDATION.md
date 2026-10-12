@@ -16,7 +16,7 @@
 | 不同tab的旧login/logout消息迟到 | 仅广播不比较代次，可能错误清新登录；后续refresh也可能遮住遗漏identity变更 | 广播仅kind/epoch；localStorage只存epoch/identityEpoch/kind排序元数据，无user/token。回归覆盖迟到、乱序与漏掉identity事件；无可靠锁/存储的环境仍以服务端409失败关闭，不承诺透明恢复 |
 | refresh409、未知commit50301、已提交后续失败50302、取消/网络丢响应 | 盲重试或logout补救可能产生多凭据、清合法cookie或撤销有效family | unknown+reauthenticationRequired；只允许新login确认状态，不自动再refresh、重放业务写或清cookie。本轮无KMS/加密秘密回执；丢响应可能需重新登录 |
 | 后端原始错误可能含不适合公开的数据 | 直接在AuthState保留business error投影会暴露未知服务端message | auth owner克隆安全HttpError metadata，不把原始business投影放state；固定文案展示；后端仍须保证request_id可公开 |
-| v2 user.id为十进制int64，部分新业务设计要求hex | 自动接受两种ID会弱化共享合同，也会把业务转换藏入库 | 本轮保持明确十进制wire；xapi等不同外部合同须显式codec/单独合同对齐，不声称已直接兼容 |
+| v2 user.id为十进制int64，部分新业务设计要求hex | 自动接受两种ID会弱化共享合同，也会把业务转换藏入库 | 基线保持明确十进制wire；后续新增闭合显式 idEncoding，见 [身份编码增量记录](IDENTITY_ENCODING.md)，不以本表历史结果冒充新验证 |
 | 首次完整build的ui-react声明生成被SIGKILL | 无TypeScript诊断；同容器10GB内存当时已用约8GB，且其他仓库并行编译 | 暂停并行重型编译后串行重跑build通过；不是代码错误，也不把被杀的一轮算通过 |
 
 ## 本地验证与环境边界

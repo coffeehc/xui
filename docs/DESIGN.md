@@ -1215,4 +1215,6 @@ DataTable以内部单一布局观察器测实际table/thead/首末行高度和co
 
 顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单select边界不变。forced-colors回退原生箭头，平台选项面板仍归浏览器/OS。
 
+实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](IDENTITY_ENCODING.md)。
+
 <!-- foundation-lifecycle:end -->

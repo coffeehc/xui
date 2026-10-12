@@ -71,6 +71,10 @@
       "types": "./dist/auth.d.ts",
       "import": "./dist/auth.js"
     },
+    "./entity-id": {
+      "types": "./dist/entity-id.d.ts",
+      "import": "./dist/entity-id.js"
+    },
     "./login-dom": {
       "types": "./dist/login-dom.d.ts",
       "import": "./dist/login-dom.js"

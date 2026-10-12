@@ -53,3 +53,5 @@ xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/
 - 标准列表优先采用[公共DataTable](../../../docs/DATA_TABLE.md)和既有workspace/pageHeader/pageToolbar。表格layout默认natural：少量/零行自然收缩，仅实际有界父级中限高并滚动表体，auto高度父级仍自然增长；显式workspace保留旧填满/最小高度，document即使在有界父级也无该上限。依赖旧默认的调用须明确layout='workspace'；shell scrollMode与公开内容区下限token不变。内部toolbar与反馈/表体/footer共用frame，外部pageToolbar仍支持，同组筛选只放一处。移除产品重复DataTableShell/筛选/footer/分割线CSS，保留data/columns/rowKey/权限/查询与业务回调。pageIndexOffset与ListData真实total显式传入，既有分页保持受控；本地数据由宿主切片并发布事实，服务端已分页rows不得二次切片或新增query owner。未知total不伪造页码，刷新保行、零行保表头、分页条数唯一且底栏可达，原生cell slot释放。公开通用footer原本在frame内不证明旧XAgent升级；须另核固定SHA和真实消费页，本轮不修改XAgent。顶栏[语言/主题/账号](../../../docs/HEADER_CONTROLS.md)默认合同不需要宿主穿透样式。
 
 - 独立指标展示采用[公共MetricCard](../../../docs/METRIC_CARD.md)，已有 Surface 拼卡可改为 label/value/marker 三个公开内容入口；名称、最终格式化值和颜色语义仍归宿主。卡片复用 Surface 和现有统计 token，排列保留调用方 Grid，不内置业务指标清单或专属网格；原生采用同页公开 dl/dt/dd 结构。
+
+- 若产品设计要求用户/Key 对外为 hex，使用[身份编码](../../../docs/IDENTITY_ENCODING.md)的公开 idEncoding 与 baseservice Options.IDEncoding 同配。默认 decimal 不变，不复制认证流程或实体解析器，不猜两种格式；固定 HTTP Key adapter 严格校验，域 adapter 的不透明 ID 不受影响。

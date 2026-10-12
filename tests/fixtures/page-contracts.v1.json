@@ -65,7 +65,7 @@
           "payload": {
             "list": [
               {
-                "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "id": "9007199254740993",
                 "name": "Synthetic key",
                 "prefix": "FAKE",
                 "permission_ids": [
@@ -109,7 +109,7 @@
           "payload": {
             "schema_version": 1,
             "metadata": {
-              "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "id": "9007199254740993",
               "name": "Synthetic key",
               "prefix": "FAKE",
               "permission_ids": [
@@ -134,7 +134,7 @@
     "api_key_revoke": {
       "request": {
         "method": "POST",
-        "path": "/api/v1/api-keys/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/revoke",
+        "path": "/api/v1/api-keys/9007199254740993/revoke",
         "body": {}
       },
       "response": {
@@ -144,7 +144,7 @@
           "message": "",
           "payload": {
             "schema_version": 1,
-            "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "id": "9007199254740993",
             "operation": "revoke",
             "completed": true
           },
@@ -156,7 +156,7 @@
     "api_key_delete_record": {
       "request": {
         "method": "DELETE",
-        "path": "/api/v1/api-keys/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/record"
+        "path": "/api/v1/api-keys/9007199254740993/record"
       },
       "response": {
         "status": 200,
@@ -165,7 +165,7 @@
           "message": "",
           "payload": {
             "schema_version": 1,
-            "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "id": "9007199254740993",
             "operation": "delete_record",
             "completed": true
           },
@@ -223,7 +223,7 @@
           "payload": {
             "list": [
               {
-                "id": "bl_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "id": "9007199254740995",
                 "event_type": "order.approved",
                 "schema_version": 3,
                 "occurred_at": "2026-10-12T01:00:00.000001Z",
@@ -255,7 +255,7 @@
     "business_log_detail": {
       "request": {
         "method": "GET",
-        "path": "/api/v1/business-logs/bl_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        "path": "/api/v1/business-logs/9007199254740995"
       },
       "response": {
         "status": 200,
@@ -264,7 +264,7 @@
           "message": "",
           "payload": {
             "event": {
-              "id": "bl_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "id": "9007199254740995",
               "event_type": "order.approved",
               "schema_version": 3,
               "occurred_at": "2026-10-12T01:00:00.000001Z",

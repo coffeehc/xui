@@ -22,7 +22,7 @@ ApiKeyAdapter为list/create/revoke及可选deleteRecord。revoke使凭据失效�
 
 ## 固定v1 facade与默认adapter
 
-createApiKeyHttpAdapter({http,timeoutMs?,pageSize?,maxRecords?})使用同一个HttpClient。baseURL只确定origin，下面是固定根路径；不尝试旧route。全部使用原生httpx AjaxResponse，以success=true判定业务成功，code保留为必填安全整数元数据，不要求固定值；错误保留HTTP事实和原生code。详情见[真实原生定义](PAGE_APIS.md#已读取的真实原生定义)。
+createApiKeyHttpAdapter({http,timeoutMs?,pageSize?,maxRecords?,idEncoding?})使用同一个HttpClient。baseURL只确定origin，下面是固定根路径；不尝试旧route。全部使用原生httpx AjaxResponse，以success=true判定业务成功，code保留为必填安全整数元数据，不要求固定值；错误保留HTTP事实和原生code。详情见[真实原生定义](PAGE_APIS.md#已读取的真实原生定义)。
 
 | 操作 | 方法/路径 | 请求和payload |
 | --- | --- | --- |
@@ -38,7 +38,7 @@ getConfiguration读取真实配置后，createApiKeyManagerController({...config
 
 ## baseservice 对齐与共享验收
 
-baseservice 的 [apikeyservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/apikeyservice/webfacade) 提供上述版本化HTTP边界，复用apikeyservice领域操作；宿主仍负责鉴权/tenant、配置与权限投影、CSRF及路由注册。登录、会话和用户管理归宿主或身份提供方，不由baseservice实现；xui现有登录API保持不变。
+baseservice 的 [apikeyservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/apikeyservice/webfacade) 提供上述版本化HTTP边界，复用apikeyservice领域操作；宿主仍负责鉴权/tenant、配置与权限投影、CSRF及路由注册。baseservice 已提供独立 authenticationservice 与 Bearer v2 facade；Key 管理不创建另一认证 owner，登录合同见 [AUTH](AUTH.md)。
 
 后端 `ErrOutcomeUnknown` 必须返回HTTP503以及原生 `AjaxResponse{success:false,code:50301,payload:null,message,request_id}`，不能返回secret、成功确认或伪造确定拒绝。`50301` 是双方约定的应用码，不是httpx包级常量；只按该明确数字码识别，不猜错误文案。前端同时防御该码被HTTP200/4xx传递的情况，不自动重试、不从列表或access pending推断提交结果。
 
@@ -57,3 +57,7 @@ baseservice 的 [apikeyservice/webfacade](https://github.com/coffeehc/baseservic
 第三方provider key与其管理API按第三方合同，不套用此平台facade或强制AjaxResponse；内部adapter只作明确领域转换。行业标准优先边界见[DESIGN](DESIGN.md#规范强度与职责)。
 
 本次追加正常Git只读fetch后核实 xLead@f08ba41cde1f976e7f3c7c4b8a83af794f74adc8 的 [Token字段](https://github.com/coffeehc/xlead/blob/f08ba41cde1f976e7f3c7c4b8a83af794f74adc8/internal/auth/types.go)和[访问记录语义](https://github.com/coffeehc/xlead/blob/f08ba41cde1f976e7f3c7c4b8a83af794f74adc8/internal/auth/README.md)：`last_access_pending:true` 表示缓存访问尚未被本次数据库读取确认。临时域adapter须显式映射 `last_accessed_at→lastUsedAt`、`last_access_pending→lastUsedAtPending`；默认facade不猜旧字段，不把该标记误作写入操作结果或业务日志。xLead的批量刷新策略仍属于产品后端，此轮没有修改它。
+
+## 实体 ID 编码
+
+固定 HTTP adapter 的 `idEncoding` 默认为 decimal，可显式选择 hex；`parseApiKeyWireMetadata(value, encoding?)` 使用相同严格正 int64 规则。列表、创建、动作确认和请求路径必须一致；发送前拒绝非法目标，返回的畸形 ID 不能成为成功。权限/有效期代码不受影响。通用 ApiKeyAdapter/页面仍允许宿主自有不透明 ID，只有固定 baseservice HTTP 合同收紧为规范身份；合成 HTTP 示例已相应纠正。规则和迁移注意事项见 [IDENTITY_ENCODING](IDENTITY_ENCODING.md)。

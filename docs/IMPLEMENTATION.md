@@ -9,7 +9,7 @@
 | 包 | 正式入口 | 职责 |
 | --- | --- | --- |
 | `@coffeehc/xui-theme` | `style.css`、`tokens.css`、`components.css`、`critical.css`；`base/button/forms/navigation/feedback/dialog/layout/floating/table/auth/sheet.css` | 无框架依赖，预构建 CSS。critical 包含 token 和除 floating 外的组件样式 |
-| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/navigation`、`/menu-layout`、`/http`、`/download`、`/api-key-http`、`/business-log-http`、`/query`、`/auth`、`/login-dom`、`/api-key`、`/api-key-dom`、`/structured-log`、`/structured-log-dom`、`/business-log`、`/business-log-dom`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
+| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/navigation`、`/menu-layout`、`/http`、`/download`、`/api-key-http`、`/business-log-http`、`/query`、`/auth`、`/entity-id`、`/login-dom`、`/api-key`、`/api-key-dom`、`/structured-log`、`/structured-log-dom`、`/business-log`、`/business-log-dom`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
 | `@coffeehc/xui-react` | 根；`/button/forms/navigation/menu-layout/tabs/dialog/sheet/alert-dialog/context-menu/feedback/layout/table/select/combobox/menu/popover/tooltip/toast/theme/login/api-key/structured-log/business-log` | React、ReactDOM、Base UI、runtime 是 peers；不捆绑宿主实例，不隐式引入 CSS |
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
