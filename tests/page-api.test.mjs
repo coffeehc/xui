@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHttpClient,createJsonApiErrorAdapter} from '../packages/runtime/dist/http.js';
-import {createApiKeyHttpAdapter,parseApiKeyConfiguration} from '../packages/runtime/dist/api-key-http.js';
+import {createApiKeyHttpAdapter,parseApiKeyConfiguration,parseApiKeyWireMetadata} from '../packages/runtime/dist/api-key-http.js';
 import {createApiKeyManagerController} from '../packages/runtime/dist/api-key.js';
 import {createBusinessLogHttpLoader} from '../packages/runtime/dist/business-log-http.js';
 import {createBusinessLogController,getBusinessLogSnapshot} from '../packages/runtime/dist/business-log.js';
@@ -58,6 +58,12 @@ test('API key synchronous host callbacks cannot revive a closed or destroyed act
  for(const operation of ['close','destroy','setDraft']){let sends=0,owner;owner=createApiKeyManagerController({canCreate:true,permissions:[],expiryOptions:[{id:'never',label:'Never'}],defaultExpiryId:'never',validateCreate:()=>{operation==='setDraft'?owner.setDraft({name:'Changed'}):owner[operation]();},adapter:{list:async()=>[row],create:async()=>{sends++;return {metadata:row,secret:'FAKE'};},revoke:async()=>{sends++;}}});owner.openCreate();owner.setDraft({name:'Demo'});await owner.submitCreate();assert.equal(sends,0);assert.equal(owner.getState().actionBusy,false);assert.equal(owner.readSecret(),null);assert.equal(owner.getState().phase,operation==='setDraft'?'create':'closed');owner.destroy();}
  let sends=0,calls=0,owner;owner=createApiKeyManagerController({permissions:[],expiryOptions:[{id:'never',label:'Never'}],defaultExpiryId:'never',canRevoke:()=>{if(++calls===2)owner.close();return true;},adapter:{list:async()=>[row],create:async()=>{throw Error('unused');},revoke:async()=>{sends++;}}});await owner.refresh();owner.openRevoke('key');await owner.confirmRevoke();assert.equal(sends,0);assert.equal(owner.getState().phase,'closed');assert.equal(owner.getState().actionBusy,false);
 });
-test('an uncertain API key write blocks resubmission until the local session closes',async()=>{
- let sends=0;const owner=createApiKeyManagerController({canCreate:true,permissions:[],expiryOptions:[{id:'never',label:'Never'}],defaultExpiryId:'never',adapter:{list:async()=>[],create:async()=>{sends++;throw Error('unconfirmed transport');},revoke:async()=>{}}});owner.openCreate();owner.setDraft({name:'Demo'});await owner.submitCreate();assert.equal(owner.getState().actionUncertain,true);owner.setDraft({name:'Changed'});await owner.submitCreate();assert.equal(sends,1);assert.equal(owner.getState().draft.name,'Demo');owner.close();owner.openCreate();owner.setDraft({name:'Checked list'});await owner.submitCreate();assert.equal(sends,2);
+test('an uncertain API key write remains blocked after closing, reading and missing reconciliation',async()=>{
+ let sends=0;const owner=createApiKeyManagerController({canCreate:true,permissions:[],expiryOptions:[{id:'never',label:'Never'}],defaultExpiryId:'never',adapter:{list:async()=>[],create:async()=>{sends++;throw Error('unconfirmed transport');},revoke:async()=>{}}});owner.openCreate();owner.setDraft({name:'Demo'});await owner.submitCreate();assert.equal(owner.getState().actionUncertain,true);owner.setDraft({name:'Changed'});await owner.submitCreate();assert.equal(sends,1);assert.equal(owner.getState().draft.name,'Demo');owner.close();owner.openCreate();owner.setDraft({name:'Checked list'});await owner.submitCreate();await owner.refresh();await owner.recoverUncertainWrite();assert.equal(sends,1);assert.equal(owner.getState().phase,'closed');assert.equal(owner.getState().actionUncertain,true);assert.equal(owner.getState().recoveryError,owner.labels.recoveryUnavailable);
+});
+
+test('native API key access persistence maps only the declared optional boolean',()=>{
+ for(const pending of [undefined,false,true]){const parsed=parseApiKeyWireMetadata(metadata({...pending===undefined?{}:{last_used_at_pending:pending}}));assert.equal(parsed.lastUsedAtPending,pending);assert.equal(Object.hasOwn(parsed,'lastUsedAtPending'),pending!==undefined);assert.equal(parsed.lastUsedAt,null);}
+ for(const pending of [null,'true',0])assert.throws(()=>parseApiKeyWireMetadata(metadata({last_used_at_pending:pending})),TypeError);
+ assert.throws(()=>parseApiKeyWireMetadata(metadata({last_access_pending:true})),TypeError);
 });

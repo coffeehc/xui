@@ -156,3 +156,19 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 第二个独立生命周期审查新增复现：旧Sheet/Alert wrapper重复destroy移除新实例role/class/side，Command UUID初始化失败留下owner，以及Accordion缺summary使destroy抛错。已加wrapper自有幂等守卫、前置Command分配与Accordion markup校验及正式浏览器回归。b7387fb完整verify在构建/types/129单测通过后的watch阶段主动终止，保留verify-adoption-controls-b7387fb-interrupted-review.log；不推送该未闭合检查点，新SHA重新跑完整门禁。
 
 追加正式打包消费回归覆盖固定480px窗口、选中菜单可见、旧Command回调与Shell句柄、延迟Dialog close/新模态/外部焦点，以及React新路由标题焦点。最新 widgets+menu 定向45/45通过；独立源复核确认普通关闭回trigger、新路由主动移焦保留，两种合同同时成立。Calendar隐式默认single更新新增单测；最终整套计数以冻结SHA日志为准。
+
+7df1ae7eb84fdd2538a97625d5de642f26a6dcb7 已冻结完整verify通过130单测/1默认watch/1Vite cold/191浏览器、68入口/20正式参考消费者，日志verify-adoption-controls-7df1ae7.log首行受测SHA与退出码0；随后正常推送main。[同SHA CI](https://github.com/coffeehc/xui/actions/runs/38205028770)首次执行成功，冻结SHA/完整门禁与CI均已确认。
+
+## API Key待保存事实与持久的内存写入门禁
+
+已从xLead最新固定f08ba41c原始字段/README核对访问待保存语义，公开可选bool精确映射，不从null猜测。新增view之外writeGuard与明确fresh list+权威终态reconcile，关闭、卸载、controller重建、普通刷新和迟到结果均不能绕过保护；默认HTTP缺核对能力仍失败关闭，不发新写入或恢复secret。内存所有者范围和服务端职责见API_KEY，不声明跨reload持久或真实后端接入。
+
+定向首轮API Key+既有capabilities浏览器30/34通过：React关闭阶段同时渲染两处核对入口、取消入口导致真实重复控件，已按phase归属只保留当前一处；提示正文包在独立p使两宿主一致可读。保留api-key-recovery-browser-first.log，随后重跑正式包。独立源审查又复现并修复共享guard外部解锁残留busy、最后通知新query仍释放旧证据、abort回调新read句柄被覆盖及成功write复活destroy终态，单测覆盖重入/迟到/两个owner和三种写入。最终冻结SHA全verify/CI另行报告。
+
+进一步独立两owner复现：恢复B的applied误关A已有result，现按phaseWriteId归属通知原确认阶段；A已有secret保留直到自身明确关闭，B原确认关闭，不重放写入。恢复最后提交再核query/dead，专项回归保留。当前完整门禁预计146单测/1watch/1Vite cold/202浏览器，最终实际数量随冻结SHA交付。
+
+最后窄屏200%字号风险主操作新增检查首轮37/39通过：两宿主核对按钮分别位于745px/777px，超出720px首屏。调整未知结果时风险/核对区优先于普通刷新，保留字号、完整风险正文和原控件大小，不裁切内容；失败截图与api-key-recovery-browser-fourth.log保留。旧原生view的retained核对/取消按钮已加alive守卫并通过回归，不能操作重建view。
+
+首屏重验React通过，原生因关闭后回到位于恢复区下方的refresh触发浏览器滚动，风险顶部移到-41px；未知状态改以当前可用核对按钮作回焦点，普通取消/成功仍按原触发器/refresh。此为真实焦点/滚动回归，保留api-key-recovery-layout-browser.log，继续相同门禁。
+
+最新正式包重验窄屏风险与回焦点、旧view按钮3/3通过；此前37/39中其余37项已通过，新增行为将随冻结SHA整套202浏览器再次验收。定向40单测与68入口/20正式消费者通过，独立runtime源码8/8复现关闭已报问题；尚不以局部结果称新SHA完整通过。

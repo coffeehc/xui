@@ -93,3 +93,13 @@ XUI-01/02下载和端点安全error adapter沿用8241e56绿色能力；XUI-03明
 第二个独立生命周期审查新增复现：旧Sheet/Alert wrapper重复destroy移除新实例role/class/side，Command UUID初始化失败留下owner，以及Accordion缺summary使destroy抛错。已加wrapper自有幂等守卫、前置Command分配与Accordion markup校验及正式浏览器回归。b7387fb完整verify在构建/types/129单测通过后的watch阶段主动终止，保留verify-adoption-controls-b7387fb-interrupted-review.log；不推送该未闭合检查点，新SHA重新跑完整门禁。
 
 追加审查关闭旧Command保留节点仍可执行callback、旧Shell重复destroy、Calendar默认single更新、Dialog延迟close/当前外部焦点/新模态与React导航回焦点问题。正式打包的widgets+menu专项45/45通过；独立390px React对照确认焦点归属guard同时保留新标题与普通trigger回退，移除内部navigation一律禁止恢复的分支。固定高度采用公开Root style，不增加私有覆写。完整新SHA验收仍须冻结后执行。
+
+## API Key追加恢复与访问事实
+
+7df1ae7公共控件检查点完整130单测/1watch/1Vite cold/191浏览器和68入口/20正式消费者通过并正常push。API Key增量独立：显式访问待保存bool、只读guard跨关闭/卸载/同adapter重建、fresh list+权威终态恢复；默认HTTP不猜新endpoint，不重放写入或恢复secret。两只读审查修复共享owner恢复busy和abort/最终通知的重入最后提交边界，原probe5/5通过；正式单测与两宿主打包浏览器复核另冻结执行。首轮新浏览器30/34的React重复关闭阶段控件与提示正文差异保留失败日志并已修正。
+
+额外多owner结果归属P2已独立复现并修复：不因恢复别人的applied清除已有result/secret；只通知原确认阶段。默认HTTP的真实页面回归核对缺能力仍blocked、无推测恢复endpoint、无第二次POST。7df1ae7[同SHA CI](https://github.com/coffeehc/xui/actions/runs/38205028770)已首次成功。新API Key冻结提交完整门禁另报告。
+
+窄屏200%新增风险检查两宿主主核对按钮超出首屏，已将风险主操作排到普通刷新之前，保留字号和全文。首轮37/39保留；独立8/8 runtime源复核通过，最后冻结门禁另记录。旧native view retained按钮不会核对或关闭新view。
+
+最后同门禁首屏/回焦点/retained按钮3/3通过，未缩字号或裁切风险文本。API Key增量定向40单测、正式68入口/20消费者、独立源8/8通过，最终冻结完整146单测/1watch/1Vite cold/202浏览器及同SHA CI继续作为交付门禁。

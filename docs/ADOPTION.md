@@ -114,7 +114,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 ## 默认接口与业务能力映射
 
-先核[页面API总索引](PAGE_APIS.md)，使用同一个HTTP/auth owner连接createApiKeyHttpAdapter与createBusinessLogHttpLoader。配置失败不得给默认权限；required/read、可选write和独立confirmed不合并；过期未撤销的key按真实capability允许撤销，已经撤销记录的删除是另一个确认操作。取消/未知结果不能重放写入，服务端仍负责鉴权、幂等和业务数据保留。
+先核[页面API总索引](PAGE_APIS.md)，使用同一个HTTP/auth owner连接createApiKeyHttpAdapter与createBusinessLogHttpLoader。配置失败不得给默认权限；required/read、可选write和独立confirmed不合并；过期未撤销的key按真实capability允许撤销，已经撤销记录的删除是另一个确认操作。取消/未知结果不能重放写入；保留同adapter或公开writeGuard在视图之外，卸载/重建/刷新不解除保护。用recoverUncertainWrite发新list并由真实reconcileWrite确认终态；缺口失败关闭，不猜endpoint、同名记录或“尚未看到就是未执行”。lastUsedAtPending只按后端显式bool显示。服务端仍负责鉴权、幂等和业务数据保留，详情见API_KEY。
 
 两宿主[React](../examples/capabilities-react/app.tsx)/[原生](../examples/capabilities-vanilla/app.js)消费正式产物，展示[公开组合](COMPOSITIONS.md)、safe filename下载及原生页面facade。合成fetch只验证合同，不证明产品具备API Key/业务日志后端。普通程序故障和供应商凭据不得改名替代这些业务。
 
