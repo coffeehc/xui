@@ -70,3 +70,5 @@ resource 按单 owner 的 request generation 隔离结果。Abort 是协作信�
 接入门槛：公开布局与组件真实消费通过；原生不加载 React；主题单 owner 和旧 CSS 层级映射明确；双仓 watch 可恢复；同一最终代码版本标准 verify 和独立审查完成。不得用参考消费者通过替代产品迁移通过。
 
 追加已授权XUI-01～09的公共采用反馈：原生transport/登录扩展/viewport/表格合成/link/choice及Calendar、CommandPicker、ToggleGroup、Avatar、Accordion、ScrollArea、InputGroup；合同和实际产物入口见[WIDGETS](WIDGETS.md)、PUBLIC_API。仍不改产品后端或认证链。
+
+可折叠分组搜索使用正式 [GroupedCombobox / createGroupedCombobox](GROUPED_SEARCH.md)：一个搜索输入与 listbox，外置折叠/分页控件；不要把 Disclosure 或 Accordion 放进 Combobox.List，也不采用同 Root 两个 List。业务查询、取消、选择与各组分页状态保持宿主所有。Disclosure 默认箭头和原生 controller 的同等合同亦见该页。

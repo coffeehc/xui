@@ -102,6 +102,14 @@
     "./header-controls": {
       "types": "./dist/header-controls.d.ts",
       "import": "./dist/header-controls.js"
+    },
+    "./grouped-combobox": {
+      "types": "./dist/grouped-combobox.d.ts",
+      "import": "./dist/grouped-combobox.js"
+    },
+    "./grouped-combobox-dom": {
+      "types": "./dist/grouped-combobox-dom.d.ts",
+      "import": "./dist/grouped-combobox-dom.js"
     }
   },
   "types": "./dist/index.d.ts"

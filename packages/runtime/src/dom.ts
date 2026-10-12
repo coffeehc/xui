@@ -25,10 +25,15 @@ export function bindPressFeedback(root:HTMLElement){
 export function createDisclosureController(trigger:HTMLElement,panel:HTMLElement,options:OpenOptions={}){
   let open=options.open??options.defaultOpen??false,dead=false;const controlled=options.open!==undefined;
   if(!panel.id)panel.id=generateDomId(panel.ownerDocument,'xui-disclosure');trigger.setAttribute('aria-controls',panel.id);
-  const syncOpen=(next:boolean)=>{if(dead)return;open=next;trigger.setAttribute('aria-expanded',String(open));panel.hidden=!open;};
+  let indicator:SVGSVGElement|undefined;
+  if(trigger.classList.contains('xui-disclosure-trigger')&&!trigger.querySelector('.xui-disclosure-indicator')){
+    indicator=trigger.ownerDocument.createElementNS('http://www.w3.org/2000/svg','svg');indicator.classList.add('xui-disclosure-indicator');indicator.setAttribute('viewBox','0 0 20 20');indicator.setAttribute('aria-hidden','true');indicator.setAttribute('focusable','false');indicator.setAttribute('fill','none');indicator.setAttribute('stroke','currentColor');indicator.setAttribute('stroke-width','var(--icon-stroke-width)');
+    const path=trigger.ownerDocument.createElementNS(indicator.namespaceURI,'path');path.setAttribute('d','m5 7 5 5 5-5');indicator.append(path);trigger.append(indicator);
+  }
+  const syncOpen=(next:boolean)=>{if(dead)return;if(!next&&panel.contains(panel.ownerDocument.activeElement))trigger.focus();open=next;trigger.setAttribute('aria-expanded',String(open));panel.hidden=!open;};
   const request=(next:boolean,event?:Event)=>{if(dead||disabled(trigger)||next===open)return;if(change(trigger,next,'toggle',event,details=>options.onOpenChange?.(next,details))&&!controlled)syncOpen(next);};
   const click=(event:Event)=>request(!open,event);trigger.addEventListener('click',click);syncOpen(open);
-  return {getOpen:()=>open,setOpen:(next:boolean)=>request(next),syncOpen,destroy(){dead=true;trigger.removeEventListener('click',click);}};
+  return {getOpen:()=>open,setOpen:(next:boolean)=>request(next),syncOpen,destroy(){if(dead)return;dead=true;trigger.removeEventListener('click',click);indicator?.remove();}};
 }
 
 export function createTabsController(root:HTMLElement,options:{value?:string;defaultValue?:string;activateOnFocus?:boolean;loopFocus?:boolean;onValueChange?:(value:string,details:ChangeDetails)=>void}={}){

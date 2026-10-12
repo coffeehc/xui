@@ -127,6 +127,10 @@
     "./command": {
       "types": "./dist/command.d.ts",
       "import": "./dist/command.js"
+    },
+    "./grouped-combobox": {
+      "types": "./dist/grouped-combobox.d.ts",
+      "import": "./dist/grouped-combobox.js"
     }
   },
   "types": "./dist/index.d.ts",

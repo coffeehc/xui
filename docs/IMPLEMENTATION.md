@@ -112,3 +112,5 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 ## 公共顶栏和布局区域
 
 [布局slot矩阵](LAYOUT_SLOTS.md)固定context/auxiliary/account、sidebarHeader/Footer、pageHeader/Toolbar/content/Footer的角色、顺序和响应式合同。默认主题按钮复用runtime/theme owner与既有按钮；可选语言选择复用宿主i18n事实，不引入词典或持久化owner。React/native通过相同类型/表现配置，独立header-controls tarball消费者验证正式入口。CSS部件只用DESIGN语义var；无消费方定位尺寸补丁。
+
+可折叠分组搜索使用正式 [GroupedCombobox / createGroupedCombobox](GROUPED_SEARCH.md)：一个搜索输入与 listbox，外置折叠/分页控件；不要把 Disclosure 或 Accordion 放进 Combobox.List，也不采用同 Root 两个 List。业务查询、取消、选择与各组分页状态保持宿主所有。Disclosure 默认箭头和原生 controller 的同等合同亦见该页。

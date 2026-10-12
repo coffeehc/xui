@@ -20,3 +20,5 @@ export * from './api-key-http.js';
 export * from './business-log-http.js';
 export * from './calendar.js';
 export * from './widgets-dom.js';
+export * from './grouped-combobox.js';
+export * from './grouped-combobox-dom.js';

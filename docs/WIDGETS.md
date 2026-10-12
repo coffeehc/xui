@@ -27,3 +27,5 @@ NativeSelect/Checkbox/Radio/Switch的controlSize=sm/default/lg是视觉尺寸，
 ## 受测范围
 
 专项[控件浏览器](../tests/browser/widgets.spec.mjs)、[日期与取消单测](../tests/calendar.test.mjs)及[登录扩展](../tests/browser/login-extensions.spec.mjs)在正式打包消费者运行；最终SHA、全verify、CI与实际数量见[验证记录](FOUNDATION_VALIDATION.md)。根字号200%只属于文字放大；真实OS/读屏器/Safari/Firefox、Wails窗口、产品接口和生产性能另验，不由源码/合成例子推断通过。
+
+可折叠分组搜索使用正式 [GroupedCombobox / createGroupedCombobox](GROUPED_SEARCH.md)：一个搜索输入与 listbox，外置折叠/分页控件；不要把 Disclosure 或 Accordion 放进 Combobox.List，也不采用同 Root 两个 List。业务查询、取消、选择与各组分页状态保持宿主所有。Disclosure 默认箭头和原生 controller 的同等合同亦见该页。
