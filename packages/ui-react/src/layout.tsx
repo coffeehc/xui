@@ -40,13 +40,14 @@ export interface AppHeaderSlots {
 }
 export type AppHeaderProps=React.ComponentProps<'div'> & AppHeaderSlots & {navigation?:React.ReactNode;theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions};
 /** Role-based layout only. The host supplies names, breadcrumb semantics and actions. */
-export function AppHeader({brand,breadcrumb,status,actions,auxiliary,context,account,navigation,theme,themeLabels,locale,children,className,...props}:AppHeaderProps){
+function AppHeaderFrame({legacyPrimary,brand,breadcrumb,status,actions,auxiliary,context,account,navigation,theme,themeLabels,locale,children,className,...props}:AppHeaderProps&{legacyPrimary?:React.ReactNode}){
   const present=hasContent;
   return <div {...props} className={cx('xui-app-header',className)}>
     <div className="xui-app-header-primary">{present(navigation)&&<div className="xui-app-header-navigation">{navigation}</div>}
       {present(brand)&&<div className="xui-app-header-brand">{brand}</div>}
       {present(breadcrumb)&&<div className="xui-app-header-breadcrumb">{breadcrumb}</div>}
       {present(context)&&<div className="xui-app-header-context">{context}</div>}
+      {present(legacyPrimary)&&<div className="xui-app-header-legacy">{legacyPrimary}</div>}
     </div>
     {<div className="xui-app-header-secondary">
       {present(status)&&<div className="xui-app-header-status">{status}</div>}
@@ -62,6 +63,8 @@ export function AppHeader({brand,breadcrumb,status,actions,auxiliary,context,acc
   </div>;
 }
 /** Content only: button/link/status semantics and business callbacks stay with the host. */
+export function AppHeader(props:AppHeaderProps){return <AppHeaderFrame {...props}/>;}
+
 export type SidebarFooterContentProps=Omit<React.ComponentProps<'span'>,'children'> & {icon?:React.ReactNode;children:React.ReactNode};
 export function SidebarFooterContent({icon,children,className,...props}:SidebarFooterContentProps){
   return <span {...props} className={cx('xui-sidebar-footer-content',className)}>
@@ -95,7 +98,7 @@ export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scro
   const navigationSidebar=<ShellNavigationContext.Provider value={{collapsed,onCollapsedChange:requestCollapsed,fallbackFocus:()=>drawer.current?.hasAttribute('data-open')?drawer.current.querySelector<HTMLElement>('.xui-dialog-footer button')??drawer.current:trigger.current}}>{sidebar}</ShellNavigationContext.Provider>;
   return <Dialog.Root open={narrow&&open} onOpenChange={next=>request(next)}><div {...props} data-collapsed={collapsed} data-scroll-mode={scrollMode} className={cx('xui-shell',className)}>
     <a className="xui-skip-link" href={`#${id}`}>{skipLabel}</a>
-    <header ref={headerElement} className="xui-shell-header"><AppHeader {...headerSlots} brand={headerSlots?headerSlots.brand:header} navigation={navigationToggle} theme={theme} themeLabels={themeLabels} locale={locale}>{headerSlots?header:undefined}</AppHeader></header>
+    <header ref={headerElement} className="xui-shell-header"><AppHeaderFrame {...headerSlots} legacyPrimary={headerSlots?undefined:header} navigation={navigationToggle} theme={theme} themeLabels={themeLabels} locale={locale}>{headerSlots?header:undefined}</AppHeaderFrame></header>
     {<div ref={desktopSlot} className="xui-shell-sidebar-host"/>}
     {typeof document==='undefined'&&<aside id={sidebarId} className="xui-shell-sidebar" aria-label={navigationLabel}>{navigationSidebar}</aside>}
     {sidebarElement&&createPortal(<>{hasHeader&&<div className="xui-shell-sidebar-header">{sidebarHeader}</div>}<div className={hasSections?"xui-shell-sidebar-menu":undefined}>{navigationSidebar}</div>{hasFooter&&<div className="xui-shell-sidebar-footer">{sidebarFooter}</div>}</>,sidebarElement)}

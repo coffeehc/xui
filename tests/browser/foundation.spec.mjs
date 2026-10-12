@@ -1,11 +1,12 @@
 import {test,expect} from '@playwright/test';
 for(const kind of ['vanilla','react']){
  const url=`/foundation-${kind}/`;
- test(`${kind}: real cold startup has readable critical content and explicit module failure recovery`,async({page},info)=>{
+ for(const width of [1280,390])test(`${kind}: real cold startup at ${width}px has readable critical content and explicit module failure recovery`,async({page},info)=>{
+  await page.setViewportSize({width,height:800});
   let release;const blocked=new Promise(resolve=>release=resolve);let fail=false;
   await page.route(`**/foundation-${kind}/app.js`,async route=>{if(fail){await route.abort('failed');return;}const response=await route.fetch();await blocked;await route.fulfill({response});});
-  await page.goto(url,{waitUntil:'commit'});await expect(page.getByText('正在加载界面。',{exact:true})).toBeVisible();const primary=page.getByRole('button',{name:'新建记录',exact:true}),before=await primary.boundingBox();await expect(primary).toBeDisabled();await expect(page.getByRole('heading',{name:'记录列表',exact:true})).toBeVisible();expect(before.y+before.height).toBeLessThan(800);
-  release();await expect(primary).toBeEnabled();const after=await primary.boundingBox();expect(Math.abs(after.y-before.y)).toBeLessThan(1);await info.attach('startup-layout.json',{body:JSON.stringify({before,after}),contentType:'application/json'});
+  await page.goto(url,{waitUntil:'commit'});await expect(page.getByText('正在加载界面。',{exact:true})).toBeVisible();const primary=page.getByRole('button',{name:'新建记录',exact:true}),before=await primary.boundingBox(),headerBefore=await page.locator('.xui-shell-header').boundingBox();await expect(primary).toBeDisabled();await expect(page.getByRole('heading',{name:'记录列表',exact:true})).toBeVisible();expect(before.y+before.height).toBeLessThan(800);
+  release();await expect(primary).toBeEnabled();const after=await primary.boundingBox(),headerAfter=await page.locator('.xui-shell-header').boundingBox();expect(Math.abs(after.y-before.y)).toBeLessThan(1);expect(Math.abs(headerAfter.height-headerBefore.height)).toBeLessThan(1);if(kind==='react'){await expect(page.locator('.xui-app-header-primary>.xui-app-header-legacy')).toHaveText('xui工作记录');await expect(page.locator('.xui-app-header-brand')).toHaveCount(0);await expect(page.locator('.xui-theme-mode-toggle')).toHaveCount(1);}await info.attach('startup-layout.json',{body:JSON.stringify({before,after,headerBefore,headerAfter}),contentType:'application/json'});
   fail=true;await page.reload();await expect(page.getByText('界面加载失败',{exact:true})).toBeVisible();fail=false;await page.getByRole('button',{name:'重新加载界面',exact:true}).click();await expect(primary).toBeEnabled();await expect(page.getByText('界面加载失败',{exact:true})).not.toBeVisible();
  });
  test(`${kind}: controlled host theme persists one JSON key and follows system`,async({page})=>{

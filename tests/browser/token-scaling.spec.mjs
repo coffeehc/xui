@@ -394,7 +394,7 @@ for(const kind of kinds){
             const label=navItem(page,'library').locator('.xui-menu-label');await expect(label).toBeVisible();
             const box=await measure(label);expect(box.width).toBeGreaterThan(0);expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth+1);
             await assertType(navItem(page,'library'),'body-sm',scale,scale,factor);
-            const dialog=await measure(drawer);expect(dialog.x).toBeGreaterThanOrEqual(-1);expect(dialog.right).toBeLessThanOrEqual(391);expect(dialog.scrollWidth).toBeLessThanOrEqual(dialog.clientWidth+1);
+            const dialog=await measure(drawer);expect(dialog.x).toBeCloseTo(16*factor,1);expect(dialog.y).toBeCloseTo(16*factor,1);expect(dialog.right).toBeLessThanOrEqual(391);expect(dialog.scrollWidth).toBeLessThanOrEqual(dialog.clientWidth+1);
             await assertNoOverflow(page);
             if(repeat===0)await snapshot(page,info,`font-${scale}-root-${rootPercent}-narrow-drawer`);
             await page.keyboard.press('Escape');await expect(drawer).toBeHidden();await expect(trigger).toBeFocused();

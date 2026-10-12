@@ -58,3 +58,5 @@ locale只有enabled:true才显示。value/options/onValueChange全部由现有�
 ## 验证边界
 
 新增header-controls正式消费者由独立tarball构建及types/exports门禁覆盖；对应unit/Playwright验证默认主题、三模式循环/系统变化、受控请求、i18n显式开启、翻译标签、槽身份/焦点、长菜单、窄屏/200%文字及空槽。全量build/watch和最终浏览器结果以对应提交Verify终态为准；本页不把源码断言、收集数量或前次CI成绩当成这次实跑成功。真实读屏器、移动OS、Safari/Firefox和SSR hydration没有本轮通过声明。
+
+旧AppShell.header未搭配headerSlots时作为完整legacy内容区放在primary，不当成brand拆分、裁切或强制子节点块显示；搭配headerSlots时仍位于secondary的既有legacy位置。重复同角色更新保持正常React协调；显式切换headerSlots有无会改变legacy所属区域，不能宣称该跨角色移动保留legacy子树身份。其他控件继续使用同一内部Frame。

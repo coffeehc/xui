@@ -22,8 +22,9 @@ test('AppHeader keeps the default theme action, omits empty host roles and prese
 });
 
 test('AppShell preserves legacy header markup and adds the default right theme control',()=>{
-  const markup=renderToStaticMarkup(React.createElement(AppShell,{sidebar:'Navigation',header:React.createElement('strong',null,'Legacy brand')},'Content'));
-  assert.match(markup,/<strong>Legacy brand<\/strong>/);
+  const markup=renderToStaticMarkup(React.createElement(AppShell,{sidebar:'Navigation',header:React.createElement(React.Fragment,null,React.createElement('strong',null,'Legacy brand'),React.createElement('span',null,'Legacy context'))},'Content'));
+  assert.match(markup,/<div class="xui-app-header-legacy"><strong>Legacy brand<\/strong><span>Legacy context<\/span><\/div>/);
+  assert.doesNotMatch(markup,/xui-app-header-brand/);assert.ok(markup.indexOf('Legacy context')<markup.indexOf('xui-app-header-secondary'));
   assert.ok(markup.includes('xui-app-header'));assert.ok(markup.includes('xui-theme-mode-toggle'));
 });
 

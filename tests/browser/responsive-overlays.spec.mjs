@@ -161,7 +161,7 @@ for(const kind of kinds){
         await capture(page,info,`nav-${viewport.width}-compact`,{sidebarWidth:60});
       }else{
         const trigger=page.getByRole('button',{name:'工作导航',exact:true});await trigger.click();const drawer=page.getByRole('dialog');
-        const actual=await assertWidth(drawer,288,viewport,16);expectNear(actual.x,16,'navigation drawer start inset');
+        const actual=await assertWidth(drawer,288,viewport,16);expectNear(actual.x,16,'navigation drawer start inset');expectNear(actual.y,16,'navigation drawer top inset');
         expect(actual.maxInlineSize).toBe('288px');await capture(page,info,`nav-${viewport.width}-drawer`,{width:288,maxInlineSize:288,inset:16});
         await page.keyboard.press('Escape');await expect(drawer).toBeHidden();await expect(trigger).toBeFocused();
       }

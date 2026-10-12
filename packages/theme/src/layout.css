@@ -22,6 +22,7 @@
   .xui-app-header-status {display:flex;align-items:center;flex-wrap:wrap;min-inline-size:0;max-inline-size:100%;gap:var(--space-control-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);overflow-wrap:anywhere;}
   .xui-app-header-actions,.xui-app-header-legacy {display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;min-inline-size:0;max-inline-size:100%;gap:var(--layout-toolbar-gap);overflow-wrap:anywhere;}
   .xui-app-header-actions>*,.xui-app-header-legacy>*,.xui-app-header-status>* {min-inline-size:0;max-inline-size:100%;}
+  .xui-app-header-primary>.xui-app-header-legacy {justify-content:flex-start;}
   .xui-app-header-actions>.xui-toolbar {justify-content:flex-end;}
   .xui-app-header-actions :is(button,a),.xui-app-header-legacy :is(button,a) {white-space:normal;overflow-wrap:anywhere;}
   .xui-shell-sidebar {grid-area:sidebar;min-inline-size:0;padding:var(--nav-sidebar-padding);background:var(--layer-shell);}
@@ -55,7 +56,7 @@
   .xui-shell-toggle[data-collapsed='true'] .xui-shell-toggle-arrow {transform:rotate(var(--motion-disclosure-rotation));}
   .xui-skip-link {position:fixed;inset-block-start:var(--space-text-gap);inset-inline-start:var(--space-text-gap);transform:translateY(var(--a11y-skip-hidden-offset));z-index:var(--z-notice);background:var(--layer-overlay);color:var(--action-primary);padding:var(--space-control-gap);}
   .xui-skip-link:focus {transform:none;}
-  .xui-shell-drawer {inset-block-start:var(--layout-viewport-inset);inset-inline-start:var(--layout-viewport-inset);inset-block-end:var(--layout-viewport-inset);top:var(--layout-viewport-inset);left:var(--layout-viewport-inset);transform:none;max-inline-size:var(--nav-drawer-max-inline-size);}
+  .xui-shell-drawer {margin:0;inset-block-start:var(--layout-viewport-inset);inset-inline-start:var(--layout-viewport-inset);inset-block-end:var(--layout-viewport-inset);top:var(--layout-viewport-inset);left:var(--layout-viewport-inset);transform:none;max-inline-size:var(--nav-drawer-max-inline-size);}
   .xui-container {inline-size:100%;max-inline-size:var(--layout-content-max);margin-inline:auto;min-inline-size:0;}
   .xui-stack,.xui-section {display:grid;gap:var(--layout-section-gap);min-inline-size:0;align-content:start;}
   .xui-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,var(--layout-field-min)),1fr));gap:var(--layout-field-gap);min-inline-size:0;}

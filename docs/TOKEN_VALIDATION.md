@@ -25,3 +25,11 @@
 本地完整verify在watch首次代际的30秒测试门限处终止；另一次合法完整开发构建成功耗时82.992秒（user92.908秒、system17.248秒），没有编译错误。保留首次失败记录，不延长门限或重复等待掩盖问题；独立consumer、冷启动、browser继续执行，最终同提交Verify负责核验完整watch链。第三轮截至本记录仍待正式浏览器及精确提交CI终态，前两轮通过不等于三轮完成。
 
 根字号200%是文字放大测试，不是操作系统或浏览器原生zoom。首次本地Chromium在sandbox因socket权限于断言前失败；不能算浏览器测试失败断言或通过。后续完整验证已获准使用浏览器所需进程socket。真实读屏器、移动OS及Safari/Firefox不在本轮通过声明中。
+
+### 首次精确提交CI与修复
+
+[1929546 Verify](https://github.com/coffeehc/xui/actions/runs/38249852388)已实际完成完整build、343 token/类型、209单测、watch、双tarball消费者及Vite冷/暖/显式依赖回归。真实Chromium为366/368通过：24项文字根、14项header/locale/slot全过；百分比浮层27/28过。两项失败原样保留在该run的validation附件：React基础消费者旧静态头部与新公开头部不一致，导致首次挂载主按钮下移5px；原生导航dialog仍继承UA margin:auto，宽288px正确但390px下x=59px、纵向居中。
+
+修复公共AppShell的旧header映射：私有稳定Frame将旧Fragment完整置于primary legacy区，不套brand样式；基础消费者故意保留旧Fragment并配套同结构首屏，保留小于1px的稳定性断言，追加桌面/窄屏头部高度及legacy结构检查；仅导航抽屉清零结构margin，保留普通Dialog居中、全部宽度合同，并追加y=viewport inset断言。独立实际查看了失败截图以及React窄屏0.9/200%根文字、原生320px Dialog和1920px顶部Sheet截图；与通过项CSS像素证据一致。修复提交仍须新的精确CI全链通过，不用首次366项成绩代替最终验收。
+
+修复后源码守卫再次覆盖165文件/1351声明，文档27文件/499链接/70入口通过；私有Frame的独立source bundle编译与静态渲染断言通过，实际diff经独立复审无阻断。原本地修复代际build/typecheck/19项快测已完成；后补legacy源的最终正式生产构建与浏览器由新提交CI执行，不混称旧dist已验证新源。
