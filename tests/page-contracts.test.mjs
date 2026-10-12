@@ -39,20 +39,20 @@ test('shared Go/TypeScript fixtures pass through default page HTTP adapters with
  assert.equal(pending.length,0);assert.equal(seen.length,8);assert(!JSON.stringify(rows).includes(created.secret));
 });
 
-test('explicit 50301 unknown writes stay blocked through business/4xx responses, recreation and fresh lists',async()=>{
- for(const status of [200,400,403,409,503])for(const operation of ['create','revoke','delete']){
+test('explicit 50301/50302 writes stay blocked through business/4xx responses, recreation and fresh lists',async()=>{
+ for(const code of [50301,50302])for(const status of [200,400,403,409,503])for(const operation of ['create','revoke','delete']){
   let writes=0;
   const row={...cases.api_key_list.response.body.payload.list[0],...(operation==='delete'?{status:'revoked',capabilities:{revoke:false,delete_record:true}}:{})};
   const adapter=createApiKeyHttpAdapter({http:client(async(_input,init)=>{
    if(init.method==='GET')return response({status:200,body:{...cases.api_key_list.response.body,payload:{list:[row],total:1}}});
-   writes++;return response({...cases.api_key_write_outcome_unknown.response,status});
+   writes++;return response({...cases.api_key_write_outcome_unknown.response,status,body:{...cases.api_key_write_outcome_unknown.response.body,code,message:code===50302?'committed_followup_failed':'API key write outcome is unknown'}});
   })});
   const make=()=>createApiKeyManagerController({adapter,canCreate:true,permissions:[{id:'read',label:'Read',required:true}],expiryOptions:[{id:'30d',label:'30 days'}],defaultExpiryId:'30d'});
   const first=make();await first.refresh();
   if(operation==='create'){first.openCreate();first.setDraft(draft);await first.submitCreate();}
   else if(operation==='revoke'){first.openRevoke(row.id);await first.confirmRevoke();}
   else{first.openDeleteRecord(row.id);await first.confirmDeleteRecord();}
-  assert.equal(writes,1);assert.equal(first.getState().writeBlock?.status,'uncertain',`${operation} HTTP ${status}`);assert.equal(first.readSecret(),null);
+  assert.equal(writes,1);assert.equal(first.getState().writeBlock?.status,'uncertain',`${operation} HTTP ${status} code ${code}`);assert.equal(first.readSecret(),null);
   first.close();await first.refresh();assert.equal(first.getState().actionUncertain,true);first.destroy();
   const second=make();assert.equal(second.getState().actionUncertain,true);await second.refresh();await second.recoverUncertainWrite();
   assert.equal(second.getState().writeBlock?.status,'uncertain');assert.equal(second.getState().recoveryError,second.labels.recoveryUnavailable);

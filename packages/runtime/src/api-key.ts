@@ -4,6 +4,8 @@ export {createApiKeyWriteGuard} from './api-key-write.js';
 export type {ApiKeyWriteGuard,ApiKeyPendingWrite,ApiKeyWriteResolution} from './api-key-write.js';
 /** Native page-facade application code, shared with baseservice. Never a definite refusal. */
 const API_KEY_WRITE_OUTCOME_UNKNOWN=50301;
+/** The commit is known, but follow-up work/response is incomplete. Never replay the mutation. */
+const API_KEY_WRITE_COMMITTED_FOLLOWUP_FAILED=50302;
 /** Public metadata only. The host supplies a display-safe prefix, never the full key. */
 export interface ApiKeyMetadata {
   id:string; name:string; prefix:string|null; permissionIds:readonly string[];
@@ -137,7 +139,7 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
   }
   const canRevoke=(key:Readonly<ApiKeyMetadata>)=>{const session=actionGeneration;if(dead||guard.getState()||key.status==='revoked'||key.capabilities?.revoke===false)return false;try{const allowed=options.canRevoke?.(key)??key.capabilities?.revoke??false;return !dead&&session===actionGeneration&&!guard.getState()&&allowed;}catch{return false;}};
   const canDeleteRecord=(key:Readonly<ApiKeyMetadata>)=>{const session=actionGeneration;if(dead||guard.getState()||key.status!=='revoked'||!options.adapter.deleteRecord||key.capabilities?.deleteRecord===false)return false;try{const allowed=options.canDeleteRecord?.(key)??key.capabilities?.deleteRecord??false;return !dead&&session===actionGeneration&&!guard.getState()&&allowed;}catch{return false;}};
-  const uncertain=(error:unknown)=>!isHttpError(error)||error.code===API_KEY_WRITE_OUTCOME_UNKNOWN||!(error.kind==='business'||error.kind==='http'&&error.status!==undefined&&error.status>=400&&error.status<500);
+  const uncertain=(error:unknown)=>!isHttpError(error)||error.code===API_KEY_WRITE_OUTCOME_UNKNOWN||error.code===API_KEY_WRITE_COMMITTED_FOLLOWUP_FAILED||!(error.kind==='business'||error.kind==='http'&&error.status!==undefined&&error.status>=400&&error.status<500);
   async function submitCreate(){
     if(dead||state.phase!=='create'||state.actionBusy||guard.getState()||options.canCreate!==true)return;
     const session=actionGeneration,originalDraft=state.draft;const current=()=>!dead&&actionGeneration===session&&state.phase==='create'&&state.draft===originalDraft&&!state.actionBusy&&!guard.getState();

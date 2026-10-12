@@ -10,7 +10,7 @@ required权限在初始draft中明确选中且不可取消；disabled权限不�
 
 ApiKeyAdapter为list/create/revoke及可选deleteRecord。revoke使凭据失效；过期状态不再硬编码禁止，必须由实际capability/宿主授权允许。deleteRecord仅针对已经revoked的管理记录，需独立能力和callback；不撤销活动凭据、不删除已有业务记录。两操作都有目标、风险、确认/取消，确认回调成功返回void后才更新/移除。服务端无能力时保留业务原入口，不削减功能，也不默认放权。
 
-写操作无自动重放。网络/超时/parse/5xx等结果未知使 `actionUncertain=true`，`writeBlock` 保留操作种类与目标ID，创建、撤销和删除均失败关闭。实际发出后取消、关闭、pagehide、视图卸载或controller销毁只终止本地等待和清除一次性值，不能回滚服务端或解除保护。发出前的取消可释放尚未执行的操作；HTTP4xx及原生明确business拒绝区分为安全拒绝反馈，但应用错误码 `50301`（`API_KEY_WRITE_OUTCOME_UNKNOWN`）始终表示结果未知，即使错误地通过HTTP200或4xx返回，也不能解除保护。迟到结果不恢复弹层、密钥或修改行。
+写操作无自动重放。网络/超时/parse/5xx等结果未知使 `actionUncertain=true`，`writeBlock` 保留操作种类与目标ID，创建、撤销和删除均失败关闭。实际发出后取消、关闭、pagehide、视图卸载或controller销毁只终止本地等待和清除一次性值，不能回滚服务端或解除保护。发出前的取消可释放尚未执行的操作；HTTP4xx及原生明确business拒绝区分为安全拒绝反馈，但应用错误码 `50301`（`API_KEY_WRITE_OUTCOME_UNKNOWN`）始终表示结果未知，即使错误地通过HTTP200或4xx返回，也不能解除保护。应用码 `50302`（`API_KEY_WRITE_COMMITTED_FOLLOWUP_FAILED`）明确已提交但后处理失败，同样保持禁止重放的门禁，不能当作确定拒绝。迟到结果不恢复弹层、密钥或修改行。
 
 ### 写入保护的所有者与恢复
 
@@ -42,7 +42,9 @@ baseservice 的 [apikeyservice/webfacade](https://github.com/coffeehc/baseservic
 
 后端 `ErrOutcomeUnknown` 必须返回HTTP503以及原生 `AjaxResponse{success:false,code:50301,payload:null,message,request_id}`，不能返回secret、成功确认或伪造确定拒绝。`50301` 是双方约定的应用码，不是httpx包级常量；只按该明确数字码识别，不猜错误文案。前端同时防御该码被HTTP200/4xx传递的情况，不自动重试、不从列表或access pending推断提交结果。
 
-[共享fixture](../tests/fixtures/page-contracts.v1.json) 与baseservice的 `docs/contracts/page-contracts.v1.json` 保持逐字节一致，均为合成数据。[HTTP合同测试](../tests/page-contracts.test.mjs) 经默认adapter消费配置、列表、创建、撤销、删除和未知结果，并验证HTTP200/4xx/503的未知写入跨视图仍受保护。Go侧通过真实handler消费相同fixture。库级合同验证不等于宿主路由、鉴权或生产集成已完成。
+`PostCommitError` 则返回HTTP503/code=50302/message=committed_followup_failed/payload=null，明确数据库已经提交、后处理失败；不能称作回滚，也不能混同50301的提交未知。前端复用现有保护owner阻止重放，即使被HTTP200/4xx包装也保持门禁；宿主需核对已提交结果与后处理状态，不能靠重新提交原写入恢复。该保护状态不改变后端已经提交的事实，也不恢复丢失的一次性值。
+
+[共享fixture](../tests/fixtures/page-contracts.v1.json) 与baseservice的 `docs/contracts/page-contracts.v1.json` 保持逐字节一致，均为合成数据。[HTTP合同测试](../tests/page-contracts.test.mjs) 经默认adapter消费配置、列表、创建、撤销、删除和未知结果，并验证HTTP200/4xx/503的50301与50302写入跨视图仍受保护。Go侧通过真实handler消费相同fixture。库级合同验证不等于宿主路由、鉴权或生产集成已完成。
 
 ## 一次性值与临时接入
 

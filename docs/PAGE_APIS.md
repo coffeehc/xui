@@ -26,7 +26,7 @@ xui 的目的包括统一品牌、前端体系与通用前后端接口。采用�
 
 默认HTTP adapters已实现；对应baseservice的 [apikeyservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/apikeyservice/webfacade) 与 [bizlogservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/bizlogservice/webfacade) 提供API Key与业务日志HTTP边界。宿主注册路由并提供真实身份/tenant、授权配置和脱敏投影；登录、会话及用户管理仍归宿主或身份提供方，不是baseservice后续待办。xui现有登录组件与API不变。
 
-双方消费逐字节一致的 [page-contracts.v1.json](../tests/fixtures/page-contracts.v1.json)：xui通过默认HTTP adapters校验，baseservice通过HTTP handlers校验。API Key提交未知统一为HTTP503、原生success=false/code=50301/payload=null，不包含secret；xui防御该码被HTTP200/4xx包装时也保持阻止写入。默认adapter和baseservice facade均没有伪造核对endpoint或持久operation receipt；List不具备提交核对权威，详见 [API_KEY](API_KEY.md)。
+双方消费逐字节一致的 [page-contracts.v1.json](../tests/fixtures/page-contracts.v1.json)：xui通过默认HTTP adapters校验，baseservice通过HTTP handlers校验。API Key提交未知统一为HTTP503、原生success=false/code=50301/payload=null，不包含secret；已提交但后处理失败单独使用HTTP503/code50302/message=committed_followup_failed/payload=null，不声称回滚；xui防御这两个码被HTTP200/4xx包装时也保持阻止重放。默认adapter和baseservice facade均没有伪造核对endpoint或持久operation receipt；List不具备提交核对权威，详见 [API_KEY](API_KEY.md)。
 
 实际可调用性和实测结果以最终提交的 [PUBLIC_API](PUBLIC_API.md)、声明及正式打包消费为准。共享合成合同通过不代表产品已注册这些路由或生产鉴权/tenant/脱敏已集成。
 
