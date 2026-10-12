@@ -130,3 +130,25 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 阶段基线为5adbf5c，源合同与逐项范围见[PAGE_APIS](PAGE_APIS.md)、[COMPOSITIONS](COMPOSITIONS.md)及[最终审查](FINAL_REVIEW.md#公共能力与原生页面api补齐)。不改DESIGN受控271变量或其它仓库。已实现默认API Key/业务日志HTTP适配、下载与安全结构化错误、三种弹层组合和条纹/展开/sticky表格，两类新消费者只消费正式包与公开CSS。
 
 定向20/20、全部116单测、typecheck、正式tarballs/types/ESM/CSS/init检查通过；新增浏览器初轮10/12的两个定位器问题按公开button/summary语义纠正后12/12通过。五个独立可复现P2修复与回归详见FINAL_REVIEW。当前完整门禁为59入口/18消费者/116单测/1默认watch/152浏览器；最终SHA全verify和CI结果由实际交付记录，不拿合成消费者当产品迁移或后端集成。真实Cookie/CSRF/CORS/tenant/鉴权/生产日志与密钥服务、其他浏览器/读屏器/真实移动OS/原生zoom/SSR/生产性能仍未跑。
+
+## 附件采用反馈 XUI-01～09 的公共库阶段
+
+基线a03f93a2e15dcdfa05396918293b2ab57028f84a已正常推送、同SHA CI成功；用户随后明确授权附件全部公共库改动并测试后推main。来源规范0.5.1/原始SHA和271默认CSS字节保持，新增样式只引用既有变量；root仅指向规范，无新许可证、发布、部署或其它仓库改动。
+
+| 编号 | 公共结果 | 验证与保留的边界 |
+| --- | --- | --- |
+| 01 下载 | 既有safe headers/filename、requestDownload/saveDownload，延续8241e56 | 真实浏览器文件名/字节、取消和Unicode合成测试；产品授权/CORS/服务端未集成 |
+| 02 安全端点错误 | 既有显式error adapter与HTTP事实，OAuth/第三方协议独立 | 不强迫AjaxResponse，不透出description/body或凭据；行业标准真实provider另验 |
+| 03 原生origin | nativeOrigin+fetch bridge，scheme/host/port tuple，强制redirect:error | wails合成status/401/取消/下载/外部目标拒绝；Darwin/Linux/Windows真实窗口未跑 |
+| 04 登录slots | beforeFields/afterFields、beforeSubmit/actions，同auth/theme owner | local/LDAP配置、标准动作等待、取消迟到/密码清理/当前错误；只有合成动作，无真实LDAP/SSO/backend |
+| 05 布局滚动 | 默认document兼容，显式有界viewport与独立sidebar/main | 24项菜单、history、草稿/DOM/scroll保持；窄屏/200%/focus，产品每route恢复策略留宿主 |
+| 06 表格状态 | stripe/expanded/selected/hover保留底层opaque背景，stickyHeader/逻辑列 | 三主题alpha覆盖与横纵滚动，选中优先、焦点/边界；数据/排序/展开事实由宿主 |
+| 07 新组合 | 所列Command、Calendar、ToggleGroup、Avatar、ScrollArea、InputGroup、Accordion及弹层/子菜单 | 各项公开React/native合同见WIDGETS/COMPOSITIONS；不把文本/OS datalist当日期/搜索选择等价，不含业务引擎 |
+| 08 link外观 | link variant及正确a role/nativeButton合同 | Space不点击、Enter与target实际popup，保留既有modifiers/ref/默认type门禁 |
+| 09 choice | controlSize独立select.size，readonly防click/Space/radio箭头且可focus | controlled/default、disabled、字段关联和尺寸；不增加密度或copy样式桥接 |
+
+定向构建/根types、全部68公开入口(theme16/runtime22/React30)的正式ESM/CSS/types/init消费、20参考页面、13项新增单测、31项新浏览器检查以及1项Vite cold/warm/include回归已通过。浏览器初轮12/25失败保留：其中真实link Space激活、React跨月焦点、动作选择不适合重复执行已修；其余准确限定status/region/password locator、force触发disabled guard、等待原生PageDown真正完成、遵循peer可聚焦disabled与无高亮状态。后两轮3/27、2/27失败与修复日志保留，最终定向31/31。没有降低可访问性/对比度/尺寸阈值、隐藏错误或禁动画来取绿。
+
+独立只读审查还用源内存转译及Chromium复现并修复：日历原子快照/订阅重入/邻月焦点/非法构造恢复，旧widget句柄销毁与更新、扩展无reason拒绝/旧auth错误、首次ArrowUp与chip删除后焦点。受控删除确认前不挪焦点，已转外部则不抢回。该审查不冒充正式构建；最终源码复核未见残留P1/P2，根整套验收与同SHA CI另以交付日志记录。
+
+标准verify现在预计129单测、1默认watch、1Vite冷启动回归、183浏览器检查，并核271默认token与68入口/20参考页。最终冻结SHA整条命令未完成前不称完整通过。未跑真实产品Cookie/CSRF/SSO/API Key/业务日志backend、3OS Wails、其他浏览器/读屏器/真实触屏OS/浏览器zoom、全SSR或生产性能。仅最小独立SSR handler对照与Vite因果夹具完成；真实用户冷启动现场仍未确认。

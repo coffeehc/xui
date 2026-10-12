@@ -10,6 +10,8 @@
 - [全部公开入口与默认行为](docs/PUBLIC_API.md)
 - [Codex 接入 skill](.agents/skills/adopt-xui/SKILL.md)
 - [原子→组合→页面的设计哲学](docs/FOUNDATION.md#组件层次与扩展原则)
+- [控件与原生公共组合](docs/WIDGETS.md)
+- [冷启动、导航与外壳滚动](docs/NAVIGATION.md)
 - [可配置登录页与统一认证接口](docs/AUTH.md)
 - [HTTP 与共享 query 接入](docs/HTTP.md)
 - [API Key 通用管理](docs/API_KEY.md)
@@ -30,4 +32,5 @@ pnpm preview
 ```
 
 主要参考页为 `http://localhost:4173/foundation-vanilla/` 和 `/foundation-react/`，通过公共 Layout/CSS 组合列表、表单与详情，附加工具真正按需加载。`/vanilla/` 和 `/react/` 用于基础控件参考与回归。
+新增控件参考页为 `/widgets-react/` 与 `/widgets-vanilla/`；登录扩展参考页为 `/login-react/?extensions` 与 `/login-vanilla/?extensions`。
 包均为 `private: true`，仅本地打包验证，不发布。许可证尚待仓库所有者决定。

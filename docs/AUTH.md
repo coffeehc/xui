@@ -78,3 +78,13 @@ cookie 的签发/轮换/有效期/服务端撤销、HttpOnly/Secure/SameSite、�
 固定cookie facade显式Accept:application/json，POST显式Content-Type:application/json；保留宿主CSRF/鉴权/tenant header，不继承旧protobuf/form编码。该标准与页面API索引一致，真实后端仍须提供cookie、CSRF/CORS与鉴权。
 
 行业标准优先：标准OAuth2/OIDC/SAML入口保留标准请求、状态和错误合同；第三方认证按其API，宿主在内部边界明确转换。这里的固定cookie facade用于自有应用会话，不替代标准OAuth2 token endpoint，也不强制第三方AjaxResponse。公共非2xx扩展见[HTTP](HTTP.md)，更多登录slots仍未实现，不把协议边界澄清当新增SSO/slots授权。
+
+## 完整登录页的正式扩展
+
+ConfigurableLoginPage和createLoginPage接受同一个extensions={beforeSubmit?,actions?,errorLabel?}，以及beforeFields/afterFields（ReactNode或原生HTMLElement）。配置区位于提交前，公共页负责Field排版、忙碌fieldsets、动作、防重复、取消、当前错误、焦点和密码清理；扩展仍通过传入的同一auth/theme owner，不创建第二套认证状态。基础登录字段/固定cookie facade保持现有合同。
+
+beforeSubmit与actions[{id,label,disabled?,run}]接收只含username和AbortSignal的context，不传密码/HTTP响应/令牌。宿主明确验证服务地址、账户来源及权限，并在已授权边界配置既有认证owner/transport；切换真实服务必须由产品按自身安全策略实现，不能把任意跨origin URL交给默认HTTP。动作可启动OAuth/OIDC/SAML等行业标准流程，xui只负责本地动作等待，既不实现provider协议也不伪造成功会话。产品使用其已验证的认证方式/transport后再确认会话。
+
+公共页等待扩展时同时禁用配置/重复动作，可取消不合作Promise的本地等待；generation拒绝迟到登录/回跳，pagehide/unmount释放。扩展开始即清DOM密码，credential对象在结束时清空；扩展失败显示固定errorLabel（默认“登录配置或认证方式暂不可用，请检查后重试。”），不透出异常body，也不让先前认证错误遮盖当前扩展失败。回调自己的外部副作用/标准跳转仍须服从signal，取消本地等待不保证外部服务回滚。
+
+正式两宿主示例加`?extensions`，分别演示服务地址输入、本地/LDAP来源和企业OIDC/SAML动作，仅用[合成模型](../examples/shared/login-extensions.ts)。其测试证明slot与共享owner/取消边界，不证明真实LDAP、SSO、Cookie/CSRF或Desktop认证链已迁移。

@@ -3,6 +3,7 @@ import { Menu as Base } from '@base-ui/react/menu';
 import {branded} from './shared.js';
 export const Menu = {
  ...Base,
+ SubmenuTrigger:function SubmenuTrigger({className,...props}:React.ComponentProps<typeof Base.SubmenuTrigger>){return <Base.SubmenuTrigger {...props} className={branded('xui-menu-item',className)}/>;},
  Item: function Item({className,...props}:React.ComponentProps<typeof Base.Item>){return <Base.Item {...props} className={branded('xui-menu-item',className)}/>;},
  LinkItem: function LinkItem({className,...props}:React.ComponentProps<typeof Base.LinkItem>){return <Base.LinkItem {...props} className={branded('xui-menu-item',className)}/>;},
  CheckboxItem: function CheckboxItem({className,...props}:React.ComponentProps<typeof Base.CheckboxItem>){return <Base.CheckboxItem {...props} className={branded('xui-menu-item',className)}/>;},

@@ -18,7 +18,7 @@
 | 产物与性能 | 子入口 + 真正 dynamic import 的参考面板 | 同等 ESM 动态面板与必要 CSS 按需 | Button-only metafile 无 Dialog/Tabs 实际贡献；字节/gzip 门禁；冷启动/受控延迟关键元素可见、位移与资源记录 |
 | 本地联调 | built exports / 宿主 peer 单实例 | built CSS/runtime | watch 覆盖 DESIGN、CSS、TS/TSX、types、init；错误后恢复；失败不冒充新构建 |
 
-矩阵中的正式接口和参考组合均已实现；验证结果在 FOUNDATION_VALIDATION.md 按能力记录，源码存在不等于验证通过。复合选择的原生入口采用浏览器原生 select/datalist，而不是承诺两个宿主使用同一种面板实现。
+矩阵中的正式接口和参考组合均已实现；验证结果在 FOUNDATION_VALIDATION.md 按能力记录，源码存在不等于验证通过。早期复合选择原生采用select/datalist；追加的CommandPicker提供正式可搜索单/多选，见[WIDGETS](WIDGETS.md)，不把datalist自由输入冒充等价选择。
 
 ## 组件层次与扩展原则
 
@@ -67,3 +67,5 @@ resource 按单 owner 的 request generation 隔离结果。Abort 是协作信�
 业务路由与领域接口、权限策略、身份凭据、缓存/查询、防抖、交易、会话、表格引擎、虚拟化、图表数据、复杂富文本/代码编辑器和 3D 引擎由宿主负责。通用 HTTP 传输与可配置认证/错误适配已实现，不等同于接管产品认证业务。SSR hydration、真实移动 OS 面板、读屏器和产品生产性能必须由采用项目另验。
 
 接入门槛：公开布局与组件真实消费通过；原生不加载 React；主题单 owner 和旧 CSS 层级映射明确；双仓 watch 可恢复；同一最终代码版本标准 verify 和独立审查完成。不得用参考消费者通过替代产品迁移通过。
+
+追加已授权XUI-01～09的公共采用反馈：原生transport/登录扩展/viewport/表格合成/link/choice及Calendar、CommandPicker、ToggleGroup、Avatar、Accordion、ScrollArea、InputGroup；合同和实际产物入口见[WIDGETS](WIDGETS.md)、PUBLIC_API。仍不改产品后端或认证链。

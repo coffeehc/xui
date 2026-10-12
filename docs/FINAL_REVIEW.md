@@ -67,7 +67,7 @@
 
 最后合同复核在Auth固定facade发现同类JSON协商遗漏；三请求补明确Accept、POST明确Content-Type，并以实际旧client headers+保留CSRF扩展已有auth合同回归。1b1cdce的整条verify在116单测通过、watch运行时主动中止以实施此修正，退出信号日志保留于.artifacts/verify-1b1cdce-auth-interrupted.log，不计整套通过或测试失败。新普通提交重新冻结全verify和同SHA CI。
 
-8241e563c08f1e435313593bb0fd4924aaa0f7e7本地完整verify通过116单测/1watch/152浏览器、59入口/18消费者，并正常推送；[同SHA CI 38195855434](https://github.com/coffeehc/xui/actions/runs/38195855434)首次执行成功。之后用户仅授权行业标准/第三方边界文档澄清：DESIGN修订0.5.1、README/ADOPTION/skill/API合同同步；271默认CSS值和库实现不变，AjaxResponse/HTTP双层协议保持。附件XUI-03/04/05及其它新增组合仍仅只读评审，无新功能授权。新文档提交继续正常验收与同SHA CI。
+8241e563c08f1e435313593bb0fd4924aaa0f7e7本地完整verify通过116单测/1watch/152浏览器、59入口/18消费者，并正常推送；[同SHA CI 38195855434](https://github.com/coffeehc/xui/actions/runs/38195855434)首次执行成功。之后用户仅授权行业标准/第三方边界文档澄清：DESIGN修订0.5.1、README/ADOPTION/skill/API合同同步；271默认CSS值和库实现不变，AjaxResponse/HTTP双层协议保持。当时附件新增组合只作只读评审；之后用户明确授权附件XUI-01～09公共库改动、测试后推main，下一阶段记录该实现。新文档提交继续正常验收与同SHA CI。
 
 
 用户追加冷启动重复页面/菜单刷新排查已独立取证，未扩展附件功能。正式tarball字节的两宿主各三条件在0–180秒共360菜单点击/60回退前进均无额外Document请求或外壳重挂；缺adapter和canNavigate=false受控对照复现完整导航，后续正常adapter恢复SPA，接入指引见[NAVIGATION](NAVIGATION.md#冷启动与路由ready边界)。本库范围未复现自发reload，不据此宣布产品问题已修复。产品现场因匿名无合法会话及本云环境ERR_TUNNEL_CONNECTION_FAILED受限；真实部署版本未核，现场现象与独立消费者证据分别记录。最终文档提交继续全verify与同SHA CI，原8241e56完整绿色证据保留。
@@ -77,3 +77,15 @@
 进一步独立Vite8.2.2 dev宿主复现：三个不可静态发现的lazy xui deep imports对应三次dependency optimized→optimized dependencies changed. reloading→HMR full-reload→Document1→4；后续点击稳定。暖optimizer cache和冷cache预声明实际include均1 Document/0 reload，无pageerror。因果与配置指引同步NAVIGATION、ADOPTION、skill；不改库runtime协议或产品配置，不认定用户实际本地已确认此根因。具体本地命令/日志仍待用户提供，生产、dev和旧线上hydration证据分开。
 
 dbd5f7f构建/271token/typecheck通过，116单测中来源复原校验1项失败：测试仍只认识0.5.0，未移除用户授权0.5.1边界段落。保留失败日志verify-boundary-dbd5f7f-source-proof-failed.log；新增精确段落marker/SHA记录并同步contractVersion，仍严格复原原始来源SHA，不改原值、默认CSS或降低门禁。新冻结SHA重新全verify。
+
+## 附件XUI-01～09公共采用反馈
+
+当前阶段基线a03f93a2e15dcdfa05396918293b2ab57028f84a已正常推送且[同SHA CI](https://github.com/coffeehc/xui/actions/runs/38199217503)成功，保留全部历史。用户明确授权完成附件公共库改动、测试后推main，未授权其它产品/commons/后端/部署/包发布。WIP保存21fe07b不充当验证通过。
+
+XUI-01/02下载和端点安全error adapter沿用8241e56绿色能力；XUI-03明确nativeOrigin/bridge/tuple/redirect，真实三OS窗口未验。XUI-04提交前slots/actions共享owner且拒绝迟到；XUI-05兼容默认document与有界viewport；XUI-06公共stickyHeader与alpha合成状态；XUI-07所有列举组合按WIDGETS/COMPOSITIONS正式React/native接口实施；XUI-08link外观保留a语义；XUI-09controlSize不占select.size、readonly choice公共guard。产品Cookie/SSO/真实API Key/业务日志前提仍由产品处理。
+
+新增独立审查复现并修复日历旧快照/二次通知导致邻月焦点丢失、旧native句柄重复destroy/update破坏重建owner、旧auth错误覆盖当前extension反馈；专项回归保留。最终冻结SHA完整verify及CI未完成前不以定向通过冒充。
+
+冷启动独立复核在固定Vite8.2.2 opaque懒深入口下cold3reload/4Document、warm与声明include0/1；生产正式消费者6组180秒360点击/60历史操作无额外Document。最小SSR handler前原生anchor有document导航，handler后SPA保持shell/草稿，这只是平台与单夹具合同证明，不宣布SSR全面支持。可重复脚本及Codex提示词已入[NAVIGATION](NAVIGATION.md)，用户真实现场日志仍待采用任务核实，线上受保护工具已停止，无凭据绕过。
+
+定向最终31/31新浏览器、13项新单测、68入口/20参考消费者、1Vite回归已通过；保留早期12/25、3/27、2/27失败。独立审查最终关闭全部已复现P2：日历快照/重入/构造/跨月焦点、旧widget句柄、登录当前错误/无理由reject、Command首次Up/移除焦点/动作重复；peerdisabled可焦点和无高亮停靠为真实合同，不强改peer。完整冻结SHA验收结果随交付记录；没有用局部通过替代完整verify。

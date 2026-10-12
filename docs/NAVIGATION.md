@@ -101,3 +101,9 @@ include清单按宿主实际正式入口扩展，特殊第三方/CJS依赖保持
 > 固定产品与 xui SHA，读取 AGENTS、adopt-xui 和真实 Vite/plugin/watch 配置。分别保存 fresh optimizer cache 与 warm cache 的安全日志、HMR full-reload 次数、主 Document 请求及 shell identity；确认是否出现 `dependency optimized` / `optimized dependencies changed. reloading`，逐个对应实际懒模块的公开深入口。只把无法扫描且真实使用的入口加入 optimizeDeps.include，保留插件与 peer dedupe；不用任意全扫描 glob、关 HMR、等几分钟、吞错或改生产构建来替代原因定位。从首次可操作菜单核 adapter 已接管，canNavigate=false 是 native fallback；路由 pending 在已接管的 navigate 内或真实 disabled 状态处理。确认公共 watch 的 BUILD_SUCCESS/sourceSha256 与 formal dist 代际；对 watch failure 保留旧产物并显示状态。按相同操作回归 cold/warm、键盘、修改键、回退前进、草稿和三主题，报告原因已证实/候选、实际 SHA、通过/失败/未跑。不用独立夹具结果代替产品现场归因，不访问用户电脑或真实凭据。
 
 公共 `pnpm dev` 默认持续构建所有包与消费者，`--packages-only` 只构建包。两者输出 `BUILD_SUCCESS <sourceSha256>` / `BUILD_ERROR` 与 `.artifacts/watch-status.json`；预览另运行 `pnpm preview`。watch 没有浏览器 HMR 客户端，采用 Vite 的产品拥有自己的 dev server。产物生成失败保留上一完整代际，不能把页面仍可打开当成新构建成功。生产消费者验收继续用 `pnpm test:consumer` 的独立 tarballs，不使用 optimizer 热修来修正式 prod。
+
+## 外壳的document与viewport滚动模式
+
+AppShell/MenuLayout及createMenuLayout新增scrollMode=document|viewport，默认document，保留原有文档滚动。原生公开标记为data-scroll-mode。viewport根为100dvh有界grid，正文行minmax(0,1fr)，sidebar/main均min-height:0且独立overflow:auto；窄屏复用既有drawer的有界Body，不加第二drawer。宿主嵌入非全窗口时给公开Root style的blockSize，不穿透私有子元素调整默认皮肤。
+
+viewport更新选中项以nearest进入所属侧栏可视区域；焦点依靠浏览器所属滚动区滚入可视区，菜单键盘规则不另建owner。同一main与内容节点更新保持滚动/输入；产品导航历史如何按route保存和恢复各容器scroll位置由宿主决定，不按route key重挂整个shell。官方两[控件消费者](WIDGETS.md)演示24项长菜单、长正文、横/纵滚动表格与反向导航；实际窄屏/文字放大和焦点验收见最终记录。

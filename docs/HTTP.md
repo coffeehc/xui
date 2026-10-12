@@ -82,3 +82,11 @@ parseListData 仅接受 list 数组/null、非负 safe integer total；不猜 it
 ErrorResponseAdapter可在client或单request明确配置；原生默认adapter保留Go字段，页面默认adapters显式选原生解析，并固定Accept:application/json及JSON写入Content-Type:application/json；保留其他宿主headers，不继承临时旧编码协议。HTTP status与业务code分开；任何body解析/投影失败保持HTTP事实和readFailure，不伪造成功。解码后结构化投影上限为64KiB JSON响应（当前先完整读取，非流式读取上限），message最多2048字符；details需显式allowlist投影，最多16KiB/depth8/512节点，拒绝函数/getter/prototype/cycle/unsafe整数。投影限制不等于后端脱敏；不能全量日志或直接弹出原始敏感响应。
 
 401仍在收到响应头时按现有epoch通知，不能依赖该早期回调取得body code。需要按旧宿主业务码判断失效的临时桥梁，显式unauthorized:ignore并由已有认证owner处理最终HttpError，不另造认证owner或吞掉401。跨origin下载需后端准确CORS与Expose-Headers允许Content-Disposition等所需字段；库不会绕过浏览器策略。
+
+## 明确的原生应用origin与transport
+
+createHttpClient({baseURL:'wails://wails/',nativeOrigin:'wails://wails',fetch:bridge})允许宿主显式声明hierarchical应用scheme/authority并注入原生fetch bridge。默认只接受HTTP(S)；自定义origin必须有host，不含URL凭据/query/hash或路径（空或/），拒绝http/https/data/blob/file/javascript/mailto作为nativeOrigin。原生同源按scheme、host、port三元组比对，绝不把不同自定义URL的origin=null当相同来源；所有目标再次拒绝凭据与外部tuple。
+
+native请求强制redirect:error，拒绝follow/manual；bridge必须实际遵守不自动跟随/透明改目标。非空Response.url在读取body前再次校验同一tuple，302等非2xx保留HTTP事实，不追Location。Response.url可为空的合成/桥接响应需要宿主保证真实目标，库无法观察桥内部的物理IO。取消、budget、401 latch、adapter/error metadata、safe headers及下载继续使用同一HTTP owner，无模拟HTTP baseURL、JS色板或业务重放。
+
+[合成测试](../tests/native-transport.test.mjs)覆盖wails://wails、不同host/scheme/port/凭据/返回URL/redirect、取消迟到、401状态与下载。Windows的HTTP(S)应用origin继续默认HTTP路径；Darwin/Linux自定义origin有新声明方式。三平台真实Wails窗口/bridge物理IO/Cookie/CORS/登录/下载尚未验，不能把合成fetch通过称作三平台兼容完成。

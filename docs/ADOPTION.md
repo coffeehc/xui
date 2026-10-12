@@ -121,3 +121,5 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 已上线xAgent的bearer/token/me/state与固定cookie登录合同不同，须单独升级评估；临时桥梁保留旧鉴权/业务、明确目标与移除条件。未发布项目直接向原生commons/webfacade/httpx标准化，由该项目自身授权实施。这里不授权修改后端、baseservice/commons、删除业务数据或部署。
 
 Vite开发接入还须核[冷启动与依赖优化](NAVIGATION.md#vite开发模式的已复现依赖优化刷新)：初始扫描看不到的lazy deep imports可在首次访问触发重新优化/full-reload；提前include实际正式入口并保留peer dedupe，分别验冷/暖cache。不把参考生产消费者无刷新当dev验收，也不靠等待、禁HMR或吞错解决。
+
+采用反馈新增公共能力见[WIDGETS](WIDGETS.md)：Command/date-only Calendar/ToggleGroup/Avatar/Accordion/ScrollArea/InputGroup，以及link/controlSize/readonly。完整登录slots在AUTH，原生origin在HTTP，viewport在NAVIGATION，sticky合成/子菜单在COMPOSITIONS。先用正式默认合同，业务需要通过声明props/data/callback扩展；不能改私有HTML或复制默认CSS。

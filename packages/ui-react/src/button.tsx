@@ -10,8 +10,8 @@ export type ButtonProps = React.ComponentProps<typeof BaseButton> & {
 export function Button({ className, variant='primary', size='default', type='button', onKeyDown, onKeyUp, onBlur, ...props }: ButtonProps) {
   const [pressed,setPressed]=React.useState(false);
   return <BaseButton {...props} type={type} className={branded('xui-button',className)} data-variant={variant} data-size={size} data-pressed={pressed}
-    onKeyDown={event=>{onKeyDown?.(event);if(!event.defaultPrevented && !event.baseUIHandlerPrevented && (event.key==='Enter'||event.key===' '&&props.role!=='link'))setPressed(true);}}
-    onKeyUp={event=>{onKeyUp?.(event);setPressed(false);}} onBlur={event=>{onBlur?.(event);setPressed(false);}} />;
+    onKeyDown={event=>{onKeyDown?.(event);if(event.key===' '&&event.currentTarget.tagName==='A'&&event.currentTarget.getAttribute('role')==='link')event.preventBaseUIHandler();if(!event.defaultPrevented && !event.baseUIHandlerPrevented && (event.key==='Enter'||event.key===' '&&props.role!=='link'))setPressed(true);}}
+    onKeyUp={event=>{onKeyUp?.(event);if(event.key===' '&&event.currentTarget.tagName==='A'&&event.currentTarget.getAttribute('role')==='link')event.preventBaseUIHandler();setPressed(false);}} onBlur={event=>{onBlur?.(event);setPressed(false);}} />;
 }
 export type IconButtonProps = ButtonProps & { 'aria-label': string };
 export function IconButton(props: IconButtonProps) { return <Button {...props} data-icon="true" />; }
