@@ -55,9 +55,11 @@ export function checkDesignDeclaration(property, input, context = '') {
 const breakpointValues = new Set(['48rem', '47.999rem', '640px', '40rem']);
 function checkQuery(query, context) {
   assert(!/var\s*\(/i.test(query), `${where(context)} Media queries cannot consume CSS variables`);
-  for (const match of query.matchAll(/(?:min-|max-)?(?:width|height)\s*:\s*([^\s)]+)/gi))
+  // The login contract declares only max-height:30rem, not a new width breakpoint.
+  const checked = query.replace(/\bmax-height\s*:\s*30rem\b/gi, '');
+  for (const match of checked.matchAll(/(?:min-|max-)?(?:width|height)\s*:\s*([^\s)]+)/gi))
     assert(breakpointValues.has(match[1]), `${where(context)} Undeclared media breakpoint ${match[1]}`);
-  for (const match of query.matchAll(/[-+]?(?:\d*\.\d+|\d+)(?:px|rem|em|vw|vh)\b/gi))
+  for (const match of checked.matchAll(/[-+]?(?:\d*\.\d+|\d+)(?:px|rem|em|vw|vh)\b/gi))
     assert(breakpointValues.has(match[0]), `${where(context)} Undeclared media breakpoint ${match[0]}`);
 }
 

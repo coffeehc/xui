@@ -5,7 +5,7 @@
   "sourceVersion": "0.4.0",
   "sourceSha256": "2a66fb8762f62ae5a452ed25d9c1bd383443e637c3529fcf7df6e9f9c56cc56c",
   "contractVersion": "0.7.0",
-  "defaultTokenCount": 345,
+  "defaultTokenCount": 349,
   "changes": [
     "Clarify action-primary-foreground in the role table.",
     "Map destructive component variant to existing action-danger/action-danger-foreground; distinguish soft danger.",

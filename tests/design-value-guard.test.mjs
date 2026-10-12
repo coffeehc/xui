@@ -93,3 +93,8 @@ test('source audit accepts semantic inline values, SVG coordinates and contract 
     'docs/GUIDE.md': '```css\n.a{margin:0;color:var(--foreground)}\n```',
   }, async root => { const result = await auditDesignSources({ root }); assert.equal(result.files, 4); assert.ok(result.declarations >= 5); });
 });
+
+test('source audit accepts the declared compressed login viewport height breakpoint',async()=>{
+  await fixture({'packages/theme/src/sample.css':'@media(max-width:30rem){.x{width:100%}}'},async root=>assert.rejects(auditDesignSources({root}),/Undeclared media breakpoint/));
+  await fixture({'packages/theme/src/sample.css':'@media(max-height:30rem){.xui-login-card{block-size:auto;min-block-size:100dvh}}'},async root=>assert.doesNotReject(auditDesignSources({root})));
+});

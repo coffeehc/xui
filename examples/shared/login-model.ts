@@ -17,7 +17,7 @@ export function createLoginExample(baseURL:string){
     return new Response(JSON.stringify(wire),{status,headers:{'Content-Type':'application/json','X-Request-ID':'demo:auth'}});
   };
   let auth:ReturnType<typeof createAuthClient>;const http=createHttpClient({baseURL,fetch,onUnauthorized:()=>auth.expire()});auth=createAuthClient({http,timeoutMs:1000});
-  const parameters=new URL(baseURL).searchParams;
-  const config:LoginPageConfig={...configData,productName:parameters.get('productName')??configData.productName,labels:{...configData.labels,submit:parameters.get('submitLabel')??configData.labels.submit},returnTo:parameters.get('returnTo')??'/workspace'};
+  const parameters=new URL(baseURL).searchParams;if(parameters.get('session')==='hold')modes.session='hold';
+  const config:LoginPageConfig={...configData,layout:parameters.get('layout')==='card'?'card':'fullscreen',productName:parameters.get('productName')??configData.productName,labels:{...configData.labels,credentialsError:parameters.has('longError')?'用户名或密码不正确，请核对当前服务地址和账户来源后再试。'.repeat(6):configData.labels.credentialsError,submit:parameters.get('submitLabel')??configData.labels.submit},returnTo:parameters.get('returnTo')??'/workspace'};
   return {auth,http,config,onAuthenticated(user:Readonly<AuthUser>,path:string){destinations.push({userId:user.id,path});},getDestinations:()=>destinations,getRequests:()=>requests,setMode(operation:string,mode:string){modes[operation]=mode;},setSession(value:AuthUser|null){session=value;},release(operation:string){const pending=holds.get(operation)??[];holds.delete(operation);pending.forEach(resolve=>resolve());},destroy(){auth.destroy();http.destroy();}};
 }

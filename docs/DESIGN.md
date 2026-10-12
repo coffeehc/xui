@@ -519,6 +519,10 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --nav-toggle-transform-origin: 60% 50%;
     --login-card-inline-size: calc(var(--layout-field-min) * 4);
     --login-card-block-size: calc(var(--layout-field-min) * 2.5);
+    --login-form-inline-size: calc(var(--layout-field-min) * 2);
+    --login-visual-max-block-size: 40dvh;
+    --login-feedback-min-block-size: calc(var(--line-height-body-sm) + var(--space-content-gap) * 2 + var(--line-width-surface) * 2);
+    --login-action-max-block-size: calc(var(--login-actions-max-block-size) - (var(--focus-width) + var(--focus-offset)) * 2);
     --login-panel-padding: calc(var(--space-section-gap) * 3);
     --login-logo-size: calc(var(--control-height-lg) * 2);
     --login-actions-max-block-size: 20dvh;
@@ -1142,7 +1146,7 @@ DropdownMenu/ContextMenu及共用菜单项角色显式绑定body-xs字号/行高
 
 ### 公共登录页布局与主题
 
-公共登录页宽屏采用左右分割：品牌区显示可配置的产品标识、名称和说明，表单区承载标题、输入、状态和操作；窄屏改为品牌在上、表单在下，不造成横向溢出。长品牌文字、配置表单和错误可滚动，主操作保持可达；沿用公共语义表面、边界、字号和间距，不新增页面尺寸档位或业务专属装饰。
+公共登录页默认采用整个动态视口左右分区，品牌/表单面板覆盖页面，没有外部居中卡片边框、圆角或大留白，只保留中间分隔。表单内容由login-form-inline-size限定可读宽度，面板沿用公共内距；显式layout=card才保留旧卡片尺寸。品牌配置标识/名称/说明，可通过brandVisual放非交互装饰图；装饰区inert且不参与朗读，窄屏收起图并改为紧凑品牌在上、表单在下。长品牌、配置表单和错误可滚动；高度不超过30rem为短视口文档滚动断点，不能将控件困在过小滚动区。正文及操作区内部保留focus-width+focus-offset四边空间和滚动安全距离，外层padding不能代替内部焦点裁切修复，不修改全局焦点token。反馈保留单行状态空间以稳定首次检查/匿名/普通错误的字段位置；认证协议、主题和成功回跳不变。默认和迁移边界见AUTH，未执行真实像素回归不能宣称视觉验收完成。
 
 登录页不另放主题选择器，直接继承已有本地偏好和单一根主题所有者；没有已保存偏好时默认跟随系统。首屏初始化先于可见内容，三模式及系统变化仍按本规范执行；不因登录页布局迁移更换既有存储 key/格式，也不改变认证会话或凭据。
 

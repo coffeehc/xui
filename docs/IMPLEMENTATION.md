@@ -54,7 +54,7 @@ foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控
 | 通知 | Toast Provider/manager/Root/Content/Viewport/Close 等复用 peer。peer 支持 collapsed/expanded，关闭控件在展开状态可访问，宿主不能将必要错误仅放在消失通知中 |
 | 表格 | Table/Container/Caption/Head/Body/Row/HeaderCell/Cell/SortButton，真实 table，striped/expandedRow、TableExpandedRow/ExpandButton、sticky start/end及显式stickyOffset，named overflow region，scope/aria-sort/selected 由宿主事实提供。无排序/选择/查询/虚拟化引擎 |
 | 组合管理页 | ApiKeyManager、BusinessLogExplorer、StructuredLogExplorer 使用 runtime 共享 controller；原生 createApiKeyManager/createBusinessLogExplorer/createStructuredLogExplorer 生成完整结构。领域回调、日志拟议 facade、详情权限由宿主，详见 [API_KEY.md](API_KEY.md)、[BUSINESS_LOGS.md](BUSINESS_LOGS.md)、[LOGS.md](LOGS.md) |
-| 配置登录页 | ConfigurableLoginPage 与原生 createLoginPage 使用同一 auth/theme owner，宽屏左品牌/右表单、窄屏上下布局；登录页无主题选择器，首屏沿已有 localStorage 偏好、无值默认 system；公开品牌文案/logo/labels/安全回跳；内部复用基础控件/CSS。固定 v1 cookie 三路由与 DTO、15 秒预算和密码清理见 [AUTH.md](AUTH.md)，实际后端尚未实施 |
+| 配置登录页 | ConfigurableLoginPage 与原生 createLoginPage 使用同一 auth/theme owner，默认整个动态视口左品牌/右表单（显式 card 保留旧卡片），窄屏上下布局，装饰 brandVisual 窄屏收起；正文/操作滚动区保留四边焦点安全空间；登录页无主题选择器，首屏沿已有 localStorage 偏好、无值默认 system；公开品牌文案/logo/labels/安全回跳；内部复用基础控件/CSS。固定 v1 cookie 三路由与 DTO、15 秒预算和密码清理见 [AUTH.md](AUTH.md)，实际后端尚未实施 |
 | 状态 | Surface/Alert、Badge/Skeleton/Spinner/Progress、Loading/Empty/ErrorState、DataRegion、RenderBoundary、useResource。错误/重试文字由宿主；render exception 重置不重试 Promise |
 
 Dialog 关闭不会自动保存；移除触发器时指定 finalFocus。浮层非模态时不 trap 焦点，模态与取消/回焦点按 peer。Tooltip.Content 内只有说明，交互内容用 Popover。动画使用统一 motion token；reduced-motion 下状态立即变化。

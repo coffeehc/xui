@@ -87,7 +87,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 | Surface/Alert/Badge/Skeleton/Spinner/Progress | children/tone/标准元素状态 | 默认层级/role/status/motion，必要事实持续可见 |
 | DataRegion/LoadingState/EmptyState/ErrorState/RenderBoundary | busy/value、反馈、retry/cancel 与 render fallback | 刷新保留旧值，错误即时可见；render 异常与异步失败分开 |
 | ApiKeyManager/createApiKeyManager | 一个共享 controller、metadata/声明权限和有效期、领域 adapter | 脱敏列表、创建/一次性结果、明确复制/撤销确认、关闭竞态；labels/React headerActions |
-| ConfigurableLoginPage/createLoginPage | 一个共享 auth/theme owner、品牌/标题/说明/logo/labels、安全 returnTo、onAuthenticated | 完整字段/错误/防重/取消/主题/登录退出与会话核对；固定路由与 DTO，密码不进 URL/storage/log，无隐式旧协议猜测 |
+| ConfigurableLoginPage/createLoginPage | 一个共享 auth/theme owner；默认 fullscreen / 显式 card、装饰 brandVisual；品牌/标题/说明/logo/labels、安全 returnTo、onAuthenticated | 完整字段/错误/防重/取消/主题/登录退出与会话核对；固定路由与 DTO，密码不进 URL/storage/log，无隐式旧协议猜测 |
 | BusinessLogExplorer/createBusinessLogExplorer | 一个共享 controller、公共日志字段、显式 list/detail loader、独立领域 JSON payload | 只读日志表格/过滤/授权详情、cursor 快照、文本回退/注册 renderer；不承诺日志写入可靠性 |
 | StructuredLogExplorer/createStructuredLogExplorer | 一个共享 controller、明确 v1 DTO/facade、filter/cursor、详情权限与保留期 | 只读分组/观察/详情、缓存已访问摘要段、持续错误/取消、普通文本；labels/host Ref mapping/React headerActions |
 | theme/resource/HTTP/query | 单 owner、key/loader/Abort/预算、endpoint adapter/query contract | 共享类型/终止/迟到隔离，默认不重试，401/403 分开，list/total 和基数明确 |

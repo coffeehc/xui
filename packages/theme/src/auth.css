@@ -1,24 +1,41 @@
 @layer xui-components {
-  .xui-login-page {min-block-size:100dvh;display:grid;place-items:center;padding:var(--layout-viewport-inset);}
-  .xui-login-card {inline-size:min(100%,var(--login-card-inline-size));block-size:min(calc(100dvh - var(--layout-viewport-inset)*2),var(--login-card-block-size));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding:0;min-inline-size:0;overflow:hidden;}
+  .xui-login-page {min-block-size:100dvh;display:grid;}
+  .xui-login-card {inline-size:100%;block-size:100dvh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-inline-size:0;min-block-size:0;background:var(--card-background);overflow:hidden;}
+  .xui-login-page[data-layout='card'] {place-items:center;padding:var(--layout-viewport-inset);}
+  .xui-login-page[data-layout='card'] .xui-login-card {inline-size:min(100%,var(--login-card-inline-size));block-size:min(calc(100dvh - var(--layout-viewport-inset)*2),var(--login-card-block-size));border:var(--line-width-surface) solid var(--card-border-color);border-radius:var(--card-radius);}
   .xui-login-brand {display:flex;flex-direction:column;justify-content:safe center;gap:var(--space-section-gap);min-inline-size:0;min-block-size:0;overflow:auto;padding:var(--login-panel-padding);background:var(--layer-support);border-inline-end:var(--line-width-surface) solid var(--separator-line);overflow-wrap:anywhere;}
   .xui-login-identity {display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-section-gap);min-inline-size:0;}
   .xui-login-brand strong {min-inline-size:0;font:var(--font-weight-heading) var(--font-size-page-title)/var(--line-height-page-title) var(--font-heading);overflow-wrap:anywhere;}
   .xui-login-logo {inline-size:var(--login-logo-size);block-size:var(--login-logo-size);object-fit:contain;flex-shrink:0;}
   .xui-login-description {margin:0;color:var(--muted-foreground);}
-  .xui-login-form {display:flex;flex-direction:column;justify-content:safe center;gap:var(--space-section-gap);min-inline-size:0;min-block-size:0;padding:var(--login-panel-padding);}
+  .xui-login-visual {display:grid;place-items:center;min-inline-size:0;}
+  .xui-login-visual :is(img,svg,picture) {display:block;max-inline-size:100%;max-block-size:var(--login-visual-max-block-size);object-fit:contain;}
+  .xui-login-form {display:flex;flex-direction:column;justify-content:safe center;align-items:center;gap:var(--space-section-gap);min-inline-size:0;min-block-size:0;padding:var(--login-panel-padding);}
+  /* The scrollport owns the focus clearance. Padding on the outer form cannot
+     protect an outline clipped by this inner scrollport. Keep all four sides. */
+  .xui-login-body,.xui-login-actions {inline-size:min(100%,var(--login-form-inline-size));padding:calc(var(--focus-width) + var(--focus-offset));scroll-padding:calc(var(--focus-width) + var(--focus-offset));}
+  .xui-login-body :is(input,select,textarea,button,a,[tabindex]),.xui-login-actions :is(button,a,[tabindex]) {scroll-margin:calc(var(--focus-width) + var(--focus-offset));}
   .xui-login-body {overflow:auto;min-block-size:0;display:grid;gap:var(--space-section-gap);overflow-wrap:anywhere;}
   .xui-login-body h1,.xui-login-body p {margin:0;}
+  .xui-login-feedback {min-block-size:var(--login-feedback-min-block-size);}
   .xui-login-actions {display:flex;flex-wrap:wrap;gap:var(--space-control-gap);flex-shrink:0;min-inline-size:0;max-block-size:var(--login-actions-max-block-size);overflow:auto;}
-  .xui-login-actions>.xui-button {flex:1;min-inline-size:0;max-block-size:var(--login-actions-max-block-size);overflow:auto;align-items:safe center;}
+  .xui-login-actions>.xui-button {flex:1;min-inline-size:0;max-block-size:var(--login-action-max-block-size);overflow:auto;align-items:safe center;}
   .xui-login-extension {margin:0;padding:0;border:0;min-inline-size:0;display:grid;gap:var(--space-control-gap);}
   .xui-login-extension:empty {display:none;}
   @media (max-width:47.999rem) {
     .xui-login-card {grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);}
     .xui-login-brand {max-block-size:var(--login-brand-max-block-size);gap:var(--space-control-gap);padding:var(--space-section-gap);border-inline-end:0;border-block-end:var(--line-width-surface) solid var(--separator-line);}
-    .xui-login-identity {flex-direction:row;align-items:center;gap:var(--space-content-gap);}
+    .xui-login-identity {flex-direction:row;align-items:center;gap:var(--space-control-gap);}
     .xui-login-identity strong {flex:1;}
     .xui-login-logo {inline-size:var(--control-height-lg);block-size:var(--control-height-lg);}
+    .xui-login-visual {display:none;}
     .xui-login-form {padding:var(--space-section-gap);}
+  }
+}
+@layer xui-components {
+  /* A compressed visual viewport (for example, a soft keyboard) must be able
+     to scroll the document rather than trapping a control in a tiny pane. */
+  @media (max-height:30rem) {
+    .xui-login-card,.xui-login-page[data-layout='card'] .xui-login-card {block-size:auto;min-block-size:100dvh;}
   }
 }

@@ -53,6 +53,7 @@ const http = createHttpClient({
 });
 const auth = createAuthClient({http});
 const config = {
+  layout: 'fullscreen', // 默认值；只有明确需要旧居中卡片时选 'card'。
   productName: '工作台', title: '登录工作台', description: '继续处理你的工作。',
   logo: {src: '/assets/logo.svg', alt: '工作台'}, returnTo: '/work',
   // labels: 本地化字符串；没有结构/HTML/内部 CSS override。
@@ -61,7 +62,13 @@ const config = {
 
 React：`<ConfigurableLoginPage auth={auth} theme={theme} config={config} />`。原生：`createLoginPage(root,{auth,theme,config})`；factory 返回 `getElement/destroy`，不销毁共享 auth/theme。先加载公共 CSS 与同步 init，复用 `window.xuiTheme`，不新建竞争主题 owner。
 
-公共登录页默认采用左右分割：宽屏左侧显示产品 logo、名称与说明，右侧显示标题、登录字段和操作；窄屏切为紧凑品牌区在上、表单在下。品牌文字仍由 `productName/description/logo` 配置，不内置业务宣传或产品专属图形。全部表面、字体、间距、边界和控件复用公共语义 token，不建立登录页独立尺寸档位。
+公共登录页默认 `config.layout="fullscreen"`，左右面板覆盖整个动态视口：宽屏左侧品牌、右侧标题/字段/操作，保留中间分隔线，没有居中卡片外框、圆角或四周大留白。表单内容使用 `--login-form-inline-size` 保持可读宽度，面板内距仍来自公共 token；不能用消费方固定像素或重复页面皮肤补偿。窄屏改为紧凑品牌在上、表单在下；长品牌限制于品牌滚动区，不抢占全部表单空间。视口高度很短（包括软键盘压缩的情形）时允许文档滚动，不把输入困在不足一个控件高的内部区域。`dvh` 随浏览器可用视口变化，真实移动 OS/输入法仍需产品验收。
+
+`LoginPageLayout` 从 runtime auth/root 和 React login/root 导出，值为 `fullscreen | card`。显式 `config.layout="card"` 保留旧居中受限卡片；未设置即为新的全屏默认，升级只涉及公开展示布局，消费者如果要暂时保留旧观感必须明确选 card。两种布局共用主题、字段、状态、防重、取消与认证 owner，不使用不同协议或额外请求。旧 login-card 尺寸 token 仅控制 card，不能限制默认全屏。这里没有升级、部署或改变 xAgent 生产代码。
+
+可选 `brandVisual` 是正式装饰图片区 slot：React 接收 `ReactNode`，原生接收 `HTMLElement`。例如 React 可传 `<img src="/assets/login-illustration.svg" alt="" />`，原生构造同样的 img 传入；无需复制内部 DOM/CSS。slot 使用公共尺寸约束，`aria-hidden` 与 `inert` 使其不参与朗读或键盘顺序，窄屏收起以优先保留字段。不要放交互、关键说明或唯一产品名称；产品标识/名称/说明继续用 `logo/productName/description`，始终保留。宿主负责传入可信、安全的图资源；xui 不内置业务宣传、远端追踪图片或产品专属插画。
+
+正文和操作滚动区在各自内部保留 `--focus-width + --focus-offset` 的四边安全空间，并提供 scroll-padding/scroll-margin。不能仅在外层 form 加 padding，也不能把所有 overflow 改为 visible，或更改全局焦点 token 来隐藏裁切。表单反馈有稳定的单行状态占位，首次会话检查、匿名可输入和普通错误不重新居中整组字段；长错误可以增长并滚动，未删除错误信息。成功确认用户及宿主导航行为保持现有合同。
 
 登录页不再展示主题选择器。它沿用宿主已有主题 owner 与首屏初始化；默认 owner 读取 `localStorage["ui.theme.mode"]`，有效值仅 `light/dark/system`，未保存、未知值或读取失败默认 `system`。不将生效的浅/深色写回偏好，不创建另一份 sessionStorage，也不更改认证会话或凭据存储。宿主已有受控主题/自定义 key 保持原合同，主题入口由登录后的应用设置提供；`theme` 参数和已有本地化字段保留公开接口兼容，但页面不再订阅或改变选择器状态。
 
@@ -94,3 +101,7 @@ beforeSubmit与actions[{id,label,disabled?,run}]接收只含username和AbortSign
 公共页等待扩展时同时禁用配置/重复动作，可取消不合作Promise的本地等待；generation拒绝迟到登录/回跳，pagehide/unmount释放。扩展开始即清DOM密码，credential对象在结束时清空；扩展失败显示固定errorLabel（默认“登录配置或认证方式暂不可用，请检查后重试。”），不透出异常body，也不让先前认证错误遮盖当前扩展失败。回调自己的外部副作用/标准跳转仍须服从signal，取消本地等待不保证外部服务回滚。
 
 正式两宿主示例加`?extensions`，分别演示服务地址输入、本地/LDAP来源和企业OIDC/SAML动作，仅用[合成模型](../examples/shared/login-extensions.ts)。其测试证明slot与共享owner/取消边界，不证明真实LDAP、SSO、Cookie/CSRF或Desktop认证链已迁移。
+
+## 布局与焦点绘制回归
+
+`tests/browser/login-layout.spec.mjs` 在正式 tarball 两个消费者上覆盖 1280/1600 宽屏、390 窄屏、三主题、200% 文字、短视口、显式 card、装饰 slot、会话检查与普通错误的字段位置。焦点回归对用户名、密码、首个服务配置、SSO/提交及错误反馈逐一截取真实浏览器画面，读取四条 outline 中段像素与真实颜色比较；只断言 computed outline 不算通过。页面和框架没有私有登录皮肤，长错误/LDAP/SSO/取消与安全回跳继续由既有 auth/extension 用例覆盖。截图与绘制测试只有在真实浏览器执行成功后才能作为通过证据；浏览器不可启动、未跑或 CI 被阻塞必须单独披露，源码/SSR 检查不能替代视觉验收。

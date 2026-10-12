@@ -64,3 +64,9 @@ test('auth subscriptions may expire or destroy during completion without returni
   for(const action of ['expire','destroy']){const {auth}=owner(async()=>json(wire(session)));auth.subscribe(()=>{if(auth.getState().status==='authenticated')auth[action]();});await assert.rejects(auth.login({username:'demo',password:'FAKE_PASSWORD'}),error=>error.kind==='cancel');assert.equal(auth.getState().user,null);assert.equal(auth.getState().busy,null);}
   const config=resolveLoginPageConfig({productName:'产品',returnTo:'//evil.example',fallbackReturnTo:'/safe',logo:{src:'/logo.svg'}});assert.equal(config.returnTo,'/safe');assert(Object.isFrozen(config.labels));assert.equal(config.logo.alt,'产品');for(const src of ['javascript:alert(1)','data:text/html,FAKE','https://name:password@example.com/a.svg'])assert.throws(()=>resolveLoginPageConfig({productName:'产品',logo:{src}}));
 });
+
+test('login presentation layout defaults to fullscreen and validates the explicit card option',()=>{
+  assert.equal(resolveLoginPageConfig({productName:'产品'}).layout,'fullscreen');
+  assert.equal(resolveLoginPageConfig({productName:'产品',layout:'card'}).layout,'card');
+  for(const layout of ['wide','',1,{}])assert.throws(()=>resolveLoginPageConfig({productName:'产品',layout}),/Invalid login layout/);
+});
