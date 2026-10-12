@@ -26,6 +26,13 @@
   .xui-data-table-tools,.xui-data-table-feedback {flex:none;min-inline-size:0;}
   .xui-data-table-frame {display:flex;flex-direction:column;flex:1 1 auto;min-block-size:0;min-inline-size:0;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
   .xui-data-table[data-layout='workspace']>.xui-data-table-frame {flex:1 1 0;}
+  /* One colgroup owns all tracks. Only opted-in tables stop content from resizing columns. */
+  .xui-data-table-body>.xui-table[data-column-sizing] {table-layout:fixed;}
+  /* With every track sized, let CSS expand from zero to the sum of the col widths. */
+  .xui-data-table-body>.xui-table[data-column-sizing='sized'] {inline-size:0;min-inline-size:0;}
+  .xui-data-table-widths {position:absolute;inset-inline:0;inset-block-start:0;block-size:0;overflow:hidden;visibility:hidden;pointer-events:none;}
+  .xui-data-table-widths>* {block-size:0;min-inline-size:0;}
+  .xui-data-table-body[data-column-sizing] {position:relative;}
   .xui-data-table-body {flex:1 1 auto;min-block-size:var(--control-height);border:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
   .xui-data-table[data-layout='workspace'] .xui-data-table-body {flex:1 1 0;}
   .xui-data-table-footer {display:flex;align-items:center;flex:none;flex-wrap:wrap;min-inline-size:0;gap:var(--space-control-gap) var(--space-section-gap);padding:var(--space-control-gap) var(--space-content-gap);border-block-start:var(--line-width-surface) solid var(--surface-line);border-radius:0 0 var(--radius-lg) var(--radius-lg);background:var(--layer-raised);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);overflow-wrap:anywhere;}

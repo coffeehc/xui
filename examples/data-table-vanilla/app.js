@@ -46,8 +46,11 @@ const columns=[
     return {element:action,update(next){current=next;action.dataset.rowId=next.id;action.setAttribute('aria-label',`查看记录 ${next.id}`);},destroy(){action.onclick=null;}};
   }},
 ];
+let columnView={mode:query.has('widths')?'mixed':'auto',hidden:[]};
+const widths={id:112,name:'clamp(12rem, 35%, 28rem)',kind:'calc(10% + 1rem)',source:'7rem',actions:120};
+const visibleColumns=()=>columns.filter(column=>!columnView.hidden.includes(column.id)).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'?160:undefined):widths[column.id]}));
 const tableRoot=element('section');tableRoot.id='records-table';
-const tableOptions=()=>{const state=owner.getState();return {label:'合成记录表格',rows:state.rows,columns,rowKey,status:state.status,filtered:state.filtered,labels:tableLabels,onRetry:owner.retry,striped:true,toolbar:internal?toolbar:undefined,pagination:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:owner.pageSize}};};
+const tableOptions=()=>{const state=owner.getState();return {label:'合成记录表格',rows:state.rows,columns:visibleColumns(),rowKey,status:state.status,filtered:state.filtered,labels:tableLabels,onRetry:owner.retry,striped:true,toolbar:internal?toolbar:undefined,pagination:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:owner.pageSize}};};
 const table=cards?undefined:createDataTable(tableRoot,tableOptions());
 // These classes are the documented public ScrollArea/Grid/Surface native structure.
 const cardRoot=element('div',undefined,'xui-scroll-area');cardRoot.style.blockSize='100%';cardRoot.dataset.testid='record-cards';
@@ -80,6 +83,6 @@ const shell=createMenuLayout(root,{items:[{id:'records',label:'合成记录',hre
 const unsubscribe=owner.subscribe(render);render();
 let dead=false;
 function destroy(){if(dead)return;dead=true;unsubscribe();owner.destroy();table?.destroy();shell.destroy();if(oldMinimum)root.style.setProperty(contentMinimum,oldMinimum,oldPriority);else root.style.removeProperty(contentMinimum);for(const control of Object.values(controls)){control.oninput=null;control.onchange=null;}for(const control of [refresh,fail,restoreButton,cancel,clear])control.onclick=null;for(const card of retainedCards.values())card.action.onclick=null;retainedCards.clear();}
-window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions]};
+window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions],setColumnView:(mode,hidden=[])=>{columnView={mode,hidden};render();}};
 if(!query.has('manual'))owner.load();
 window.addEventListener('pagehide',destroy,{once:true});

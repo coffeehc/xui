@@ -50,3 +50,20 @@ test('React empty optional slots do not reserve wrappers and numeric zero remain
   for(const toolbar of ['',null,undefined,false,[],React.createElement(React.Fragment)])assert.doesNotMatch(render({toolbar}),/class="xui-data-table-tools"/);
   const zero=render({toolbar:0,feedback:0,footer:0});assert.match(zero,/class="xui-data-table-tools">0<\/div>/);assert.match(zero,/class="xui-data-table-feedback">0<\/div>/);assert.match(zero,/class="xui-data-table-footer-extra">0<\/div>/);
 });
+
+test('width accepts finite pixels, CSS lengths and responsive expressions, rejecting invalid shapes',()=>{
+  for(const width of [0,128,1.5,'12rem','25%','clamp(12rem, 35%, 30rem)','calc(50% - 1rem)','min(20vw, 12rem)','max(10rem, 30%)','var(--layout-field-min)'])assert.doesNotThrow(()=>validateDataTableKeys([],[{id:'one',width}],row=>row.id));
+  for(const width of [-1,NaN,Infinity,-Infinity,null,true,{},[],['12rem'],'','120','auto','-1px','1fr','200px; color:red','clamp(1rem, 50%, 20rem','calc()','calc(1rem)) calc(2rem)','calc(1px/*no*/)'])assert.throws(()=>validateDataTableKeys([],[{id:'one',width}],row=>row.id),/DataTable width/);
+});
+test('browser CSS parser rejects malformed width math before rendering',()=>{
+  const prior=Object.getOwnPropertyDescriptor(globalThis,'CSS');globalThis.CSS={supports:(property,value)=>property==='width'&&value==='calc(50% - 1rem)'};
+  try{assert.throws(()=>validateDataTableKeys([],[{id:'one',width:'calc(bad)'}],()=>''),/DataTable width/);assert.doesNotThrow(()=>validateDataTableKeys([],[{id:'one',width:'calc(50% - 1rem)'}],()=>''));}
+  finally{if(prior)Object.defineProperty(globalThis,'CSS',prior);else delete globalThis.CSS;}
+});
+test('React widths use a single colgroup while empty, hidden and reordered columns remain aligned structurally',()=>{
+  const named={...columns[0],width:'clamp(12rem, 35%, 30rem)'},fixed={id:'fixed',header:'Fixed',cell:()=> 'Value',width:128,sticky:'end'};
+  const html=render({columns:[named,fixed]});assert.match(html,/data-column-sizing="sized"/);assert.match(html,/<colgroup><col style="width:clamp\(12rem, 35%, 30rem\)"\/><col style="width:128px"\/><\/colgroup>/);assert.match(html,/class="xui-data-table-widths" aria-hidden="true"/);
+  assert.match(render({columns:[named,{...fixed,width:undefined}]}),/data-column-sizing="mixed"/);assert.doesNotMatch(render({}),/data-column-sizing=/);
+  const empty=render({columns:[fixed,named],rows:[]});assert.match(empty,/colspan="2"/i);assert.ok(empty.indexOf('width:128px',empty.indexOf('<colgroup>'))<empty.indexOf('width:clamp(',empty.indexOf('<colgroup>')));
+  const hidden=render({columns:[fixed]});assert.equal((hidden.match(/<col style=/g)||[]).length,1);assert.doesNotMatch(hidden,/Record name/);assert.match(hidden,/data-sticky="end"/);
+});

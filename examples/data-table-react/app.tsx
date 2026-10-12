@@ -21,13 +21,18 @@ const rowKey=(row:ExampleRow)=>row.id;
 const filters=[{name:'kind',label:'类型',values:['记忆','会话']},{name:'scope',label:'范围',values:['个人','共享']},{name:'source',label:'来源',values:['手动','导入']}] as const;
 const restore=()=>owner.setEmpty(false);
 const actions:string[]=[];
+type WidthMode='auto'|'mixed'|'sized';
+let configureColumns:(mode:WidthMode,hidden?:string[])=>void=()=>{};
+const widths={id:112,name:'clamp(12rem, 35%, 28rem)',kind:'calc(10% + 1rem)',source:'7rem',actions:120} as const;
 let dead=false;
 const destroy=()=>{if(dead)return;dead=true;root.unmount();owner.destroy();};
-declare global {interface Window {dataTableDemo:{owner:ReturnType<typeof createDataTableExample>;restore:()=>void;destroy:()=>void;getActions:()=>string[]}}}
-window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions]};
+declare global {interface Window {dataTableDemo:{owner:ReturnType<typeof createDataTableExample>;restore:()=>void;destroy:()=>void;getActions:()=>string[];setColumnView:(mode:WidthMode,hidden?:string[])=>void}}}
+window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions],setColumnView:(mode,hidden)=>configureColumns(mode,hidden)};
 
 function App(){
   const state=React.useSyncExternalStore(owner.subscribe,owner.getState,owner.getState);
+  const [columnView,setColumnView]=React.useState<{mode:WidthMode;hidden:string[]}>({mode:query.has('widths')?'mixed':'auto',hidden:[]});
+  React.useLayoutEffect(()=>{configureColumns=(mode,hidden=[])=>setColumnView({mode,hidden});return()=>{configureColumns=()=>{};};},[]);
   const [inspected,setInspected]=React.useState('尚未查看');
   const inspect=React.useCallback((row:ExampleRow)=>{actions.push(row.id);setInspected(`已查看 ${row.id}`);},[]);
   // Stable callbacks and row keys preserve the action node across confirmed reads.
@@ -40,6 +45,7 @@ function App(){
     {id:'source',header:'来源',cell:row=>row.source},
     {id:'actions',header:'操作',sticky:'end',cell:row=><Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button>},
   ],[inspect]);
+  const visibleColumns=React.useMemo(()=>columns.filter(column=>!columnView.hidden.includes(column.id)).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'?160:undefined):widths[column.id as keyof typeof widths]})),[columns,columnView]);
   const toolbar=<DataTableToolbar aria-label="记录筛选" data-testid="record-filters">
     <DataTableFilter label="搜索记录" grow><Input type="search" value={String(state.filters.search??'')} onChange={event=>owner.filter('search',event.currentTarget.value)}/></DataTableFilter>
     {filters.map(filter=><DataTableFilter label={filter.label} key={filter.name}><NativeSelect value={String(state.filters[filter.name]??'')} onChange={event=>owner.filter(filter.name,event.currentTarget.value)}><option value="">全部{filter.label}</option>{filter.values.map(value=><option key={value} value={value}>{value}</option>)}</NativeSelect></DataTableFilter>)}
@@ -48,7 +54,7 @@ function App(){
   const pageHeader=<PageHeader data-testid="record-header" title={title}
     meta={<p>125 条合成记录；不连接业务服务。<output aria-label="查看结果">{inspected}</output></p>}
     actions={<><Button onClick={()=>owner.refresh()} disabled={state.busy}>刷新</Button><Button variant="outline" onClick={()=>owner.refresh(true)} disabled={state.busy}>模拟失败</Button><Button variant="outline" onClick={restore} disabled={state.busy}>恢复记录</Button><Button variant="outline" onClick={owner.cancel} disabled={!state.busy}>取消请求</Button></>}/>;
-  const table=<DataTable id="records-table" label="合成记录表格" rows={state.rows} columns={columns} rowKey={rowKey}
+  const table=<DataTable id="records-table" label="合成记录表格" rows={state.rows} columns={visibleColumns} rowKey={rowKey}
     status={state.status} filtered={state.filtered} labels={tableLabels} onRetry={owner.retry} striped
     toolbar={internal?toolbar:undefined}
     pagination={{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:owner.pageSize}}/>;

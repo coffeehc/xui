@@ -177,3 +177,5 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 原生 `MenuLayoutOptions.sidebar?:Node|null` 可替换完整菜单区域，省略/null恢复默认数据菜单；稳定节点、替换焦点和清理边界见[原生自组sidebar](NAVIGATION.md#原生完整自组-sidebar)。它复用同一个shell，不占sidebarHeader限定高度。React使用现有AppShell.sidebar组合。
 
 公共 DataTable/DataTableToolbar/DataTableFilter 与原生 createDataTable/createDataTableToolbar/createDataTableFilter 复用表格和页内槽，合同见 [DATA_TABLE](DATA_TABLE.md)。顶栏语言入口默认无常驻外框和装饰SVG箭头，controls/account紧凑但命中区不减，见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。
+
+`DataTableColumn<T>` / `NativeDataTableColumn<T>` 追加 `width?:DataTableColumnWidth`；共享类型从 runtime/data-table、runtime/data-table-dom、React/data-table 及 runtime/React 根入口导出。number 为有限非负 CSS 像素，字符串为 length/百分比或 calc/clamp/min/max/var 表达式；形状类型与 SSR 结构校验不代替浏览器 CSS/数学解析。未配置维持原自动布局，混合列由未配置列吸收余量，全部配置按列总宽布局；百分比和混合表达式以表体可用宽度解析，表头与全部数据单元格共用 colgroup 列轨道。`0` 不隐藏列，默认长文本换行而不裁切操作或焦点；不新增品牌尺寸 token、业务列或多 sticky 列自动偏移。完整值校验、内容与布局边界见 [列宽合同](DATA_TABLE.md#列宽与内容边界)。

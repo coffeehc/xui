@@ -7,11 +7,36 @@
 ## 责任与最小接口
 
 - 库提供表格整体、表体滚动、自然流底栏、列头/单元结构、筛选排列、状态反馈、键盘与默认视觉。宿主提供数据、列/行键、业务筛选、权限、排序/选择事实与业务动作。
-- `DataTable<T>` / `createDataTable<T>` 必填 `label`、`rows`、`columns`、`rowKey`。每列有唯一 `id`、`header`、`cell(row, context)`；React cell 返回 ReactNode，原生返回 Node/文本或下述生命周期 slot。列可声明 `ariaSort` 和 `sticky:'start'|'end'`，复用原有表格样式；排序按钮放 header，真实排序通过宿主回调完成。
+- `DataTable<T>` / `createDataTable<T>` 必填 `label`、`rows`、`columns`、`rowKey`。每列有唯一 `id`、`header`、`cell(row, context)`；React cell 返回 ReactNode，原生返回 Node/文本或下述生命周期 slot。列可声明 `width`、`ariaSort` 和 `sticky:'start'|'end'`，复用原有表格样式；排序按钮放 header，真实排序通过宿主回调完成。
 - `rowState(row)` 可提供 `selected/expanded` 事实。这里没有选择、排序、虚拟化或编辑状态引擎；展开明细、复杂合并单元格继续按已有 Table 原语组合，不伪装成已支持的 DataTable 特性。
 - `status` 明确为 `idle/loading/ready/refreshing/error`，默认为 ready。`disabled` 阻止组件自有分页/条数/重试动作；单元业务动作由宿主按真实权限决定，context 提供 busy/disabled 事实。只读查看可在刷新时继续可用，不把整个表体设为 inert。
 - `toolbar`、`emptyState`、`errorState`、`feedback`、`footer` 是公开插槽；没有默认业务动作或自动写入。`labels` 覆盖加载、错误、空态、分页和 `count({rowCount,total})` 文案。
 - 所有 rowKey 必须唯一、稳定，字符串/数字经文本化也不能重合；列 id 唯一非空。空列、不合法 page facts 在渲染之前拒绝。
+
+## 列宽与内容边界
+
+`DataTableColumn<T>.width` 与 `NativeDataTableColumn<T>.width` 同为可选 `DataTableColumnWidth`。该类型从 `@coffeehc/xui-runtime/data-table`、`@coffeehc/xui-runtime/data-table-dom`、`@coffeehc/xui-react/data-table` 以及 runtime、React 根入口导出。列宽是宿主按列内容或用户配置传入的尺寸，不重定义品牌 token，也不让库新增业务列、读取用户偏好或保存列配置。
+
+```tsx
+import type {DataTableColumn, DataTableColumnWidth} from '@coffeehc/xui-react/data-table';
+
+type Row = {id: string; name: string};
+const nameWidth: DataTableColumnWidth = 'clamp(12rem, 50%, 32rem)';
+const columns: readonly DataTableColumn<Row>[] = [
+  {id: 'id', header: '标识', width: 160, cell: row => row.id},
+  {id: 'name', header: '名称', width: nameWidth, cell: row => row.name},
+];
+```
+
+- number 是 CSS 像素，运行时必须有限且非负；`0` 合法，但不表示隐藏列。隐藏列应由宿主过滤 `columns`，不能依靠零宽隐藏仍存在的表头、数据或交互。
+- 字符串支持有单位的 CSS length（如 `'12rem'`、`'160px'`）、百分比（如 `'25%'`）、`calc(...)`、`clamp(...)`、`min(...)`、`max(...)` 和 `var(--...)`。裸数字字符串（如 `'160'`）、`auto`、对象、数组和 boolean 不是本接口的宽度值；自动列省略 `width`。
+- TypeScript 模板字符串限制值的形状，不是完整 CSS 或数学验证。number 类型也不能静态证明有限、非负。在正常浏览器中，运行时再用 `CSS.supports('width', value)` 拒绝无效 CSS；SSR/无 CSS parser 时仅检查结构，不模拟 CSS parser、不解析变量，也不据此声明 SSR hydration 已验证。宿主须提供能解析为宽度的自定义属性；`calc(...)` 的合法表达式若计算为负数，宽度由浏览器归零，不会在静态类型阶段被证明或拒绝。
+
+未声明任何 `width` 时，保留原有自动表格布局。部分列声明时，明确尺寸的列使用配置宽度，未声明列吸收剩余可用空间；全部声明时，表格宽度按列宽总和布局，不保证填满表体。总宽超过可用宽度时仍由原有表体区域横向滚动。表头和全部数据单元格使用同一张 table 的列轨道，不分别计算或复制表头宽度。
+
+百分比及混合表达式（如 `'calc(50% - 1rem)'`）统一以表体可用宽度为基准，不以自身表格已经扩出的总宽为基准。组件内部用非交互、`aria-hidden` 的零高测量块交给浏览器解析，并由单个 `ResizeObserver` 将结果同步为 `colgroup` 的像素宽度；宿主无需查询内部 DOM、计算百分比或维护自己的观察器。此内部结构不是公共定位或样式入口。
+
+长中文、长英文及无空格文本沿用公共表格的 `overflow-wrap:anywhere` 换行，不默认截断或省略内容。宿主 slot 若强制 `nowrap`、放置不可收缩的大控件或更大的最小宽度，仍须按内容选择合适列宽或适配 slot；库不会为满足指定宽度默认裁切按钮、操作内容或焦点轮廓。`sticky:'start'|'end'` 仍是既有单侧零 offset 合同，列宽配置不自动累加多个 sticky 列的偏移；需要多列冻结组合时使用已有 Table 原语的显式 `stickyOffset`。
 
 ## 页面标题、筛选与滚动
 

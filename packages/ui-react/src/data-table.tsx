@@ -1,15 +1,17 @@
 import * as React from 'react';
-import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,type DataTableViewOptions} from '@coffeehc/xui-runtime/data-table';
+import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,type DataTableViewOptions,type DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
 import {Table,TableContainer,TableRow,TableCell,TableHeaderCell} from './table.js';
 import {Toolbar} from './layout.js';
 import {Field,NativeSelect,type FieldProps} from './forms.js';
 import {DataRegion,LoadingState,EmptyState,ErrorState,Skeleton} from './feedback.js';
 import {Pagination} from './navigation.js';
 import {cx} from './shared.js';
-export type {DataTablePagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableViewOptions} from '@coffeehc/xui-runtime/data-table';
+export type {DataTablePagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableViewOptions,DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
 export interface DataTableCellContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
 export interface DataTableColumn<T> {
   id:string; header:React.ReactNode; cell:(row:T,context:DataTableCellContext)=>React.ReactNode;
+  /** Column track width; numeric values are pixels. Percentages use the table body width. */
+  width?:DataTableColumnWidth;
   ariaSort?:React.AriaAttributes['aria-sort']; sticky?:'start'|'end';
 }
 export interface DataTableProps<T> extends DataTableViewOptions {
@@ -31,6 +33,23 @@ export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,er
   const state=getDataTableState(options,rows.length),keys=validateDataTableKeys(rows,columns,rowKey),{labels,pagination}= {labels:state.labels,pagination:options.pagination};
   const guard=React.useRef<ReturnType<typeof createDataTableRequestGuard>|null>(null);if(!guard.current)guard.current=createDataTableRequestGuard();
   const request=(callback:(()=>void)|undefined)=>guard.current!.run(state.blocked,callback);
+  const columnSizing=columns.some(column=>column.width!==undefined)?columns.every(column=>column.width!==undefined)?'sized':'mixed':undefined;
+  const widthProbes=React.useRef<HTMLDivElement>(null),columnGroup=React.useRef<HTMLTableColElement>(null);
+  React.useLayoutEffect(()=>{
+    if(!columnSizing)return;
+    const probes=widthProbes.current!,group=columnGroup.current!,win=probes.ownerDocument.defaultView!;let dead=false,frame=0;
+    const measure=()=>{
+      if(dead)return;
+      // Read every used block width before touching table tracks. Percentage math
+      // is resolved outside table layout; transformed ancestors do not scale it.
+      const widths=columns.map((column,index)=>column.width===undefined?null:win.getComputedStyle(probes.children[index]).width);
+      widths.forEach((width,index)=>{if(width?.endsWith('px')&&Number.isFinite(parseFloat(width))){const col=group.children[index] as HTMLTableColElement;if(col.style.width!==width)col.style.width=width;}});
+    };
+    const schedule=()=>{if(!dead&&!frame)frame=win.requestAnimationFrame(()=>{frame=0;measure();});};
+    const observer=new ResizeObserver(schedule);observer.observe(probes);for(const probe of Array.from(probes.children))observer.observe(probe);
+    win.addEventListener('resize',schedule);measure();
+    return()=>{dead=true;observer.disconnect();win.cancelAnimationFrame(frame);win.removeEventListener('resize',schedule);};
+  },[columns,columnSizing]);
   const hasRows=rows.length>0,showError=state.status==='error';
   const error=errorState??<ErrorState title={labels.error} retryLabel={labels.retry} onRetry={options.onRetry?()=>request(options.onRetry):undefined} retryDisabled={state.blocked}/>;
   const empty=emptyState??<EmptyState title={options.filtered?labels.noMatches:labels.empty}/>;
@@ -38,8 +57,10 @@ export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,er
     {hasContent(toolbar)&&<div className="xui-data-table-tools">{toolbar}</div>}
     <div className="xui-data-table-frame">
       {(hasRows&&(state.busy||showError)||hasContent(feedback))&&<div className="xui-data-table-feedback">{hasRows&&(showError?error:state.busy?<LoadingState>{labels.refreshing}</LoadingState>:null)}{feedback}</div>}
-      <TableContainer className="xui-data-table-body" aria-label={options.label+' — '+labels.count({rowCount:rows.length,total:state.total})}>
-        <Table striped={striped} stickyHeader={stickyHeader} aria-label={options.label}>
+      <TableContainer data-column-sizing={columnSizing} className="xui-data-table-body" aria-label={options.label+' — '+labels.count({rowCount:rows.length,total:state.total})}>
+        <div ref={widthProbes} className="xui-data-table-widths" aria-hidden="true" hidden={!columnSizing}>{columns.map(column=><div key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</div>
+        <Table data-column-sizing={columnSizing} striped={striped} stickyHeader={stickyHeader} aria-label={options.label}>
+          <colgroup ref={columnGroup}>{columns.map(column=><col key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</colgroup>
           <thead><TableRow>{columns.map(column=><TableHeaderCell key={column.id} sticky={column.sticky} aria-sort={column.ariaSort}>{column.header}</TableHeaderCell>)}</TableRow></thead>
           <tbody>{hasRows?rows.map((row,index)=><TableRow key={keys[index]} {...rowState?.(row)}>{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):state.busy?<>{Array.from({length:5},(_,index)=><TableRow key={index}><TableCell colSpan={columns.length}><Skeleton/></TableCell></TableRow>)}<TableRow><TableCell colSpan={columns.length}><LoadingState>{labels.loading}</LoadingState></TableCell></TableRow></>:<TableRow><TableCell colSpan={columns.length}>{showError?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</TableCell></TableRow>}</tbody>
         </Table>

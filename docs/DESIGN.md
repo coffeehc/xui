@@ -1205,6 +1205,8 @@ headerSlots.leading是可选、默认空且不收缩的最前区域，位于自�
 
 完整DataTable复用Table/Toolbar/Field/Pagination/DataRegion原语。标题/主操作和筛选可分别置于既有pageHeader/pageToolbar；表格在workspace正文自然占剩余高度，只有表体滚动，真实计数、唯一每页条数和分页留在同一正常流底栏。整表只有一层外框，保留列头、行和底栏信息边界；不得复制额外工具条下边框、测量header或定位分页。筛选采用data-table-filter-min，搜索可沿长字段尺度增长，窄屏自然换行。data-table-min-block-size是组件最小尺度，不是固定表体高度。workspace的layout-workspace-content-min-block-size默认0px保留旧收缩语义，公共DataTable组合须在shell公开style显式绑定为var(--data-table-min-block-size)，为极端超高页头保留非零正文滚动视口；该下限受100dvh约束，main可自然滚动。库不通过父级:has探测表格，不测量或固定页头高度。设计门禁仅允许这个精确语义alias赋值，不放宽任意token重定义、裸尺寸或fallback。
 
+列宽属于宿主列内容或用户尺寸配置，可通过公共 width 提供数字像素、CSS 长度、百分比和 calc()/clamp()；这不是重定义品牌色、字体、间距或装饰 token 的许可。库用非交互、零高测量轨道让浏览器以表体可用宽度解析百分比表达式，再由同一 colgroup 统一表头与数据列；测量不得制造滚动范围、可访问节点或另一套宿主布局逻辑，更新/销毁必须释放观察。未配置宽度保持原有自动表格算法，完整取舍及长内容边界见 DataTable 合同。
+
 空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。完整API与双端公共消费见[DataTable](DATA_TABLE.md)。
 
 顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单select边界不变。forced-colors回退原生箭头，平台选项面板仍归浏览器/OS。

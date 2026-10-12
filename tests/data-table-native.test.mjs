@@ -43,3 +43,25 @@ test('native replacing a Node with identical text removes the old interactive se
 test('native optional slots hide empty strings and retain numeric zero',()=>{
   const {root}=navigationDOM(),owner=createDataTable(root,{...base,toolbar:'',feedback:'',footer:''});assert.equal(root.querySelector('.xui-data-table-tools').hidden,true);assert.equal(root.querySelector('.xui-data-table-feedback').hidden,true);assert.equal(root.querySelector('.xui-data-table-footer-extra').hidden,true);owner.update({toolbar:0,feedback:0,footer:0});for(const name of ['tools','feedback','footer-extra']){assert.equal(root.querySelector('.xui-data-table-'+name).hidden,false);assert.equal(root.querySelector('.xui-data-table-'+name).textContent,'0');}owner.destroy();
 });
+
+test('native width tracks update, reorder, hide and clear without replacing retained rows or slots',()=>{
+  const {root}=navigationDOM(),cell=base.columns[0].cell;
+  const name={id:'name',header:'Name',cell,width:'calc(50% - 1rem)'},fixed={id:'fixed',header:'Fixed',cell:()=> 'Fixed',width:128,sticky:'end'};
+  const owner=createDataTable(root,{...base,columns:[name,fixed]}),group=root.querySelector('colgroup'),track=group.children[0],row=root.querySelector('tbody').firstElementChild;
+  assert.equal(root.querySelector('table').dataset.columnSizing,'sized');assert.equal(track.style.width,'calc(50% - 1rem)');assert.equal(group.children[1].style.width,'128px');
+  owner.update({columns:[fixed,{...name,width:'clamp(12rem, 40%, 30rem)'}]});assert.equal(group.children[1],track);assert.equal(track.style.width,'clamp(12rem, 40%, 30rem)');assert.equal(root.querySelector('tbody').firstElementChild,row);
+  owner.update({columns:[{...name,width:undefined},fixed]});assert.equal(track.style.width,'');assert.equal(root.querySelector('table').dataset.columnSizing,'mixed');
+  owner.update({columns:[{...name,width:undefined}]});assert.equal(group.children.length,1);assert.equal(root.querySelector('.xui-data-table-widths').children.length,1);assert.equal(root.querySelector('table').dataset.columnSizing,undefined);
+  assert.throws(()=>owner.update({columns:[{...name,width:{bad:1}}]}),/DataTable width/);assert.equal(group.children[0],track);owner.destroy();
+});
+test('native width observer batches used CSS widths and disconnects on update and destroy',()=>{
+  const {root,win}=navigationDOM();let callback,disconnects=0,observed=[],frame;win.requestAnimationFrame=fn=>{frame=fn;return 1;};win.cancelAnimationFrame=()=>{frame=undefined;};const flush=()=>{const fn=frame;frame=undefined;fn?.();};
+  const previous=Object.getOwnPropertyDescriptor(globalThis,'ResizeObserver');globalThis.ResizeObserver=class {constructor(value){callback=value;}observe(node){observed.push(node);}disconnect(){disconnects++;observed=[];}};
+  let pixels='237.5px';win.getComputedStyle=()=>({width:pixels});
+  try{
+    const owner=createDataTable(root,{...base,columns:[{...base.columns[0],width:'calc(50% - 1rem)'}]}),track=root.querySelector('col');assert.equal(track.style.width,'237.5px');assert.equal(observed.length,2);
+    pixels='0px';callback();flush();assert.equal(track.style.width,'0px');pixels='301px';callback();flush();assert.equal(track.style.width,'301px');
+    owner.update({columns:base.columns});assert.equal(observed.length,0);assert.equal(track.style.width,'');
+    callback();owner.destroy();assert.equal(frame,undefined);assert.ok(disconnects>=3);pixels='999px';callback();assert.equal(track.style.width,'');assert.equal(win.listeners.get('resize').length,0);
+  }finally{if(previous)Object.defineProperty(globalThis,'ResizeObserver',previous);else delete globalThis.ResizeObserver;}
+});
