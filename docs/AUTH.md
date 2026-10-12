@@ -2,6 +2,8 @@
 
 `ConfigurableLoginPage` 和 `createLoginPage` 提供完整登录页：项目填写产品名称、标题、说明、可选 logo、文案与安全回跳目标，传入已有主题 owner 和认证 client，即可采用相同默认皮肤和交互。原子→组合→页面的设计哲学统一记录在 [FOUNDATION.md](FOUNDATION.md#组件层次与扩展原则)，通用视觉规则仍只在 [DESIGN.md](DESIGN.md)。
 
+`createLoginPage` 的 label、错误说明和标题关联 ID 使用 runtime 共享 UI allocator，不调用 `crypto.randomUUID()`，因此内网 HTTP 中缺少该 API 不会阻止原生登录页构造；多实例与重建规则见[接入手册](ADOPTION.md#原生-ui-id-与内网-http)。这不改变以下认证协议、凭据和传输安全边界。
+
 ## 真实参考与新合同的区别
 
 已用正常 Git 读取 xAgent 提交 `29139f7843d9a79a9eca42892cb87da8f08f6320`，核对 [auth-service.ts](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/frontend/packages/business/src/services/auth-service.ts)、[http-service.ts](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/frontend/packages/business/src/services/http-service.ts)、[user_endpoint.go](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/user_endpoint.go) 和 [user_auth_endpoint.go](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/user_auth_endpoint.go)。现有密码登录为 `POST /api/v1/auth/token`，发送 password grant、username/password/client_id/channel_type/terminal_id，返回 access/refresh token；退出是 `POST /api/v1/auth/logout`，当前用户为 `GET /api/v1/me/state`。现有前端持有 bearer token，错误也有 HTTP 200 的业务 envelope。

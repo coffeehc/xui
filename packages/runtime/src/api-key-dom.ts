@@ -1,3 +1,4 @@
+import {generateDomId} from './dom-id.js';
 import type {ApiKeyManagerController} from './api-key.js';
 import {createDialogController,bindPressFeedback} from './dom.js';
 const owners=new WeakSet<HTMLElement>();
@@ -15,7 +16,7 @@ export function createApiKeyManager(root:HTMLElement,{controller,writeClipboard}
   const table=node('table','xui-table'),caption=node('caption','',labels.title),thead=node('thead'),heading=node('tr'),tbody=node('tbody');
   for(const text of [labels.name,labels.prefix,labels.permissions,labels.createdAt,labels.expiry,labels.lastUsedAt,labels.status,labels.actions]){const cell=node('th','',text);cell.scope='col';heading.append(cell);}thead.append(heading);table.append(caption,thead,tbody);tableContainer.append(table);region.append(tableContainer,empty,feedback);section.append(region);
   const dialog=node('dialog','xui-native-dialog xui-layer'),dialogTitle=node('h2','xui-dialog-title'),description=node('p','xui-dialog-description'),body=node('div','xui-dialog-body xui-stack'),footer=node('div','xui-dialog-footer');
-  const id=`xui-key-${crypto.randomUUID()}`;dialogTitle.id=id+'-title';description.id=id+'-description';dialog.setAttribute('aria-labelledby',dialogTitle.id);dialog.setAttribute('aria-describedby',description.id);dialog.append(dialogTitle,description,body,footer);section.append(dialog);root.replaceChildren(section);
+  const id=generateDomId(doc,'xui-key');dialogTitle.id=id+'-title';description.id=id+'-description';dialog.setAttribute('aria-labelledby',dialogTitle.id);dialog.setAttribute('aria-describedby',description.id);dialog.append(dialogTitle,description,body,footer);section.append(dialog);root.replaceChildren(section);
   const form=node('form','xui-stack');form.noValidate=true;form.id=id+'-form';
   const field=(text:string,control:HTMLElement,suffix:string)=>{const wrapper=node('div','xui-field'),label=node('label','xui-label',text),error=node('p','xui-error');control.id=id+'-'+suffix;label.htmlFor=control.id;error.id=control.id+'-error';control.setAttribute('aria-describedby',error.id);wrapper.append(label,control,error);return {wrapper,error};};
   const name=node('input','xui-input');name.autocomplete='off';name.required=true;const nameField=field(labels.name,name,'name');

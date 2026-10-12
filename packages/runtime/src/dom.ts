@@ -1,3 +1,4 @@
+import {generateDomId} from './dom-id.js';
 export interface ChangeDetails{reason:string;event?:Event;cancel:()=>void}
 export interface DialogCloseDetails{reason:string;event?:Event}
 export interface OpenOptions{restoreFocus?:boolean|((details:DialogCloseDetails)=>boolean);open?:boolean;defaultOpen?:boolean;onOpenChange?:(open:boolean,details:ChangeDetails)=>void;finalFocus?:HTMLElement|(()=>HTMLElement|null);initialFocus?:HTMLElement|(()=>HTMLElement|null)}
@@ -23,7 +24,7 @@ export function bindPressFeedback(root:HTMLElement){
 
 export function createDisclosureController(trigger:HTMLElement,panel:HTMLElement,options:OpenOptions={}){
   let open=options.open??options.defaultOpen??false,dead=false;const controlled=options.open!==undefined;
-  if(!panel.id)panel.id=`xui-disclosure-${crypto.randomUUID()}`;trigger.setAttribute('aria-controls',panel.id);
+  if(!panel.id)panel.id=generateDomId(panel.ownerDocument,'xui-disclosure');trigger.setAttribute('aria-controls',panel.id);
   const syncOpen=(next:boolean)=>{if(dead)return;open=next;trigger.setAttribute('aria-expanded',String(open));panel.hidden=!open;};
   const request=(next:boolean,event?:Event)=>{if(dead||disabled(trigger)||next===open)return;if(change(trigger,next,'toggle',event,details=>options.onOpenChange?.(next,details))&&!controlled)syncOpen(next);};
   const click=(event:Event)=>request(!open,event);trigger.addEventListener('click',click);syncOpen(open);
@@ -106,7 +107,7 @@ const popupStacks=new WeakMap<Document,HTMLElement[]>();
 export function createPopoverController(trigger:HTMLElement,popup:HTMLElement,options:OpenOptions & {menu?:boolean;tooltip?:boolean;contextMenu?:boolean;submenu?:boolean}={}){
   let open=false,dead=false,touch=false;const doc=popup.ownerDocument,win=doc.defaultView!;const controlled=options.open!==undefined;
   const menu=!!(options.menu||options.contextMenu);let contextPoint:{x:number;y:number}|null=null;
-  if(!popup.id)popup.id=`xui-popup-${crypto.randomUUID()}`;popup.setAttribute('popover','manual');popup.hidden=false;
+  if(!popup.id)popup.id=generateDomId(popup.ownerDocument,'xui-popup');popup.setAttribute('popover','manual');popup.hidden=false;
   if(options.tooltip){popup.setAttribute('role','tooltip');trigger.setAttribute('aria-describedby',[trigger.getAttribute('aria-describedby'),popup.id].filter(Boolean).join(' '));}
   else{trigger.setAttribute('aria-controls',popup.id);if(menu){trigger.setAttribute('aria-haspopup','menu');popup.setAttribute('role','menu');}}
   const stack=popupStacks.get(doc)??[];popupStacks.set(doc,stack);
@@ -173,7 +174,7 @@ export function createToastController(viewport:HTMLElement,options:{limit?:numbe
   viewport.classList.add('xui-toast-viewport','xui-layer');viewport.tabIndex=-1;
   const close=(id:string)=>{const item=toasts.get(id);if(!item)return;const focused=item.node.contains(viewport.ownerDocument.activeElement);if(item.timer)clearTimeout(item.timer);item.cleanup();item.node.remove();toasts.delete(id);if(focused)viewport.focus();};
   return {add(message:{id?:string;title:string;description?:string;tone?:'info'|'success'|'warning'|'error';timeoutMs?:number}){
-    if(dead)return '';const id=message.id??crypto.randomUUID();close(id);while(toasts.size>=Math.max(1,options.limit??5))close(toasts.keys().next().value!);
+    if(dead)return '';let id=message.id;if(id==null){do{id=generateDomId(viewport.ownerDocument,'xui-toast');}while(toasts.has(id));}close(id);while(toasts.size>=Math.max(1,options.limit??5))close(toasts.keys().next().value!);
     const doc=viewport.ownerDocument,node=doc.createElement('div'),title=doc.createElement('strong'),description=doc.createElement('p'),button=doc.createElement('button');node.className='xui-toast';node.dataset.tone=message.tone??'info';node.setAttribute('role',message.tone==='error'?'alert':'status');title.textContent=message.title;description.textContent=message.description??'';button.type='button';button.className='xui-button';button.textContent=options.dismissLabel??'Dismiss notification';const clicked=()=>close(id);button.addEventListener('click',clicked);node.append(title,description,button);viewport.append(node);
     const now=()=>doc.defaultView!.performance.now();
     let remaining=message.timeoutMs,start=0;const item={node,timer:undefined as ReturnType<typeof setTimeout>|undefined,cleanup:()=>{button.removeEventListener('click',clicked);node.removeEventListener('pointerenter',pause);node.removeEventListener('pointerleave',resume);node.removeEventListener('focusin',pause);node.removeEventListener('focusout',focusOut);}};

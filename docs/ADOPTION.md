@@ -49,6 +49,12 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 独立结构化错误完整消费为 [React](../examples/log-react/app.tsx)/[原生](../examples/log-vanilla/app.js)，共用 [typed fake facade](../examples/shared/log-model.ts)。按真实 cursor/query 语义展示累计/命中数与首次代表，只有单记录授权读取返回详情；拟议协议和宿主实现责任见 [LOGS.md](LOGS.md)。
 
+## 原生 UI ID 与内网 HTTP
+
+原生登录、菜单/布局、API Key/日志视图、Command、Disclosure、Popover 和 Toast 的内部 UI ID 不依赖 `crypto` 或 `crypto.randomUUID()`。内网 HTTP 等非安全上下文无需提供 UUID polyfill；用固定提交重新构建和安装正式 runtime 产物即可取得修复。
+
+内部 allocator 在每个 `ownerDocument` 共享递增计数器，因此独立 bundle、多个组件、尚未挂载的根和卸载重建不会重用已分配 ID；生成前避开已有同名及字段/选项后缀的宿主 ID。组件沿用已有显式 DOM ID，Toast 仍以显式 `message.id` 去重。宿主应把自动生成 ID 视为不透明的临时 UI 标识，不解析格式、不跨文档持久化，也不用于 token、nonce、密钥或幂等键。这项兼容只涉及页面构造与可访问性关联；认证传输、Cookie、CSRF、剪贴板等能力仍遵循各自安全要求。
+
 ## 主题、CSS 与单 owner
 
 首屏 init 在 CSS/内容之前，应用复用 window.xuiTheme，不另建 matchMedia/storage/context 竞争状态。mode 是 light/dark/system 选择，effective 是浅深结果；受控选择经宿主确认，不隐式写 storage。React useTheme 只订阅，原生释放订阅/owner 边界明确。

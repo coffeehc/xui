@@ -1,3 +1,4 @@
+import {generateDomId} from './dom-id.js';
 import {bindPressFeedback} from './dom.js';
 /** Shared, serializable menu data. Icons are identifiers resolved once by the host. */
 export interface NavigationItem {
@@ -107,7 +108,7 @@ export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuOpti
     const build=(items:readonly NavigationItem[],parent:HTMLElement)=>{
       const children:HTMLElement[]=[];
       for(const item of items){used.add(item.id);const node=nodes.get(item.id)!,kind=item.group?'group':item.href?'link':'toggle';let entry=records.get(item.id);
-        if(!entry||entry.kind!==kind){entry?.li.remove();const li=doc.createElement('li'),row=doc.createElement('div'),primary=doc.createElement(kind==='group'?'h2':kind==='link'?'a':'button'),nested=doc.createElement('ul');li.className='xui-menu-entry';li.dataset.menuEntry=item.id;row.className='xui-menu-row';nested.className='xui-menu-children';nested.id=`xui-menu-${crypto.randomUUID()}`;row.append(primary);li.append(row,nested);entry={li,row,primary,children:nested,kind};records.set(item.id,entry);}
+        if(!entry||entry.kind!==kind){entry?.li.remove();const li=doc.createElement('li'),row=doc.createElement('div'),primary=doc.createElement(kind==='group'?'h2':kind==='link'?'a':'button'),nested=doc.createElement('ul');li.className='xui-menu-entry';li.dataset.menuEntry=item.id;row.className='xui-menu-row';nested.className='xui-menu-children';nested.id=generateDomId(doc,'xui-menu');row.append(primary);li.append(row,nested);entry={li,row,primary,children:nested,kind};records.set(item.id,entry);}
         const {li,primary}=entry,nested=entry.children;primary.className=kind==='group'?'xui-menu-group-title':'xui-nav-item';primary.dataset.menuId=item.id;
         if(kind!=='group'){primary.dataset.menuControl='primary';primary.setAttribute('aria-disabled',String(node.disabled));primary.setAttribute('title',item.label);primary.dataset.collapsed=String(state.collapsed);}
         primary.replaceChildren();if(item.icon||state.collapsed)primary.append(renderNavigationIcon(doc,resolveNavigationIcon(item.icon,options.resolveIcon)));const label=doc.createElement('span');label.className='xui-menu-label';label.textContent=item.label;primary.append(label);

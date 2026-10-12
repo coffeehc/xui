@@ -1,3 +1,4 @@
+import {generateDomId} from './dom-id.js';
 import {createDialogController,createDisclosureController,bindPressFeedback} from './dom.js';
 import {getBusinessLogSnapshot,findBusinessLogRenderer,getBusinessLogTable,getBusinessLogFacts,type BusinessLogController,type BusinessLogDetail,type BusinessLogFilter,type BusinessLogRenderer,type BusinessLogActorKind,type BusinessLogOutcome} from './business-log.js';
 export interface BusinessLogViewOptions {controller:BusinessLogController;renderers?:readonly BusinessLogRenderer<Node>[]}
@@ -10,7 +11,7 @@ export function createBusinessLogExplorer(root:HTMLElement,{controller,renderers
   const button=(text:string,variant='outline')=>{const result=node('button','xui-button',text);result.type='button';result.dataset.variant=variant;return result;};
   const section=node('section','xui-stack'),header=node('header','xui-page-header'),title=node('h1','',labels.title),actions=node('div','xui-toolbar'),refresh=button(labels.refresh,'primary');actions.append(refresh);header.append(title,actions);section.append(header);
   const toggle=button(labels.filters),panel=node('div'),form=node('form','xui-stack'),grid=node('div','xui-grid'),inputs:Record<string,HTMLInputElement|HTMLSelectElement>={};
-  const prefix='xui-business-log-'+crypto.randomUUID();
+  const prefix=generateDomId(doc,'xui-business-log');
   const field=(key:string,label:string,values?:readonly string[])=>{const wrapper=node('div','xui-field'),name=node('label','xui-label',label),input=values?node('select','xui-select'):node('input','xui-input');input.id=prefix+'-'+key;name.htmlFor=input.id;if(values)for(const value of values){const option=node('option','',value?labels[value as BusinessLogActorKind|BusinessLogOutcome]:labels.all);option.value=value;input.append(option);}else (input as HTMLInputElement).autocomplete='off';wrapper.append(name,input);grid.append(wrapper);inputs[key]=input;};
   field('since',labels.since);field('until',labels.until);field('actorKind',labels.actorKind,['user','agent','service']);field('actorId',labels.actorId);field('objectKind',labels.objectKind);field('objectId',labels.objectId);field('event_type',labels.eventType);field('action',labels.action);field('result',labels.result,['','succeeded','failed','denied','unknown']);field('correlation_id',labels.correlationId);field('request_id',labels.requestId);
   const filterActions=node('div','xui-toolbar'),apply=button(labels.apply,'primary'),clear=button(labels.clear),filterError=node('div','xui-alert');apply.type='submit';filterError.dataset.tone='error';filterError.setAttribute('role','alert');filterActions.append(apply,clear);form.append(grid,filterActions,filterError);panel.append(form);section.append(toggle,panel);

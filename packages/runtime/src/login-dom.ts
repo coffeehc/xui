@@ -1,3 +1,4 @@
+import {generateDomId} from './dom-id.js';
 import {resolveLoginPageConfig,getLoginPageError,runLoginPageExtension,type LoginPageExtensions,type LoginPageAction,type LoginPageConfig,type AuthClient,type AuthUser} from './auth.js';
 import {bindPressFeedback} from './dom.js';
 import type {ThemeController} from './theme.js';
@@ -9,7 +10,7 @@ export function createLoginPage(root:HTMLElement,{auth,config:input,onAuthentica
   const config=resolveLoginPageConfig(input),{labels}=config,doc=root.ownerDocument,original=Array.from(root.childNodes);let dead=false,request=0,viewAbort:AbortController|undefined,extensionBusy:string|null=null,extensionError=false;
   const node=<Tag extends keyof HTMLElementTagNameMap>(tag:Tag,className='',text?:string)=>{const element=doc.createElement(tag);element.className=className;if(text!==undefined)element.textContent=text;return element;};
   const button=(text:string,variant='primary')=>{const element=node('button','xui-button',text);element.type='button';element.dataset.variant=variant;return element;};
-  const page=node('main','xui xui-login-page'),card=node('section','xui-login-card xui-surface'),brand=node('header','xui-login-brand'),identityBrand=node('div','xui-login-identity'),prefix=`xui-login-${crypto.randomUUID()}`;
+  const page=node('main','xui xui-login-page'),card=node('section','xui-login-card xui-surface'),brand=node('header','xui-login-brand'),identityBrand=node('div','xui-login-identity'),prefix=generateDomId(doc,'xui-login');
   if(config.logo){const logo=node('img','xui-login-logo');logo.src=config.logo.src;logo.alt=config.logo.alt;logo.referrerPolicy='no-referrer';identityBrand.append(logo);}identityBrand.append(node('strong','',config.productName));brand.append(identityBrand);if(config.description)brand.append(node('p','xui-login-description',config.description));
   const form=node('form','xui-login-form'),body=node('div','xui-login-body'),title=node('h1','',config.title);title.id=prefix+'-title';card.setAttribute('aria-labelledby',title.id);body.append(title);
   const fields=node('div','xui-stack'),username=node('input','xui-input'),password=node('input','xui-input'),errors={username:node('p','xui-error'),password:node('p','xui-error')};
