@@ -13,7 +13,7 @@ export function GroupedCombobox({groups,label,inputValue,onInputValueChange,valu
   const selected=value===undefined?internal:value;
   const groupId=(key:string)=>{let value=groupIds.current.get(key);if(!value){value=`${id}-group-${groupIds.current.size+1}`;groupIds.current.set(key,value);}return value;};
   return <div className={cx('xui-grouped-combobox',className)}>
-    <Combobox.Root<string> inline open loopFocus autoHighlight={false} highlightItemOnHover={false} filter={null} items={items.map(item=>item.id)} filteredItems={visible.map(item=>item.id)} value={selected} inputValue={inputValue} itemToStringLabel={key=>byId.get(key)?.label??key} disabled={disabled}
+    <Combobox.Root<string> inline open loopFocus autoHighlight={false} highlightItemOnHover={false} filter={null} items={items.map(item=>item.id)} filteredItems={visible.filter(item=>!item.disabled).map(item=>item.id)} value={selected} inputValue={inputValue} itemToStringLabel={key=>byId.get(key)?.label??key} disabled={disabled}
       onInputValueChange={(next,details)=>{if(details.reason==='input-change'||details.reason==='input-clear')onInputValueChange?.(next);else details.cancel();}}
       onValueChange={(next,details)=>{if(details.reason!=='item-press'||next===selected){details.cancel();return;}if(next!==null&&visible.some(item=>item.id===next&&!item.disabled)){if(value===undefined)setInternal(next);onValueChange?.(next);}}}>
       <Combobox.Input ref={input} aria-label={label}/>
@@ -21,7 +21,11 @@ export function GroupedCombobox({groups,label,inputValue,onInputValueChange,valu
       <Combobox.List aria-label={label}>
         {groups.map(group=><Combobox.Group key={group.id} id={groupId(group.id)} hidden={group.open===false} aria-busy={group.busy||undefined}>
           <Combobox.GroupLabel className="xui-command-group">{group.label}</Combobox.GroupLabel>
-          {group.open!==false&&group.items.map(item=><Combobox.Item key={item.id} value={item.id} disabled={group.disabled||item.disabled}>{item.label}</Combobox.Item>)}
+          {group.open!==false&&group.items.map((item,index)=>group.disabled||item.disabled
+            // Base UI 1.7 intentionally navigates disabled Items. Keep a disabled
+            // option visible, but outside the composite's selectable registry.
+            ?<div key={item.id} id={`${groupId(group.id)}-disabled-${index}`} className="xui-menu-item" role="option" aria-disabled="true" aria-selected={selected===item.id}>{item.label}</div>
+            :<Combobox.Item key={item.id} value={item.id}>{item.label}</Combobox.Item>)}
         </Combobox.Group>)}
       </Combobox.List>
       {visible.length===0&&!groups.some(group=>group.open!==false&&(group.busy||group.emptyLabel))&&<p className="xui-state" role="status">{emptyLabel}</p>}

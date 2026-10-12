@@ -53,7 +53,7 @@ export function createGroupedCombobox(root:HTMLElement,initial:GroupedComboboxOp
   const changed=()=>{if(dead||options.disabled||composing)return;active=null;highlight();options.onInputValueChange?.(input.value);if(!dead)input.value=options.inputValue;};
   const key=(event:KeyboardEvent)=>{
     if(dead||options.disabled||event.isComposing||composing||event.defaultPrevented||event.ctrlKey||event.altKey||event.metaKey||event.shiftKey)return;
-    if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();const available=visible.filter(item=>!item.disabled),index=available.findIndex(item=>item.id===active),step=event.key==='ArrowDown'?1:-1;if(available.length)active=available[index<0?(step===1?0:available.length-1):(index+step+available.length)%available.length].id;highlight();if(active)optionNodes.get(active)?.scrollIntoView({block:'nearest'});}
+    if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();const available=visible.filter(item=>!item.disabled),index=available.findIndex(item=>item.id===active),step=event.key==='ArrowDown'?1:-1;if(available.length){const next=index<0?(step===1?0:available.length-1):index+step;active=available[next]?.id??null;}highlight();if(active)optionNodes.get(active)?.scrollIntoView({block:'nearest'});}
     else if(event.key==='Enter'&&active){event.preventDefault();select(active);}
   };
   const blur=()=>{active=null;highlight();},pointer=()=>{active=null;highlight();},compositionStart=()=>{composing=true;},compositionEnd=()=>{composing=false;changed();};
