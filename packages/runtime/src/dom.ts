@@ -114,7 +114,7 @@ export function createShellController(root:HTMLElement,options:OpenOptions={}){
   if(!trigger||!dialog||!sidebar||!main||!slot)throw new Error('AppShell requires toggle, dialog, sidebar, content slot and main');
   const media=root.ownerDocument.defaultView!.matchMedia('(max-width: 47.999rem)');
   const control=createDialogController(dialog,trigger,{...options,finalFocus:options.finalFocus??(()=>media.matches?trigger:main)});
-  const update=()=>{if(media.matches)slot.append(sidebar);else{control.syncOpen(false);root.insertBefore(sidebar,main);}};
+  const update=()=>{if(media.matches){if(sidebar.parentNode!==slot)slot.append(sidebar);}else{control.syncOpen(false);if(sidebar.parentNode!==root||sidebar.nextSibling!==main)root.insertBefore(sidebar,main);}};
   media.addEventListener('change',update);update();let dead=false;return {...control,destroy(){if(dead)return;dead=true;media.removeEventListener('change',update);control.destroy();root.insertBefore(sidebar,main);}};
 }
 

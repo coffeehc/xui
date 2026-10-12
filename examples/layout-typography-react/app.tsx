@@ -22,7 +22,9 @@ function Dropdown(){
   return <Menu.Root><Menu.Trigger render={<Button variant="outline"/>}>打开操作菜单</Menu.Trigger><Menu.Content data-testid="ordinary-popup">
     <Menu.Group><Menu.GroupLabel>项目操作</Menu.GroupLabel>
       <Menu.Item data-testid="ordinary-item"><Menu.Icon><Symbol/></Menu.Icon>普通菜单项</Menu.Item>
-      <Menu.LinkItem data-testid="link-item" href="#menu-link"><Menu.Icon><Symbol/></Menu.Icon>链接菜单项</Menu.LinkItem>
+      {/* Base UI 1.7 defaults LinkItem.closeOnClick to false; route-closing is an explicit host choice. */}
+      <Menu.LinkItem data-testid="link-item" href="#menu-link" closeOnClick><Menu.Icon><Symbol/></Menu.Icon>链接菜单项</Menu.LinkItem>
+      <Menu.LinkItem data-testid="link-default-item" href="#menu-link-default"><Menu.Icon><Symbol/></Menu.Icon>保留菜单的链接</Menu.LinkItem>
       <Menu.CheckboxItem data-testid="checkbox-item" defaultChecked><Menu.Icon><Symbol/></Menu.Icon>复选菜单项</Menu.CheckboxItem>
       <Menu.RadioGroup defaultValue="one"><Menu.RadioItem data-testid="radio-item" value="one"><Menu.Icon><Symbol/></Menu.Icon>单选菜单项</Menu.RadioItem><Menu.RadioItem value="two">另一单选菜单项</Menu.RadioItem></Menu.RadioGroup>
       <Menu.SubmenuRoot><Menu.SubmenuTrigger data-testid="submenu-trigger"><Menu.Icon><Symbol/></Menu.Icon>更多项目操作</Menu.SubmenuTrigger><Menu.Content data-testid="submenu-popup"><Menu.Item data-testid="submenu-item"><Menu.Icon><Symbol/></Menu.Icon>子菜单操作</Menu.Item></Menu.Content></Menu.SubmenuRoot>

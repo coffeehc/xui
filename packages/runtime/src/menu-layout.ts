@@ -38,7 +38,7 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   root.classList.add('xui','xui-shell','xui-menu-layout');root.replaceChildren(skip,header,sidebar,main,dialog);if(options.content)main.append(options.content);else main.append(...original);
   const syncLabels=()=>{root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport')menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});toggle.setAttribute('aria-label',options.label??'Navigation');title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';syncHeader();};syncLabels();
   const media=doc.defaultView!.matchMedia('(max-width: 47.999rem)');
-  const syncSidebar=(details?:DialogCloseDetails)=>shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);
+  const syncSidebar=(details?:DialogCloseDetails)=>{shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);if(options.scrollMode==='viewport'&&(!media.matches||shell?.getOpen()))menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});};
   shell=createShellController(root,{open:false,restoreFocus:details=>details.reason!=='navigation',onOpenChange:(open,details)=>{if(options.sidebarOpen===undefined)internalOpen=open;options.onSidebarOpenChange?.(open);syncSidebar(details);}});
   let wasNarrow=media.matches;
   const viewport=()=>{if(wasNarrow&&!media.matches){if(options.sidebarOpen===undefined)internalOpen=false;options.onSidebarOpenChange?.(false);}wasNarrow=media.matches;syncSidebar();};

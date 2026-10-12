@@ -67,6 +67,17 @@ for(const kind of kinds){
         await page.evaluate(scale=>{document.documentElement.style.fontSize=`${scale*100}%`;window.scrollTo(0,0);},scale);await settle(page);
         await capture(page,info,`header-${mode}-${viewport.width}-text-${scale*100}`);await assertHeader(page);
         const header=await bounds(page.locator('.xui-shell-header'));expect(header.height).toBeLessThan(viewport.height);
+        if(viewport.width===390){
+          const primary=await bounds(page.locator('.xui-app-header-primary')),brand=await bounds(page.locator('.xui-app-header-brand')),breadcrumb=await bounds(page.locator('.xui-app-header-breadcrumb'));
+          expect(breadcrumb.width).toBeCloseTo(primary.width,1);expect(breadcrumb.y).toBeGreaterThanOrEqual(brand.bottom);
+        }
+        if(viewport.width===390&&scale===2){
+          // At this size each action wraps to its own row. A public Toolbar
+          // wrapper must preserve the same end alignment as direct React parts.
+          const end=(await bounds(page.locator('.xui-app-header-actions'))).right;
+          const rows=[];for(const name of ['保存草稿','导出数据','帮助中心']){const action=await bounds(page.getByRole('button',{name,exact:true}));expect(action.right).toBeCloseTo(end,1);rows.push(action);}
+          for(let index=1;index<rows.length;index++)expect(rows[index].y).toBeGreaterThanOrEqual(rows[index-1].bottom);
+        }
       }
       if(mode==='system'){
         await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
@@ -130,7 +141,13 @@ for(const kind of kinds){
     await setup(page,kind,'?list=long&scroll=viewport');const sidebar=page.locator('.xui-shell-sidebar'),main=page.locator('.xui-shell-main');
     const rail=await bounds(sidebar),current=await bounds(navItem(page,'record-79'));contained(current,rail);
     const before=await page.evaluate(()=>({sidebar:document.querySelector('.xui-shell-sidebar').scrollTop,main:document.querySelector('main').scrollTop,document:scrollY}));expect(before.sidebar).toBeGreaterThan(0);expect(before.main).toBe(0);expect(before.document).toBe(0);
-    await main.evaluate(node=>{node.scrollTop=500;});expect(await sidebar.evaluate(node=>node.scrollTop)).toBe(before.sidebar);expect(await page.evaluate(()=>scrollY)).toBe(0);
+    for(const [index,label] of ['紧凑导航','展开导航'].entries()){
+      // Clicking the top toggle may scroll it into view; the layout must restore
+      // the far-below current item after either density change, not just item0.
+      await page.getByRole('button',{name:label,exact:true}).click();await settle(page);contained(await bounds(navItem(page,'record-79')),await bounds(sidebar));expect(await main.evaluate(node=>node.scrollTop)).toBe(0);expect(await page.evaluate(()=>scrollY)).toBe(0);await capture(page,info,`long-current-79-cycle-${index}`);
+    }
+    const sidebarBeforeMainScroll=await sidebar.evaluate(node=>node.scrollTop);
+    await main.evaluate(node=>{node.scrollTop=500;});expect(await sidebar.evaluate(node=>node.scrollTop)).toBe(sidebarBeforeMainScroll);expect(await page.evaluate(()=>scrollY)).toBe(0);
     await page.evaluate(()=>window.layoutTypography.navigate('record-0'));await expect(navItem(page,'record-0')).toHaveAttribute('aria-current','page');await settle(page);
     contained(await bounds(navItem(page,'record-0')),await bounds(sidebar));expect(await main.evaluate(node=>node.scrollTop)).toBe(500);
     for(const label of ['紧凑导航','展开导航','紧凑导航','展开导航']){await page.getByRole('button',{name:label,exact:true}).click();await settle(page);expect(await main.evaluate(node=>node.scrollTop)).toBe(500);}
@@ -147,12 +164,20 @@ for(const kind of kinds){
   });
   test(`${kind} menu, checkbox, radio, submenu and context text use 13/20/500 with explicit 16px icons`,async({page},info)=>{
     await setup(page,kind);const typography=async ids=>{for(const id of ids){const node=page.getByTestId(id);await expect(node).toBeVisible();expect(await bounds(node)).toMatchObject({fontSize:'13px',lineHeight:'20px',fontWeight:'500'});const icon=await bounds(node.locator('[data-menu-symbol]'));expect(icon.width).toBeCloseTo(16,1);expect(icon.height).toBeCloseTo(16,1);}};
-    await page.getByRole('button',{name:'打开操作菜单',exact:true}).click();await typography(['ordinary-item','link-item','checkbox-item','radio-item','submenu-trigger']);expect(await bounds(page.getByTestId('ordinary-popup'))).toMatchObject({fontSize:'14px',lineHeight:'22px',fontWeight:'400'});
+    await page.getByRole('button',{name:'打开操作菜单',exact:true}).click();await typography(['ordinary-item','link-item',...(kind==='react'?['link-default-item']:[]),'checkbox-item','radio-item','submenu-trigger']);expect(await bounds(page.getByTestId('ordinary-popup'))).toMatchObject({fontSize:'14px',lineHeight:'22px',fontWeight:'400'});
     expect((await bounds(page.getByTestId('illustration-item').locator('[data-illustration]'))).width).toBeCloseTo(24,1);await capture(page,info,'menu-typography');
     const more=page.getByTestId('submenu-trigger');await more.focus();await more.press('ArrowRight');await typography(['submenu-item']);await expect(page.getByTestId('submenu-item')).toBeFocused();await capture(page,info,'submenu-typography');await page.keyboard.press('Escape');await expect(more).toBeFocused();await page.keyboard.press('Escape');
     const context=page.getByTestId('context-trigger');await context.focus();await context.press('Shift+F10');await typography(['context-item','context-checkbox-item','context-radio-item','context-submenu-trigger']);await capture(page,info,'context-typography');
     const contextMore=page.getByTestId('context-submenu-trigger');await contextMore.focus();await contextMore.press('ArrowRight');await typography(['context-submenu-item']);await capture(page,info,'context-submenu-typography');await page.keyboard.press('Escape');await page.keyboard.press('Escape');await expect(context).toBeFocused();
-    await page.getByRole('button',{name:'打开操作菜单',exact:true}).click();const link=page.getByTestId('link-item');await expect(link).toHaveAttribute('href','#menu-link');await link.click();await expect(page).toHaveURL(/#menu-link$/);await expect(page.getByTestId('ordinary-popup')).toBeHidden();
+    await page.getByRole('button',{name:'打开操作菜单',exact:true}).click();
+    if(kind==='react'){
+      // The pinned Base UI peer keeps LinkItem open by default. Hash navigation
+      // proves the native anchor still works without a route unmount hiding it.
+      const defaultLink=page.getByTestId('link-default-item');await expect(defaultLink).toHaveAttribute('href','#menu-link-default');await defaultLink.click();await expect(page).toHaveURL(/#menu-link-default$/);await expect(page.getByTestId('ordinary-popup')).toBeVisible();
+    }
+    // The React fixture explicitly opts into closeOnClick for this route link;
+    // the native controller's ordinary menuitem contract also closes on select.
+    const link=page.getByTestId('link-item');await expect(link).toHaveAttribute('href','#menu-link');await link.click();await expect(page).toHaveURL(/#menu-link$/);await expect(page.getByTestId('ordinary-popup')).toBeHidden();
   });
   test(`${kind} field labels use 13/20/500, preserve 8/4/4px gaps and accessible choice hit areas`,async({page},info)=>{
     await setup(page,kind);const field=page.getByTestId('field'),label=field.locator('.xui-label'),input=field.locator('input'),help=field.locator('.xui-help'),error=field.locator('.xui-error');

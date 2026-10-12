@@ -21,3 +21,9 @@
 本轮云端按既有Playwright配置执行一次正式Chromium启动，仍在页面打开前失败：process_singleton_posix.cc的socket()返回Operation not permitted；保留启动日志，不修改浏览器安全参数或反复重试。构建、275-token校验、typecheck及159项单测已实际通过；独立tarball消费也已通过68公开入口、全部命名types/ESM/CSS/init、React/native新合成页、peer/按需及gzip门禁。32项新浏览器回归已成功发现（全套234项），但本地未执行；本地watch未重复此前环境超时，cold-start因同一浏览器限制未跑。完整watch/cold-start/视觉矩阵留给本次push自动触发的既有GitHub CI，未取得结果前不称完整验收通过。最终精确提交的检查结果及CI链接由交付记录给出；失败与未跑必须分别列出，不能用静态源码断言替代截图/真实渲染。
 
 用户提到的产品相对复现脚本及本机output截图未上传，本任务没有访问其本机路径，也未把这些截图作为已检查证据。原生浏览器200%zoom、真实产品页面/后端、其它浏览器、真实移动OS和读屏器未验证；根字体200%与相应窄CSS视口是明示的合成覆盖，不冒充原生浏览器缩放。
+
+## 首次CI的实际结果与修复
+
+[d0eb336的CI](https://github.com/coffeehc/xui/actions/runs/38226422938)完整执行构建、159单测、watch、正式消费者、cold-start后，浏览器232/234通过；新增30/32通过。头部三主题/宽窄/200%文字、紧凑栏及菜单/字段文字和图标测量均通过；失败不能忽略：原生长菜单初始化后当前项仍在4580px、视口底部800px，shell对已就位sidebar的多余insertBefore会重置滚动，修复为仅在真实换容器/位置时搬移并在布局/抽屉同步后确保当前项可见。另一个失败是新测试错误假设React Menu.LinkItem默认点击关闭；固定Base UI 1.7的公开closeOnClick默认false，现分别验证默认保留及显式true关闭，不改peer业务语义。失败日志、截图与trace保留在上述CI的validation产物；后续精确SHA完整复核由最终交付记录给出。
+
+对上述官方截图的人工复核另外发现：原生actions中使用公开Toolbar时，390px/200%文字的换行动作继承了Toolbar左对齐；已由公共actions角色统一为右对齐。相同极窄文字场景的breadcrumb虽未溢出，却只余单字宽；窄屏现在让路径在主组内独占一行，先保留导航/品牌，再排列状态和动作。相应验收增加动作末端对齐与路径宽度/所在行检查，不以原非重叠断言替代视觉复核。

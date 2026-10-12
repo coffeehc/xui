@@ -116,7 +116,7 @@ viewport更新选中项以nearest进入所属侧栏可视区域；焦点依靠�
 
 `AppShell`、`MenuLayout` 的 `headerSlots: AppHeaderSlots` 接收 `brand`、`breadcrumb`、`status`、`actions` 四个 React 内容角色；`AppHeader` / `AppHeaderProps` 从 `@coffeehc/xui-react/layout`（及根入口）导出，可独立组合，直接接收这四个 props，另有 `navigation` 和兼容内容 `children`。`AppShell` 持有抽屉触发器，宿主不要再添加一套菜单开关。
 
-`AppShell` 未传 `headerSlots` 时保留旧header直接排列，显式传角色对象才启用新组合。`MenuLayout` 的 `title` 仍可用：未提供 `headerSlots.brand` 时作为品牌回退；显式 `null` 隐藏回退。旧 `header` 仍渲染在兼容区域，可和新角色并存。品牌/面包屑组成左侧主组，状态/动作在右侧；窄屏先保留主组，再将状态和动作换行。长中文品牌和 breadcrumb 在自己的空间省略，不挤散另一组；完整文本不从 DOM/可访问名称删除。动作只换行，不自动隐藏。必要业务反馈仍由宿主决定放置，库没有授权、版本、返回等业务规则。
+`AppShell` 未传 `headerSlots` 时保留旧header直接排列，显式传角色对象才启用新组合。`MenuLayout` 的 `title` 仍可用：未提供 `headerSlots.brand` 时作为品牌回退；显式 `null` 隐藏回退。旧 `header` 仍渲染在兼容区域，可和新角色并存。品牌/面包屑组成左侧主组，状态/动作在右侧；窄屏先保留导航/品牌，breadcrumb在主组内独占下一行，再将状态和动作换行，避免200%文字把路径挤成单个字。长中文品牌和 breadcrumb 在自己的空间省略，不挤散另一组；完整文本不从 DOM/可访问名称删除。动作只换行，不自动隐藏。必要业务反馈仍由宿主决定放置，库没有授权、版本、返回等业务规则。
 
 ```tsx
 import {MenuLayout} from '@coffeehc/xui-react/menu-layout';
