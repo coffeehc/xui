@@ -33,7 +33,14 @@ export interface DisclosureIndicatorProps {open:boolean;className?:string}
 export function DisclosureIndicator({open,className}:DisclosureIndicatorProps){return <svg className={cx('xui-disclosure-indicator',className)} data-open={open} aria-hidden="true" focusable="false" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)"><path d="m5 7 5 5 5-5"/></svg>;}
 export type DisclosureProps=Omit<React.ComponentProps<'div'>,'onChange'|'title'> & {title:React.ReactNode;open?:boolean;defaultOpen?:boolean;onOpenChange?:(open:boolean)=>void;disabled?:boolean};
 export function Disclosure({title,open,defaultOpen=false,onOpenChange,disabled,children,className,...props}:DisclosureProps){
-  const [internal,setInternal]=React.useState(defaultOpen),expanded=open??internal,id=React.useId(),trigger=React.useRef<HTMLButtonElement>(null),panel=React.useRef<HTMLDivElement>(null);
-  React.useLayoutEffect(()=>{if(!expanded&&panel.current?.contains(panel.current.ownerDocument.activeElement))trigger.current?.focus();},[expanded]);
-  return <div {...props} className={cx('xui-disclosure',className)}><button ref={trigger} type="button" className="xui-disclosure-trigger" aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={()=>{if(open===undefined)setInternal(!expanded);onOpenChange?.(!expanded);}}><span className="xui-disclosure-label">{title}</span><DisclosureIndicator open={expanded}/></button><div ref={panel} id={id} hidden={!expanded} className="xui-disclosure-body">{children}</div></div>;
+  const [internal,setInternal]=React.useState(defaultOpen),expanded=open??internal,id=React.useId(),trigger=React.useRef<HTMLButtonElement>(null),panel=React.useRef<HTMLDivElement>(null),focusWithin=React.useRef(false);
+  React.useLayoutEffect(()=>{
+    if(expanded)return;
+    const body=panel.current,active=body?.ownerDocument.activeElement;
+    // Applying hidden can blur a descendant before layout effects run. Keep that
+    // ownership, but never override a focus target the host has chosen outside.
+    if(body&&(body.contains(active??null)||focusWithin.current&&active===body.ownerDocument.body))trigger.current?.focus();
+    focusWithin.current=false;
+  },[expanded]);
+  return <div {...props} className={cx('xui-disclosure',className)}><button ref={trigger} type="button" className="xui-disclosure-trigger" aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={()=>{if(open===undefined)setInternal(!expanded);onOpenChange?.(!expanded);}}><span className="xui-disclosure-label">{title}</span><DisclosureIndicator open={expanded}/></button><div ref={panel} id={id} hidden={!expanded} className="xui-disclosure-body" onFocusCapture={()=>{focusWithin.current=true;}} onBlurCapture={event=>{if(!event.currentTarget.hidden)focusWithin.current=event.currentTarget.contains(event.relatedTarget);}}>{children}</div></div>;
 }

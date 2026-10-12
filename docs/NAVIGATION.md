@@ -280,3 +280,5 @@ const menu = createNavigationMenu(root, {items,
 原生 `MenuLayoutOptions.sidebar?: Node | null` 与 React `AppShell.sidebar` 都可以承载上述两组自组导航。原生 sidebar 替换完整的默认菜单内容区域；没有传值或传 null 时显示原数据菜单，不占 sidebarHeader 的限定高度。sidebarHeader/sidebarFooter 仍是各自独立的上下槽，不将整份导航塞到顶部槽。一个 shell 继续拥有顶栏开关、主题、桌面 collapsed 与窄屏 drawer；多个自组 NavigationMenu 的 collapsed 和实际 navigation/关闭回调由宿主用现有 update 连接，不再创建另一个 shell/drawer。
 
 同一 Node/Fragment 重传保留节点，普通 location/slot 更新不重建自组菜单；Fragment 首次转移后保留其内容，不重用已经移除的空 Fragment 恢复旧内容。替换/移除 sidebar 时只在旧焦点仍归该区域的情况下回到新可用控件，空菜单回顶栏开关或已打开 drawer 的关闭按钮。被暂时替换的自组内容生命周期仍归宿主，最终分别 destroy 其 NavigationMenu/Disclosure/ContextMenu 和订阅；createMenuLayout 不销毁自己未创建的 owner。
+
+正式富导航示例用宿主公开的 `collapsed` 与 `sidebarOpen` 状态决定 rail 内容：桌面 compact 仅保留项目图标导航及独立 action，收纳完整搜索框、组标题、组外加载按钮和成员 Disclosure；顶栏“展开导航”仍可经 Tab/Enter 到达，展开后恢复完整控件。移动 drawer 打开时恢复全部控件，不复制第二份查询或导航树，也不按私有 DOM/class 或固定像素判断视口。受控原生 drawer 明确连接 `sidebarOpen` 与 `onSidebarOpenChange`，导航关闭后仍可再次打开。
