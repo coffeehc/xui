@@ -1,4 +1,4 @@
-import {bindPressFeedback,createShellController} from './dom.js';
+import {bindPressFeedback,createShellController,type DialogCloseDetails} from './dom.js';
 import {createNavigationMenu,indexNavigation,type NavigationMenuOptions,type NavigationAdapter} from './navigation.js';
 
 export interface MenuLayoutOptions extends NavigationMenuOptions {
@@ -19,13 +19,13 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   let shell:ReturnType<typeof createShellController>|undefined;
   const menuOptions=():NavigationMenuOptions=>({...options,location:options.location??doc.location?.href,baseURL:options.baseURL??doc.baseURI,
     onCollapsedChange:next=>{options.onCollapsedChange?.(next);root.dataset.collapsed=String(menu.getState().collapsed);},
-    navigation:options.navigation?{canNavigate:request=>options.navigation?.canNavigate?.(request)!==false,navigate:request=>{options.navigation!.navigate(request);shell?.close();}} satisfies NavigationAdapter:undefined});
+    navigation:options.navigation?{canNavigate:request=>options.navigation?.canNavigate?.(request)!==false,navigate:request=>{shell?.close('navigation');options.navigation!.navigate(request);}} satisfies NavigationAdapter:undefined});
   const menu=createNavigationMenu(menuRoot,menuOptions());
   root.classList.add('xui','xui-shell','xui-menu-layout');root.replaceChildren(skip,header,sidebar,main,dialog);if(options.content)main.append(options.content);else main.append(...original);
   const syncLabels=()=>{root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport')menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});toggle.setAttribute('aria-label',options.label??'Navigation');title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';brand.textContent=options.title??'';};syncLabels();
   const media=doc.defaultView!.matchMedia('(max-width: 47.999rem)');
-  const syncSidebar=()=>shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen));
-  shell=createShellController(root,{open:false,onOpenChange:open=>{if(options.sidebarOpen===undefined)internalOpen=open;options.onSidebarOpenChange?.(open);syncSidebar();}});
+  const syncSidebar=(details?:DialogCloseDetails)=>shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);
+  shell=createShellController(root,{open:false,restoreFocus:details=>details.reason!=='navigation',onOpenChange:(open,details)=>{if(options.sidebarOpen===undefined)internalOpen=open;options.onSidebarOpenChange?.(open);syncSidebar(details);}});
   let wasNarrow=media.matches;
   const viewport=()=>{if(wasNarrow&&!media.matches){if(options.sidebarOpen===undefined)internalOpen=false;options.onSidebarOpenChange?.(false);}wasNarrow=media.matches;syncSidebar();};
   media.addEventListener('change',viewport);syncSidebar();

@@ -14,3 +14,5 @@ test('calendar publishes one coherent snapshot when a focused adjacent-month day
 test('calendar subscription reentrancy cannot deliver an older selection callback after a newer intent',()=>{const changes=[],model=createCalendarModel({today:'2026-10-01',onValueChange:value=>changes.push(value)});model.subscribe(()=>{if(model.getState().value==='2026-10-12')model.choose('2026-10-13');});model.choose('2026-10-12');assert.equal(model.getState().value,'2026-10-13');assert.deepEqual(changes,['2026-10-13']);});
 
 test('login extension preserves promise rejection and throw even without a reason',async()=>{for(const callback of [()=>Promise.reject(),()=>{throw undefined;}]){let rejected=false;await runLoginPageExtension(callback,{username:'demo',signal:new AbortController().signal}).catch(()=>rejected=true);assert.equal(rejected,true);}});
+
+test('calendar accepts an explicit update of its default single mode while rejecting an actual mode change',()=>{const model=createCalendarModel({today:'2026-10-12'});assert.doesNotThrow(()=>model.update({mode:'single'}));assert.throws(()=>model.update({mode:'range'}),TypeError);});

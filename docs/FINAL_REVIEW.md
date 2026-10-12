@@ -89,3 +89,7 @@ XUI-01/02下载和端点安全error adapter沿用8241e56绿色能力；XUI-03明
 冷启动独立复核在固定Vite8.2.2 opaque懒深入口下cold3reload/4Document、warm与声明include0/1；生产正式消费者6组180秒360点击/60历史操作无额外Document。最小SSR handler前原生anchor有document导航，handler后SPA保持shell/草稿，这只是平台与单夹具合同证明，不宣布SSR全面支持。可重复脚本及Codex提示词已入[NAVIGATION](NAVIGATION.md)，用户真实现场日志仍待采用任务核实，线上受保护工具已停止，无凭据绕过。
 
 定向最终31/31新浏览器、13项新单测、68入口/20参考消费者、1Vite回归已通过；保留早期12/25、3/27、2/27失败。独立审查最终关闭全部已复现P2：日历快照/重入/构造/跨月焦点、旧widget句柄、登录当前错误/无理由reject、Command首次Up/移除焦点/动作重复；peerdisabled可焦点和无高亮停靠为真实合同，不强改peer。完整冻结SHA验收结果随交付记录；没有用局部通过替代完整verify。
+
+第二个独立生命周期审查新增复现：旧Sheet/Alert wrapper重复destroy移除新实例role/class/side，Command UUID初始化失败留下owner，以及Accordion缺summary使destroy抛错。已加wrapper自有幂等守卫、前置Command分配与Accordion markup校验及正式浏览器回归。b7387fb完整verify在构建/types/129单测通过后的watch阶段主动终止，保留verify-adoption-controls-b7387fb-interrupted-review.log；不推送该未闭合检查点，新SHA重新跑完整门禁。
+
+追加审查关闭旧Command保留节点仍可执行callback、旧Shell重复destroy、Calendar默认single更新、Dialog延迟close/当前外部焦点/新模态与React导航回焦点问题。正式打包的widgets+menu专项45/45通过；独立390px React对照确认焦点归属guard同时保留新标题与普通trigger回退，移除内部navigation一律禁止恢复的分支。固定高度采用公开Root style，不增加私有覆写。完整新SHA验收仍须冻结后执行。

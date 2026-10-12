@@ -107,3 +107,7 @@ include清单按宿主实际正式入口扩展，特殊第三方/CJS依赖保持
 AppShell/MenuLayout及createMenuLayout新增scrollMode=document|viewport，默认document，保留原有文档滚动。原生公开标记为data-scroll-mode。viewport根为100dvh有界grid，正文行minmax(0,1fr)，sidebar/main均min-height:0且独立overflow:auto；窄屏复用既有drawer的有界Body，不加第二drawer。宿主嵌入非全窗口时给公开Root style的blockSize，不穿透私有子元素调整默认皮肤。
 
 viewport更新选中项以nearest进入所属侧栏可视区域；焦点依靠浏览器所属滚动区滚入可视区，菜单键盘规则不另建owner。同一main与内容节点更新保持滚动/输入；产品导航历史如何按route保存和恢复各容器scroll位置由宿主决定，不按route key重挂整个shell。官方两[控件消费者](WIDGETS.md)演示24项长菜单、长正文、横/纵滚动表格与反向导航；实际窄屏/文字放大和焦点验收见最终记录。
+
+固定高度宿主可使用 React `MenuLayout` 的公开 `style={{blockSize:480}}`（或 AppShell 的同一 Root style），原生给传入的 root 设置 `style.blockSize`，并显式选 `scrollMode='viewport'`。这时侧栏和正文分别滚动，选中菜单滚动到可见范围；不靠子元素私有选择器修补，也不把滚动恢复策略移入库。
+
+抽屉关闭先释放本次模态，再调用宿主 `navigation.navigate`。默认回焦点仅在当前焦点仍属于关闭的抽屉或没有有效焦点时执行；宿主已将焦点放到新路由标题、外部控件或新模态时保持它。React `restoreSidebarFocus={false}` 可显式关闭恢复；原生 `createDialogController`/Sheet/AlertDialog 的 `restoreFocus` 可用布尔值或接收 `DialogCloseDetails.reason` 的函数，`close(reason)` 与受控 `syncOpen(false, details)` 保留原因。原生 MenuLayout 的导航关闭原因是 `navigation`，取消/Escape 仍按普通关闭处理。旧 owner 的延迟 close 事件或重复 destroy 不得夺取新 owner 焦点。

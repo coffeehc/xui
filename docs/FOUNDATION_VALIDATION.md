@@ -151,4 +151,8 @@ Toast 原合并单项和完整套件在云端通过，未复现用户本机的�
 
 独立只读审查还用源内存转译及Chromium复现并修复：日历原子快照/订阅重入/邻月焦点/非法构造恢复，旧widget句柄销毁与更新、扩展无reason拒绝/旧auth错误、首次ArrowUp与chip删除后焦点。受控删除确认前不挪焦点，已转外部则不抢回。该审查不冒充正式构建；最终源码复核未见残留P1/P2，根整套验收与同SHA CI另以交付日志记录。
 
-标准verify现在预计129单测、1默认watch、1Vite冷启动回归、183浏览器检查，并核271默认token与68入口/20参考页。最终冻结SHA整条命令未完成前不称完整通过。未跑真实产品Cookie/CSRF/SSO/API Key/业务日志backend、3OS Wails、其他浏览器/读屏器/真实触屏OS/浏览器zoom、全SSR或生产性能。仅最小独立SSR handler对照与Vite因果夹具完成；真实用户冷启动现场仍未确认。
+标准verify现在预计130单测、1默认watch、1Vite冷启动回归、191浏览器检查，并核271默认token与68入口/20参考页。最终冻结SHA整条命令未完成前不称完整通过。未跑真实产品Cookie/CSRF/SSO/API Key/业务日志backend、3OS Wails、其他浏览器/读屏器/真实触屏OS/浏览器zoom、全SSR或生产性能。仅最小独立SSR handler对照与Vite因果夹具完成；真实用户冷启动现场仍未确认。
+
+第二个独立生命周期审查新增复现：旧Sheet/Alert wrapper重复destroy移除新实例role/class/side，Command UUID初始化失败留下owner，以及Accordion缺summary使destroy抛错。已加wrapper自有幂等守卫、前置Command分配与Accordion markup校验及正式浏览器回归。b7387fb完整verify在构建/types/129单测通过后的watch阶段主动终止，保留verify-adoption-controls-b7387fb-interrupted-review.log；不推送该未闭合检查点，新SHA重新跑完整门禁。
+
+追加正式打包消费回归覆盖固定480px窗口、选中菜单可见、旧Command回调与Shell句柄、延迟Dialog close/新模态/外部焦点，以及React新路由标题焦点。最新 widgets+menu 定向45/45通过；独立源复核确认普通关闭回trigger、新路由主动移焦保留，两种合同同时成立。Calendar隐式默认single更新新增单测；最终整套计数以冻结SHA日志为准。

@@ -1,5 +1,6 @@
 export interface ChangeDetails{reason:string;event?:Event;cancel:()=>void}
-export interface OpenOptions{open?:boolean;defaultOpen?:boolean;onOpenChange?:(open:boolean,details:ChangeDetails)=>void;finalFocus?:HTMLElement|(()=>HTMLElement|null);initialFocus?:HTMLElement|(()=>HTMLElement|null)}
+export interface DialogCloseDetails{reason:string;event?:Event}
+export interface OpenOptions{restoreFocus?:boolean|((details:DialogCloseDetails)=>boolean);open?:boolean;defaultOpen?:boolean;onOpenChange?:(open:boolean,details:ChangeDetails)=>void;finalFocus?:HTMLElement|(()=>HTMLElement|null);initialFocus?:HTMLElement|(()=>HTMLElement|null)}
 const disabled=(node:HTMLElement)=>node.matches(':disabled,[aria-disabled="true"]');
 const focusable=(root:HTMLElement)=>Array.from(root.querySelectorAll<HTMLElement>('button,a[href],input,select,textarea,[tabindex]')).filter(node=>!disabled(node)&&node.tabIndex>=0&&!node.closest('[hidden]')&&node.getClientRects().length>0);
 function change(node:HTMLElement,value:unknown,reason:string,event:Event|undefined,callback?: (details:ChangeDetails)=>void){
@@ -7,10 +8,10 @@ function change(node:HTMLElement,value:unknown,reason:string,event:Event|undefin
   const custom=new CustomEvent('xui:change',{bubbles:true,cancelable:true,detail:{value,reason,event}});
   if(!node.dispatchEvent(custom))cancelled=true;return !cancelled;
 }
-function restore(doc:Document,trigger:HTMLElement,finalFocus:OpenOptions['finalFocus']){
+function restore(doc:Document,trigger:HTMLElement,finalFocus:OpenOptions['finalFocus'],guard?:(target:HTMLElement|null|undefined)=>boolean){
   const explicit=typeof finalFocus==='function'?finalFocus():finalFocus;
   const target=[explicit,trigger].find(node=>node?.isConnected&&!disabled(node)&&node.getClientRects().length>0);
-  target?.focus();
+  if(!guard||guard(target))target?.focus();
 }
 export function bindPressFeedback(root:HTMLElement){
   const pressed=new Set<HTMLElement>();
@@ -50,18 +51,18 @@ export function createTabsController(root:HTMLElement,options:{value?:string;def
 
 const dialogStacks=new WeakMap<Document,HTMLDialogElement[]>();
 export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElement,options:OpenOptions={}){
-  let dead=false;const controlled=options.open!==undefined;trigger.setAttribute('aria-haspopup','dialog');if(dialog.id)trigger.setAttribute('aria-controls',dialog.id);
+  let dead=false,opened=false,shouldRestore=true,closeDetails:DialogCloseDetails={reason:'native'};const controlled=options.open!==undefined;trigger.setAttribute('aria-haspopup','dialog');if(dialog.id)trigger.setAttribute('aria-controls',dialog.id);
   const stack=dialogStacks.get(dialog.ownerDocument)??[];dialogStacks.set(dialog.ownerDocument,stack);const remove=()=>{const index=stack.indexOf(dialog);if(index>=0)stack.splice(index,1);};
-  const syncOpen=(next:boolean)=>{if(dead)return;if(next&&!dialog.open){if(disabled(trigger))return;remove();stack.push(dialog);try{dialog.showModal();}catch(error){remove();throw error;}const initial=typeof options.initialFocus==='function'?options.initialFocus():options.initialFocus;if(!dead&&dialog.open&&initial&&dialog.contains(initial)&&!disabled(initial))initial.focus();}else if(!next&&dialog.open){remove();dialog.close();}trigger.setAttribute('aria-expanded',String(dialog.open));};
-  const request=(next:boolean,reason='imperative',event?:Event)=>{if(dead||next===dialog.open||(next&&disabled(trigger)))return;if(change(dialog,next,reason,event,details=>options.onOpenChange?.(next,details))&&!controlled)syncOpen(next);};
+  const syncOpen=(next:boolean,details:DialogCloseDetails={reason:'imperative'})=>{if(dead)return;if(next&&!dialog.open){if(disabled(trigger))return;remove();stack.push(dialog);opened=true;shouldRestore=true;closeDetails={reason:'native'};try{dialog.showModal();}catch(error){opened=false;remove();throw error;}const initial=typeof options.initialFocus==='function'?options.initialFocus():options.initialFocus;if(!dead&&dialog.open&&initial&&dialog.contains(initial)&&!disabled(initial))initial.focus();}else if(!next&&dialog.open){closeDetails=details;const active=dialog.ownerDocument.activeElement;shouldRestore=dialog.contains(active)||active===dialog.ownerDocument.body;remove();dialog.close();}trigger.setAttribute('aria-expanded',String(dialog.open));};
+  const request=(next:boolean,reason='imperative',event?:Event)=>{if(dead||next===dialog.open||(next&&disabled(trigger)))return;if(change(dialog,next,reason,event,details=>options.onOpenChange?.(next,details))&&!controlled)syncOpen(next,{reason,event});};
   const click=(event:Event)=>request(true,'trigger',event);
   const cancel=(event:Event)=>{event.preventDefault();if(event.target===dialog&&stack.at(-1)===dialog)request(false,'escape',event);};
   const closeClick=(event:MouseEvent)=>{const button=(event.target as HTMLElement).closest<HTMLElement>('[data-xui-close]');if(button&&button.closest('dialog')===dialog&&!disabled(button))request(false,'close',event);};
   const key=(event:KeyboardEvent)=>{if(!dialog.open||stack.at(-1)!==dialog||event.defaultPrevented||event.key!=='Tab'||event.altKey||event.ctrlKey||event.metaKey)return;const targets=focusable(dialog),active=dialog.ownerDocument.activeElement;
     if(!targets.length){event.preventDefault();dialog.focus();return;}if(event.shiftKey&&active===targets[0]||!event.shiftKey&&active===targets.at(-1)||!dialog.contains(active)){event.preventDefault();(event.shiftKey?targets.at(-1):targets[0])?.focus();}};
-  const closed=()=>{if(dead||dialog.open)return;remove();trigger.setAttribute('aria-expanded','false');restore(dialog.ownerDocument,trigger,options.finalFocus);};
+  const closed=()=>{if(dead||dialog.open||!opened)return;opened=false;remove();trigger.setAttribute('aria-expanded','false');const policy=typeof options.restoreFocus==='function'?options.restoreFocus(closeDetails):options.restoreFocus;if(policy===false||!shouldRestore)return;const doc=dialog.ownerDocument;restore(doc,trigger,options.finalFocus,target=>{const active=doc.activeElement,top=stack.at(-1);return !dead&&!dialog.open&&(active===doc.body||active===trigger||dialog.contains(active))&&(!top||!!target&&top.contains(target));});};
   trigger.addEventListener('click',click);dialog.addEventListener('cancel',cancel);dialog.addEventListener('click',closeClick);dialog.addEventListener('keydown',key);dialog.addEventListener('close',closed);syncOpen(options.open??options.defaultOpen??false);
-  return {getOpen:()=>dialog.open,open:()=>request(true),close:()=>request(false),syncOpen,destroy(){if(dead)return;syncOpen(false);remove();dead=true;trigger.removeEventListener('click',click);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',closeClick);dialog.removeEventListener('keydown',key);dialog.removeEventListener('close',closed);}};
+  return {getOpen:()=>dialog.open,open:()=>request(true),close:(reason='imperative')=>request(false,reason),syncOpen,destroy(){if(dead)return;syncOpen(false,{reason:'destroy'});remove();dead=true;trigger.removeEventListener('click',click);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',closeClick);dialog.removeEventListener('keydown',key);dialog.removeEventListener('close',closed);}};
 }
 
 const popupStacks=new WeakMap<Document,HTMLElement[]>();
@@ -104,8 +105,8 @@ export function createPopoverController(trigger:HTMLElement,popup:HTMLElement,op
   return {getOpen:()=>open,open:()=>{contextPoint=null;request(true,'imperative');if(open&&menu)items()[0]?.focus();},close:()=>request(false,'imperative'),syncOpen,destroy(){syncOpen(false);dead=true;trigger.removeEventListener('click',click);trigger.removeEventListener('contextmenu',context);trigger.removeEventListener('pointerdown',pointer);trigger.removeEventListener('focus',focus);trigger.removeEventListener('blur',blur);trigger.removeEventListener('pointerenter',enter);trigger.removeEventListener('pointerleave',leave);doc.removeEventListener('pointerdown',outside);doc.removeEventListener('keydown',key);popup.removeEventListener('click',disabledClick,true);popup.removeEventListener('click',itemClick);win.removeEventListener('resize',position);doc.removeEventListener('scroll',scroll,true);}};
 }
 
-export function createSheetController(dialog:HTMLDialogElement,trigger:HTMLElement,{side='end',...options}:OpenOptions&{side?:'start'|'end'|'top'|'bottom'}={}){if(!['start','end','top','bottom'].includes(side))throw new TypeError('Invalid sheet side');const prior=dialog.dataset.side,hadClass=dialog.classList.contains('xui-sheet');dialog.classList.add('xui-sheet');dialog.dataset.side=side;const controller=createDialogController(dialog,trigger,options);return {...controller,destroy(){controller.destroy();if(!hadClass)dialog.classList.remove('xui-sheet');if(prior===undefined)delete dialog.dataset.side;else dialog.dataset.side=prior;}};}
-export function createAlertDialogController(dialog:HTMLDialogElement,trigger:HTMLElement,options:OpenOptions={}){const role=dialog.getAttribute('role'),hadClass=dialog.classList.contains('xui-alert-dialog');dialog.setAttribute('role','alertdialog');dialog.classList.add('xui-alert-dialog');const controller=createDialogController(dialog,trigger,{...options,initialFocus:options.initialFocus??(()=>dialog.querySelector<HTMLElement>('[data-xui-cancel]')??dialog)});return {...controller,destroy(){controller.destroy();if(role===null)dialog.removeAttribute('role');else dialog.setAttribute('role',role);if(!hadClass)dialog.classList.remove('xui-alert-dialog');}};}
+export function createSheetController(dialog:HTMLDialogElement,trigger:HTMLElement,{side='end',...options}:OpenOptions&{side?:'start'|'end'|'top'|'bottom'}={}){if(!['start','end','top','bottom'].includes(side))throw new TypeError('Invalid sheet side');const prior=dialog.dataset.side,hadClass=dialog.classList.contains('xui-sheet');dialog.classList.add('xui-sheet');dialog.dataset.side=side;const controller=createDialogController(dialog,trigger,options);let dead=false;return {...controller,destroy(){if(dead)return;dead=true;controller.destroy();if(!hadClass)dialog.classList.remove('xui-sheet');if(prior===undefined)delete dialog.dataset.side;else dialog.dataset.side=prior;}};}
+export function createAlertDialogController(dialog:HTMLDialogElement,trigger:HTMLElement,options:OpenOptions={}){const role=dialog.getAttribute('role'),hadClass=dialog.classList.contains('xui-alert-dialog');dialog.setAttribute('role','alertdialog');dialog.classList.add('xui-alert-dialog');const controller=createDialogController(dialog,trigger,{...options,initialFocus:options.initialFocus??(()=>dialog.querySelector<HTMLElement>('[data-xui-cancel]')??dialog)});let dead=false;return {...controller,destroy(){if(dead)return;dead=true;controller.destroy();if(role===null)dialog.removeAttribute('role');else dialog.setAttribute('role',role);if(!hadClass)dialog.classList.remove('xui-alert-dialog');}};}
 export function createContextMenuController(trigger:HTMLElement,popup:HTMLElement,options:OpenOptions={}){return createPopoverController(trigger,popup,{...options,contextMenu:true,menu:true});}
 
 export function createShellController(root:HTMLElement,options:OpenOptions={}){
@@ -114,7 +115,7 @@ export function createShellController(root:HTMLElement,options:OpenOptions={}){
   const media=root.ownerDocument.defaultView!.matchMedia('(max-width: 47.999rem)');
   const control=createDialogController(dialog,trigger,{...options,finalFocus:options.finalFocus??(()=>media.matches?trigger:main)});
   const update=()=>{if(media.matches)slot.append(sidebar);else{control.syncOpen(false);root.insertBefore(sidebar,main);}};
-  media.addEventListener('change',update);update();return {...control,destroy(){media.removeEventListener('change',update);control.destroy();root.insertBefore(sidebar,main);}};
+  media.addEventListener('change',update);update();let dead=false;return {...control,destroy(){if(dead)return;dead=true;media.removeEventListener('change',update);control.destroy();root.insertBefore(sidebar,main);}};
 }
 
 export function createToastController(viewport:HTMLElement,options:{limit?:number;dismissLabel?:string}={}){
