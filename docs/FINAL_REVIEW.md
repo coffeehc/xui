@@ -75,3 +75,5 @@
 用户后续更正冷启动问题发生在本地新接入版本、尚未部署；停止线上取证，旧线上#418不再参与归因。未访问用户本机，本地dev/watch命令与日志尚未提供；继续云端独立dev模块初始化对照，区分生产字节与Vite依赖优化/HMR，不以“未就绪”代替因果证据。
 
 进一步独立Vite8.2.2 dev宿主复现：三个不可静态发现的lazy xui deep imports对应三次dependency optimized→optimized dependencies changed. reloading→HMR full-reload→Document1→4；后续点击稳定。暖optimizer cache和冷cache预声明实际include均1 Document/0 reload，无pageerror。因果与配置指引同步NAVIGATION、ADOPTION、skill；不改库runtime协议或产品配置，不认定用户实际本地已确认此根因。具体本地命令/日志仍待用户提供，生产、dev和旧线上hydration证据分开。
+
+dbd5f7f构建/271token/typecheck通过，116单测中来源复原校验1项失败：测试仍只认识0.5.0，未移除用户授权0.5.1边界段落。保留失败日志verify-boundary-dbd5f7f-source-proof-failed.log；新增精确段落marker/SHA记录并同步contractVersion，仍严格复原原始来源SHA，不改原值、默认CSS或降低门禁。新冻结SHA重新全verify。
