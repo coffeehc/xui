@@ -22,3 +22,5 @@ export * from './calendar.js';
 export * from './widgets-dom.js';
 export * from './grouped-combobox.js';
 export * from './grouped-combobox-dom.js';
+export * from './data-table.js';
+export * from './data-table-dom.js';

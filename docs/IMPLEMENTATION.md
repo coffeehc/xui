@@ -118,3 +118,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 ### 富导航扩展
 
 NavigationMenu 的 renderButton/renderAction 与原生 NavigationMenuDOMOptions 详见[富条目合同](NAVIGATION.md#富条目独立行尾动作与上下文菜单)。主链接/无href分支和辅助单button为 sibling，库承担 roving、继承禁用和 token 布局；不得在 renderLabel 中嵌入互动控件。原生 slots 按 id/kind/factory 保留 DOM 和 update/destroy，一次绑定一次清理；ContextMenu 使用公开 renderer/decorator，不复制内部导航结构。查询/独立cursor/hasMore、业务配置和写入由宿主拥有。
+
+## 完整受控表格组合
+
+DataTable系列新增正式/data-table与/data-table-dom入口，复用既有Table/Toolbar/Field/Pagination/DataRegion，采用已有workspace/page slots。统一footer和表体滚动属于库，data/columns/actions/rights/query仍由宿主提供；null total明确不启用编号分页。原生keyed row与cell slot.update/destroy保留生命周期，见[完整合同](DATA_TABLE.md)。顶栏locale装饰箭头、无框状态与controls/account尺度见[顶栏控件](HEADER_CONTROLS.md)。

@@ -5,15 +5,23 @@ export interface HeaderLocaleOptions {
   onValueChange:(value:string)=>void;label?:string;disabled?:boolean;
 }
 export function isHeaderLocaleEnabled(locale?:HeaderLocaleOptions):locale is HeaderLocaleOptions{return locale?.enabled===true;}
-/** A persistent native select; updates neither replace it nor dispatch a change. */
-export function bindHeaderLocaleSelect(select:HTMLSelectElement,initial:HeaderLocaleOptions){
-  let options=initial,signature='';
-  const update=(next:HeaderLocaleOptions)=>{options=next;select.classList.add('xui-select','xui-header-locale');select.setAttribute('aria-label',options.label??'语言');select.disabled=!!options.disabled;
+type HeaderLocaleBinding={element:HTMLSpanElement;update:(next:HeaderLocaleOptions)=>void;destroy:()=>void};
+const localeOwners=new WeakMap<HTMLSelectElement,HeaderLocaleBinding>();
+/** A persistent native select. Mount element; updates keep the select and its focus.
+ * Destroy removes this decoration/listener and unwraps the original select, retaining
+ * the last host facts. A destroyed handle cannot update a later binding. */
+export function bindHeaderLocaleSelect(select:HTMLSelectElement,initial:HeaderLocaleOptions):HeaderLocaleBinding{
+  const existing=localeOwners.get(select);if(existing){existing.update(initial);return existing;}
+  const doc=select.ownerDocument,element=doc.createElement('span'),icon=doc.createElementNS('http://www.w3.org/2000/svg','svg'),path=doc.createElementNS('http://www.w3.org/2000/svg','path');
+  element.className='xui-header-locale-control';icon.setAttribute('class','xui-header-locale-icon');icon.setAttribute('viewBox','0 0 20 20');icon.setAttribute('aria-hidden','true');icon.setAttribute('focusable','false');icon.setAttribute('fill','none');icon.setAttribute('stroke','currentColor');path.setAttribute('d','m1 6 9 8 9-8');icon.append(path);
+  if(select.parentNode)select.parentNode.insertBefore(element,select);element.append(select,icon);
+  let options=initial,signature='',dead=false;
+  const update=(next:HeaderLocaleOptions)=>{if(dead)return;options=next;select.classList.add('xui-select','xui-header-locale');select.setAttribute('aria-label',options.label??'语言');select.disabled=!options.enabled||!!options.disabled;
     const items=options.options,hasCurrent=items.some(item=>item.value===options.value),key=JSON.stringify([items,hasCurrent?null:options.value]);
-    if(key!==signature){select.replaceChildren(...[...(hasCurrent?[]:[{value:options.value,label:'',disabled:true}]),...items].map(item=>{const node=select.ownerDocument.createElement('option');node.value=item.value;node.textContent=item.label;node.disabled=!!item.disabled;return node;}));signature=key;}
+    if(key!==signature){select.replaceChildren(...[...(hasCurrent?[]:[{value:options.value,label:'',disabled:true}]),...items].map(item=>{const node=doc.createElement('option');node.value=item.value;node.textContent=item.label;node.disabled=!!item.disabled;return node;}));signature=key;}
     select.value=options.value;
   };
-  const change=()=>{const next=select.value;select.value=options.value;if(options.enabled&&!options.disabled&&options.options.some(item=>item.value===next&&!item.disabled)&&next!==options.value)options.onValueChange(next);};
-  update(initial);select.addEventListener('change',change);
-  return {update,destroy(){select.removeEventListener('change',change);}};
+  const change=()=>{if(dead)return;const next=select.value;select.value=options.value;if(options.enabled&&!options.disabled&&options.options.some(item=>item.value===next&&!item.disabled)&&next!==options.value)options.onValueChange(next);};
+  const binding:HeaderLocaleBinding={element,update,destroy(){if(dead)return;dead=true;select.removeEventListener('change',change);localeOwners.delete(select);if(element.parentNode)element.parentNode.insertBefore(select,element);else select.remove();element.remove();select.classList.remove('xui-header-locale');}};
+  update(initial);select.addEventListener('change',change);localeOwners.set(select,binding);return binding;
 }

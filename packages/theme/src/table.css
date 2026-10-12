@@ -20,3 +20,24 @@
   .xui-sort-button:active {background:var(--interaction-pressed);}
   .xui-sort-button:disabled {color:var(--muted-foreground);cursor:not-allowed;}
 }
+@layer xui-components {
+  .xui-data-table {display:flex;flex-direction:column;min-inline-size:0;gap:var(--space-content-gap);}
+  .xui-data-table[data-layout='workspace'] {block-size:100%;min-block-size:var(--data-table-min-block-size);}
+  .xui-data-table-tools,.xui-data-table-feedback {flex:none;min-inline-size:0;}
+  .xui-data-table-frame {display:flex;flex-direction:column;flex:1 1 auto;min-block-size:0;min-inline-size:0;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
+  .xui-data-table[data-layout='workspace']>.xui-data-table-frame {flex:1 1 0;}
+  .xui-data-table-body {flex:1 1 auto;min-block-size:var(--control-height);border:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
+  .xui-data-table[data-layout='workspace'] .xui-data-table-body {flex:1 1 0;}
+  .xui-data-table-footer {display:flex;align-items:center;flex:none;flex-wrap:wrap;min-inline-size:0;gap:var(--space-control-gap) var(--space-section-gap);padding:var(--space-control-gap) var(--space-content-gap);border-block-start:var(--line-width-surface) solid var(--surface-line);border-radius:0 0 var(--radius-lg) var(--radius-lg);background:var(--layer-raised);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);overflow-wrap:anywhere;}
+  :is(.xui-data-table-tools,.xui-data-table-feedback,.xui-data-table-footer-extra):empty {display:none;}
+  .xui-data-table-footer-extra {min-inline-size:0;max-inline-size:100%;}
+  .xui-data-table-count {flex:1 1 auto;min-inline-size:0;}
+  .xui-data-table-page-size {display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-control-gap);min-inline-size:0;}
+  .xui-data-table-page-size>.xui-select {inline-size:auto;max-inline-size:100%;}
+  .xui-data-table-footer>.xui-pagination {flex-wrap:wrap;}
+  .xui-data-table-footer .xui-button {white-space:normal;overflow-wrap:anywhere;}
+  .xui-data-table-toolbar {align-items:flex-end;}
+  .xui-data-table-toolbar>.xui-data-table-filter {flex:0 1 var(--data-table-filter-min);min-inline-size:min(100%,var(--data-table-filter-min));max-inline-size:100%;}
+  .xui-data-table-toolbar>.xui-data-table-filter[data-grow='true'] {flex:1 1 var(--layout-field-long-min);}
+  .xui-data-table-toolbar>* {max-inline-size:100%;}
+}

@@ -131,6 +131,10 @@
     "./grouped-combobox": {
       "types": "./dist/grouped-combobox.d.ts",
       "import": "./dist/grouped-combobox.js"
+    },
+    "./data-table": {
+      "types": "./dist/data-table.d.ts",
+      "import": "./dist/data-table.js"
     }
   },
   "types": "./dist/index.d.ts",

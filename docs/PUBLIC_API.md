@@ -48,6 +48,9 @@
 | `@coffeehc/xui-react/feedback` <!-- public-entry: @coffeehc/xui-react/feedback --> | [源码](../packages/ui-react/src/feedback.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/layout` <!-- public-entry: @coffeehc/xui-react/layout --> | [源码](../packages/ui-react/src/layout.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/table` <!-- public-entry: @coffeehc/xui-react/table --> | [源码](../packages/ui-react/src/table.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-react/data-table` <!-- public-entry: @coffeehc/xui-react/data-table --> | [源码](../packages/ui-react/src/data-table.tsx) | [完整组合](DATA_TABLE.md) | [示例](../examples/data-table-react/app.tsx) |
+| `@coffeehc/xui-runtime/data-table` <!-- public-entry: @coffeehc/xui-runtime/data-table --> | [共享事实/类型](../packages/runtime/src/data-table.ts) | [完整组合](DATA_TABLE.md) | [模型](../examples/shared/data-table-model.ts) |
+| `@coffeehc/xui-runtime/data-table-dom` <!-- public-entry: @coffeehc/xui-runtime/data-table-dom --> | [原生](../packages/runtime/src/data-table-dom.ts) | [完整组合](DATA_TABLE.md) | [示例](../examples/data-table-vanilla/app.js) |
 | `@coffeehc/xui-react/select` <!-- public-entry: @coffeehc/xui-react/select --> | [源码](../packages/ui-react/src/select.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/combobox` <!-- public-entry: @coffeehc/xui-react/combobox --> | [源码](../packages/ui-react/src/combobox.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/grouped-combobox` <!-- public-entry: @coffeehc/xui-react/grouped-combobox --> | [源码](../packages/ui-react/src/grouped-combobox.tsx) | [合同](GROUPED_SEARCH.md) | [示例](../examples/grouped-search-react/app.tsx) |
@@ -170,3 +173,5 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 `@coffeehc/xui-react/menu-layout` / 根的 `NavigationMenuProps`（及 `MenuLayoutProps`）追加 `renderButton(item)`、`renderAction(item)`：单 button 分支 renderer 与独立 sibling 辅助动作。保留已有 `children/resolveIcon/renderLabel/renderLink`，不是 listbox。`@coffeehc/xui-runtime/navigation` / 根追加类型 `NavigationRowState`、`NavigationDOMLifecycle`、`NavigationDOMSlot`、`NavigationMenuDOMOptions`；`createNavigationMenu` 和原生 `MenuLayoutOptions` 接受 renderLabel/renderAction/decorateItem 公共生命周期。默认无扩展时保持原菜单；busy 不自动等于 disabled。API、键盘、内容限制和清理见[富条目合同](NAVIGATION.md#富条目独立行尾动作与上下文菜单)，[双端正式消费者](GROUPED_SEARCH.md#富业务分组导航与简单选择的边界)。
 
 原生 `MenuLayoutOptions.sidebar?:Node|null` 可替换完整菜单区域，省略/null恢复默认数据菜单；稳定节点、替换焦点和清理边界见[原生自组sidebar](NAVIGATION.md#原生完整自组-sidebar)。它复用同一个shell，不占sidebarHeader限定高度。React使用现有AppShell.sidebar组合。
+
+公共 DataTable/DataTableToolbar/DataTableFilter 与原生 createDataTable/createDataTableToolbar/createDataTableFilter 复用表格和页内槽，合同见 [DATA_TABLE](DATA_TABLE.md)。顶栏语言入口默认无常驻外框和装饰SVG箭头，controls/account紧凑但命中区不减，见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。

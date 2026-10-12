@@ -173,6 +173,15 @@ for (const kind of ['vanilla','react']) {
   await copyFile(`${grouped}/index.html`,`${groupedOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${groupedOutput}/theme-init.js`);await writeFile(`${groupedOutput}/metafile.json`,JSON.stringify(groupedBuild.metafile,null,2));
   await copyFile('tests/fixtures/grouped-search-types.tsx',`${cwd}/grouped-search-types.tsx`);
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',...(kind==='react'?['grouped-search/app.tsx','grouped-search-types.tsx']:['shared/grouped-search-model.ts'])],{cwd,stdio:'inherit'});
+  const dataTable=resolve(cwd,'data-table'),dataTableOutput=resolve(`dist/data-table-${kind}`);
+  await cp(`examples/data-table-${kind}`,dataTable,{recursive:true});await copyFile('examples/shared/data-table-model.ts',`${cwd}/shared/data-table-model.ts`);
+  const dataTableBuild=await build({entryPoints:[`${dataTable}/app.${kind==='react'?'tsx':'js'}`],outdir:dataTableOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(dataTableBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'DataTable consumer escaped standalone install');
+  assert(!Object.keys(dataTableBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'DataTable consumer requires private CSS');
+  if(kind==='vanilla')assert(!Object.keys(dataTableBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native DataTable imported React');
+  await copyFile(`${dataTable}/index.html`,`${dataTableOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${dataTableOutput}/theme-init.js`);await writeFile(`${dataTableOutput}/metafile.json`,JSON.stringify(dataTableBuild.metafile,null,2));
+  await copyFile('tests/fixtures/data-table-types.tsx',`${cwd}/data-table-types.tsx`);await copyFile('tests/fixtures/data-table-native-types.ts',`${cwd}/data-table-native-types.ts`);
+  execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',...(kind==='react'?['data-table/app.tsx','data-table-types.tsx']:['shared/data-table-model.ts','data-table-native-types.ts'])],{cwd,stdio:'inherit'});
   const richNavigation=resolve(cwd,'rich-navigation'),richNavigationOutput=resolve(`dist/rich-navigation-${kind}`);
   await cp(`examples/rich-navigation-${kind}`,richNavigation,{recursive:true});await copyFile('examples/shared/rich-navigation-model.ts',`${cwd}/shared/rich-navigation-model.ts`);
   const richNavigationBuild=await build({entryPoints:[`${richNavigation}/app.${kind==='react'?'tsx':'js'}`],outdir:richNavigationOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});

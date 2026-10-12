@@ -45,7 +45,7 @@ export function checkContract(document) {
   const rules = [];
   tree.walkRules(rule => rules.push(rule));
   const light = declarations(rules.find(rule => rule.selector === ':root'));
-  assert.equal(Object.keys(light).length, 343, 'Default token count');
+  assert.equal(Object.keys(light).length, 345, 'Default token count');
   for (const name of ['--font-scale','--line-height-scale']) {
     const registration=tree.nodes.find(node=>node.type==='atrule'&&node.name==='property'&&node.params===name);
     assert(registration, `Missing typed ${name} registration`);
@@ -129,6 +129,6 @@ export async function generate(check = false, outputDirectory='packages/theme/di
     if (check) assert.equal(await readFile(path,'utf8'),value, `Generated CSS drift: ${path}`);
     else await writeFile(path,value);
   }
-  console.log('Contract: 343 tokens, complete acyclic graphs, light/dark/system/reduced, YAML and extracted CSS agree.');
+  console.log(`Contract: ${Object.keys(light).length} tokens, complete acyclic graphs, light/dark/system/reduced, YAML and extracted CSS agree.`);
 }
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) await generate(process.argv.includes('--check'));

@@ -28,3 +28,4 @@ export * from './scroll-area.js';
 export * from './calendar.js';
 export * from './command.js';
 export * from './grouped-combobox.js';
+export * from './data-table.js';

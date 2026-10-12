@@ -525,6 +525,8 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --login-brand-max-block-size: 20dvh;
     --sheet-max-block-size: 80dvh;
     --tabs-padding: calc(var(--spacing) * .75);
+    --data-table-filter-min: 9rem;
+    --data-table-min-block-size: calc(var(--control-height) * 4);
     --table-min-inline-size: calc(var(--control-height) * 12);
     --z-sticky-intersection: calc(var(--z-sticky) + 1);
     --avatar-size-lg: calc(var(--control-height) * 1.5);
@@ -1193,5 +1195,13 @@ headerSlots.leading是可选、默认空且不收缩的最前区域，位于自�
 带层级、图标和描述的业务导航保持普通nav/link/button语义。主要导航/展开控件与行尾辅助button必须为sibling，标签只包含非交互描述，不能嵌入button/link/input或伪装成listbox option。库维护单一roving停靠：上下/Home/End遍历可见可用控件，左右只处理主控件的层级，辅助动作Enter/Space不触发导航。ContextMenu的浮层键盘和回焦点保持独立，不能借事件穿透要求消费方stopPropagation。库提供公开单元素renderer/原生稳定slot生命周期；disabled继承，busy和业务防重复由宿主明确提供。
 
 行尾按钮和紧凑排列复用现有control/nav/space语义变量，根据可用窗口自适应；紧凑辅助按钮在同项下一行，不写产品固定宽高或加宽轨道。共享查询、各组独立cursor/hasMore、关闭取消与迟到丢弃属于宿主，不在通用组件猜total/pageCount或内置领域请求与写入。可用Input、Section/Disclosure、独立NavigationMenu与组外加载按钮组成富分组导航，简单选择仍采用原有listbox合同。
+
+### 公共表格整体与紧凑顶栏工具
+
+完整DataTable复用Table/Toolbar/Field/Pagination/DataRegion原语。标题/主操作和筛选可分别置于既有pageHeader/pageToolbar；表格在workspace正文自然占剩余高度，只有表体滚动，真实计数、唯一每页条数和分页留在同一正常流底栏。整表只有一层外框，保留列头、行和底栏信息边界；不得复制额外工具条下边框、测量header或定位分页。筛选采用data-table-filter-min，搜索可沿长字段尺度增长，窄屏自然换行。data-table-min-block-size只提供极端低高度可达性兜底，不是固定表体高度。
+
+空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。完整API与双端公共消费见[DataTable](DATA_TABLE.md)。
+
+顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单select边界不变。forced-colors回退原生箭头，平台选项面板仍归浏览器/OS。
 
 <!-- foundation-lifecycle:end -->

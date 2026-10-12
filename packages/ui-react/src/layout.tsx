@@ -23,11 +23,11 @@ export function Section({title,actions,children,className,...props}:SectionProps
 
 function HeaderLocaleSelect({locale}:{locale:HeaderLocaleOptions}){
   const select=React.useRef<HTMLSelectElement>(null);
-  React.useLayoutEffect(()=>{const node=select.current;return ()=>{if(node&&node.ownerDocument.activeElement===node)node.parentElement?.querySelector<HTMLButtonElement>('.xui-theme-mode-toggle')?.focus();};},[]);
-  return <select ref={select} className="xui-select xui-header-locale" aria-label={locale.label??'语言'} value={locale.value} disabled={locale.disabled} onChange={event=>{const value=event.currentTarget.value;if(!locale.disabled&&value!==locale.value&&locale.options.some(item=>item.value===value&&!item.disabled))locale.onValueChange(value);}}>
+  React.useLayoutEffect(()=>{const node=select.current;return ()=>{if(node&&node.ownerDocument.activeElement===node)node.closest('.xui-app-header-controls')?.querySelector<HTMLButtonElement>('.xui-theme-mode-toggle')?.focus();};},[]);
+  return <span className="xui-header-locale-control"><select ref={select} className="xui-select xui-header-locale" aria-label={locale.label??'语言'} value={locale.value} disabled={!locale.enabled||locale.disabled} onChange={event=>{const value=event.currentTarget.value;event.currentTarget.value=locale.value;if(locale.enabled&&!locale.disabled&&value!==locale.value&&locale.options.some(item=>item.value===value&&!item.disabled))locale.onValueChange(value);}}>
     {!locale.options.some(item=>item.value===locale.value)&&<option value={locale.value} disabled/>}
     {locale.options.map(item=><option key={item.value} value={item.value} disabled={item.disabled}>{item.label}</option>)}
-  </select>;
+  </select><svg className="xui-header-locale-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"><path d="m1 6 9 8 9-8"/></svg></span>;
 }
 const hasContent=(value:React.ReactNode):boolean=>{
   if(value===undefined||value===null||typeof value==='boolean')return false;

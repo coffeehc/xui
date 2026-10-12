@@ -53,6 +53,8 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 独立结构化错误完整消费为 [React](../examples/log-react/app.tsx)/[原生](../examples/log-vanilla/app.js)，共用 [typed fake facade](../examples/shared/log-model.ts)。按真实 cursor/query 语义展示累计/命中数与首次代表，只有单记录授权读取返回详情；拟议协议和宿主实现责任见 [LOGS.md](LOGS.md)。
 
+公开完整表格与page slots见 /data-table-react/、/data-table-vanilla/；使用默认正式样式，无产品表体或footer补丁。顶栏紧凑间隔与无框语言入口见 [HEADER_CONTROLS](HEADER_CONTROLS.md)，普通NativeSelect边界保持。
+
 ## 原生 UI ID 与内网 HTTP
 
 原生登录、菜单/布局、API Key/日志视图、Command、Disclosure、Popover 和 Toast 的内部 UI ID 不依赖 `crypto` 或 `crypto.randomUUID()`。内网 HTTP 等非安全上下文无需提供 UUID polyfill；用固定提交重新构建和安装正式 runtime 产物即可取得修复。
@@ -81,6 +83,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 | NavItem/Breadcrumbs/Pagination/Disclosure/Tabs | 当前项/页码/open/value 与内容 | page 选中、受控确认、disabled/RTL/方向键；Tabs 为实际 Root/List/Tab/Panel 部件 |
 | Dialog/Sheet/AlertDialog/ContextMenu/Menu/Popover/Tooltip/Toast | open/value、内容/执行回调、finalFocus，Toast manager | 公开部件/Content/positionerProps；模态/外点/Esc/回焦点；Tooltip 只放说明 |
 | Table/TableContainer/TableCaption/TableHead/TableBody/TableRow/TableHeaderCell/TableCell/SortButton | 行/列/单元内容、scope/aria-sort/selected | 独立导出、原生 table 与命名滚动区域；排序/分页/选择由宿主，不是 rows/columns 引擎 |
+| DataTable/DataTableToolbar/DataTableFilter；原生 createDataTable | rows/columns/rowKey、明确status、pageIndexOffset/pageIndex/pageSize/total、外部查询回调 | 有界表体滚动、保留空表头、自然流底栏、受控busy/失败恢复；unknown total不生成页码 |
 | Surface/Alert/Badge/Skeleton/Spinner/Progress | children/tone/标准元素状态 | 默认层级/role/status/motion，必要事实持续可见 |
 | DataRegion/LoadingState/EmptyState/ErrorState/RenderBoundary | busy/value、反馈、retry/cancel 与 render fallback | 刷新保留旧值，错误即时可见；render 异常与异步失败分开 |
 | ApiKeyManager/createApiKeyManager | 一个共享 controller、metadata/声明权限和有效期、领域 adapter | 脱敏列表、创建/一次性结果、明确复制/撤销确认、关闭竞态；labels/React headerActions |
@@ -89,7 +92,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 | StructuredLogExplorer/createStructuredLogExplorer | 一个共享 controller、明确 v1 DTO/facade、filter/cursor、详情权限与保留期 | 只读分组/观察/详情、缓存已访问摘要段、持续错误/取消、普通文本；labels/host Ref mapping/React headerActions |
 | theme/resource/HTTP/query | 单 owner、key/loader/Abort/预算、endpoint adapter/query contract | 共享类型/终止/迟到隔离，默认不重试，401/403 分开，list/total 和基数明确 |
 
-标准列表页为 MenuLayout→PageHeader 主操作→Toolbar/Field 筛选→DataRegion→TableContainer/Table→Pagination。筛选/排序重置该 endpoint 第一页并取消旧请求。cursor 业务日志/错误观察页使用各自完整公开组件，不套此 Pagination 页码或杜撰 total。表单页用 PageHeader/Fieldset/Field/公开控件，值、保存权限、防重复由宿主，必要错误关联并回焦点。详情页用 Breadcrumbs/Section/Surface/公开文本结构，敏感明细按授权加载，不执行 HTML。
+标准列表页使用 MenuLayout workspace 的 pageHeader→PageHeader 主操作、pageToolbar→DataTableToolbar/DataTableFilter 筛选、正文→DataTable（原生 createDataTable）。完整组合内置 Table/DataRegion 与统一计数、每页条数、Pagination 底栏；不再让产品复制 DataTableShell、通用滚动与 footer CSS。复杂自定义表格仍可单独组合既有原语。详细合同见 [DATA_TABLE](DATA_TABLE.md)。筛选/排序重置该 endpoint 第一页并取消旧请求。cursor 业务日志/错误观察页使用各自完整公开组件，不套此 Pagination 页码或杜撰 total。表单页用 PageHeader/Fieldset/Field/公开控件，值、保存权限、防重复由宿主，必要错误关联并回焦点。详情页用 Breadcrumbs/Section/Surface/公开文本结构，敏感明细按授权加载，不执行 HTML。
 
 原生基础控件可使用公开 HTML 类与 controller；这不是随意复制 React 内部 DOM。数据驱动菜单通过 createMenuLayout/createNavigationMenu 生成，不手写内部皮肤/selected 伪元素或第二套键盘。
 
