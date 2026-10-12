@@ -89,19 +89,22 @@ for(const kind of ['react','vanilla']){
     await page.evaluate(()=>{window.sidebarFooterDemo.finish();window.sidebarFooterDemo.setActionState({disabled:true});});await expect(action(page)).toBeDisabled();await action(page).dispatchEvent('click');expect(await page.evaluate(()=>window.sidebarFooterDemo.snapshot().calls)).toBe(1);
     await nav(page,'overview').focus();await page.keyboard.press('Tab');await expect(page.getByTestId('footer-theme')).toBeFocused();await page.keyboard.press('Enter');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
     await page.evaluate(()=>window.sidebarFooterDemo.setActionState({disabled:false}));await action(page).focus();await page.keyboard.press('Space');expect(await page.evaluate(()=>window.sidebarFooterDemo.snapshot().calls)).toBe(2);
-    await page.evaluate(()=>{window.sidebarFooterDemo.finish();const node=document.querySelector('[data-testid="footer-action"]');node.click();node.click();});expect(await page.evaluate(()=>window.sidebarFooterDemo.snapshot().calls)).toBe(3);
+    await page.evaluate(()=>window.sidebarFooterDemo.finish());await expect(action(page)).toBeEnabled();
+    // React must commit the enabled DOM state before native click() can run.
+    // Both clicks remain in one task to exercise the synchronous domain gate.
+    await page.evaluate(()=>{const node=document.querySelector('[data-testid="footer-action"]');node.click();node.click();});expect(await page.evaluate(()=>window.sidebarFooterDemo.snapshot().calls)).toBe(3);
     await capture(page,info,'keyboard-disabled-busy');
   });
 
   test(`${kind} one responsive drawer keeps the exact footer nodes and restores its trigger`,async({page},info)=>{
-    await setup(page,kind,'?collapsed=true');await remember(page);await page.setViewportSize({width:390,height:844});const trigger=page.getByRole('button',{name:'工作导航',exact:true});
+    await setup(page,kind,'?collapsed=true');await remember(page);await page.setViewportSize({width:390,height:844});const trigger=page.locator('.xui-shell-header .xui-shell-toggle');await expect(trigger).toHaveAccessibleName('工作导航');
     for(let count=0;count<2;count++){
       await trigger.click();await expect(drawer(page)).toBeVisible();await expect(trigger).toHaveAttribute('aria-expanded','true');await expect(action(page)).toBeVisible();await assertIdentity(page);
       await expect(drawer(page).locator('.xui-shell-sidebar-footer')).toHaveCount(1);await expect(page.locator('nav[aria-label="工作导航"]')).toHaveCount(1);await expect(action(page)).toHaveAccessibleName(actionName);
       const label=await bounds(action(page).locator('.xui-sidebar-footer-label'));expect(label.width).toBeGreaterThan(80);within(await bounds(action(page)),await bounds(drawer(page)));
       await action(page).focus();await page.keyboard.press('Tab');await expect(page.getByTestId('footer-theme')).toBeFocused();await page.keyboard.press('Escape');await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(trigger).toHaveAttribute('aria-expanded','false');await assertIdentity(page);
     }
-    await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));await trigger.click();await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await expect(page.locator('nav[aria-label="工作导航"] [data-menu-control][tabindex="0"]')).toHaveCount(1);await page.getByRole('button',{name:'关闭导航',exact:true}).focus();await page.keyboard.press('Tab');await expect(nav(page,'settings')).toBeFocused();await nav(page,'library').click();await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(trigger).toHaveAttribute('aria-expanded','false');await assertIdentity(page);
+    await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));await expect(nav(page,'settings')).toHaveAttribute('tabindex','0');await trigger.click();await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');const roving=page.locator('nav[aria-label="工作导航"] [data-menu-control][tabindex="0"]');await expect(roving).toHaveCount(1);const rovingId=await roving.getAttribute('data-menu-id');await page.getByRole('button',{name:'关闭导航',exact:true}).focus();await page.keyboard.press('Tab');await expect(nav(page,rovingId)).toBeFocused();await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await nav(page,'library').click();await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(trigger).toHaveAttribute('aria-expanded','false');await assertIdentity(page);
     await trigger.click();await capture(page,info,'single-narrow-drawer');await page.setViewportSize({width:1280,height:800});await expect(drawer(page)).toBeHidden();await expect(action(page)).toBeVisible();await assertIdentity(page);expect((await bounds(sidebar(page))).width).toBeCloseTo(60,1);
   });
 
