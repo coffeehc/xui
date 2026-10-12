@@ -98,3 +98,61 @@ export function createDataTableRequestGuard() {
     destroy() { dead = true; },
   };
 }
+
+/**
+ * @internal One geometry owner per rendered DataTable. Its only output is the
+ * body's intrinsic grid-track minimum; it never changes column measurements,
+ * pagination, host heights, or the full-content document flow.
+ */
+export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, table: HTMLTableElement) {
+  const win = table.ownerDocument.defaultView;
+  // Non-layout renderers (including server/test DOMs) need no geometry owner.
+  if (!win || typeof table.offsetHeight !== 'number') return {update() {}, destroy() {}};
+  const original = frame.style.gridTemplateRows;
+  let dead = false, pending = 0, written: string | undefined;
+  const watched = new Set<Element>();
+  const number = (value: string) => Number.parseFloat(value) || 0;
+  const measure = () => {
+    if (dead || !table.offsetHeight) return;
+    const head = table.tHead, rows = table.tBodies[0]?.rows;
+    const style = win.getComputedStyle(body);
+    const scrollbar = Math.max(0, body.offsetHeight - body.clientHeight - number(style.borderTopWidth) - number(style.borderBottomWidth));
+    const clearance = number(style.scrollPaddingTop) + number(style.scrollPaddingBottom);
+    const edgeHeight = Math.max(rows?.[0]?.offsetHeight ?? 0, rows?.[rows.length - 1]?.offsetHeight ?? 0);
+    const contentHeight = table.offsetHeight + scrollbar;
+    const readableHeight = (head?.offsetHeight ?? 0) + edgeHeight + clearance + scrollbar;
+    const minimum = Math.ceil(Math.min(contentHeight, readableHeight));
+    if (!Number.isFinite(minimum) || minimum <= 0) return;
+    const tracks = `auto auto minmax(${minimum}px, 1fr) auto`;
+    if (frame.style.gridTemplateRows !== tracks) frame.style.gridTemplateRows = tracks;
+    written = tracks;
+  };
+  const schedule = () => {
+    if (!dead && !pending) pending = win.requestAnimationFrame(() => { pending = 0; measure(); });
+  };
+  const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(schedule);
+  const update = () => {
+    if (dead) return;
+    const rows = table.tBodies[0]?.rows;
+    const targets = new Set<Element>([body, table]);
+    if (table.tHead) targets.add(table.tHead);
+    if (rows?.length) { targets.add(rows[0]); targets.add(rows[rows.length - 1]); }
+    for (const node of watched) if (!targets.has(node)) { observer?.unobserve(node); watched.delete(node); }
+    for (const node of targets) if (!watched.has(node)) { observer?.observe(node); watched.add(node); }
+    schedule();
+  };
+  win.addEventListener('resize', schedule);
+  update();
+  return {
+    update,
+    destroy() {
+      if (dead) return;
+      dead = true;
+      observer?.disconnect();
+      watched.clear();
+      win.cancelAnimationFrame(pending);
+      win.removeEventListener('resize', schedule);
+      if (written !== undefined && frame.style.gridTemplateRows === written) frame.style.gridTemplateRows = original;
+    },
+  };
+}

@@ -7,7 +7,7 @@ const test=base.extend({page:async({page},use,info)=>{
   const errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   page.on('console',message=>{
-    if(message.type()==='error'||message.type()==='warning'&&/hydration|uncaught|invalid hook|cannot update|did not match/i.test(message.text()))errors.push(message.text());
+    if(message.type()==='error'||message.type()==='warning'&&/hydration|uncaught|invalid hook|cannot update|did not match|ResizeObserver.*(?:loop|undelivered)/i.test(message.text()))errors.push(message.text());
   });
   await use(page);
   await info.attach('layout-browser-errors.json',{body:JSON.stringify(errors,null,2),contentType:'application/json'});
@@ -22,7 +22,7 @@ const selectors={
   header:'[data-testid="record-header"]',toolbar:'[data-testid="record-filters"]',
   outer:'#records-table',frame:'#records-table .xui-data-table-frame',
   tools:'#records-table .xui-data-table-tools',body:'#records-table .xui-data-table-body',
-  grid:'#records-table table',footer:'#records-table .xui-data-table-footer',
+  grid:'#records-table > .xui-data-table-frame > .xui-data-table-body > table',thead:'#records-table > .xui-data-table-frame > .xui-data-table-body > table > thead',stickyHeader:'#records-table > .xui-data-table-frame > .xui-data-table-body > table > thead th:first-child',footer:'#records-table .xui-data-table-footer',
   count:'#records-table .xui-data-table-count',sizeField:'#records-table .xui-data-table-page-size',
   size:'#records-table .xui-data-table-page-size select',pagination:'#records-table .xui-pagination',
 };
@@ -64,7 +64,9 @@ async function metrics(page){
         overflowX:s.overflowX,overflowY:s.overflowY,position:s.position,display:s.display,
         minBlockSize:s.minBlockSize,maxBlockSize:s.maxBlockSize,flex:s.flex,
         borderTop:parseFloat(s.borderTopWidth),borderBottom:parseFloat(s.borderBottomWidth),
+        borderLeft:parseFloat(s.borderLeftWidth),borderRight:parseFloat(s.borderRightWidth),
         paddingTop:parseFloat(s.paddingTop),paddingBottom:parseFloat(s.paddingBottom),
+        scrollPaddingTop:parseFloat(s.scrollPaddingTop)||0,scrollPaddingBottom:parseFloat(s.scrollPaddingBottom)||0,
       };
     };
     const footer=document.querySelector(selectors.footer),grid=document.querySelector(selectors.grid);
@@ -73,6 +75,7 @@ async function metrics(page){
       viewport:{width:innerWidth,height:innerHeight},document:measure(document.scrollingElement),
       ...Object.fromEntries(Object.entries(selectors).map(([name,selector])=>[name,measure(document.querySelector(selector))])),
       host:measure(document.querySelector(selectors.outer)?.parentElement),
+      firstRow:measure(grid?.querySelector('tbody tr:first-child')),
       lastRow:measure(last),lastCellBorders:last?[...last.children].map(cell=>parseFloat(getComputedStyle(cell).borderBottomWidth)):[],
       footerChildren:footer?[...footer.children].map(measure).filter(Boolean):[],
       toolbarInFrame:!!document.querySelector(selectors.frame)?.contains(document.querySelector(selectors.toolbar)),
@@ -93,6 +96,12 @@ function noHorizontalEscape(m,key){
 function sameRect(before,after,key){
   for(const dimension of ['x','y','width','height'])near(after[key][dimension],before[key][dimension],`${key} ${dimension} stays put`);
 }
+function insideFrame(m,key){
+  expect(m[key].x,`${key} begins inside the frame`).toBeGreaterThanOrEqual(m.frame.x+m.frame.borderLeft-1.5);
+  expect(m[key].right,`${key} ends inside the frame`).toBeLessThanOrEqual(m.frame.right-m.frame.borderRight+1.5);
+  expect(m[key].y,`${key} begins below the frame's top border`).toBeGreaterThanOrEqual(m.frame.y+m.frame.borderTop-1.5);
+  expect(m[key].bottom,`${key} ends above the frame's bottom border`).toBeLessThanOrEqual(m.frame.bottom-m.frame.borderBottom+1.5);
+}
 function assertFrame(m){
   near(m.outer.y,m.frame.y,'frame begins at the outer component');
   near(m.outer.bottom,m.frame.bottom,'outer component ends with its frame');
@@ -104,6 +113,7 @@ function assertFrame(m){
   expect(m.footer.borderTop,'footer retains its information boundary').toBeGreaterThan(0);
   expect(['fixed','absolute','sticky'],'footer belongs to ordinary layout flow').not.toContain(m.footer.position);
   expect(m.body.clientHeight,'body never collapses').toBeGreaterThan(0);
+  for(const key of ['body','footer',...(m.tools?['tools']:[])])insideFrame(m,key);
   for(const key of ['outer','frame']){noVerticalScroll(m,key);noHorizontalEscape(m,key);}
 }
 async function assertFooter(page,m,{pagination=true,compact=true}={}){
@@ -174,9 +184,9 @@ async function assertBounded(page,count,{label=`bounded-${count}`,layout='natura
   near(m.outer.height,m.content.clientHeight,'long table caps at the allocated content height');
   expect(m.body.scrollHeight,'long rows genuinely overflow the body').toBeGreaterThan(m.body.clientHeight+1.5);
   expect(m.body.overflowY).toBe('auto');
-  // The body keeps its small, accessible control-height floor; the two flex
-  // ancestors must allow shrink. Rectangles above prove the actual bounded cap.
-  if(layout==='natural')for(const key of ['outer','frame'])expect(m[key].minBlockSize,`${key} can shrink within a bounded parent`).toBe('0px');
+  // Test the measured cap, not a particular min-block-size CSS strategy. An
+  // intrinsic minimum must preserve chrome and an actually usable body viewport.
+  await expect(page.locator(selectors.outer)).toHaveAttribute('data-layout',layout);
   expect(m.footer.bottom,'footer stays inside the viewport').toBeLessThanOrEqual(m.viewport.height+1.5);
   await expect(page.locator(selectors.footer)).toBeInViewport({ratio:1});
   if(pagination)await expect(size(page)).toBeInViewport({ratio:1});
@@ -205,6 +215,50 @@ async function reachable(control){
     const r=node.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
     return !!hit&&(node===hit||node.contains(hit));
   }),'focused control is not clipped or covered').toBe(true);
+}
+async function usableBodyMinimum(page){
+  // A sticky header plus a whole edge row must fit. Scroll padding is part of
+  // the browser's real geometry, rather than another hard-coded header offset.
+  await expect.poll(async()=>{
+    const m=await metrics(page);
+    const required=Math.min(m.grid.height,m.thead.height+Math.max(m.firstRow.height,m.lastRow.height)+m.body.scrollPaddingTop+m.body.scrollPaddingBottom);
+    return required-m.body.clientHeight;
+  },{message:'measured body viewport fits the sticky header, an edge row and scroll padding'}).toBeLessThanOrEqual(1.5);
+  await settle(page);
+}
+async function clickEdgeRowAction(page,edge,label){
+  const row=edge==='first'?rows(page).first():rows(page).last();
+  const id=await row.locator('td').first().innerText();
+  const action=page.getByRole('button',{name:`查看记录 ${id}`,exact:true});
+  const before=await page.evaluate(()=>window.dataTableDemo.getActions());
+  // Only move the real body/ancestors. Do not use forced locator clicks or
+  // scroll the action itself to conceal a row trapped behind the sticky header.
+  await body(page).scrollIntoViewIfNeeded();
+  await body(page).evaluate((node,edge)=>{node.scrollTop=edge==='first'?0:node.scrollHeight;},edge);
+  await expect.poll(()=>body(page).evaluate((node,edge)=>edge==='first'?node.scrollTop:node.scrollHeight-node.clientHeight-node.scrollTop,edge)).toBeLessThanOrEqual(1.5);
+  await settle(page);await expect(action).toBeInViewport({ratio:1});
+  const point=await action.evaluate(node=>{
+    const r=node.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);
+    return {x,y,hit:!!hit&&(node===hit||node.contains(hit)),hitTag:hit?.tagName,hitLabel:hit?.getAttribute('aria-label'),top:r.top,bottom:r.bottom};
+  });
+  const m=await capture(page,`${label}-${edge}-action`);assertFrame(m);
+  await test.info().attach(`${label}-${edge}-hit-test.json`,{body:JSON.stringify(point,null,2),contentType:'application/json'});
+  expect(point.top,'whole edge action sits below the sticky column header').toBeGreaterThanOrEqual(m.stickyHeader.bottom-1.5);
+  expect(point.bottom,'whole edge action stays inside the body viewport').toBeLessThanOrEqual(m.body.bottom+1.5);
+  expect(point.hit,'elementFromPoint reaches the actual row action, not a sticky header or clipping ancestor').toBe(true);
+  await page.mouse.click(point.x,point.y);
+  await expect(page.getByLabel('查看结果',{exact:true})).toHaveText(`已查看 ${id}`);
+  expect(await page.evaluate(()=>window.dataTableDemo.getActions()),'the real pointer click invokes exactly the requested record action').toEqual([...before,id]);
+}
+async function enlargedFrame(page,label){
+  await usableBodyMinimum(page);
+  const m=await capture(page,label);assertFrame(m);
+  expect(m.content.clientHeight,'public shell minimum preserves an allocated content region').toBeGreaterThan(0);
+  expect(m.body.scrollHeight).toBeGreaterThan(m.body.clientHeight);
+  expect(m.main.scrollHeight>m.main.clientHeight+1.5||m.content.scrollHeight>m.content.clientHeight+1.5,'oversized but fully framed chrome uses an ancestor fallback').toBe(true);
+  noHorizontalEscape(m,'document');
+  await assertControls(page,m,{internal:true});await assertFooter(page,m,{compact:false});
+  return m;
 }
 
 for(const kind of kinds){
@@ -249,29 +303,72 @@ for(const kind of kinds){
     await expect(size(page)).toBeInViewport({ratio:1});await expect(next(page)).toBeInViewport({ratio:1});
   });
 
-  test(`${kind} natural internal toolbar at 200% text: oversized chrome retains a reachable fallback`,async({page})=>{
-    await setup(page,kind,['internal','long','size=100'],mobile);
+  test(`${kind} natural internal toolbar at 200% text: complete frame and genuinely clickable edge rows`,async({page})=>{
+    await setup(page,kind,['internal','long','size=100','nested-feedback'],mobile);
+    await expect(page.getByRole('table',{name:'辅助表格',exact:true})).toBeVisible();
     await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});await settle(page);
     await expect(page.locator(selectors.outer)).toHaveAttribute('data-layout','natural');
-    const before=await capture(page,'natural-enlarged-before-focus');
-    expect(before.content.clientHeight,'public shell minimum preserves an allocated content region').toBeGreaterThan(0);
-    expect(before.body.clientHeight,'oversized internal tools cannot collapse the body').toBeGreaterThan(0);
-    expect(before.body.scrollHeight).toBeGreaterThan(before.body.clientHeight);
-    expect(before.main.scrollHeight>before.main.clientHeight+1.5||before.content.scrollHeight>before.content.clientHeight+1.5,'oversized chrome has a real ancestor fallback scroll').toBe(true);
-    noHorizontalEscape(before,'document');
-    // In this intentional fallback, tools/footer can exceed the bounded frame.
-    // Do not incorrectly demand that every ancestor has zero vertical overflow.
+    await enlargedFrame(page,'natural-enlarged-before-focus');
+    // Ancestors can scroll, but all chrome remains inside the component's frame.
     for(const control of [page.getByRole('button',{name:'刷新',exact:true}),search(page),page.getByRole('combobox',{name:'来源',exact:true}),size(page),next(page)])await reachable(control);
-    await body(page).scrollIntoViewIfNeeded();
-    await body(page).evaluate(node=>{node.scrollTop=node.scrollHeight;});
-    await expect.poll(()=>body(page).evaluate(node=>node.scrollHeight-node.clientHeight-node.scrollTop)).toBeLessThanOrEqual(1.5);
-    await settle(page);const end=await capture(page,'natural-enlarged-last-row');
-    expect(end.lastRow.bottom,'last row reaches the end of the body scrollport').toBeLessThanOrEqual(end.body.bottom+1.5);
-    expect(end.lastRow.bottom,'last row intersects the reachable scrollport').toBeGreaterThan(end.body.y);
-    await expect(body(page)).toBeInViewport({ratio:1});
+    await clickEdgeRowAction(page,'first','natural-enlarged');
+    await clickEdgeRowAction(page,'last','natural-enlarged');
     await reachable(size(page));await reachable(next(page));
-    const after=await capture(page,'natural-enlarged-footer');noHorizontalEscape(after,'document');
-    expect(after.body.clientHeight).toBeGreaterThan(0);
+    const after=await capture(page,'natural-enlarged-footer');assertFrame(after);noHorizontalEscape(after,'document');
+  });
+
+  test(`${kind} natural layout measurements recover from font changes and hidden resizes without remounting`,async({page})=>{
+    await setup(page,kind,['internal','long','local','size=100'],mobile);
+    const originalBody=await body(page).elementHandle();
+    const originalFrame=await page.locator(selectors.frame).elementHandle();
+    const originalFont=await page.evaluate(()=>({value:document.documentElement.style.getPropertyValue('font-size'),priority:document.documentElement.style.getPropertyPriority('font-size')}));
+    // Keep the inspected-result text identical in baseline and restored phases,
+    // so any difference measures layout recovery rather than header text wrap.
+    await clickEdgeRowAction(page,'last','observer-before-baseline');
+    await page.evaluate(()=>{for(const node of [document.scrollingElement,document.querySelector('.xui-shell-main'),document.querySelector('.xui-shell-content')])node.scrollTop=0;});
+    const baseline=await assertBounded(page,100,{label:'observer-baseline',compact:false});
+    await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
+    const enlarged=await enlargedFrame(page,'observer-enlarged');
+    expect(enlarged.thead.height,'font scaling actually changes the observed header geometry').toBeGreaterThan(baseline.thead.height);
+    expect(enlarged.grid.height,'font scaling actually changes the observed row geometry').toBeGreaterThan(baseline.grid.height);
+    await clickEdgeRowAction(page,'first','observer-enlarged');await clickEdgeRowAction(page,'last','observer-enlarged');
+    await page.evaluate(original=>{
+      if(original.value)document.documentElement.style.setProperty('font-size',original.value,original.priority);
+      else document.documentElement.style.removeProperty('font-size');
+      for(const node of [document.scrollingElement,document.querySelector('.xui-shell-main'),document.querySelector('.xui-shell-content')])node.scrollTop=0;
+    },originalFont);
+    await expect.poll(async()=>Math.abs((await metrics(page)).body.height-baseline.body.height),{message:'font restoration releases the enlarged intrinsic body floor'}).toBeLessThanOrEqual(1.5);
+    const restored=await assertBounded(page,100,{label:'observer-font-restored',compact:false});
+    for(const key of ['outer','frame','body','footer'])near(restored[key].height,baseline[key].height,`${key} recovers after font restoration`);
+    // Change font and width while unmeasurable; showing the same nodes must
+    // resume measurements instead of retaining zero or stale cached heights.
+    await page.locator(selectors.outer).evaluate(node=>{node.style.display='none';});
+    await expect(page.locator(selectors.outer)).toBeHidden();
+    await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
+    await page.setViewportSize({width:430,height:844});await settle(page);
+    await page.locator(selectors.outer).evaluate(node=>{node.style.removeProperty('display');});
+    await expect(page.locator(selectors.outer)).toBeVisible();
+    await enlargedFrame(page,'observer-shown-after-hidden-resize');
+    expect(await body(page).evaluate((node,original)=>node===original,originalBody),'body node is retained across font and visibility changes').toBe(true);
+    expect(await page.locator(selectors.frame).evaluate((node,original)=>node===original,originalFrame),'frame node is retained across font and visibility changes').toBe(true);
+    await clickEdgeRowAction(page,'first','observer-shown');await clickEdgeRowAction(page,'last','observer-shown');
+    await reachable(size(page));await reachable(next(page));
+    await page.evaluate(original=>{
+      if(original.value)document.documentElement.style.setProperty('font-size',original.value,original.priority);
+      else document.documentElement.style.removeProperty('font-size');
+      for(const node of [document.scrollingElement,document.querySelector('.xui-shell-main'),document.querySelector('.xui-shell-content')])node.scrollTop=0;
+    },originalFont);
+    await page.setViewportSize(mobile);
+    await expect.poll(async()=>Math.abs((await metrics(page)).body.height-baseline.body.height),{message:'a second restoration does not retain hidden-state or large-font measurements'}).toBeLessThanOrEqual(1.5);
+    await assertBounded(page,100,{label:'observer-final-restored',compact:false});
+    // The observer minimum must not turn one/zero-row states into a fixed-height
+    // body after it has seen a long, enlarged, temporarily hidden table.
+    await page.setViewportSize(desktop);
+    await page.evaluate(()=>window.dataTableDemo.owner.filter('search','记录 125'));await ready(page);
+    await assertShort(page,1,{label:'observer-final-one'});
+    await page.evaluate(()=>window.dataTableDemo.owner.setEmpty(true));await ready(page);
+    await assertShort(page,0,{label:'observer-final-empty'});
+    await originalBody.dispose();await originalFrame.dispose();
   });
 
   test(`${kind} natural internal toolbar: one enclosing frame follows short and long content`,async({page})=>{
@@ -341,6 +438,21 @@ for(const kind of kinds){
     await expect(size(page)).toBeInViewport({ratio:1});await expect(next(page)).toBeInViewport({ratio:1});
     await page.evaluate(()=>window.dataTableDemo.owner.filter('search','记录 125'));await ready(page);
     await assertShort(page,1,{label:'document-bounded-one'});
+  });
+
+  test(`${kind} explicit workspace with an auto-height parent preserves its intrinsic floor and content flow`,async({page})=>{
+    await setup(page,kind,['unbounded','layout=workspace','local','empty','no-search','no-actions','no-pagination']);
+    for(const count of [0,100,1]){
+      if(count===100){await page.evaluate(()=>{window.dataTableDemo.owner.setEmpty(false);window.dataTableDemo.owner.pageSize(100);});await ready(page);}
+      if(count===1){await page.evaluate(()=>window.dataTableDemo.owner.filter('search','记录 125'));await ready(page);}
+      await expect(rows(page)).toHaveCount(count);
+      const m=await capture(page,`workspace-auto-${count}`);assertFrame(m);noVerticalScroll(m,'body');
+      const minimum=await page.locator(selectors.outer).evaluate(node=>parseFloat(getComputedStyle(node,'::before').minBlockSize));
+      expect(Number.isFinite(minimum),'the declared workspace intrinsic floor resolves in an auto-height parent').toBe(true);
+      expect(m.outer.height).toBeGreaterThanOrEqual(minimum-1.5);
+      expect(m.body.height).toBeGreaterThanOrEqual(m.grid.height-1.5);
+      if(count===100){expect(m.outer.height).toBeGreaterThan(m.viewport.height);await page.locator(selectors.footer).scrollIntoViewIfNeeded();await expect(page.locator(selectors.count)).toBeInViewport({ratio:1});}
+    }
   });
 
   test(`${kind} explicit workspace keeps fill behavior for empty, one and long data`,async({page})=>{

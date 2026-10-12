@@ -104,3 +104,14 @@ test('the public workspace table minimum permits only its documented semantic al
   for(const value of ['144px','0px','var(--control-height)','var(--data-table-min-block-size, 144px)'])assert.throws(()=>checkDesignDeclaration('--layout-workspace-content-min-block-size',value),/central token contract/);
   assert.throws(()=>checkDesignDeclaration('--data-table-min-block-size','var(--control-height)'),/central token contract/);
 });
+
+
+test('only the reviewed DataTable intrinsic track measurement is exempted',async()=>{
+  const measured='frame.style.gridTemplateRows=`auto auto minmax(${minimum}px, 1fr) auto`;';
+  await fixture({'packages/runtime/src/data-table.ts':measured},async root=>assert.doesNotReject(auditDesignSources({root})));
+  for(const [file,source] of [
+    ['packages/runtime/src/sample.ts',measured],
+    ['packages/runtime/src/data-table.ts',measured.replace('${minimum}','${minimum+8}')],
+    ['packages/runtime/src/data-table.ts',measured.replace('gridTemplateRows','height')],
+  ])await fixture({[file]:source},async root=>assert.rejects(auditDesignSources({root}),/Unreviewed dynamic/));
+});

@@ -22,13 +22,19 @@
 }
 @layer xui-components {
   .xui-data-table {display:flex;flex-direction:column;min-inline-size:0;min-block-size:0;}
-  .xui-data-table[data-layout='natural'] {max-block-size:100%;min-block-size:0;}
+  .xui-data-table[data-layout='natural'] {max-block-size:100%;min-block-size:min-content;}
   .xui-data-table[data-layout='document'] {flex:none;min-block-size:0;}
-  .xui-data-table[data-layout='workspace'] {block-size:100%;min-block-size:var(--data-table-min-block-size);}
+  .xui-data-table[data-layout='workspace'] {display:grid;grid-template-columns:minmax(0,1fr);block-size:100%;min-block-size:min-content;}
   .xui-data-table-tools,.xui-data-table-feedback {flex:none;min-inline-size:0;}
   .xui-data-table-tools {padding:var(--space-content-gap);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
-  .xui-data-table-frame {display:flex;flex-direction:column;flex:1 1 auto;min-block-size:0;min-inline-size:0;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
-  .xui-data-table[data-layout='workspace']>.xui-data-table-frame {flex:1 1 0;}
+  .xui-data-table-frame {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(var(--control-height),1fr) auto;flex:1 1 auto;min-block-size:min-content;min-inline-size:0;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
+  /* A same-cell intrinsic floor preserves workspace's token even in auto-height hosts. */
+  .xui-data-table[data-layout='workspace']::before {content:'';grid-column:1;grid-row:1;min-block-size:var(--data-table-min-block-size);pointer-events:none;}
+  .xui-data-table[data-layout='workspace']>.xui-data-table-frame {grid-column:1;grid-row:1;}
+  .xui-data-table-tools {grid-row:1;}
+  .xui-data-table-feedback {grid-row:2;}
+  .xui-data-table-body {grid-row:3;}
+  .xui-data-table-footer {grid-row:4;}
   /* One colgroup owns all tracks. Only opted-in tables stop content from resizing columns. */
   .xui-data-table-body>.xui-table[data-column-sizing] {table-layout:fixed;}
   /* With every track sized, let CSS expand from zero to the sum of the col widths. */
@@ -36,10 +42,9 @@
   .xui-data-table-widths {position:absolute;inset-inline:0;inset-block-start:0;block-size:0;overflow:hidden;visibility:hidden;pointer-events:none;}
   .xui-data-table-widths>* {block-size:0;min-inline-size:0;}
   .xui-data-table-body[data-column-sizing] {position:relative;}
-  .xui-data-table-body {flex:1 1 auto;min-block-size:var(--control-height);border:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
+  .xui-data-table-body {min-block-size:0;border:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
   .xui-data-table-tools:not(:empty):not([hidden])~.xui-data-table-body,.xui-data-table-feedback:not(:empty):not([hidden])~.xui-data-table-body {border-start-start-radius:0;border-start-end-radius:0;}
   .xui-data-table-body tbody>tr:last-child>td {border-block-end:0;}
-  .xui-data-table[data-layout='workspace'] .xui-data-table-body {flex:1 1 0;}
   .xui-data-table-footer {display:flex;align-items:center;flex:none;flex-wrap:wrap;min-inline-size:0;gap:var(--space-control-gap) var(--space-section-gap);padding:var(--space-control-gap) var(--space-content-gap);border-block-start:var(--line-width-surface) solid var(--surface-line);border-radius:0 0 var(--radius-lg) var(--radius-lg);background:var(--layer-raised);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);overflow-wrap:anywhere;}
   :is(.xui-data-table-tools,.xui-data-table-feedback,.xui-data-table-footer-extra):empty {display:none;}
   .xui-data-table-footer-extra {min-inline-size:0;max-inline-size:100%;}

@@ -163,7 +163,8 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
         for (const span of node.templateSpans) scanNumber(span.expression);
         const measuredPosition = file === 'packages/runtime/src/dom.ts' && /^(?:left|top)$/.test(prop) && /^`\$\{[\s\S]+\}px`$/.test(raw) && /(?:anchor\.|contextPoint|win\.(?:innerWidth|innerHeight)|box\.)/.test(raw) && !hasNumericOffset && !/["']\d+(?:px|rem)["']/.test(raw);
         const measuredSidebar = ['packages/runtime/src/menu-layout.ts', 'packages/ui-react/src/layout.tsx'].includes(file) && prop === 'blockSize' && /^`max\(var\(--nav-sidebar-min-height\), calc\(100dvh - \$\{(?:header|headerNode)\.getBoundingClientRect\(\)\.height\}px\)\)`$/.test(raw);
-        if (measuredPosition || measuredSidebar) { exceptions.add(`${file}: measured ${prop}`); return; }
+        const measuredTableTrack = file === 'packages/runtime/src/data-table.ts' && prop === 'gridTemplateRows' && raw === '`auto auto minmax(${minimum}px, 1fr) auto`';
+        if (measuredPosition || measuredSidebar || measuredTableTrack) { exceptions.add(`${file}: measured ${prop}`); return; }
         errors.push(`${where(loc(node))} ${prop}: Unreviewed dynamic style template ${raw}`);
       }
     }

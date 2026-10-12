@@ -1,5 +1,5 @@
 import {generateDomId} from './dom-id.js';
-import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,type DataTableViewOptions,type DataTableColumnWidth} from './data-table.js';
+import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,type DataTableViewOptions,type DataTableColumnWidth} from './data-table.js';
 export type {DataTablePagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from './data-table.js';
 export type DataTableContent = Node | string | number | null | undefined;
 export interface NativeDataTableCellContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
@@ -53,6 +53,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
   type CellEntry={element:HTMLTableCellElement;column:NativeDataTableColumn<T>;value:DataTableContent;slot?:NativeDataTableCellSlot<T>};
   type RowEntry={element:HTMLTableRowElement;row:T;cells:Map<string,CellEntry>;index:number;blocked:boolean};
   const rows=new Map<string|number,RowEntry>(),headers=new Map<string,HTMLTableCellElement>(),tracks=new Map<string,HTMLTableColElement>(),probes=new Map<string,HTMLDivElement>();
+  const layoutOwner=observeDataTableLayout(frame,body,table);
   const win=doc.defaultView!;let widthFrame=0;
   const measureWidths=()=>{
     if(dead)return;
@@ -134,8 +135,9 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     const currentSizes=Array.from(size.children).map(option=>(option as HTMLOptionElement).value).join(',');if(currentSizes!==state.sizes.join(','))size.replaceChildren(...state.sizes.map(value=>{const option=node('option');option.value=String(value);option.textContent=String(value);return option;}));size.value=String(page?.pageSize??'');
     pagination.hidden=!page||state.pageCount===null||state.outOfRange;pagination.setAttribute('aria-label',labels.pagination);previous.textContent=labels.previous;next.textContent=labels.next;position.textContent=state.page+' / '+state.pageCount;previous.disabled=state.blocked||!page?.onPageChange||state.page<=1;next.disabled=state.blocked||!page?.onPageChange||state.pageCount===null||state.page>=state.pageCount;
     content(extra,options.footer);extra.hidden=options.footer===undefined||options.footer===null||options.footer==='';
+    layoutOwner.update();
   };
-  const destroy=()=>{if(dead)return;dead=true;guard.destroy();widthObserver?.disconnect();if(widthFrame)win.cancelAnimationFrame(widthFrame);win.removeEventListener('resize',scheduleWidths);for(const entry of rows.values())for(const cell of entry.cells.values())releaseCell(cell);rows.clear();previous.onclick=next.onclick=retry.onclick=size.onchange=null;root.replaceChildren(...original);for(const [name,value]of attributes)if(value===null)root.removeAttribute(name);else root.setAttribute(name,value);owners.delete(root);};
+  const destroy=()=>{if(dead)return;dead=true;guard.destroy();layoutOwner.destroy();widthObserver?.disconnect();if(widthFrame)win.cancelAnimationFrame(widthFrame);win.removeEventListener('resize',scheduleWidths);for(const entry of rows.values())for(const cell of entry.cells.values())releaseCell(cell);rows.clear();previous.onclick=next.onclick=retry.onclick=size.onchange=null;root.replaceChildren(...original);for(const [name,value]of attributes)if(value===null)root.removeAttribute(name);else root.setAttribute(name,value);owners.delete(root);};
   try{render();}catch(error){destroy();throw error;}
   return {
     update(next:Partial<NativeDataTableOptions<T>>){if(dead)return;const proposed={...options,...next};getDataTableState(proposed,proposed.rows.length);validateDataTableKeys(proposed.rows,proposed.columns,proposed.rowKey);options=proposed;try{render();}catch(error){destroy();throw error;}},

@@ -59,6 +59,7 @@ function App(){
   const table=<DataTable id="records-table" label="合成记录表格" layout={layout} rows={state.rows} columns={visibleColumns} rowKey={rowKey}
     status={state.status} filtered={state.filtered} labels={tableLabels} onRetry={owner.retry} striped
     toolbar={internal?toolbar:undefined}
+    feedback={query.has('nested-feedback')?<table aria-label="辅助表格"><tbody><tr><td>嵌套反馈</td></tr></tbody></table>:undefined}
     pagination={query.has('no-pagination')?undefined:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}}/>;
   // The existing public ScrollArea root takes the same allocated workspace height.
   // Grid/Surface provide the public card layout and skin; no private table/shell CSS is copied.

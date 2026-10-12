@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,type DataTableViewOptions,type DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
+import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,type DataTableViewOptions,type DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
 import {Table,TableContainer,TableRow,TableCell,TableHeaderCell} from './table.js';
 import {Toolbar} from './layout.js';
 import {Field,NativeSelect,type FieldProps} from './forms.js';
@@ -49,16 +49,23 @@ export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,er
     win.addEventListener('resize',schedule);measure();
     return()=>{dead=true;observer.disconnect();win.cancelAnimationFrame(frame);win.removeEventListener('resize',schedule);};
   },[columns,columnSizing]);
+  const layoutFrame=React.useRef<HTMLDivElement>(null),layoutBody=React.useRef<HTMLDivElement>(null),layoutTable=React.useRef<HTMLTableElement>(null),layoutOwner=React.useRef<ReturnType<typeof observeDataTableLayout>|null>(null);
+  React.useLayoutEffect(()=>{
+    const owner=observeDataTableLayout(layoutFrame.current!,layoutBody.current!,layoutTable.current!);
+    layoutOwner.current=owner;
+    return()=>{owner.destroy();layoutOwner.current=null;};
+  },[]);
+  React.useLayoutEffect(()=>{layoutOwner.current?.update();});
   const hasRows=rows.length>0,showError=state.status==='error';
   const error=errorState??<ErrorState title={labels.error} retryLabel={labels.retry} onRetry={options.onRetry?()=>request(options.onRetry):undefined} retryDisabled={state.blocked}/>;
   const empty=emptyState??<EmptyState title={options.filtered?labels.noMatches:labels.empty}/>;
   return <DataRegion id={id} className={cx('xui-data-table',className)} data-layout={state.layout} aria-label={options.label} busy={state.busy}>
-    <div className="xui-data-table-frame">
+    <div ref={layoutFrame} className="xui-data-table-frame">
       {hasContent(toolbar)&&<div className="xui-data-table-tools">{toolbar}</div>}
       {(hasRows&&(state.busy||showError)||hasContent(feedback))&&<div className="xui-data-table-feedback">{hasRows&&(showError?error:state.busy?<LoadingState>{labels.refreshing}</LoadingState>:null)}{feedback}</div>}
-      <TableContainer data-column-sizing={columnSizing} className="xui-data-table-body" aria-label={options.label+' — '+labels.count({rowCount:rows.length,total:state.total})}>
+      <TableContainer ref={layoutBody} data-column-sizing={columnSizing} className="xui-data-table-body" aria-label={options.label+' — '+labels.count({rowCount:rows.length,total:state.total})}>
         <div ref={widthProbes} className="xui-data-table-widths" aria-hidden="true" hidden={!columnSizing}>{columns.map(column=><div key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</div>
-        <Table data-column-sizing={columnSizing} striped={striped} stickyHeader={stickyHeader} aria-label={options.label}>
+        <Table ref={layoutTable} data-column-sizing={columnSizing} striped={striped} stickyHeader={stickyHeader} aria-label={options.label}>
           <colgroup ref={columnGroup}>{columns.map(column=><col key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</colgroup>
           <thead><TableRow>{columns.map(column=><TableHeaderCell key={column.id} sticky={column.sticky} aria-sort={column.ariaSort}>{column.header}</TableHeaderCell>)}</TableRow></thead>
           <tbody>{hasRows?rows.map((row,index)=><TableRow key={keys[index]} {...rowState?.(row)}>{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):state.busy?<>{Array.from({length:5},(_,index)=><TableRow key={index}><TableCell colSpan={columns.length}><Skeleton/></TableCell></TableRow>)}<TableRow><TableCell colSpan={columns.length}><LoadingState>{labels.loading}</LoadingState></TableCell></TableRow></>:<TableRow><TableCell colSpan={columns.length}>{showError?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</TableCell></TableRow>}</tbody>

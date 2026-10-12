@@ -97,6 +97,8 @@ test('local pagination slices once in its host and uses the same controlled page
 test('layout CSS keeps natural sizing independent of DataRegion import order and document out of flex shrinking',async()=>{
   const {readFile}=await import('node:fs/promises');
   const css=await readFile('packages/theme/dist/table.css','utf8');
-  assert.match(css,/\.xui-data-table\[data-layout='natural'\]\s*\{[^}]*max-block-size:100%;[^}]*min-block-size:0;/);
+  assert.match(css,/\.xui-data-table\[data-layout='natural'\]\s*\{[^}]*max-block-size:100%;[^}]*min-block-size:min-content;/);
   assert.match(css,/\.xui-data-table\[data-layout='document'\]\s*\{[^}]*flex:none;[^}]*min-block-size:0;/);
+  assert.match(css,/\.xui-data-table-frame\s*\{[^}]*display:grid;[^}]*min-block-size:min-content;/);
+  assert.match(css,/\.xui-data-table\[data-layout='workspace'\]::before\s*\{[^}]*min-block-size:var\(--data-table-min-block-size\);/);
 });

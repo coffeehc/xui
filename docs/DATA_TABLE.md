@@ -68,7 +68,11 @@ const columns: readonly DataTableColumn<Row>[] = [
 </MenuLayout>
 ```
 
-组件内部的 toolbar、反馈、表体与 footer 共用一个 frame；只有表体 `TableContainer` 在高度受限时滚动，列头按原有 stickyHeader 合同默认启用。边框属于整体 frame，滚动容器不再叠一层外框；底栏有必要的信息分隔。组件使用真实可用高度，不测 header、不减固定像素、不 absolute/fixed 定位分页。
+组件内部的 toolbar、反馈、表体与 footer 共用一个 frame；只有表体 `TableContainer` 在高度受限时滚动，列头按原有 stickyHeader 合同默认启用。边框属于整体 frame，滚动容器不再叠一层外框；底栏有必要的信息分隔。组件使用真实可用高度，宿主无需测量 pageHeader 或减固定像素，也不 absolute/fixed 定位分页。
+
+极端字号或高工具条使全部 chrome 超过正文分配高度时，外框保留完整工具条/反馈/底栏和可读表体下限，交给既有祖先滚动，不让 footer 越出 frame。库内部只有一个稳定的布局观察器，以实际 table、thead、首末行高度和 computed scroll-padding/滚动条计算 `min(实际内容高度, 表头与首末行较高者的可读高度)`，仅更新 Grid 的表体轨道下限；无固定表头数字、行数分类或新的宿主参数。短内容不会因此补出空白。观察器合并同帧读写、忽略隐藏时的零几何、恢复显示后重测，并在销毁时释放；列宽测量与 colgroup 合同独立且不变。
+
+这个下限保证边缘记录操作的可达空间，不保证任意高度的全部中间行都可完整同屏。自定义超高单元格仍由表体滚动访问；需要逐行长文档阅读时可选 `document`，或按已有 `stickyHeader={false}` / `{stickyHeader:false}` 关闭吸顶列头。父视口本身不足时使用祖先滚动，不裁切内容。
 
 外部 `pageToolbar` 仍受支持，与内部 `toolbar` 二选一放同一组筛选；不要复制搜索或增加查询 owner。`DataTableToolbar` 复用 Toolbar，`DataTableFilter` 复用 Field 的标签/id/错误关联；普通筛选默认使用 `--data-table-filter-min`，`grow` 搜索使用既有长字段尺度，在足够宽时自然同排，窄屏换行。不要直接依赖 NativeSelect 的全宽规则排列整个筛选区域。原生使用 `createDataTableToolbar(document, nodes)` 和 `createDataTableFilter(document, {label,control,grow})`，业务 control Node 与事件始终属于宿主。未提供搜索、动作或 toolbar 时，不为缺失能力保留空控件。
 

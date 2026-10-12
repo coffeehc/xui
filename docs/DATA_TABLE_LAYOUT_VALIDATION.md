@@ -11,8 +11,8 @@
 | 外拼分页、每页选择器占满一行、不同产品底栏不一致 | 当前公共组件在本轮前已把计数、唯一条数选择器与 Pagination 放在同一内部 footer，并已有紧凑 select CSS；仅凭产品现象不能确认使用了该组合 | 保留已有受控分页，不重复造 owner。产品应在各自授权任务核对固定版本、实际组件、外拼 footer/全宽覆盖后迁移；本轮未改产品 |
 | 最后一行与 footer 相邻时重复边线 | 表格单元默认末端边线与 footer 顶部线叠加 | 仅 DataTable 末行取消单元末端线；表头/行间线和 footer 信息边界保留 |
 | document 作为有界 column-flex 的子项可能被压缩 | 代码评审发现根 `min-block-size:0` 与默认 flex-shrink 会削弱无界合同 | document 明确 `flex:none`；正常/column-flex 有界宿主的实际增高与底栏滚动可达案例已在 CI 通过 |
-| 分片 CSS 次序可能恢复 DataRegion 的通用最小高度 | `.xui-data-region` 与原根选择器同优先级；feedback.css 后加载可覆盖自然高度的零最小值 | natural/document 在带 layout 属性的更高优先级选择器声明零最小值；CSS 结构门禁通过，未单独执行浏览器分片反序载入用例 |
-| 极端高工具条/200%文字下，sticky 表头可能遮住最低表体中的行 | 保留的表体最小值为 control-height；自定义/换行表头可能比它更高。这是源码评审风险，尚无本轮浏览器像素复现，旧 workspace 同样沿用该最小值 | 新增 natural 内部工具条 200% 案例已在 CI 验证祖先滚动、表体非零、末行几何交集和 footer 焦点/命中。该检查不证明被 sticky 表头覆盖处的行操作可命中；必要时补精确行命中复现再决定独立 fallback，不能把风险写成已修复 |
+| 分片 CSS 次序可能恢复 DataRegion 的通用最小高度 | `.xui-data-region` 与原根选择器同优先级；feedback.css 后加载可覆盖自然高度的零最小值 | natural/document 在带 layout 属性的更高优先级选择器覆盖通用值；后续内在高度修复把 natural 改为 min-content、document 仍为零。CSS 结构门禁通过，未单独执行浏览器分片反序载入用例 |
+| 极端高工具条/200%文字下，sticky 表头可能遮住最低表体中的行 | 保留的表体最小值为 control-height；自定义/换行表头可能比它更高。CI 38297151612 的 geometry 附件已确认 390px、内部 toolbar、200% 时 outer/frame 高 288px、内容高 1146px、body 高 72px、footer 高 377px；footer 实际越过 frame 下边界。旧 workspace 同样沿用该最低表体值 | 旧测试仅验证祖先滚动、表体非零、末行几何交集和 footer 焦点/命中，漏掉 footer/frame 包含与行操作命中，CI 绿色不能证明完整需求。正在补真实首末操作点击/命中和 frame 包含断言，并修复内在最小高度；未获新 SHA 浏览器通过前保持未解决 |
 
 ## 已完成的本地检查
 
@@ -32,3 +32,14 @@
 - 本里程碑代码的同 SHA CI 已完成；后续源码变更需要按其新 SHA 独立验收，不能沿用本次结果。
 - 真实产品后端、Wails/移动 OS、读屏器、Firefox/Safari、SSR hydration、生产性能及部署均未验证。
 - 父容器高度为 auto 时自然表格不会凭空获得有界视口；分页会随完整表格位于文档后方，可通过文档滚动到达。需要固定可见分页的宿主必须使用公开 workspace 或自身真实已知高度。
+
+
+## 极端 chrome 的内在高度修复（后续候选）
+
+前述绿色 CI 遗漏的真实缺陷不能仅以文档关闭。后续实现把 frame 改为明确的工具条/反馈/表体/footer 四行 Grid；natural 和 workspace 的根及 frame 保留内在最小高度，全部 chrome 超出分配高度时完整外框自然撑起，由既有祖先滚动。workspace 的同格空伪元素保留原有 token 下限，即使父高度为 auto；不能用含未解析 100% 的 max() 代替独立下限。
+
+组件内部新增稳定布局 owner，仅测实际 table/thead/首末行和 computed scroll-padding/滚动条，使用完整内容高与可读边缘行高度的较小值作为表体轨道下限。没有行数阈值、固定表头高度、消费者测量或新布局配置。观察目标更新、同帧合并、无变化不写、隐藏恢复和销毁清理有独立单元覆盖；宽度 API、宽度 observer/probe/colgroup 不变。
+
+浏览器矩阵补上所有 frame 的四边包含，极端字号下 footer 必须真正留框内，首末行操作必须 elementFromPoint 命中后以真实指针点击且产生唯一业务回调；新增字号恢复、隐藏期间字号/宽度变化后显示、同 DOM 身份、短内容再收缩，以及 workspace 的 auto-height 父级。全量收集为 638 例，其中布局文件 50 例；收集不是执行。候选的 build/tokens/typecheck/326 单元检查与双端正式 tarball 已通过（含独立类型、公开入口、React 单实例、原生零 React 和 gzip 门禁）。独立复核另发现 React 从 frame 查询 table 可能误取 feedback/toolbar 内嵌表格，已改为真实 TableContainer/Table 的直接 ref，并将内嵌反馈表格加入极端用例；最后引用修补后的 build/tokens/typecheck/326 单元已再次通过，构建指纹 `8c1693948732`。该最后修补没有再次重复本地全 tarball；最终新 SHA CI 必须重新验证完整 tarball 与真实浏览器，不能使用修补前的打包结果代替。本段不以旧 SHA 成功代替新修复验收。
+
+已知边界：任意自定义的中间行可能比首末行更高，不保证每行都能完整同屏；通过表体滚动访问操作，长文档可用既有 document 或关闭 stickyHeader。用户电脑、真实产品、其它浏览器与生产部署仍未测试。
