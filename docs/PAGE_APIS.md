@@ -1,6 +1,8 @@
 # 公共页面 API 与原生协议总索引
 
-xui 的目的包括统一品牌、前端体系与通用前后端接口。采用项目主动使用原生 commons/webfacade 与 httpx 处理前端 API，不长期保留另一套响应、查询或错误协议。这里列出页面所需合同、默认实现与后端前置条件；视觉规则仍只来自 [DESIGN](DESIGN.md)，原子/组合/页面分层见 [FOUNDATION](FOUNDATION.md#组件层次与扩展原则)。
+xui 的目的包括统一品牌、前端体系与通用前后端接口。采用项目主动使用原生 commons/webfacade 与 httpx 处理自有普通业务API，不长期保留另一套响应、查询或错误协议。这里列出页面所需合同、默认实现与后端前置条件；视觉规则仍只来自 [DESIGN](DESIGN.md)，原子/组合/页面分层见 [FOUNDATION](FOUNDATION.md#组件层次与扩展原则)。
+
+行业标准/第三方优先边界见[DESIGN](DESIGN.md#规范强度与职责)。下面固定facade只针对自有普通业务API；OAuth2/OIDC/SAML按标准，第三方按其API/错误格式，在宿主内部adapter明确转换，不强制外部AjaxResponse。平台API Key是自身签发凭据，业务日志是自身业务记录，两者不能由provider key、第三方响应或程序故障改名替代。
 
 ## 已读取的真实原生定义
 
@@ -9,6 +11,7 @@ xui 的目的包括统一品牌、前端体系与通用前后端接口。采用�
 - httpx JSON 为 `AjaxResponse{success,message,payload,request_id,code,redirect?}`；列表为 `ListData{list,total}`，Go nil list 可为 null。code 是 int64，成功 helper 接收调用者指定的 code，没有包级统一成功常量。xui 固定页面 facade 选定 success=true/code=1；这是应用合同，后端可用原生 SendSuccess 明确传1，不把它宣称为包默认值。
 - webfacade 原生 URL 查询为 page_index/page_size/return_total、字段值、sort 与 sort_<field>；endpoint 显式声明页码基数、限制和 FieldDefined。没有全局页大小，也不接受任意 JSON query AST。以下默认 facade 选定基数0/最大200，按接口声明使用原生 ParseQuery/ParsePageQuery。
 - webfacade 默认 Time codec 不是 RFC3339Nano。业务日志的 since/until 保留纳秒，后端须声明 FieldDefined.Convert，可用原生 GetTimeFormQuery 配合 time.RFC3339Nano；不能偷偷降精度或更改 commons。
+- HTTP状态与AjaxResponse业务success/code是两层事实，不要求全200。SendError/SendErrors/SendErrorWithRedirect明确设置传入的statusCode；SendSuccess的JSON分支不另重设status，成功code由调用方传入。commons/webfacade的PBResponse是另一个实现，不能混为AjaxResponse或据此修改原生包。
 - 没有额外通用 JSON 请求 envelope：业务请求是声明的 JSON DTO或原生 URL query。路由、payload DTO、权限和 cookie 行为由具体应用合同规定；它们不是原生包中已经存在的服务。
 
 ## 页面、默认 HTTP facade 与前置条件

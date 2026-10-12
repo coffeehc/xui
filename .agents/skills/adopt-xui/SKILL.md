@@ -13,7 +13,9 @@ description: 接入、迁移或评审采用 xui 的 React/原生前端页面，�
 
 ## 统一品牌、前端体系与通用API
 
-xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/PAGE_APIS.md)，按实际commons/webfacade与httpx原生request/query/response/error定义指导采用项目在自身授权范围主动标准化后端。旧协议adapter仅为明确临时迁移：列来源SHA、准确映射、保留能力/鉴权、目标合同与移除条件；不能长期另造通用协议。xui任务本身不授权改产品后端、baseservice或commons，也不授权删除生产数据、重置或部署。已上线xAgent另评估升级兼容。
+xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/PAGE_APIS.md)，按实际commons/webfacade与httpx原生request/query/response/error定义指导采用项目在自身授权范围主动标准化自有普通业务API后端。旧协议adapter仅为明确临时迁移：列来源SHA、准确映射、保留能力/鉴权、目标合同与移除条件；不能长期另造通用协议。xui任务本身不授权改产品后端、baseservice或commons，也不授权删除生产数据、重置或部署。已上线xAgent另评估升级兼容。
+
+行业标准优先：OAuth2/OIDC/SAML保持原协议，第三方按对方API/错误格式；adapter在宿主内部边界明确转换，不强迫第三方AjaxResponse。此正常协议边界不按旧升级兼容桥梁删除。平台API Key是自有平台向Agent/集成签发的凭据，不是provider key；自身业务日志不是第三方响应或程序故障记录。唯一通用边界见[DESIGN](../../../docs/DESIGN.md#规范强度与职责)。
 
 ## 先保留业务能力，再接入表现层
 

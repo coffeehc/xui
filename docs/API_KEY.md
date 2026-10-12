@@ -1,6 +1,6 @@
 # API Key管理与原生HTTP合同
 
-此页面管理用户授予集成的访问密钥，不是上游供应商凭据配置。通用规则仅在[DESIGN](DESIGN.md)，统一前后端标准见[PAGE_APIS](PAGE_APIS.md)。没有该业务接口的产品记录前置缺口，不能通过改名或假adapter制造成功。
+此页面管理自有平台向Agent等集成签发的访问密钥，不是上游供应商凭据配置。通用规则仅在[DESIGN](DESIGN.md)，统一前后端标准见[PAGE_APIS](PAGE_APIS.md)。没有该业务接口的产品记录前置缺口，不能通过改名或假adapter制造成功。
 
 ## 公开页面与授权
 
@@ -35,3 +35,5 @@ getConfiguration读取真实配置后，createApiKeyManagerController({...config
 本轮读取xLead@e766fb2a的真实[API页](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/web/api-page.js)与[token routes](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/plugin/api/auth_routes.go)：其read/write scopes、独立confirmed、30/90/365/0天、过期但未撤销仍可撤销、DELETE /tokens/{id}撤销与DELETE /tokens/{id}/record删除已撤销管理记录，必须保留。临时域adapter可精确映射为上述controller，成功删除需验证真实ok===true再返回void；不能把两种DELETE合并。长期由xLead在自己的授权任务中标准化后端，本轮不修改它。
 
 [既有React例](../examples/api-key-react/app.tsx)/[原生例](../examples/api-key-vanilla/app.js)演示明确域adapter；[新共享模型](../examples/shared/capability-model.ts)与[React](../examples/capabilities-react/app.tsx)/[原生](../examples/capabilities-vanilla/app.js)实际消费默认HTTPadapter。全部合成FAKE数据，不生成真实密钥或证明生产鉴权通过。
+
+第三方provider key与其管理API按第三方合同，不套用此平台facade或强制AjaxResponse；内部adapter只作明确领域转换。行业标准优先边界见[DESIGN](DESIGN.md#规范强度与职责)。

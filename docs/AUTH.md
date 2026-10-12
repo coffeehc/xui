@@ -76,3 +76,5 @@ cookie 的签发/轮换/有效期/服务端撤销、HttpOnly/Secure/SameSite、�
 合成 fetch 没有签发真实 cookie，不证明后端登录、CSRF、CORS、鉴权或日志可靠性通过。最终完整验收与同 SHA CI 随交付记录。注册、重置密码、SSO、完整用户管理 UI 和 baseservice 后端是后续组合计划；当前基础已有登录/API Key/业务日志，不声称完整基础系统或产品迁移已完成。
 
 固定cookie facade显式Accept:application/json，POST显式Content-Type:application/json；保留宿主CSRF/鉴权/tenant header，不继承旧protobuf/form编码。该标准与页面API索引一致，真实后端仍须提供cookie、CSRF/CORS与鉴权。
+
+行业标准优先：标准OAuth2/OIDC/SAML入口保留标准请求、状态和错误合同；第三方认证按其API，宿主在内部边界明确转换。这里的固定cookie facade用于自有应用会话，不替代标准OAuth2 token endpoint，也不强制第三方AjaxResponse。公共非2xx扩展见[HTTP](HTTP.md)，更多登录slots仍未实现，不把协议边界澄清当新增SSO/slots授权。

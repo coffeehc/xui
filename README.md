@@ -2,7 +2,7 @@
 
 统一品牌前端基础：无框架 CSS 与运行时、React 薄封装、公共布局、完整基础交互与加载反馈，以及独立安装后的 React/原生参考页。
 
-项目用于统一品牌和前端体系。通用前端 API 遵循原生 `commons/webfacade`、`httpx` 定义，采用项目应在自身授权范围主动标准化后端；旧协议 adapter 仅用于明确的临时迁移。合同、必须遵循项和领域扩展边界见[页面 API 总索引](docs/PAGE_APIS.md)。
+项目用于统一品牌和前端体系。自有项目的普通业务API遵循原生 `commons/webfacade`、`httpx` 定义；行业标准优先，OAuth2/OIDC/SAML与第三方API保持其协议，在内部边界明确转换。采用项目应在自身授权范围主动标准化自有后端；旧协议 adapter 仅用于明确的临时迁移。合同、必须遵循项和领域扩展边界见[页面 API 总索引](docs/PAGE_APIS.md)。
 
 - [完整通用规范](docs/DESIGN.md)
 - [范围、包接口与实施映射](docs/IMPLEMENTATION.md)

@@ -54,3 +54,5 @@ controller 的列表与详情各有取消/generation；替换、关闭、卸载�
 createBusinessLogHttpLoader({http,timeoutMs?})固定GET /api/v1/business-logs与GET /api/v1/business-logs/{id}。原生AjaxResponse success=true/code=1（xui应用选择，不是httpx包全局常量）；列表payload原生ListData{list,total}，null list显式投影空数组，unsafe总数拒绝。默认offset query为page_index基数0/page_size最大200/return_total=true/sort=recorded_at,id与两个sort_* desc；filters为since/until、actor_kind/actor_id、object_kind/object_id、event_type/action/result/correlation_id/request_id，单次URL编码。后端明确FieldDefined和半开时间边界，用原生Convert/GetTimeFormQuery处理RFC3339Nano，不改commons或降精度。
 
 请求no-store/redirect:error、默认30秒、无自动重试。详情使用现有BusinessLogDetail DTO，403/404/expired/unavailable分别处理；没有默认写入或删除API。页面实际后端缺失须报告前置条件，不能将程序故障记录、供应商凭据配置或假snapshot映射成业务日志成功。[共享默认adapter示例](../examples/shared/capability-model.ts)和[合同回归](../tests/page-api.test.mjs)使用合成原生fetch；真实服务/权限/脱敏仍未集成。
+
+此合同用于自有业务记录，不把第三方响应或程序故障当作业务日志。第三方日志/审计API按第三方字段、分页和错误格式，宿主在内部边界投影允许披露的真实业务事实；不要求第三方AjaxResponse。行业标准/第三方优先边界见[DESIGN](DESIGN.md#规范强度与职责)。

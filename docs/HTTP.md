@@ -2,6 +2,8 @@
 
 这是实现接口；完整通用规则只在 [DESIGN.md](DESIGN.md)。从 runtime/http、runtime/query 导入，React/原生使用同一无框架类型。React 复用 useResource/DataRegion/ErrorState，不创建第二套请求 owner。
 
+自有普通业务API的统一合同与行业标准/第三方边界见[DESIGN](DESIGN.md#规范强度与职责)。OAuth2/OIDC/SAML保持标准，第三方按其API、HTTP状态及错误格式；端点明确response/errorAdapter在内部投影。标准OAuth2非2xx的error discriminator可由显式allowlist ErrorResponseAdapter映射，不能直接使用xLead的nested-error adapter猜其结构，也不要求OAuth2返回AjaxResponse。
+
 ## 固定源码合同
 
 通过正常 Git 读取的来源：
@@ -12,6 +14,8 @@
 - [commons@896d1e7 query.go](https://github.com/coffeehc/commons/blob/896d1e7a80ec902cfdf739f67a82b7f49aa2b403/webfacade/query.go)、[query_test.go](https://github.com/coffeehc/commons/blob/896d1e7a80ec902cfdf739f67a82b7f49aa2b403/webfacade/query_test.go)、[select.go](https://github.com/coffeehc/commons/blob/896d1e7a80ec902cfdf739f67a82b7f49aa2b403/dbsource/sqlbuilder/select.go)：URL query；pageIndexOffset/maxPageSize 由接口决定。ParsePageQuery 无全局默认大小；BuildQuery 的缺省 30 和 AppendLimit 的 size=0 不分页也不是所有接口通用约定。
 
 公开类型以 [http.ts](../packages/runtime/src/http.ts)、[query.ts](../packages/runtime/src/query.ts) 和正式构建声明为准，不另复制类型定义，不按旧 data/msg/items 别名猜测兼容。
+
+HTTP状态表达传输/请求事实，AjaxResponse的success/code表达业务结果。独立httpx/httpxcommons的SendError、SendErrors和SendErrorWithRedirect设置c.Status(statusCode)；SendSuccess的JSON分支不重设status且code由调用者指定。因此不是放弃HTTP状态或全200合同。xui支持2xx业务失败，非2xx仍是HTTP错误并保留合法code/request_id。commons/webfacade的PBResponse与SendPBError是另一实现，不能混同上述JSON合同；本轮不改任何原生包或响应协议。
 
 ## 单一传输与生命周期
 

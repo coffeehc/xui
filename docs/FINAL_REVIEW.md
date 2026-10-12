@@ -66,3 +66,5 @@
 真实产品后端、Cookie/CSRF/CORS/鉴权/tenant、业务日志脱敏/可靠性与生产API Key生成未集成。模拟数据不代表xAgent/xLead或其它产品迁移；真实移动OS/长按/读屏器/Firefox/Safari/浏览器原生zoom/SSR/生产性能未跑。无密钥生成、许可证/可见性变更、发布或部署。
 
 最后合同复核在Auth固定facade发现同类JSON协商遗漏；三请求补明确Accept、POST明确Content-Type，并以实际旧client headers+保留CSRF扩展已有auth合同回归。1b1cdce的整条verify在116单测通过、watch运行时主动中止以实施此修正，退出信号日志保留于.artifacts/verify-1b1cdce-auth-interrupted.log，不计整套通过或测试失败。新普通提交重新冻结全verify和同SHA CI。
+
+8241e563c08f1e435313593bb0fd4924aaa0f7e7本地完整verify通过116单测/1watch/152浏览器、59入口/18消费者，并正常推送；[同SHA CI 38195855434](https://github.com/coffeehc/xui/actions/runs/38195855434)首次执行成功。之后用户仅授权行业标准/第三方边界文档澄清：DESIGN修订0.5.1、README/ADOPTION/skill/API合同同步；271默认CSS值和库实现不变，AjaxResponse/HTTP双层协议保持。附件XUI-03/04/05及其它新增组合仍仅只读评审，无新功能授权。新文档提交继续正常验收与同SHA CI。
