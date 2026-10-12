@@ -70,7 +70,7 @@ navigation adapter必须在第一个可操作菜单呈现时已连接，并保�
 
 本轮六组正式tarball消费者在冷缓存、资源延迟和已命中三份资源的暖缓存下，0/30/60/120/180秒共360菜单点击、60次前进/后退，只有每组初始一个Document请求，document/timeOrigin/shell/theme与草稿保持，无pageerror。移除adapter或canNavigate=false的两宿主受控对照均复现document导航，随后已连接adapter的点击保持SPA；这证明合同边界，不证明任何产品使用了错误gating。完整本地记录在.artifacts/cold-start/与cold-start-probe.log。
 
-用户后续更正：问题发生在本地新接入版本，尚未部署，未访问用户本机。此前匿名线上根页跳登录、旧client-CmZD9ipx.js的React #418仅为独立旧版本事实，不能用于归因本地新版本，线上取证已停止。本地具体dev命令、两个watch/HMR日志、路由ready状态和初始资源版本尚未提供；需要用户后续提供安全日志或由采用任务在对应云环境取证，不收集真实凭据、响应body或cookie。云端独立dev对照须另记录实际optimizer/HMR因果，不能用生产消费者未复现就排除dev问题，也不能笼统归因“未就绪”。
+用户后续更正：问题发生在本地新接入版本，尚未部署，未访问用户本机。此前旧线上页面不能用于归因本地新版本，线上取证已停止。本地具体dev命令、两个watch/HMR日志、路由ready状态和初始资源版本尚未提供；需要用户后续提供安全日志或由采用任务在对应云环境取证，不收集真实凭据、响应body或cookie。云端独立dev对照须另记录实际optimizer/HMR因果，不能用生产消费者未复现就排除dev问题，也不能笼统归因“未就绪”。
 
 
 ### Vite开发模式的已复现依赖优化刷新
@@ -93,3 +93,11 @@ export default defineConfig({
 ```
 
 include清单按宿主实际正式入口扩展，特殊第三方/CJS依赖保持自身协议和interop；不把此清单当所有产品固定依赖或新增runtime API。保留framework插件/已有配置，在隔离冷cache和暖cache分别核optimizer日志、HMR packet与Document请求，并确认peer单实例和正常懒加载。没有在xAgent、用户本机或其他产品改配置；其真实本地日志仍待提供。
+
+可重复回归：[tests/cold-start/vite.test.mjs](../tests/cold-start/vite.test.mjs)，构建后执行 `pnpm test:cold-start`；完整 `pnpm verify` 也包含它。脚本重新 pack 并安装独立宿主，固定 Vite 8.2.2、React 19.2.8、Base UI 1.7，使用全新、相同暖、独立 include 三组 cache。结果保存至 `.artifacts/vite-regression-*/results.json`，断言默认 cold 为 3 个 full-reload/4 个 Document，warm 与明确 include 均为 0/1。`@vite-ignore` 是夹具模拟无法静态发现路径的条件，不是给产品的修复建议。记录保留失败，未访问产品、真实服务或本机。
+
+采用项目的 Codex 核对提示：
+
+> 固定产品与 xui SHA，读取 AGENTS、adopt-xui 和真实 Vite/plugin/watch 配置。分别保存 fresh optimizer cache 与 warm cache 的安全日志、HMR full-reload 次数、主 Document 请求及 shell identity；确认是否出现 `dependency optimized` / `optimized dependencies changed. reloading`，逐个对应实际懒模块的公开深入口。只把无法扫描且真实使用的入口加入 optimizeDeps.include，保留插件与 peer dedupe；不用任意全扫描 glob、关 HMR、等几分钟、吞错或改生产构建来替代原因定位。从首次可操作菜单核 adapter 已接管，canNavigate=false 是 native fallback；路由 pending 在已接管的 navigate 内或真实 disabled 状态处理。确认公共 watch 的 BUILD_SUCCESS/sourceSha256 与 formal dist 代际；对 watch failure 保留旧产物并显示状态。按相同操作回归 cold/warm、键盘、修改键、回退前进、草稿和三主题，报告原因已证实/候选、实际 SHA、通过/失败/未跑。不用独立夹具结果代替产品现场归因，不访问用户电脑或真实凭据。
+
+公共 `pnpm dev` 默认持续构建所有包与消费者，`--packages-only` 只构建包。两者输出 `BUILD_SUCCESS <sourceSha256>` / `BUILD_ERROR` 与 `.artifacts/watch-status.json`；预览另运行 `pnpm preview`。watch 没有浏览器 HMR 客户端，采用 Vite 的产品拥有自己的 dev server。产物生成失败保留上一完整代际，不能把页面仍可打开当成新构建成功。生产消费者验收继续用 `pnpm test:consumer` 的独立 tarballs，不使用 optimizer 热修来修正式 prod。

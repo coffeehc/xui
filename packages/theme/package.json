@@ -24,6 +24,7 @@
     "./table.css": "./dist/table.css",
     "./critical.css": "./dist/critical.css",
     "./auth.css": "./dist/auth.css",
-    "./sheet.css": "./dist/sheet.css"
+    "./sheet.css": "./dist/sheet.css",
+    "./widgets.css": "./dist/widgets.css"
   }
 }

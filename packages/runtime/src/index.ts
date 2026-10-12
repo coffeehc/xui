@@ -16,3 +16,5 @@ export * from './login-dom.js';
 export * from './download.js';
 export * from './api-key-http.js';
 export * from './business-log-http.js';
+export * from './calendar.js';
+export * from './widgets-dom.js';

@@ -12,3 +12,5 @@
   .xui-login-actions {display:flex;flex-wrap:wrap;gap:var(--space-control-gap);flex-shrink:0;min-inline-size:0;max-block-size:20dvh;overflow:auto;}
   .xui-login-actions>.xui-button {flex:1;min-inline-size:0;max-block-size:20dvh;overflow:auto;align-items:safe center;}
 }
+
+@layer xui-components {.xui-login-extension {margin:0;padding:0;border:0;min-inline-size:0;display:grid;gap:var(--space-control-gap);}.xui-login-extension:empty {display:none;}}

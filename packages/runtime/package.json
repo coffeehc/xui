@@ -86,6 +86,14 @@
     "./business-log-http": {
       "types": "./dist/business-log-http.d.ts",
       "import": "./dist/business-log-http.js"
+    },
+    "./calendar": {
+      "types": "./dist/calendar.d.ts",
+      "import": "./dist/calendar.js"
+    },
+    "./widgets-dom": {
+      "types": "./dist/widgets-dom.d.ts",
+      "import": "./dist/widgets-dom.js"
     }
   },
   "types": "./dist/index.d.ts"

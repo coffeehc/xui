@@ -103,6 +103,30 @@
     "./context-menu": {
       "types": "./dist/context-menu.d.ts",
       "import": "./dist/context-menu.js"
+    },
+    "./toggle-group": {
+      "types": "./dist/toggle-group.d.ts",
+      "import": "./dist/toggle-group.js"
+    },
+    "./avatar": {
+      "types": "./dist/avatar.d.ts",
+      "import": "./dist/avatar.js"
+    },
+    "./accordion": {
+      "types": "./dist/accordion.d.ts",
+      "import": "./dist/accordion.js"
+    },
+    "./scroll-area": {
+      "types": "./dist/scroll-area.d.ts",
+      "import": "./dist/scroll-area.js"
+    },
+    "./calendar": {
+      "types": "./dist/calendar.d.ts",
+      "import": "./dist/calendar.js"
+    },
+    "./command": {
+      "types": "./dist/command.d.ts",
+      "import": "./dist/command.js"
     }
   },
   "types": "./dist/index.d.ts",

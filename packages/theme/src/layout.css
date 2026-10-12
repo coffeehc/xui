@@ -1,5 +1,7 @@
 @layer xui-components {
   .xui-shell {min-block-size:100dvh;display:grid;grid-template-columns:calc(var(--nav-item-height)*6) minmax(0,1fr);grid-template-rows:auto 1fr;grid-template-areas:'header header' 'sidebar main';}
+  .xui-shell[data-scroll-mode='viewport'] {block-size:100dvh;min-block-size:0;overflow:hidden;grid-template-rows:auto minmax(0,1fr);}
+  .xui-shell[data-scroll-mode='viewport'] :is(.xui-shell-sidebar,.xui-shell-main) {min-block-size:0;overflow:auto;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
   .xui-shell-header {grid-area:header;min-block-size:var(--layout-header-height);display:flex;align-items:center;gap:var(--space-content-gap);padding:var(--space-text-gap) var(--layout-content-inset);background:var(--layer-shell);border-block-end:var(--line-width-surface) solid var(--separator-line);}
   .xui-shell-sidebar {grid-area:sidebar;min-inline-size:0;padding:var(--space-content-gap);background:var(--layer-shell);}
   .xui-shell-main {grid-area:main;min-inline-size:0;padding:var(--layout-content-inset);}

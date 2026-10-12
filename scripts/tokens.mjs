@@ -96,12 +96,12 @@ export function checkStyles(styles, values, runtimeVariables = []) {
     assert(!/(#[a-f\d]{3,8}\b|\b(?:rgb|hsl|oklch|oklab)\s*\()/i.test(decl.value),'Raw color outside contract');
     assert(!decl.prop.startsWith('--'),'Components cannot invent default values');
     if (decl.prop !== 'border-collapse' && /color|background|border(?!-radius)|outline|shadow|fill|stroke/.test(decl.prop)) {
-      const rest = decl.value.replace(/var\(--[\w-]+\)/g,'').replace(/color-mix\(|\bin\s+oklab\b|\b(?:transparent|currentcolor|none|solid|inherit|initial|unset|px|rem|em)\b|[-+\d.%\s(),]/gi,'');
+      const rest = decl.value.replace(/var\(--[\w-]+\)/g,'').replace(/color-mix\(|linear-gradient\(|\bin\s+oklab\b|\b(?:transparent|currentcolor|none|solid|inherit|initial|unset|px|rem|em)\b|[-+\d.%\s(),]/gi,'');
       assert.equal(rest,'','Raw named or uncontrolled color outside contract');
     }
   });
 }
-export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet'];
+export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets'];
 export async function generate(check = false, outputDirectory='packages/theme/dist') {
   const doc = await readFile('docs/DESIGN.md','utf8');
   const { css, light } = checkContract(doc);

@@ -68,6 +68,8 @@ export interface HttpRequestOptions<T=unknown>{
 }
 export interface HttpClientOptions{
   baseURL:string;fetch?:typeof globalThis.fetch;headers?:HeadersInit;getHeaders?:()=>HeadersInit|Promise<HeadersInit>;
+  /** Explicit hierarchical application origin (for example wails://wails). Requires a native fetch bridge. */
+  nativeOrigin?:string;
   response?:ResponseMode;adapter?:ResponseAdapter<unknown>;timeoutMs?:number;credentials?:RequestCredentials;
   errorAdapter?:ErrorResponseAdapter;
   onUnauthorized?:(error:HttpError)=>void|Promise<void>;onError?:(error:HttpError)=>void|Promise<void>;
@@ -84,14 +86,22 @@ function retryAfter(value:string|null):number|undefined{
 /** One client per host transport/auth boundary. No cache, palette, credentials store or router. */
 export function createHttpClient(options:HttpClientOptions):HttpClient{
   let base:URL;try{base=new URL(options.baseURL);}catch{throw new TypeError('An absolute HTTP baseURL is required');}
-  if(!['http:','https:'].includes(base.protocol)||base.username||base.password)throw new TypeError('An absolute HTTP baseURL without URL credentials is required');
+  let native:URL|undefined;
+  if(options.nativeOrigin!==undefined){
+    if(typeof options.nativeOrigin!=='string')throw new TypeError('Declare a native origin string');
+    try{native=new URL(options.nativeOrigin);}catch{throw new TypeError('Declare a hierarchical native origin');}
+    if(typeof options.fetch!=='function'||['http:','https:','data:','blob:','file:','javascript:','mailto:'].includes(native.protocol)||!native.hostname||native.username||native.password||native.search||native.hash||native.pathname&&native.pathname!=='/'||!options.nativeOrigin.slice(native.protocol.length).startsWith('//'))throw new TypeError('Declare an application origin and native fetch bridge');
+  }
+  const sameOrigin=(url:URL)=>native?url.protocol===native.protocol&&url.hostname.toLowerCase()===native.hostname.toLowerCase()&&url.port===native.port: url.origin===base.origin;
+  if(base.username||base.password||(native?!sameOrigin(base):!['http:','https:'].includes(base.protocol)))throw new TypeError('An absolute configured baseURL without URL credentials is required');
   if(options.timeoutMs!==undefined)validMs(options.timeoutMs,'timeoutMs');
   const send=options.fetch??globalThis.fetch;let dead=false,authEpoch=0,unauthorized=false;const active=new Set<()=>void>();
   const notifyUnauthorized=(error:HttpError,epoch:number)=>{if(dead||epoch!==authEpoch||unauthorized)return;unauthorized=true;try{Promise.resolve(options.onUnauthorized?.(error)).catch(()=>{});}catch{/* Host feedback cannot replace an HTTP fact. */}};
   async function request<T=unknown>(path:string,init:HttpRequestOptions<T>={}):Promise<HttpResponse<T>>{
     if(dead)throw new HttpError('cancel');
     let url:URL;try{url=new URL(path,base);}catch{throw new TypeError('Invalid request path');}
-    if(url.origin!==base.origin||url.username||url.password)throw new TypeError('Requests must use the configured origin without URL credentials');
+    if(!sameOrigin(url)||url.username||url.password)throw new TypeError('Requests must use the configured origin without URL credentials');
+    if(native&&init.redirect!==undefined&&init.redirect!=='error')throw new TypeError('Native transports must reject automatic redirects');
     const method=(init.method??'GET').toUpperCase(),mode=init.response??options.response??'ajax',retry=init.retry,timeout=init.timeoutMs??options.timeoutMs??(mode==='blob'?120000:30000);
     if(!['ajax','json','text','blob','empty'].includes(mode))throw new TypeError('Unsupported response mode');
     if(init.unauthorized!==undefined&&!['notify','ignore'].includes(init.unauthorized))throw new TypeError('Unsupported unauthorized policy');
@@ -124,7 +134,8 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
         try{
           const headers=new Headers(options.headers);const provided=await options.getHeaders?.();check();if(provided)new Headers(provided).forEach((value,key)=>headers.set(key,value));if(init.headers)new Headers(init.headers).forEach((value,key)=>headers.set(key,value));
           if(!headers.has('accept')&&(['ajax','json'].includes(mode)||mode==='blob'&&init.detectAjaxErrors))headers.set('accept','application/json');if('json' in init&&!headers.has('content-type'))headers.set('content-type','application/json');
-          const response=await send(url.href,{method,headers,body,signal:controller.signal,credentials:init.credentials??options.credentials??'same-origin',cache:init.cache,redirect:init.redirect});check();
+          const response=await send(url.href,{method,headers,body,signal:controller.signal,credentials:init.credentials??options.credentials??'same-origin',cache:init.cache,redirect:native?'error':init.redirect});check();
+          if(native&&response.url){let final:URL;try{final=new URL(response.url);}catch{throw new HttpError('network',{...metadata,status:response.status});}if(!sameOrigin(final)||final.username||final.password)throw new HttpError('network',{...metadata,status:response.status});}
           metadata={...metadata,status:response.status,headerRequestId:response.headers.get('X-Request-ID')??undefined,retryAfterMs:retryAfter(response.headers.get('Retry-After'))};
           if(response.status===401&&notify401)notifyUnauthorized(new HttpError('http',metadata),epoch);
           const context:HttpResponseContext={status:response.status,headerRequestId:metadata.headerRequestId,endpointId:init.endpointId,attempts:attempt};

@@ -124,3 +124,12 @@ export function resolveLoginPageConfig(input:LoginPageConfig){
 export function getLoginPageError(error:HttpError,labels:Readonly<LoginPageLabels>):string{
   return error.kind==='cancel'?labels.cancelled:error.status===401?labels.credentialsError:error.status===403?labels.forbidden:error.status===429?labels.rateLimited:error.kind==='timeout'?labels.timeout:error.kind==='network'?labels.network:labels.error;
 }
+
+/** Host-owned service/source validation and standards-based actions; no password in callbacks. */
+export interface LoginExtensionContext {username:string;signal:AbortSignal}
+export interface LoginPageAction {id:string;label:string;run:(context:LoginExtensionContext)=>void|Promise<void>;disabled?:boolean}
+export interface LoginPageExtensions {beforeSubmit?:(context:LoginExtensionContext)=>void|Promise<void>;actions?:readonly LoginPageAction[];errorLabel?:string}
+/** Promptly cancel local waiting even when a host extension does not cooperate. */
+export function runLoginPageExtension(callback:(context:LoginExtensionContext)=>void|Promise<void>,context:LoginExtensionContext):Promise<void>{
+ return new Promise((resolve,reject)=>{let settled=false;const done=(error?:unknown)=>{if(settled)return;settled=true;context.signal.removeEventListener('abort',cancel);error===undefined?resolve():reject(error);},cancel=()=>done(new HttpError('cancel'));if(context.signal.aborted){cancel();return;}context.signal.addEventListener('abort',cancel,{once:true});Promise.resolve().then(()=>{if(context.signal.aborted)throw new HttpError('cancel');return callback(context);}).then(()=>done(),error=>done(error));});
+}

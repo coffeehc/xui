@@ -20,11 +20,14 @@ function useField(props: {id?: string; 'aria-describedby'?: string; 'aria-invali
 }
 export function Input({className,...props}: React.ComponentProps<'input'>) { return <input {...props} {...useField(props)} className={cx('xui-input',className)} />; }
 export function Textarea({className,...props}: React.ComponentProps<'textarea'>) { return <textarea {...props} {...useField(props)} className={cx('xui-textarea',className)} />; }
-export function NativeSelect({className,...props}: React.ComponentProps<'select'>) { return <select {...props} {...useField(props)} className={cx('xui-select',className)} />; }
-type ChoiceProps = Omit<React.ComponentProps<'input'>,'type' | 'children'> & { label: React.ReactNode };
-function Choice({label,className,kind,...props}: ChoiceProps & {kind:'checkbox'|'radio'|'switch'}) {
+export type ControlSize='sm'|'default'|'lg';
+export function NativeSelect({className,controlSize='default',...props}: React.ComponentProps<'select'>&{controlSize?:ControlSize}) { return <select {...props} {...useField(props)} data-control-size={controlSize} className={cx('xui-select',className)} />; }
+export type ChoiceProps = Omit<React.ComponentProps<'input'>,'type' | 'children'> & { label: React.ReactNode;controlSize?:ControlSize };
+function Choice({label,className,kind,controlSize='default',readOnly,onClickCapture,onKeyDownCapture,onChange,...props}: ChoiceProps & {kind:'checkbox'|'radio'|'switch'}) {
   const fieldProps = useField(props);
-  return <label className="xui-choice-label"><input {...props} {...fieldProps} type={kind === 'radio' ? 'radio' : 'checkbox'} role={kind === 'switch' ? 'switch' : undefined} className={cx('xui-choice',className)} />{label}</label>;
+  return <label className="xui-choice-label"><input {...props} {...fieldProps} readOnly={readOnly} aria-readonly={readOnly||undefined} data-control-size={controlSize}
+    onClickCapture={event=>{onClickCapture?.(event);if(readOnly)event.preventDefault();}} onKeyDownCapture={event=>{onKeyDownCapture?.(event);if(readOnly&&(event.key===' '||kind==='radio'&&event.key.startsWith('Arrow')))event.preventDefault();}} onChange={event=>{if(!readOnly)onChange?.(event);}}
+    type={kind === 'radio' ? 'radio' : 'checkbox'} role={kind === 'switch' ? 'switch' : undefined} className={cx('xui-choice',className)} />{label}</label>;
 }
 export function Checkbox(props: ChoiceProps) { return <Choice {...props} kind="checkbox" />; }
 export function Radio(props: ChoiceProps) { return <Choice {...props} kind="radio" />; }
@@ -38,3 +41,11 @@ export function Fieldset({legend,help,error,className,children,'aria-describedby
     <legend className="xui-label">{legend}</legend>{children}{help&&<p className="xui-help" id={`${id}-help`}>{help}</p>}{error&&<p className="xui-error" id={`${id}-error`}>{error}</p>}
   </fieldset></FieldContext.Provider>;
 }
+
+/** One Field control; addons never receive its id or input semantics. */
+export const InputGroup={
+ Root:function InputGroupRoot({className,...props}:React.ComponentProps<'div'>){const field=React.useContext(FieldContext);return <div {...props} className={cx('xui-input-group',className)} data-invalid={field?.invalid||undefined}/>;},
+ Addon:function InputGroupAddon({className,...props}:React.ComponentProps<'span'>){return <span {...props} className={cx('xui-input-addon',className)}/>;},
+ Input,
+ Button:function InputGroupButton({className,type='button',...props}:React.ComponentProps<'button'>){return <button {...props} type={type} className={cx('xui-input-action',className)}/>;},
+};

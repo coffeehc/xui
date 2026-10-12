@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {cx} from './shared.js';
-export function Table({className,striped,...props}:React.ComponentProps<'table'>&{striped?:boolean}){return <table {...props} className={cx('xui-table',className)} data-striped={striped}/>;}
+export function Table({className,striped,stickyHeader,...props}:React.ComponentProps<'table'>&{striped?:boolean;stickyHeader?:boolean}){return <table {...props} className={cx('xui-table',className)} data-striped={striped} data-sticky-header={stickyHeader}/>;}
 export function TableContainer({className,...props}:React.ComponentProps<'div'>){return <div tabIndex={0} role="region" {...props} className={cx('xui-table-container',className)}/>;}
 export function TableCaption({className,...props}:React.ComponentProps<'caption'>){return <caption {...props} className={cx('xui-table-caption',className)}/>;}
 export function TableHead(props:React.ComponentProps<'thead'>){return <thead {...props}/>;}

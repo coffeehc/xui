@@ -15,9 +15,10 @@
     "test:consumer": "node scripts/consumers.mjs",
     "test:browser": "playwright test",
     "preview": "node scripts/serve.mjs",
-    "verify": "pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:watch && pnpm test:consumer && pnpm test:browser",
+    "verify": "pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:watch && pnpm test:consumer && pnpm test:cold-start && pnpm test:browser",
     "dev": "node scripts/watch.mjs",
-    "test:watch": "node --test tests/watch/watch.test.mjs"
+    "test:watch": "node --test tests/watch/watch.test.mjs",
+    "test:cold-start": "node --test tests/cold-start/vite.test.mjs"
   },
   "devDependencies": {
     "@base-ui/react": "1.7.0",

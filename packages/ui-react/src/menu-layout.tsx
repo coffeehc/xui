@@ -21,7 +21,7 @@ export function NavigationMenu({items,className,renderLink,renderLabel,...option
   const setExpanded=(id:string,open:boolean)=>{if(nodes.get(id)?.disabled)return;const next=new Set(expanded);open?next.add(id):next.delete(id);if(options.expandedIds===undefined)setInternalExpanded([...next]);options.onExpandedChange?.([...next]);};
   const latest=React.useRef({nodes,active,expanded,setExpanded});latest.current={nodes,active,expanded,setExpanded};
   React.useLayoutEffect(()=>{keyboard.current=createNavigationKeyboard(root.current!,{activeId:()=>latest.current.active,node:id=>latest.current.nodes.get(id),expanded:id=>latest.current.expanded.includes(id),setExpanded:(id,open)=>latest.current.setExpanded(id,open),listen:false});return()=>{keyboard.current?.destroy();keyboard.current=null;};},[]);
-  React.useLayoutEffect(()=>{keyboard.current?.refresh();},[items,active,expanded,collapsed]);
+  React.useLayoutEffect(()=>{keyboard.current?.refresh();if(root.current?.closest('[data-scroll-mode="viewport"]'))root.current?.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});},[items,active,expanded,collapsed]);
   const compact=()=>{const next=!collapsed;if(options.collapsed===undefined)setInternalCollapsed(next);options.onCollapsedChange?.(next);};
   const renderItems=(entries:readonly NavigationItem[]):React.ReactNode=>entries.map(item=>{
     const node=nodes.get(item.id)!,hasChildren=!!item.children?.length,open=!!item.group||expanded.includes(item.id),childId=prefix+'-'+encodeURIComponent(item.id);
@@ -40,12 +40,12 @@ export function NavigationMenu({items,className,renderLink,renderLabel,...option
 }
 
 export interface MenuLayoutProps extends NavigationMenuProps {
-  children:React.ReactNode;title?:string;header?:React.ReactNode;
+  scrollMode?:'document'|'viewport';children:React.ReactNode;title?:string;header?:React.ReactNode;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
   skipLabel?:string;closeLabel?:string;
 }
 /** Owns the default menu and shell; no route key is applied to either. */
-export function MenuLayout({children,title,header,sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,skipLabel,closeLabel,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,className,...menu}:MenuLayoutProps){
+export function MenuLayout({scrollMode,children,title,header,sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,skipLabel,closeLabel,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,className,...menu}:MenuLayoutProps){
   const [internalOpen,setInternalOpen]=React.useState(defaultSidebarOpen),[internalCollapsed,setInternalCollapsed]=React.useState(defaultCollapsed);
   const nodes=React.useMemo(()=>indexNavigation(menu.items),[menu.items]),active=getNavigationActiveId(nodes,menu),signature=JSON.stringify([active,nodes.get(active??'')?.ancestors]);
   const [internalExpanded,setInternalExpanded]=React.useState<readonly string[]>(()=>[...new Set([...(menu.defaultExpandedIds??[]),...(nodes.get(active??'')?.ancestors??[])])]);
@@ -55,6 +55,6 @@ export function MenuLayout({children,title,header,sidebarOpen,defaultSidebarOpen
   const requestCollapsed=(next:boolean)=>{if(controlledCollapsed===undefined)setInternalCollapsed(next);onCollapsedChange?.(next);};
   const requestExpanded=(next:readonly string[])=>{if(menu.expandedIds===undefined)setInternalExpanded(next);menu.onExpandedChange?.(next);};
   const navigation=menu.navigation?{canNavigate:menu.navigation.canNavigate,navigate:(request:Parameters<NonNullable<NavigationMenuOptions['navigation']>['navigate']>[0])=>{menu.navigation!.navigate(request);requestOpen(false);}}:undefined;
-  return <AppShell className={cx('xui xui-menu-layout',className)} data-collapsed={collapsed} navigationLabel={menu.label} skipLabel={skipLabel} closeLabel={closeLabel} sidebarOpen={open} onSidebarOpenChange={requestOpen} header={<><strong>{title}</strong>{header}</>}
+  return <AppShell scrollMode={scrollMode} className={cx('xui xui-menu-layout',className)} data-collapsed={collapsed} navigationLabel={menu.label} skipLabel={skipLabel} closeLabel={closeLabel} sidebarOpen={open} onSidebarOpenChange={requestOpen} header={<><strong>{title}</strong>{header}</>}
     sidebar={<NavigationMenu {...menu} navigation={navigation} collapsed={collapsed} onCollapsedChange={requestCollapsed} expandedIds={menu.expandedIds??internalExpanded} onExpandedChange={requestExpanded}/>}>{children}</AppShell>;
 }
