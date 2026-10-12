@@ -447,7 +447,7 @@ for(const kind of kinds){
       if(count===1){await page.evaluate(()=>window.dataTableDemo.owner.filter('search','记录 125'));await ready(page);}
       await expect(rows(page)).toHaveCount(count);
       const m=await capture(page,`workspace-auto-${count}`);assertFrame(m);noVerticalScroll(m,'body');
-      const minimum=await page.locator(selectors.outer).evaluate(node=>parseFloat(getComputedStyle(node,'::before').minBlockSize));
+      const minimum=await page.locator(selectors.outer).evaluate(node=>parseFloat(getComputedStyle(node).minBlockSize));
       expect(Number.isFinite(minimum),'the declared workspace intrinsic floor resolves in an auto-height parent').toBe(true);
       expect(m.outer.height).toBeGreaterThanOrEqual(minimum-1.5);
       expect(m.body.height).toBeGreaterThanOrEqual(m.grid.height-1.5);

@@ -52,3 +52,14 @@
 这是真实布局回归，不能修改断言掩盖。最小纠正仅将 natural 根切换为单列 Grid，保留自动行、100% 上限和内在下限；与已通过的 workspace 根约束路径一致，但不添加 workspace 的 token 伪元素，因此短内容仍由真实内容决定。原有 50 例几何/可交互矩阵保持不减弱，结构单测追加 natural 的 Grid 根门禁。新的源码检查与完整浏览器验收仍须跟随本次提交的 SHA，未通过前不关闭极端问题。
 
 本次 Grid 根纠正已随共同工作树通过 build/tokens/typecheck/332 项单元（0 fail/skip），构建指纹 `8a60cd76d5b4`；其中包含由独立 owner 尚待提交的身份编码扩展，不将其变更或额外测试数误归入本表格提交。表格提交仅包含 CSS 根规则、对应结构门禁和本记录，完整 tarball/浏览器结果仍按精确提交 SHA 验收。
+
+
+### c55a2ed / b539c04 二次同型失败与实测组件下限
+
+[表格 CI 38305343634](https://github.com/coffeehc/xui/actions/runs/38305343634) 和 [整合身份 CI 38305391325](https://github.com/coffeehc/xui/actions/runs/38305391325) 均为 failure：638 项浏览器仍然是相同 36 项 natural 失败、602 通过。后者包含身份编码 `b539c043b3c578df26075b16b836d6a51541ec77`，332 单元、watch、正式双端 tarball（types/exports/peer/性能门禁）、cold-start 已通过。此结果明确否定“仅将根从 flex 换成 Grid 就能让 min-content 只代表可读下限”的上一轮推断；不能把失败归到认证，也不再靠该 intrinsic 关键字猜测。
+
+本轮改为沿用同一布局 owner 直接计算：表体下限 B 是既有真实内容/可读边缘行高度的较小值；组件下限 C = B + 实际工具条/反馈/footer 高度 + frame 边框/内边距。只写表体 track 与组件根最小高度，不测宿主页头、不以已分配 root/frame 高度回算 C、不观察 root/frame 写入目标。normal natural 仍由 auto 高度与父级 100% 上限决定，只在 C 更大时以 min 的标准优先级完整撑起框并让祖先滚动；workspace 的最小值为原 token 与 C 的较大者；document 恢复原根值。取消 root/frame 的 min-content 及上轮 workspace 伪元素，避免完整 table 参与意外的根下限查询。
+
+独立几何单测使用可变真实输入替身验证：内容封顶时不补短表空白；chrome 增减时 C 同步增减而不累计已有输出高度；替换输入节点后释放旧观察目标；layout 切换、隐藏恢复、RAF 去重、无变化不写和销毁恢复仍成立。数据、分页、宽度 API/probe/colgroup 不变。50 项真实浏览器矩阵不删减；仅 workspace auto 父级的下限读取改为根计算值，不依赖已移除的实现伪元素。仍需新提交 SHA 的完整 CI 验证普通长表仅 body 滚动、短表无空白、极端 footer 留框与实际首末操作点击。
+
+本次实测组件下限候选已通过独立几何/设计门禁 19 项，以及 build/tokens/typecheck/334 项全量单元（0 fail/skip），构建指纹 `ff6cec46af27`。未再重复已知不允许的本地浏览器；本轮未重复本地完整 tarball，后续精确 SHA 的完整 CI 负责重验正式双端消费和全部 638 项真实浏览器。

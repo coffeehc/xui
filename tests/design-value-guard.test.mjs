@@ -115,3 +115,13 @@ test('only the reviewed DataTable intrinsic track measurement is exempted',async
     ['packages/runtime/src/data-table.ts',measured.replace('gridTemplateRows','height')],
   ])await fixture({[file]:source},async root=>assert.rejects(auditDesignSources({root}),/Unreviewed dynamic/));
 });
+
+
+test('DataTable component minimum only permits the exact reviewed measured outputs',async()=>{
+  for(const expression of ['`${componentMinimum}px`','`max(var(--data-table-min-block-size), ${componentMinimum}px)`']){
+    const measured='root.style.minBlockSize='+expression+';';
+    await fixture({'packages/runtime/src/data-table.ts':measured},async root=>assert.doesNotReject(auditDesignSources({root})));
+    for(const [file,source] of [['packages/runtime/src/sample.ts',measured],['packages/runtime/src/data-table.ts',measured.replace('${componentMinimum}','${componentMinimum+8}')]])
+      await fixture({[file]:source},async root=>assert.rejects(auditDesignSources({root}),/Unreviewed dynamic/));
+  }
+});

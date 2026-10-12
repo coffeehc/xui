@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import {observeDataTableLayout} from '../packages/runtime/dist/data-table.js';
 
 function fixture() {
-  let next = 0, writes = 0, value = '', callback;
+  let next = 0, writes = 0, value = '', rootValue = '', callback;
   const pending = new Map(), listeners = new Map(), observed = new Set();
   const first = {offsetHeight:60}, last = {offsetHeight:80}, head = {offsetHeight:40};
   const win = {
-    getComputedStyle:() => ({borderTopWidth:'0px',borderBottomWidth:'0px',scrollPaddingTop:'8px',scrollPaddingBottom:'8px'}),
+    getComputedStyle:node => node===frame ? {borderTopWidth:'1px',borderBottomWidth:'1px',paddingTop:'0px',paddingBottom:'0px'} : {borderTopWidth:'0px',borderBottomWidth:'0px',scrollPaddingTop:'8px',scrollPaddingBottom:'8px'},
     requestAnimationFrame:fn => {pending.set(++next,fn);return next;},
     cancelAnimationFrame:id => pending.delete(id),
     addEventListener:(name,fn) => listeners.set(name,fn),
@@ -15,10 +15,12 @@ function fixture() {
   };
   const body = {offsetHeight:240,clientHeight:224};
   const table = {ownerDocument:{defaultView:win},offsetWidth:500,offsetHeight:1000,tHead:head,tBodies:[{rows:[first,last]}]};
-  const frame = {style:{get gridTemplateRows(){return value;},set gridTemplateRows(next){value=next;writes++;}}};
+  const tools={offsetHeight:100},feedback={offsetHeight:0},footer={offsetHeight:50};
+  const root={dataset:{layout:'natural'},style:{get minBlockSize(){return rootValue;},set minBlockSize(next){rootValue=next;writes++;}}};
+  const frame = {parentElement:root,children:[tools,feedback,body,footer],style:{get gridTemplateRows(){return value;},set gridTemplateRows(next){value=next;writes++;}}};
   const prior = Object.getOwnPropertyDescriptor(globalThis,'ResizeObserver');
   globalThis.ResizeObserver = class {constructor(fn){callback=fn;}observe(node){observed.add(node);}unobserve(node){observed.delete(node);}disconnect(){observed.clear();}};
-  return {body,table,head,first,last,frame,observed,pending,listeners,
+  return {body,table,head,first,last,root,frame,tools,feedback,footer,observed,pending,listeners,
     tick(){const tasks=[...pending.values()];pending.clear();tasks.forEach(fn=>fn());},
     resize(){callback();},get writes(){return writes;},
     restore(){if(prior)Object.defineProperty(globalThis,'ResizeObserver',prior);else delete globalThis.ResizeObserver;},
@@ -30,16 +32,19 @@ test('layout minimum uses actual header, edge rows, computed clearance and scrol
   try {
     owner=observeDataTableLayout(f.frame,f.body,f.table);f.tick();
     assert.equal(f.frame.style.gridTemplateRows,'auto auto minmax(152px, 1fr) auto');
-    assert.equal(f.observed.size,5);
+    assert.equal(f.root.style.minBlockSize,'304px');
+    assert.equal(f.observed.size,8);
+    assert.equal(f.observed.has(f.root),false);assert.equal(f.observed.has(f.frame),false);
     // Short actual content wins; this is independent of row count.
     f.table.offsetHeight=110;f.resize();f.tick();
     assert.equal(f.frame.style.gridTemplateRows,'auto auto minmax(126px, 1fr) auto');
+    assert.equal(f.root.style.minBlockSize,'278px');
     // One tall row is not classified as short merely by its count.
     f.table.tBodies[0].rows=[f.first];f.first.offsetHeight=700;f.table.offsetHeight=740;
     owner.update();f.tick();
     assert.equal(f.frame.style.gridTemplateRows,'auto auto minmax(756px, 1fr) auto');
     assert.equal(f.observed.has(f.last),false);
-    assert.equal(f.observed.size,4);
+    assert.equal(f.observed.size,7);
   } finally {owner?.destroy();f.restore();}
 });
 
@@ -54,7 +59,7 @@ test('layout owner coalesces unchanged observations, retains hidden geometry, re
     assert.equal(f.frame.style.gridTemplateRows,'auto auto minmax(176px, 1fr) auto');
     f.resize();assert.equal(f.pending.size,1);owner.destroy();owner.destroy();
     assert.equal(f.pending.size,0);assert.equal(f.observed.size,0);assert.equal(f.listeners.size,0);
-    assert.equal(f.frame.style.gridTemplateRows,'');const destroyedWrites=f.writes;
+    assert.equal(f.frame.style.gridTemplateRows,'');assert.equal(f.root.style.minBlockSize,'');const destroyedWrites=f.writes;
     f.resize();owner.update();f.tick();assert.equal(f.writes,destroyedWrites);
   } finally {owner?.destroy();f.restore();}
 });
@@ -63,8 +68,30 @@ test('layout owner does not overwrite a subsequent host style on destroy and ski
   const f=fixture();let owner;
   try {
     owner=observeDataTableLayout(f.frame,f.body,f.table);f.tick();
-    f.frame.style.gridTemplateRows='auto';owner.destroy();assert.equal(f.frame.style.gridTemplateRows,'auto');
+    f.frame.style.gridTemplateRows='auto';f.root.style.minBlockSize='999px';owner.destroy();assert.equal(f.frame.style.gridTemplateRows,'auto');assert.equal(f.root.style.minBlockSize,'999px');
     const inert=observeDataTableLayout(f.frame,f.body,{ownerDocument:{defaultView:f.table.ownerDocument.defaultView}});
     inert.update();inert.destroy();assert.equal(f.pending.size,0);
+  } finally {owner?.destroy();f.restore();}
+});
+
+
+test('component minimum follows measured chrome changes and preserves layout-specific minimum ownership',()=>{
+  const f=fixture();let owner;
+  try {
+    owner=observeDataTableLayout(f.frame,f.body,f.table);f.tick();
+    // The natural cap may shrink below full table content, but never below
+    // actual chrome + a readable body. No allocated output height is reused.
+    assert.equal(f.root.style.minBlockSize,'304px');
+    f.tools.offsetHeight=400;f.footer.offsetHeight=160;f.resize();f.tick();
+    assert.equal(f.root.style.minBlockSize,'714px');
+    f.tools.offsetHeight=0;f.footer.offsetHeight=50;f.resize();f.tick();
+    assert.equal(f.root.style.minBlockSize,'204px');
+    const replacement={offsetHeight:30};f.frame.children=[f.body,f.footer,replacement];owner.update();f.tick();
+    assert.equal(f.root.style.minBlockSize,'234px');
+    assert.equal(f.observed.has(f.tools),false);assert.equal(f.observed.has(f.feedback),false);assert.equal(f.observed.has(replacement),true);
+    f.root.dataset.layout='workspace';owner.update();f.tick();
+    assert.equal(f.root.style.minBlockSize,'max(var(--data-table-min-block-size), 234px)');
+    f.root.dataset.layout='document';owner.update();f.tick();assert.equal(f.root.style.minBlockSize,'');
+    f.root.dataset.layout='natural';owner.update();f.tick();assert.equal(f.root.style.minBlockSize,'234px');
   } finally {owner?.destroy();f.restore();}
 });

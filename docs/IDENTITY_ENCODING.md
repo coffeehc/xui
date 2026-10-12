@@ -36,3 +36,6 @@ Cookie、Bearer 隔离、memory-only access、CSRF、跨标签协调、取消/�
 本云执行环境已有 Chromium/socket 限制，不重复启动或绕过。watch、冷启动、双端完整 tarball 与真实浏览器由最终提交 SHA 的 GitHub Actions `pnpm verify` 验证；推送时其状态为待运行/待完成，不能将本地检查当作这些阶段通过。正式 tarball 脚本增加 `identity-contract.ts`，在原生与 React 独立安装中编译闭合编码选项、公开 parser 和错误类型用例。
 
 只证明共享库与合成合同，不代表产品已注册路由、真实后端事务/权限/TLS/CSRF 通过。没有部署、生成真实凭据或修改产品。
+
+
+整合提交 `b539c043b3c578df26075b16b836d6a51541ec77` 的 [CI 38305391325](https://github.com/coffeehc/xui/actions/runs/38305391325) 已完成：332 单元、watch、双端正式 tarball/types/exports、cold-start 全过；浏览器 602 过、36 项 DataTable natural 布局失败，因此整体 CI 为 failure。身份编码阶段未出现失败，不将整体状态宣称为绿色；表格实测证据、修复尝试与后续验收见 [DataTable 布局验证](DATA_TABLE_LAYOUT_VALIDATION.md)，最终整体验收以包含两项变更的最新 SHA 为准。

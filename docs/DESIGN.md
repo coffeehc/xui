@@ -1207,7 +1207,7 @@ headerSlots.leading是可选、默认空且不收缩的最前区域，位于自�
 
 标题/主操作可置于既有pageHeader；内部toolbar、反馈、表体与footer共用一层frame，外部pageToolbar仍可放筛选但与内部toolbar二选一，不复制搜索或查询owner。保留列头、行和底栏信息边界，不额外复制工具条下边框、要求宿主测量pageHeader或定位分页。筛选采用data-table-filter-min，搜索可沿长字段尺度增长，窄屏自然换行。data-table-min-block-size保留为显式workspace组件下限，不强制natural填满，也不是固定表体高度。workspace shell的layout-workspace-content-min-block-size默认0px保留旧收缩语义；需要极端超高页头下非零正文视口的组合，须在shell公开style显式绑定为var(--data-table-min-block-size)。该下限受100dvh约束，main可自然滚动，不改变natural表格的内容高度。库不通过父级:has探测表格，不测量或固定页头高度。设计门禁仅允许这个精确语义alias赋值，不放宽任意token重定义、裸尺寸或fallback。
 
-DataTable以内部单一布局观察器测实际table/thead/首末行高度和computed scroll-padding/滚动条，仅设置Grid表体轨道的内在下限，取完整内容高与可读边缘行高度的较小值；不按行数分类、不硬编码表头高、不新增宿主布局参数。超高chrome由完整frame自然撑起并由祖先滚动，footer始终属于外框。读写按帧合并、无变化不写、隐藏后恢复重测、销毁释放；不承诺任意超高中间行完整同屏，允许既有stickyHeader关闭或document布局。此高度owner不修改独立列宽observer与colgroup。
+DataTable以内部单一布局观察器测实际table/thead/首末行高度和computed scroll-padding/滚动条，取完整内容高与可读边缘行高度的较小值作为Grid表体轨道下限，再加组件自身toolbar/反馈/footer的实际高度与frame边界作为组件根的实测最小高度；workspace与原token取较大者，document不加根下限，不用CSS min-content查询替代实际chrome。只观察内容输入，不观察写入尺寸的root/frame；不按行数分类、不硬编码表头高、不新增宿主布局参数。超高chrome由完整frame自然撑起并由祖先滚动，footer始终属于外框。读写按帧合并、无变化不写、隐藏后恢复重测、销毁释放；不承诺任意超高中间行完整同屏，允许既有stickyHeader关闭或document布局。此高度owner不修改独立列宽observer与colgroup。
 
 列宽属于宿主列内容或用户尺寸配置，可通过公共 width 提供数字像素、CSS 长度、百分比和 calc()/clamp()；这不是重定义品牌色、字体、间距或装饰 token 的许可。库用非交互、零高测量轨道让浏览器以表体可用宽度解析百分比表达式，再由同一 colgroup 统一表头与数据列；测量不得制造滚动范围、可访问节点或另一套宿主布局逻辑，更新/销毁必须释放观察。未配置宽度保持原有自动表格算法，完整取舍及长内容边界见 DataTable 合同。
 
