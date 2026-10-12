@@ -53,7 +53,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 独立结构化错误完整消费为 [React](../examples/log-react/app.tsx)/[原生](../examples/log-vanilla/app.js)，共用 [typed fake facade](../examples/shared/log-model.ts)。按真实 cursor/query 语义展示累计/命中数与首次代表，只有单记录授权读取返回详情；拟议协议和宿主实现责任见 [LOGS.md](LOGS.md)。
 
-公开完整表格与page slots见 /data-table-react/、/data-table-vanilla/；使用默认正式样式，无产品表体或footer补丁。顶栏紧凑间隔与无框语言入口见 [HEADER_CONTROLS](HEADER_CONTROLS.md)，普通NativeSelect边界保持。
+公开完整表格与page slots见 /data-table-react/、/data-table-vanilla/；默认 natural，`?layout=workspace` / `?layout=document` 对比显式布局，`?unbounded` 检查 auto 高度父级，`?local` 演示宿主本地分页，`?no-search`、`?no-actions`、`?no-pagination`、`?fixed-page-size` 检查可选能力。使用默认正式样式，无产品表体或footer补丁。顶栏紧凑间隔与无框语言入口见 [HEADER_CONTROLS](HEADER_CONTROLS.md)，普通NativeSelect边界保持。
 
 ## 原生 UI ID 与内网 HTTP
 
@@ -83,7 +83,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 | NavItem/Breadcrumbs/Pagination/Disclosure/Tabs | 当前项/页码/open/value 与内容 | page 选中、受控确认、disabled/RTL/方向键；Tabs 为实际 Root/List/Tab/Panel 部件 |
 | Dialog/Sheet/AlertDialog/ContextMenu/Menu/Popover/Tooltip/Toast | open/value、内容/执行回调、finalFocus，Toast manager | 公开部件/Content/positionerProps；模态/外点/Esc/回焦点；Tooltip 只放说明 |
 | Table/TableContainer/TableCaption/TableHead/TableBody/TableRow/TableHeaderCell/TableCell/SortButton | 行/列/单元内容、scope/aria-sort/selected | 独立导出、原生 table 与命名滚动区域；排序/分页/选择由宿主，不是 rows/columns 引擎 |
-| DataTable/DataTableToolbar/DataTableFilter；原生 createDataTable | rows/columns/rowKey、明确status、pageIndexOffset/pageIndex/pageSize/total、外部查询回调 | 有界表体滚动、保留空表头、自然流底栏、受控busy/失败恢复；unknown total不生成页码 |
+| DataTable/DataTableToolbar/DataTableFilter；原生 createDataTable | rows/columns/rowKey、明确status、pageIndexOffset/pageIndex/pageSize/total、外部查询回调 | 默认natural按内容收缩、实际有界父级中限高并只滚动表体；显式workspace填满/document无约束；保留空表头和唯一底栏、受控busy/失败恢复；unknown total不生成页码 |
 | Surface/Alert/Badge/Skeleton/Spinner/Progress | children/tone/标准元素状态 | 默认层级/role/status/motion，必要事实持续可见 |
 | [MetricCard](METRIC_CARD.md) | label/value/可选 marker、section props/ref | 复用 Surface 的单层皮肤与既有统计 token；名称/值/颜色含义由宿主提供，多卡仍用 Grid，不造业务网格 |
 | DataRegion/LoadingState/EmptyState/ErrorState/RenderBoundary | busy/value、反馈、retry/cancel 与 render fallback | 刷新保留旧值，错误即时可见；render 异常与异步失败分开 |
@@ -93,13 +93,19 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 | StructuredLogExplorer/createStructuredLogExplorer | 一个共享 controller、明确 v1 DTO/facade、filter/cursor、详情权限与保留期 | 只读分组/观察/详情、缓存已访问摘要段、持续错误/取消、普通文本；labels/host Ref mapping/React headerActions |
 | theme/resource/HTTP/query | 单 owner、key/loader/Abort/预算、endpoint adapter/query contract | 共享类型/终止/迟到隔离，默认不重试，401/403 分开，list/total 和基数明确 |
 
-标准列表页使用 MenuLayout workspace 的 pageHeader→PageHeader 主操作、pageToolbar→DataTableToolbar/DataTableFilter 筛选、正文→DataTable（原生 createDataTable）。完整组合内置 Table/DataRegion 与统一计数、每页条数、Pagination 底栏；不再让产品复制 DataTableShell、通用滚动与 footer CSS。复杂自定义表格仍可单独组合既有原语。详细合同见 [DATA_TABLE](DATA_TABLE.md)。筛选/排序重置该 endpoint 第一页并取消旧请求。cursor 业务日志/错误观察页使用各自完整公开组件，不套此 Pagination 页码或杜撰 total。表单页用 PageHeader/Fieldset/Field/公开控件，值、保存权限、防重复由宿主，必要错误关联并回焦点。详情页用 Breadcrumbs/Section/Surface/公开文本结构，敏感明细按授权加载，不执行 HTML。
+标准列表页可使用 MenuLayout workspace 的 pageHeader→PageHeader 主操作、正文→DataTable（原生 createDataTable）；筛选优先放同一 frame 内的 toolbar→DataTableToolbar/DataTableFilter，也可选择外部 pageToolbar，同一组控件不重复。表格默认 natural：少量/零行随内容收缩，只有实际有界父级才限高并滚动表体；auto 高度父级中仍按文档流增长。显式 workspace 保留旧填满/最小高度，document 在有界父级也取消高度上限。完整组合内置 Table/DataRegion 与统一计数、每页条数、Pagination 底栏；不再让产品复制 DataTableShell、通用滚动与 footer CSS。本地分页由宿主筛选/排序后切片并发布真实页事实；服务端分页保留已确认响应，不二次切片或新建 query owner。复杂自定义表格仍可单独组合既有原语。详细合同见 [DATA_TABLE](DATA_TABLE.md)。筛选/排序由同一宿主 owner 重置该 endpoint 第一页并取消旧请求。cursor 业务日志/错误观察页使用各自完整公开组件，不套此 Pagination 页码或杜撰 total。表单页用 PageHeader/Fieldset/Field/公开控件，值、保存权限、防重复由宿主，必要错误关联并回焦点。详情页用 Breadcrumbs/Section/Surface/公开文本结构，敏感明细按授权加载，不执行 HTML。
 
 原生基础控件可使用公开 HTML 类与 controller；这不是随意复制 React 内部 DOM。数据驱动菜单通过 createMenuLayout/createNavigationMenu 生成，不手写内部皮肤/selected 伪元素或第二套键盘。
 
 ## 发布状态与升级原则
 
 当前用户确认只有xAgent正式上线。未正式发布的项目按新设计直接演进，不为旧接口、旧配置或旧模型设置升级兼容分支/别名；xui本轮BusinessAudit旧入口已移除，仅有BusinessLog实现。正常props/render/loader/adapter扩展、权限校验和数据安全边界不是兼容层。对已上线xAgent，采用前单独评估协议、配置、会话与持久数据影响，按授权制定兼容升级方案；本轮不修改它的消费者或数据。代码清理不授权删除生产数据、重置运行或部署。
+
+## DataTable 默认布局迁移
+
+此前省略 layout 会填满 workspace，现在省略使用 natural。依赖旧表现的 React 调用显式加 `layout="workspace"`，原生 options 加 `layout:'workspace'`；希望少量/空行自然收缩的调用继续省略。显式 document 保持无高度上限。shell 的 scrollMode 与表格 layout 各自独立，既有 `--layout-workspace-content-min-block-size` 保留；超高页头仍须按[公开合同](DATA_TABLE.md#页面标题筛选与滚动)提供必要的正文下限，不使用私有 DOM/定位补丁。
+
+当前通用 DataTable 的 footer 原本已位于 frame 内，这不能证明已上线的旧 XAgent 表格升级。产品采用须另核对固定依赖 SHA、实际入口、toolbar/footer 重复 owner 与真实页面回归；本轮没有修改 XAgent。先保留业务能力，再按产品授权迁移。
 
 ## 逐页迁移与清理
 

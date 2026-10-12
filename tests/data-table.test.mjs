@@ -67,3 +67,36 @@ test('React widths use a single colgroup while empty, hidden and reordered colum
   const empty=render({columns:[fixed,named],rows:[]});assert.match(empty,/colspan="2"/i);assert.ok(empty.indexOf('width:128px',empty.indexOf('<colgroup>'))<empty.indexOf('width:clamp(',empty.indexOf('<colgroup>')));
   const hidden=render({columns:[fixed]});assert.equal((hidden.match(/<col style=/g)||[]).length,1);assert.doesNotMatch(hidden,/Record name/);assert.match(hidden,/data-sticky="end"/);
 });
+
+test('layout defaults to natural, retains explicit fill/document, and validates at the shared boundary',()=>{
+  assert.equal(getDataTableState({label:'Records'},0).layout,'natural');
+  for(const layout of ['natural','workspace','document']){assert.equal(getDataTableState({label:'Records',layout},1).layout,layout);assert.match(render({layout}),new RegExp(`data-layout="${layout}"`));}
+  assert.throws(()=>getDataTableState({label:'Records',layout:'fill'},1),/Invalid DataTable layout/);
+  assert.match(render({}),/data-layout="natural"/);
+});
+test('React toolbar, table and the one controlled footer belong to a single frame',()=>{
+  const html=render({toolbar:React.createElement('button',null,'Filter')});
+  assert.match(html,/<div class="xui-data-table-frame"><div class="xui-data-table-tools"><button>Filter<\/button><\/div>/);
+  assert.equal((html.match(/<footer /g)||[]).length,1);
+  const footer=html.slice(html.indexOf('<footer '),html.indexOf('</footer>'));
+  assert.match(footer,/1 shown · 125 total/);assert.match(footer,/Rows per page/);assert.match(footer,/xui-pagination/);
+  assert.doesNotMatch(render({pagination:undefined}),/Rows per page|xui-pagination/);
+});
+test('local pagination slices once in its host and uses the same controlled page facts without a resource',async()=>{
+  const {build}=await import('esbuild');
+  const built=await build({entryPoints:['examples/shared/data-table-model.ts'],bundle:true,write:false,format:'esm',platform:'node',target:'es2022'});
+  const {createDataTableExample}=await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].contents).toString('base64')}`);
+  for(const offset of [0,1]){
+    const owner=createDataTableExample({local:true,offset});owner.load();let state=owner.getState();assert.equal(state.rows.length,20);assert.equal(state.total,125);
+    owner.page(offset+1);state=owner.getState();assert.equal(state.pageIndex,offset+1);assert.equal(state.rows[0].id,'21');
+    owner.pageSize(50);state=owner.getState();assert.equal(state.pageIndex,offset);assert.equal(state.rows.length,50);
+    owner.filter('search','记录 125');state=owner.getState();assert.equal(state.rows.length,1);assert.equal(state.total,1);assert.equal(state.rows[0].id,'125');
+    assert.deepEqual(owner.getRequests(),[]);owner.destroy();owner.clear();assert.equal(owner.getState(),state);
+  }
+});
+test('layout CSS keeps natural sizing independent of DataRegion import order and document out of flex shrinking',async()=>{
+  const {readFile}=await import('node:fs/promises');
+  const css=await readFile('packages/theme/dist/table.css','utf8');
+  assert.match(css,/\.xui-data-table\[data-layout='natural'\]\s*\{[^}]*max-block-size:100%;[^}]*min-block-size:0;/);
+  assert.match(css,/\.xui-data-table\[data-layout='document'\]\s*\{[^}]*flex:none;[^}]*min-block-size:0;/);
+});

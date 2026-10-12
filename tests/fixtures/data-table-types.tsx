@@ -45,3 +45,24 @@ const missingOffset:DataTablePagination={pageIndex:1,pageSize:20,total:10};
 const inventedCursor:DataTablePagination={pageIndex:0,pageIndexOffset:0,pageSize:20,cursor:'opaque',total:null};
 
 export const workspace=<AppShell sidebar={null} scrollMode="workspace" style={{'--layout-workspace-content-min-block-size':'var(--data-table-min-block-size)'} as CSSProperties}>{example}</AppShell>;
+
+// Layout is shared across all public entry points; omission above exercises natural default.
+import type {DataTableLayout} from '@coffeehc/xui-react/data-table';
+import type {DataTableLayout as NativeLayout} from '@coffeehc/xui-runtime/data-table-dom';
+import type {DataTableLayout as ReactRootLayout} from '@coffeehc/xui-react';
+import type {DataTableLayout as RuntimeRootLayout} from '@coffeehc/xui-runtime';
+import type {DataTableLayout as SharedLayout} from '@coffeehc/xui-runtime/data-table';
+const naturalLayout:DataTableLayout='natural';
+const workspaceLayout:ReactRootLayout='workspace';
+const documentLayout:RuntimeRootLayout='document';
+const sharedLayout:SharedLayout=naturalLayout;
+const nativeLayout:NativeLayout=sharedLayout;
+export const naturalExample=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Natural records" layout={naturalLayout}/>;
+export const workspaceExample=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Workspace records" layout={workspaceLayout}/>;
+export const documentExample=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Document records" layout={documentLayout}/>;
+const layoutOwner=createDataTable(document.createElement('section'),{rows,columns:nativeColumns,rowKey:row=>row.id,label:'Natural records',layout:nativeLayout});
+layoutOwner.update({layout:workspaceLayout});layoutOwner.update({layout:documentLayout});layoutOwner.update({layout:undefined});layoutOwner.destroy();
+// @ts-expect-error Layout accepts only natural, workspace or document.
+const invalidLayout:DataTableLayout='viewport';
+// @ts-expect-error React props use the shared layout contract.
+export const invalidLayoutExample=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Invalid layout" layout="auto"/>;

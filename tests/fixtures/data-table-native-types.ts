@@ -33,3 +33,19 @@ const autoWidth:DataTableColumnWidth='auto';
 const table=createDataTable(document.createElement('section'),{rows,columns,rowKey:row=>row.id,label:'Records',pagination,toolbar:createDataTableToolbar(document,[createDataTableFilter(document,{label:'Search',control:document.createElement('input')})])});table.update({status:'refreshing'});table.getBody();table.destroy();
 // @ts-expect-error Explicit page offset is required in the native entry as well.
 const invalid:DataTablePagination={pageIndex:1,pageSize:20,total:10};
+
+// Native-only consumers use the same layout type without importing React.
+import type {DataTableLayout} from '@coffeehc/xui-runtime/data-table-dom';
+import type {DataTableLayout as SharedLayout} from '@coffeehc/xui-runtime/data-table';
+import type {DataTableLayout as RootLayout} from '@coffeehc/xui-runtime';
+const naturalLayout:DataTableLayout='natural';
+const workspaceLayout:SharedLayout='workspace';
+const documentLayout:RootLayout='document';
+for(const layout of [naturalLayout,workspaceLayout,documentLayout]) {
+  const layoutTable=createDataTable(document.createElement('section'),{rows,columns,rowKey:row=>row.id,label:'Layout records',layout});
+  layoutTable.update({layout:undefined});layoutTable.destroy();
+}
+// @ts-expect-error Layout accepts only natural, workspace or document.
+const invalidLayout:DataTableLayout='viewport';
+// @ts-expect-error Native options use the shared layout contract.
+const invalidLayoutTable=createDataTable(document.createElement('section'),{rows,columns,rowKey:row=>row.id,label:'Invalid layout',layout:'auto'});

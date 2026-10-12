@@ -5,8 +5,10 @@ import '@coffeehc/xui-runtime/init.js';
 import '@coffeehc/xui-theme/style.css';
 
 const query=new URLSearchParams(location.search),doc=document,root=doc.getElementById('root');
-const owner=createDataTableExample({pageSize:Number(query.get('size')??20),offset:Number(query.get('offset')??0),empty:query.has('empty'),unknown:query.has('unknown')});
+const owner=createDataTableExample({pageSize:Number(query.get('size')??20),offset:Number(query.get('offset')??0),empty:query.has('empty'),unknown:query.has('unknown'),local:query.has('local')});
 const cards=query.has('cards'),internal=query.has('internal')&&!cards;
+const layout=query.get('layout')==='workspace'?'workspace':query.get('layout')==='document'?'document':undefined;
+const noSearch=query.has('no-search'),noActions=query.has('no-actions');
 const title=query.has('tall')?'超高页面标题与全部操作仍应可以通过滚动和键盘到达。'.repeat(60):query.has('long')?'合成记录：用于检查长中文标题、页内筛选与独立表体滚动的公共组合':'合成记录';
 const element=(tag,text,className)=>{const node=doc.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;};
 const button=(text,action,variant)=>{const node=element('button',text,'xui-button');node.type='button';if(variant)node.dataset.variant=variant;node.onclick=action;return node;};
@@ -20,7 +22,7 @@ const restore=()=>owner.setEmpty(false);
 const refresh=button('刷新',()=>owner.refresh()),fail=button('模拟失败',()=>owner.refresh(true),'outline'),restoreButton=button('恢复记录',restore,'outline'),cancel=button('取消请求',()=>owner.cancel(),'outline');
 const pageHeader=element('header',undefined,'xui-page-header');pageHeader.dataset.testid='record-header';
 const heading=element('div'),meta=element('p','125 条合成记录；不连接业务服务。'),headerActions=element('div',undefined,'xui-toolbar');
-meta.append(result);heading.append(element('h1',title),meta);headerActions.append(refresh,fail,restoreButton,cancel);pageHeader.append(heading,headerActions);
+meta.append(result);heading.append(element('h1',title),meta);headerActions.append(refresh,fail,restoreButton,cancel);pageHeader.append(heading);if(!noActions)pageHeader.append(headerActions);
 const controls={};
 const search=element('input',undefined,'xui-input');search.type='search';search.oninput=()=>owner.filter('search',search.value);controls.search=search;
 const filterFields=[createDataTableFilter(doc,{label:'搜索记录',control:search,grow:true})];
@@ -48,9 +50,9 @@ const columns=[
 ];
 let columnView={mode:query.has('widths')?'mixed':'auto',hidden:[]};
 const widths={id:112,name:'clamp(12rem, 35%, 28rem)',kind:'calc(10% + 1rem)',source:'7rem',actions:120};
-const visibleColumns=()=>columns.filter(column=>!columnView.hidden.includes(column.id)).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'?160:undefined):widths[column.id]}));
+const visibleColumns=()=>columns.filter(column=>!columnView.hidden.includes(column.id)&&(!noActions||column.id!=='actions')).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'?160:undefined):widths[column.id]}));
 const tableRoot=element('section');tableRoot.id='records-table';
-const tableOptions=()=>{const state=owner.getState();return {label:'合成记录表格',rows:state.rows,columns:visibleColumns(),rowKey,status:state.status,filtered:state.filtered,labels:tableLabels,onRetry:owner.retry,striped:true,toolbar:internal?toolbar:undefined,pagination:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:owner.pageSize}};};
+const tableOptions=()=>{const state=owner.getState();return {label:'合成记录表格',layout,rows:state.rows,columns:visibleColumns(),rowKey,status:state.status,filtered:state.filtered,labels:tableLabels,onRetry:owner.retry,striped:true,toolbar:internal&&!noSearch?toolbar:undefined,pagination:query.has('no-pagination')?undefined:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}};};
 const table=cards?undefined:createDataTable(tableRoot,tableOptions());
 // These classes are the documented public ScrollArea/Grid/Surface native structure.
 const cardRoot=element('div',undefined,'xui-scroll-area');cardRoot.style.blockSize='100%';cardRoot.dataset.testid='record-cards';
@@ -79,7 +81,10 @@ function render(){
   refresh.disabled=fail.disabled=restoreButton.disabled=state.busy;cancel.disabled=!state.busy;
   if(cards)renderCards(state);else table.update(tableOptions());
 }
-const shell=createMenuLayout(root,{items:[{id:'records',label:'合成记录',href:'#records',icon:'list'}],activeId:'records',label:'示例导航',scrollMode:'workspace',headerSlots:{brand:element('strong','公共列表组合')},pageHeader,pageToolbar:internal?undefined:toolbar,content:cards?cardRoot:tableRoot});
+// A known-size host tests composition as a column-flex item, not just a block child.
+const flexHost=element('div');flexHost.style.display='flex';flexHost.style.flexDirection='column';flexHost.style.blockSize='100%';flexHost.style.minBlockSize='0';
+if(query.has('flex-host')&&!cards)flexHost.append(tableRoot);
+const shell=createMenuLayout(root,{items:[{id:'records',label:'合成记录',href:'#records',icon:'list'}],activeId:'records',label:'示例导航',scrollMode:query.has('unbounded')?'document':'workspace',headerSlots:{brand:element('strong','公共列表组合')},pageHeader,pageToolbar:internal||noSearch?undefined:toolbar,content:cards?cardRoot:query.has('flex-host')?flexHost:tableRoot});
 const unsubscribe=owner.subscribe(render);render();
 let dead=false;
 function destroy(){if(dead)return;dead=true;unsubscribe();owner.destroy();table?.destroy();shell.destroy();if(oldMinimum)root.style.setProperty(contentMinimum,oldMinimum,oldPriority);else root.style.removeProperty(contentMinimum);for(const control of Object.values(controls)){control.oninput=null;control.onchange=null;}for(const control of [refresh,fail,restoreButton,cancel,clear])control.onclick=null;for(const card of retainedCards.values())card.action.onclick=null;retainedCards.clear();}

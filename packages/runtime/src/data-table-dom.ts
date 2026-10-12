@@ -1,6 +1,6 @@
 import {generateDomId} from './dom-id.js';
 import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,type DataTableViewOptions,type DataTableColumnWidth} from './data-table.js';
-export type {DataTablePagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableViewOptions,DataTableColumnWidth} from './data-table.js';
+export type {DataTablePagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from './data-table.js';
 export type DataTableContent = Node | string | number | null | undefined;
 export interface NativeDataTableCellContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
 export interface NativeDataTableCellSlot<T> {element:Node;update?:(row:T,context:NativeDataTableCellContext)=>void;destroy?:()=>void}
@@ -14,7 +14,7 @@ export interface NativeDataTableOptions<T> extends DataTableViewOptions {
   rows:readonly T[]; columns:readonly NativeDataTableColumn<T>[]; rowKey:(row:T)=>string|number;
   rowState?:(row:T)=>{selected?:boolean;expanded?:boolean}; toolbar?:DataTableContent;
   emptyState?:DataTableContent; errorState?:DataTableContent; feedback?:DataTableContent; footer?:DataTableContent;
-  layout?:'workspace'|'document'; striped?:boolean; stickyHeader?:boolean;
+  striped?:boolean; stickyHeader?:boolean;
 }
 const owners=new WeakSet<HTMLElement>();
 /** Public native Toolbar/Field composition: controls remain the host's nodes. */
@@ -48,7 +48,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
   const placeholderRow=node('tr','xui-table-row'),placeholderCell=node('td');placeholderRow.append(placeholderCell);
   const skeletonRows=Array.from({length:5},()=>{const tr=node('tr','xui-table-row'),td=node('td'),skeleton=node('div','xui-skeleton');skeleton.setAttribute('aria-hidden','true');td.append(skeleton);tr.append(td);return tr;});
   body.tabIndex=0;body.setAttribute('role','region');count.setAttribute('aria-live','polite');position.setAttribute('aria-live','polite');size.dataset.controlSize='default';previous.type=next.type='button';
-  head.append(headerRow);table.append(colgroup,head,tbody);widthProbes.setAttribute('aria-hidden','true');body.append(widthProbes,table);sizeField.append(sizeLabel,size);pagination.append(previous,position,next);footer.append(count,sizeField,pagination,extra);frame.append(feedback,body,footer);root.classList.add('xui-data-region','xui-data-table');root.setAttribute('role','region');root.replaceChildren(tools,frame);
+  head.append(headerRow);table.append(colgroup,head,tbody);widthProbes.setAttribute('aria-hidden','true');body.append(widthProbes,table);sizeField.append(sizeLabel,size);pagination.append(previous,position,next);footer.append(count,sizeField,pagination,extra);frame.append(tools,feedback,body,footer);root.classList.add('xui-data-region','xui-data-table');root.setAttribute('role','region');root.replaceChildren(frame);
   const arrange=(parent:HTMLElement,children:HTMLElement[])=>{children.forEach((child,index)=>{if(parent.children[index]!==child)parent.insertBefore(child,parent.children[index]??null);});for(const child of Array.from(parent.children))if(!children.includes(child as HTMLElement))child.remove();};
   type CellEntry={element:HTMLTableCellElement;column:NativeDataTableColumn<T>;value:DataTableContent;slot?:NativeDataTableCellSlot<T>};
   type RowEntry={element:HTMLTableRowElement;row:T;cells:Map<string,CellEntry>;index:number;blocked:boolean};
@@ -75,7 +75,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
   previous.onclick=()=>dispatch('previous');next.onclick=()=>dispatch('next');retry.onclick=()=>dispatch('retry');size.onchange=()=>{const requested=Number(size.value);size.value=String(options.pagination?.pageSize??'');dispatch('size',requested);};
   const render=()=>{
     const state=getDataTableState(options,options.rows.length),keys=validateDataTableKeys(options.rows,options.columns,options.rowKey),labels=state.labels,page=options.pagination,hasRows=options.rows.length>0;
-    root.dataset.layout=options.layout??'workspace';root.setAttribute('aria-label',options.label);root.setAttribute('aria-busy',String(state.busy));body.setAttribute('aria-label',options.label+' — '+labels.count({rowCount:options.rows.length,total:state.total}));table.setAttribute('aria-label',options.label);table.dataset.striped=String(!!options.striped);table.dataset.stickyHeader=String(options.stickyHeader!==false);
+    root.dataset.layout=state.layout;root.setAttribute('aria-label',options.label);root.setAttribute('aria-busy',String(state.busy));body.setAttribute('aria-label',options.label+' — '+labels.count({rowCount:options.rows.length,total:state.total}));table.setAttribute('aria-label',options.label);table.dataset.striped=String(!!options.striped);table.dataset.stickyHeader=String(options.stickyHeader!==false);
     const sized=options.columns.filter(column=>column.width!==undefined).length;
     if(sized)body.dataset.columnSizing=table.dataset.columnSizing=sized===options.columns.length?'sized':'mixed';else {delete table.dataset.columnSizing;delete body.dataset.columnSizing;}
     widthProbes.hidden=!sized;

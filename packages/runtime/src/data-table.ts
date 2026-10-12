@@ -25,6 +25,8 @@ function validateColumnWidth(width: DataTableColumnWidth | undefined) {
 
 /** View facts only. Query, HTTP, cancellation and response ordering stay with the host. */
 export type DataTableStatus = 'idle' | 'loading' | 'ready' | 'refreshing' | 'error';
+/** natural caps content to a bounded parent; workspace fills it; document is unbounded. */
+export type DataTableLayout = 'natural' | 'workspace' | 'document';
 export interface DataTablePagination {
   /** Wire/query index and the endpoint's explicit index offset. No implicit 0/1 conversion. */
   pageIndex: number;
@@ -50,11 +52,15 @@ export const dataTableDefaultLabels: Readonly<DataTableLabels> = Object.freeze({
 });
 export interface DataTableViewOptions {
   label: string; status?: DataTableStatus; disabled?: boolean; filtered?: boolean;
+  /** Defaults to natural. Explicit workspace preserves the former fill behavior. */
+  layout?: DataTableLayout;
   pagination?: DataTablePagination; labels?: Partial<DataTableLabels>; onRetry?: () => void;
 }
 export function getDataTableState(options: DataTableViewOptions, rowCount: number) {
   if (!options.label?.trim()) throw new TypeError('DataTable needs an accessible label');
   const status = options.status ?? 'ready';
+  const layout = options.layout ?? 'natural';
+  if (!['natural','workspace','document'].includes(layout)) throw new TypeError('Invalid DataTable layout');
   if (!['idle','loading','ready','refreshing','error'].includes(status)) throw new TypeError('Invalid DataTable status');
   if (!Number.isSafeInteger(rowCount) || rowCount < 0) throw new TypeError('Invalid DataTable row count');
   const pagination = options.pagination;
@@ -71,7 +77,7 @@ export function getDataTableState(options: DataTableViewOptions, rowCount: numbe
   }
   const busy = status === 'loading' || status === 'refreshing';
   const outOfRange = pageCount !== null && page > pageCount;
-  return {status,busy,blocked: !!options.disabled || busy,outOfRange,page,pageCount,sizes,total:pagination?.total ?? null,labels:{...dataTableDefaultLabels,...options.labels}};
+  return {layout,status,busy,blocked: !!options.disabled || busy,outOfRange,page,pageCount,sizes,total:pagination?.total ?? null,labels:{...dataTableDefaultLabels,...options.labels}};
 }
 export function validateDataTableKeys<T>(rows: readonly T[], columns: readonly {id: string; width?: DataTableColumnWidth}[], rowKey: (row: T) => string | number): readonly (string | number)[] {
   if (!columns.length || columns.some(column => !column.id) || new Set(columns.map(column => column.id)).size !== columns.length) throw new TypeError('DataTable columns need unique nonempty ids');

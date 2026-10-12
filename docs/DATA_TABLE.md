@@ -2,7 +2,7 @@
 
 正式入口：React `@coffeehc/xui-react/data-table`；原生 `@coffeehc/xui-runtime/data-table-dom`；共享事实与类型 `@coffeehc/xui-runtime/data-table`。三者也从各自根入口导出。默认皮肤属于公共 `@coffeehc/xui-theme/table.css`，完整 `style.css` 已包含它。原有 Table/TableContainer、Toolbar/Field、Pagination、DataRegion/反馈原语保持原语合同，不会自动升级所有旧表格。
 
-完整消费者：[React](../examples/data-table-react/app.tsx)、[原生](../examples/data-table-vanilla/app.js)，共用[合成只读模型](../examples/shared/data-table-model.ts)。它们只安装正式 tarball，不依赖 `packages/src` alias、私有 CSS、产品 DOM 或真实业务服务。本页不代表任何产品完成迁移。
+完整消费者：[React](../examples/data-table-react/app.tsx)、[原生](../examples/data-table-vanilla/app.js)，共用[合成只读模型](../examples/shared/data-table-model.ts)。它们只安装正式 tarball，不依赖 `packages/src` alias、私有 CSS、产品 DOM 或真实业务服务。默认示例使用自然高度；`?layout=workspace` / `?layout=document` 对比显式布局，`?unbounded` 检查无高度边界，`?local` 演示宿主本地分页，`?no-search`、`?no-actions`、`?no-pagination`、`?fixed-page-size` 检查可选能力。本页不代表任何产品完成迁移。
 
 ## 责任与最小接口
 
@@ -10,7 +10,7 @@
 - `DataTable<T>` / `createDataTable<T>` 必填 `label`、`rows`、`columns`、`rowKey`。每列有唯一 `id`、`header`、`cell(row, context)`；React cell 返回 ReactNode，原生返回 Node/文本或下述生命周期 slot。列可声明 `width`、`ariaSort` 和 `sticky:'start'|'end'`，复用原有表格样式；排序按钮放 header，真实排序通过宿主回调完成。
 - `rowState(row)` 可提供 `selected/expanded` 事实。这里没有选择、排序、虚拟化或编辑状态引擎；展开明细、复杂合并单元格继续按已有 Table 原语组合，不伪装成已支持的 DataTable 特性。
 - `status` 明确为 `idle/loading/ready/refreshing/error`，默认为 ready。`disabled` 阻止组件自有分页/条数/重试动作；单元业务动作由宿主按真实权限决定，context 提供 busy/disabled 事实。只读查看可在刷新时继续可用，不把整个表体设为 inert。
-- `toolbar`、`emptyState`、`errorState`、`feedback`、`footer` 是公开插槽；没有默认业务动作或自动写入。`labels` 覆盖加载、错误、空态、分页和 `count({rowCount,total})` 文案。
+- `toolbar`、`emptyState`、`errorState`、`feedback`、`footer` 是公开插槽；内部 toolbar、反馈、表体与 footer 位于同一个 frame，没有默认业务动作或自动写入。`labels` 覆盖加载、错误、空态、分页和 `count({rowCount,total})` 文案。
 - 所有 rowKey 必须唯一、稳定，字符串/数字经文本化也不能重合；列 id 唯一非空。空列、不合法 page facts 在渲染之前拒绝。
 
 ## 列宽与内容边界
@@ -40,35 +40,41 @@ const columns: readonly DataTableColumn<Row>[] = [
 
 ## 页面标题、筛选与滚动
 
-采用已有 `AppShell/MenuLayout` 的 `scrollMode="workspace"`、`pageHeader`、`pageToolbar` 和正文；没有第二套 PageLayout。
+共享 `DataTableLayout = 'natural' | 'workspace' | 'document'` 从 runtime/data-table、runtime/data-table-dom、React/data-table 及 runtime/React 根入口导出。React `DataTable` 与原生 `createDataTable` 的 `layout` 默认均为 `'natural'`；它与 shell 的 `scrollMode` 是两个独立选择。
+
+- `natural`：零行、少量行时随内容自然收缩；有实际确定高度的父容器时，以 `max-block-size:100%` 为上限，多行才由表体独立滚动，内部 toolbar、反馈和 footer 保留在正常布局流。父容器高度为 auto 时，百分比上限不能创造可用视口，表格仍按文档流增长；要限制高度，先通过公开 shell 或宿主已知尺寸建立真实边界。
+- `workspace`：显式保留旧有填满已分配正文高度和组件最小高度的行为，适合需要少量行也占满工作区的页面。
+- `document`：始终按无约束文档流增长，即使父容器有确定高度也不采用 natural 的高度上限；外层页面负责滚动可达性。
+
+采用已有 `AppShell/MenuLayout` 的 `scrollMode="workspace"`、`pageHeader` 与正文可提供真实高度边界，没有第二套 PageLayout。下面让自然高度表格在 workspace 正文内按内容收缩，并把筛选放在同一表格外框内：
 
 ```tsx
 <MenuLayout scrollMode="workspace" items={navigation}
   style={{'--layout-workspace-content-min-block-size': 'var(--data-table-min-block-size)'} as React.CSSProperties}
   pageHeader={<PageHeader title="记录" meta={<span>业务说明</span>}
-    actions={<Button onClick={createRecord}>新增</Button>}/>}
-  pageToolbar={<DataTableToolbar aria-label="筛选记录">
-    <DataTableFilter label="搜索" grow>
-      <Input value={query.search} onChange={event => requestSearch(event.target.value)}/>
-    </DataTableFilter>
-    <DataTableFilter label="类型">
-      <NativeSelect value={query.type} onChange={event => requestType(event.target.value)}>
-        {typeOptions}
-      </NativeSelect>
-    </DataTableFilter>
-  </DataTableToolbar>}>
+    actions={<Button onClick={createRecord}>新增</Button>}/>}>
   <DataTable label="记录" columns={columns} rows={rows} rowKey={row => row.id}
-    status={status} pagination={pagination} onRetry={retry}/>
+    status={status} pagination={pagination} onRetry={retry}
+    toolbar={<DataTableToolbar aria-label="筛选记录">
+      <DataTableFilter label="搜索" grow>
+        <Input value={query.search} onChange={event => requestSearch(event.target.value)}/>
+      </DataTableFilter>
+      <DataTableFilter label="类型">
+        <NativeSelect value={query.type} onChange={event => requestType(event.target.value)}>
+          {typeOptions}
+        </NativeSelect>
+      </DataTableFilter>
+    </DataTableToolbar>}/>
 </MenuLayout>
 ```
 
-默认 `layout='workspace'` 直接填满已分配的正文高度。组件工具条/反馈与 footer 为正常布局流，表体 `TableContainer` 独立滚动，列头按原有 stickyHeader 合同默认启用。边框属于整体 frame，滚动容器不再叠一层外框；底栏有必要的信息分隔。组件使用真实可用高度，不测 header、不减固定像素、不 absolute/fixed 定位分页。
+组件内部的 toolbar、反馈、表体与 footer 共用一个 frame；只有表体 `TableContainer` 在高度受限时滚动，列头按原有 stickyHeader 合同默认启用。边框属于整体 frame，滚动容器不再叠一层外框；底栏有必要的信息分隔。组件使用真实可用高度，不测 header、不减固定像素、不 absolute/fixed 定位分页。
 
-外部 `pageToolbar` 与内部 `toolbar` 二选一放同一组筛选；不要复制搜索或增加查询 owner。`DataTableToolbar` 复用 Toolbar，`DataTableFilter` 复用 Field 的标签/id/错误关联；普通筛选默认使用 `--data-table-filter-min`，`grow` 搜索使用既有长字段尺度，在足够宽时自然同排，窄屏换行。不要直接依赖 NativeSelect 的全宽规则排列整个筛选区域。原生使用 `createDataTableToolbar(document, nodes)` 和 `createDataTableFilter(document, {label,control,grow})`，业务 control Node 与事件始终属于宿主。
+外部 `pageToolbar` 仍受支持，与内部 `toolbar` 二选一放同一组筛选；不要复制搜索或增加查询 owner。`DataTableToolbar` 复用 Toolbar，`DataTableFilter` 复用 Field 的标签/id/错误关联；普通筛选默认使用 `--data-table-filter-min`，`grow` 搜索使用既有长字段尺度，在足够宽时自然同排，窄屏换行。不要直接依赖 NativeSelect 的全宽规则排列整个筛选区域。原生使用 `createDataTableToolbar(document, nodes)` 和 `createDataTableFilter(document, {label,control,grow})`，业务 control Node 与事件始终属于宿主。未提供搜索、动作或 toolbar 时，不为缺失能力保留空控件。
 
 pageToolbar 容器原本就没有常驻下边框，和下方正文之间已有 `--layout-section-gap`。不要额外包整行 border-b；迁移时清理产品重复分隔及 footer/表体定位 CSS。表头、行和底栏必要边界保留。
 
-`--layout-workspace-content-min-block-size` 是既有 shell 的公开内容区下限，默认 `0px`，不自动探测 DataTable。采用本组合时，必须如上通过 shell 的公开 style 显式绑定为 `var(--data-table-min-block-size)`。普通高度仍由正文吃满剩余空间；超高页头/200%文字时保留非零正文视口，main可自然滚到表格，内容区可继续滚动到完整 footer。该下限按 rem 随字号变化并受 100dvh 约束，极短窗口允许 main 滚动，不承诺所有内容同屏。DataTable 自身的最小高度不能跨越零高父视口解决可达性。
+`--layout-workspace-content-min-block-size` 仍是既有 shell 的公开内容区下限，默认 `0px`，不自动探测 DataTable。在 workspace shell 中要求超高页头/200%文字下保留非零正文视口时，仍须如上通过公开 style 显式绑定为 `var(--data-table-min-block-size)`；该设置只保障 shell 正文的可达空间，不把 natural 表格变成填满布局。main 可自然滚到表格，内容区可继续滚动到完整 footer。该下限按 rem 随字号变化并受 100dvh 约束，极短窗口允许 main 滚动，不承诺所有内容同屏。`--data-table-min-block-size` 保留用于显式 workspace 的组件下限，不是 natural 的强制高度；组件最小高度不能跨越零高父视口解决可达性。
 
 原生同样只设置宿主 root 的公开 token，在生命周期结束时恢复宿主原值；不要查找或改写 `.xui-shell-content`：
 
@@ -77,13 +83,19 @@ const token = '--layout-workspace-content-min-block-size';
 const oldValue = root.style.getPropertyValue(token);
 const oldPriority = root.style.getPropertyPriority(token);
 root.style.setProperty(token, 'var(--data-table-min-block-size)');
-const shell = createMenuLayout(root, {scrollMode:'workspace', items, pageHeader, pageToolbar, content:tableRoot});
+const shell = createMenuLayout(root, {scrollMode:'workspace', items, pageHeader, content:tableRoot});
 // On host cleanup, after table.destroy() and shell.destroy():
 if (oldValue) root.style.setProperty(token, oldValue, oldPriority);
 else root.style.removeProperty(token);
 ```
 
-无边界文档页显式选择 `layout='document'`。卡片列表直接用相同 pageHeader/pageToolbar，正文复用 ScrollArea/Grid/Surface，参见消费者 cards 模式；不用另造页面骨架。
+普通无边界文档页可直接使用默认 natural；只有需要显式取消有界父容器高度上限时才选择 `layout='document'`。卡片列表仍用相同 pageHeader/pageToolbar，正文复用 ScrollArea/Grid/Surface，参见消费者 cards 模式；不用另造页面骨架。
+
+## 默认布局迁移
+
+此前省略 `layout` 等同于 `workspace`，现在省略等同于 `natural`。依赖旧默认填满工作区或最小高度的消费者应显式加 React `layout="workspace"` 或原生 `{layout:'workspace'}`，保留其真实父高度与必要的 shell 内容区下限。希望少量行/空态自然收缩的页面可以继续省略；显式 `document` 调用无需改变。不要通过产品私有 CSS 恢复旧默认。
+
+既有公共 DataTable 的计数/每页条数/Pagination footer 本来就在 frame 内，此次将内部 toolbar 也统一到同一 frame；看到通用组件已有内部 footer，不能据此声称旧 XAgent 表格已升级。产品必须另行核对固定依赖 SHA、实际采用入口、页面槽和业务行为。本次仅修改 xui 公共组件、示例与合同，不修改 XAgent，也不替代已上线产品的兼容评估。
 
 ## 分页事实与未知总数边界
 
@@ -99,9 +111,14 @@ const pagination = {
 };
 ```
 
+组件只渲染传入的 `rows`，不自动切片，也不新增查询 owner。两种分页方式复用同一受控接口和同一个 footer：
+
+- 本地分页：宿主持有完整记录和查询状态，先筛选/排序，再按 `(pageIndex - pageIndexOffset) * pageSize` 切出当前页，发布切片 rows、筛选后真实 total 和已确认 page facts。查询或条数改变时由同一宿主 owner 重置/校正页码。
+- 服务端分页：宿主发请求，并以已确认响应对应的 rows、pageIndex、pageSize、total 更新表格；等待/失败期间保留旧确认事实。服务端已分页的 rows 不得再做一次本地切片。
+
 `pageIndexOffset` 必须显式指定 endpoint 页基数，不默认猜 0 或 1。共享 `WebfacadeQuery` 使用真实 `page_index/page_size/return_total`；`parseListData` 验证真实 `list/total`，`toListPage(wire,{returnTotal})` 把未请求的总数投影为 null。组件不调用 HTTP、解析 envelope、猜字段或建立第二个 query/resource owner。
 
-已知 total 时只做明确视图投影：`page = pageIndex - pageIndexOffset + 1`，`pageCount = max(1, ceil(total/pageSize))`。用户点击发出原 wire 基数 index；事实仍保持旧值，直到宿主确认响应后更新。每页条数只在 footer 出现一次，和真实已显示条数、已知总数与分页在同一公共区域；pageSize 更改只发请求，宿主决定是否回 endpoint 第一页。pageSizeOptions 必须为正的唯一整数并包含已确认值。
+已知 total 时只做明确视图投影：`page = pageIndex - pageIndexOffset + 1`，`pageCount = max(1, ceil(total/pageSize))`。用户点击发出原 wire 基数 index；事实仍保持旧值，直到宿主确认下一组 rows/page facts 后更新，服务端场景以响应确认为准。每页条数只在 footer 出现一次，和真实已显示条数、已知总数与分页在同一公共区域；pageSize 更改只发请求，宿主决定是否回 endpoint 第一页。pageSizeOptions 必须为正的唯一整数并包含已确认值。省略 `onPageSizeChange` 表示条数不可编辑，保留唯一禁用条数控件；不应在 toolbar 再放一个条数选择器。
 
 `total:null` 只显示真实已加载数，不生成编号 Pagination，也不从满页/短页/数组长度猜 pageCount 或 hasMore。可使用 footer 放宿主已有 cursor 控件；本轮不提供 cursor 链/上一页历史/hasMore owner，不能把该插槽称为完整 cursor 分页组合。无 pagination 则为未分页列表，只显示已加载数。已知 total 缩小导致当前 page 超范围时，组件保留事实而隐藏无效编号控件；宿主须在同一查询 owner 中协调过期页或提供恢复入口，不静默 clamp/自动发请求。
 
@@ -110,7 +127,7 @@ busy/disabled 阻止重复分页、条数和默认重试，另有同步单事件
 ## 状态、焦点与生命周期
 
 - 首次 loading 始终保留列头并在 tbody 显示稳定骨架及 loading 状态，footer 不把加载中的未知计数当 0 条成功结果。
-- refreshing 传入既有 rows；表体、底栏和搜索身份保持，反馈置于同一外框内、表体前的正常流，显示反馈不移动可见外框。error 仍保留既有行并提供 `onRetry`；首屏 error 位于 tbody，不能伪装成 empty。
+- refreshing 传入既有 rows；表体、底栏和搜索身份保持，反馈置于同一外框内、表体前的正常流，不另加外部反馈层；natural 会随反馈内容自然调整高度，达到真实父级上限后再压缩表体。error 仍保留既有行并提供 `onRetry`；首屏 error 位于 tbody，不能伪装成 empty。
 - ready 且 rows=[] 保留全部列头，默认空态在跨全列 tbody 单元格内。`filtered` 区分初始无记录与筛选无匹配；自定义 emptyState 可放已有新增/清空回调，库不会凭空创建记录。
 - 关闭、切页、查询变化、取消和迟到响应由现有 resource/query owner 处理。示例使用 `createResource` 与显式已确认快照，不添加 HTTP owner。业务查询改变时保留旧 rows 的策略明确由宿主选择，不能把它们误标为新查询结果。
 - React 行/单元使用稳定 key。不要在 footer 更新时改变 columns renderer 的组件类型、重新生成行键或用整个查询给 DataTable 设 key。
@@ -138,4 +155,6 @@ cell: (row) => {
 
 单元测试覆盖显式基数/真实总数、未知 total、控制值回退、busy/disabled/同步防重、空态列头、刷新保行、slot身份/清理与无效更新。正式 tarball 消费包含每个公开 ESM/CSS/types、新入口、React peer 单实例以及原生零 React。
 
-Playwright 用真实浏览器量测组件/body/footer rect、clientHeight/scrollHeight，并实际把表体滚到尾部；同时检查页头/搜索 rect 不变、分页仍可见、横向滚动/列对齐、窄屏换行、键盘/取消、三主题与 reduced-motion、0/20/50/100条和长中文、刷新失败恢复、200%与超高页头可达性。代码存在或 overflow 字符串正确不等于验收通过；实际通过/失败/未跑以对应 SHA 的执行证据为准。没有真实产品查询、产品 slot 迁移、部署、Wails、移动 OS、读屏器、Firefox/Safari、SSR hydration 或性能通过声明。
+Playwright 用真实浏览器量测组件/body/footer rect、clientHeight/scrollHeight，并实际把表体滚到尾部；验收需区分 natural 的少行/零行收缩、多行有界滚动及 auto 父级自然流，显式 workspace 填满和 document 取消上限，并覆盖缺搜索、动作、分页及固定条数的组合；同时检查页头/搜索 rect 不变、分页仍可见、横向滚动/列对齐、窄屏换行、键盘/取消、三主题与 reduced-motion、0/20/50/100条和长中文、刷新失败恢复、200%与超高页头可达性。代码存在或 overflow 字符串正确不等于验收通过；实际通过/失败/未跑以对应 SHA 的执行证据为准。没有真实产品查询、产品 slot 迁移、部署、Wails、移动 OS、读屏器、Firefox/Safari、SSR hydration 或性能通过声明。
+
+本次变更的差距、处理、未验证风险和执行状态见 [高度与分页组合验证记录](DATA_TABLE_LAYOUT_VALIDATION.md)。

@@ -6,7 +6,7 @@ import {Field,NativeSelect,type FieldProps} from './forms.js';
 import {DataRegion,LoadingState,EmptyState,ErrorState,Skeleton} from './feedback.js';
 import {Pagination} from './navigation.js';
 import {cx} from './shared.js';
-export type {DataTablePagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableViewOptions,DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
+export type {DataTablePagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
 export interface DataTableCellContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
 export interface DataTableColumn<T> {
   id:string; header:React.ReactNode; cell:(row:T,context:DataTableCellContext)=>React.ReactNode;
@@ -21,15 +21,14 @@ export interface DataTableProps<T> extends DataTableViewOptions {
   toolbar?:React.ReactNode; emptyState?:React.ReactNode; errorState?:React.ReactNode; feedback?:React.ReactNode;
   /** Optional host cursor controls; no numbered pagination is fabricated for unknown total. */
   footer?:React.ReactNode;
-  /** workspace fills an already bounded parent; document follows natural flow. */
-  layout?:'workspace'|'document'; striped?:boolean; stickyHeader?:boolean;
+  striped?:boolean; stickyHeader?:boolean;
   className?:string; id?:string;
 }
 export function DataTableToolbar({className,...props}:React.ComponentProps<typeof Toolbar>) {return <Toolbar {...props} className={cx('xui-data-table-toolbar',className)}/>;}
 export function DataTableFilter({className,grow=false,...props}:FieldProps&{grow?:boolean}) {return <Field {...props} data-grow={grow} className={cx('xui-data-table-filter',className)}/>;}
 const hasContent=(value:React.ReactNode):boolean=>value!==undefined&&value!==null&&typeof value!=='boolean'&&(typeof value!=='string'||value.length>0)&&(Array.isArray(value)?value.some(hasContent):React.isValidElement<{children?:React.ReactNode}>(value)&&value.type===React.Fragment?hasContent(value.props.children):true);
 /** Fully controlled composition; it never owns a request or changes page facts. */
-export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,errorState,feedback,footer,layout='workspace',striped=false,stickyHeader=true,className,id,...options}:DataTableProps<T>) {
+export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,errorState,feedback,footer,striped=false,stickyHeader=true,className,id,...options}:DataTableProps<T>) {
   const state=getDataTableState(options,rows.length),keys=validateDataTableKeys(rows,columns,rowKey),{labels,pagination}= {labels:state.labels,pagination:options.pagination};
   const guard=React.useRef<ReturnType<typeof createDataTableRequestGuard>|null>(null);if(!guard.current)guard.current=createDataTableRequestGuard();
   const request=(callback:(()=>void)|undefined)=>guard.current!.run(state.blocked,callback);
@@ -53,9 +52,9 @@ export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,er
   const hasRows=rows.length>0,showError=state.status==='error';
   const error=errorState??<ErrorState title={labels.error} retryLabel={labels.retry} onRetry={options.onRetry?()=>request(options.onRetry):undefined} retryDisabled={state.blocked}/>;
   const empty=emptyState??<EmptyState title={options.filtered?labels.noMatches:labels.empty}/>;
-  return <DataRegion id={id} className={cx('xui-data-table',className)} data-layout={layout} aria-label={options.label} busy={state.busy}>
-    {hasContent(toolbar)&&<div className="xui-data-table-tools">{toolbar}</div>}
+  return <DataRegion id={id} className={cx('xui-data-table',className)} data-layout={state.layout} aria-label={options.label} busy={state.busy}>
     <div className="xui-data-table-frame">
+      {hasContent(toolbar)&&<div className="xui-data-table-tools">{toolbar}</div>}
       {(hasRows&&(state.busy||showError)||hasContent(feedback))&&<div className="xui-data-table-feedback">{hasRows&&(showError?error:state.busy?<LoadingState>{labels.refreshing}</LoadingState>:null)}{feedback}</div>}
       <TableContainer data-column-sizing={columnSizing} className="xui-data-table-body" aria-label={options.label+' — '+labels.count({rowCount:rows.length,total:state.total})}>
         <div ref={widthProbes} className="xui-data-table-widths" aria-hidden="true" hidden={!columnSizing}>{columns.map(column=><div key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</div>

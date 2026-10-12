@@ -65,3 +65,12 @@ test('native width observer batches used CSS widths and disconnects on update an
     callback();owner.destroy();assert.equal(frame,undefined);assert.ok(disconnects>=3);pixels='999px';callback();assert.equal(track.style.width,'');assert.equal(win.listeners.get('resize').length,0);
   }finally{if(previous)Object.defineProperty(globalThis,'ResizeObserver',previous);else delete globalThis.ResizeObserver;}
 });
+
+test('native natural layout and single-frame toolbar update without replacing scroll or pagination owners',()=>{
+  const {root,doc}=navigationDOM(),toolbar=createDataTableToolbar(doc,[doc.createElement('input')]);
+  const owner=createDataTable(root,{...base,toolbar}),frame=root.querySelector('.xui-data-table-frame'),body=owner.getBody(),footer=root.querySelector('footer'),select=root.querySelector('select');
+  assert.equal(root.dataset.layout,'natural');assert.equal(root.querySelector('.xui-data-table-tools').parentElement,frame);assert.equal(body.parentElement,frame);assert.equal(footer.parentElement,frame);
+  for(const layout of ['workspace','document','natural']){owner.update({layout});assert.equal(root.dataset.layout,layout);assert.equal(owner.getBody(),body);assert.equal(root.querySelector('footer'),footer);assert.equal(root.querySelector('select'),select);}
+  assert.throws(()=>owner.update({layout:'fill'}),/Invalid DataTable layout/);assert.equal(root.dataset.layout,'natural');
+  owner.update({pagination:undefined,toolbar:undefined});assert.equal(select.parentElement.hidden,true);assert.equal(root.querySelector('.xui-data-table-tools').hidden,true);assert.match(root.querySelector('.xui-data-table-count').textContent,/1 loaded/);owner.destroy();
+});

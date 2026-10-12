@@ -121,4 +121,6 @@ NavigationMenu 的 renderButton/renderAction 与原生 NavigationMenuDOMOptions 
 
 ## 完整受控表格组合
 
-DataTable系列新增正式/data-table与/data-table-dom入口，复用既有Table/Toolbar/Field/Pagination/DataRegion，采用已有workspace/page slots。统一footer和表体滚动属于库，data/columns/actions/rights/query仍由宿主提供；null total明确不启用编号分页。原生keyed row与cell slot.update/destroy保留生命周期，见[完整合同](DATA_TABLE.md)。顶栏locale装饰箭头、无框状态与controls/account尺度见[顶栏控件](HEADER_CONTROLS.md)。
+DataTable系列使用正式/data-table与/data-table-dom入口，复用既有Table/Toolbar/Field/Pagination/DataRegion和page slots。共享DataTableLayout从runtime/data-table、runtime/data-table-dom、React/data-table与两包根导出。React DataTable/原生createDataTable默认layout='natural'，少量/零行按内容收缩，以max-block-size:100%对真实有界父级限高，只有表体滚动；auto高度父级中仍自然增长，不能凭百分比创造视口。显式workspace保持旧填满与最小高度，document即使在有界父级也不采用该上限。旧默认调用若依赖填满，须显式设置workspace；shell的公开内容区下限token与scrollMode默认不变。
+
+内部toolbar、反馈、表体、footer统一在同一frame，外部pageToolbar仍可替代内部toolbar，同组筛选只放一处。统一计数/条数/Pagination footer和表体滚动属于库，data/columns/actions/rights/query仍由宿主提供；既有受控分页不建立第二个owner。本地分页由宿主切片并发布真实total/page facts，服务端分页使用确认响应且不二次切片；null total明确不启用编号分页。原生keyed row与cell slot.update/destroy保留生命周期，见[完整合同](DATA_TABLE.md)。公共footer原本已在frame内，不证明旧XAgent已升级；本次不修改XAgent消费者。顶栏locale装饰箭头、无框状态与controls/account尺度见[顶栏控件](HEADER_CONTROLS.md)。

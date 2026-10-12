@@ -4,7 +4,31 @@ import type {DataTableStatus} from '@coffeehc/xui-runtime/data-table';
 export interface ExampleRow {id:string;name:string;kind:string;scope:string;source:string}
 const records=Array.from({length:125},(_,index)=>({id:String(index+1),name:`记录 ${index+1}：很长的中文名称与内容用于验证换行、横向滚动和列对齐`,kind:index%2?'会话':'记忆',scope:index%3?'个人':'共享',source:index%2?'导入':'手动'}));
 export const tableLabels={loading:'正在加载…',refreshing:'正在刷新…',idle:'等待加载',empty:'还没有记录',noMatches:'没有匹配记录',error:'加载失败，原有记录仍保留',retry:'重试',pageSize:'每页条数',pagination:'记录分页',previous:'上一页',next:'下一页',count:({rowCount,total}:{rowCount:number;total:number|null})=>total===null?`已加载 ${rowCount} 条`:`显示 ${rowCount} 条，共 ${total} 条`};
-export function createDataTableExample(options:{pageSize?:number;unknown?:boolean;empty?:boolean;offset?:number}={}) {
+export interface DataTableExampleOptions {pageSize?:number;unknown?:boolean;empty?:boolean;offset?:number;local?:boolean}
+/** Synchronous host-owned slicing. DataTable still receives only the current page. */
+export function createLocalDataTableExample(options:DataTableExampleOptions={}) {
+  const offset=options.offset??0,listeners=new Set<()=>void>();
+  let dead=false,empty=!!options.empty,pageIndex=offset,pageSize=options.pageSize??20,filters:Record<string,string>={},status:DataTableStatus='idle';
+  let snapshot={rows:[] as readonly ExampleRow[],total:null as number|null,pageIndex,pageSize,pageIndexOffset:offset,filters,filtered:false,status:status as DataTableStatus,busy:false,requests:0};
+  const publish=(nextStatus:DataTableStatus='ready')=>{
+    if(dead)return;status=nextStatus;
+    const filtered=empty?[]:records.filter(row=>Object.entries(filters).every(([key,value])=>!value||(key==='search'?row.name.includes(value):row[key as keyof ExampleRow]===value)));
+    const start=(pageIndex-offset)*pageSize;
+    snapshot={rows:nextStatus==='error'?snapshot.rows:filtered.slice(start,start+pageSize),total:options.unknown?null:filtered.length,pageIndex,pageSize,pageIndexOffset:offset,filters,filtered:Object.values(filters).some(Boolean),status,busy:false,requests:0};
+    for(const listener of listeners)listener();
+  };
+  return {
+    getState:()=>snapshot,subscribe(listener:()=>void){listeners.add(listener);return()=>{listeners.delete(listener);};},
+    load:()=>publish(),retry:()=>publish(),refresh:(fail=false)=>publish(fail?'error':'ready'),
+    page:(value:number)=>{pageIndex=value;publish();},pageSize:(value:number)=>{pageSize=value;pageIndex=offset;publish();},
+    filter:(field:string,value:string)=>{filters={...filters,[field]:value};pageIndex=offset;publish();},clear:()=>{filters={};pageIndex=offset;publish();},
+    cancel:()=>{},setEmpty:(value:boolean)=>{empty=value;pageIndex=offset;publish();},
+    // Local reads are synchronous; delayed plans belong only to the server example.
+    planNext:(_plan:{delayMs?:number;ignoreAbort?:boolean;fail?:boolean})=>{},getRequests:():string[]=>[],destroy(){dead=true;listeners.clear();},
+  };
+}
+export function createDataTableExample(options:DataTableExampleOptions={}) {
+  if(options.local)return createLocalDataTableExample(options);
   const offset=options.offset??0;
   let desired:WebfacadeQuery={page_index:offset,page_size:options.pageSize??20,return_total:!options.unknown,filters:{}},committed:{rows:readonly ExampleRow[];total:number|null;query:WebfacadeQuery}|undefined,fail=false,dead=false,empty=!!options.empty;
   let nextPlan:{delayMs?:number;ignoreAbort?:boolean;fail?:boolean}|undefined;

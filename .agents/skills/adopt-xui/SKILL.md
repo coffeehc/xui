@@ -44,12 +44,12 @@ xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/
 - 先逐页采用 xui；按产品授权逐项目接入baseservice facade或换后端 adapter。公共合同变更同步升级消费方依赖/固定 SHA、DTO adapter、类型和独立业务/页面回归；不自动修改其他项目，也不要求全产品同时切换。
 - 只在具体任务授权的仓库和操作范围内行动。这份 skill 不授权提交其他产品、push、包发布、部署、生成真实密钥或改许可证/可见性；已获授权的操作不重复索取确认。
 
-- 公共扩展默认：viewport显式选择，否则document；表格stickyHeader与行底色合成由库提供；link保留原生a语义；controlSize不覆盖HTML select.size，readonly choice使用公共React guard或bindReadonlyChoice。原生自定义scheme用明确nativeOrigin和bridge，不因URL.origin=null放行外部tuple；真实Wails三OS必须另验。新组合正式消费参考[React](../../../examples/widgets-react/app.tsx)/[原生](../../../examples/widgets-vanilla/app.js)。
+- 公共扩展默认：shell的viewport/workspace显式选择，否则document；表格stickyHeader与行底色合成由库提供；link保留原生a语义；controlSize不覆盖HTML select.size，readonly choice使用公共React guard或bindReadonlyChoice。原生自定义scheme用明确nativeOrigin和bridge，不因URL.origin=null放行外部tuple；真实Wails三OS必须另验。新组合正式消费参考[React](../../../examples/widgets-react/app.tsx)/[原生](../../../examples/widgets-vanilla/app.js)。
 
 - 简单选项的可折叠分组搜索采用[正式GroupedCombobox](../../../docs/GROUPED_SEARCH.md)及双端示例。不能将Disclosure/Accordion嵌入Combobox.List或在同Root放两个List；无需消费者stopPropagation/穿透DOM。共享查询、归档关闭暂停/取消、分页属于宿主；默认Disclosure箭头属于库。
 
 - 富业务导航（子树、图标、描述、独立配置按钮、ContextMenu、未知total/cursor）采用[NAVIGATION公开扩展](../../../docs/NAVIGATION.md#富条目独立行尾动作与上下文菜单)和双端rich-navigation正式消费者；复用Input、Section/Disclosure、各组NavigationMenu和组外加载按钮。原有children/resolveIcon/renderLabel/renderLink不是缺口；使用renderButton/renderAction及原生slots/decorator，不把互动控件塞进label/option，不添加消费方stopPropagation。导航按单roving停靠，辅助动作不导航；请求/游标/防重复/取消/迟到丢弃属于宿主，GroupedCombobox仍是简单选择且不杜撰pageCount。
 
-- 标准列表优先采用[公共DataTable](../../../docs/DATA_TABLE.md)和既有workspace/pageHeader/pageToolbar；移除产品重复DataTableShell/筛选/footer/分割线CSS，保留data/columns/rowKey/权限/查询与业务回调。pageIndexOffset与ListData真实total显式传入，未知total不伪造页码；刷新保行、零行保表头、分页条数唯一且底栏可达，原生cell slot释放。顶栏[语言/主题/账号](../../../docs/HEADER_CONTROLS.md)默认合同不需要宿主穿透样式。
+- 标准列表优先采用[公共DataTable](../../../docs/DATA_TABLE.md)和既有workspace/pageHeader/pageToolbar。表格layout默认natural：少量/零行自然收缩，仅实际有界父级中限高并滚动表体，auto高度父级仍自然增长；显式workspace保留旧填满/最小高度，document即使在有界父级也无该上限。依赖旧默认的调用须明确layout='workspace'；shell scrollMode与公开内容区下限token不变。内部toolbar与反馈/表体/footer共用frame，外部pageToolbar仍支持，同组筛选只放一处。移除产品重复DataTableShell/筛选/footer/分割线CSS，保留data/columns/rowKey/权限/查询与业务回调。pageIndexOffset与ListData真实total显式传入，既有分页保持受控；本地数据由宿主切片并发布事实，服务端已分页rows不得二次切片或新增query owner。未知total不伪造页码，刷新保行、零行保表头、分页条数唯一且底栏可达，原生cell slot释放。公开通用footer原本在frame内不证明旧XAgent升级；须另核固定SHA和真实消费页，本轮不修改XAgent。顶栏[语言/主题/账号](../../../docs/HEADER_CONTROLS.md)默认合同不需要宿主穿透样式。
 
 - 独立指标展示采用[公共MetricCard](../../../docs/METRIC_CARD.md)，已有 Surface 拼卡可改为 label/value/marker 三个公开内容入口；名称、最终格式化值和颜色语义仍归宿主。卡片复用 Surface 和现有统计 token，排列保留调用方 Grid，不内置业务指标清单或专属网格；原生采用同页公开 dl/dt/dd 结构。

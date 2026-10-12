@@ -178,4 +178,8 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 
 公共 DataTable/DataTableToolbar/DataTableFilter 与原生 createDataTable/createDataTableToolbar/createDataTableFilter 复用表格和页内槽，合同见 [DATA_TABLE](DATA_TABLE.md)。顶栏语言入口默认无常驻外框和装饰SVG箭头，controls/account紧凑但命中区不减，见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。
 
+`DataTableLayout = 'natural' | 'workspace' | 'document'` 从 runtime/data-table、runtime/data-table-dom、React/data-table 及 runtime/React 根入口导出。`DataTable` / `createDataTable` 的 `layout` 默认改为 natural：少量/零行随内容收缩，实际有界父容器中以 `max-block-size:100%` 限高并只滚动表体；auto 高度父级中仍为自然文档流，不会自动获得视口边界。显式 workspace 保留旧填满与最小高度，document 即使在有界父级也不采用此高度上限。依赖旧默认的消费者必须显式选择 `layout='workspace'`；shell 的 scrollMode 默认和公开内容区最小高度 token 不变，详见[默认布局迁移](DATA_TABLE.md#默认布局迁移)。
+
+内部 toolbar、反馈、表体和唯一 footer 位于同一 frame；外部 pageToolbar 仍可替代内部 toolbar，同组筛选只放一处。既有分页保持受控，本地列表由宿主切片并发布事实，服务端列表使用已确认响应且不得二次切片；计数/每页条数/Pagination 不增设第二个 owner。通用 footer 原本位于 frame 内不代表旧 XAgent 已采用或升级；本次没有 XAgent 修改。
+
 `DataTableColumn<T>` / `NativeDataTableColumn<T>` 追加 `width?:DataTableColumnWidth`；共享类型从 runtime/data-table、runtime/data-table-dom、React/data-table 及 runtime/React 根入口导出。number 为有限非负 CSS 像素，字符串为 length/百分比或 calc/clamp/min/max/var 表达式；形状类型与 SSR 结构校验不代替浏览器 CSS/数学解析。未配置维持原自动布局，混合列由未配置列吸收余量，全部配置按列总宽布局；百分比和混合表达式以表体可用宽度解析，表头与全部数据单元格共用 colgroup 列轨道。`0` 不隐藏列，默认长文本换行而不裁切操作或焦点；不新增品牌尺寸 token、业务列或多 sticky 列自动偏移。完整值校验、内容与布局边界见 [列宽合同](DATA_TABLE.md#列宽与内容边界)。

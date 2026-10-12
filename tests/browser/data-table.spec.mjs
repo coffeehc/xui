@@ -29,7 +29,8 @@ async function state(page){return page.evaluate(()=>window.dataTableDemo.owner.g
 async function setup(page,kind,{query='',theme='light',viewport=viewports[0],motion='reduce',wait=true}={}){
   await page.setViewportSize(viewport);await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:motion});
   await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),theme);
-  await page.goto(`/data-table-${kind}/${query}`);await page.waitForFunction(()=>!!window.dataTableDemo);if(wait)await ready(page);else await settle(page);
+  const params=new URLSearchParams(query);params.set('layout','workspace');
+  await page.goto(`/data-table-${kind}/?${params}`);await page.waitForFunction(()=>!!window.dataTableDemo);if(wait)await ready(page);else await settle(page);
   await expect(page.locator('.xui-shell')).toHaveAttribute('data-scroll-mode','workspace');
   expect(await page.locator('.xui-shell').evaluate(node=>node.style.getPropertyValue('--layout-workspace-content-min-block-size'))).toBe('var(--data-table-min-block-size)');
   await expect(page.locator('html')).toHaveAttribute('data-theme',theme);
