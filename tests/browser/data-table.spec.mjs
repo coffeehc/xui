@@ -74,7 +74,11 @@ async function assertColumns(page){
 }
 async function scrollToEnd(page){
   const before=await metrics(page),region=body(page);
-  await region.hover();await page.mouse.wheel(0,240);await expect.poll(()=>region.evaluate(node=>node.scrollTop)).toBeGreaterThan(0);
+  // Wheel is compositor-driven: settle its painted frame before reading scrollTop.
+  // Reset each page-size phase so a retained offset cannot satisfy the assertion.
+  await region.evaluate(node=>{node.scrollTop=0;});await settle(page);
+  await region.hover();await page.mouse.wheel(0,240);await settle(page);
+  await expect.poll(async()=>{await settle(page);return region.evaluate(node=>node.scrollTop);}).toBeGreaterThan(0);
   await region.evaluate(node=>{node.scrollTop=node.scrollHeight;});
   await expect.poll(()=>region.evaluate(node=>node.scrollHeight-node.clientHeight-node.scrollTop)).toBeLessThanOrEqual(1.5);
   await settle(page);const after=await metrics(page);
