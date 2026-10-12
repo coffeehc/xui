@@ -59,7 +59,11 @@ const config = {
 
 React：`<ConfigurableLoginPage auth={auth} theme={theme} config={config} />`。原生：`createLoginPage(root,{auth,theme,config})`；factory 返回 `getElement/destroy`，不销毁共享 auth/theme。先加载公共 CSS 与同步 init，复用 `window.xuiTheme`，不新建竞争主题 owner。
 
-可选 `onAuthenticated(user,returnTo)` 将导航交给宿主 router；没有回调时登录成功和“Continue”采用安全的根相对 `location.assign`。已有有效会话显示确认用户、进入与退出操作。配置均以文本/普通 img 渲染，logo 只接受 HTTP(S)或相对资源且不能带 URL credentials；不注入 HTML、脚本或内部皮肤。尽量简短标题/说明；过长品牌与动作文字各自可滚动并保留正文空间，卡片正文必要时独立滚动，底部主操作保持可达，不裁切关键文字或缩小字号。
+公共登录页默认采用左右分割：宽屏左侧显示产品 logo、名称与说明，右侧显示标题、登录字段和操作；窄屏切为紧凑品牌区在上、表单在下。品牌文字仍由 `productName/description/logo` 配置，不内置业务宣传或产品专属图形。全部表面、字体、间距、边界和控件复用公共语义 token，不建立登录页独立尺寸档位。
+
+登录页不再展示主题选择器。它沿用宿主已有主题 owner 与首屏初始化；默认 owner 读取 `localStorage["ui.theme.mode"]`，有效值仅 `light/dark/system`，未保存、未知值或读取失败默认 `system`。不将生效的浅/深色写回偏好，不创建另一份 sessionStorage，也不更改认证会话或凭据存储。宿主已有受控主题/自定义 key 保持原合同，主题入口由登录后的应用设置提供；`theme` 参数和已有本地化字段保留公开接口兼容，但页面不再订阅或改变选择器状态。
+
+可选 `onAuthenticated(user,returnTo)` 将导航交给宿主 router；没有回调时登录成功和“Continue”采用安全的根相对 `location.assign`。已有有效会话显示确认用户、进入与退出操作。配置均以文本/普通 img 渲染，logo 只接受 HTTP(S)或相对资源且不能带 URL credentials；不注入 HTML、脚本或内部皮肤。尽量简短标题/说明；过长品牌与动作文字各自可滚动并保留正文空间，品牌区与表单正文必要时独立滚动，底部主操作保持可达，不裁切关键文字或缩小字号。
 
 `resolveLoginReturnTo` 只保留根相对同源路径，规范化和重复解码后再拒绝双斜杠、反斜杠/控制字符、默认 `/login` 循环、无效转义与不安全 fallback。去掉整个 fragment 和 password/access_token/refresh_token/token/auth_token/authorization/code/api_key/client_secret/secret query；安全 fallback 默认 `/`。其它自定义登录路由和业务 query 由宿主另验，不承诺任意参数都识别为秘密；标准页面不会把密码构造成 returnTo。目标页面及任何后续业务重定向仍须后端自行验证，不把同源中转路由当开放跳转豁免。
 
@@ -71,7 +75,7 @@ cookie 的签发/轮换/有效期/服务端撤销、HttpOnly/Secure/SameSite、�
 
 ## 验证与后续边界
 
-[共享配置](../examples/shared/login-config.json)、[合成 facade](../examples/shared/login-model.ts)、[React](../examples/login-react/app.tsx) 与 [原生](../examples/login-vanilla/app.js) 都经 fresh npm tarball 安装正式入口再打包，不读 monorepo 源码 alias，也不需要私有页面 CSS。[逻辑回归](../tests/auth.test.mjs) 与 [浏览器回归](../tests/browser/login.spec.mjs) 核对严格 DTO、共享401、固定请求、取消/超时/迟到/防重复、回跳、错误安全、theme、键盘/焦点/reduced-motion、390px/200%/后备字体和密码节点清空。
+[共享配置](../examples/shared/login-config.json)、[合成 facade](../examples/shared/login-model.ts)、[React](../examples/login-react/app.tsx) 与 [原生](../examples/login-vanilla/app.js) 都经 fresh npm tarball 安装正式入口再打包，不读 monorepo 源码 alias，也不需要私有页面 CSS。[逻辑回归](../tests/auth.test.mjs) 与 [浏览器回归](../tests/browser/login.spec.mjs) 核对严格 DTO、共享401、固定请求、取消/超时/迟到/防重复、回跳、错误安全、theme、键盘/焦点/reduced-motion、390px/200%/后备字体和密码节点清空。[登录布局与首屏回归](../tests/browser/login-layout.spec.mjs)另检查桌面左右/窄屏上下、已保存主题/无值/system变化、主包未到达时同步 init 和首个可见帧、刷新、owner 复用及无主题选择器，并留存浅深/system 两种视口截图。
 
 合成 fetch 没有签发真实 cookie，不证明后端登录、CSRF、CORS、鉴权或日志可靠性通过。最终完整验收与同 SHA CI 随交付记录。注册、重置密码、SSO和用户管理属于宿主/身份提供方责任，不是baseservice后续计划；当前基础已有登录/API Key/业务日志，不声称完整基础系统或产品迁移已完成。
 
