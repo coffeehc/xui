@@ -1,0 +1,21 @@
+import {createMenuLayout} from '@coffeehc/xui-runtime/menu-layout';
+import '@coffeehc/xui-runtime/init.js';
+import '@coffeehc/xui-theme/style.css';
+const query=new URLSearchParams(location.search),root=document.getElementById('root');
+const element=(tag,text)=>{const node=document.createElement(tag);if(text)node.textContent=text;return node;};
+const region=(tag,label)=>{const node=element(tag);node.setAttribute('aria-label',label);return node;};
+let slots=!query.has('plain'),leading=query.has('platform'),count=query.has('short')?2:100,sent=0;
+const platform=element('button','OS');platform.type='button';platform.className='xui-button';platform.dataset.variant='ghost';platform.setAttribute('aria-label','Platform action');
+const brand=element('strong','Workspace'),context=element('span','A host-owned workspace context that can wrap onto another header line'),status=element('span','Ready');
+const pageHeader=element('header');pageHeader.className='xui-page-header';pageHeader.append(element('h1','Page title'));const pageToolbar=element('span','Page tools'),pageFooter=element('span','Page footer');
+// Host-owned business geometry. No xui internal selector, shell measurement, or fixed composer.
+const content=element('div');content.dataset.testid='workspace';Object.assign(content.style,{display:'flex',blockSize:'100%',minBlockSize:0,minInlineSize:0,gap:'var(--space-content-gap)'});
+const conversation=region('section','Conversation');Object.assign(conversation.style,{display:'flex',flexDirection:'column',flex:'1 1 0',minBlockSize:0,minInlineSize:0});
+const history=region('div','Message history');history.role='region';history.tabIndex=0;history.dataset.testid='history';Object.assign(history.style,{flex:'1 1 0',minBlockSize:0,overflow:'auto'});
+const composer=region('form','Composer');Object.assign(composer.style,{display:'flex',flex:'none',gap:'var(--space-control-gap)',minInlineSize:0});const draft=region('input','Message draft');draft.className='xui-input';draft.value='Keep my draft';Object.assign(draft.style,{flex:'1 1 0',minInlineSize:0});const send=element('button','Send message');send.className='xui-button';send.type='submit';composer.append(draft,send);
+const inspector=region('aside','Inspector');inspector.dataset.testid='inspector';Object.assign(inspector.style,{flex:'1 1 0',minBlockSize:0,minInlineSize:0,overflow:'auto'});const counter=element('p','Sent: 0');
+const renderHistory=()=>{history.replaceChildren(...Array.from({length:count},(_,i)=>element('p',`Message ${i+1}: Synthetic conversation content.`)));inspector.replaceChildren(counter,...Array.from({length:count},(_,i)=>element('p',`Detail ${i+1}`)));};renderHistory();
+composer.onsubmit=event=>{event.preventDefault();counter.textContent=`Sent: ${++sent}`;};conversation.append(history,composer);content.append(conversation,inspector);
+const state=()=>({headerSlots:{leading:leading?platform:null,brand,context:query.has('wrapped')?context:null,status},pageHeader:slots?pageHeader:null,pageToolbar:slots?pageToolbar:null,pageFooter:slots?pageFooter:null});
+const owner=createMenuLayout(root,{items:[{id:'conversation',label:'Conversation',href:'#conversation',icon:'chat'},{id:'settings',label:'Settings',href:'#settings',icon:'settings'}],activeId:'conversation',label:'Workspace navigation',compactLabel:'Compact navigation',expandLabel:'Expand navigation',scrollMode:'workspace',content,...state(),navigation:{navigate:request=>owner.update({activeId:request.id})}});
+window.workspaceDemo={setSlots:next=>{slots=next;owner.update(state());},setLeading:next=>{leading=next;owner.update(state());},setMode:scrollMode=>owner.update({scrollMode}),setCount:next=>{count=next;renderHistory();},navigate:()=>owner.update({activeId:'settings'}),destroy:()=>owner.destroy()};

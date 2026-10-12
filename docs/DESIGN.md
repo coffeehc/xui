@@ -1181,4 +1181,10 @@ Dialog偏好layout-dialog-width-ratio=40%，min/max分别24rem/48rem；Confirm�
 
 AppHeader/AppShell/MenuLayout与原生createMenuLayout在右侧默认提供一个主题图标按钮，light→dark→system→light循环；复用文档现有theme owner，不另建存储。语言入口只在locale.enabled显式true时显示，语言value/options/onValueChange与词典均由宿主现有i18n owner提供。顶栏主区域、工具组与独立账号区，以及sidebarHeader/sidebarFooter、pageHeader/pageToolbar/content/pageFooter的顺序和所有权见[公共布局插槽](LAYOUT_SLOTS.md)。这些槽只消费公共var及布局原语，不授予产品动作、不放新业务内容默认值；空槽无视觉占位，更新保留正文与导航实例，导航抽屉仍只拥有一份侧栏。默认登录页继续仅继承外观，不新增这些顶栏工具。
 
+### 有界工作区与平台前置安全区
+
+公共scrollMode保留document默认自然滚动与viewport独立main滚动，新增workspace显式工作区模式：shell默认100dvh，header自然换行，main按自然pageHeader/pageToolbar/pageFooter占用分配剩余确定高度给content；库维护min-block-size:0与弹性收缩链，业务区域通过公开内容组合选择内部滚动owner。不得要求消费者减固定header高度、修私有selector或绝对定位发送区。大于可用高度且不可拆分的内容保留滚动可达兜底，不把文字或操作裁掉。公开root尺寸可由已知宿主窗口大小覆盖，不更改既有默认尺度。
+
+headerSlots.leading是可选、默认空且不收缩的最前区域，位于自动导航按钮之前；品牌继续独立。库负责顺序与窄屏布局，不内置macOS窗口控件尺寸或平台检测。平台/全屏状态、安全区真实尺寸、drag/no-drag由宿主集成提供，不把业务/OS规则带入默认皮肤。完整合同及两端正式消费者见[布局插槽](LAYOUT_SLOTS.md)。
+
 <!-- foundation-lifecycle:end -->

@@ -5,11 +5,13 @@ import {bindThemeModeButton,type ThemeModeLabels} from './theme-control.js';
 import {bindPressFeedback,createShellController,type DialogCloseDetails} from './dom.js';
 import {createNavigationMenu,indexNavigation,renderNavigationIcon,type NavigationMenuOptions,type NavigationAdapter} from './navigation.js';
 
+/** document: natural page; viewport: main scrolls; workspace: content fills the remaining viewport. */
+export type ShellScrollMode='document'|'viewport'|'workspace';
 export interface MenuLayoutHeaderSlots {
-  brand?:Node|null;breadcrumb?:Node|null;status?:Node|null;actions?:Node|null;auxiliary?:Node|null;context?:Node|null;account?:Node|null;
+  leading?:Node|null;brand?:Node|null;breadcrumb?:Node|null;status?:Node|null;actions?:Node|null;auxiliary?:Node|null;context?:Node|null;account?:Node|null;
 }
 export interface MenuLayoutOptions extends NavigationMenuOptions {
-  theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:'document'|'viewport';title?:string;header?:Node;headerSlots?:MenuLayoutHeaderSlots;sidebarHeader?:Node|null;sidebarFooter?:Node|null;pageHeader?:Node|null;pageToolbar?:Node|null;pageFooter?:Node|null;content?:Node;skipLabel?:string;closeLabel?:string;
+  theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:ShellScrollMode;title?:string;header?:Node;headerSlots?:MenuLayoutHeaderSlots;sidebarHeader?:Node|null;sidebarFooter?:Node|null;pageHeader?:Node|null;pageToolbar?:Node|null;pageFooter?:Node|null;content?:Node;skipLabel?:string;closeLabel?:string;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
 }
 const owners=new WeakMap<HTMLElement,unknown>();
@@ -32,15 +34,15 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   header.className='xui-shell-header';toggle.type='button';toggle.className='xui-button xui-shell-toggle';toggle.dataset.variant='ghost';toggle.dataset.xuiSidebarToggle='';toggle.dataset.xuiMenuToggle='';toggle.dataset.icon='true';const toggleIcon=renderNavigationIcon(doc,{paths:['M3 4h14v12H3zM7 4v12','m13 8-2 2 2 2']});toggleIcon.lastElementChild?.classList.add('xui-shell-toggle-arrow');toggle.append(toggleIcon);
   const headerPart=(name:string)=>{const node=doc.createElement('div');node.className=`xui-app-header${name?'-'+name:''}`;return node;};
   const headerLayout=headerPart(''),primary=headerPart('primary'),secondary=headerPart('secondary'),navigationSlot=headerPart('navigation');
-  const slots={brand:headerPart('brand'),breadcrumb:headerPart('breadcrumb'),status:headerPart('status'),actions:headerPart('actions'),legacy:headerPart('legacy'),auxiliary:headerPart('auxiliary'),context:headerPart('context'),account:headerPart('account')};
+  const slots={leading:headerPart('leading'),brand:headerPart('brand'),breadcrumb:headerPart('breadcrumb'),status:headerPart('status'),actions:headerPart('actions'),legacy:headerPart('legacy'),auxiliary:headerPart('auxiliary'),context:headerPart('context'),account:headerPart('account')};
   const controls=headerPart('controls'),localeSelect=doc.createElement('select');let localeBinding:ReturnType<typeof bindHeaderLocaleSelect>|undefined;
   const themeSlot=headerPart('theme'),themeButton=doc.createElement('button');themeSlot.append(themeButton);let themeInput:ThemeController|undefined,themeLabelsInput:Partial<ThemeModeLabels>|undefined,releaseTheme=()=>{};
   const slotInputs:Partial<Record<keyof typeof slots,Node|null>>={};
-  navigationSlot.append(toggle);primary.append(navigationSlot,slots.brand,slots.breadcrumb,slots.context);controls.append(slots.auxiliary,themeSlot);secondary.append(slots.status,slots.actions,slots.legacy,controls,slots.account);headerLayout.append(primary,secondary);header.append(headerLayout);
+  navigationSlot.append(toggle);primary.append(slots.leading,navigationSlot,slots.brand,slots.breadcrumb,slots.context);controls.append(slots.auxiliary,themeSlot);secondary.append(slots.status,slots.actions,slots.legacy,controls,slots.account);headerLayout.append(primary,secondary);header.append(headerLayout);
   const syncHeader=()=>{
     if(brand.textContent!==(options.title??''))brand.textContent=options.title??'';brand.title=options.title??'';
     const nodes={...options.headerSlots,brand:options.headerSlots?.brand===undefined?(options.title?brand:null):options.headerSlots.brand,legacy:options.header};
-    for(const role of ['brand','breadcrumb','status','actions','legacy','auxiliary','context','account'] as const){const node=nodes[role]??null,slot=slots[role];slot.hidden=!node;if(slotInputs[role]!==node){slot.replaceChildren(...(node?[node]:[]));slotInputs[role]=node;}slot.hidden=!hasSlotContent(slot);}
+    for(const role of ['leading','brand','breadcrumb','status','actions','legacy','auxiliary','context','account'] as const){const node=nodes[role]??null,slot=slots[role];slot.hidden=!node;if(slotInputs[role]!==node){slot.replaceChildren(...(node?[node]:[]));slotInputs[role]=node;}slot.hidden=!hasSlotContent(slot);}
     const controller=options.theme??getThemeController(doc.defaultView!);if(themeInput!==controller||themeLabelsInput!==options.themeLabels){releaseTheme();releaseTheme=bindThemeModeButton(themeButton,controller,options.themeLabels);themeInput=controller;themeLabelsInput=options.themeLabels;}
     if(isHeaderLocaleEnabled(options.locale)){if(!localeBinding)localeBinding=bindHeaderLocaleSelect(localeSelect,options.locale);else localeBinding.update(options.locale);if(localeSelect.parentNode!==controls)controls.insertBefore(localeSelect,themeSlot);}else{localeBinding?.destroy();localeBinding=undefined;if(localeSelect===doc.activeElement)themeButton.focus();localeSelect.remove();}
   };syncHeader();
@@ -57,10 +59,10 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   const menu=createNavigationMenu(menuRoot,menuOptions(),{fallbackFocus:()=>shell?.getOpen()?close:toggle});
   const toggleDesktop=(event:Event)=>{if(!media.matches&&!dead){event.stopImmediatePropagation();menu.setCollapsed(!menu.getState().collapsed);}};toggle.addEventListener('click',toggleDesktop,true);
   root.classList.add('xui','xui-shell','xui-menu-layout');root.replaceChildren(skip,header,sidebar,main,dialog);if(!options.content)content.append(...original);syncContent();
-  const syncLabels=()=>{syncFooter();root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport'||sidebarHasSections)menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});syncToggle();title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';syncHeader();};syncLabels();
-  const measureSidebar=()=>{sidebar.style.blockSize=sidebarHasSections&&!media.matches&&options.scrollMode!=='viewport'?`max(var(--nav-sidebar-min-height), calc(100dvh - ${header.getBoundingClientRect().height}px))`:'';body.classList.toggle('xui-shell-sidebar-body',!!sidebarHasSections);};
+  const syncLabels=()=>{syncFooter();root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport'||options.scrollMode==='workspace'||sidebarHasSections)menuRoot.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});syncToggle();title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';syncHeader();};syncLabels();
+  const measureSidebar=()=>{sidebar.style.blockSize=sidebarHasSections&&!media.matches&&(options.scrollMode??'document')==='document'?`max(var(--nav-sidebar-min-height), calc(100dvh - ${header.getBoundingClientRect().height}px))`:'';body.classList.toggle('xui-shell-sidebar-body',!!sidebarHasSections);};
   const headerObserver=new ResizeObserver(measureSidebar);headerObserver.observe(header);measureSidebar();
-  const syncSidebar=(details?:DialogCloseDetails)=>{shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);syncToggle();if((options.scrollMode==='viewport'||sidebarHasSections)&&(!media.matches||shell?.getOpen())){
+  const syncSidebar=(details?:DialogCloseDetails)=>{shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);syncToggle();if((options.scrollMode==='viewport'||options.scrollMode==='workspace'||sidebarHasSections)&&(!media.matches||shell?.getOpen())){
     const active=doc.activeElement,target=active&&menuRoot.contains(active)?active:menuRoot.querySelector('[aria-current="page"]');
     // Opening preserves the roving target, which can differ from selection.
     // Do not immediately scroll that newly focused control out of view.

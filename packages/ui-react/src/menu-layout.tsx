@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {indexNavigation,getNavigationActiveId,resolveNavigationIcon,navigateNavigationItem,createNavigationKeyboard,type NavigationItem,type NavigationMenuOptions,type NavigationMenuState,type NavigationIconResolver} from '@coffeehc/xui-runtime/navigation';
 import {NavItem} from './navigation.js';
-import {AppShell,type AppHeaderSlots} from './layout.js';
+import {AppShell,type AppHeaderSlots,type ShellScrollMode} from './layout.js';
 import {Button} from './button.js';
 import {cx} from './shared.js';
 import type {HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
@@ -26,7 +26,7 @@ export function NavigationMenu({items,className,renderLink,renderLabel,...option
   const setExpanded=(id:string,open:boolean)=>{if(nodes.get(id)?.disabled)return;const next=new Set(expanded);open?next.add(id):next.delete(id);if(options.expandedIds===undefined)setInternalExpanded([...next]);options.onExpandedChange?.([...next]);};
   const latest=React.useRef({nodes,active,expanded,setExpanded});latest.current={nodes,active,expanded,setExpanded};
   React.useLayoutEffect(()=>{keyboard.current=createNavigationKeyboard(root.current!,{activeId:()=>latest.current.active,node:id=>latest.current.nodes.get(id),expanded:id=>latest.current.expanded.includes(id),setExpanded:(id,open)=>latest.current.setExpanded(id,open),listen:false,fallbackFocus:()=>shell?.fallbackFocus()??null});return()=>{keyboard.current?.destroy();keyboard.current=null;};},[]);
-  React.useLayoutEffect(()=>{keyboard.current?.refresh();if(root.current?.closest('[data-scroll-mode="viewport"],.xui-shell-sidebar-with-footer'))root.current?.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});},[items,active,expanded,collapsed]);
+  React.useLayoutEffect(()=>{keyboard.current?.refresh();if(root.current?.closest('[data-scroll-mode="viewport"],[data-scroll-mode="workspace"],.xui-shell-sidebar-with-footer'))root.current?.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});},[items,active,expanded,collapsed]);
   const compact=()=>{const next=!collapsed;if(options.collapsed===undefined&&!shell)setInternalCollapsed(next);(options.onCollapsedChange??shell?.onCollapsedChange)?.(next);};
   const renderItems=(entries:readonly NavigationItem[]):React.ReactNode=>entries.map(item=>{
     const node=nodes.get(item.id)!,hasChildren=!!item.children?.length,open=!!item.group||expanded.includes(item.id),childId=prefix+'-'+encodeURIComponent(item.id);
@@ -45,7 +45,7 @@ export function NavigationMenu({items,className,renderLink,renderLabel,...option
 }
 
 export interface MenuLayoutProps extends NavigationMenuProps {
-  theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;restoreSidebarFocus?:boolean;style?:React.CSSProperties;scrollMode?:'document'|'viewport';children:React.ReactNode;title?:string;header?:React.ReactNode;headerSlots?:AppHeaderSlots;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;
+  theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;restoreSidebarFocus?:boolean;style?:React.CSSProperties;scrollMode?:ShellScrollMode;children:React.ReactNode;title?:string;header?:React.ReactNode;headerSlots?:AppHeaderSlots;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
   skipLabel?:string;closeLabel?:string;
 }

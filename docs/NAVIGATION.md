@@ -104,11 +104,13 @@ include清单按宿主实际正式入口扩展，特殊第三方/CJS依赖保持
 
 公共 `pnpm dev` 默认持续构建所有包与消费者，`--packages-only` 只构建包。两者输出 `BUILD_SUCCESS <sourceSha256>` / `BUILD_ERROR` 与 `.artifacts/watch-status.json`；预览另运行 `pnpm preview`。watch 没有浏览器 HMR 客户端，采用 Vite 的产品拥有自己的 dev server。产物生成失败保留上一完整代际，不能把页面仍可打开当成新构建成功。生产消费者验收继续用 `pnpm test:consumer` 的独立 tarballs，不使用 optimizer 热修来修正式 prod。
 
-## 外壳的document与viewport滚动模式
+## 外壳的document、viewport与workspace滚动模式
 
-AppShell/MenuLayout及createMenuLayout新增scrollMode=document|viewport，默认document，保留原有文档滚动。原生公开标记为data-scroll-mode。viewport根为100dvh有界grid，正文行minmax(0,1fr)，sidebar/main均min-height:0且独立overflow:auto；窄屏复用既有drawer的有界Body，不加第二drawer。宿主嵌入非全窗口时给公开Root style的blockSize，不穿透私有子元素调整默认皮肤。
+AppShell/MenuLayout及createMenuLayout支持scrollMode=document|viewport|workspace（共享ShellScrollMode类型），默认document，保留原有文档滚动。原生公开标记为data-scroll-mode。viewport根为100dvh有界grid，正文行minmax(0,1fr)，sidebar/main均min-height:0且独立overflow:auto；窄屏复用既有drawer的有界Body，不加第二drawer。宿主嵌入非全窗口时给公开Root style的blockSize，不穿透私有子元素调整默认皮肤。
 
-viewport更新选中项以nearest进入所属侧栏可视区域；焦点依靠浏览器所属滚动区滚入可视区，菜单键盘规则不另建owner。同一main与内容节点更新保持滚动/输入；产品导航历史如何按route保存和恢复各容器scroll位置由宿主决定，不按route key重挂整个shell。官方两[控件消费者](WIDGETS.md)演示24项长菜单、长正文、横/纵滚动表格与反向导航；实际窄屏/文字放大和焦点验收见最终记录。
+viewport/workspace更新选中项以nearest进入所属侧栏可视区域；焦点依靠浏览器所属滚动区滚入可视区，菜单键盘规则不另建owner。同一main与内容节点更新保持滚动/输入；产品导航历史如何按route保存和恢复各容器scroll位置由宿主决定，不按route key重挂整个shell。官方两[控件消费者](WIDGETS.md)演示24项长菜单、长正文、横/纵滚动表格与反向导航；实际窄屏/文字放大和焦点验收见最终记录。
+
+workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageFooter后的剩余高度，适合历史+发送区/编辑器+检查器等业务内部滚动。普通viewport不承诺content剩余高度。两端公开合同、leading平台前置槽、例子和边界见[布局插槽](LAYOUT_SLOTS.md#有界工作区与滚动所有权)。
 
 固定高度宿主可使用 React `MenuLayout` 的公开 `style={{blockSize:'var(--layout-embedded-shell-height)'}}`（或 AppShell 的同一 Root style），原生给传入的 root 设置 `style.blockSize`，并显式选 `scrollMode='viewport'`。这时侧栏和正文分别滚动，选中菜单滚动到可见范围；不靠子元素私有选择器修补，也不把滚动恢复策略移入库。
 

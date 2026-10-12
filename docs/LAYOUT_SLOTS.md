@@ -8,6 +8,7 @@ React 的 AppShell/MenuLayout 接收 ReactNode；原生 createMenuLayout 接收 
 
 | 区域 | React | 原生 | 默认与响应式 | 所有权/更新 |
 | --- | --- | --- | --- | --- |
+| 平台前置安全区 | headerSlots.leading / AppHeader.leading | 同名Node | primary最前、自动菜单开关之前；不收缩，默认为空 | OS/窗口态/真实尺寸和drag规则由宿主提供；不内置mac像素 |
 | 顶栏品牌 | headerSlots.brand | headerSlots.brand | primary 内，长品牌省略；窄屏保持导航入口 | 内容由宿主提供；title仅未指定brand时回退 |
 | 路径 | headerSlots.breadcrumb | 同名Node | 品牌右侧；窄屏单独换行 | 宿主提供nav语义，不推断路由 |
 | 顶栏左中扩展 | headerSlots.context | 同名Node | primary末尾；窄屏另起一行 | 工作区/搜索等宿主内容，不与右辅助工具混合 |
@@ -22,12 +23,32 @@ React 的 AppShell/MenuLayout 接收 ReactNode；原生 createMenuLayout 接收 
 | 侧栏底 | sidebarFooter | sidebarFooter | 短菜单贴底；极长内容自身滚动 | 返回/授权/版本只是可选业务内容，无默认内置意义 |
 | 页面标题与操作 | pageHeader内组合PageHeader(title/description/meta/actions) | pageHeader Node，使用公开xui-page-header/xui-toolbar结构 | 正文滚动流开头，标题右侧actions窄屏换行 | 复用现有PageHeader，不增加同义标题API |
 | 页内工具条 | pageToolbar | pageToolbar | 标题下、主内容前；正文滚动流 | 过滤器/页内tabs/提示等宿主内容，不做数据owner |
-| 主内容 | children | content或root原内容 | 既有document/viewport正文滚动合同 | 恒定content容器，切换其他槽不重挂正文 |
+| 主内容 | children | content或root原内容 | document/viewport自然正文；workspace模式填满剩余高度 | 恒定content容器，切换其他槽不重挂正文 |
 | 页面底部 | pageFooter | pageFooter | 主内容后、同一正文滚动流，非悬浮覆盖层 | 页面说明/操作，与sidebarFooter独立 |
 
 空的可选槽不占位；React undefined/null/boolean、空字符串/数组/Fragment不产生内容包装，数值0保留；自定义组件渲染结果由React决定，实际空DOM包装用:empty消除视觉占位。原生空槽不占视觉/键盘空间。同一个Node/已消费Fragment传回不重建内容、不重复绑定；需要替换内容传新Node/Fragment，清空传null/undefined。移除后恢复已消费Fragment须重新填入内容或保留Node引用。React遵循正常key/type协调，宿主有意移除某槽会卸载该槽内容，不影响其他槽、正文和导航owner。
 
-Tab按真实DOM顺序经过primary（导航、品牌、路径、context）、secondary（状态、actions、旧header、auxiliary、语言、主题、account），然后侧栏/正文；不使用正tabindex重排。打开抽屉仍采用原模态焦点限制；关闭回同一个顶栏菜单开关。关闭当前聚焦的语言入口会把焦点移到相邻主题按钮。槽自身交互语义/disabled/busy由其组件或宿主拥有。
+Tab按真实DOM顺序经过primary（leading、导航、品牌、路径、context）、secondary（状态、actions、旧header、auxiliary、语言、主题、account），然后侧栏/正文；不使用正tabindex重排。打开抽屉仍采用原模态焦点限制；关闭回同一个顶栏菜单开关。关闭当前聚焦的语言入口会把焦点移到相邻主题按钮。槽自身交互语义/disabled/busy由其组件或宿主拥有。
+
+## 有界工作区与滚动所有权
+
+`scrollMode` 使用共享 `ShellScrollMode = 'document' | 'viewport' | 'workspace'`，React AppShell/MenuLayout和原生createMenuLayout完全同型。默认仍为document，旧viewport语义不变：
+
+- document：页面随文档自然滚动，适合普通列表/表单/文章。
+- viewport：外壳默认100dvh，sidebar/main各自滚动；content仍为自然文档高度，不承诺把业务的100%高度解析为剩余窗口。
+- workspace：外壳有界，顶栏按真实内容自然增高/换行；main内部pageHeader→pageToolbar→content→pageFooter，标题/工具条/底部占自然高度，content获得明确的剩余高度并允许收缩到零。库拥有这条min-block-size:0链，不要求宿主测量顶栏、减固定头高或定位发送框。
+
+workspace的顶栏和page slots不覆盖正文；主内容的业务布局通常使用height/blockSize:100%、flex/grid、min-block-size:0，再让指定历史/编辑器/检查器区域overflow:auto。发送区保持业务正常流、不收缩，历史区吃剩余空间。main/content的overflow:auto只作为无法拆分内容或页头/页尾过大的可达性兜底；正常可容纳的业务布局只有指定内部区域产生滚动。过大的固定业务内容仍需要可访问的滚动，模式不是把任意页面强行塞进首屏的裁切开关。不要叠加另一套body overflow锁、复制库内部CSS或绝对定位composer。
+
+公开Root style可以提供宿主已有的明确blockSize来嵌入非全窗口；否则以100dvh为界。若宿主使用百分比高度，它必须先提供可解析的祖先高度。改变scrollMode、页内槽或leading不会重建main/content，保留正文输入、焦点与宿主状态。短内容占满可用工作区但不产生多余文档滚动；自然高度页面继续选择document。完整两栏长/短历史示例：[React](../examples/workspace-react/app.tsx)（`?direct`直接AppShell）、[原生](../examples/workspace-vanilla/app.js)。示例仅在自有业务元素上提供布局，不读取或改写库内部元素。
+
+## 窗口平台前置槽
+
+`headerSlots.leading`（独立AppHeader为`leading`）位于primary最前，先于库生成的导航按钮；brand仍是品牌位置。leading默认无内容、无尺寸、无额外Tab目标。库保持leading不收缩并限制其最大宽度为所在行；其他内容按既有窄屏规则换行，DOM与键盘顺序一致，不使用CSS order或正tabindex。宿主提供的内容必须适配可用宽度，不能把无界固定宽内容当作安全区。
+
+macOS hiddenInset的真实控件避让尺寸、全屏/退出全屏、Windows/Linux和无标题栏变化由宿主窗口集成决定：需要时传安全区Node，不需要时传null；库不检测平台、不固定traffic-light像素、不创建窗口按钮。装饰性占位使用aria-hidden且不设tabIndex；真的交互控件提供名称和正常键盘语义。示例`?platform`的OS按钮只是合成顺序验证，不是原生窗口控件。
+
+Wails/Electron等drag/no-drag机制属于宿主桥接。仅对宿主自有非交互区域声明可拖动；interactive leading内容应按宿主框架标为no-drag，不可把可拖动样式继承到整套xui顶栏或覆盖自动菜单/主题/账号按钮。库不会猜测或修改框架专用CSS属性。本次验证浏览器布局与DOM顺序；没有真实Wails/hiddenInset验证声明。
 
 ## 默认主题与可选i18n
 

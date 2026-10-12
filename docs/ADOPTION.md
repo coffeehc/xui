@@ -29,6 +29,8 @@ pnpm test:consumer
 pnpm preview
 ```
 
+新增 /workspace-react/、/workspace-vanilla/ 验证公开有界工作区（?direct直接AppShell、?short、?plain、?platform、?wrapped），不需要内部样式补丁。
+
 访问 /capabilities-react/、/capabilities-vanilla/ 侧栏/确认/右键菜单/表格/下载与默认页面HTTP，/menu-react/、/menu-vanilla/ 最小菜单，/http-react/、/http-vanilla/ 标准查询页，/login-react/、/login-vanilla/ 配置登录页，/api-key-react/、/api-key-vanilla/ 管理组件，/business-log-react/、/business-log-vanilla/ 业务日志，/log-react/、/log-vanilla/ 独立结构化错误查询，/foundation-react/、/foundation-vanilla/ 列表/表单/详情与动态加载。浏览器检查使用已有 Chromium，或 pnpm exec playwright install chromium。没有部署/发布操作。
 
 test:consumer 将三个包 npm pack，在每次新目录安装 tarball，再从正式 ESM/CSS/types 编译和打包；原生不安装 React，React peers 单实例。生产接入也固定已验证提交，先构建并安装本地 tarball；包尚未发布，不默认填写不存在的 registry 版本。无 monorepo package src alias 或下游 Tailwind 扫描要求；菜单/HTTP/登录/API Key/日志/错误观察/foundation 示例只消费公开 CSS，最初 vanilla/react 示例保留自身页面 layout.css，它不是库所需的样式依赖。

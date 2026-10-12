@@ -157,3 +157,10 @@ API Key入口追加公开 `createApiKeyWriteGuard`、`ApiKeyPendingWrite`/`ApiKe
 完整[布局矩阵/迁移](LAYOUT_SLOTS.md)与[React](../examples/header-controls-react/app.tsx)/[原生](../examples/header-controls-vanilla/app.js)为正式独立消费者。AppHeaderSlots/MenuLayoutHeaderSlots追加context（左中）、auxiliary（工具组）、account（最右独立区）；原brand/breadcrumb/status/actions和legacy header继续保留。AppShell/MenuLayout及原生createMenuLayout追加sidebarHeader、pageHeader、pageToolbar、pageFooter，使用现有sidebarFooter/正文组合，不创建同义PageLayout。
 
 AppHeader/AppShell/MenuLayout与原生MenuLayoutOptions同型theme?:ThemeController、themeLabels?:Partial<ThemeModeLabels>、locale?:HeaderLocaleOptions。主题入口默认始终存在，locale只有enabled:true才显示，辅助槽不依赖locale。ThemeModeButton/ThemeModeButtonProps从React/theme和根导出；runtime/theme的getThemeController(win)复用文档owner；runtime/theme-control导出ThemeModeLabels、getThemeModePresentation、bindThemeModeButton；runtime/header-controls导出HeaderLocaleOption/HeaderLocaleOptions、isHeaderLocaleEnabled、bindHeaderLocaleSelect。低层bind只绑定视图，清理不销毁theme/i18n owner。所有声明与新增名字由正式public-api/消费者检查自动取证。
+
+
+## 有界工作区与平台前置槽
+
+`ShellScrollMode`从runtime/menu-layout及根导出，并由React/layout及根重新导出；AppShellProps/MenuLayoutProps/MenuLayoutOptions.scrollMode接受document（默认）/viewport（旧main滚动）/workspace（content填满剩余高度）。workspace以库内flex/min-block-size链分配真实header和page slots以外的空间，不强制业务滚动区域、窗口集成或路由恢复策略。
+
+AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null）；独立AppHeader直接接受leading。顺序为leading→自动navigation→brand→breadcrumb→context，默认空；同Node/Fragment与普通React协调保持稳定。宿主提供平台/全屏事实、尺寸和drag/no-drag语义，库没有OS默认像素。完整[合同](LAYOUT_SLOTS.md)、[React正式消费者](../examples/workspace-react/app.tsx)、[原生正式消费者](../examples/workspace-vanilla/app.js)及[验证记录](WORKSPACE_VALIDATION.md)。

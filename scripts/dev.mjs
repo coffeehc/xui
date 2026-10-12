@@ -3,7 +3,7 @@ import {mkdir,mkdtemp,readFile,writeFile,copyFile,rename,rm,readdir} from 'node:
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {extract} from './tokens.mjs';
-const kinds=['header-controls-vanilla','header-controls-react','sidebar-footer-vanilla','sidebar-footer-react','vanilla','react','foundation-vanilla','foundation-react','menu-vanilla','menu-react','http-vanilla','http-react','api-key-vanilla','api-key-react','log-vanilla','log-react','business-log-vanilla','business-log-react','login-vanilla','login-react','capabilities-vanilla','capabilities-react','widgets-vanilla','widgets-react','grouped-search-vanilla','grouped-search-react'];
+const kinds=['workspace-vanilla','workspace-react','header-controls-vanilla','header-controls-react','sidebar-footer-vanilla','sidebar-footer-react','vanilla','react','foundation-vanilla','foundation-react','menu-vanilla','menu-react','http-vanilla','http-react','api-key-vanilla','api-key-react','log-vanilla','log-react','business-log-vanilla','business-log-react','login-vanilla','login-react','capabilities-vanilla','capabilities-react','widgets-vanilla','widgets-react','grouped-search-vanilla','grouped-search-react'];
 const names={'@coffeehc/xui-theme':'theme','@coffeehc/xui-runtime':'runtime','@coffeehc/xui-react':'ui-react'};
 /** Development aliases target published-layout dist files, never package source. Formal verify uses installed tarballs. */
 export async function buildDevExamples(){

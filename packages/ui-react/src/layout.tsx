@@ -8,6 +8,8 @@ import type {ThemeController} from '@coffeehc/xui-runtime/theme';
 import {isHeaderLocaleEnabled,type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
 import type {ThemeModeLabels} from '@coffeehc/xui-runtime/theme-control';
 export type {HeaderLocaleOptions,HeaderLocaleOption} from '@coffeehc/xui-runtime/header-controls';
+import type {ShellScrollMode} from '@coffeehc/xui-runtime/menu-layout';
+export type {ShellScrollMode} from '@coffeehc/xui-runtime/menu-layout';
 import {ShellNavigationContext} from './shell-context.js';
 
 export function Container({className,...props}:React.ComponentProps<'div'>){return <div {...props} className={cx('xui-container',className)}/>;}
@@ -36,14 +38,14 @@ const hasContent=(value:React.ReactNode):boolean=>{
 };
 
 export interface AppHeaderSlots {
-  brand?:React.ReactNode;breadcrumb?:React.ReactNode;status?:React.ReactNode;actions?:React.ReactNode;auxiliary?:React.ReactNode;context?:React.ReactNode;account?:React.ReactNode;
+  leading?:React.ReactNode;brand?:React.ReactNode;breadcrumb?:React.ReactNode;status?:React.ReactNode;actions?:React.ReactNode;auxiliary?:React.ReactNode;context?:React.ReactNode;account?:React.ReactNode;
 }
 export type AppHeaderProps=React.ComponentProps<'div'> & AppHeaderSlots & {navigation?:React.ReactNode;theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions};
 /** Role-based layout only. The host supplies names, breadcrumb semantics and actions. */
-function AppHeaderFrame({legacyPrimary,brand,breadcrumb,status,actions,auxiliary,context,account,navigation,theme,themeLabels,locale,children,className,...props}:AppHeaderProps&{legacyPrimary?:React.ReactNode}){
+function AppHeaderFrame({legacyPrimary,leading,brand,breadcrumb,status,actions,auxiliary,context,account,navigation,theme,themeLabels,locale,children,className,...props}:AppHeaderProps&{legacyPrimary?:React.ReactNode}){
   const present=hasContent;
   return <div {...props} className={cx('xui-app-header',className)}>
-    <div className="xui-app-header-primary">{present(navigation)&&<div className="xui-app-header-navigation">{navigation}</div>}
+    <div className="xui-app-header-primary">{present(leading)&&<div className="xui-app-header-leading">{leading}</div>}{present(navigation)&&<div className="xui-app-header-navigation">{navigation}</div>}
       {present(brand)&&<div className="xui-app-header-brand">{brand}</div>}
       {present(breadcrumb)&&<div className="xui-app-header-breadcrumb">{breadcrumb}</div>}
       {present(context)&&<div className="xui-app-header-context">{context}</div>}
@@ -73,7 +75,7 @@ export function SidebarFooterContent({icon,children,className,...props}:SidebarF
   </span>;
 }
 export interface AppShellProps extends Omit<React.ComponentProps<'div'>,'children'> {
-  theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:'document'|'viewport';sidebar:React.ReactNode;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;header?:React.ReactNode;headerSlots?:AppHeaderSlots;children:React.ReactNode;
+  theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:ShellScrollMode;sidebar:React.ReactNode;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;header?:React.ReactNode;headerSlots?:AppHeaderSlots;children:React.ReactNode;
   collapsed?:boolean;defaultCollapsed?:boolean;onCollapsedChange?:(collapsed:boolean)=>void;compactLabel?:string;expandLabel?:string;
   restoreSidebarFocus?:boolean;navigationLabel?:string;skipLabel?:string;closeLabel?:string;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
