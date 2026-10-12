@@ -40,6 +40,7 @@ test('login scrollports retain four-sided focus clearance without changing focus
   const css=await readFile('packages/theme/src/auth.css','utf8');
   assert.match(css,/\.xui-login-body,\.xui-login-actions[^}]*padding:calc\(var\(--focus-width\) \+ var\(--focus-offset\)\)/);
   assert.match(css,/\.xui-login-body \{overflow:auto/);
+  assert.match(css,/\.xui-login-body[^}]*grid-auto-rows:max-content;align-content:start/);
   assert.match(css,/scroll-margin:calc\(var\(--focus-width\) \+ var\(--focus-offset\)\)/);
   assert.match(css,/max-height:30rem/);assert.doesNotMatch(css,/--focus-(?:width|offset)\s*:/);
 });

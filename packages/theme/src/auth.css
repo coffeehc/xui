@@ -15,7 +15,8 @@
      protect an outline clipped by this inner scrollport. Keep all four sides. */
   .xui-login-body,.xui-login-actions {inline-size:min(100%,var(--login-form-inline-size));padding:calc(var(--focus-width) + var(--focus-offset));scroll-padding:calc(var(--focus-width) + var(--focus-offset));}
   .xui-login-body :is(input,select,textarea,button,a,[tabindex]),.xui-login-actions :is(button,a,[tabindex]) {scroll-margin:calc(var(--focus-width) + var(--focus-offset));}
-  .xui-login-body {overflow:auto;min-block-size:0;display:grid;gap:var(--space-section-gap);overflow-wrap:anywhere;}
+  /* Keep wrapped feedback inside its grid row so end padding remains scrollable. */
+  .xui-login-body {overflow:auto;min-block-size:0;display:grid;grid-auto-rows:max-content;align-content:start;gap:var(--space-section-gap);overflow-wrap:anywhere;}
   .xui-login-body h1,.xui-login-body p {margin:0;}
   .xui-login-feedback {min-block-size:var(--login-feedback-min-block-size);}
   .xui-login-actions {display:flex;flex-wrap:wrap;gap:var(--space-control-gap);flex-shrink:0;min-inline-size:0;max-block-size:var(--login-actions-max-block-size);overflow:auto;}
