@@ -105,3 +105,19 @@ test('native toast remaining time is independent of system clock changes',async(
  }
  await page.evaluate(()=>window.toastContract.destroy());
 });
+
+for(const initial of ['settings','dialog'])test(`native explicit ${initial} autofocus overrides competing attributes without an incidental first-control focus`,async({page})=>{
+ await setup(page);
+ await page.evaluate(initial=>{
+   const box=document.createElement('div');box.id='initial-dialog';
+   box.innerHTML='<button id="initial-trigger">Open explicit focus</button><dialog class="xui-native-dialog" aria-label="Explicit focus" autofocus="root-value"><button id="incidental" autofocus="first-value">First control</button><button id="intended" autofocus="target-value">Intended control</button><button data-xui-close>Close explicit focus</button></dialog>';
+   document.body.append(box);const dialog=box.querySelector('dialog'),trigger=box.querySelector('#initial-trigger');trigger.focus();window.explicitFocusEvents=[];
+   box.addEventListener('focusin',event=>{if(event.target.id)window.explicitFocusEvents.push(event.target.id);});
+   window.explicitDialog=window.foundationTools.createDialogController(dialog,trigger,{initialFocus:initial==='dialog'?dialog:box.querySelector('#intended')});window.explicitDialog.open();
+ },initial);
+ const box=page.locator('#initial-dialog'),dialog=box.locator('dialog');await expect(dialog).toBeVisible();
+ await expect(initial==='dialog'?dialog:box.locator('#intended')).toBeFocused();
+ expect(await page.evaluate(()=>window.explicitFocusEvents)).toEqual(initial==='dialog'?[]:['intended']);
+ await expect(dialog).toHaveAttribute('autofocus','root-value');await expect(box.locator('#incidental')).toHaveAttribute('autofocus','first-value');await expect(box.locator('#intended')).toHaveAttribute('autofocus','target-value');await expect(dialog.locator(':scope > *')).toHaveCount(3);await expect(dialog).not.toHaveAttribute('tabindex');
+ await page.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(box.locator('#initial-trigger')).toBeFocused();await page.evaluate(()=>window.explicitDialog.destroy());
+});

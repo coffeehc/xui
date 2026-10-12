@@ -4,7 +4,7 @@ import {createDialogController} from '../packages/runtime/dist/dom.js';
 
 // Model the synchronous native dialog focusing step, not browser layout or
 // accessibility. Playwright covers the real showModal/focusin/roving integration.
-function fixture(){
+function fixture({legacy=true}={}){
   const doc={activeElement:null},events=[];
   class Element extends EventTarget {
     constructor(name){super();this.name=name;this.ownerDocument=doc;this.attributes=new Map();this.children=[];this.isConnected=true;this.tabIndex=0;}
@@ -16,12 +16,14 @@ function fixture(){
     closest(){return null;}
     getClientRects(){return this.isConnected&&!this.disabled?[{}]:[];}
     contains(node){return node===this||this.children.some(child=>child.contains(node));}
-    querySelectorAll(){return this.children;}
+    querySelectorAll(selector){return selector==='[autofocus]'?this.children.filter(node=>node.hasAttribute('autofocus')):this.children;}
+    prepend(node){this.children.unshift(node);node.parent=this;}
+    remove(){if(this.parent)this.parent.children=this.parent.children.filter(node=>node!==this);this.isConnected=false;if(doc.activeElement===this)doc.activeElement=doc.body;}
     focus(){doc.activeElement=this;events.push(`focus:${this.name}`);this.onFocus?.();}
   }
   const body=new Element('body'),trigger=new Element('trigger'),dialog=new Element('dialog'),overview=new Element('overview'),settings=new Element('settings'),close=new Element('close');
-  doc.body=body;doc.activeElement=trigger;dialog.children=[overview,settings,close];dialog.open=false;
-  dialog.showModal=()=>{events.push('showModal');if(dialog.fail)throw new Error('cannot open');dialog.open=true;(dialog.hasAttribute('autofocus')?dialog:overview).focus();};
+  doc.createElement=name=>new Element(name);doc.body=body;doc.activeElement=trigger;dialog.children=[overview,settings,close];dialog.open=false;
+  dialog.showModal=()=>{events.push('showModal');if(dialog.fail)throw new Error('cannot open');dialog.open=true;(!legacy&&dialog.hasAttribute('autofocus')?dialog:dialog.children.find(node=>node.hasAttribute('autofocus'))??overview).focus();};
   dialog.close=()=>{dialog.open=false;doc.activeElement=trigger;dialog.dispatchEvent(new Event('close'));};
   return {doc,events,trigger,dialog,overview,settings,close};
 }
@@ -33,7 +35,7 @@ test('dialog snapshots initial focus before native focus can overwrite a roving 
   owner.syncOpen(true);
   assert.equal(f.doc.activeElement,f.settings);
   assert.equal(roving,f.settings);
-  assert.deepEqual(f.events,['resolve:settings','showModal','focus:dialog','focus:settings']);
+  assert.deepEqual(f.events,['resolve:settings','showModal','focus:settings']);
   assert.equal(f.dialog.hasAttribute('autofocus'),false);
   owner.destroy();
 });
@@ -52,9 +54,9 @@ test('failed native opening releases temporary autofocus and can be retried',()=
 });
 
 test('explicit initial focus does not steal a newer focus chosen during native opening',()=>{
-  const f=fixture();f.dialog.onFocus=()=>f.close.focus();
+  const f=fixture();f.settings.onFocus=()=>f.close.focus();
   const owner=createDialogController(f.dialog,f.trigger,{initialFocus:f.settings});owner.syncOpen(true);
-  assert.equal(f.doc.activeElement,f.close);assert.equal(f.events.includes('focus:settings'),false);owner.destroy();
+  assert.equal(f.doc.activeElement,f.close);assert.deepEqual(f.events,['showModal','focus:settings','focus:close']);owner.destroy();
 });
 
 test('unspecified or invalid initial focus keeps native dialog behavior',()=>{
@@ -81,13 +83,21 @@ test('a reentrant resolver leaves its newer opening in control and resolves once
 
 test('synchronous focus close and reopen keeps the new dialog focus instead of the old target',()=>{
   const f=fixture();let owner,target=f.settings,reopened=false;
-  f.dialog.onFocus=()=>{if(reopened)return;reopened=true;owner.syncOpen(false);target=f.dialog;owner.syncOpen(true);};
+  f.settings.onFocus=()=>{if(reopened)return;reopened=true;owner.syncOpen(false);target=f.dialog;owner.syncOpen(true);};
   owner=createDialogController(f.dialog,f.trigger,{initialFocus:()=>target});owner.syncOpen(true);
-  assert.equal(f.dialog.open,true);assert.equal(f.doc.activeElement,f.dialog);assert.equal(f.events.includes('focus:settings'),false);assert.equal(f.dialog.hasAttribute('autofocus'),false);owner.destroy();
+  assert.equal(f.dialog.open,true);assert.equal(f.doc.activeElement,f.dialog);assert.equal(f.events.filter(event=>event==='focus:settings').length,1);assert.equal(f.dialog.hasAttribute('autofocus'),false);assert.equal(f.dialog.children.some(node=>node.name==='span'),false);owner.destroy();
 });
 
 test('synchronous native focus destruction leaves the dialog closed without target delivery',()=>{
-  const f=fixture();let owner;f.dialog.onFocus=()=>owner.destroy();
+  const f=fixture();let owner;f.settings.onFocus=()=>owner.destroy();
   owner=createDialogController(f.dialog,f.trigger,{initialFocus:f.settings});owner.syncOpen(true);
-  assert.equal(f.dialog.open,false);assert.equal(f.events.includes('focus:settings'),false);assert.equal(f.dialog.hasAttribute('autofocus'),false);
+  assert.equal(f.dialog.open,false);assert.equal(f.events.filter(event=>event==='focus:settings').length,1);assert.equal(f.dialog.hasAttribute('autofocus'),false);
+});
+
+
+for(const legacy of [true,false])test(`native ${legacy?'legacy':'modern'} autofocus preserves the captured target and restores all host attributes`,()=>{
+  const f=fixture({legacy});f.dialog.setAttribute('autofocus','root');f.overview.setAttribute('autofocus','first');f.settings.setAttribute('autofocus','target');
+  const owner=createDialogController(f.dialog,f.trigger,{initialFocus:f.settings});owner.syncOpen(true);
+  assert.equal(f.doc.activeElement,f.settings);assert.deepEqual(f.events,['showModal','focus:settings']);
+  assert.equal(f.dialog.getAttribute('autofocus'),'root');assert.equal(f.overview.getAttribute('autofocus'),'first');assert.equal(f.settings.getAttribute('autofocus'),'target');owner.destroy();
 });

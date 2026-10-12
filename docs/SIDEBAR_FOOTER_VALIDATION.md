@@ -37,8 +37,10 @@
 
 ### 原生初始焦点修复与回归
 
-修复归属公共shell/dialog：打开前快照合法目标，showModal期间由dialog暂接焦点，随后仅在同一次有效打开且焦点未被新owner接管时交付目标；完整恢复原autofocus属性。菜单与footer不重建，既有Tab循环/模态隔离/关闭恢复继续使用原owner；初始open时先移入sidebar，长菜单打开后滚动优先保留实际焦点。未添加消费者CSS/focus补丁或新接口。
+修复归属公共shell/dialog：打开前快照合法目标，showModal期间由已捕获目标临时拥有autofocus，只有同一次有效打开且焦点未被新owner接管时才能继续交付焦点；完整恢复原autofocus属性（含既有竞争属性）。菜单与footer不重建，既有Tab循环/模态隔离/关闭恢复继续使用原owner；初始open时先移入sidebar，长菜单打开后滚动优先保留实际焦点。未添加消费者CSS/focus补丁或新接口。
 
 可执行顺序回归`tests/dialog-focus.test.mjs`对修复前正式dist运行：5项中2项失败，包含候选在showModal后才求值而返回overview；这是同步焦点算法的模拟单测，不冒充真实浏览器。修复后同一断言检查候选先解析、无overview中途focus、既有autofocus恢复、打开失败恢复、重新打开与宿主同步焦点转移。Playwright固定断言settings，另覆盖已存在library停靠优先于settings选中、无footer、长菜单、空菜单关闭退路、Tab循环、反复开关、关闭回入口及宿主新标题/新模态不被夺焦点。
 
 当前提交的完整浏览器/watch/cold-start结果以[标准Verify](https://github.com/coffeehc/xui/actions)对应SHA终态为准；源码检查、单测和收集数均不能替代。此修复不证明历史hydration错误或任何产品接入状态。
+
+`62d25c3`的标准Verify已真实执行：前置build/token/type/177单测/watch/consumer/cold-start通过，浏览器268/278通过、10项原生焦点回归失败。该轮只在dialog根上临时设置autofocus，模拟单测采用新HTML算法，未覆盖Chromium仍使用的legacy算法。Chromium legacy从dialog子节点开始查找，因此忽略根autofocus，仍聚焦首个可聚焦子节点（长菜单中也可能是滚动区域）。后续修正把autofocus直接交给预先捕获的目标子节点，显式dialog目标使用临时代理，并为legacy/modern两套同步算法补单测；严格浏览器断言保持不变。该失败记录保留，修复成功仍以新SHA的完整Verify终态为准。

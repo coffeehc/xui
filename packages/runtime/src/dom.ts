@@ -63,17 +63,28 @@ export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElem
       const requested=typeof options.initialFocus==='function'?options.initialFocus():options.initialFocus;
       if(dead||dialog.open||version!==focusVersion)return;
       const initial=requested&&dialog.contains(requested)&&!disabled(requested)?requested:null;
-      const autofocus=dialog.getAttribute('autofocus');
+      // Chromium's legacy dialog algorithm ignores autofocus on the dialog
+      // itself. Give the captured descendant native autofocus directly. A
+      // transient focus proxy also covers an explicit dialog-root target.
+      const proxy=initial===dialog?dialog.ownerDocument.createElement('span'):null;
+      if(proxy){proxy.tabIndex=-1;dialog.prepend(proxy);}
+      const nativeTarget=proxy??initial;
+      const autofocus=initial?Array.from(new Set([dialog,...Array.from(dialog.querySelectorAll<HTMLElement>('[autofocus]')),nativeTarget!])).map(node=>({node,value:node.getAttribute('autofocus')})):[];
+      for(const {node} of autofocus)node.removeAttribute('autofocus');
+      nativeTarget?.setAttribute('autofocus','');
       remove();stack.push(dialog);opened=true;shouldRestore=true;closeDetails={reason:'native'};
-      // Let native modal setup focus this neutral owner, never an incidental
-      // first descendant. Do not leave an autofocus attribute on host markup.
-      if(initial)dialog.setAttribute('autofocus','');
-      try{dialog.showModal();}catch(error){opened=false;remove();throw error;}
-      finally{if(initial){if(autofocus===null)dialog.removeAttribute('autofocus');else dialog.setAttribute('autofocus',autofocus);}}
-      // A focus handler may close/reopen, destroy, or hand focus to another owner.
-      if(initial&&!dead&&dialog.open&&version===focusVersion&&stack.at(-1)===dialog&&dialog.ownerDocument.activeElement===dialog){
-        const target=dialog.contains(initial)&&!disabled(initial)&&initial.getClientRects().length>0?initial:focusable(dialog)[0]??dialog;
-        target.focus();
+      try{
+        try{dialog.showModal();}catch(error){if(version===focusVersion){opened=false;remove();}throw error;}
+        // A focus handler may close/reopen, destroy, or hand focus to another
+        // owner. Do not override it, even if the new focus stays in this dialog.
+        const active=dialog.ownerDocument.activeElement;
+        if(initial&&!dead&&dialog.open&&version===focusVersion&&stack.at(-1)===dialog&&(active===nativeTarget||active===dialog)){
+          const target=dialog.contains(initial)&&!disabled(initial)&&initial.getClientRects().length>0?initial:focusable(dialog)[0]??dialog;
+          if(active!==target)target.focus();
+        }
+      }finally{
+        for(const {node,value} of autofocus){if(value===null)node.removeAttribute('autofocus');else node.setAttribute('autofocus',value);}
+        proxy?.remove();
       }
     }else if(!next&&dialog.open){
       ++focusVersion;closeDetails=details;const active=dialog.ownerDocument.activeElement;shouldRestore=dialog.contains(active)||active===dialog.ownerDocument.body;remove();dialog.close();
