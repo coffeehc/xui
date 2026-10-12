@@ -85,6 +85,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 | Table/TableContainer/TableCaption/TableHead/TableBody/TableRow/TableHeaderCell/TableCell/SortButton | 行/列/单元内容、scope/aria-sort/selected | 独立导出、原生 table 与命名滚动区域；排序/分页/选择由宿主，不是 rows/columns 引擎 |
 | DataTable/DataTableToolbar/DataTableFilter；原生 createDataTable | rows/columns/rowKey、明确status、pageIndexOffset/pageIndex/pageSize/total、外部查询回调 | 有界表体滚动、保留空表头、自然流底栏、受控busy/失败恢复；unknown total不生成页码 |
 | Surface/Alert/Badge/Skeleton/Spinner/Progress | children/tone/标准元素状态 | 默认层级/role/status/motion，必要事实持续可见 |
+| [MetricCard](METRIC_CARD.md) | label/value/可选 marker、section props/ref | 复用 Surface 的单层皮肤与既有统计 token；名称/值/颜色含义由宿主提供，多卡仍用 Grid，不造业务网格 |
 | DataRegion/LoadingState/EmptyState/ErrorState/RenderBoundary | busy/value、反馈、retry/cancel 与 render fallback | 刷新保留旧值，错误即时可见；render 异常与异步失败分开 |
 | ApiKeyManager/createApiKeyManager | 一个共享 controller、metadata/声明权限和有效期、领域 adapter | 脱敏列表、创建/一次性结果、明确复制/撤销确认、关闭竞态；labels/React headerActions |
 | ConfigurableLoginPage/createLoginPage | 一个共享 auth/theme owner；默认 fullscreen / 显式 card、装饰 brandVisual；品牌/标题/说明/logo/labels、安全 returnTo、onAuthenticated | 完整字段/错误/防重/取消/主题/登录退出与会话核对；固定路由与 DTO，密码不进 URL/storage/log，无隐式旧协议猜测 |

@@ -135,6 +135,10 @@
     "./data-table": {
       "types": "./dist/data-table.d.ts",
       "import": "./dist/data-table.js"
+    },
+    "./metric-card": {
+      "types": "./dist/metric-card.d.ts",
+      "import": "./dist/metric-card.js"
     }
   },
   "types": "./dist/index.d.ts",

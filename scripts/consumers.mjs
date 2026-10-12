@@ -102,6 +102,17 @@ for (const kind of ['vanilla','react']) {
   await copyFile(`${layoutTypography}/index.html`,`${layoutTypographyOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${layoutTypographyOutput}/theme-init.js`);await writeFile(`${layoutTypographyOutput}/metafile.json`,JSON.stringify(layoutTypographyBuild.metafile,null,2));
   await writeFile(`${layoutTypography}/types.ts`,"import {createMenuLayout,type MenuLayoutHeaderSlots} from '@coffeehc/xui-runtime/menu-layout';\nimport {fixtureOptions} from '../shared/layout-typography-model';\nconst slots:MenuLayoutHeaderSlots={brand:document.createElement('strong'),breadcrumb:document.createElement('nav'),status:document.createElement('span'),actions:document.createElement('div')};const owner=createMenuLayout(document.createElement('div'),{items:fixtureOptions('').items,headerSlots:slots});owner.update({headerSlots:{...slots,brand:null,actions:null}});owner.destroy();\n");
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',kind==='react'?'layout-typography/app.tsx':'layout-typography/types.ts'],{cwd,stdio:'inherit'});
+  const metricCard=resolve(cwd,'metric-card'),metricCardOutput=resolve(`dist/metric-card-${kind}`);
+  await cp(`examples/metric-card-${kind}`,metricCard,{recursive:true});
+  const metricCardBuild=await build({entryPoints:[`${metricCard}/app.${kind==='react'?'tsx':'js'}`],outdir:metricCardOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(metricCardBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'MetricCard consumer escaped standalone install');
+  assert(!Object.keys(metricCardBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'MetricCard consumer requires private CSS');
+  if(kind==='vanilla')assert(!Object.keys(metricCardBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native MetricCard imported React');
+  await copyFile(`${metricCard}/index.html`,`${metricCardOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${metricCardOutput}/theme-init.js`);await writeFile(`${metricCardOutput}/metafile.json`,JSON.stringify(metricCardBuild.metafile,null,2));
+  if(kind==='react'){
+    await copyFile('tests/fixtures/metric-card-types.tsx',`${cwd}/metric-card-types.tsx`);
+    execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','metric-card/app.tsx','metric-card-types.tsx'],{cwd,stdio:'inherit'});
+  }
   const headerControls=resolve(cwd,'header-controls'),headerControlsOutput=resolve(`dist/header-controls-${kind}`);
   await cp(`examples/header-controls-${kind}`,headerControls,{recursive:true});
   const headerControlsBuild=await build({entryPoints:[`${headerControls}/app.${kind==='react'?'tsx':'js'}`],outdir:headerControlsOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});

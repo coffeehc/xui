@@ -29,3 +29,4 @@ export * from './calendar.js';
 export * from './command.js';
 export * from './grouped-combobox.js';
 export * from './data-table.js';
+export * from './metric-card.js';
