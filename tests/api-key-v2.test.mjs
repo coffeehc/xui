@@ -174,3 +174,16 @@ test('late terminal cleanup compares the complete atomic record and cannot clear
  const [scope,raw]=[...atomic.values][0],descriptor={...JSON.parse(raw).descriptor,operation_id:'00000000-0000-4000-8000-000000000009',fingerprint:'f'.repeat(64)};await exchange(scope,raw,null);await exchange(scope,null,JSON.stringify({schema_version:1,scope_id:'authenticated-user:tenant-1',descriptor}));store.save('authenticated-user:tenant-1',{schema_version:1,scope_id:'authenticated-user:tenant-1',descriptor});allowClear.resolve();await original;
  assert.deepEqual(JSON.parse(atomic.values.get(scope)).descriptor,descriptor);assert.deepEqual(manager.getState().writeBlock.descriptor,descriptor);assert.deepEqual(store.values.get('authenticated-user:tenant-1').descriptor,descriptor);manager.close();
 });
+
+test('closing while atomic reservation is pending never dispatches and conditionally cleans only the unstarted descriptor',async()=>{
+ const store=storage(),atomic=testOperationStore(store),exchange=atomic.compareExchange,entered=deferred(),allow=deferred(),cleared=deferred();
+ atomic.compareExchange=async(scope,expected,next)=>{if(expected===null&&next!==null){entered.resolve();await allow.promise;}const result=await exchange(scope,expected,next);if(next===null)cleared.resolve();return result;};let writes=0;
+ const {manager}=setup(async()=>{writes++;return json(null);},store);manager.openCreate();manager.setDraft({name:'Cancel reservation'});const attempt=manager.submitCreate();await entered.promise;manager.close();await attempt;assert.equal(writes,0);assert.equal(manager.getState().phase,'closed');allow.resolve();await cleared.promise;await wait();assert.equal(writes,0);assert.equal(atomic.values.size,0);assert.equal(store.values.size,0);assert.equal(manager.getState().writeBlock,null);
+});
+
+test('scope change during atomic reservation hides the old owner, preserves the original ID and sends no request',async()=>{
+ const store=storage(),atomic=testOperationStore(store),exchange=atomic.compareExchange,entered=deferred(),allow=deferred();let current=true,writes=0,original;
+ atomic.compareExchange=async(scope,expected,next)=>{if(expected===null&&next!==null){original=JSON.parse(next).descriptor;entered.resolve();await allow.promise;}return exchange(scope,expected,next);};
+ const options={scopeId:'http-server:verified-actor:tenant',isCurrentScope:()=>current,storage:store,operationStore:atomic},writeGuard=createApiKeyWriteGuard(options),adapter=createApiKeyHttpAdapter({writeGuard,http:createHttpClient({baseURL:'http://fixture.invalid',fetch:async()=>{writes++;return json(null);}})}),manager=make(adapter);manager.openCreate();manager.setDraft({name:'Old identity'});const attempt=manager.submitCreate();await entered.promise;current=false;assert.equal(manager.getState().phase,'closed');allow.resolve();await attempt;await wait();assert.equal(writes,0);assert.equal(manager.getState().writeBlock,null);assert.equal(manager.readSecret(),null);assert.deepEqual(JSON.parse([...atomic.values.values()][0]).descriptor,original);
+ current=true;const restored=createApiKeyWriteGuard(options);await restored.ready();assert.deepEqual(restored.getState().descriptor,original);assert.equal(restored.getState().status,'uncertain');
+});
