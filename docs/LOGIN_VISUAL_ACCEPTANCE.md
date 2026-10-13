@@ -105,3 +105,5 @@
 ### 当前验证状态
 
 本机Chromium正常安全配置启动在process_singleton socket()返回EPERM，未产生新渲染；未添加no-sandbox或其它安全降级。新截图、几何、状态、中文字体和真实200%等待官方Chrome安全CI。静态类型/单测/构建结果在最终版本记录，不能替代视觉查看。最终交付前必须打开新旧截图对照检查比例、可读性、空白与焦点。
+
+本轮预检：source generation `1813da04f25c` 的正式build/typecheck、357-token合同及477/477单测通过；React/原生独立tarball的全部公开ESM/CSS/types、lazy strength拆包与体积门禁通过。新增视觉+既有login-visual收集52项（收集不等于执行）。真实watch重建与错误恢复通过（187.9秒）；真实安全Chrome与新截图尚待CI。随后仅增加Agent-ready研究/规范及更新AUTH的旧尺寸描述，最终提交仍由CI重跑。
