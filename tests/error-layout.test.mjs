@@ -8,7 +8,7 @@ import {DataRegion} from '../packages/ui-react/dist/feedback.js';
 import {ConfigurableLoginPage} from '../packages/ui-react/dist/login.js';
 import {HttpError} from '../packages/runtime/dist/http.js';
 const read=path=>readFile(path,'utf8');
-const loginLabels={cancel:'Cancel request',checkSession:'Retry connection'};
+const loginLabels={checkSession:'Retry connection'};
 function renderLogin(state={}){
   const snapshot={status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false,...state};
   return renderToStaticMarkup(React.createElement(ConfigurableLoginPage,{auth:{subscribe:()=>()=>{},getState:()=>snapshot},theme:{},config:{productName:'Demo',title:'Login',labels:loginLabels}}));

@@ -72,10 +72,6 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
   },[auth,state.status,state.user,state.busy,state.reauthenticationRequired,viewOperation]);
   const authenticated=state.status==='authenticated',busy=!!state.busy||viewOperation!==null||extensionBusy!==null||authenticated&&!sessionFailed.current&&navigationPhase!=='failed',locked=busy||authenticated;
   const canCheck=!busy&&!state.reauthenticationRequired&&(sessionFailed.current&&!state.error||!authenticated&&state.error?.metadata.endpointId==='auth.session'&&(state.error.kind==='network'||state.error.kind==='timeout'||state.error.kind==='http'&&(state.error.status??0)>=500));
-  const canCancel=viewOperation==='extension'&&extensionBusy!==null;
-  const restoreFocus=React.useRef(false);
-  React.useLayoutEffect(()=>{if(restoreFocus.current&&!locked){restoreFocus.current=false;username.current?.focus();}},[locked]);
-  const cancel=()=>{restoreFocus.current=true;revision.current++;pending.current?.abort();pending.current=undefined;setViewOperation(null);setExtensionBusy(null);clearPassword();};
   const navigating=authenticated&&!state.busy&&viewOperation===null&&!sessionFailed.current,navigationFailed=navigating&&navigationPhase==='failed';
   const message=navigationFailed?labels.navigationError:navigating?labels.opening:extensionBusy??(state.error?(state.reauthenticationRequired?labels.reauthenticate:getLoginPageError(state.error,labels)):sessionFailed.current?labels.error:labels[viewOperation==='session'||state.busy==='session'||state.busy==='refresh'?'checking':'signingIn']);
   const submitLabel=navigating?labels.opening:state.busy==='login'||viewOperation==='login'?labels.signingIn:labels.submit;
@@ -86,7 +82,7 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
     actions={<Button ref={submit} className="xui-login-submit" size="lg" data-idle-label={labels.submit} data-busy-label={labels.signingIn} type="submit" disabled={locked}><span>{submitLabel}</span><span className="xui-login-opening-reservation" aria-hidden="true">{labels.opening}</span></Button>}
     alternatives={extensions?.actions?.length?extensions.actions.map(action=><Button key={action.id} variant="outline" disabled={locked||action.disabled} onClick={()=>{if(pending.current||auth.getState().busy||auth.getState().status==='authenticated')return;clearPassword();void run('extension',undefined,action);}}>{action.label}</Button>):undefined}
     feedback={(state.error||state.busy||viewOperation||extensionBusy||extensionError||sessionFailed.current||authenticated)?<Alert ref={feedback} tabIndex={-1} tone={navigationFailed||extensionError||sessionFailed.current||state.error&&state.error.kind!=='cancel'?'error':'info'}>{extensionError?(extensions?.errorLabel??'登录配置或认证方式暂不可用，请检查后重试。'):message}</Alert>:undefined}
-    feedbackActions={<>{canCancel&&<Button size="sm" variant="ghost" onClick={cancel}>{labels.cancel}</Button>}{canCheck&&<Button size="sm" variant="ghost" onClick={()=>run('session')}>{labels.checkSession}</Button>}{navigationFailed&&<Button size="sm" variant="ghost" onClick={()=>{const user=auth.getState().user;if(user)void openApplication(user,true);}}>{labels.retryNavigation}</Button>}</>}
+    feedbackActions={<>{canCheck&&<Button size="sm" variant="ghost" onClick={()=>run('session')}>{labels.checkSession}</Button>}{navigationFailed&&<Button size="sm" variant="ghost" onClick={()=>{const user=auth.getState().user;if(user)void openApplication(user,true);}}>{labels.retryNavigation}</Button>}</>}
   >
     <div className="xui-stack">
       <fieldset className="xui-login-extension" disabled={locked}>{beforeFields}</fieldset>

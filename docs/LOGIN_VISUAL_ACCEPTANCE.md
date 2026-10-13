@@ -20,7 +20,7 @@
 | L03 | 表单内容最大 400px（含四边焦点余量），标题 32/40px、label 13/20px、输入文字 14/22px、主按钮至少40px；标题明确大于字段 | screenshot + JSON type/rect | 未测 |
 | L04 | label→input 8px、字段之间16px、密码→登录16px；无反馈框或隐藏辅助按钮插在密码和登录之间 | idle/error/busy screenshot + gap JSON | 未测 |
 | L05 | 匿名普通页只有一个可见主登录按钮，宽度与字段一致；错误401不显示会话检查；SSO是独立次级组 | 公共 API 页面操作 + screenshots | 未测 |
-| L06 | 反馈在主按钮之后，固定轨道默认48px（40px内容及焦点余量），只随公共文字/控件token缩放；长错误局部单一滚动，不撑高卡片；取消/重试仅有真实用途时出现，不能占主动作宽度或隐藏占行 | idle/busy/error/长错误截图，动作与反馈rect | 未测 |
+| L06 | 反馈在主按钮之后，固定轨道默认48px（40px内容及焦点余量），只随公共文字/控件token缩放；长错误局部单一滚动，不撑高卡片；不生成取消动作，重试仅有真实用途时出现，不能占主动作宽度或隐藏占行 | idle/busy/error/长错误截图，动作与反馈rect | 未测 |
 | L07 | 检查→匿名、提交→busy→错误、断网/超时/重试时品牌、字段、主动作位置/大小变化≤1.5px；长错误在局部可滚动 | 连续状态 rect JSON + screenshot；已有 error-layout 回归 | 未测 |
 | L08 | unknown write / reauthenticationRequired 不出现可刷新重试，不自动 refresh/logout/重放；显式重新登录可恢复，密码即时清空 | auth unit + auth-bearer/login browser HTTP counts | 未测 |
 | L09 | 1280/1600/390普通首屏主操作完整可见，无页面横向溢出；200%与短视口自然文档滚动到每个字段/动作。极端长主按钮独立限高并内部滚动，完整按钮与四边焦点仍可滚入视口，字段及操作组不困在局部小区域 | screenshot + viewport/scroll metrics；长品牌/长标签的按钮rect、内部滚动与键盘提交 | 未测 |

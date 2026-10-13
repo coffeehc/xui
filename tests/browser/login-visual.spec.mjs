@@ -34,8 +34,8 @@ for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','s
     await page.evaluate(()=>window.loginDemo.setMode('login','credentials'));await username.fill('demo');await password.fill('FAKE_VISUAL_PASSWORD');await submit.click();await expect(page.getByRole('alert')).toHaveText('用户名或密码不正确。');await settle(page);
     const error=await measurements(page);stable(idle,error);await expect(page.getByRole('button',{name:'重试连接',exact:true})).toHaveCount(0);await expect(password).toHaveValue('');await evidence(page,info,`${kind}-${appearance}-${width}-error`,error);
     await page.evaluate(()=>window.loginDemo.setMode('login','hold'));await password.fill('FAKE_VISUAL_PASSWORD');await submit.click();await expect(page.getByRole('button',{name:'正在登录…',exact:true})).toBeDisabled();await settle(page);
-    const busy=await measurements(page);expect(busy.busy).toBe('login');stable(idle,busy);await expect(page.locator('.xui-login-feedback').getByRole('button',{name:'取消等待'})).toBeVisible();await evidence(page,info,`${kind}-${appearance}-${width}-busy`,busy);
-    await page.getByRole('button',{name:'取消等待'}).click();await expect(username).toBeFocused();await page.evaluate(()=>window.loginDemo.release('login'));
+    const busy=await measurements(page);expect(busy.busy).toBe('login');stable(idle,busy);await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);await evidence(page,info,`${kind}-${appearance}-${width}-busy`,busy);
+    await page.evaluate(()=>{window.loginDemo.destroy();window.loginDemo.release('login');});await settle(page);await expect(page.locator('.xui-login-page')).toHaveCount(0);
     expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
   });
 }
@@ -48,13 +48,13 @@ for(const kind of ['react','vanilla']){
       expect(await title.evaluate(element=>({size:getComputedStyle(element).fontSize,height:getComputedStyle(element).lineHeight}))).toEqual({size,height});
     }
   });
-  test(`${kind} real Tab order exposes only actual actions and returns focus after cancel`,async({page},info)=>{
+  test(`${kind} real Tab order exposes only actual actions and unmount blocks late extensions`,async({page},info)=>{
     await page.goto(`/login-${kind}/?extensions&visualAcceptance`);const submit=page.getByRole('button',{name:'登录',exact:true});await expect(submit).toBeEnabled();
     await page.getByLabel('服务地址').focus();
     for(const target of [page.getByLabel('账户来源'),page.getByRole('textbox',{name:'用户名',exact:true}),page.getByLabel('密码'),submit,page.getByRole('button',{name:'企业 OIDC 登录'}),page.getByRole('button',{name:'企业 SAML 登录'})]){await page.keyboard.press('Tab');await expect(target).toBeFocused();}
     await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);
-    await page.evaluate(()=>window.loginDemo.setExtensionMode('hold'));await page.getByRole('button',{name:'企业 SAML 登录'}).click();await page.keyboard.press('Tab');await expect(page.getByRole('button',{name:'取消等待'})).toBeFocused();
-    await info.attach(`${kind}-cancel-keyboard`,{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});await page.keyboard.press('Enter');await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toBeFocused();await page.evaluate(()=>window.loginDemo.releaseExtension());
+    await page.evaluate(()=>window.loginDemo.setExtensionMode('hold'));await page.getByRole('button',{name:'企业 SAML 登录'}).click();await page.keyboard.press('Tab');await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);await expect(submit).toBeDisabled();
+    await info.attach(`${kind}-extension-busy-keyboard`,{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});await page.evaluate(()=>{window.loginDemo.destroy();window.loginDemo.releaseExtension();});await settle(page);await expect(page.locator('.xui-login-page')).toHaveCount(0);expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
   });
   test(`${kind} explicit safe read recovery stays local and does not become a login peer`,async({page},info)=>{
     await page.goto(`/login-${kind}/?sessionReadError&handoff=hold&visualAcceptance`);const retry=page.getByRole('button',{name:'重试连接',exact:true});await expect(retry).toBeVisible();await expect(page.locator('.xui-login-feedback').getByRole('button',{name:'重试连接',exact:true})).toHaveCount(1);await expect(page.locator('.xui-login-actions button:visible')).toHaveCount(1);

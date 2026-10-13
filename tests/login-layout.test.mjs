@@ -57,3 +57,9 @@ test('login centers one credential core with its primary action before separate 
   assert.doesNotMatch(core,/xui-login-feedback|xui-login-support/);assert.match(support,/class="xui-login-feedback"/);
   assert.ok(markup.indexOf(core)<markup.indexOf(support));assert.doesNotMatch(render(),/xui-login-options/);
 });
+
+test('public login removes cancelled-action UI and obsolete page labels',async()=>{
+  const {loginPageDefaultLabels}=await import('../packages/runtime/dist/auth.js');
+  for(const key of ['cancel','signingOut','continue','logout','theme','light','dark','system','signedIn'])assert.equal(Object.hasOwn(loginPageDefaultLabels,key),false,key);
+  for(const file of ['packages/ui-react/src/login.tsx','packages/runtime/src/login-dom.ts']){const source=await readFile(file,'utf8');assert.doesNotMatch(source,/labels\.cancel\b|canCancel|restoreFocus|cancel\.onclick/);}
+});
