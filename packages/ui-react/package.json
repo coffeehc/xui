@@ -155,6 +155,10 @@
     "./choice-group": {
       "types": "./dist/choice-group.d.ts",
       "import": "./dist/choice-group.js"
+    },
+    "./text-inputs": {
+      "types": "./dist/text-inputs.d.ts",
+      "import": "./dist/text-inputs.js"
     }
   },
   "types": "./dist/index.d.ts",

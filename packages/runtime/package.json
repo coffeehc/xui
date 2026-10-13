@@ -154,6 +154,14 @@
     "./choice-group-dom": {
       "types": "./dist/choice-group-dom.d.ts",
       "import": "./dist/choice-group-dom.js"
+    },
+    "./number-input": {
+      "types": "./dist/number-input.d.ts",
+      "import": "./dist/number-input.js"
+    },
+    "./text-inputs-dom": {
+      "types": "./dist/text-inputs-dom.d.ts",
+      "import": "./dist/text-inputs-dom.js"
     }
   },
   "types": "./dist/index.d.ts",

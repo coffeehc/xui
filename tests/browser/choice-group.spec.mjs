@@ -1,3 +1,4 @@
+import {inputVisualTests} from './input-visual-helpers.mjs';
 import {test,expect} from '@playwright/test';
 import {existsSync} from 'node:fs';
 // Security floor: no --no-sandbox fallback on restricted workers.
@@ -16,4 +17,5 @@ for(const kind of ['react','vanilla']){
   await page.getByRole('button',{name:'Toggle readonly'}).click();await write.focus();await page.getByRole('button',{name:'Remove write'}).evaluate(button=>button.click());await expect(read).toBeFocused();
  });
  test(`${kind}: narrow and dark theme choices remain reachable`,async({page})=>{await page.setViewportSize({width:320,height:700});await page.emulateMedia({colorScheme:'dark'});await page.goto(`/choice-group-${kind}/`);await expect(page.getByRole('group',{name:'Permissions'})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);await page.locator('.xui-choice-group').evaluateAll(groups=>{for(const group of groups){group.querySelector('legend').textContent='长标题LongLegend'.repeat(50);for(const text of group.querySelectorAll('.xui-choice-label>span'))text.textContent='长选项LongUnbrokenOption'.repeat(50);}});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);const clipped=await page.locator('.xui-choice-group input').evaluateAll(nodes=>nodes.filter(node=>{const rect=node.getBoundingClientRect();return rect.x<0||rect.right>innerWidth+1;}));expect(clipped).toEqual([]);});
+ inputVisualTests('choice-group',kind);
 }

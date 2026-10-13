@@ -35,3 +35,5 @@ export * from './search-toolbar.js';
 export * from './display.js';
 
 export * from './choice-group.js';
+
+export * from './text-inputs.js';

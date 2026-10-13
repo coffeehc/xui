@@ -127,6 +127,15 @@ for (const kind of ['vanilla','react']) {
   await copyFile(`${choiceGroup}/index.html`,`${choiceGroupOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${choiceGroupOutput}/theme-init.js`);await writeFile(`${choiceGroupOutput}/metafile.json`,JSON.stringify(choiceGroupBuild.metafile,null,2));
   const choiceGroupTypes=kind==='react'?'choice-group-types.tsx':'choice-group-native-types.ts';await copyFile(`tests/fixtures/${choiceGroupTypes}`,`${cwd}/${choiceGroupTypes}`);
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',choiceGroupTypes,...(kind==='react'?['choice-group/app.tsx']:[])],{cwd,stdio:'inherit'});
+  const textInputs=resolve(cwd,'text-inputs'),textInputsOutput=resolve(`dist/text-inputs-${kind}`);
+  await cp(`examples/text-inputs-${kind}`,textInputs,{recursive:true});
+  const textInputsBuild=await build({entryPoints:[`${textInputs}/app.${kind==='react'?'tsx':'js'}`],outdir:textInputsOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(textInputsBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'TextInputs escaped standalone install');
+  assert(!Object.keys(textInputsBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'TextInputs requires private CSS');
+  if(kind==='vanilla')assert(!Object.keys(textInputsBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native TextInputs imported React');
+  await copyFile(`${textInputs}/index.html`,`${textInputsOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${textInputsOutput}/theme-init.js`);await writeFile(`${textInputsOutput}/metafile.json`,JSON.stringify(textInputsBuild.metafile,null,2));
+  const textInputsTypes=kind==='react'?'text-inputs-types.tsx':'text-inputs-native-types.ts';await copyFile(`tests/fixtures/${textInputsTypes}`,`${cwd}/${textInputsTypes}`);
+  execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',textInputsTypes,...(kind==='react'?['text-inputs/app.tsx']:[])],{cwd,stdio:'inherit'});
   const metricCard=resolve(cwd,'metric-card'),metricCardOutput=resolve(`dist/metric-card-${kind}`);
   await cp(`examples/metric-card-${kind}`,metricCard,{recursive:true});
   const metricCardBuild=await build({entryPoints:[`${metricCard}/app.${kind==='react'?'tsx':'js'}`],outdir:metricCardOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});

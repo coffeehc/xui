@@ -1241,4 +1241,8 @@ SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。sea
 
 CheckboxGroup/RadioGroup 复用 fieldset/legend、choice 与 help/error 的既有间距、控件尺寸、焦点和错误语义 token。全选部分态复用原 indeterminate 横线；只读/禁用仍保留明确原生状态，不以颜色代替。没有新的权限引擎、字体或密度。完整受控值、诊断、校验与双端入口见 [CHOICE_GROUP](CHOICE_GROUP.md)。
 
+### 专用输入组合
+
+NumberInput、PasswordInput、SearchInput 复用 InputGroup 的唯一输入边界与既有 input-action、control-height、control-icon-size、焦点和禁用 token。数字草稿/确认值分开，密码仅显隐与清理，搜索仅提交/清除意图；没有新颜色、密度、请求或认证 owner。帮助/错误继续采用 Field/native field 的关联。行为和安全边界见 [TEXT_INPUTS](TEXT_INPUTS.md)。
+
 <!-- foundation-lifecycle:end -->

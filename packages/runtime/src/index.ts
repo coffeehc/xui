@@ -35,3 +35,7 @@ export * from './display-dom.js';
 export * from './choice-group.js';
 
 export * from './choice-group-dom.js';
+
+export * from './number-input.js';
+
+export * from './text-inputs-dom.js';

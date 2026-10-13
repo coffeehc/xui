@@ -5,7 +5,9 @@ import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {spawn} from 'node:child_process';
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-test('real watch rebuilds CSS, tokens, TSX, declarations and init; errors preserve the last generation and recover', {timeout:180000},async()=>{
+// Every checkpoint rebuilds all public examples; added choice/input fixtures increase the
+// total work. Keep each build's 30-second deadline and every recovery assertion unchanged.
+test('real watch rebuilds CSS, tokens, TSX, declarations and init; errors preserve the last generation and recover', {timeout:300000},async()=>{
  const fixture=await mkdtemp(resolve(tmpdir(),'xui-watch-'));let child,log='';
  try{
   for(const name of ['docs','scripts','examples','packages','package.json','pnpm-lock.yaml','tsconfig.json'])await cp(name,resolve(fixture,name),{recursive:true,filter:path=>!path.includes('/dist')&&!path.includes('/node_modules')});
@@ -21,6 +23,7 @@ test('real watch rebuilds CSS, tokens, TSX, declarations and init; errors preser
   for(const kind of ['react','vanilla']){assert.match(await readFile(resolve(fixture,`dist/grouped-search-${kind}/app.js`),'utf8'),/xui-grouped-combobox/);assert.match(await readFile(resolve(fixture,`dist/grouped-search-${kind}/app.css`),'utf8'),/xui-disclosure-indicator/);assert.match(await readFile(resolve(fixture,`dist/grouped-search-${kind}/index.html`),'utf8'),/可折叠分组搜索/);}
   for(const kind of ['react','vanilla']){assert.match(await readFile(resolve(fixture,`dist/search-toolbar-${kind}/app.js`),'utf8'),/xui-search-toolbar/);assert.match(await readFile(resolve(fixture,`dist/search-toolbar-${kind}/app.css`),'utf8'),/xui-search-toolbar-search/);}
   for(const kind of ['react','vanilla']){assert.match(await readFile(resolve(fixture,`dist/display-${kind}/app.js`),'utf8'),/xui-copyable/);assert.match(await readFile(resolve(fixture,`dist/display-${kind}/app.css`),'utf8'),/xui-image/);}
+  for(const kind of ['react','vanilla']){assert.match(await readFile(resolve(fixture,`dist/choice-group-${kind}/app.js`),'utf8'),/xui-choice-group/);assert.match(await readFile(resolve(fixture,`dist/text-inputs-${kind}/app.js`),'utf8'),/aria-valuenow/);assert.match(await readFile(resolve(fixture,`dist/text-inputs-${kind}/app.css`),'utf8'),/xui-input-group/);}
   const edit=async(path,transform)=>{const full=resolve(fixture,path);await writeFile(full,transform(await readFile(full,'utf8')));const prior=current.sourceSha256;current=await status(state=>state.state==='success'&&state.sourceSha256!==prior);for(const name of ['theme','runtime','ui-react'])assert.equal(JSON.parse(await readFile(resolve(fixture,`packages/${name}/dist/build.json`))).sourceSha256,current.sourceSha256);};
   await edit('docs/DESIGN.md',text=>text.replace('<!-- design-default-css:start -->','<!-- design-default-css:start -->').replace(':root {',':root {\n  /* watch-token-proof */'));
   assert.match(await readFile(resolve(fixture,'packages/theme/dist/tokens.css'),'utf8'),/watch-token-proof/);
