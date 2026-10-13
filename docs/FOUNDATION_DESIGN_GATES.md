@@ -108,3 +108,5 @@ Progress forced-colors的旧断言虽绿，人工图审发现轨道/填充完全
 按当前实际出口，G1清单固定为19个具名入口（Button/IconButton分别计；Typography四个parts不重复），另加真实label/help/error基础能力。12个已有专项浏览器通过记录；Input/Textarea强化矩阵及Progress修补在当前候选验收；Image/Avatar/Tag/Badge最后集中成一批18例，只补既定合同，不继续增添产品场景。Tag/Badge“普通文字”权重映射歧义保留现值，不把500写成新增规范或擅改400。OS原生子界面、实际系统读屏和跨浏览器平台结果另列，不以未测项伪造完成。
 
 d3064c9安全CI：517单测、81Auth通过；focused634/646，失败12项全在新增Input消费者首控件贴viewport的四边焦点断言。Progress6组加强像素/系统色/未知静止及Key10项精确焦点流程均通过，完整浏览器/watch/冷启动因focused失败未执行。输入fixture纠正与证据见 INPUT_FOUNDATION_VALIDATION.md；最终四展示族的有限明确合同见 MEDIA_FOUNDATION_VALIDATION.md。G1整体仍未闭环。
+
+ba934dd安全CI38463267448：521单测、81Auth通过；focused646/664，18失败为Input12的原生编辑/滚动测试假设和Image6的实际负向溢出。Avatar6及Tag/Badge6已通过，并核浅/深390/root200实际图、四边删除焦点与真实cover。Image首行在scrollTop0高于边界93px不可达，最小修采用CSS安全居中，短文居中和长文首末严格原断言并存；原图保留。Input修正记录与真实滚动/裁切区别见专项，不将未执行的后续断言计入通过。此轮完整browser/watch/冷启动仍未运行，后续同一冻结候选重跑，不标G1整体通过。

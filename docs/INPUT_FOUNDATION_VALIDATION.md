@@ -26,3 +26,5 @@
 ## 首轮安全 CI 与消费者纠正
 
 候选 d3064c9 / CI 38460396345 的12项新增输入测试均在第一个输入框的左侧焦点几何失败：控件边框 x=0，2px outline加2px offset后为-4px。原始失败PNG/trace保留在该run的 focused-interactions artifact（11846890265）。页面只使用 Container（仅最大宽度和居中，不提供内距）；并非使用 Surface 后仍裁切。纠正双端fixture为正式 Surface / xui-surface 包裹表单，使用既有 card-padding；没有私有padding、改Input绘制或放宽四边断言。首轮在此处中断后的readonly键盘、编辑FormData等行为尚未跑完，不计通过，须新CI全部重验。
+
+ba934dd 的第二轮12失败已逐组拆分：语义6项用含空格的只读改值序列触发浏览器Space页面滚动，trace在下一Tab后scrollY继续从21/78增加到760；不是值被修改。序列改为无页面导航键的字母，保留选区、值不变与事件计数。样式6项在首Textarea真实Tab焦点后首行光标可见，整个72px控件底部仍超900px视口37.78125px；没有overflow容器裁切。浏览器编辑焦点只保证光标滚入，相关原理见 [Blink focused-editable参数](https://chromium.googlesource.com/chromium/src/+/e86aa03c91690aa22750fa335ea704bb1c207810/third_party/blink/public/mojom/scroll/scroll_into_view_params.mojom)。测试保留真实Tab和精确focused，记录自然滚入前几何；需要时通过普通鼠标滚轮把完整控件置于可用viewport，再逐边检查所有overflow祖先与视口。没有脚本focus/scrollIntoView或生产滚动劫持；短视口容不下控件应按可达区域验收，此fixture的控件高度均小于视口。原四边断言不放宽，滚动前后JSON作为独立证据。原生readonly Space默认行为不拦截。
