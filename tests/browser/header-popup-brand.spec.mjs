@@ -11,11 +11,16 @@ for(const kind of ['react','vanilla']){
     await page.keyboard.press('End');await expect(popup.getByRole('option').last()).toBeInViewport();await page.keyboard.press('Escape');await expect(trigger).toBeFocused();
   });
   test(`${kind} brand precedes toggle and tracks desktop sidebar/content geometry`,async({page})=>{
-    await setup(page);const identity=page.locator('.xui-app-header-identity'),toggle=page.locator('[data-xui-menu-toggle]'),brand=page.locator('.xui-app-header-brand');
+    await setup(page);const toggle=page.locator('[data-xui-menu-toggle]'),brand=page.locator('.xui-app-header-brand');
     for(const collapsed of [false,true,false]){
       if((await page.locator('.xui-shell').getAttribute('data-collapsed'))!==String(collapsed))await toggle.click();await expect(page.locator('.xui-shell')).toHaveAttribute('data-collapsed',String(collapsed));
-      await expect.poll(async()=>{const rect=await toggle.boundingBox();return page.locator('main').evaluate((node,left)=>Math.abs(left-(node.getBoundingClientRect().left+parseFloat(getComputedStyle(node).paddingLeft))),rect.x);}).toBeLessThan(1);
-      const region=await identity.boundingBox(),button=await toggle.boundingBox();expect(region.x+region.width).toBeLessThanOrEqual(button.x);expect(await brand.evaluate(node=>!!(node.compareDocumentPosition(node.closest('.xui-app-header-primary').querySelector('[data-xui-menu-toggle]'))&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+      // Measure related animated boxes in one rendering frame; sequential
+      // protocol reads can straddle sidebar flex/grid transition frames.
+      await expect.poll(()=>page.evaluate(()=>{
+        const identity=document.querySelector('.xui-app-header-identity'),toggle=document.querySelector('[data-xui-menu-toggle]'),main=document.querySelector('main'),brand=document.querySelector('.xui-app-header-brand');
+        const region=identity.getBoundingClientRect(),button=toggle.getBoundingClientRect(),content=main.getBoundingClientRect();
+        return {aligned:Math.abs(button.left-(content.left+parseFloat(getComputedStyle(main).paddingLeft)))<1,separate:region.right<=button.left,ordered:!!(brand.compareDocumentPosition(toggle)&Node.DOCUMENT_POSITION_FOLLOWING)};
+      })).toEqual({aligned:true,separate:true,ordered:true});
     }
     await page.setViewportSize({width:390,height:844});await expect(brand).toBeVisible();await toggle.click();await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(toggle).toBeFocused();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   });
