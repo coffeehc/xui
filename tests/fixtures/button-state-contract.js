@@ -19,3 +19,14 @@ for(const variant of variants){
 }
 const group=node('div'),toggle=node('button','Selected disabled toggle');group.setAttribute('aria-label','Disabled selected group');toggle.dataset.value='selected';toggle.dataset.testid='disabled-selected-toggle';group.append(toggle);root.append(group);
 document.getElementById('root').append(root);createToggleGroup(group,{defaultValue:['selected'],disabled:true});
+const sizeSection=node('section');sizeSection.className='xui-surface';sizeSection.append(node('h2','Button sizes'));
+for(const kind of ['text','icon']){
+ const row=node('div');row.className='xui-toolbar';
+ for(const size of ['xs','sm','default','lg']){
+  const button=node('button');button.type='button';button.className='xui-button';button.dataset.size=size;button.dataset.testid=`size-${size}-${kind}`;button.append(root.querySelector('svg').cloneNode(true));
+  if(kind==='icon'){button.dataset.icon='true';button.setAttribute('aria-label',`${size} save`);}else button.append(document.createTextNode('Save'));
+  row.append(button);
+ }
+ sizeSection.append(row);
+}
+root.append(sizeSection);
