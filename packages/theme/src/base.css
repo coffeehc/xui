@@ -53,5 +53,5 @@
   .xui-image-content,.xui-image-placeholder {position:absolute;inset:0;inline-size:100%;block-size:100%;min-inline-size:0;min-block-size:0;}
   .xui-image-content {object-fit:contain;}
   .xui-image[data-fit="cover"]>.xui-image-content {object-fit:cover;}
-  .xui-image-placeholder {position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:var(--space-control-gap);overflow:auto;overflow-wrap:anywhere;background:var(--muted);color:var(--muted-foreground);}
+  .xui-image-placeholder {position:absolute;inset:0;display:flex;align-items:safe center;justify-content:safe center;padding:var(--space-control-gap);overflow:auto;overflow-wrap:anywhere;background:var(--muted);color:var(--muted-foreground);}
 }

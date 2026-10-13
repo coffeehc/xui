@@ -1,0 +1,318 @@
+{
+  "commit": "ba934dd",
+  "run": 38463267448,
+  "artifact": 11848082145,
+  "viewport": {
+    "width": 1280,
+    "fontPercent": 100
+  },
+  "finding": "At scrollTop=0 the first character is 93 CSS px above the Image placeholder; the 0.5px strict boundary fails by 92.5px. End-of-scroll screenshots show the tail but cannot prove start reachability.",
+  "images": [
+    {
+      "file": "image-overflow-ba934dd-light.png",
+      "sha256": "e9b033e04e139a5eb2cd351f070c39f9dcf887ac40082c857497f89582cb729e",
+      "capture": "end of scroll; start reachability comes from the accompanying Range measurements"
+    },
+    {
+      "file": "image-overflow-ba934dd-dark.png",
+      "sha256": "a58929d516faa5d49c6690dccd97e53cab75daca3e63c64b05d19eb979cafcd0",
+      "capture": "end of scroll; start reachability comes from the accompanying Range measurements"
+    }
+  ],
+  "cases": [
+    {
+      "title": "react light: Image reserves content geometry, alt semantics and contain/cover pixels",
+      "start": {
+        "first": {
+          "top": 1514.84375,
+          "left": 8,
+          "bottom": 1534.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1800.84375,
+          "left": 210.453125,
+          "bottom": 1820.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 0,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      },
+      "end": {
+        "first": {
+          "top": 1412.84375,
+          "left": 8,
+          "bottom": 1432.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1698.84375,
+          "left": 210.453125,
+          "bottom": 1718.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 102,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      }
+    },
+    {
+      "title": "react dark: Image reserves content geometry, alt semantics and contain/cover pixels",
+      "start": {
+        "first": {
+          "top": 1514.84375,
+          "left": 8,
+          "bottom": 1534.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1800.84375,
+          "left": 210.453125,
+          "bottom": 1820.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 0,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      },
+      "end": {
+        "first": {
+          "top": 1412.84375,
+          "left": 8,
+          "bottom": 1432.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1698.84375,
+          "left": 210.453125,
+          "bottom": 1718.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 102,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      }
+    },
+    {
+      "title": "react system: Image reserves content geometry, alt semantics and contain/cover pixels",
+      "start": {
+        "first": {
+          "top": 1514.84375,
+          "left": 8,
+          "bottom": 1534.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1800.84375,
+          "left": 210.453125,
+          "bottom": 1820.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 0,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      },
+      "end": {
+        "first": {
+          "top": 1412.84375,
+          "left": 8,
+          "bottom": 1432.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1698.84375,
+          "left": 210.453125,
+          "bottom": 1718.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 102,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      }
+    },
+    {
+      "title": "vanilla light: Image reserves content geometry, alt semantics and contain/cover pixels",
+      "start": {
+        "first": {
+          "top": 1514.84375,
+          "left": 8,
+          "bottom": 1534.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1800.84375,
+          "left": 210.453125,
+          "bottom": 1820.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 0,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      },
+      "end": {
+        "first": {
+          "top": 1412.84375,
+          "left": 8,
+          "bottom": 1432.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1698.84375,
+          "left": 210.453125,
+          "bottom": 1718.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 102,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      }
+    },
+    {
+      "title": "vanilla dark: Image reserves content geometry, alt semantics and contain/cover pixels",
+      "start": {
+        "first": {
+          "top": 1514.84375,
+          "left": 8,
+          "bottom": 1534.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1800.84375,
+          "left": 210.453125,
+          "bottom": 1820.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 0,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      },
+      "end": {
+        "first": {
+          "top": 1412.84375,
+          "left": 8,
+          "bottom": 1432.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1698.84375,
+          "left": 210.453125,
+          "bottom": 1718.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 102,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      }
+    },
+    {
+      "title": "vanilla system: Image reserves content geometry, alt semantics and contain/cover pixels",
+      "start": {
+        "first": {
+          "top": 1514.84375,
+          "left": 8,
+          "bottom": 1534.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1800.84375,
+          "left": 210.453125,
+          "bottom": 1820.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 0,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      },
+      "end": {
+        "first": {
+          "top": 1412.84375,
+          "left": 8,
+          "bottom": 1432.84375,
+          "right": 22
+        },
+        "last": {
+          "top": 1698.84375,
+          "left": 210.453125,
+          "bottom": 1718.84375,
+          "right": 218.71875
+        },
+        "box": {
+          "top": 1607.84375,
+          "left": 0,
+          "bottom": 1727.84375,
+          "right": 240
+        },
+        "scrollTop": 102,
+        "scrollHeight": 222,
+        "clientHeight": 120
+      }
+    }
+  ]
+}

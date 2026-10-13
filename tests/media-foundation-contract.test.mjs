@@ -31,3 +31,10 @@ test('Tag publishes removal intent without removing itself and metadata uses exi
  const badge=mapping('.xui-badge',{'font-size':'var(--font-size-body-xs)','line-height':'var(--line-height-body-xs)',gap:'var(--space-text-gap)'});assert.equal(badge.background,undefined);assert.equal(badge.border,undefined);mapping('.xui-tag-label',{'overflow-wrap':'anywhere','min-inline-size':'0'});mapping('.xui-tag>.xui-button',{flex:'none'});
  // DESIGN's ordinary-text wording does not independently settle Badge 400/500.
 });
+
+
+test('Image placeholder keeps short content centered while overflowing text starts inside its scroll range',async()=>{
+ mapping('.xui-image-placeholder',{'align-items':'safe center','justify-content':'safe center',overflow:'auto','overflow-wrap':'anywhere',padding:'var(--space-control-gap)'});
+ const failure=JSON.parse(await readFile('tests/fixtures/evidence/image-overflow-ba934dd.json','utf8'));assert.equal(failure.cases.length,6);
+ for(const {start,end}of failure.cases){assert.equal(start.scrollTop,0);assert.equal(start.first.top-start.box.top,-93);assert.ok(start.first.top<start.box.top-.5);assert.ok(end.last.bottom<=end.box.bottom+.5);}
+});

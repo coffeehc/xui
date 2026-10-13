@@ -1,6 +1,6 @@
 # G1 媒体与标签基础验收
 
-本批基线 `d3064c9`，仅增加 Avatar、Image、Tag、Badge 的测试、正式消费 fixture 和验证说明，不改变生产 CSS、组件 API、字体权重或风格。它补齐明确缺口，不声明 G1 全层或真实产品已验收。
+首批基线 `d3064c9`，仅增加 Avatar、Image、Tag、Badge 的测试、正式消费 fixture 和验证说明。随后 `ba934dd` 安全 CI 确证 Image 长占位存在不可达开头，最小修复记录在下节；组件 API、字体权重和其它组件风格均不改。本文件不声明 G1 全层或真实产品已验收。
 
 ## 合同来源与已有证据
 
@@ -37,3 +37,16 @@
 系统读屏器真实播报、触控、Firefox/Safari、多 OS、真实浏览器 zoom 与任意业务图片/宿主布局未由本批证明。Tag/Badge 不增加选择状态，Image 不加入上传、查看器或自动重试，Avatar 不推断业务身份或名称缩写。
 
 标签交互样本使用公开Surface/xui-surface承载（既有card-padding），避免裸Container的零viewport内距让外焦点环缺少宿主绘制空间；Avatar/Image几何样本保持原结构。四边实际像素及几何断言不改，未新增私有padding。
+
+
+## 已确证的 Image 长占位缺陷与最小修复
+
+[安全 CI 38463267448](https://github.com/coffeehc/xui/actions/runs/38463267448)，`ba934dd`、artifact `11848082145` 中 Avatar 六例与 Tag/Badge 六例通过，Image 六例均在第一个 1280px/100% 根字号场景的首行可达断言失败，后续 390px/200% 场景尚未执行。保留 [原浅色尾部截图](../tests/fixtures/evidence/image-overflow-ba934dd-light.png)、[原深色尾部截图](../tests/fixtures/evidence/image-overflow-ba934dd-dark.png)及 [六组原 Range 数据与图片 SHA256](../tests/fixtures/evidence/image-overflow-ba934dd.json)。
+
+六组均为 scrollTop=0、clientHeight=120、scrollHeight=222，首字 top=1514.84375，框 top=1607.84375；实际开头位于边界上方 93 CSS px，超过既有 0.5px 容差 92.5px。滚到底部可见 END-IMAGE，但不能据此声称全部文本可读；保存的 PNG 是末端截图，起点不可达的证据来自同时保存的真实 Range 几何。
+
+根因是 `.xui-image-placeholder` 使用两轴无条件 center，超过预留框的匿名文本 flex 项被居中到负向不可滚区域。最小生产修改仅将该选择器的 align-items/justify-content 改为 `safe center`；短内容继续居中，溢出时按起点布局进入正向滚动范围。[W3C CSS Box Alignment Level 3 §4.4](https://www.w3.org/TR/css-align-3/#overflow-values) 明确定义该回退语义。该文档仍是工作草案，标准语义不替代本项目的浏览器验证。
+
+这是落实 DESIGN 的长文本可达要求，不引入新颜色、字号、尺寸、布局 token、DOM 或 API；原 padding、wrap、overflow、预留宽高/比例、alt 与资源生命周期均保留。静态回归固定两轴 safe center 和旧失败几何。原长文首末严格断言不改，追加短占位 Range 居中测量、短占位 PNG 与长文滚动起点 PNG；短文字形的垂直中心容许在自身行高内的字体度量差异，不放宽长文的可达边界。
+
+修复候选已通过独立 build（`e7d40a10a51d`）、types、362 token/原始 SHA256 逆重建、522/522 全量单测（追加 1 项）、正式双端全 tarball consumer、文档引用检查及原 18 例枚举。实际首末图、390px/200% 与各主题结果仍待新的安全 CI，不能由静态校验宣布已修复。跨浏览器/OS 与系统读屏器仍保持上节的未测边界。
