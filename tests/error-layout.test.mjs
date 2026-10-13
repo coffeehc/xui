@@ -6,7 +6,22 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {DataTable} from '../packages/ui-react/dist/data-table.js';
 import {DataRegion} from '../packages/ui-react/dist/feedback.js';
 import {ConfigurableLoginPage} from '../packages/ui-react/dist/login.js';
+import {HttpError} from '../packages/runtime/dist/http.js';
 const read=path=>readFile(path,'utf8');
+const loginLabels={cancel:'Cancel request',checkSession:'Retry connection'};
+function renderLogin(state={}){
+  const snapshot={status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false,...state};
+  return renderToStaticMarkup(React.createElement(ConfigurableLoginPage,{auth:{subscribe:()=>()=>{},getState:()=>snapshot},theme:{},config:{productName:'Demo',title:'Login',labels:loginLabels}}));
+}
+function loginFeedback(markup){
+  const start=markup.indexOf('<div class="xui-login-feedback">');assert.notEqual(start,-1);
+  const tags=/<(\/?)div\b[^>]*>/g;tags.lastIndex=start;let depth=0,match;
+  while((match=tags.exec(markup))){depth+=match[1]?-1:1;if(depth===0)return markup.slice(start,tags.lastIndex);}
+  assert.fail('Login feedback has a closing tag');
+}
+const authError=(kind,endpointId,status)=>new HttpError(kind,{attempts:1,endpointId,...(status===undefined?{}:{status})});
+const noRetry=markup=>assert.doesNotMatch(markup,/>Retry connection<\/button>/);
+const declarations=(css,selector)=>[...css.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([,selectors])=>selectors.split(',').some(value=>value.trim()===selector)).map(([, ,body])=>body).join(';');
 
 test('DataTable reserves the same status track before busy/error, and a bounded empty placeholder',()=>{
   for(const rows of [[],[{id:'a'}]])for(const status of ['idle','ready','loading','refreshing','error']){
@@ -23,17 +38,60 @@ test('DataRegion feedback prop opts into a persistent local slot, including idle
   }
   assert.doesNotMatch(renderToStaticMarkup(React.createElement(DataRegion,null,'Content')),/xui-feedback-slot/);
 });
-test('inactive login auxiliary controls reserve geometry but are excluded from focus and accessibility',()=>{
-  const html=renderToStaticMarkup(React.createElement(ConfigurableLoginPage,{auth:{subscribe:()=>()=>{},getState:()=>({status:'anonymous',user:null,busy:null,error:null})},theme:{},config:{productName:'Demo',title:'Login'}}));
-  assert.equal((html.match(/data-inactive="true"/g)||[]).length,2);
-  for(const button of html.match(/<button[^>]*data-inactive="true"[^>]*>/g)||[]){assert.match(button,/aria-hidden="true"/);assert.match(button,/tabindex="-1"/);assert.match(button,/disabled=""/);}
+test('idle login keeps an empty feedback track without hidden auxiliary controls',()=>{
+  const html=renderLogin();
+  assert.equal(loginFeedback(html),'<div class="xui-login-feedback"></div>');
+  assert.doesNotMatch(html,/xui-reserved-action|data-inactive=|>Cancel request<\/button>/);noRetry(html);
+  assert.equal((html.match(/<button\b/g)||[]).length,1);
   assert.match(html,/data-idle-label=/);assert.match(html,/data-busy-label=/);
+});
+test('credential rejections never offer session retry, including an unknown prior identity',()=>{
+  for(const status of [401,403,429])for(const identity of ['anonymous','unknown']){
+    const html=renderLogin({status:identity,error:authError('http','auth.login',status)});
+    assert.match(loginFeedback(html),/role="alert"/);noRetry(html);
+    assert.doesNotMatch(html,/>Cancel request<\/button>|xui-reserved-action|data-inactive=/);
+  }
+});
+test('only retryable session reads expose a local retry beside, not inside, their live feedback',()=>{
+  for(const [kind,status] of [['network'],['timeout'],['http',500],['http',502],['http',503],['http',599]]){
+    const html=renderLogin({status:'unknown',error:authError(kind,'auth.session',status)}),feedback=loginFeedback(html);
+    assert.equal((html.match(/>Retry connection<\/button>/g)||[]).length,1);
+    assert.match(feedback,/<div\b[^>]*role="alert"[^>]*>[^<]+<\/div>\s*<button\b[^>]*>Retry connection<\/button>/);
+    noRetry(html.replace(feedback,''));assert.doesNotMatch(feedback,/>Cancel request<\/button>/);
+  }
+  for(const [kind,status] of [['http',401],['http',403],['http',409],['http',429],['http'],['cancel'],['parse'],['business']])noRetry(renderLogin({status:'unknown',error:authError(kind,'auth.session',status)}));
+  noRetry(renderLogin({status:'unknown'}));noRetry(renderLogin({status:'unknown',error:authError('network',undefined)}));
+  noRetry(renderLogin({status:'authenticated',user:{id:'42',username:'demo',display_name:null},error:authError('network','auth.session')}));
+});
+test('unconfirmed writes and reauthentication-required states never offer session retry',()=>{
+  for(const endpointId of ['auth.login','auth.refresh','auth.logout'])for(const [kind,status] of [['network'],['timeout'],['http',503]])for(const reauthenticationRequired of [false,true]){
+    noRetry(renderLogin({status:'unknown',reauthenticationRequired,error:authError(kind,endpointId,status)}));
+  }
+  for(const [kind,status] of [['network'],['timeout'],['http',500],['http',503]]){
+    const html=renderLogin({status:'unknown',reauthenticationRequired:true,error:authError(kind,'auth.session',status)});
+    noRetry(html);assert.match(loginFeedback(html),/The session state is unconfirmed\. Sign in again to verify it\./);
+  }
+});
+test('login requests expose local cancel; session and application logout are not page cancellation actions',()=>{
+  for(const busy of ['login']){
+    const html=renderLogin({status:'unknown',busy}),feedback=loginFeedback(html);
+    assert.equal((html.match(/>Cancel request<\/button>/g)||[]).length,1);
+    assert.match(feedback,/<div\b[^>]*role="status"[^>]*>[^<]+<\/div>\s*<button\b[^>]*>Cancel request<\/button>/);
+    assert.doesNotMatch(html.replace(feedback,''),/>Cancel request<\/button>/);noRetry(html);
+    assert.doesNotMatch(html,/xui-reserved-action|data-inactive=/);
+  }
+  for(const busy of ['session','refresh','logout'])assert.doesNotMatch(renderLogin({status:'unknown',busy}),/>Cancel request<\/button>/);
+  noRetry(renderLogin({status:'unknown',busy:'session',error:authError('network','auth.session')}));
 });
 test('shared error layout is locally scrollable, token-scaled, and needs no remote fonts/icons',async()=>{
   const css=await read('packages/theme/src/feedback.css'),auth=await read('packages/theme/src/auth.css');
-  assert.match(css,/\.xui-feedback-slot,\.xui-data-table-feedback,\.xui-login-feedback \{block-size:var\(--feedback-slot-block-size\)/);
-  assert.match(css,/overflow:auto/);assert.match(css,/visibility:hidden;pointer-events:none/);
-  assert.match(auth,/\.xui-login-feedback>\.xui-alert \{max-block-size:100%;overflow:auto/);
+  for(const selector of ['.xui-feedback-slot','.xui-data-table-feedback']){
+    const rules=declarations(css,selector);assert.match(rules,/(?:^|;)\s*block-size:var\(--feedback-slot-block-size\)/);assert.match(rules,/overflow:auto/);
+  }
+  assert.doesNotMatch(css,/\.xui-login-feedback\b/);
+  const feedback=declarations(auth,'.xui-login-feedback');
+  assert.match(feedback,/min-block-size:var\(--login-feedback-min-block-size\)/);assert.match(feedback,/max-block-size:var\(--login-feedback-max-block-size\)/);assert.match(feedback,/overflow:hidden/);assert.match(declarations(auth,'.xui-login-feedback>.xui-alert'),/max-block-size:100%.*overflow:auto/);
+  assert.doesNotMatch(feedback,/(?:^|;)\s*block-size:/);
   for(const part of ['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets'])assert.doesNotMatch(await read(`packages/theme/src/${part}.css`),/@font-face|@import\s+['"]https?:|url\(\s*['"]?https?:/i);
 });
 test('native list views only move keyed rows when their actual order changes',async()=>{

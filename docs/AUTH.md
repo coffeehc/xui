@@ -78,11 +78,15 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 
 包括login在内的所有cookie写入需要后端严格CSRF：baseservice由宿主Options.CSRF精确校验Origin，可结合Fetch Metadata和缺header策略；JSON Content-Type仅为辅助，配套准确CORS、限速及枚举防护。本合同不新增自定义CSRF token/header。前端same-origin credentials和JSON并不提供完整CSRF保证。当前默认owner只支持同源cookie恢复；不自动开启跨origin include，也不读取/制造CSRF token。标准OAuth/OIDC/SAML仍由宿主按标准流程集成。
 
-## 完整页面与扩展保持不变
+## 完整页面与扩展
 
-配置产品名称、标题、说明、可选logo、文案、safe returnTo；默认fullscreen与显式card沿用[DESIGN](DESIGN.md)。主题复用已有owner，登录页不增主题选择器或持久化副本。React和原生布局保持已有的窄屏/200%文字/焦点安全空间与错误区；不改主题、DataTable、菜单或业务页面。
+配置产品名称、标题、说明、可选logo、文案、safe returnTo；默认fullscreen与显式card沿用[DESIGN](DESIGN.md)。主题复用已有owner，登录页不增主题选择器或持久化副本。React和原生布局保持已有的窄屏/200%文字/焦点安全空间与错误区；不改主题、DataTable、菜单或业务页面。公共尺寸、品牌组合和反馈位置见[定量登录验收](LOGIN_VISUAL_ACCEPTANCE.md)。brandVisual是装饰内容，不应再嵌入完整登录卡片或重复登录任务标题；公共库不识别图片文字。原checkSession文案键仍可配置，默认文字改为“Retry connection”，仅在安全的session读取网络/超时/服务端失败时作为局部次动作出现；凭据401/403/429与未知写入均无此入口。自动session/refresh检查只显示局部状态；共享读取的等待者取消不等于取消底层owner，因此页面不提供该阶段的取消按钮。用户主动login/扩展仍可取消本地请求并保留未知结果安全语义。页面不再承担登出管理；应用内仍可通过同一auth owner显式logout。
 
-没有onAuthenticated时，登录成功和Continue仍用经过 `resolveLoginReturnTo` 的根相对location.assign。回跳拒绝规范化及多次解码后的外部路径、控制字符、双斜杠、默认/login循环；去fragment与明确密码/token/code/api_key等query。其它自定义登录路由或含秘密业务query仍由宿主验证。
+owner确认有效authenticated后，无论来自初始session检查还是主动login，都一次直接进入目标页；不显示“已登录/继续进入”确认卡。匿名保留同一表单；checking、login busy、错误与navigation交接不重挂字段或主按钮。同一auth owner与已验证user.id去重，不依赖每次refresh产生的新user对象引用；StrictMode effect重放、重复订阅通知和原生render不会重复导航。
+
+`onAuthenticated(user, returnTo)`兼容void，也可显式返回Promise<void>。宿主负责真正导航或替换为目标内容。同步抛错/返回Promise拒绝时，保留已确认的认证事实，局部显示navigationError与retryNavigation；重试只再次打开目标，不调用login/refresh/logout。void回调自行启动的异步任务无法由页面观测，其错误由宿主处理；需要页面处理失败则返回该Promise。pagehide/unmount后迟到的回调结果不再修改登录页；已经开始的宿主副作用仍由宿主按自身生命周期取消。opening期间禁重复且清空密码，没有虚假的完成卡。真正卸载后alive失效；StrictMode探测性cleanup/replay沿用同一次回调而不再次启动；更换auth owner会失效旧导航revision。pagehide使当前激活失效；pageshow.persisted恢复交互，并在owner仍确认authenticated时开始该次激活的一次目标导航，不补session/refresh/login请求。宿主需遵循bfcache生命周期，不能在persisted pagehide无条件销毁要恢复的owner。
+
+没有onAuthenticated时，直接使用经过 `resolveLoginReturnTo` 的根相对location.assign；若目标path/query就是当前页，则显示局部导航失败而不重复reload。回跳拒绝规范化及多次解码后的外部路径、控制字符、双斜杠、默认/login循环；去fragment与明确密码/token/code/api_key等query。其它自定义登录路由或含秘密业务query仍由宿主验证。
 
 `extensions.beforeSubmit/actions/errorLabel` 和beforeFields/afterFields仍只接收username与AbortSignal，不接收密码/token/原始响应。宿主标准SSO、服务地址与账户来源保留同一认证owner。重复提交、扩展取消、迟到导航和密码节点清空仍受页面generation控制；修改真实服务由产品安全策略决定。
 
@@ -91,3 +95,18 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 [共享wire fixture](../tests/fixtures/contracts/auth.v2.json)与[baseservice 0f5dba4](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/contracts/auth.v2.json)固定字节一致（配套[后端合同](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/bearer-auth-v2.md)），含issued/session/logout和8类错误。unit覆盖严格DTO/凭据隔离/恢复/多401/旧代响应/取消等待者/refresh-logout排序/不确定结果/不重放。正式React与原生消费者只用公开入口和tarball。浏览器测试覆盖原生整页导航恢复、Cookie/Authorization隔离、跨tab锁与安全通知；是否真正执行成功看[凭据格式验证记录](CREDENTIAL_FORMAT_VALIDATION.md)（早期会话机制记录见 [AUTH_V2_VALIDATION](AUTH_V2_VALIDATION.md)）。
 
 xAgent旧token/me/state协议不会仅改baseURL就兼容；已上线消费者需要单独授权迁移，未发布项目直接采用明确新合同。产品对外hex ID使用已提供的显式 idEncoding，并与后端 facade 同步配置，不自动接受双格式。注册、密码重置、用户生命周期和业务资源策略由实际后端/身份提供方负责。本轮不改业务项目、不部署、不生成真实凭据。
+
+## 纯认证布局 AuthPage
+
+首次管理员设置、启动错误和其他认证入口使用 `AuthPage`（React `/login`）或 `createAuthPage`（原生 `/login-dom`），由xui统一品牌组、横纵定位、400px表单、32/40标题、内距、全宽lg主动作、反馈与滚动/focus。不得拼 `xui-login-*` 私有结构、给产品补定位CSS或局部修改control-height等公共尺度。既有完整登录内部复用此组合；认证client和业务API不属于布局。
+
+- `config: AuthPageConfig`：productName、必填title、可选description/logo/layout，沿用登录品牌校验与fullscreen/card含义。主题继承文档根，不接第二theme owner。
+- React `children` / 原生 `content`：宿主公开Field/Input等组成的内容，不传另一整个页面或嵌套form。
+- `actions`：主操作按钮/Fragment；公共槽负责全宽、lg高度与内距，宿主负责标签、disabled/busy、权限、验证和事件。`alternatives`：独立次级操作组。
+- `feedback`：宿主Alert等反馈；`feedbackActions`：只在有真实用途时出现的局部次动作。布局不自动提交、重试、认证或清除宿主字段。
+- 可选 `brandVisual`：非交互装饰内容，继承窄屏隐藏与inert。
+- 默认panel为section。只有显式 `form:{noValidate?,onSubmit?}` 才渲染form；公共处理阻止原生默认提交，避免无回调时把字段发到URL，然后调用宿主回调。初始化API、密码校验/清理、成功后的路由均由宿主负责，不接入或猜测产品初始化协议。
+
+原生返回 `getElement()`、`getForm()`、`update(partialOptions)`、`destroy()`。`update({config})`是完整品牌配置替换；传入同一content/action Node时不搬动、不重建，不丢输入值、focus或事件。DocumentFragment按初次插入的实际子节点维护。表单提交回调/noValidate可更新，但已挂载form/section类型不可切换（需有意destroy后新建）；React同样保留固定类型。update在改变DOM前拒绝把布局本身或槽祖先作为内容。destroy只释放布局自己的监听；root仍仅包含该布局时还原原内容，若宿主已换页则保留宿主新内容。宿主领域资源仍由宿主清理。
+
+正式纯布局消费者为 [React](../examples/auth-page-react/app.tsx) / [原生](../examples/auth-page-vanilla/app.js)：三字段管理员设置，仅合成submit回调，不调用真实初始化或认证API。按[同一登录验收清单](LOGIN_VISUAL_ACCEPTANCE.md)验位置、更新identity、三主题/窄屏/200%与主动作可达；不能把示例通过当成xLead或其他产品已迁移。

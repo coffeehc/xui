@@ -19,7 +19,7 @@ for(const kind of ['react','vanilla']){
   const destination=`/login-${kind}/?transport=http`;
   await page.goto(`/login-${kind}/?transport=http&navigate&returnTo=${encodeURIComponent(destination)}`);
   await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await page.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await page.getByLabel('密码').fill('FAKE_PASSWORD');
-  await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page).toHaveURL(new RegExp(`/login-${kind}/\\?transport=http$`));await expect(page.getByText('已登录: 示例用户',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page).toHaveURL(new RegExp(`/login-${kind}/\\?transport=http$`));await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();
   expect(requests.map(request=>request.operation)).toEqual(['refresh','login','refresh','session']);
   for(const request of requests){if(request.operation==='session'){expect(request.authorization).toBe(`Bearer ${access}`);expect(request.cookie).toBe('');}else{expect(request.authorization).toBeNull();expect(request.contentType).toContain('application/json');}}
   expect(requests[2].cookie).toContain('baseservice_refresh=FAKE_RECOVERY_1');expect((await context.cookies()).find(cookie=>cookie.name==='baseservice_refresh').httpOnly).toBe(true);
@@ -29,9 +29,9 @@ for(const kind of ['react','vanilla']){
  test(`${kind} unconfirmed bootstrap shows explicit re-login and never automatically repeats refresh`,async({page})=>{
   let refreshes=0;
   await page.route('**/api/v1/auth/**',async route=>{const op=new URL(route.request().url()).pathname.split('/').at(-1);if(op==='refresh'){refreshes++;await route.fulfill({status:409,contentType:'application/json',body:JSON.stringify(wire(null,409,40901))});}else await route.fulfill({contentType:'application/json',body:JSON.stringify(wire(issued()))});});
-  await page.goto(`/login-${kind}/?transport=http`);await expect(page.getByRole('alert')).toHaveText('会话安全状态尚未确认，请重新登录验证。');await expect(page.getByRole('button',{name:'核对会话',exact:true})).toHaveCount(0);
+  await page.goto(`/login-${kind}/?transport=http`);await expect(page.getByRole('alert')).toHaveText('会话安全状态尚未确认，请重新登录验证。');await expect(page.getByRole('button',{name:'重试连接',exact:true})).toHaveCount(0);
   const failure=await page.evaluate(async()=>{try{await window.loginDemo.auth.currentUser();}catch{}try{await window.loginDemo.auth.refresh();}catch{}return window.loginDemo.auth.getState().reauthenticationRequired;});expect(failure).toBe(true);expect(refreshes).toBe(1);
-  await page.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByText('已登录: 示例用户',{exact:true})).toBeVisible();expect(refreshes).toBe(1);
+  await page.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();expect(refreshes).toBe(1);
  });
 }
 
@@ -50,10 +50,10 @@ test('same-origin tabs serialize recovery cookies with Web Locks and broadcast n
  });
  const a=await context.newPage(),b=await context.newPage();await Promise.all([a.goto('/login-react/?transport=http'),b.goto('/login-vanilla/?transport=http')]);
  for(const page of [a,b])await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
- await a.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await a.getByLabel('密码').fill('FAKE_PASSWORD');await a.getByRole('button',{name:'登录',exact:true}).click();await expect(a.getByText('已登录: 示例用户',{exact:true})).toBeVisible();
+ await a.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await a.getByLabel('密码').fill('FAKE_PASSWORD');await a.getByRole('button',{name:'登录',exact:true}).click();await expect(a.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();
  await expect.poll(()=>b.evaluate(()=>window.loginDemo.auth.getState().status)).toBe('unknown');
  await Promise.all([a.evaluate(()=>window.loginDemo.auth.refresh()),b.evaluate(()=>window.loginDemo.auth.refresh())]);expect(maximum).toBe(1);
- for(const page of [a,b]){await expect(page.getByText('已登录: 示例用户',{exact:true})).toBeVisible();const events=await page.evaluate(()=>window.authBroadcastMessages);for(const event of events)expect(Object.keys(event).sort()).toEqual(['epoch','kind']);expect(await page.evaluate(()=>JSON.stringify(localStorage)+JSON.stringify(sessionStorage)+JSON.stringify(window.authBroadcastMessages))).not.toContain(access);}
+ for(const page of [a,b]){await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();const events=await page.evaluate(()=>window.authBroadcastMessages);for(const event of events)expect(Object.keys(event).sort()).toEqual(['epoch','kind']);expect(await page.evaluate(()=>JSON.stringify(localStorage)+JSON.stringify(sessionStorage)+JSON.stringify(window.authBroadcastMessages))).not.toContain(access);}
  await a.getByRole('button',{name:'退出登录',exact:true}).click();await expect.poll(()=>b.evaluate(()=>window.loginDemo.auth.getState().status)).toBe('anonymous');
  await a.close();await b.close();
 });

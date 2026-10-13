@@ -145,3 +145,7 @@ Vite开发接入还须核[冷启动与依赖优化](NAVIGATION.md#vite开发模�
 采用反馈新增公共能力见[WIDGETS](WIDGETS.md)：Command/date-only Calendar/ToggleGroup/Avatar/Accordion/ScrollArea/InputGroup，以及link/controlSize/readonly。完整登录slots在AUTH，原生origin在HTTP，viewport在NAVIGATION，sticky合成/子菜单在COMPOSITIONS。先用正式默认合同，业务需要通过声明props/data/callback扩展；不能改私有HTML或复制默认CSS。
 
 可折叠分组搜索使用正式 [GroupedCombobox / createGroupedCombobox](GROUPED_SEARCH.md)：一个搜索输入与 listbox，外置折叠/分页控件；不要把 Disclosure 或 Accordion 放进 Combobox.List，也不采用同 Root 两个 List。业务查询、取消、选择与各组分页状态保持宿主所有。Disclosure 默认箭头和原生 controller 的同等合同亦见该页。
+
+## 登录页验收入口
+
+接入公共登录页时，先按 [DESIGN](DESIGN.md#公共登录页布局与主题) 确定品牌与任务层级，再逐项执行 [登录定量验收](LOGIN_VISUAL_ACCEPTANCE.md)。移除被公共组合接管的重复登录布局/动作 owner，通过公开内容与扩展入口保留业务能力；记录本产品实际截图、几何、状态矩阵和最终依赖 SHA。公共示例通过不能替代产品验收。

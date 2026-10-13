@@ -20,6 +20,8 @@ ApiKeyAdapter为list/create/revoke及可选deleteRecord。revoke使凭据失效�
 
 普通 `refresh()`、重新打开弹层和卸载重建均不解除保护。默认 `createApiKeyHttpAdapter` 没有猜测核对endpoint或实现 `reconcileWrite`：此时核对可刷新列表并明确提示服务缺口，写入继续被阻止。只有真实服务提供权威请求结果时，宿主才扩展该回调；前端不提供事务保证。baseservice 当前facade没有持久化operation receipt或核对endpoint，不能将一次List读到/没读到某条记录当作权威核对；宿主没有额外真实核对能力时，未知写入继续保持阻止状态。
 
+关闭弹层后的写入保护提示与明确核对动作属于持久安全区域：React/原生均将其放在页面标题之后、列表工具栏之前，以自然高度保留全文和动作，不塞入列表的固定高度反馈槽。区域出现或解除可以下推/回收列表空间，不宣称写入门禁状态切换零位移；普通列表读取的loading/error/retry仍使用原固定槽，保留既有行、焦点和几何。窄屏大字验证须检查文字和动作相对每个祖先滚动/裁切区的完整可见性及四边焦点像素，不能仅验证viewport内的bounding box。超出视口的长提示由页面滚动完整阅读。闭窗可以从当前弹窗/原触发者恢复到核对入口，但不能夺走宿主已主动移到其他控件的焦点。
+
 ## 固定v1 facade与默认adapter
 
 createApiKeyHttpAdapter({http,timeoutMs?,pageSize?,maxRecords?,idEncoding?})使用同一个HttpClient。baseURL只确定origin，下面是固定根路径；不尝试旧route。全部使用原生httpx AjaxResponse，以success=true判定业务成功，code保留为必填安全整数元数据，不要求固定值；错误保留HTTP事实和原生code。详情见[真实原生定义](PAGE_APIS.md#已读取的真实原生定义)。

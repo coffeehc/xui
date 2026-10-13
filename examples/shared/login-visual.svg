@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" fill="none">
+  <title>原创合成工作台装饰图</title>
+  <defs>
+    <linearGradient id="surface" x1="58" y1="16" x2="590" y2="478" gradientUnits="userSpaceOnUse"><stop stop-color="#e7f0ec"/><stop offset="1" stop-color="#d7e5df"/></linearGradient>
+    <linearGradient id="accent" x1="230" y1="125" x2="425" y2="320" gradientUnits="userSpaceOnUse"><stop stop-color="#4d8b7e"/><stop offset="1" stop-color="#275b50"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="170%" height="180%"><feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#244d43" flood-opacity=".12"/></filter>
+  </defs>
+  <rect width="640" height="480" rx="24" fill="url(#surface)"/>
+  <circle cx="524" cy="96" r="124" stroke="#fffefb" stroke-opacity=".6"/>
+  <circle cx="112" cy="400" r="148" stroke="#fffefb" stroke-opacity=".6"/>
+  <path d="M157 267H269M371 230H485M320 310V387" stroke="#95b9ac" stroke-width="4" stroke-linecap="round"/>
+  <g filter="url(#shadow)">
+    <rect x="80" y="173" width="150" height="178" rx="16" fill="#fffefb"/>
+    <rect x="102" y="197" width="47" height="10" rx="5" fill="#719d8e"/>
+    <rect x="102" y="230" width="104" height="7" rx="3.5" fill="#dce6df"/><rect x="102" y="249" width="80" height="7" rx="3.5" fill="#dce6df"/>
+    <rect x="102" y="282" width="104" height="44" rx="8" fill="#eaf1ec"/><path d="m120 304 10 9 18-20" stroke="#4d8b7e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="253" y="99" width="148" height="196" rx="18" fill="url(#accent)"/>
+    <rect x="277" y="123" width="99" height="67" rx="10" fill="#b7d0c2" fill-opacity=".4"/>
+    <path d="M299 157h53m-26-26v52" stroke="#f0f6f1" stroke-width="5" stroke-linecap="round"/>
+    <rect x="277" y="215" width="74" height="8" rx="4" fill="#dceade"/><rect x="277" y="236" width="94" height="6" rx="3" fill="#89b7a3"/>
+    <rect x="426" y="201" width="135" height="152" rx="16" fill="#fffefb"/>
+    <rect x="447" y="225" width="89" height="8" rx="4" fill="#dce6df"/>
+    <path d="M451 319v-32m25 32v-49m25 49v-66m25 66v-89" stroke="#71a58e" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <circle cx="320" cy="383" r="19" fill="#fffefb"/><path d="m312 383 6 6 10-12" stroke="#4d8b7e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

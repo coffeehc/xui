@@ -77,7 +77,7 @@ for(const kind of ['react','vanilla']){
     await page.setViewportSize({width:390,height:800});await expect(page.locator('.xui-login-visual')).toBeHidden();await expect(page.locator('.xui-login-identity strong')).toBeVisible();await expect(page.getByLabel('密码')).toBeInViewport();
   });
   test(`${kind} initial session checking and one-line error preserve field positions`,async({page})=>{
-    await page.goto(`/login-${kind}/?session=hold`);await expect(page.getByRole('status')).toHaveText('正在核对会话…');
+    await page.goto(`/login-${kind}/?session=hold`);await expect(page.getByRole('status')).toHaveText('正在确认登录状态…');
     const username=page.getByRole('textbox',{name:'用户名',exact:true}),initial=await box(username);
     await page.evaluate(()=>window.loginDemo.release('session'));await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();expect(await box(username)).toEqual(initial);
     await page.evaluate(()=>window.loginDemo.setMode('login','credentials'));await username.fill('demo');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('alert')).toHaveText('用户名或密码不正确。');expect(await box(username)).toEqual(initial);
@@ -103,10 +103,17 @@ for(const kind of ['react','vanilla'])test(`${kind} long credential feedback rem
   await page.evaluate(()=>{document.documentElement.style.fontSize='200%';window.loginDemo.setMode('login','credentials');});
   await page.getByRole('textbox',{name:'用户名',exact:true}).fill('demo');await page.getByLabel('密码').fill('FAKE_LONG_ERROR_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();
   await expect(page.getByRole('alert')).toHaveText('用户名或密码不正确，请核对当前服务地址和账户来源后再试。'.repeat(6));
-  const scroll=page.locator('.xui-login-body');expect(await scroll.evaluate(element=>element.scrollHeight>element.clientHeight)).toBe(true);
+  const scroll=page.getByRole('alert');expect(await scroll.evaluate(element=>element.scrollHeight>element.clientHeight)).toBe(true);expect(await page.locator('.xui-login-body').evaluate(element=>element.scrollHeight>element.clientHeight)).toBe(true);
   for(const end of [false,true]){await scroll.evaluate((element,end)=>{element.scrollTop=end?element.scrollHeight:0;},end);await info.attach(`${kind}-long-error-${end?'end':'start'}`,{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});}
   await paintedFocus(page,page.getByLabel('服务地址'),info,`${kind}-long-error-first-field`);
   await paintedFocus(page,page.getByLabel('补充说明'),info,`${kind}-long-error-last-field`);
   await paintedFocus(page,page.getByRole('button',{name:'登录',exact:true}),info,`${kind}-long-error-submit`);
   expect(await page.getByLabel('密码').inputValue()).toBe('');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','system'])for(const mode of ['desktop','narrow','large-text','short-height'])test(`${kind} local recovery and cancel retain four painted focus sides: ${appearance}, ${mode}`,async({page},info)=>{
+  await page.setViewportSize(mode==='desktop'?{width:1280,height:800}:mode==='short-height'?{width:390,height:320}:{width:390,height:800});await page.emulateMedia({colorScheme:appearance==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),appearance);
+  await page.goto(`/login-${kind}/?extensions&visualAcceptance`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();if(mode==='large-text')await page.evaluate(()=>document.documentElement.style.fontSize='200%');await page.evaluate(()=>window.loginDemo.setExtensionMode('hold'));await page.getByRole('button',{name:'企业 OIDC 登录'}).click();
+  await paintedFocus(page,page.getByRole('button',{name:'取消等待'}),info,`${kind}-${appearance}-${mode}-cancel`);await page.getByRole('button',{name:'取消等待'}).click();await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toBeFocused();await page.evaluate(()=>window.loginDemo.releaseExtension());
+  await page.goto(`/login-${kind}/?sessionReadError&visualAcceptance`);await expect(page.getByRole('button',{name:'重试连接'})).toBeVisible();if(mode==='large-text')await page.evaluate(()=>document.documentElement.style.fontSize='200%');await paintedFocus(page,page.getByRole('button',{name:'重试连接'}),info,`${kind}-${appearance}-${mode}-retry`);
 });

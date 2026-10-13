@@ -184,3 +184,7 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 内部 toolbar、反馈、表体和唯一 footer 位于同一 frame；外部 pageToolbar 仍可替代内部 toolbar，同组筛选只放一处。既有分页保持受控，本地列表由宿主切片并发布事实，服务端列表使用已确认响应且不得二次切片；计数/每页条数/Pagination 不增设第二个 owner。通用 footer 原本位于 frame 内不代表旧 XAgent 已采用或升级；本次没有 XAgent 修改。
 
 `DataTableColumn<T>` / `NativeDataTableColumn<T>` 追加 `width?:DataTableColumnWidth`；共享类型从 runtime/data-table、runtime/data-table-dom、React/data-table 及 runtime/React 根入口导出。number 为有限非负 CSS 像素，字符串为 length/百分比或 calc/clamp/min/max/var 表达式；形状类型与 SSR 结构校验不代替浏览器 CSS/数学解析。未配置维持原自动布局，混合列由未配置列吸收余量，全部配置按列总宽布局；百分比和混合表达式以表体可用宽度解析，表头与全部数据单元格共用 colgroup 列轨道。`0` 不隐藏列，默认长文本换行而不裁切操作或焦点；不新增品牌尺寸 token、业务列或多 sticky 列自动偏移。完整值校验、内容与布局边界见 [列宽合同](DATA_TABLE.md#列宽与内容边界)。
+
+## 通用认证入口布局
+
+`@coffeehc/xui-react/login` 公开 `AuthPage` / `AuthPageProps`，`@coffeehc/xui-runtime/login-dom` 公开 `createAuthPage` / `AuthPageOptions`。`AuthPageConfig` 从runtime/auth与React/login可导入。这是无请求的品牌/表单/动作/反馈组合；`ConfigurableLoginPage` / `createLoginPage`内部复用同一结构，不要求初始化页复制私有DOM。完整合同、更新生命周期与正式消费者见[AUTH](AUTH.md#纯认证布局-authpage)。
