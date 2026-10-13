@@ -58,12 +58,13 @@ export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,er
   },[]);
   React.useLayoutEffect(()=>{layoutOwner.current?.update();});
   const hasRows=rows.length>0,showError=state.status==='error';
+  const countLabel=labels.count({rowCount:rows.length,total:state.total}),hasSummary=!!countLabel||hasRows&&(showError||state.busy)||hasContent(feedback);
+  const hasFooter=hasSummary||!!pagination||hasContent(footer);
   const error=errorState??<ErrorState title={labels.error} retryLabel={labels.retry} onRetry={options.onRetry?()=>request(options.onRetry):undefined} retryDisabled={state.blocked}/>;
   const empty=emptyState??<EmptyState title={options.filtered?labels.noMatches:labels.empty}/>;
   return <DataRegion id={id} className={cx('xui-data-table',className)} data-layout={state.layout} aria-label={options.label} busy={state.busy}>
     <div ref={layoutFrame} className="xui-data-table-frame">
       {hasContent(toolbar)&&<div className="xui-data-table-tools">{toolbar}</div>}
-      <div className="xui-data-table-feedback">{hasRows&&(showError?error:state.busy?<LoadingState>{labels.refreshing}</LoadingState>:null)}{feedback}</div>
       <TableContainer ref={layoutBody} data-column-sizing={columnSizing} className="xui-data-table-body" aria-label={options.label+' — '+labels.count({rowCount:rows.length,total:state.total})}>
         <div ref={widthProbes} className="xui-data-table-widths" aria-hidden="true" hidden={!columnSizing}>{columns.map(column=><div key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</div>
         <Table ref={layoutTable} data-column-sizing={columnSizing} striped={striped} stickyHeader={stickyHeader} aria-label={options.label}>
@@ -72,8 +73,11 @@ export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,er
           <tbody>{hasRows?rows.map((row,index)=><TableRow key={keys[index]} {...rowState?.(row)}>{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{state.busy?<><LoadingState>{labels.loading}</LoadingState>{Array.from({length:5},(_,index)=><Skeleton key={index}/>)}</>:showError?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
         </Table>
       </TableContainer>
-      <footer className="xui-data-table-footer">
-        <span className="xui-data-table-count" aria-live="polite">{labels.count({rowCount:rows.length,total:state.total})}</span>
+      <footer className="xui-data-table-footer" hidden={!hasFooter}>
+        <div className="xui-data-table-summary" hidden={!hasSummary}>
+          <span className="xui-data-table-count" aria-live="polite">{countLabel}</span>
+          <div className="xui-data-table-feedback">{hasRows&&(showError?error:state.busy?<LoadingState>{labels.refreshing}</LoadingState>:null)}{feedback}</div>
+        </div>
         {pagination&&<label className="xui-data-table-page-size"><span>{labels.pageSize}</span><SimpleSelect aria-label={labels.pageSize} value={pagination.pageSize} disabled={state.blocked||!pagination.onPageSizeChange} onChange={event=>{const size=Number(event.currentTarget.value);event.currentTarget.value=String(pagination.pageSize);if(size!==pagination.pageSize&&state.sizes.includes(size))request(()=>pagination.onPageSizeChange?.(size));}}>{state.sizes.map(size=><option value={size} key={size}>{size}</option>)}</SimpleSelect></label>}
         {pagination&&pagination.mode!=='cursor'&&state.pageCount!==null&&!state.outOfRange&&<Pagination aria-label={labels.pagination} page={state.page} pageCount={state.pageCount} disabled={state.blocked||!pagination.onPageChange} previousLabel={labels.previous} nextLabel={labels.next} onPageChange={page=>request(()=>pagination.onPageChange?.(page-1+pagination.pageIndexOffset))}/>}
         {pagination?.mode==='cursor'&&<nav className="xui-pagination" aria-label={labels.pagination}>

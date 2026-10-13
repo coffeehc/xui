@@ -70,9 +70,9 @@ const columns: readonly DataTableColumn<Row>[] = [
 </MenuLayout>
 ```
 
-组件内部的 toolbar、反馈、表体与 footer 共用一个 frame；只有表体 `TableContainer` 在高度受限时滚动，列头按原有 stickyHeader 合同默认启用。边框属于整体 frame，滚动容器不再叠一层外框；底栏有必要的信息分隔。组件使用真实可用高度，宿主无需测量 pageHeader 或减固定像素，也不 absolute/fixed 定位分页。
+组件内部的 toolbar、表体与 footer 共用一个 frame；已有行的状态反馈与自定义 feedback 放在 footer 的计数区域，未出现反馈时不在列头上方预留空行；只有表体 `TableContainer` 在高度受限时滚动，列头按原有 stickyHeader 合同默认启用。边框属于整体 frame，滚动容器不再叠一层外框；底栏有必要的信息分隔。组件使用真实可用高度，宿主无需测量 pageHeader 或减固定像素，也不 absolute/fixed 定位分页。
 
-极端字号或高工具条使全部 chrome 超过正文分配高度时，外框保留完整工具条/反馈/底栏和可读表体下限，交给既有祖先滚动，不让 footer 越出 frame。库内部只有一个稳定的布局观察器，以实际 table、thead、首末行高度和 computed scroll-padding/滚动条计算 `min(实际内容高度, 表头与首末行较高者的可读高度)`，将该值用于 Grid 的表体轨道，并与组件自身工具条/反馈/footer 的实际高度、frame 边框相加，设置组件根的最小高度；不读取宿主页头或已分配的根/frame 高度作为下限。workspace 取该实测最小值与原 token 的较大者，document 不加此根下限。无固定表头数字、行数分类或新的宿主参数。短内容不会因此补出空白。观察器只观察内容输入节点，不观察写入尺寸的 root/frame；合并同帧读写、无变化不写、忽略隐藏时的零几何、恢复显示后重测，并在销毁时释放及恢复拥有的内联值；列宽测量与 colgroup 合同独立且不变。
+极端字号或高工具条使全部 chrome 超过正文分配高度时，外框保留完整工具条/反馈/底栏和可读表体下限，交给既有祖先滚动，不让 footer 越出 frame。库内部只有一个稳定的布局观察器，以实际 table、thead、首末行高度和 computed scroll-padding/滚动条计算 `min(实际内容高度, 表头与首末行较高者的可读高度)`，将该值用于 Grid 的表体轨道，并与组件自身工具条/footer（含反馈）的实际高度、frame 边框相加，设置组件根的最小高度；不读取宿主页头或已分配的根/frame 高度作为下限。workspace 取该实测最小值与原 token 的较大者，document 不加此根下限。无固定表头数字、行数分类或新的宿主参数。短内容不会因此补出空白。观察器只观察内容输入节点，不观察写入尺寸的 root/frame；合并同帧读写、无变化不写、忽略隐藏时的零几何、恢复显示后重测，并在销毁时释放及恢复拥有的内联值；列宽测量与 colgroup 合同独立且不变。
 
 这个下限保证边缘记录操作的可达空间，不保证任意高度的全部中间行都可完整同屏。自定义超高单元格仍由表体滚动访问；需要逐行长文档阅读时可选 `document`，或按已有 `stickyHeader={false}` / `{stickyHeader:false}` 关闭吸顶列头。父视口本身不足时使用祖先滚动，不裁切内容。
 
@@ -155,7 +155,7 @@ busy/disabled 阻止重复分页、条数和默认重试，另有同步单事件
 ## 状态、焦点与生命周期
 
 - 首次 loading 始终保留列头并在 tbody 显示稳定骨架及 loading 状态，footer 不把加载中的未知计数当 0 条成功结果。
-- refreshing 传入既有 rows；表体、底栏和搜索身份保持，反馈置于同一外框内、表体前的正常流，不另加外部反馈层；natural 会随反馈内容自然调整高度，达到真实父级上限后再压缩表体。error 仍保留既有行并提供 `onRetry`；首屏 error 位于 tbody，不能伪装成 empty。
+- refreshing 传入既有 rows；表体、底栏和搜索身份保持，反馈置于同一外框内 footer 的计数区域，不另加外部反馈层；常规短状态优先复用 footer 既有高度；长内容或窄屏需要时自然调整高度，达到真实父级上限后再压缩表体。error 仍保留既有行并提供 `onRetry`；首屏 error 位于 tbody，不能伪装成 empty。
 - ready 且 rows=[] 保留全部列头，默认空态在跨全列 tbody 单元格内。`filtered` 区分初始无记录与筛选无匹配；自定义 emptyState 可放已有新增/清空回调，库不会凭空创建记录。
 - 关闭、切页、查询变化、取消和迟到响应由现有 resource/query owner 处理。示例使用 `createResource` 与显式已确认快照，不添加 HTTP owner。业务查询改变时保留旧 rows 的策略明确由宿主选择，不能把它们误标为新查询结果。
 - React 行/单元使用稳定 key。不要在 footer 更新时改变 columns renderer 的组件类型、重新生成行键或用整个查询给 DataTable 设 key。
@@ -189,8 +189,12 @@ Playwright 用真实浏览器量测组件/body/footer rect、clientHeight/scroll
 
 ACL/权限过滤后的有界扫描可连续返回空 list 与非空 next_cursor；这仍可继续翻页，不保证下一页含记录，也不表示剩余数量。仅显式 null 是 cursor 末页。DataTable 不因空行禁用下一页，React/原生都有独立回归；此补充不改变共享 fixture 的字节或 hash。
 
-## 请求失败时的几何稳定
+## 请求失败时的可读性与布局
 
-状态反馈行在 idle/ready/loading/refreshing/error 时始终占位，以共享 `--feedback-slot-block-size`（一行控件、公共内距及焦点空间）约束本地反馈，而不是固定整页高度。长错误、自定义 feedback 或重试按钮在该区域内滚动且可通过键盘到达，不撑开 frame、不挤动既有表头、行、页脚。零行的 loading/idle/empty/error 使用同一个局部占位区；底栏持续显示真实 rowCount/total，不把长错误再次塞进计数区域。
+无反馈时，toolbar 之后直接进入列头，不保留常驻状态空行。已有行刷新或失败的反馈，以及自定义 feedback，使用已有 footer 中计数旁的正常流区域；保留真实计数、每页条数及分页 owner。常规短状态在空间足够时复用底栏高度并保持表体边缘；窄屏、200% 或长文案以完整可读、键盘可达为更高优先级，允许 footer 必要增长，由既有布局观察器维持 frame 包含与祖先滚动。无 count（labels.count 返回空字符串）且无 pagination、footer、反馈时，不显示空 footer；必要反馈出现时仍有完整区域。
+
+库不截取、改写或猜测 labels.error / errorState / feedback 的摘要，不将关键条件藏在固定高内部滚动框里。宿主有明确短摘要与独立详情时，可在 errorState / feedback 里组合已有公开 Disclosure（原生 createDisclosureController）；摘要应完整表达当前后果，详情通过明确按钮展开，输入、展开状态和焦点在同一宿主节点生命周期中保留。只传一个长消息或 Node 时，原样自然呈现，不能为了零位移裁掉内容。
+
+零行的 loading/idle/empty/error 仍在保留列头的 tbody 内，有 token 最小高度而无固定内容高度上限。首次加载/长错误可以自然增长；多行仍仅由表体独立滚动，分页留在 frame 内。没有新增自动重试、请求或缓存 owner。双端正式消费者可用 `?internal&no-count&no-pagination` 和 `?internal&disclosure-feedback` 验证可选信息与长详情。
 
 现有行是否保留仍由宿主 rows 决定：普通同资源刷新应保留已确认事实；权限撤销、退出、租户或资源切换应按领域/认证规则清空，无权通过本组件继续展示。组件不缓存数据、不创建网络请求或离线 owner。见 [失败布局验证与边界](ERROR_LAYOUT_VALIDATION.md)。

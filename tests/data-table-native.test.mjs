@@ -15,7 +15,7 @@ test('native footer updates retain search, row action, table body, focus and cel
   const {root,doc}=navigationDOM();const search=doc.createElement('input'),toolbar=createDataTableToolbar(doc,[createDataTableFilter(doc,{label:'Search',control:search,grow:true})]);let creates=0,updates=0,disposes=0;
   const columns=[...base.columns,{id:'action',header:'Action',cell:row=>{creates++;const button=doc.createElement('button');return {element:button,update(value){updates++;button.textContent='View '+value.name;},destroy(){disposes++;button.onclick=null;}};}}];
   const owner=createDataTable(root,{...base,columns,toolbar}),action=find(root,'View First'),body=owner.getBody();action.focus();owner.update({status:'refreshing'});owner.update({status:'error',onRetry:()=>{}});owner.update({pagination:{...page,total:200},status:'ready'});
-  assert.equal(root.querySelector('.xui-data-table-feedback').parentElement,root.querySelector('.xui-data-table-frame'));assert.equal(doc.activeElement,action);assert.equal(find(root,'View First'),action);assert.equal(owner.getBody(),body);assert.equal(creates,1);assert.ok(updates>=4);assert.equal(disposes,0);
+  assert.equal(root.querySelector('.xui-data-table-feedback').parentElement,root.querySelector('.xui-data-table-summary'));assert.equal(doc.activeElement,action);assert.equal(find(root,'View First'),action);assert.equal(owner.getBody(),body);assert.equal(creates,1);assert.ok(updates>=4);assert.equal(disposes,0);
   search.focus();owner.update({pagination:{...page,total:50}});assert.equal(doc.activeElement,search);assert.equal(root.querySelector('input'),search);
   owner.update({rows:[{id:'one',name:'Updated'}]});assert.equal(find(root,'View Updated'),action);assert.equal(creates,1);owner.update({rows:[]});assert.equal(disposes,1);owner.destroy();assert.equal(disposes,1);
 });
@@ -40,8 +40,8 @@ test('native slot cleanup is once-only even when one host cleanup throws',()=>{
 test('native replacing a Node with identical text removes the old interactive semantics',()=>{
   const {root,doc}=navigationDOM(),button=doc.createElement('button');button.textContent='Same';const owner=createDataTable(root,{...base,columns:[{id:'name',header:button,cell:()=> 'First'}]});owner.update({columns:[{id:'name',header:'Same',cell:()=> 'First'}]});assert.equal(root.querySelector('thead').textContent,'Same');assert.equal(root.querySelector('thead').querySelector('button'),null);owner.destroy();
 });
-test('native optional slots hide empty strings, reserve the status track and retain numeric zero',()=>{
-  const {root}=navigationDOM(),owner=createDataTable(root,{...base,toolbar:'',feedback:'',footer:''});assert.equal(root.querySelector('.xui-data-table-tools').hidden,true);assert.equal(root.querySelector('.xui-data-table-feedback').hidden,false);assert.equal(root.querySelector('.xui-data-table-footer-extra').hidden,true);owner.update({toolbar:0,feedback:0,footer:0});for(const name of ['tools','feedback','footer-extra']){assert.equal(root.querySelector('.xui-data-table-'+name).hidden,false);assert.equal(root.querySelector('.xui-data-table-'+name).textContent,'0');}owner.destroy();
+test('native optional slots hide empty strings without reserving a status row and retain numeric zero',()=>{
+  const {root}=navigationDOM(),owner=createDataTable(root,{...base,toolbar:'',feedback:'',footer:''});assert.equal(root.querySelector('.xui-data-table-tools').hidden,true);assert.equal(root.querySelector('.xui-data-table-feedback').hidden,true);assert.equal(root.querySelector('.xui-data-table-footer-extra').hidden,true);owner.update({toolbar:0,feedback:0,footer:0});for(const name of ['tools','feedback','footer-extra']){assert.equal(root.querySelector('.xui-data-table-'+name).hidden,false);assert.equal(root.querySelector('.xui-data-table-'+name).textContent,'0');}owner.destroy();
 });
 
 test('native width tracks update, reorder, hide and clear without replacing retained rows or slots',()=>{
@@ -93,4 +93,11 @@ test('consecutive ACL-empty cursor pages keep next enabled until an explicit nul
   assert.equal(next.disabled,false);assert.equal(root.querySelector('tbody').textContent,'No records yet');next.click();assert.deepEqual(requests,['scan:one']);await Promise.resolve();
   owner.update({rows:[],pagination:{...pagination,nextCursor:'scan:two',hasPrevious:true}});assert.equal(next.disabled,false);next.click();assert.deepEqual(requests,['scan:one','scan:two']);await Promise.resolve();
   owner.update({rows:[],pagination:{...pagination,nextCursor:null,hasPrevious:true}});assert.equal(next.disabled,true);next.click();assert.equal(requests.length,2);owner.destroy();
+});
+
+test('native feedback without pagination or count remains intact, with no empty ready footer',()=>{
+  const {root,doc}=navigationDOM(),details=doc.createElement('button');details.textContent='Read details';
+  const owner=createDataTable(root,{...base,pagination:undefined,labels:{count:()=>''}}),footer=root.querySelector('.xui-data-table-footer');assert.equal(footer.hidden,true);
+  owner.update({feedback:details});assert.equal(footer.hidden,false);assert.equal(root.querySelector('.xui-data-table-feedback').contains(details),true);details.focus();owner.update({status:'refreshing'});assert.equal(doc.activeElement,details);
+  owner.update({status:'ready',feedback:undefined});assert.equal(footer.hidden,true);owner.destroy();
 });

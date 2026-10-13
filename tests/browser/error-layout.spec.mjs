@@ -4,7 +4,7 @@ const rectangles=async(page,selectors)=>page.evaluate(selectors=>Object.fromEntr
 const same=(before,after)=>{for(const key of Object.keys(before))for(const dimension of ['x','y','width','height'])expect(Math.abs(after[key][dimension]-before[key][dimension]),`${key}.${dimension} is stable`).toBeLessThanOrEqual(1.5);};
 const tableSelectors={shell:'.xui-shell',head:'.xui-data-table thead',body:'.xui-data-table-body',footer:'.xui-data-table-footer',search:'input[type=search]'};
 for(const kind of ['react','vanilla']){
-  for(const layout of ['natural','workspace','document'])for(const width of [1280,390])test(`${kind} ${layout} ${width}: long request errors and retry preserve table geometry, rows, and keyboard focus`,async({page})=>{
+  for(const layout of ['natural','workspace','document'])for(const width of [1280,390])test(`${kind} ${layout} ${width}: long request errors remain complete and retry preserves rows and keyboard focus`,async({page})=>{
     await page.setViewportSize({width,height:900});await page.emulateMedia({reducedMotion:'reduce'});
     await page.goto(`/data-table-${kind}/?layout=${layout}&long-error`);
     await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');
@@ -13,20 +13,21 @@ for(const kind of ['react','vanilla']){
     await page.evaluate(()=>{window.savedLayoutRow=document.querySelector('.xui-data-table tbody tr');window.savedLayoutFocus=document.activeElement;window.savedLayoutScroll=[document.scrollingElement,...document.querySelectorAll('.xui-shell-main,.xui-shell-content')].filter(Boolean).map(node=>({node,top:node.scrollTop,left:node.scrollLeft}));});
     const initial=await rectangles(page,tableSelectors);
     await page.evaluate(()=>{window.dataTableDemo.owner.planNext({delayMs:300,fail:true});window.dataTableDemo.owner.refresh();});
-    await expect(page.locator('.xui-data-table')).toHaveAttribute('aria-busy','true');await settle(page);same(initial,await rectangles(page,tableSelectors));
-    await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('error');await settle(page);same(initial,await rectangles(page,tableSelectors));await expect(search).toBeFocused();
-    const slot=page.locator('.xui-data-table-feedback');expect(await slot.evaluate(node=>node.scrollHeight>node.clientHeight)).toBe(true);
+    await expect(page.locator('.xui-data-table')).toHaveAttribute('aria-busy','true');await settle(page);await expect(search).toBeFocused();
+    await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('error');await settle(page);await expect(search).toBeFocused();
+    const slot=page.locator('.xui-data-table-feedback');expect(await slot.evaluate(node=>node.scrollHeight<=node.clientHeight+1)).toBe(true);
+    const lines=await slot.locator('strong').evaluate(node=>{const range=document.createRange();range.selectNodeContents(node);const parent=node.closest('.xui-data-table-feedback').getBoundingClientRect();return [...range.getClientRects()].every(r=>r.top>=parent.top-1&&r.bottom<=parent.bottom+1&&r.left>=parent.left-1&&r.right<=parent.right+1);});expect(lines,'every error line is readable in naturally sized feedback').toBe(true);
     expect(await page.evaluate(()=>window.savedLayoutRow===document.querySelector('.xui-data-table tbody tr')&&document.activeElement===window.savedLayoutFocus)).toBe(true);
-    // Keyboard can reach the retry at the end of a long scrollable error.
+    // Outer layout scrolling can reach retry after the complete error, without an inner clipped message.
     const retry=slot.getByRole('button',{name:'重试',exact:true});await retry.focus();await expect(retry).toBeFocused();await expect(retry).toBeInViewport();
     await search.focus();await page.evaluate(()=>{for(const {node,top,left} of window.savedLayoutScroll){node.scrollTop=top;node.scrollLeft=left;}window.dataTableDemo.owner.retry();});await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');await settle(page);same(initial,await rectangles(page,tableSelectors));await expect(search).toBeFocused();
     expect(await page.evaluate(()=>window.savedLayoutRow===document.querySelector('.xui-data-table tbody tr'))).toBe(true);
   });
-  test(`${kind} first empty load, failure and retry keep header and footer in place`,async({page})=>{
+  test(`${kind} first empty load and failure retain headers with complete errors and recover to natural size`,async({page})=>{
     await page.goto(`/data-table-${kind}/?manual&empty&long-error`);await settle(page);
     const selectors={head:'.xui-data-table thead',footer:'.xui-data-table-footer',body:'.xui-data-table-body'},initial=await rectangles(page,selectors);
-    await page.evaluate(()=>{window.dataTableDemo.owner.planNext({delayMs:300,fail:true});window.dataTableDemo.owner.load();});await expect(page.locator('.xui-data-table')).toHaveAttribute('aria-busy','true');await settle(page);same(initial,await rectangles(page,selectors));
-    await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('error');await settle(page);same(initial,await rectangles(page,selectors));
+    await page.evaluate(()=>{window.dataTableDemo.owner.planNext({delayMs:300,fail:true});window.dataTableDemo.owner.load();});await expect(page.locator('.xui-data-table')).toHaveAttribute('aria-busy','true');await settle(page);await expect(page.locator('thead')).toBeVisible();
+    await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('error');await settle(page);await expect(page.locator('thead')).toBeVisible();expect(await page.locator('.xui-data-table-placeholder').evaluate(node=>node.scrollHeight<=node.clientHeight+1)).toBe(true);await page.getByRole('button',{name:'重试',exact:true}).focus();await expect(page.getByRole('button',{name:'重试',exact:true})).toBeInViewport();
     await page.evaluate(()=>window.dataTableDemo.owner.retry());await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');await settle(page);same(initial,await rectangles(page,selectors));
   });
   for(const width of [1280,390])test(`${kind} ${width}: actual offline, HTTP, business, timeout and recovery preserve loaded HTTP page`,async({page,context})=>{

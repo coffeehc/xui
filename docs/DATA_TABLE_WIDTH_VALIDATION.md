@@ -18,9 +18,13 @@ React 与原生仅使用正式 tarball exports，全部数据合成。以下路�
 
 `tests/browser/data-table-widths.spec.mjs` 增加直接复现、frame/scrollport/table 左右边、配置列不变及主要内容列吸收余宽断言，并输出 CSS 像素矩形 JSON 和两张合成截图。矩形包含 toolbar→table 距离、反馈槽、footer 及是否在视口。覆盖 React/原生、320/390/1280、light/dark/system、100%/200%、natural/workspace、自动/混合和隐藏列。原有测试继续检查全部指定尺寸、百分比表达式、空态 colspan、sticky LTR/RTL、隐藏恢复、销毁。少行/空态自然高、受限多行滚动、footer、缺省 toolbar 和 document 由既有 `data-table-layout.spec.mjs` 与 `data-table.spec.mjs` 聚合验证。
 
-## 工具栏后的空白是另一个公共问题
+## 工具栏后的空白与公共修复
 
-`057ea7ca` 引入 `.xui-data-table-feedback` 的常驻反馈槽。当前高度为 `control-height + 2 × space-content-gap + 2 × (focus-width + focus-offset)`；ready 无反馈也预留。它用于失败/刷新不挤动表头，但会形成可见空白。这里记录原因，不把它解释成合理的最终视觉，也不以删除高度破坏失败稳定回归。后续应评估在已有 toolbar/footer 区域呈现短状态摘要、长详情按需展开的公共结构；要同时验证无工具栏、窄屏、200%、键盘重试及失败前后焦点和几何稳定。尚未实现该结构。
+`057ea7ca` 引入的常驻反馈槽高度为 `control-height + 2 × space-content-gap + 2 × (focus-width + focus-offset)`，ready 无反馈也预留。这是表格工具栏与列头间空白的公共根因，独立于列宽。
+
+后续公共修复将已有行状态及自定义 feedback 移入 footer 的计数区域，无反馈时 toolbar 直接接表体。短状态在空间足够时复用原底栏高度；长消息保留全部原文，不再固定高裁切/内滚，允许底栏必要增长并通过既有布局观察器保障 frame 与祖先滚动。零行 placeholder 同样只保留最小高。宿主已有摘要/详情可通过公开 Disclosure 合成；库不猜摘要、不增加业务流程或自动重试。无 count/pagination/业务 footer/反馈时隐藏空 footer。
+
+`data-table-feedback.spec.mjs` 提供短状态前后真实几何、320/390/1280 的 200% 长错误完整文本行、短窗口分页/重试焦点命中、无 count/pagination 以及自定义 Disclosure 展开/输入/焦点保留。所有截图仅合成数据。浏览器实际结果需以新 SHA CI 确认。
 
 ## 采用方检查提示词
 

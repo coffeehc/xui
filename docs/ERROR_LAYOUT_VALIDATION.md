@@ -1,6 +1,6 @@
 # 请求失败布局稳定性
 
-登录布局的后续层级修复与当前验收标准见 [LOGIN_VISUAL_ACCEPTANCE](LOGIN_VISUAL_ACCEPTANCE.md)。下文“辅助动作占位”是057批次的历史方案，已由独立核心表单/后置反馈与条件次动作取代；表格及日志的记录不受影响。
+登录布局的后续层级修复与当前验收标准见 [LOGIN_VISUAL_ACCEPTANCE](LOGIN_VISUAL_ACCEPTANCE.md)。下文“辅助动作占位”是057批次的历史方案，已由独立核心表单/后置反馈与条件次动作取代；DataTable 的常驻反馈方案也已被 [横向空间与紧凑反馈修复](DATA_TABLE_WIDTH_VALIDATION.md) 取代；下文是原提交历史，不能作为现合同。日志记录不受影响。
 
 ## 范围与修复
 

@@ -29,7 +29,6 @@
   .xui-data-table-tools {padding:var(--space-content-gap);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
   .xui-data-table-frame {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(var(--control-height),1fr) auto;flex:1 1 auto;min-block-size:0;min-inline-size:0;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
   .xui-data-table-tools {grid-row:1;}
-  .xui-data-table-feedback {grid-row:2;}
   .xui-data-table-body {grid-row:3;}
   .xui-data-table-footer {grid-row:4;}
   /* One colgroup owns all tracks. Only opted-in tables stop content from resizing columns. */
@@ -40,13 +39,21 @@
   .xui-data-table-widths>* {block-size:0;min-inline-size:0;}
   .xui-data-table-body[data-column-sizing] {position:relative;}
   .xui-data-table-body {min-block-size:0;border:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
-  .xui-data-table-tools:not(:empty):not([hidden])~.xui-data-table-body,.xui-data-table-feedback~.xui-data-table-body {border-start-start-radius:0;border-start-end-radius:0;}
-  .xui-data-table-placeholder {block-size:var(--feedback-slot-block-size);overflow:auto;min-inline-size:0;overscroll-behavior:contain;padding:calc(var(--focus-width) + var(--focus-offset));scroll-padding:calc(var(--focus-width) + var(--focus-offset));}
+  .xui-data-table-tools:not(:empty):not([hidden])~.xui-data-table-body {border-start-start-radius:0;border-start-end-radius:0;}
+  .xui-data-table-placeholder {min-block-size:var(--feedback-slot-block-size);min-inline-size:0;overscroll-behavior:contain;padding:calc(var(--focus-width) + var(--focus-offset));scroll-padding:calc(var(--focus-width) + var(--focus-offset));}
   .xui-data-table-body tbody>tr:last-child>td {border-block-end:0;}
   .xui-data-table-footer {display:flex;align-items:center;flex:none;flex-wrap:wrap;min-inline-size:0;gap:var(--space-control-gap) var(--space-section-gap);padding:var(--space-control-gap) var(--space-content-gap);border-block-start:var(--line-width-surface) solid var(--surface-line);border-radius:0 0 var(--radius-lg) var(--radius-lg);background:var(--layer-raised);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);overflow-wrap:anywhere;}
   :is(.xui-data-table-tools,.xui-data-table-footer-extra):empty {display:none;}
   .xui-data-table-footer-extra {min-inline-size:0;max-inline-size:100%;}
-  .xui-data-table-count {flex:1 1 auto;min-inline-size:0;}
+  /* Status belongs beside the existing count, not in an empty row above thead.
+     Full host messages remain readable; narrow/long feedback may grow the footer. */
+  .xui-data-table-summary {display:flex;align-items:center;flex-wrap:wrap;flex:1 1 var(--layout-field-long-min);min-inline-size:min(100%,var(--layout-field-long-min));max-inline-size:100%;min-block-size:var(--control-height);gap:var(--space-control-gap);}
+  .xui-data-table-count {min-inline-size:0;}
+  .xui-data-table-feedback {min-inline-size:0;max-inline-size:100%;}
+  .xui-data-table-feedback:empty {display:none;}
+  .xui-data-table-feedback .xui-state {flex-direction:row;flex-wrap:wrap;align-items:center;min-block-size:var(--control-height);padding:0;}
+  .xui-data-table-feedback .xui-state>* {min-inline-size:0;max-inline-size:100%;}
+
   .xui-data-table-page-size {display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-control-gap);min-inline-size:0;}
   .xui-data-table-page-size>.xui-select {inline-size:auto;max-inline-size:100%;}
   .xui-data-table-page-size .xui-select-control {flex:none;}

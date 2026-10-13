@@ -29,7 +29,7 @@ test('React empty, loading and error bodies always retain semantic headers',()=>
   assert.match(render({rows:[],filtered:true}),/No matching records/);assert.match(render({rows:[]}),/No records yet/);
 });
 test('React refresh and failure preserve rows; numbered controls never guess unknown totals',()=>{
-  for(const status of ['refreshing','error']){const markup=render({status,onRetry:()=>{}});assert.match(markup,/First record/);assert.match(markup,status==='error'?/Retry/:/Refreshing/);assert.match(markup,/<div class="xui-data-table-frame"><div class="xui-data-table-feedback">/);}
+  for(const status of ['refreshing','error']){const markup=render({status,onRetry:()=>{}});assert.match(markup,/First record/);assert.match(markup,status==='error'?/Retry/:/Refreshing/);assert.ok(markup.indexOf('class="xui-data-table-feedback"')>markup.indexOf('<footer '));}
   const unknown=render({pagination:{...pagination,total:null}});assert.doesNotMatch(unknown,/class="xui-pagination"/);assert.match(unknown,/1 loaded/);
   assert.doesNotMatch(render({pagination:{...pagination,pageIndex:9,total:1}}),/class="xui-pagination"/);
 });
@@ -132,4 +132,11 @@ test('React empty cursor body does not turn an explicit continuation token into 
     const markup=render({rows:[],pagination:{mode:'cursor',pageSize:20,total:null,nextCursor,hasPrevious:false,onNext:()=>{}}});
     assert.match(markup,/No records yet/);const next=markup.match(/<button([^>]*)>Next page<\/button>/);assert.ok(next);assert.doesNotMatch(next[1],/disabled/);
   }
+});
+
+test('React feedback lives beside the existing count and an omitted count/pagination does not leave an empty footer',()=>{
+  const html=render({status:'error',onRetry:()=>{},labels:{error:'Complete error with recovery conditions'}});
+  const footer=html.slice(html.indexOf('<footer '));assert.match(footer,/Complete error with recovery conditions/);assert.match(footer,/1 shown · 125 total/);assert.match(footer,/Retry/);
+  const empty=render({pagination:undefined,labels:{count:()=>''}});assert.match(empty,/<footer class="xui-data-table-footer" hidden=""/);
+  const feedback=render({pagination:undefined,labels:{count:()=>''},feedback:React.createElement('button',null,'Read details')});assert.match(feedback,/<footer class="xui-data-table-footer">/);assert.match(feedback,/Read details/);
 });

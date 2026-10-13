@@ -2,6 +2,7 @@ import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 import {MenuLayout,NavigationMenu} from '@coffeehc/xui-react/menu-layout';
 import {AppShell,Grid,PageHeader} from '@coffeehc/xui-react/layout';
+import {Disclosure} from '@coffeehc/xui-react/navigation';
 import {Button} from '@coffeehc/xui-react/button';
 import {Input,NativeSelect} from '@coffeehc/xui-react/forms';
 import {Surface,LoadingState,EmptyState,ErrorState} from '@coffeehc/xui-react/feedback';
@@ -57,9 +58,9 @@ function App(){
     meta={<p>125 条合成记录；不连接业务服务。<output aria-label="查看结果">{inspected}</output></p>}
     actions={noActions?undefined:<><Button onClick={()=>owner.refresh()} disabled={state.busy}>刷新</Button><Button variant="outline" onClick={()=>owner.refresh(true)} disabled={state.busy}>模拟失败</Button><Button variant="outline" onClick={restore} disabled={state.busy}>恢复记录</Button><Button variant="outline" onClick={owner.cancel} disabled={!state.busy}>取消请求</Button></>}/>;
   const table=<DataTable id="records-table" label="合成记录表格" layout={layout} rows={state.rows} columns={visibleColumns} rowKey={rowKey}
-    status={state.status} filtered={state.filtered} labels={query.has('long-error')?{...tableLabels,error:tableLabels.error.repeat(30)}:tableLabels} onRetry={owner.retry} striped
+    status={state.status} filtered={state.filtered} labels={{...tableLabels,...(query.has('long-error')?{error:tableLabels.error.repeat(30)}:{}),...(query.has('no-count')?{count:()=>''}:{})}} onRetry={owner.retry} striped
     toolbar={internal?toolbar:undefined}
-    feedback={query.has('nested-feedback')?<table aria-label="辅助表格"><tbody><tr><td>嵌套反馈</td></tr></tbody></table>:undefined}
+    feedback={query.has('disclosure-feedback')?<div><p>合成读取说明：现有记录仍保留。</p><Disclosure title="查看完整说明"><p>{'完整合成详情，无任何用户数据。'.repeat(40)}</p><Input aria-label="详情备注" defaultValue="保留值"/></Disclosure></div>:query.has('nested-feedback')?<table aria-label="辅助表格"><tbody><tr><td>嵌套反馈</td></tr></tbody></table>:undefined}
     pagination={query.has('no-pagination')?undefined:query.has('cursor')?{mode:'cursor',nextCursor:state.nextCursor,hasPrevious:state.hasPrevious,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onNext:owner.next,onPrevious:owner.previous,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}}/>;
   // The existing public ScrollArea root takes the same allocated workspace height.
   // Grid/Surface provide the public card layout and skin; no private table/shell CSS is copied.

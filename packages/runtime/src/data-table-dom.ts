@@ -42,14 +42,14 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     if(parent.childNodes.length!==1||parent.childNodes[0]!==value)parent.replaceChildren(value);
   };
   const tools=node('div','xui-data-table-tools'),feedback=node('div','xui-data-table-feedback'),frame=node('div','xui-data-table-frame'),body=node('div','xui-table-container xui-data-table-body'),table=node('table','xui-table'),colgroup=node('colgroup'),widthProbes=node('div','xui-data-table-widths'),head=node('thead'),headerRow=node('tr','xui-table-row'),tbody=node('tbody'),footer=node('footer','xui-data-table-footer'),count=node('span','xui-data-table-count'),sizeField=node('label','xui-data-table-page-size'),sizeLabel=node('span'),size=node('select','xui-select'),pagination=node('nav','xui-pagination'),previous=node('button','xui-button'),position=node('span'),next=node('button','xui-button'),extra=node('div','xui-data-table-footer-extra');
-  const statusFeedback=node('div'),customFeedback=node('div');feedback.append(statusFeedback,customFeedback);
+  const summary=node('div','xui-data-table-summary'),statusFeedback=node('div'),customFeedback=node('div');feedback.append(statusFeedback,customFeedback);
   const retry=node('button','xui-button'),error=node('div','xui-state xui-state-error'),errorTitle=node('strong','xui-strong');error.setAttribute('role','alert');retry.type='button';retry.dataset.variant='outline';error.append(errorTitle,retry);
   const loading=node('div','xui-state'),spinner=node('span','xui-spinner'),loadingText=node('span');loading.setAttribute('role','status');spinner.setAttribute('aria-hidden','true');loading.append(spinner,loadingText);
   const empty=node('div','xui-state'),emptyTitle=node('strong','xui-strong');empty.append(emptyTitle);
   const placeholderRow=node('tr','xui-table-row'),placeholderCell=node('td'),placeholderContent=node('div','xui-data-table-placeholder');placeholderCell.append(placeholderContent);placeholderRow.append(placeholderCell);
   const skeletons=Array.from({length:5},()=>{const skeleton=node('div','xui-skeleton');skeleton.setAttribute('aria-hidden','true');return skeleton;});
   body.tabIndex=0;body.setAttribute('role','region');count.setAttribute('aria-live','polite');position.setAttribute('aria-live','polite');size.dataset.controlSize='default';previous.type=next.type='button';
-  head.append(headerRow);table.append(colgroup,head,tbody);widthProbes.setAttribute('aria-hidden','true');body.append(widthProbes,table);sizeField.append(sizeLabel,size);pagination.append(previous,position,next);footer.append(count,sizeField,pagination,extra);frame.append(tools,feedback,body,footer);root.classList.add('xui-data-region','xui-data-table');root.setAttribute('role','region');root.replaceChildren(frame);
+  head.append(headerRow);table.append(colgroup,head,tbody);widthProbes.setAttribute('aria-hidden','true');body.append(widthProbes,table);sizeField.append(sizeLabel,size);pagination.append(previous,position,next);summary.append(count,feedback);footer.append(summary,sizeField,pagination,extra);frame.append(tools,body,footer);root.classList.add('xui-data-region','xui-data-table');root.setAttribute('role','region');root.replaceChildren(frame);
   const arrange=(parent:HTMLElement,children:HTMLElement[])=>{children.forEach((child,index)=>{if(parent.children[index]!==child)parent.insertBefore(child,parent.children[index]??null);});for(const child of Array.from(parent.children))if(!children.includes(child as HTMLElement))child.remove();};
   type CellEntry={element:HTMLTableCellElement;column:NativeDataTableColumn<T>;value:DataTableContent;slot?:NativeDataTableCellSlot<T>};
   type RowEntry={element:HTMLTableRowElement;row:T;cells:Map<string,CellEntry>;index:number;blocked:boolean};
@@ -100,7 +100,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     errorTitle.textContent=labels.error;retry.textContent=labels.retry;retry.hidden=!options.onRetry;retry.disabled=state.blocked;emptyTitle.textContent=options.filtered?labels.noMatches:labels.empty;loadingText.textContent=hasRows?labels.refreshing:labels.loading;
     const hasStatus=hasRows&&(state.busy||state.status==='error'),hasFeedback=options.feedback!==undefined&&options.feedback!==null&&options.feedback!=='';
     content(statusFeedback,hasStatus?(state.status==='error'?options.errorState??error:loading):null);statusFeedback.hidden=!hasStatus;
-    content(customFeedback,options.feedback);customFeedback.hidden=!hasFeedback;
+    content(customFeedback,options.feedback);customFeedback.hidden=!hasFeedback;feedback.hidden=!hasStatus&&!hasFeedback;
     const headerNodes=options.columns.map(column=>{let th=headers.get(column.id);if(!th){th=node('th');th.scope='col';headers.set(column.id,th);}content(th,column.header);if(column.ariaSort)th.setAttribute('aria-sort',column.ariaSort);else th.removeAttribute('aria-sort');if(column.sticky)th.dataset.sticky=column.sticky;else delete th.dataset.sticky;return th;});arrange(headerRow,headerNodes);for(const id of headers.keys())if(!options.columns.some(column=>column.id===id))headers.delete(id);
     const rowNodes:HTMLTableRowElement[]=[];
     options.rows.forEach((row,index)=>{
@@ -143,6 +143,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     next.disabled=state.blocked||(cursor?page.nextCursor===null||!page.onNext:!page?.onPageChange||state.pageCount===null||state.page>=state.pageCount);
 
     content(extra,options.footer);extra.hidden=options.footer===undefined||options.footer===null||options.footer==='';
+    summary.hidden=!count.textContent&&!hasStatus&&!hasFeedback;footer.hidden=summary.hidden&&!page&&extra.hidden;
     for(const binding of selectBindings)binding.update();
     layoutOwner.update();
   };

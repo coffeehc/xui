@@ -23,11 +23,11 @@ const authError=(kind,endpointId,status)=>new HttpError(kind,{attempts:1,endpoin
 const noRetry=markup=>assert.doesNotMatch(markup,/>Retry connection<\/button>/);
 const declarations=(css,selector)=>[...css.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([,selectors])=>selectors.split(',').some(value=>value.trim()===selector)).map(([, ,body])=>body).join(';');
 
-test('DataTable reserves the same status track before busy/error, and a bounded empty placeholder',()=>{
+test('DataTable retains a footer feedback owner without a reserved row above its table',()=>{
   for(const rows of [[],[{id:'a'}]])for(const status of ['idle','ready','loading','refreshing','error']){
     const html=renderToStaticMarkup(React.createElement(DataTable,{label:'Records',rows,status,rowKey:row=>row.id,columns:[{id:'name',header:'Name',cell:row=>row.id}],onRetry(){}}));
     assert.equal((html.match(/class="xui-data-table-feedback"/g)||[]).length,1);
-    assert.match(html,/<thead>/);assert.match(html,/<footer class="xui-data-table-footer">/);
+    assert.match(html,/<thead>/);assert.match(html,/<footer class="xui-data-table-footer">/);assert.ok(html.indexOf('class="xui-data-table-feedback"')>html.indexOf('<footer '));
     if(!rows.length)assert.equal((html.match(/class="xui-data-table-placeholder"/g)||[]).length,1);
   }
 });
@@ -81,7 +81,7 @@ test('login, session and application logout do not expose page cancellation acti
 
 test('feedback is token-scaled and auth text is never constrained to a clipped local slot',async()=>{
   const css=await read('packages/theme/src/feedback.css'),auth=await read('packages/theme/src/auth.css');
-  for(const selector of ['.xui-feedback-slot','.xui-data-table-feedback']){
+  for(const selector of ['.xui-feedback-slot']){
     const rules=declarations(css,selector);assert.match(rules,/(?:^|;)\s*block-size:var\(--feedback-slot-block-size\)/);assert.match(rules,/overflow:auto/);
   }
   assert.doesNotMatch(css,/\.xui-login-feedback\b/);
@@ -95,4 +95,10 @@ test('native list views only move keyed rows when their actual order changes',as
     assert.doesNotMatch(source,/tbody\.append\(entry\.row\)/);
     assert.match(source,/tbody\.children\[rowIndex\]!==entry\.row/);
   }
+});
+
+test('DataTable feedback and placeholder do not clip complete host content into a fixed-height status row',async()=>{
+  const css=await read('packages/theme/src/table.css');
+  for(const selector of ['.xui-data-table-feedback','.xui-data-table-placeholder'])assert.doesNotMatch(declarations(css,selector),/(?:^|;)\s*(?:block-size|max-block-size):|overflow:(?:auto|hidden|clip)/);
+  assert.match(declarations(css,'.xui-data-table-feedback:empty'),/display:none/);
 });
