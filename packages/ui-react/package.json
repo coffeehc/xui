@@ -147,6 +147,10 @@
     "./search-toolbar": {
       "types": "./dist/search-toolbar.d.ts",
       "import": "./dist/search-toolbar.js"
+    },
+    "./display": {
+      "types": "./dist/display.d.ts",
+      "import": "./dist/display.js"
     }
   },
   "types": "./dist/index.d.ts",

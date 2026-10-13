@@ -72,3 +72,7 @@ resource 按单 owner 的 request generation 隔离结果。Abort 是协作信�
 追加已授权XUI-01～09的公共采用反馈：原生transport/登录扩展/viewport/表格合成/link/choice及Calendar、CommandPicker、ToggleGroup、Avatar、Accordion、ScrollArea、InputGroup；合同和实际产物入口见[WIDGETS](WIDGETS.md)、PUBLIC_API。仍不改产品后端或认证链。
 
 可折叠分组搜索使用正式 [GroupedCombobox / createGroupedCombobox](GROUPED_SEARCH.md)：一个搜索输入与 listbox，外置折叠/分页控件；不要把 Disclosure 或 Accordion 放进 Combobox.List，也不采用同 Root 两个 List。业务查询、取消、选择与各组分页状态保持宿主所有。Disclosure 默认箭头和原生 controller 的同等合同亦见该页。
+
+### 已实现文字与媒体原子 A1/A3
+
+[Typography、Copyable、Separator、Tag、Image](DISPLAY.md) 在 React/native 正式入口同等提供。复用既有文字、Badge、Button、Skeleton、separator-line 与标题尺度；仅复制生命周期、移除意图及图片资源代际属于新增交互。宿主继续拥有集合/焦点目标、路由、复制授权值、图片来源及显式重试；没有第二份字号系统或业务请求 owner。

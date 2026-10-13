@@ -165,7 +165,9 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
         const measuredSidebar = ['packages/runtime/src/menu-layout.ts', 'packages/ui-react/src/layout.tsx'].includes(file) && prop === 'blockSize' && /^`max\(var\(--nav-sidebar-min-height\), calc\(100dvh - \$\{(?:header|headerNode)\.getBoundingClientRect\(\)\.height\}px\)\)`$/.test(raw);
         const measuredTableTrack = file === 'packages/runtime/src/data-table.ts' && prop === 'gridTemplateRows' && raw === '`auto auto minmax(${minimum}px, 1fr) auto`';
         const measuredTableMinimum = file === 'packages/runtime/src/data-table.ts' && prop === 'minBlockSize' && ['`${componentMinimum}px`', '`max(var(--data-table-min-block-size), ${componentMinimum}px)`'].includes(raw);
-        if (measuredPosition || measuredSidebar || measuredTableTrack || measuredTableMinimum) { exceptions.add(`${file}: measured ${prop}`); return; }
+        // Explicit positive image dimensions are consumer data, validated before DOM writes.
+        const imageWidth = file === 'packages/runtime/src/display-dom.ts' && prop === 'width' && raw === '`${options.width}px`';
+        if (measuredPosition || measuredSidebar || measuredTableTrack || measuredTableMinimum || imageWidth) { exceptions.add(`${file}: measured ${prop}`); return; }
         errors.push(`${where(loc(node))} ${prop}: Unreviewed dynamic style template ${raw}`);
       }
     }

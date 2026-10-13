@@ -214,3 +214,10 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 - `@coffeehc/xui-theme/search-toolbar.css` <!-- public-entry: @coffeehc/xui-theme/search-toolbar.css --> 同时包含于 style/critical/components；统一尺寸和响应布局仅消费既有公共 token。
 
 默认高级区折叠，只有非空内容才显示触发器；受控请求等待宿主回传，折叠 hidden/inert 保留节点和值。搜索、筛选与主动作不引入业务 owner。完整默认、内容与更新合同见 [SEARCH_TOOLBAR](SEARCH_TOOLBAR.md)。
+## 文字、复制与媒体 A1/A3
+
+- `@coffeehc/xui-react/display` <!-- public-entry: @coffeehc/xui-react/display -->：Typography.Heading/Text/Link/Code、Copyable、Separator、Tag、Image，及同名 props/共享类型。
+- `@coffeehc/xui-runtime/display` <!-- public-entry: @coffeehc/xui-runtime/display -->：createCopyController、copyableLabels、validateImageOptions 与文字/复制/图片共享类型。
+- `@coffeehc/xui-runtime/display-dom` <!-- public-entry: @coffeehc/xui-runtime/display-dom -->：createTypographyHeading/Text/Link/Code、createCopyable、createSeparator、createTag、createImage 与原生 options。
+
+所有入口同时从各自根导出。[完整合同与双端示例](DISPLAY.md)：复制仅明确 value、串行写与旧结果隔离；Tag 删除意图/焦点由宿主；Image 显式 alt/尺寸、稳定占位与显式重试，不包含上传或查看器。

@@ -1,0 +1,12 @@
+import {createTypographyHeading,createTypographyText,createTypographyLink,createTypographyCode,createSeparator,createImage,createTag,createCopyable} from '@coffeehc/xui-runtime/display-dom';
+import {createCopyController,type ImageSize} from '@coffeehc/xui-runtime/display';
+const dimensions:ImageSize={aspectRatio:2};
+createTypographyHeading(document,{level:2,text:'Heading'});createTypographyText(document,{text:'Safe',as:'p'});createTypographyLink(document,{text:'Native',href:'/next',download:'file'});createTypographyCode(document,{value:'<text>',block:true});createSeparator(document,{decorative:true});
+const image=createImage(document,{...dimensions,src:'a',alt:''});image.update({src:'b',alt:'Image',width:40,height:30});image.destroy();
+createTag(document,{label:'Tag',onRemove(){},removeLabel:'Remove tag'}).destroy();createCopyable(document,{value:'x',writeText:async value=>{void value;}}).destroy();createCopyController({value:'x'}).destroy();
+// @ts-expect-error No implicit alt.
+createImage(document,{src:'a',aspectRatio:2});
+// @ts-expect-error No implicit dimensions.
+createImage(document,{src:'a',alt:''});
+// @ts-expect-error No unnamed remove action.
+createTag(document,{label:'Tag',onRemove(){}});

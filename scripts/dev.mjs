@@ -3,7 +3,7 @@ import {mkdir,mkdtemp,readFile,writeFile,copyFile,rename,rm,readdir} from 'node:
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {extract} from './tokens.mjs';
-const kinds=['search-toolbar-vanilla','search-toolbar-react','data-table-vanilla','data-table-react','rich-navigation-vanilla','rich-navigation-react','workspace-vanilla','workspace-react','header-controls-vanilla','header-controls-react','sidebar-footer-vanilla','sidebar-footer-react','vanilla','react','foundation-vanilla','foundation-react','menu-vanilla','menu-react','http-vanilla','http-react','api-key-vanilla','api-key-react','log-vanilla','log-react','business-log-vanilla','business-log-react','login-vanilla','login-react','auth-page-vanilla','auth-page-react','capabilities-vanilla','capabilities-react','widgets-vanilla','widgets-react','grouped-search-vanilla','grouped-search-react'];
+const kinds=['display-vanilla','display-react','search-toolbar-vanilla','search-toolbar-react','data-table-vanilla','data-table-react','rich-navigation-vanilla','rich-navigation-react','workspace-vanilla','workspace-react','header-controls-vanilla','header-controls-react','sidebar-footer-vanilla','sidebar-footer-react','vanilla','react','foundation-vanilla','foundation-react','menu-vanilla','menu-react','http-vanilla','http-react','api-key-vanilla','api-key-react','log-vanilla','log-react','business-log-vanilla','business-log-react','login-vanilla','login-react','auth-page-vanilla','auth-page-react','capabilities-vanilla','capabilities-react','widgets-vanilla','widgets-react','grouped-search-vanilla','grouped-search-react'];
 const names={'@coffeehc/xui-theme':'theme','@coffeehc/xui-runtime':'runtime','@coffeehc/xui-react':'ui-react'};
 /** Development aliases target published-layout dist files, never package source. Formal verify uses installed tarballs. */
 export async function buildDevExamples(){
@@ -18,6 +18,7 @@ export async function buildDevExamples(){
       const react=kind.endsWith('react'),foundation=kind.startsWith('foundation'),directory=`${stage}/${kind}`;await mkdir(directory,{recursive:true});
       await build({entryPoints:foundation?{app:`examples/${kind}/app.${react?'tsx':'js'}`,'heavy-panel':`examples/${kind}/heavy-panel.${react?'tsx':'js'}`}:[`examples/${kind}/app.${react?'tsx':'js'}`],outdir:directory,bundle:true,splitting:foundation,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',plugins:[plugin],define:{'process.env.NODE_ENV':'"development"'}});
       await copyFile(`examples/${kind}/index.html`,`${directory}/index.html`);await copyFile('packages/runtime/dist/init.js',`${directory}/theme-init.js`);
+      if(kind.startsWith('display-'))await copyFile('examples/shared/display-image.svg',`${directory}/display-image-a.svg`);
       if(kind.startsWith('login-')||kind.startsWith('auth-page-')){await copyFile('examples/shared/login-mark.svg',`${directory}/mark.svg`);await copyFile('examples/shared/login-visual.svg',`${directory}/visual.svg`);}
       if(kind.startsWith('business-log-'))await copyFile('examples/shared/business-log-reference.html',`${directory}/reference.html`);
       if(kind.startsWith('log-'))await copyFile('examples/shared/log-reference.html',`${directory}/reference.html`);

@@ -138,6 +138,14 @@
     "./search-toolbar-dom": {
       "types": "./dist/search-toolbar-dom.d.ts",
       "import": "./dist/search-toolbar-dom.js"
+    },
+    "./display": {
+      "types": "./dist/display.d.ts",
+      "import": "./dist/display.js"
+    },
+    "./display-dom": {
+      "types": "./dist/display-dom.d.ts",
+      "import": "./dist/display-dom.js"
     }
   },
   "types": "./dist/index.d.ts"

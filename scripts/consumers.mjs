@@ -138,6 +138,27 @@ for (const kind of ['vanilla','react']) {
   await copyFile(`${headerControls}/index.html`,`${headerControlsOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${headerControlsOutput}/theme-init.js`);await writeFile(`${headerControlsOutput}/metafile.json`,JSON.stringify(headerControlsBuild.metafile,null,2));
   await writeFile(`${headerControls}/types.ts`,"import {createMenuLayout} from '@coffeehc/xui-runtime/menu-layout';\nimport {getThemeController} from '@coffeehc/xui-runtime/theme';\nimport {type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';\nconst locale:HeaderLocaleOptions={enabled:true,value:'en',options:[{value:'en',label:'English'}],onValueChange:()=>{}};const owner=createMenuLayout(document.createElement('div'),{items:[],theme:getThemeController(window),locale,headerSlots:{context:document.createElement('div'),auxiliary:document.createDocumentFragment(),account:document.createElement('button')},sidebarHeader:document.createElement('div'),pageHeader:document.createElement('header'),pageToolbar:document.createElement('div'),pageFooter:document.createElement('footer')});owner.update({locale:{...locale,enabled:false},pageToolbar:null});owner.destroy();\n");
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',kind==='react'?'header-controls/app.tsx':'header-controls/types.ts'],{cwd,stdio:'inherit'});
+  const display=resolve(cwd,'display'),displayOutput=resolve(`dist/display-${kind}`);
+  await cp(`examples/display-${kind}`,display,{recursive:true});
+  const displayBuild=await build({entryPoints:[`${display}/app.${kind==='react'?'tsx':'js'}`],outdir:displayOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(displayBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Display consumer escaped standalone install');
+  assert(!Object.keys(displayBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Display consumer needs private CSS');
+  if(kind==='vanilla')assert(!Object.keys(displayBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native display imported React');
+  await copyFile(`${display}/index.html`,`${displayOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${displayOutput}/theme-init.js`);await writeFile(`${displayOutput}/metafile.json`,JSON.stringify(displayBuild.metafile,null,2));
+  await copyFile('examples/shared/display-image.svg',`${displayOutput}/display-image-a.svg`);
+  const displayTypes=kind==='react'?'display-contract.tsx':'display-native-contract.ts';
+  await copyFile(`tests/fixtures/${displayTypes}`,`${cwd}/${displayTypes}`);
+  execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',displayTypes,...(kind==='react'?['display/app.tsx']:[])],{cwd,stdio:'inherit'});
+  if(kind==='react'){
+    await copyFile('tests/fixtures/display-hydration-tree.tsx',`${display}/hydration-tree.tsx`);
+    await writeFile(`${display}/hydrate.tsx`,"import * as React from 'react';import {hydrateRoot} from 'react-dom/client';import {DisplayHydrationTree} from './hydration-tree';import '@coffeehc/xui-theme/style.css';(window as any).hydrationErrors=[];hydrateRoot(document.getElementById('root')!,<DisplayHydrationTree/>,{onRecoverableError:error=>(window as any).hydrationErrors.push(String(error))});");
+    await writeFile(`${display}/server.tsx`,"import * as React from 'react';import {renderToString} from 'react-dom/server';import {DisplayHydrationTree} from './hydration-tree';console.log(renderToString(<DisplayHydrationTree/>));");
+    await build({entryPoints:[`${display}/server.tsx`],outfile:`${display}/server.mjs`,bundle:true,platform:'node',format:'esm',jsx:'automatic',packages:'external'});
+    const markup=execFileSync('node',[`${display}/server.mjs`],{cwd,encoding:'utf8'}).trim();
+    const hydrationBuild=await build({entryPoints:[`${display}/hydrate.tsx`],outfile:`${displayOutput}/hydrate.js`,bundle:true,platform:'browser',format:'esm',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+    assert(Object.keys(hydrationBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Display hydration escaped standalone install');
+    await writeFile(`${displayOutput}/hydrate.html`,'<!doctype html><html><head><meta charset="utf-8"><link rel="icon" href="data:,"><link rel="stylesheet" href="./hydrate.css"></head><body class="xui"><div id="root">'+markup+'</div><script type="module" src="./hydrate.js"></script></body></html>');
+  }
   const workspace=resolve(cwd,'workspace'),workspaceOutput=resolve(`dist/workspace-${kind}`);
   await cp(`examples/workspace-${kind}`,workspace,{recursive:true});
   const workspaceBuild=await build({entryPoints:[`${workspace}/app.${kind==='react'?'tsx':'js'}`],outdir:workspaceOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
