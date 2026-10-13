@@ -14,3 +14,9 @@ horizontal.setAttribute('aria-label','Horizontal separator');vertical.setAttribu
 separatorRow.append(createTypographyText(document,{text:'左侧'}),vertical,createTypographyText(document,{text:'右侧'}));
 separatorSample.append(createTypographyText(document,{text:'分隔线与区域边框使用独立线宽。'}),horizontal,separatorRow);root.append(separatorSample);
 window.addEventListener('pagehide',()=>{copy.destroy();failure.destroy();tags.forEach(tag=>tag.destroy());disabled.destroy();image.destroy();},{once:true});
+
+const foundationSample=document.createElement('section');foundationSample.className='xui-surface xui-stack';foundationSample.setAttribute('aria-label','Display foundation');
+for(const tone of ['default','muted','error','success'])foundationSample.append(createTypographyText(document,{text:`${tone}: 完整可读的基础文字`,tone}));
+const firstInput=document.createElement('input');firstInput.className='xui-input';firstInput.setAttribute('aria-label','Surface first input');
+const lastAction=document.createElement('button');lastAction.type='button';lastAction.className='xui-button';lastAction.textContent='Surface last action';
+foundationSample.append(firstInput,createTypographyLink(document,{text:'Surface middle link',href:'#details'}),lastAction);root.append(foundationSample);
