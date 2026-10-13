@@ -520,13 +520,19 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --nav-drawer-max-inline-size: calc(var(--nav-item-height) * 8);
     --nav-toggle-transform-origin: 60% 50%;
     --login-card-padding: calc(var(--space-section-gap) * 1.5);
-    --login-form-inline-size: 25rem;
+    --login-form-inline-size: 24rem;
+    --login-card-padding-end: var(--space-content-gap);
+    --login-heading-gap: var(--space-control-gap);
+    --login-heading-fields-gap: calc(var(--space-section-gap) * 1.5);
+    --login-control-height: calc(var(--control-height-lg) + var(--space-text-gap));
+    --login-control-font-size: var(--font-size-section-title);
+    --login-control-line-height: var(--line-height-section-title);
     --login-card-inline-size: calc(var(--login-form-inline-size) + var(--login-card-padding) * 2 + var(--line-width-surface) * 2);
-    --login-title-font-size: max(.75rem, calc(2rem * clamp(.5, var(--font-scale), 2)));
-    --login-title-line-height: max(calc(var(--login-title-font-size) * 1.25), calc(2.5rem * clamp(.5, var(--line-height-scale), 2)));
+    --login-title-font-size: max(.75rem, calc(1.75rem * clamp(.5, var(--font-scale), 2)));
+    --login-title-line-height: max(calc(var(--login-title-font-size) * 9 / 7), calc(2.25rem * clamp(.5, var(--line-height-scale), 2)));
     --login-visual-max-block-size: calc(var(--control-height-lg) * 2);
-    --login-feedback-block-size: calc(max(var(--control-height-lg), calc(var(--line-height-body-sm) + var(--space-text-gap) * 2 + var(--line-width-surface) * 2)) + (var(--focus-width) + var(--focus-offset)) * 2);
-    --login-action-max-block-size: max(var(--control-height-lg), 20dvh);
+    --login-feedback-block-size: calc(max(var(--control-height-sm), calc(var(--line-height-body-sm) + var(--space-text-gap) * 2 + var(--line-width-surface) * 2)) + (var(--focus-width) + var(--focus-offset)) * 2);
+    --login-action-max-block-size: max(var(--login-control-height), 20dvh);
     --login-logo-size: var(--control-height-sm);
     --sheet-max-block-size: 80dvh;
     --tabs-padding: calc(var(--spacing) * .75);
@@ -1148,11 +1154,13 @@ DropdownMenu/ContextMenu及共用菜单项角色显式绑定body-xs字号/行高
 
 ### 公共登录页布局与主题
 
-公共登录页默认layout=card：整个动态视口居中放置一个自然高度的单列登录框，使用既有Surface的一层边框、radius-lg和raised表面，无投影。框最大宽度由400px表单、两侧各24px内边距与边框合成（默认450px），宽屏不扩为面板；≤40rem窄屏内边距16px，并受视口两侧layout-viewport-inset封顶。显式layout=fullscreen沿用同一个居中窄框，只省略Surface外框皮肤；任何模式都不使用左右品牌面板或中间分割线。紧凑品牌身份行（logo默认32px、名称section-title 16/26px）位于框内顶部，先于可选说明及登录标题。brandVisual保留为宿主显式提供的inert装饰槽，不参与朗读，最大80px高，窄屏隐藏；默认无图，不内置产品专属素材。
+公共登录/初始化页复用一个AuthPage布局owner，默认layout=card：动态视口居中、自然高度的单列框，既有Surface边框、radius-lg和raised表面，无投影。框默认434px：384px内容轨道（含四边focus余量）+两侧24px内边距+边框；≤40rem时两侧16px，外侧保留layout-viewport-inset。底部padding使用space-content-gap（12px），不为视觉撑高卡片。fullscreen同布局只省略Surface皮肤。禁止左右品牌面板、背景大图、渐变或分割线。显式brandVisual仍为inert可选装饰，最大80px、窄屏隐藏。
 
-独立登录任务需要高于工作区普通page-title的标题角色，因此只为公共登录标题补充login-title-font-size/line-height（默认32/40px，随文字角色缩放，600）；不改变通用七组字号。表单由login-form-inline-size约束为默认25rem（400px，包含焦点余量），不随宽屏无限增长；label沿用body-xs 13/20px，正文/输入body-sm 14/22px，输入和唯一主按钮使用现有control-height-lg 40px。标题至字段24px，字段gap16px、label至control8px、密码至主按钮16px，由共享间距和焦点余量组成。字段、主动作同宽；扩展SSO在其后的独立次级组，不与主登录平分宽度。极端长主动作标签保留完整名称，单个按钮采用login-action-max-block-size（动态视口高度的20%，至少lg控件高）上限与内部滚动，整按钮及四边焦点可滚入视口；默认40px按钮不受影响。不限制品牌、字段或整个操作组高度，标签状态保留项共用有界grid轨道与safe center，不能把可见标签居中到滚动起点之外。可见主按钮文案改变时将按钮内部滚动归零，保证idle→busy→opening/idle的新文案可见；输入变化和文案未变的认证通知保留用户滚动位置，不重挂按钮或字段。
+层级顺序为紧凑品牌身份→任务标题→可选任务说明→常显标签/字段→唯一主动作→局部反馈。品牌名采用body-sm 14/22px、600，logo32px；任务标题使用login-title-font-size/line-height，默认28/36px，随font-scale/line-height-scale与根字号缩放，600。description属于标题说明而非品牌口号，使用body-sm 14/22px，标题到说明8px；整个标题组到首字段24px。宿主标题建议使用“登录”或“创建管理员”等任务名，不重复品牌全称；显式配置仍原样保留，不猜测删词。字段label采用body-sm 14/22px、500，输入和主动作采用已有section-title的16/26px文字尺度作为清晰的控件文字（并不改变元素语义）。login-control-height默认44px由control-height-lg+space-text-gap派生；字号增大时控件自然增高。label到input8px、字段间16px、最后字段到主动作16px；字段和主动作同宽（默认376px可操作区）。帮助与错误仍body-xs 13/20px，沿用通用颜色与间距，不增加仅登录使用的调色板、字体栈或焦点规则。
 
-反馈位于主按钮之后，使用login-feedback-block-size的紧凑常驻轨道（默认40px内容加四边焦点余量，共48px），不占密码到按钮的间隔。轨道高度只随公共文字与控件token缩放，不随请求状态或错误长度变化；长错误在反馈自身单一局部滚动，品牌/字段/主动作在检查、匿名、busy、失败间保持位置。公共登录页不生成取消等待按钮；安全可重试的读取只在反馈旁出现，采用公共ghost次动作，不以visibility隐藏按钮保留整行或平分主动作。普通凭据错误不显示会话核对入口；必要重试使用“重试连接”等用户文案，是否允许仍由AUTH实际安全状态决定。unknown write/reauthenticationRequired不自动刷新、登出或重放。
+反馈仍在主按钮之后，login-feedback-block-size从control-height-sm与文字内容计算，默认32px内容+四边focus余量共40px。form到support不额外叠加间隔；底部按钮边缘到卡片边缘默认57px（动作focus4+反馈40+底部12+边框1），替代旧85px空白。常驻有限轨道保持checking/idle/busy/error时主布局稳定，长错误仅在自身单一局部滚动，不扩大卡片。错误关联与必要恢复动作保持原行为。普通密码登录不显示新密码规则或强度；管理员初始化在相同布局内采用NewPasswordFields。没有虚构的注册、找回密码、SSO或验证码入口。普通凭据错误没有会话核对；安全可重试读取使用反馈旁公共ghost动作；未知写入不自动refresh/logout/重放。
+
+SSO显式配置时作为主动作后的次级组。极端长主动作保留完整可访问名称，login-action-max-block-size（20dvh且至少login-control-height）限制单按钮高度并可内部滚动，保留safe center与四边focus。状态标签原位切换并滚动归零；普通通知不重挂输入或按钮。登录、初始化和纯AuthPage消费同一结构和token，不允许产品私有CSS补丁。
 
 长品牌、配置表单、SSO及放大文字使用自然文档滚动；短视口不限制表单高度，所有字段与动作始终可达。正文、操作、反馈和SSO内部保留focus-width+focus-offset四边空间与滚动安全距离，反馈内的焦点不会被局部滚动裁切，不修改全局焦点token。定量标准、状态矩阵与真实截图验收见[公共登录验收](LOGIN_VISUAL_ACCEPTANCE.md)；未执行实际像素回归与图像查看不能宣称视觉验收完成。
 

@@ -11,7 +11,7 @@ function stable(before,after){for(const key of stableKeys)for(const dimension of
 async function evidence(page,info,name,data){
   const image=info.outputPath(name+'.png'),json=info.outputPath(name+'.json');
   await page.screenshot({path:image,animations:'disabled'});
-  await writeFile(json,JSON.stringify({standard:'docs/LOGIN_VISUAL_ACCEPTANCE.md',expected:{title:'32/40px',brand:'16/26px',logo:32,maxCardWidth:450,maxContentWidth:400,controlHeight:40,passwordToPrimaryGap:16,maximumStateGeometryDelta:1.5},measured:data},null,2));
+  await writeFile(json,JSON.stringify({standard:'docs/LOGIN_VISUAL_ACCEPTANCE.md',expected:{title:'28/36px',brand:'14/22px',logo:32,maxCardWidth:434,maxContentWidth:384,controlHeight:44,passwordToPrimaryGap:16,maximumStateGeometryDelta:1.5},measured:data},null,2));
   await info.attach(name,{path:image,contentType:'image/png'});await info.attach(name+'-geometry',{path:json,contentType:'application/json'});
 }
 for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','system'])for(const width of [1280,1600,390]){
@@ -21,13 +21,13 @@ for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','s
     const submit=page.getByRole('button',{name:'登录',exact:true}),username=page.getByRole('textbox',{name:'用户名',exact:true}),password=page.getByLabel('密码');
     await expect(submit).toBeEnabled();await settle(page);
     const idle=await measurements(page),e=idle.elements;
-    expect(e.card.width).toBeLessThanOrEqual(Math.min(width,450));expect(Math.abs((e.card.x+e.card.width/2)-width/2)).toBeLessThanOrEqual(1);
-    expect(e.content.width).toBeLessThanOrEqual(400);expect(e.form.width).toBeLessThanOrEqual(400);expect(e.brand.bottom).toBeLessThanOrEqual(e.form.y);
-    expect(e.title.fontSize).toBe('32px');expect(e.title.lineHeight).toBe('40px');expect(e.product.fontSize).toBe('16px');expect(e.product.lineHeight).toBe('26px');expect(e.label.fontSize).toBe('13px');expect(e.username.fontSize).toBe('14px');
-    for(const key of ['username','password','submit'])expect(e[key].height).toBeCloseTo(40,0);
+    expect(e.card.width).toBeLessThanOrEqual(Math.min(width,434));expect(Math.abs((e.card.x+e.card.width/2)-width/2)).toBeLessThanOrEqual(1);
+    expect(e.content.width).toBeLessThanOrEqual(384);expect(e.form.width).toBeLessThanOrEqual(384);expect(e.brand.bottom).toBeLessThanOrEqual(e.form.y);
+    expect(e.title.fontSize).toBe('28px');expect(e.title.lineHeight).toBe('36px');expect(e.product.fontSize).toBe('14px');expect(e.product.lineHeight).toBe('22px');expect(e.label.fontSize).toBe('14px');expect(e.username.fontSize).toBe('16px');
+    for(const key of ['username','password','submit'])expect(e[key].height).toBeCloseTo(44,0);
     expect(e.logo.width).toBeCloseTo(32,0);expect(e.submit.width).toBeCloseTo(e.password.width,0);expect(e.username.width).toBeCloseTo(e.password.width,0);
-    expect(e.username.y-e.label.bottom).toBeCloseTo(8,0);expect(e.password.y-e.username.bottom-e.label.height-8).toBeCloseTo(16,0);expect(e.submit.y-e.password.bottom).toBeCloseTo(16,0);expect(e.label.y-e.title.bottom).toBeCloseTo(24,0);
-    expect(e.feedback.y).toBeGreaterThanOrEqual(e.submit.bottom);expect(e.feedback.height).toBeCloseTo(48,0);expect(e.identity.bottom).toBeLessThan(e.description.y);
+    expect(e.username.y-e.label.bottom).toBeCloseTo(8,0);expect(e.password.y-e.username.bottom-e.label.height-8).toBeCloseTo(16,0);expect(e.submit.y-e.password.bottom).toBeCloseTo(16,0);expect(e.label.y-e.description.bottom).toBeCloseTo(24,0);
+    expect(e.feedback.y).toBeGreaterThanOrEqual(e.submit.bottom);expect(e.feedback.height).toBeCloseTo(40,0);expect(e.identity.bottom).toBeLessThan(e.title.y);expect(e.description.y-e.title.bottom).toBeCloseTo(8,0);expect(e.card.bottom-e.submit.bottom).toBeCloseTo(57,0);
     await expect(page.locator('.xui-login-visual')).toBeHidden();await expect(page.locator('.xui-login-visual img')).toHaveCount(0);
     await expect(page.locator('.xui-login-actions button:visible')).toHaveCount(1);await expect(page.getByRole('button',{name:'重试连接',exact:true})).toHaveCount(0);await expect(page.locator('.xui-login-form .xui-reserved-action')).toHaveCount(0);
     expect(idle.viewport.scrollWidth).toBeLessThanOrEqual(width);await expect(submit).toBeInViewport();await evidence(page,info,`${kind}-${appearance}-${width}-idle`,idle);
@@ -43,7 +43,7 @@ for(const kind of ['react','vanilla']){
   test(`${kind} login title respects independent font and line-height preferences`,async({page})=>{
     await page.goto(`/login-${kind}/`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
     const title=page.locator('.xui-login-body h1');
-    for(const [font,line,height,size] of [['1','2','80px','32px'],['2','1','80px','64px'],['.5','.5','20px','16px']]){
+    for(const [font,line,height,size] of [['1','2','72px','28px'],['2','1','72px','56px'],['.5','.5','18px','14px']]){
       await page.evaluate(({font,line})=>{document.documentElement.style.setProperty('--font-scale',font);document.documentElement.style.setProperty('--line-height-scale',line);},{font,line});
       expect(await title.evaluate(element=>({size:getComputedStyle(element).fontSize,height:getComputedStyle(element).lineHeight}))).toEqual({size,height});
     }

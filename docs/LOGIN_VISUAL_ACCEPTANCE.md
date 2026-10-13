@@ -15,12 +15,12 @@
 
 | ID | 预期 | 验收方法 / 证据 | 实测与状态 |
 | --- | --- | --- | --- |
-| L01 | 默认 card 居中单列窄框，最大450px、自然高度；1280/1600/390均无左右品牌面板或分割线。显式 fullscreen 同列仅省略外框皮肤 | 双端、两模式真实截图 + card/brand/form rect | 未测 |
-| L02 | 紧凑身份行在框内顶部，先于说明与登录标题；logo 32px、品牌名 16/26px。可选装饰图 inert、最大80px高、窄屏隐藏 | 默认无图与可选图 desktop 截图 + DOM 顺序、rect、computed type | 未测 |
-| L03 | 表单内容最大 400px（含四边焦点余量），标题 32/40px、label 13/20px、输入文字 14/22px、主按钮至少40px；标题明确大于字段 | screenshot + JSON type/rect | 未测 |
+| L01 | 默认 card 居中单列窄框，最大434px、自然高度；1280/1600/390均无左右品牌面板或分割线。显式 fullscreen 同列仅省略外框皮肤 | 双端、两模式真实截图 + card/brand/form rect | 未测 |
+| L02 | 紧凑身份行在框内顶部，先于任务标题，说明紧跟标题；logo 32px、品牌名 14/22px。可选装饰图 inert、最大80px高、窄屏隐藏 | 默认无图与可选图 desktop 截图 + DOM 顺序、rect、computed type | 未测 |
+| L03 | 表单内容最大384px（含四边焦点余量），标题28/36px、label14/22px、输入/主动作16/26px，输入和主按钮至少44px；标题明确大于字段 | screenshot + JSON type/rect | 未测 |
 | L04 | label→input 8px、字段之间16px、密码→登录16px；无反馈框或隐藏辅助按钮插在密码和登录之间 | idle/error/busy screenshot + gap JSON | 未测 |
 | L05 | 匿名普通页只有一个可见主登录按钮，宽度与字段一致；错误401不显示会话检查；SSO是独立次级组 | 公共 API 页面操作 + screenshots | 未测 |
-| L06 | 反馈在主按钮之后，固定轨道默认48px（40px内容及焦点余量），只随公共文字/控件token缩放；长错误局部单一滚动，不撑高卡片；不生成取消动作，重试仅有真实用途时出现，不能占主动作宽度或隐藏占行 | idle/busy/error/长错误截图，动作与反馈rect | 未测 |
+| L06 | 反馈在主按钮之后，固定轨道默认40px（32px内容及焦点余量），只随公共文字/控件token缩放；长错误局部单一滚动，不撑高卡片；不生成取消动作，重试仅有真实用途时出现，不能占主动作宽度或隐藏占行 | idle/busy/error/长错误截图，动作与反馈rect | 未测 |
 | L07 | 检查→匿名、提交→busy→错误、断网/超时/重试时品牌、字段、主动作位置/大小变化≤1.5px；长错误在局部可滚动 | 连续状态 rect JSON + screenshot；已有 error-layout 回归 | 未测 |
 | L08 | unknown write / reauthenticationRequired 不出现可刷新重试，不自动 refresh/logout/重放；持久 unknown 保留门禁；operation-v1 仅同身份权威终态后允许显式重新登录，密码即时清空 | auth unit + auth-bearer/login browser HTTP counts | 未测 |
 | L09 | 1280/1600/390普通首屏主操作完整可见，无页面横向溢出；200%与短视口自然文档滚动到每个字段/动作。极端长主按钮独立限高并内部滚动，完整按钮与四边焦点仍可滚入视口，字段及操作组不困在局部小区域 | screenshot + viewport/scroll metrics；长品牌/长标签的按钮rect、内部滚动与键盘提交 | 未测 |
@@ -79,3 +79,29 @@
 - 异常恢复：超时或网络失败不能推断写入失败，持久 unknown 不提供盲重试；operation-v1 的核对与确认终止只针对原操作，权威终态后才允许新提交。缺少能力时保留清楚的阻塞提示。
 - 待独立验收：真实系统密码管理器/自动填充、真实读屏器、手机系统键盘、真实 BFCache 命中；现有 autocomplete/ARIA 属性和模拟生命周期测试不算这些实际结果。登录页当前没有密码显隐按钮，不能把另一个公共 PasswordInput 的能力写成登录页已接入；若接入需保持光标/焦点并补两端回归。
 - 验证码、短信、锁定解锁、注册、忘记密码、二次认证与第三方账号绑定均依赖真实后端能力。本次不为参考模板补假入口、倒计时或未实现恢复路径；多端策略以已实现认证合同为准。
+
+
+## 第二轮层级重设计：基线、依据与目标（2026-10-13）
+
+此轮以功能整合4b772f7为代码基线，不修改认证协议、setup业务controller或密码强度算法。旧截图为0eb345a的CI18登录证据，其视觉布局未被后续功能整合改变；新截图必须来自本轮最终提交，不拿旧全绿当新验收。
+
+### 实际观察与参考取舍
+
+已打开CI18的React light 1280截图，并读取同布局1600几何：卡片450×470px，品牌16/26、标题32/40、标签13/20、输入14/22和40高；主按钮底到卡片底85px。标题重复品牌任务词并抢占注意，说明先于任务标题，标签相对大标题显小；底部空轨与多个padding叠加显松。CI截图中文字出现衬线fallback，必须记录实际渲染字体，不用CSS声明冒充字体生效。
+
+- [Carbon Login：Centered layout与Spacing](https://www.carbondesignsystem.com/building-blocks/core/patterns/login)：采纳任务集中、同网格和状态间位置稳定；其分步账号流程、背景图和营销区不移植。
+- [GitHub Primer Forms](https://primer.style/product/ui-patterns/forms/)：采纳纵向扫描、标签常显、说明不重复；使用已有角色和邻近关系，不复制其品牌色或像素值。
+- [GOV.UK Text input](https://design-system.service.gov.uk/components/text-input/)：参考label/hint/error的清晰职责与关联；不改变本项目既有错误时序。
+- [用户提供的墨刀参考](https://modao.cc/ad/blog/login-page-prototype-templates.html)：作为异常、键盘、密码管理器和中断清单；不增加没有后端支持的入口、验证码或账号状态。
+
+### 本轮预先固定的量化目标
+
+默认16px根字号：卡片434px、内容轨道384px、字段和主动作376px；品牌14/22和32px图标；标题28/36；说明与标签14/22；输入和主动作16/26、44px高。顺序为品牌→标题→说明→字段→主动作→反馈。标题/说明8px、说明/首标签24px、标签/字段8px、字段间16px、末字段/动作16px；反馈40px、卡片底padding12px，动作后总余量57px而非85px。缺省说明时不占行。所有尺寸由DESIGN默认语义变量推导；主按钮不会被错误挤动，长消息只在局部滚动。正文增大时可自然增高，仍保留根字号偏好。
+
+双端/三主题/320与390窄屏/1280桌面检查默认登录和真实AdminSetupPage；原长文案测试保留。普通登录不出现新密码规则与强度；setup显示规则、计数与本地强度。真实浏览器200%采用官方Chrome设置页的Page zoom=2，核验DPR翻倍、innerWidth减半、根字号不变、pinch=1与CSS zoom=1；另保留200%根字号测试，二者不得混称。逐控件focus和滚动可达，截图需捕获整个真实物理视口并核验尺寸。
+
+中文生产字体继续使用已有中文sans系统回退，不远程加载字体。CI从官方系统仓安装Noto Sans CJK，并用Chrome CSS.getPlatformFontsForNode记录实际字体与glyphCount，发现缺字/衬线fallback时应报告。仅增加CI字体不能证明用户系统字体表现一致。
+
+### 当前验证状态
+
+本机Chromium正常安全配置启动在process_singleton socket()返回EPERM，未产生新渲染；未添加no-sandbox或其它安全降级。新截图、几何、状态、中文字体和真实200%等待官方Chrome安全CI。静态类型/单测/构建结果在最终版本记录，不能替代视觉查看。最终交付前必须打开新旧截图对照检查比例、可读性、空白与焦点。

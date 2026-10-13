@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-const ready=async(page,kind,path='',submitName='登录')=>{await page.goto(`/login-${kind}/${path}`);await expect(page.getByRole('heading',{name:'登录工作台'})).toBeVisible();await expect(page.getByRole('button',{name:submitName,exact:true})).toBeEnabled();};
+const ready=async(page,kind,path='',submitName='登录')=>{await page.goto(`/login-${kind}/${path}`);await expect(page.getByRole('heading',{name:'登录',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:submitName,exact:true})).toBeEnabled();};
 const fill=async(page)=>{await page.getByRole('textbox',{name:'用户名',exact:true}).fill('demo');await page.getByLabel('密码').fill('FAKE_LOGIN_PASSWORD');};
 const mode=async(page,operation,value)=>page.evaluate(([operation,value])=>window.loginDemo.setMode(operation,value),[operation,value]);
 for(const kind of ['react','vanilla']){

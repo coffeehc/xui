@@ -19,14 +19,13 @@ export function AuthPage({config:input,brandVisual,children,actions,alternatives
   const config=React.useMemo(()=>{if(typeof input.title!=='string')throw new TypeError('AuthPage title is required.');return resolveLoginPageConfig(input);},[input]),titleId=React.useId(),formMode=React.useRef(form!==undefined);
   if(formMode.current!==(form!==undefined))throw new TypeError('AuthPage form mode cannot change after mounting.');
   const content=<><div className="xui-login-content">
-    <div className="xui-login-body"><h1 id={titleId}>{config.title}</h1>{children}</div>
+    <div className="xui-login-body"><div className="xui-login-heading"><h1 id={titleId}>{config.title}</h1>{config.description&&<p className="xui-login-description">{config.description}</p>}</div>{children}</div>
     {actions!=null&&<footer className="xui-login-actions">{actions}</footer>}
     {alternatives!=null&&<div className="xui-login-options">{alternatives}</div>}
   </div><div className="xui-login-support"><div className="xui-login-feedback">{feedback}{feedbackActions}</div></div></>;
   return <main className="xui xui-login-page" data-layout={config.layout}><section className={`xui-login-card${config.layout==='card'?' xui-surface':''}`} aria-labelledby={titleId}>
     <header className="xui-login-brand"><div className="xui-login-brand-content">
       <div className="xui-login-identity">{config.logo&&<img className="xui-login-logo" src={config.logo.src} alt={config.logo.alt} referrerPolicy="no-referrer"/>}<strong>{config.productName}</strong></div>
-      {config.description&&<p className="xui-login-description">{config.description}</p>}
       {brandVisual!=null&&<div className="xui-login-visual" aria-hidden="true" inert>{brandVisual}</div>}
     </div></header>
     {form?<form className="xui-login-form" noValidate={form.noValidate} onSubmit={event=>{event.preventDefault();form.onSubmit?.(event);}}>{content}</form>:<section className="xui-login-form">{content}</section>}

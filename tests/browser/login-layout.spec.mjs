@@ -38,11 +38,11 @@ for(const kind of ['react','vanilla']){
       await ready(page,kind);await settle(page);
       const brand=await box(page.locator('.xui-login-brand')),form=await box(page.locator('.xui-login-form')),content=await box(page.locator('.xui-login-content')),card=await box(page.locator('.xui-login-card'));
       expect(card.x).toBeGreaterThanOrEqual(0);expect(card.right).toBeLessThanOrEqual(width);expect(Math.abs((card.x+card.width/2)-width/2)).toBeLessThanOrEqual(1);
-      expect(content.width).toBeLessThanOrEqual(400);expect(content.x).toBeGreaterThanOrEqual(card.x);expect(content.right).toBeLessThanOrEqual(card.right);
+      expect(content.width).toBeLessThanOrEqual(384);expect(content.x).toBeGreaterThanOrEqual(card.x);expect(content.right).toBeLessThanOrEqual(card.right);
       expect(brand.bottom).toBeLessThanOrEqual(form.y);expect(brand.x).toBeGreaterThanOrEqual(card.x);expect(form.right).toBeLessThanOrEqual(card.right);
-      if(width===390)expect(card.width).toBeLessThanOrEqual(390);else expect(card.width).toBeLessThanOrEqual(450);
+      if(width===390)expect(card.width).toBeLessThanOrEqual(390);else expect(card.width).toBeLessThanOrEqual(434);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeInViewport();
-      await expect(page.locator('.xui-login-brand strong')).toHaveText('轻舟工作台');await expect(page.locator('.xui-login-description')).toHaveText('继续处理你的工作。');await expect(page.getByRole('heading',{name:'登录工作台'})).toBeVisible();
+      await expect(page.locator('.xui-login-brand strong')).toHaveText('轻舟工作台');await expect(page.locator('.xui-login-description')).toHaveText('继续处理你的工作。');await expect(page.getByRole('heading',{name:'登录',exact:true})).toBeVisible();
       await expect(page.locator('.xui-login-visual')).toBeHidden();await expect(page.locator('.xui-login-visual img')).toHaveCount(0);
       const path=info.outputPath(`login-${kind}-${appearance}-${width}.png`);await page.screenshot({path,animations:'disabled'});await info.attach('login-layout',{path,contentType:'image/png'});
     });
@@ -68,7 +68,7 @@ for(const kind of ['react','vanilla']){
     for(const layout of ['card','fullscreen'])for(const size of [{width:1280,height:800},{width:1600,height:900},{width:390,height:800}]){
       await page.setViewportSize(size);await page.goto(`/login-${kind}/${layout==='card'?'':'?layout=fullscreen'}`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
       const card=await box(page.locator('.xui-login-card')),content=await box(page.locator('.xui-login-content')),brand=await box(page.locator('.xui-login-brand')),form=await box(page.locator('.xui-login-form'));
-      expect(Math.abs((card.x+card.width/2)-size.width/2)).toBeLessThanOrEqual(1);expect(card.width).toBeLessThanOrEqual(Math.min(size.width,450));expect(content.width).toBeLessThanOrEqual(400);
+      expect(Math.abs((card.x+card.width/2)-size.width/2)).toBeLessThanOrEqual(1);expect(card.width).toBeLessThanOrEqual(Math.min(size.width,434));expect(content.width).toBeLessThanOrEqual(384);
       expect(brand.bottom).toBeLessThanOrEqual(form.y);await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toBeInViewport();await expect(page.getByLabel('密码')).toBeInViewport();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeInViewport();
       await expect(page.locator('.xui-login-page')).toHaveAttribute('data-layout',layout);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
