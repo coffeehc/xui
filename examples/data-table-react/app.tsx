@@ -33,7 +33,7 @@ window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions],setColum
 
 function App(){
   const state=React.useSyncExternalStore(owner.subscribe,owner.getState,owner.getState);
-  const [columnView,setColumnView]=React.useState<{mode:WidthMode;hidden:string[]}>({mode:query.has('widths')?'mixed':'auto',hidden:[]});
+  const [columnView,setColumnView]=React.useState<{mode:WidthMode;hidden:string[]}>({mode:query.get('column-mode')==='sized'?'sized':query.has('widths')?'mixed':'auto',hidden:query.getAll('hide-column')});
   React.useLayoutEffect(()=>{configureColumns=(mode,hidden=[])=>setColumnView({mode,hidden});return()=>{configureColumns=()=>{};};},[]);
   const [inspected,setInspected]=React.useState('尚未查看');
   const inspect=React.useCallback((row:ExampleRow)=>{actions.push(row.id);setInspected(`已查看 ${row.id}`);},[]);
@@ -47,7 +47,7 @@ function App(){
     {id:'source',header:'来源',cell:row=>row.source},
     {id:'actions',header:'操作',sticky:'end',cell:row=><Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button>},
   ],[inspect]);
-  const visibleColumns=React.useMemo(()=>columns.filter(column=>!columnView.hidden.includes(column.id)&&(!noActions||column.id!=='actions')).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'?160:undefined):widths[column.id as keyof typeof widths]})),[columns,columnView]);
+  const visibleColumns=React.useMemo(()=>columns.filter(column=>!columnView.hidden.includes(column.id)&&(!noActions||column.id!=='actions')).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'||query.has('fluid-content')?160:undefined):column.id==='name'&&columnView.mode==='mixed'&&query.has('fluid-content')?undefined:widths[column.id as keyof typeof widths]})),[columns,columnView]);
   const toolbar=noSearch?undefined:<DataTableToolbar aria-label="记录筛选" data-testid="record-filters">
     <DataTableFilter label="搜索记录" grow><Input type="search" value={String(state.filters.search??'')} onChange={event=>owner.filter('search',event.currentTarget.value)}/></DataTableFilter>
     {filters.map(filter=><DataTableFilter label={filter.label} key={filter.name}><NativeSelect value={String(state.filters[filter.name]??'')} onChange={event=>owner.filter(filter.name,event.currentTarget.value)}><option value="">全部{filter.label}</option>{filter.values.map(value=><option key={value} value={value}>{value}</option>)}</NativeSelect></DataTableFilter>)}

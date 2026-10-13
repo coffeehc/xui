@@ -38,6 +38,8 @@ const columns: readonly DataTableColumn<Row>[] = [
 
 长中文、长英文及无空格文本沿用公共表格的 `overflow-wrap:anywhere` 换行，不默认截断或省略内容。宿主 slot 若强制 `nowrap`、放置不可收缩的大控件或更大的最小宽度，仍须按内容选择合适列宽或适配 slot；库不会为满足指定宽度默认裁切按钮、操作内容或焦点轮廓。`sticky:'start'|'end'` 仍是既有单侧零 offset 合同，列宽配置不自动累加多个 sticky 列的偏移；需要多列冻结组合时使用已有 Table 原语的显式 `stickyOffset`。
 
+全指定列与主要内容列省略 width 的正式消费者对比、源码历史和实际矩形验收见 [横向空间回归](DATA_TABLE_WIDTH_VALIDATION.md)。
+
 ## 页面标题、筛选与滚动
 
 共享 `DataTableLayout = 'natural' | 'workspace' | 'document'` 从 runtime/data-table、runtime/data-table-dom、React/data-table 及 runtime/React 根入口导出。React `DataTable` 与原生 `createDataTable` 的 `layout` 默认均为 `'natural'`；它与 shell 的 `scrollMode` 是两个独立选择。
