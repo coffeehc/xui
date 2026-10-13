@@ -22,6 +22,8 @@ offset 端点可省略 next_cursor；cursor 端点每次明确给出 token 或 n
 6. 不需要总数的新列表默认选择不计算；需要总数的现有 offset 功能按其显式合同请求。Key 管理全量 adapter 仍要求 total 来验证完整读取，业务日志默认 offset loader 同样要求 total；缺失时拒绝，不能误切 cursor 或猜结束。
 7. serializeWebfacadeQuery 不变：page_index/page_size/return_total 和 filter/sort 合同仍显式。具体 cursor 请求参数留 endpoint adapter；库不新增未经后端定义的通用 query AST。
 
+新端点采用 [commons 的严格 ParsePaginationQuery](https://github.com/coffeehc/commons/blob/2fd78215cf5321b9dc9b12d5f02c90567ce3cc71/webfacade/pagination.go) 时，cursor 请求使用 page_size 与显式 return_total=false；首屏省略 cursor，续页将原 token 交 URLSearchParams 编码一次，不发送 page_index，也不把 null/空串序列化成 cursor。端点显式声明模式、页大小上限和过滤字段；旧 offset serializeWebfacadeQuery 与页基数合同不变。后端服务/存储必须实际跳过 COUNT，仅把算出的 total 从 JSON 隐去不算完成性能目标。
+
 ## 示例与验证记录
 
 正式 React/原生 DataTable 示例增加 ?cursor：不请求 total，服务端 fixture 发布真实 token 和末页 null；?cursor&cursor-total 展示二者共存仍无页码。宿主 resource 在成功后才提交 rows、cursor 和历史，失败/取消保留已确认事实，筛选和条数变化重置历史。不连接真实业务服务。
@@ -35,7 +37,7 @@ offset 端点可省略 next_cursor；cursor 端点每次明确给出 token 或 n
 - 本地 build、350 token/design checks、typecheck 与 344 项 unit 已通过（0 fail/skip），构建指纹 e7a6d60d9735；此初版双端正式 tarball/exports/types/peer/performance 也通过；随后补 HTTP 示例修正，已按下方最终结果重跑，没有沿用初版成绩。本地 Chromium/socket 已知受环境限制，不重试绕过，实际浏览器验收由 GitHub Actions 正常 pnpm verify 完成。
 - 边界：未测试真实数据库 COUNT、产品权限/生产 route、其他浏览器/OS/读屏器或生产部署。
 
-共享 fixture 的唯一源为 commons/webfacade/testdata/webfacade-list.v1.json；本仓逐字节镜像在 [tests/fixtures/webfacade-list.v1.json](../tests/fixtures/webfacade-list.v1.json)，SHA-256 为 d1d04bf74b24909dd7f8e4a27fa7b2a6fc2de17c6e8c3c79027d2450df9c4ed1。共 9 个标准有效响应、1 个 legacy nil-slice 响应、17 个无效响应；实际 HTTP adapter、parseListData、显式投影与 cursor DataTable 共同消费同一文件。截至 2026-10-13 00:29 UTC，已核对后端本地提交 commons `2fd78215cf5321b9dc9b12d5f02c90567ce3cc71` 与 httpx `51e2a0a334f77ff79bf23b2ebc4c75de5a8e0814`，但两者尚未发布到远端；它们不是可采用的正式远端版本，因此不提供不可达的源码链接。共享 fixture 内容及 hash 已核实相同。后端正式发布后再固定其远端版本、完成真实端点/数据库与产品接入验收；本仓通过不能替代这些步骤。
+共享 fixture 的唯一源为 commons/webfacade/testdata/webfacade-list.v1.json；本仓逐字节镜像在 [tests/fixtures/webfacade-list.v1.json](../tests/fixtures/webfacade-list.v1.json)，SHA-256 为 d1d04bf74b24909dd7f8e4a27fa7b2a6fc2de17c6e8c3c79027d2450df9c4ed1。共 9 个标准有效响应、1 个 legacy nil-slice 响应、17 个无效响应；实际 HTTP adapter、parseListData、显式投影与 cursor DataTable 共同消费同一文件。正式来源已经正常推送并逐仓核对 remote master：commons [`2fd78215cf5321b9dc9b12d5f02c90567ce3cc71`](https://github.com/coffeehc/commons/blob/2fd78215cf5321b9dc9b12d5f02c90567ce3cc71/webfacade/README.md) 与冻结兼容的 httpx [`51e2a0a334f77ff79bf23b2ebc4c75de5a8e0814`](https://github.com/coffeehc/httpx/blob/51e2a0a334f77ff79bf23b2ebc4c75de5a8e0814/README.md)。[同一 fixture 源文件](https://github.com/coffeehc/commons/blob/2fd78215cf5321b9dc9b12d5f02c90567ce3cc71/webfacade/testdata/webfacade-list.v1.json) 与本仓镜像逐字节相同。此前未发布阶段不作为正式依赖来源；现在可以固定上述远端版本，但仍不能把合同检查等同真实端点/数据库或产品迁移验收。
 
 独立只读审阅核对三态、控制回调、取消历史与 count-required adapter，未发现阻断。初版 consumer 仅有既有 npm http-proxy 配置警告，退出状态为 0；没有变更环境配置。
 
@@ -51,4 +53,4 @@ ACL/权限过滤后的有界扫描可连续返回空 list 与非空 next_cursor�
 
 新增 8 项 cursor 检查覆盖 React/原生 × 1280/390px 的前后翻页、真实 token、未知与已知总数、空末页、失败/重试、取消迟到、筛选/条数重置和 footer 四边 bounds；新增 2 项 HTTP 检查验证不计数响应确实省略 total、未知时不造编号页数、恢复真实总数后正常分页。既有全部列宽与布局矩阵亦通过。没有修改这些宽度/布局实现来放宽测试。
 
-本地未重复尝试已知受限的 Chromium/socket 路径。xui 前端合同与正式消费者已验证；上述未发布后端以及真实数据库/生产产品接入仍按明确边界单独完成。
+本地未重复尝试已知受限的 Chromium/socket 路径。xui 前端合同与正式消费者已验证，后端固定源码来源已发布；真实数据库/生产产品接入仍按明确边界单独完成。
