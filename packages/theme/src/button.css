@@ -30,6 +30,6 @@
   .xui-button[data-icon="true"][data-size="lg"] { width: var(--control-height-lg); height: var(--control-height-lg); }
   .xui-button svg { width: var(--control-icon-size); height: var(--control-icon-size); flex-shrink: 0; }
   .xui-button[data-size="xs"] svg { width: var(--control-icon-size-xs); height: var(--control-icon-size-xs); }
-  .xui-button:where(:disabled,[aria-disabled="true"],[data-disabled]) { background: var(--button-disabled-background); color: var(--button-disabled-foreground); cursor: not-allowed; transform: none; }
+  .xui-button:is(:disabled,[aria-disabled="true"],[data-disabled]) { background: var(--button-disabled-background); color: var(--button-disabled-foreground); cursor: not-allowed; transform: none; }
   .xui-button[aria-busy="true"] { border-color: var(--surface-line-strong); }
 }

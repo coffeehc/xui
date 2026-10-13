@@ -65,6 +65,15 @@ for (const kind of ['vanilla','react']) {
   assert(Object.values(initializer.metafile.outputs).some(output => Object.entries(output.inputs).some(([path,data]) => path.endsWith('/@coffeehc/xui-runtime/dist/init.js') && data.bytesInOutput > 0)), 'Theme initializer was tree-shaken from the packed consumer');
   await writeFile(`${cwd}/types.ts`,"import { createThemeController, type ThemeMode } from '@coffeehc/xui-runtime';\nconst mode: ThemeMode = 'system'; createThemeController().setMode(mode);\n");
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',kind === 'react' ? 'app.tsx' : 'types.ts'],{cwd,stdio:'inherit'});
+  const buttonStateFixture=`button-state-contract.${kind==='react'?'tsx':'js'}`;
+  await copyFile(`tests/fixtures/${buttonStateFixture}`,`${cwd}/${buttonStateFixture}`);
+  const buttonStateBuild=await build({entryPoints:[`${cwd}/${buttonStateFixture}`],outfile:`dist/${kind}/button-state-contract.js`,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(buttonStateBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Button states escaped the standalone tarball install');
+  assert(!Object.keys(buttonStateBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Button states require private CSS');
+  if(kind==='vanilla')assert(!Object.keys(buttonStateBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native button states imported React');
+  else execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',buttonStateFixture],{cwd,stdio:'inherit'});
+  await writeFile(`dist/${kind}/button-state-contract.html`,'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><script src="./theme-init.js"></script><link rel="stylesheet" href="./button-state-contract.css"></head><body class="xui"><div id="root"></div><script type="module" src="./button-state-contract.js"></script></body></html>');
+  await writeFile(`dist/${kind}/button-state-contract-metafile.json`,JSON.stringify(buttonStateBuild.metafile,null,2));
   if (kind === 'react') {
     await copyFile('tests/fixtures/peer-contract.tsx',`${cwd}/peer-contract.tsx`);
     const fixture = await build({entryPoints:[`${cwd}/peer-contract.tsx`],outfile:'dist/react/peer-contract.js',bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
