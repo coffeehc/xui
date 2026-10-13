@@ -8,7 +8,7 @@ React 三控件均受控，value/onValueChange 必填，保留 input ref、name�
 
 value 是 number|null，空白提交 null，绝不转为 0。min/max 必须有限且顺序正确，step 默认为 1 且必须正数；外部 value 必须有限且绝对值不超过 Number.MAX_SAFE_INTEGER。本组件不适用于精确金额、大整数、ID；这些继续用字符串 Input 加领域 parser，不提供格式化/本地化或 decimal 引擎。
 
-文本输入保留 `-`、`.`、`1e` 等编辑中间态；无关 render 或同值 update 不擦除 draft。真实 inputMode=decimal、role=spinbutton、aria-valuemin/max/now 保留可访问数字语义。onDraftChange（可选）每次编辑通知；onValueChange 只在 blur、非 IME Enter、方向键或步进按钮提交有效且与确认值不同的值时通知。onInvalidDraft（可选）在提交非法文本时通知 draft/error；输入始终以 customValidity 阻止非法/越界/不合步长表单提交。草稿和已确认值不同是有意设计；即使宿主拒绝步进值，aria-valuenow 仍是原确认值。更改外部 value 才替换草稿，defaultValue 始终派生自确认值，form.reset 同步表单数据及后续 task 恢复最新确认值，不发送变更。
+文本输入保留 `-`、`.`、`1e` 等编辑中间态；无关 render 或同值 update 不擦除 draft。真实 inputMode=decimal、role=spinbutton、aria-valuemin/max/now 保留可访问数字语义。onDraftChange（可选）每次编辑通知；onValueChange 只在 blur、非 IME Enter、方向键或步进按钮提交有效且与确认值不同的值时通知。onInvalidDraft（可选）在提交非法文本时通知 draft/error；输入始终以 customValidity 阻止非法/越界/不合步长表单提交。草稿和已确认值不同是有意设计；即使宿主拒绝步进值，aria-valuenow 仍是原确认值。更改外部 value 才替换草稿，form.reset 捕获阶段会先把 defaultValue 同步为最新确认值，浏览器随后的同步重置及立即 FormData 因此都使用确认值；后续 task 再同步 React 草稿，不发送变更。React 在 input/change 事件结束时可能把 DOM defaultValue 写回草稿，所以不把该 DOM 属性当作确认值 owner，也不只依赖 layout effect。取消 reset 保留原草稿。
 
 解析支持普通小数和指数，不接受千位分隔或 locale 小数逗号。step 以 min（否则 0）为基线，容忍有限浮点噪声；步进封顶到边界内合法格点，空值从 min（否则 0，负 max 时从不超过 max 的合法格点）开始。超出支持范围或无法安全计算步数时拒绝；不承诺任意小数精确性。wheel 不改值。原生额外提供 getDraft()/commit()；需要表单提交前领域验证仍由宿主拥有。
 

@@ -3,10 +3,15 @@ import {Input,InputGroup} from './forms.js';
 import {parseNumberDraft,stepNumber,validateNumberConstraints,validateNumberValue,type NumberInputConstraints} from '@coffeehc/xui-runtime/number-input';
 type ControlledInput=Omit<React.ComponentProps<'input'>,'type'|'value'|'defaultValue'|'onChange'> & {value:string;onValueChange:(value:string)=>void};
 /** Mirror controlled defaults and run after native reset, without a change callback. */
-function useTextReset(input:React.RefObject<HTMLInputElement|null>,value:string,onReset?:(value:string)=>void){
+function useTextReset(input:React.RefObject<HTMLInputElement|null>,value:string,onReset?:((value:string)=>void),prepareDefaultOnReset=false){
  const current=React.useRef({value,onReset});current.current={value,onReset};
  React.useLayoutEffect(()=>{if(input.current)input.current.defaultValue=value;});
- React.useEffect(()=>{const doc=input.current?.ownerDocument;let timer:ReturnType<typeof setTimeout>|undefined;const reset=(event:Event)=>{if(event.target!==input.current?.form)return;clearTimeout(timer);timer=setTimeout(()=>{if(input.current&&!event.defaultPrevented){input.current.value=current.current.value;current.current.onReset?.(current.current.value);}},0);};doc?.addEventListener('reset',reset,true);return()=>{clearTimeout(timer);doc?.removeEventListener('reset',reset,true);};},[]);
+ React.useEffect(()=>{const doc=input.current?.ownerDocument;let timer:ReturnType<typeof setTimeout>|undefined;const reset=(event:Event)=>{if(event.target!==input.current?.form)return;
+ // React restores a controlled input's defaultValue from its draft after input/change
+ // events, later than layout effects. NumberInput must prepare the confirmed reset
+ // default here, before the browser's synchronous reset algorithm and FormData.
+ if(prepareDefaultOnReset&&input.current)input.current.defaultValue=current.current.value;
+ clearTimeout(timer);timer=setTimeout(()=>{if(input.current&&!event.defaultPrevented){input.current.value=current.current.value;current.current.onReset?.(current.current.value);}},0);};doc?.addEventListener('reset',reset,true);return()=>{clearTimeout(timer);doc?.removeEventListener('reset',reset,true);};},[]);
  return current;
 }
 export type SearchInputProps=Omit<ControlledInput,'onSubmit'> & {onSubmit?:(value:string)=>void;onClear?:()=>void;clearLabel?:string;clearOnEscape?:boolean};
@@ -28,7 +33,7 @@ export function PasswordInput({value,onValueChange,onClear,showLabel='Show passw
 export type NumberInputProps=Omit<React.ComponentProps<'input'>,'type'|'value'|'defaultValue'|'onChange'|'min'|'max'|'step'> & NumberInputConstraints & {value:number|null;onValueChange:(value:number|null)=>void;onDraftChange?:(draft:string)=>void;onInvalidDraft?:(draft:string,error:string)=>void;incrementLabel?:string;decrementLabel?:string};
 export function NumberInput({value,onValueChange,onDraftChange,onInvalidDraft,min,max,step=1,incrementLabel='Increase value',decrementLabel='Decrease value',disabled,readOnly,ref,onBlur,onKeyDown,onCompositionStart,onCompositionEnd,...props}:NumberInputProps){
  validateNumberValue(value);validateNumberConstraints({min,max,step});const input=React.useRef<HTMLInputElement>(null),[draft,setDraft]=React.useState(value===null?'':String(value)),composing=React.useRef(false),current=React.useRef(value);React.useImperativeHandle(ref,()=>input.current!);
- useTextReset(input,value===null?'':String(value),next=>{setDraft(next);const parsed=parseNumberDraft(next,{min,max,step});input.current?.setCustomValidity(parsed.valid?'':parsed.error);});
+ useTextReset(input,value===null?'':String(value),next=>{setDraft(next);const parsed=parseNumberDraft(next,{min,max,step});input.current?.setCustomValidity(parsed.valid?'':parsed.error);},true);
  React.useEffect(()=>{if(!Object.is(current.current,value)){current.current=value;setDraft(value===null?'':String(value));input.current?.setCustomValidity('');}},[value]);
  React.useEffect(()=>{const parsed=parseNumberDraft(draft,{min,max,step});input.current?.setCustomValidity(parsed.valid?'':parsed.error);},[draft,min,max,step]);
  const commit=(text=draft)=>{if(disabled||readOnly)return;const result=parseNumberDraft(text,{min,max,step});input.current?.setCustomValidity(result.valid?'':result.error);if(result.valid){if(!Object.is(result.value,value))onValueChange(result.value);}else onInvalidDraft?.(text,result.error);};
