@@ -23,15 +23,3 @@ jobs:
             test-results
             .artifacts/vite-regression-*/results.json
             .artifacts/public-api.json
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: login-visual-acceptance
-          if-no-files-found: warn
-          path: |
-            test-results/login-visual-*/*.png
-            test-results/login-visual-*/*.json
-            test-results/login-navigation-*/*.png
-            test-results/login-navigation-*/*.json
-            test-results/auth-page-*/*.png
-            test-results/auth-page-*/*.json
