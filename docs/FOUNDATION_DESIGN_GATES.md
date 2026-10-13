@@ -80,3 +80,11 @@ CI 38443173192：510 单测、81 Auth 视觉、558 focused 全部通过（零跳
 漏掉的专项现改用 computed clientHeight 减上下 padding 作为百分比高度包含块，并补横向内容盒宽度及左上起点强断言，不写固定减8、不改变1px容差。全部滚动、footer/composer可见、短/空内容、DOM/focus保持断言保留；该专项纳入前置检查，随后仍跑完整套件。生产未改变，修复后结果待新CI。
 
 本候选已实际通过的基础修复包括 Button 六variant禁用16例、原严格尺寸12例及xs追加6例、输入字体/NativeSelect平台边界6例、Separator独立线宽6例、choice绘制/真实禁用与只读交互12例，以及原生控件4例。这里只结算这些基础条款，不代表Typography/Surface/其他展示族全部token与可访问性门禁完成。G2候选继续后置；OS弹层、自动填充/密码管理器、系统读屏与多OS字体仍明确未全面测。
+
+### G0/G1 展示基础的下一项独立消费证据
+
+已按真实出口复核 Typography.Heading/Text/Link/Code（display）、Surface（feedback）及原生 createTypography* / xui-surface。新 `display-foundation-contract.spec.mjs` 使用既有独立 tarball 两端示例，增加六项三主题验证：文字四parts的独立font-family/字号/行高/字重变量，Surface背景/边线/线宽/圆角/padding/平面阴影；同时覆写Surface线宽仍不影响Separator，真实Tab进入链接，以及390px下200%文字放大不横溢出。这是新增待执行回归，语法和用例发现通过不代表真实浏览器通过。
+
+Badge/Tag：DESIGN930/955写“元数据body-xs普通文字”，Typography799列正文400/控件500；现Badge使用control字重500且Tag复用。历史与DISPLAY专项没有明确独立字重映射，暂记录规格歧义，不凭孤立词语改变默认值。Tag删除按钮仍是Button控件。其既有移除/焦点/禁用/长中文测试不能替代元数据文字token的明确合同。
+
+仍需逐族补充独立消费证据：Typography全部tone，Surface嵌套与四边focus，Alert四tone/非颜色唯一提示，Badge明确文字角色，Avatar fallback，Spinner/Skeleton独立motion token与无重复播报，Progress值/不定值及独立轨道token。现有display行为/SSR、native-controls进度/forced-colors、widgets头像等属于已有覆盖入口，不将这些入口存在自动计为上述所有合同完成。系统读屏、浏览器自动填充/密码管理器和跨OS原生窗口边界继续单独记录。
