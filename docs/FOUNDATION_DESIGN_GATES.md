@@ -8,7 +8,7 @@
 
 | 范围 | 静态规范/token检查 | 单测/正式消费 | 必须实际验证 | 当前缺口/未测 |
 | --- | --- | --- | --- | --- |
-| DESIGN→生成产物 | 358 tokens、无环依赖、light/dark/system/reduced、CSS/YAML一致；design-value-guard维持结构/运行时例外边界 | tokens/build、每个正式ESM/CSS/types出口、Button-only贡献与gzip门禁 | 在真正消费者覆盖语义变量后computed与绘制改变 | 尚无已选新风格；没有styleId/profile API |
+| DESIGN→生成产物 | 已验基线358 tokens；当前Progress修补候选362 tokens（新增4个forced-colors系统色/边界角色，浏览器待验）；无环依赖、light/dark/system/reduced、CSS/YAML一致；design-value-guard维持结构/运行时例外边界 | tokens/build、每个正式ESM/CSS/types出口、Button-only贡献与gzip门禁 | 在真正消费者覆盖语义变量后computed与绘制改变 | 尚无已选新风格；没有styleId/profile API |
 | 字体与文字角色 | font、size、line-height、weight、说明/错误颜色只取相应变量 | typography、display、table-design-contract | 中英文/数字/长文本、fallback/离线、三主题对比与200% | 浏览器CJK字体已有CI证据；系统读屏、不同OS字体未全面验 |
 | 共享状态优先级 | H/P/S/F/X/B各状态的适用规则，不用hover覆盖selected或variant覆盖disabled | menu-design-contract、design-state-contract；Button专项已通过 | 默认/hover/active/selected/focus/disabled/busy/invalid交叉矩阵 | Button variants 16例已过；所有组件的全局状态优先级仍需逐族核对 |
 | 边界、surface和focus | 背景/边线/圆角/阴影/outline、scroll paint空间均用公共变量 | foundation-contract、focus-boundaries、design-state-regressions | 四边实际绘制、所有overflow祖先、Tab自动滚动、forced colors | workspace焦点与Toggle 24例已过；Surface及其他容器需逐项门禁 |
@@ -92,3 +92,13 @@ Badge/Tag：DESIGN930/955写“元数据body-xs普通文字”，Typography799�
 5a5896c 完整复验结论：510单测、81 Auth、600 focused、1224完整浏览器均通过；watch120.82秒、cold15.27秒通过。上述42个workspace验证基准已逐条关闭。后续纯基础验收批增加Typography全部tone和Surface内首/中/末控件的真实Tab与四边focus几何，放大文字后重复，未扩生产样式。此后新回归在CI实际执行前仍列未测。
 
 合并纯基础验收批：`feedback-foundation-contract` 再增加18项独立React/native×三主题测试，具体覆盖与非重复边界见 [反馈基础验证](FEEDBACK_FOUNDATION_VALIDATION.md)。与展示6项一起24项纳入前置门禁。合成后的516单测和类型检查通过；浏览器执行、实际像素与截图审阅留给本批CI，不把unit或仅收集用例计为渲染验收。
+
+### 770a83d 真实结果与绿色测试漏项
+
+516单测、81 Auth、624 focused通过；watch125.47秒、cold17.94秒通过；全量1247/1248通过，1项React APIKey窄屏200%循环Tab在第5步即时contains断言失败。锁定BaseUI1.7.0的FloatingFocusManager使用after-guard并通过enqueueFocus/requestAnimationFrame回首项；此前4步inside=true，失败后的真实ARIA快照已是名称textbox active。测试现先等初始名称focus，随后8次Tab逐个严格等待写权限/Enabled/取消/Save/名称/写权限/Enabled/取消，保留inside、Escape恢复和零PUT断言，不手动focus、不减少循环。
+
+独立实图缺陷仍未关闭：该APIKey旧组合在390×720、根字号200%时，长description挤压Dialog.Body成窄条，输入focus有裁切。证据为CI38454862068 artifact11845201271的api-key-v2 narrow失败截图；这是Dialog/组合布局候选，不能把键盘等待修正当作视觉修复。按基础优先顺序保留待办，未修改上层生产。
+
+Progress forced-colors的旧断言虽绿，人工图审发现轨道/填充完全不可见；不能结算为已满足DESIGN。下一基础批先修系统色实际绘制，并与Input/Textarea独立基础验收合并。其普通模式及其他基础展示条款通过不抵消该实图缺陷。
+
+当前冻结基础候选同时补 Input/Textarea 与真实 label 的12项正式双端验收：readonly选择范围与提交、disabled排除与真实点击/Tab、invalid加focus、独立token覆写和390px/root200%。仅新增验证；尚未实际浏览器运行，不提前标绿。Progress强制色修补的原始空白PNG、像素负例、系统色依赖和新绘制断言见 FEEDBACK_FOUNDATION_VALIDATION.md。
