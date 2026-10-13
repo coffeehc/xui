@@ -31,3 +31,13 @@
 正式门禁保留旧组合长标题失败复现，增加动态标题/字体和短窗口切换的 DOM 身份、值/焦点保持，真实触屏滚动/点击 Footer，以及无 ResizeObserver、上下 Sheet 实际高度回归。正常窗口 Footer 同屏断言保留；极限窗口断言它经实际滚动完全可见且动作收到一次点击。新候选浏览器尚未执行，不能将本地单测通过替代可达性验收。包间 internal/dialog-layout 路径仅库实现接线，不是宿主可依赖的稳定布局 API。
 
 本地最终候选 generation `eca5c3805af5`：363 token 与原始规范逆向 SHA 检查、根类型、528 单测、完整独立 tarball React/native 全部入口/类型/包体门禁通过。独立只读复核发现的固定 Sheet 高度、变换坐标混用已修正，并补 computed content-box/border-box、销毁待执行帧和无观察器单测。布局切换仅把原有焦点控件 nearest 滚入新 owner，不重新 focus，不拦截输入键盘；新增末字段真实 Tab 双向切换截图回归。初始化 showModal 抛错也释放观察器/监听。77 条 Dialog 前置浏览器用例已收集，实际结果等待安全 CI，不将本地结果记为浏览器通过。
+
+## dff9dba 实测结果与下一验证修正
+
+安全 CI [38477897046](https://github.com/coffeehc/xui/actions/runs/38477897046) 为 528 单测/构建/正式消费者通过，Dialog 73/77；后续 Input/Auth/focused/watch/cold/full 均未执行。四项失败没有被重试涂绿。
+
+- 长 Header 双端已经通过 Body 高度、Footer 全部可见及 Save 收到一次点击；滚回顶部失败。原图与 trace 显示弹层中心落在示例内独立 Nested ScrollArea，它的 overscroll containment 合法阻止轮滚传到外层。修正验证落点：从公开弹层自身 padding 得到坐标，elementFromPoint 必须命中目标弹层，再发送真实滚轮；保留回顶为零、关闭和返回焦点要求。
+- 短窗口双端的 CDP 5000px 合成 touch gesture 前后 scrollTop 均 146，没有发生滚动。协议的负 yDistance 方向正确；现有证据尚不能把未产生滚动归为生产缺陷或宣称触控已可用。下一验证改为完全位于视口内的 touchStart/move/end 连续上滑，每次必须有实际滚动增量，记录轨迹并最终真实触屏点击 Footer，不能通过直接赋 scrollTop。
+- 无 ResizeObserver 的关闭、上下 Sheet 四例、最后字段在双向 owner 切换后的值/焦点/绘制两例全部通过。常规三主题/宽窄/root200%及长警告六例继续通过，但不代替新触控门禁。
+
+本次后续仅修测试和验证记录，不改变生产布局或降低可见性/交互断言。失败原 PNG/trace 和官方 artifact 均保留；正式稳定包仍为 3afbcf5。

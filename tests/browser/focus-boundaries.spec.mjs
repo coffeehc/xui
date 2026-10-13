@@ -5,6 +5,28 @@ async function setup(page,{native,kind,mode,width,scale=1,standalone=false,noHea
  await page.evaluate(({native,kind,mode,scale,standalone,noHeader,titleText,side})=>{document.documentElement.dataset.theme=mode;document.documentElement.dataset.themeEffective=mode==='system'?'dark':mode;document.documentElement.style.fontSize=`${16*scale}px`;window.renderFocusCase({native,kind,standalone,noHeader,titleText,side});},{native,kind,mode,scale,standalone,noHeader,titleText,side});
  if(kind!=='card')await page.getByRole('button',{name:'Open form',exact:true}).click();
 }
+async function pointAtScrollOwner(page,owner){
+ // The fixture deliberately contains a nested ScrollArea. Its contained wheel
+ // gestures must not be mistaken for gestures on the outer modal scrollport.
+ const point=await owner.evaluate(node=>{const r=node.getBoundingClientRect(),css=getComputedStyle(node);const x=r.left+node.clientLeft+parseFloat(css.paddingLeft)/2,y=r.top+r.height/2;return {x,y,hit:node.ownerDocument.elementFromPoint(x,y)===node};});
+ expect(point.hit,'The gesture must hit the requested scroll owner, not a nested scroll area').toBe(true);await page.mouse.move(point.x,point.y);return point;
+}
+async function touchScrollToEnd(page,owner,cdp){
+ const gestures=[];
+ await owner.evaluate(node=>{window.dialogTouchEvents=[];window.dialogTouchRecorder=event=>{window.dialogTouchEvents.push({type:event.type,target:event.target?.className,cancelable:event.cancelable,defaultPrevented:event.defaultPrevented,isTrusted:event.isTrusted,scrollTop:node.scrollTop});};for(const name of ['touchstart','touchmove','touchend','touchcancel'])node.addEventListener(name,window.dialogTouchRecorder,{passive:true});});
+ const geometry=await owner.evaluate(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node),padding=parseFloat(s.paddingTop);return {x:r.left+node.clientLeft+parseFloat(s.paddingLeft)/2,start:r.bottom-padding,end:r.top+padding,range:node.scrollHeight-node.clientHeight};});
+ const distance=geometry.start-geometry.end;expect(distance).toBeGreaterThan(0);
+ for(let attempt=0;attempt<=Math.ceil(geometry.range/distance)*2;attempt++){
+  const before=await owner.evaluate(node=>({top:node.scrollTop,max:node.scrollHeight-node.clientHeight}));if(before.top>=before.max)break;
+  const hit=await owner.evaluate((node,p)=>node.ownerDocument.elementFromPoint(p.x,p.start)===node,geometry);expect(hit).toBe(true);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:geometry.x,y:geometry.start,id:0}]});
+  for(let step=1;step<=4;step++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:geometry.x,y:geometry.start-distance*step/4,id:0}]});await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>resolve())));}
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await expect.poll(()=>owner.evaluate(node=>node.scrollTop)).toBeGreaterThan(before.top);
+  gestures.push({before:before.top,after:await owner.evaluate(node=>node.scrollTop),x:geometry.x,start:geometry.start,end:geometry.end});
+ }
+ return gestures;
+}
 async function assertFocusPaint(control){
  await control.focus();
  const result=await control.evaluate(node=>{
@@ -56,10 +78,10 @@ for(const native of [false,true])for(const titleText of ['', '很长的标题用
  if(titleText){
   await expect(dialog).toHaveAttribute('data-dialog-scroll','whole');await expect(body).toHaveCSS('overflow-y','visible');
   await expect(close).toBeFocused();await page.keyboard.press('Tab');await expect(first).toBeFocused();await first.fill('Preserved across layout changes');
-  await dialog.hover();await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));
+  await pointAtScrollOwner(page,dialog);await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));
   await expect.poll(async()=>{const box=await footer.boundingBox();return box.y>=0&&box.y+box.height<=844;}).toBe(true);
   await dialog.getByRole('button',{name:'Save form',exact:true}).click();expect(await page.evaluate(()=>window.focusCaseSaves)).toBe(1);await info.attach('whole-scroll-footer.png',{body:await page.screenshot(),contentType:'image/png'});
-  await dialog.hover();await page.mouse.wheel(0,-(await dialog.evaluate(node=>node.scrollHeight)));await expect.poll(()=>dialog.evaluate(node=>node.scrollTop)).toBe(0);
+  await pointAtScrollOwner(page,dialog);await page.mouse.wheel(0,-(await dialog.evaluate(node=>node.scrollHeight)));await expect.poll(()=>dialog.evaluate(node=>node.scrollTop)).toBe(0);
   await info.attach('whole-scroll-title-and-close.png',{body:await page.screenshot(),contentType:'image/png'});
  }else {await expect(dialog).toHaveAttribute('data-dialog-scroll','body');const foot=await footer.boundingBox();expect(foot.y+foot.height).toBeLessThanOrEqual(844);}
  await close.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
@@ -77,9 +99,9 @@ for(const native of [false,true])test(`${native?'native':'react'} dialog changes
  await title.evaluate(node=>node.textContent='很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行');await page.evaluate(()=>document.documentElement.style.fontSize='200%');
  await expect(dialog).toHaveAttribute('data-dialog-scroll','whole');await expect(body).toHaveCSS('overflow-y','visible');await expect(first).toBeFocused();await expect(first).toHaveValue('Keep this field and focus');expect(await first.evaluate(node=>node===window.dialogFieldIdentity)).toBe(true);
  await page.setViewportSize({width:390,height:320});
- const box=await dialog.boundingBox(),cdp=await page.context().newCDPSession(page);
+ const cdp=await page.context().newCDPSession(page);
  await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
- await cdp.send('Input.synthesizeScrollGesture',{x:box.x+box.width/2,y:box.y+box.height/2,yDistance:-5000,gestureSourceType:'touch',speed:4000});
+ let gestures;try{gestures=await touchScrollToEnd(page,dialog,cdp);}finally{const events=await dialog.evaluate(node=>{for(const name of ['touchstart','touchmove','touchend','touchcancel'])node.removeEventListener(name,window.dialogTouchRecorder);return window.dialogTouchEvents;});await info.attach('touch-scroll-events.json',{body:JSON.stringify(events,null,2),contentType:'application/json'});}await info.attach('touch-scroll-trajectory.json',{body:JSON.stringify(gestures,null,2),contentType:'application/json'});
  const footer=dialog.locator('.xui-dialog-footer');await expect.poll(async()=>{const r=await footer.boundingBox();return r.y>=0&&r.y+r.height<=320;}).toBe(true);
  const saveBox=await dialog.getByRole('button',{name:'Save form',exact:true}).boundingBox();await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:saveBox.x+saveBox.width/2,y:saveBox.y+saveBox.height/2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await expect.poll(()=>page.evaluate(()=>window.focusCaseSaves)).toBe(1);await info.attach('short-window-touch-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cdp.detach();
  await title.evaluate(node=>node.textContent='Short title');await page.evaluate(()=>document.documentElement.style.fontSize='100%');await page.setViewportSize({width:390,height:844});await expect(dialog).toHaveAttribute('data-dialog-scroll','body');await expect(first).toHaveValue('Keep this field and focus');expect(await first.getAttribute('id')).toBe(identity);expect(await first.evaluate(node=>node===window.dialogFieldIdentity)).toBe(true);
@@ -90,12 +112,12 @@ test('native dialog remains reachable without ResizeObserver',async({page},info)
  await page.setViewportSize({width:390,height:480});await page.goto('/react/foundation-contract.html');await page.waitForFunction(()=>!!window.renderFocusCase);
  await page.evaluate(()=>{const observer=window.ResizeObserver;window.ResizeObserver=undefined;try{window.renderFocusCase({native:true,kind:'dialog',titleText:'很长的标题'.repeat(12)});}finally{window.ResizeObserver=observer;}});
  await page.getByRole('button',{name:'Open form',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog).not.toHaveAttribute('data-dialog-scroll','body');await expect(dialog.locator('.xui-dialog-body')).toHaveCSS('overflow-y','visible');
- await dialog.hover();await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const b=await cancel.boundingBox();return b.y>=0&&b.y+b.height<=480;}).toBe(true);await info.attach('no-observer-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
+ await pointAtScrollOwner(page,dialog);await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const b=await cancel.boundingBox();return b.y>=0&&b.y+b.height<=480;}).toBe(true);await info.attach('no-observer-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
 });
 
 for(const native of [false,true])for(const side of ['top','bottom'])test(`${native?'native':'react'} ${side} sheet respects its actual height budget`,async({page},info)=>{
  await setup(page,{native,kind:'sheet',side,mode:'light',width:390,scale:2,titleText:'很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行'});const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body');await expect(dialog).toHaveAttribute('data-dialog-scroll','whole');await expect(body).toHaveCSS('overflow-y','visible');
- await dialog.hover();await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const c=await cancel.boundingBox(),d=await dialog.boundingBox();return c.y>=d.y&&c.y+c.height<=d.y+d.height;}).toBe(true);await info.attach('fixed-height-sheet-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();
+ await pointAtScrollOwner(page,dialog);await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const c=await cancel.boundingBox(),d=await dialog.boundingBox();return c.y>=d.y&&c.y+c.height<=d.y+d.height;}).toBe(true);await info.attach('fixed-height-sheet-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();
 });
 
 for(const native of [false,true])test(`${native?'native':'react'} last-field focus remains painted through both scroll-owner transitions`,async({page},info)=>{
