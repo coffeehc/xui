@@ -1,3 +1,4 @@
+import {createApiKeyWriteGuard} from '@coffeehc/xui-runtime/api-key';
 import {parseEntityId,type EntityIdEncoding} from '@coffeehc/xui-runtime/entity-id';
 import {createHttpClient} from '@coffeehc/xui-runtime/http';
 import {createAuthClient,parseAuthSession} from '@coffeehc/xui-runtime/auth';
@@ -7,9 +8,9 @@ const encoding:EntityIdEncoding='hex';
 const id:string=parseEntityId('7fffffffffffffff',encoding);
 const http=createHttpClient({baseURL:'https://fixture.invalid'});
 const auth=createAuthClient({http,idEncoding:encoding});
-const keys=createApiKeyHttpAdapter({http,idEncoding:encoding});
+const keys=createApiKeyHttpAdapter({http,idEncoding:encoding,writeGuard:createApiKeyWriteGuard({isCurrentScope:()=>true,scopeId:'fixture',storage:{load:()=>null,save:()=>{}}})});
 const user=parseAuthSession({schema_version:2,user:{id,username:'fixture',display_name:null}},encoding).user;
-const metadata=parseApiKeyWireMetadata({id,name:'fixture',prefix:null,permission_ids:[],created_at:null,expires_at:null,last_used_at:null,status:'active',capabilities:{revoke:true,delete_record:false}},encoding);
+const metadata=parseApiKeyWireMetadata({id,name:'fixture',prefix:null,permission_ids:[],created_at:null,expires_at:null,last_used_at:null,status:'active',version:'1',enabled:true,capabilities:{update:true,revoke:true,delete_record:false}},encoding);
 void [keys,user,metadata];auth.destroy();http.destroy();
 
 // @ts-expect-error 未声明的编码不能进入公共选项。

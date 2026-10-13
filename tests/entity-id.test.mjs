@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {parseEntityId} from '../packages/runtime/dist/entity-id.js';
 import {createHttpClient} from '../packages/runtime/dist/http.js';
 import {createAuthClient,parseAuthSession} from '../packages/runtime/dist/auth.js';
-import {createApiKeyHttpAdapter,parseApiKeyWireMetadata} from '../packages/runtime/dist/api-key-http.js';
+import {createApiKeyHttpAdapter,parseApiKeyWireMetadata} from './helpers/api-key-v2.mjs';
 
 const read=async name=>JSON.parse(await readFile(new URL(`./fixtures/contracts/${name}`,import.meta.url),'utf8'));
 const fixture=await read('identity-encodings.v1.json'),authFixture=await read('auth.v2.hex.json'),keyFixture=await read('page-contracts.v1.hex.json');
@@ -57,7 +57,7 @@ test('hex 认证各端点拒绝非法身份，未知写入关闭后不重放',as
  }
 });
 
-test('共享 hex API Key wire 的列表、创建、路径、body 和确认均与 Go 相同',async()=>{
+test('归档 hex fixture 显式升级 v2 后保留列表、路径和 body 覆盖',async()=>{
  const pending=Object.values(keyFixture.cases),client=http(async(input,init)=>{
   const expected=pending.shift(),url=new URL(input);assert(expected);assert.equal(init.method,expected.request.method);assert.equal(url.pathname,expected.request.path);assert.deepEqual(Object.fromEntries(url.searchParams),expected.request.query??{});assert.deepEqual(init.body===undefined?undefined:JSON.parse(init.body),expected.request.body);return json(expected.response.body,expected.response.status);
  });

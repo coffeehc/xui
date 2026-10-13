@@ -19,14 +19,14 @@ xui 的目的包括统一品牌、前端体系与通用前后端接口。采用�
 | 页面/组合 | 公共接入与标准路径 | 原生协议与业务前置 |
 | --- | --- | --- |
 | ConfigurableLoginPage/createLoginPage | createAuthClient；POST /api/v1/auth/login、refresh、logout，GET /api/v1/auth/session | 原生 AjaxResponse；严格 Bearer v2，access仅内存，恢复Cookie只用于refresh/logout，session只接受session Bearer；baseservice authenticationservice/webfacade配套，宿主注册route与CSRF/资源策略，详情见 [AUTH](AUTH.md)。xAgent现有bearer/token/me/state尚不满足，不能说登录页没有合同，也不能直接换baseURL假装已集成 |
-| ApiKeyManager/createApiKeyManager | createApiKeyHttpAdapter；GET /api/v1/api-keys/capabilities，GET/POST /api/v1/api-keys，POST /api/v1/api-keys/{id}/revoke，DELETE /api/v1/api-keys/{id}/record | 原生 ListData + AjaxResponse、webfacade页查询；配置/权限/有效期/独立授权确认、metadata/可选访问待保存bool与一次性secret、明确操作确认；未知写入跨视图保护，恢复须新list及宿主权威终态，默认adapter不猜核对endpoint。后端须真正提供访问密钥管理，不能把上游供应商凭据配置改名接入。详见 [API_KEY](API_KEY.md) |
+| ApiKeyManager/createApiKeyManager | createApiKeyHttpAdapter；GET /api/v1/api-keys/capabilities，GET/POST /api/v1/api-keys，PUT /api/v1/api-keys/{id}，GET /api/v1/api-keys/operations/{operation_id}，POST /api/v1/api-keys/operations/{operation_id}/resolve，POST /api/v1/api-keys/{id}/revoke，DELETE /api/v1/api-keys/{id}/record | 原生 ListData + AjaxResponse、webfacade页查询；配置/权限/有效期/独立授权确认、metadata/可选访问待保存bool与一次性secret、明确操作确认；严格DTO v2；name/权限增减/enabled启停、expected_version CAS；显式actor-scoped持久guard跨重载保护，Lookup只读，Resolve独立确认可终止尚未执行请求；终态必须逐项匹配descriptor。后端须真正提供访问密钥管理，不能把上游供应商凭据配置改名接入。详见 [API_KEY](API_KEY.md) |
 | BusinessLogExplorer/createBusinessLogExplorer | createBusinessLogHttpLoader；GET /api/v1/business-logs，GET /api/v1/business-logs/{id} | 默认原生webfacade offset查询/ListData；公共业务记录字段与授权payload，真实服务负责权限/tenant/脱敏。没有强制或伪造snapshot。不存在业务日志接口时记录前置缺口，不把程序故障记录当业务行为。详见 [BUSINESS_LOGS](BUSINESS_LOGS.md) |
 | StructuredLogExplorer/createStructuredLogExplorer | 已声明四操作DTO/facade，endpoints由宿主明确 | 独立程序错误观察，仍按 [LOGS](LOGS.md)；不能用它代替业务日志，也不宣称对应后端已存在 |
 | MenuLayout、公共布局、表格、字段与弹层 | 公开数据/props/parts/controllers，无业务路由默认值 | 普通需求组合公开能力；业务API、授权、筛选范围和执行属于业务层，不用组件内部DOM或私有皮肤接入 |
 
 默认HTTP adapters已实现；对应baseservice的 [apikeyservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/apikeyservice/webfacade) 与 [bizlogservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/bizlogservice/webfacade) 提供API Key与业务日志HTTP边界。宿主注册路由并提供真实身份/tenant、授权配置和脱敏投影；登录、会话及用户管理仍归宿主或身份提供方，不是baseservice后续待办。xui现有登录组件与API不变。
 
-双方消费逐字节一致的 [page-contracts.v1.json](../tests/fixtures/page-contracts.v1.json)：xui通过默认HTTP adapters校验，baseservice通过HTTP handlers校验。API Key提交未知统一为HTTP503、原生success=false/code=50301/payload=null，不包含secret；已提交但后处理失败单独使用HTTP503/code50302/message=committed_followup_failed/payload=null，不声称回滚；xui防御这两个码被HTTP200/4xx包装时也保持阻止重放。默认adapter和baseservice facade均没有伪造核对endpoint或持久operation receipt；List不具备提交核对权威，详见 [API_KEY](API_KEY.md)。
+API Key v2 双方消费逐字节一致的 [decimal](../tests/fixtures/api-key-contracts.v2.json) / [hex](../tests/fixtures/api-key-contracts.v2.hex.json) fixtures；真实adapter/handler验证精确body、headers、更新及Lookup/Resolve回执。旧 [page-contracts.v1.json](../tests/fixtures/page-contracts.v1.json)保留归档，业务日志合同不变；旧Key fixture仅通过明确test-only升级helper保留覆盖，不宣称v1服务兼容。提交未知50301和已提交后处理失败50302，即使被HTTP200/4xx包装仍阻止重放。List不具有提交核对权威，详见 [API_KEY](API_KEY.md)。
 
 实际可调用性和实测结果以最终提交的 [PUBLIC_API](PUBLIC_API.md)、声明及正式打包消费为准。共享合成合同通过不代表产品已注册这些路由或生产鉴权/tenant/脱敏已集成。
 

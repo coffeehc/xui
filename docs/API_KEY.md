@@ -1,65 +1,74 @@
-# API Key管理与原生HTTP合同
+# API Key 管理与 HTTP v2 安全合同
 
-此页面管理自有平台向Agent等集成签发的访问密钥，不是上游供应商凭据配置。通用规则仅在[DESIGN](DESIGN.md)，统一前后端标准见[PAGE_APIS](PAGE_APIS.md)。没有该业务接口的产品记录前置缺口，不能通过改名或假adapter制造成功。
+此页面管理自有平台向 Agent 等集成签发的访问密钥，不是上游供应商凭据配置。通用规则仅在 [DESIGN](DESIGN.md)，统一前后端标准见 [PAGE_APIS](PAGE_APIS.md)。第三方 provider、OAuth/OIDC 等遵循原有行业协议，不强制套用此 facade；没有真实业务接口时记录前置缺口，不制造成功 adapter。
 
-## 公开页面与授权
+## 公开页面与业务能力
 
-ApiKeyManager/createApiKeyManager共用createApiKeyManagerController。permissions、expiryOptions、defaultExpiryId由服务/宿主授权声明，不猜产品权限或期限。创建要求明确canCreate:true；行capabilities声明revoke/deleteRecord，未知默认不启用。无capabilities的临时域adapter可以给明确canRevoke/canDeleteRecord；已有false服务声明不会被宿主true覆盖。后端始终重新鉴权。
+`ApiKeyManager` / `createApiKeyManager` 共用 `createApiKeyManagerController`。权限、期限、默认值和授权确认来自服务/宿主，不能由 UI 猜测。创建要求 `canCreate:true`；行 capabilities 分别声明 `update/revoke/deleteRecord`，未知默认不启用。通用域 adapter 可使用明确 `canUpdate/canRevoke/canDeleteRecord`，但服务端的明确 false 不能被宿主 true 覆盖。后端始终重新鉴权。
 
-required权限在初始draft中明确选中且不可取消；disabled权限不可选择，两者冲突拒绝配置。可选confirmationLabel提供独立授权勾选，draft.confirmed必须为true才能创建；它不是权限选择本身。validateCreate可返回name/permissions/expiry/confirmation的安全本地错误。不能将勾选视作后端授权或替代权限校验。
+- create：name、permissionIds、expiryId、可选独立 confirmed；required 权限必须选中，disabled 权限不可选择，冲突配置拒绝。
+- update：`openUpdate(id)/setUpdateDraft/submitUpdate` 编辑 name、permissionIds、enabled；可增加/移除宿主声明的权限，四个 scope 也使用同一权限集合，不写产品私有分支。required/disabled 规则仍适用；`validateUpdate(draft,key)` 可返回安全的 name/permissions 错误。没有完整已知 enabled 事实时不提供编辑入口，避免猜测启停状态。
+- 暂停/恢复使用 enabled；暂停显示 disabled，不是 revoke。revoked 密钥不可更新或恢复；不重新显示完整密钥。
+- revoke：使凭据失效；过期但未撤销的密钥仍按实际 capability 授权撤销。
+- deleteRecord：仅删除已经 revoked 的管理记录，独立确认及 capability；不撤销活动凭据、不删除业务记录。
 
-ApiKeyAdapter为list/create/revoke及可选deleteRecord。revoke使凭据失效；过期状态不再硬编码禁止，必须由实际capability/宿主授权允许。deleteRecord仅针对已经revoked的管理记录，需独立能力和callback；不撤销活动凭据、不删除已有业务记录。两操作都有目标、风险、确认/取消，确认回调成功返回void后才更新/移除。服务端无能力时保留业务原入口，不削减功能，也不默认放权。
+`ApiKeyAdapter.update` 返回真实公共 metadata；revoke/deleteRecord 成功返回 void。通用 custom adapter 的 update、metadata.version/enabled/capabilities.update 均可选，不要求尚未采用 baseservice 的 xAgent 或第三方平台实现 base 协议。React/原生页面等价，使用统一表单、选择器、弹窗、错误和焦点生命周期。
 
-写操作无自动重放。网络/超时/parse/5xx等结果未知使 `actionUncertain=true`，`writeBlock` 保留操作种类与目标ID，创建、撤销和删除均失败关闭。实际发出后取消、关闭、pagehide、视图卸载或controller销毁只终止本地等待和清除一次性值，不能回滚服务端或解除保护。发出前的取消可释放尚未执行的操作；HTTP4xx及原生明确business拒绝区分为安全拒绝反馈，但应用错误码 `50301`（`API_KEY_WRITE_OUTCOME_UNKNOWN`）始终表示结果未知，即使错误地通过HTTP200或4xx返回，也不能解除保护。应用码 `50302`（`API_KEY_WRITE_COMMITTED_FOLLOWUP_FAILED`）明确已提交但后处理失败，同样保持禁止重放的门禁，不能当作确定拒绝。迟到结果不恢复弹层、密钥或修改行。
+## 默认 HTTP adapter：严格 v2
 
-### 写入保护的所有者与恢复
+`createApiKeyHttpAdapter({http,writeGuard,timeoutMs?,pageSize?,maxRecords?,idEncoding?})` 必须提供下面的持久 actor-scoped guard。旧默认 HTTP v1 调用须显式升级，不静默回退旧 endpoint、缺省版本或授权。URL 仍为 `/api/v1/api-keys`，DTO `schema_version` 为 2。所有请求 no-store / redirect:error，无写入自动重放；AjaxResponse 以 success=true 判定业务成功，code 为必填安全整数而非固定成功数字。
 
-`createApiKeyWriteGuard()` 返回只读 `getState/subscribe` 所有者；通过 `ApiKeyManagerOptions.writeGuard` 在同一鉴权/租户范围共享，放在视图生命周期之外。未显式提供时，同一个原始adapter对象自动共享同一guard，controller重新创建仍继承保护；重建adapter对象时必须传入保留的guard。不同身份/租户使用各自owner，不能把未确认操作挪入另一范围。guard仅保存本地递增ID、operation、targetId和pending/uncertain，不保存draft、prefix、secret、URL、凭据、响应body，不写storage。这个ID只帮助宿主关联当前进程的请求，不是后端幂等键。整页重载、跨窗口或进程重启不提供自动持久保护；真实服务仍负责幂等、关联与重复写入防护。
-
-`recoverUncertainWrite()` 是明确只读核对动作：先发起新的list并严格验证完整脱敏metadata，再调用宿主可选 `adapter.reconcileWrite(write,{rows,signal})`。写回调context携带可选 `write` 关联事实，宿主可在自己的领域边界关联真实请求。只有权威终态 `applied` 或 `not-applied` 才解除当前操作的保护；`not-applied` 必须确认原请求已经终结且未来不会迟到应用，不能因为当前列表没有同名记录就作判断。`applied` 不恢复一次性完整值；只按原操作归属关闭create/revoke/delete确认弹层，另一视图已成功result的一次性值保持到其明确关闭，更新列表仍只用刚读到的公共事实。`pending`、失败、非法结果、取消、销毁、较新查询或较新guard都保留保护；两owner并行核对时，旧等待不会清除新的写入或残留busy。核对完成从不自动发出写操作，用户须表达新意图。
-
-普通 `refresh()`、重新打开弹层和卸载重建均不解除保护。默认 `createApiKeyHttpAdapter` 没有猜测核对endpoint或实现 `reconcileWrite`：此时核对可刷新列表并明确提示服务缺口，写入继续被阻止。只有真实服务提供权威请求结果时，宿主才扩展该回调；前端不提供事务保证。baseservice 当前facade没有持久化operation receipt或核对endpoint，不能将一次List读到/没读到某条记录当作权威核对；宿主没有额外真实核对能力时，未知写入继续保持阻止状态。
-
-关闭弹层后的写入保护提示与明确核对动作属于持久安全区域：React/原生均将其放在页面标题之后、列表工具栏之前，以自然高度保留全文和动作，不塞入列表的固定高度反馈槽。区域出现或解除可以下推/回收列表空间，不宣称写入门禁状态切换零位移；普通列表读取的loading/error/retry仍使用原固定槽，保留既有行、焦点和几何。窄屏大字验证须检查文字和动作相对每个祖先滚动/裁切区的完整可见性及四边焦点像素，不能仅验证viewport内的bounding box。超出视口的长提示由页面滚动完整阅读。闭窗可以从当前弹窗/原触发者恢复到核对入口，但不能夺走宿主已主动移到其他控件的焦点。
-
-## 固定v1 facade与默认adapter
-
-createApiKeyHttpAdapter({http,timeoutMs?,pageSize?,maxRecords?,idEncoding?})使用同一个HttpClient。baseURL只确定origin，下面是固定根路径；不尝试旧route。全部使用原生httpx AjaxResponse，以success=true判定业务成功，code保留为必填安全整数元数据，不要求固定值；错误保留HTTP事实和原生code。详情见[真实原生定义](PAGE_APIS.md#已读取的真实原生定义)。
-
-| 操作 | 方法/路径 | 请求和payload |
+| 操作 | 方法/路径 | 请求和 payload |
 | --- | --- | --- |
-| 配置 | GET /api/v1/api-keys/capabilities | payload schema_version:1、can_create:boolean、permissions[{id,label,description:null/string,disabled,required}]、expiry_options[{id,label}]、default_expiry_id、default_permission_ids、confirmation_label:null/string |
-| 列表 | GET /api/v1/api-keys | webfacade基数0/page_size(默认100最大200)/return_total=true/sort=id/sort_id=asc；payload为原生ListData{list,total} |
-| 创建 | POST /api/v1/api-keys | JSON{name,permission_ids,expiry_id,confirmed}；payload{schema_version:1,metadata,secret}，secret只显示一次 |
-| 撤销 | POST /api/v1/api-keys/{id}/revoke | JSON{}；payload{schema_version:1,id,operation:revoke,completed:true} |
-| 删除管理记录 | DELETE /api/v1/api-keys/{id}/record | 无body；payload{schema_version:1,id,operation:delete_record,completed:true} |
+| 配置 | GET /api/v1/api-keys/capabilities | schema_version:2、can_create、permissions、expiry_options、default_expiry_id、default_permission_ids、confirmation_label |
+| 列表 | GET /api/v1/api-keys | 基数0 page_index/page_size/return_total=true/sort=id/sort_id=asc；原生 ListData {list,total} |
+| 创建 | POST /api/v1/api-keys | {name,permission_ids,expiry_id,confirmed}；{schema_version:2,metadata,secret,operation_id,fingerprint} |
+| 更新/启停 | PUT /api/v1/api-keys/{id} | {expected_version,name,permission_ids,enabled}；{schema_version:2,id,operation:"update",completed:true,metadata,operation_id,fingerprint} |
+| 撤销 | POST /api/v1/api-keys/{id}/revoke | {}；{schema_version:2,id,operation:"revoke",completed:true,operation_id,fingerprint} |
+| 删除管理记录 | DELETE /api/v1/api-keys/{id}/record | 无 body；{schema_version:2,id,operation:"delete_record",completed:true,operation_id,fingerprint} |
 
-wire metadata为id/name/prefix/permission_ids/created_at/expires_at/last_used_at/可选last_used_at_pending/status/capabilities{revoke,delete_record}；nullable字段必须明确null，status为active/revoked/expired/unknown/null。时间由后端提供，UI不根据本机时钟猜授权状态。capability是服务确认的操作授权，状态规则仍由前端和后端共同校验。列表/metadata不允许secret/token等额外凭据字段。内部公开metadata使用camelCase，adapter做一次精确映射，不猜别名。可选 `last_used_at_pending:boolean` 精确映射为 `lastUsedAtPending`：true在最近使用时间旁显示“待保存”，false保留明确false，缺失保留缺失，不从nullable时间、状态或前端时钟推断是否已持久化。两者都不改变授权/有效期或替代后端事实。访问元数据的“待保存”不是事务Pending或写入结果未知；baseservice当前默认metadata没有此待保存事实时省略该字段，不能为配合界面伪造false/true。
+wire metadata 为 id/name/prefix/permission_ids/created_at/expires_at/last_used_at/可选 last_used_at_pending/status/version/enabled/capabilities{update,revoke,delete_record}。nullable 字段必须明确 null，status 为 active/disabled/revoked/expired/unknown/null；version 必须为规范正 int64 十进制字符串（与 ID 编码独立），enabled 为明确 boolean。metadata 不允许 secret/token 等额外字段。内部公开 metadata 使用 camelCase，仅精确映射一次。
 
-getConfiguration读取真实配置后，createApiKeyManagerController({...config,adapter})。配置404/403/无效DTO即错误，不能填默认授权或假配置。列表adapter按原生页查询收集完整列表，30秒整体预算、每页最多200、默认最多5000(显式可配置至100000)，拒绝变动total/重复ID/缺页/超限，不悄悄丢弃后续记录；不承诺跨页原子快照。写操作无自动重试，所有请求no-store/redirect:error。实际服务必须实现路径、DTO、鉴权/tenant、CSRF、限速、幂等与安全存储。
+默认 ID 编码 decimal，可显式 hex；列表/创建/响应确认/请求路径采用同一规范正 int64 编码，发送前拒绝非法目标。权限和期限代码不受影响，custom adapter 仍可使用不透明 ID。详情 [IDENTITY_ENCODING](IDENTITY_ENCODING.md)。
 
-## baseservice 对齐与共享验收
+`last_used_at_pending:boolean` 只映射为 `lastUsedAtPending`。true 显示“待保存”，false/缺失各自保留；不从本机时间、nullable 时间或状态推断。访问元数据待保存不是写入事务 pending。分页完整收集预算30秒、每页最多200、默认最多5000条（显式可至100000）；拒绝变动 total、重复ID、缺页、超限，不承诺跨页原子快照。
 
-baseservice 的 [apikeyservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/apikeyservice/webfacade) 提供上述版本化HTTP边界，复用apikeyservice领域操作；宿主仍负责鉴权/tenant、配置与权限投影、CSRF及路由注册。baseservice 已提供独立 authenticationservice 与 Bearer v2 facade；Key 管理不创建另一认证 owner，登录合同见 [AUTH](AUTH.md)。
+## 持久写入 owner 与恢复
 
-后端 `ErrOutcomeUnknown` 必须返回HTTP503以及原生 `AjaxResponse{success:false,code:50301,payload:null,message,request_id}`，不能返回secret、成功确认或伪造确定拒绝。`50301` 是双方约定的应用码，不是httpx包级常量；只按该明确数字码识别，不猜错误文案。前端同时防御该码被HTTP200/4xx传递的情况，不自动重试、不从列表或access pending推断提交结果。
+正式 HTTP v2 必须创建 `createApiKeyWriteGuard({scopeId,isCurrentScope,storage:{load,save}})`，再把该 guard 传给 HTTP adapter；manager 自动复用 adapter 的同一 owner，若另传不同 guard 则拒绝。scopeId 必须来自宿主已经验证的 server/账号/namespace，不能从请求参数、用户名或 origin 单独猜测。必填 isCurrentScope() 与宿主真实 auth owner 的当前三元身份比较；throw 等同 false，不得在生产中硬编码 true。claim、prepare 后、发送、响应、receipt 终态和持久清理前均复核；失效停止旧 controller/等待，隐藏其metadata与一次性值，不删除旧 scope 恢复记录。宿主在身份事件发生时同步 destroy 旧 controller，避免等待下一次读/操作才反映切换。换身份时使用该身份自己的 owner，不展示其他 scope 的 descriptor、不清除旧 scope 未决记录。scopeId 不使用 token/password/secret；服务端仍绑定真实 actor/scope 并重新鉴权。
 
-`PostCommitError` 则返回HTTP503/code=50302/message=committed_followup_failed/payload=null，明确数据库已经提交、后处理失败；不能称作回滚，也不能混同50301的提交未知。前端复用现有保护owner阻止重放，即使被HTTP200/4xx包装也保持门禁；宿主需核对已提交结果与后处理状态，不能靠重新提交原写入恢复。该保护状态不改变后端已经提交的事实，也不恢复丢失的一次性值。
+storage 是宿主提供的同步持久替换接口：`load(scopeId)` 返回 null/undefined 或快照，`save(scopeId,snapshot|null)` 成功返回 void，失败必须 throw。完整快照仅 `{schema_version:1,scope_id,descriptor}`；每个 scope 最多一个操作，每次新写前重新读取当前 scope 已保存锁，新操作受已有 owner 门禁限制，不截断恢复项。初始化验证字段白名单、版本、scope、各字符串长度/格式；失败拒绝启动，不回退无保护页面。prepare 后保存前及清理前再次读取；已出现不同 descriptor（五字段逐项比较）时继承其 uncertain，不覆盖或删除，尤其未准备完成的取消不能清除其他操作。描述符保存成功后才允许发送 HTTP。save 失败、可能部分写入或清理失败均保留锁；刷新不会绕过。同步接口不等于跨窗口原子互斥：宿主必须在其实际存储和身份生命周期中协调多窗口，不宣称 localStorage 提供事务或不同 operation ID 的业务去重。
 
-[共享fixture](../tests/fixtures/page-contracts.v1.json) 与baseservice的 `docs/contracts/page-contracts.v1.json` 保持逐字节一致，均为合成数据。[HTTP合同测试](../tests/page-contracts.test.mjs) 经默认adapter消费配置、列表、创建、撤销、删除和未知结果，并验证HTTP200/4xx/503的50301与50302写入跨视图仍受保护。Go侧通过真实handler消费相同fixture。库级合同验证不等于宿主路由、鉴权或生产集成已完成。
+descriptor 仅含：
 
-## 一次性值与临时接入
+```
+{ operation_id, operation, target_id, expected_version, fingerprint }
+```
 
-完整值仅在controller瞬时私有结果中，readSecret只允许result视图读取；不进getState、list缓存、URL、storage、日志或业务payload。关闭/pagehide/卸载同步清value/defaultValue/textContent，复制必须明确用户动作。无法复制时允许手动复制，不承诺JS内存擦除或撤回剪贴板。
+operation 为 create/update/revoke/delete_record；create 的 target_id 为空，其他为所选 ID 编码；仅 update 的 expected_version 为正 int64 十进制字符串，其他为空。没有 draft、name、prefix、URL、secret、token、password 或响应 body。
 
-本轮读取xLead@e766fb2a的真实[API页](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/web/api-page.js)与[token routes](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/plugin/api/auth_routes.go)：其read/write scopes、独立confirmed、30/90/365/0天、过期但未撤销仍可撤销、DELETE /tokens/{id}撤销与DELETE /tokens/{id}/record删除已撤销管理记录，必须保留。临时域adapter可精确映射为上述controller，成功删除需验证真实ok===true再返回void；不能把两种DELETE合并。长期由xLead在自己的授权任务中标准化后端，本轮不修改它。
+每个请求生成 canonical lowercase UUIDv4 `operation_id`，仅依赖 `crypto.getRandomValues`，不要求安全上下文的 randomUUID；安全随机数不可用则发送前拒绝。指纹为 exact UTF8 `method + '\n' + canonicalPath + '\n' + exactBodyBytes` 的 SHA-256；GET 不算，DELETE 空 body。内网 HTTP 不依赖 SubtleCrypto。发送 headers `X-API-Key-Operation-ID` / `X-API-Key-Request-Fingerprint`；服务端独立重算并绑定权限/actor/scope/CAS，不能信任客户端 header。异步 prepare 后检查当前 generation/取消/owner；取消且确定未调用写 adapter 时才按 before-send 证明释放。成功响应 operation_id/fingerprint 必须逐项匹配。
 
-[既有React例](../examples/api-key-react/app.tsx)/[原生例](../examples/api-key-vanilla/app.js)演示明确域adapter；[新共享模型](../examples/shared/capability-model.ts)与[React](../examples/capabilities-react/app.tsx)/[原生](../examples/capabilities-vanilla/app.js)实际消费默认HTTPadapter。全部合成FAKE数据，不生成真实密钥或证明生产鉴权通过。
+通用 custom adapter 不使用正式 HTTP 时仍可沿用 `createApiKeyWriteGuard()` 内存 owner，或显式接入 prepareWrite/持久 descriptor。同一个原始 adapter 默认共享 owner；重建 adapter 时保留 owner。没有持久配置的 custom adapter 不宣称整页重载保护。
 
-第三方provider key与其管理API按第三方合同，不套用此平台facade或强制AjaxResponse；内部adapter只作明确领域转换。行业标准优先边界见[DESIGN](DESIGN.md#规范强度与职责)。
+### 只读 Lookup 与显式 Resolve
 
-本次追加正常Git只读fetch后核实 xLead@f08ba41cde1f976e7f3c7c4b8a83af794f74adc8 的 [Token字段](https://github.com/coffeehc/xlead/blob/f08ba41cde1f976e7f3c7c4b8a83af794f74adc8/internal/auth/types.go)和[访问记录语义](https://github.com/coffeehc/xlead/blob/f08ba41cde1f976e7f3c7c4b8a83af794f74adc8/internal/auth/README.md)：`last_access_pending:true` 表示缓存访问尚未被本次数据库读取确认。临时域adapter须显式映射 `last_accessed_at→lastUsedAt`、`last_access_pending→lastUsedAtPending`；默认facade不猜旧字段，不把该标记误作写入操作结果或业务日志。xLead的批量刷新策略仍属于产品后端，此轮没有修改它。
+`recoverUncertainWrite()` 首先新读并验证完整公共列表，然后调用只读 `adapter.reconcileWrite`。默认 v2 为 GET `/api/v1/api-keys/operations/{operation_id}`，query 为其余四个 descriptor 字段。列表相似、没有同名记录、普通409或当前时间都不是核对证据；没有 receipt 时 Lookup 必须 pending。
 
-## 实体 ID 编码
+`openResolveWrite()/confirmResolveWrite()` 是独立明确确认：“终止尚未执行请求并核查结果”。对应 POST 同路径 `/resolve`，body 为 descriptor 其余四字段。它可能写不可逆 not-applied 墓碑，阻止迟到原请求；不是只读，不撤销已应用写入，不由 refresh/Lookup 自动触发。用户先看到终止说明，再确认。服务端与原写共用操作事务锁，重验身份/权限；不能先读后凭猜测写墓碑。
 
-固定 HTTP adapter 的 `idEncoding` 默认为 decimal，可显式选择 hex；`parseApiKeyWireMetadata(value, encoding?)` 使用相同严格正 int64 规则。列表、创建、动作确认和请求路径必须一致；发送前拒绝非法目标，返回的畸形 ID 不能成为成功。权限/有效期代码不受影响。通用 ApiKeyAdapter/页面仍允许宿主自有不透明 ID，只有固定 baseservice HTTP 合同收紧为规范身份；合成 HTTP 示例已相应纠正。规则和迁移注意事项见 [IDENTITY_ENCODING](IDENTITY_ENCODING.md)。
+两者仅接受 `{schema_version:2,...完整descriptor,resolution:'pending'|'applied'|'not-applied'}`。五个身份字段逐项严格匹配，只有 applied / not-applied 权威终态才释放当前保护；not-applied 必须保证未来不会迟到应用。pending、失配、错误、取消、较新 list/guard 或 Resolve 结果未知继续锁。不恢复一次性值，不自动重放；用户须表达新的写入意图。
+
+创建、更新、撤销、删除的网络/超时/parse/5xx/普通409均保持 uncertain。明确其他4xx/business拒绝可释放，50301（提交未知）与50302（已提交、后处理失败）即使被200/4xx包装也继续阻止重放。50302 不表示回滚。取消、关闭、pagehide、卸载、destroy 只停止本地等待，不回滚服务端。正式v2持久 descriptor 跨整页重载恢复为 uncertain，迟到结果不恢复弹窗、密钥或改行。
+
+关闭后的门禁提示与核对/终止入口位于标题之后、列表工具栏之前，自然高度完整显示；不塞固定列表反馈槽。窄屏大字检查祖先裁切区和焦点四边，不承诺门禁切换零位移。闭窗恢复焦点到核对入口，但不夺走宿主主动移走的焦点。
+
+## 一次性值与验证边界
+
+完整值仅在 controller 瞬时私有结果，readSecret 只允许 result 视图读取；不进入状态、列表缓存、URL、storage、日志或业务 payload。关闭/pagehide/卸载同步清 DOM value/defaultValue/textContent。复制必须明确用户动作，失败允许手动复制；不承诺 JS 内存物理擦除或撤回剪贴板。
+
+baseservice [apikeyservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/apikeyservice/webfacade) 对应严格v2。共享 [decimal](../tests/fixtures/api-key-contracts.v2.json) / [hex](../tests/fixtures/api-key-contracts.v2.hex.json) fixtures 逐字节一致，通过真实 adapter 验证 exact body_text、headers、更新和 Lookup/Resolve。测试还使用公开 SHA-256 向量、独立 Node crypto 和 Go UTF8 固定向量。旧 page-contracts.v1 仍归档；旧覆盖通过明确测试专用 helper 升级合成输入，不能称作真实服务v1兼容或新合同联调。
+
+[shared capability-model](../examples/shared/capability-model.ts) 的 React/原生消费者演示v2、storage和编辑启停；全部合成 FAKE 数据，不能证明真实鉴权、部署或生产集成完成。宿主升级须同时注册 endpoints、持久 receipts/事务锁、鉴权/tenant、授权投影、CSRF、限速与安全存储；不能只更新前端库。
+
+迁移保留业务边界：xLead 的 read/write、独立 confirmed、30/90/365/0天、过期撤销和单独管理记录删除仍通过服务声明/custom adapter 表达。xLead 的 last_accessed_at/last_access_pending 只能在其领域 adapter 显式映射，不猜旧别名。本轮不修改产品业务仓库；Argus四scope增减/暂停恢复由新通用编辑模型承载，真实接入仍需产品任务验证。

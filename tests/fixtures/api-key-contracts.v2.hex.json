@@ -1,0 +1,353 @@
+{
+  "fixture_version": 2,
+  "cases": {
+    "api_key_capabilities": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys/capabilities",
+        "body_text": ""
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 2,
+            "can_create": true,
+            "permissions": [
+              {
+                "id": "read",
+                "label": "Read",
+                "description": null,
+                "disabled": false,
+                "required": true
+              },
+              {
+                "id": "write",
+                "label": "Write",
+                "description": "Synthetic write permission",
+                "disabled": false,
+                "required": false
+              }
+            ],
+            "expiry_options": [
+              {
+                "id": "30d",
+                "label": "30 days"
+              }
+            ],
+            "default_expiry_id": "30d",
+            "default_permission_ids": [],
+            "confirmation_label": "Confirm these permissions"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_list": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys",
+        "query": {
+          "page_index": "0",
+          "page_size": "100",
+          "return_total": "true",
+          "sort": "id",
+          "sort_id": "asc"
+        },
+        "body_text": ""
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "list": [
+              {
+                "id": "20000000000001",
+                "name": "Synthetic key",
+                "prefix": "FAKE",
+                "permission_ids": [
+                  "read"
+                ],
+                "created_at": "2026-10-12T01:00:00Z",
+                "expires_at": null,
+                "last_used_at": null,
+                "status": "active",
+                "capabilities": {
+                  "revoke": true,
+                  "delete_record": false,
+                  "update": true
+                },
+                "version": "19",
+                "enabled": true
+              }
+            ],
+            "total": 1
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_create": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys",
+        "body": {
+          "name": "Synthetic key",
+          "permission_ids": [
+            "read"
+          ],
+          "expiry_id": "30d",
+          "confirmed": true
+        },
+        "body_text": "{\"name\":\"Synthetic key\",\"permission_ids\":[\"read\"],\"expiry_id\":\"30d\",\"confirmed\":true}",
+        "headers": {
+          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
+          "X-API-Key-Request-Fingerprint": "d3b616ffe42b9f90a7f52c76487164d8c8e40b7a1d312fbfb08fdb2591339863"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 2,
+            "metadata": {
+              "id": "20000000000001",
+              "name": "Synthetic key",
+              "prefix": "FAKE",
+              "permission_ids": [
+                "read"
+              ],
+              "created_at": "2026-10-12T01:00:00Z",
+              "expires_at": null,
+              "last_used_at": null,
+              "status": "active",
+              "capabilities": {
+                "revoke": true,
+                "delete_record": false,
+                "update": true
+              },
+              "version": "19",
+              "enabled": true
+            },
+            "secret": "FAKE_CONTRACT_ONE_TIME_VALUE",
+            "operation_id": "12345678-1234-4234-9234-123456789abc",
+            "fingerprint": "d3b616ffe42b9f90a7f52c76487164d8c8e40b7a1d312fbfb08fdb2591339863"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_revoke": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/20000000000001/revoke",
+        "body": {},
+        "body_text": "{}",
+        "headers": {
+          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
+          "X-API-Key-Request-Fingerprint": "7c720c32af3a061b812d4de274b1e332702deada20765bdfedb06a5c28646cca"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 2,
+            "id": "20000000000001",
+            "operation": "revoke",
+            "completed": true,
+            "operation_id": "12345678-1234-4234-9234-123456789abc",
+            "fingerprint": "7c720c32af3a061b812d4de274b1e332702deada20765bdfedb06a5c28646cca"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_delete_record": {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/v1/api-keys/20000000000001/record",
+        "body_text": "",
+        "headers": {
+          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
+          "X-API-Key-Request-Fingerprint": "e897c14bbf57a2e0b4d9ee972142781f988aadcbda6d6ddfe4abc8d2e1d21c9c"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 2,
+            "id": "20000000000001",
+            "operation": "delete_record",
+            "completed": true,
+            "operation_id": "12345678-1234-4234-9234-123456789abc",
+            "fingerprint": "e897c14bbf57a2e0b4d9ee972142781f988aadcbda6d6ddfe4abc8d2e1d21c9c"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_write_outcome_unknown": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys",
+        "body": {
+          "name": "Synthetic key",
+          "permission_ids": [
+            "read"
+          ],
+          "expiry_id": "30d",
+          "confirmed": true
+        },
+        "body_text": "{\"name\":\"Synthetic key\",\"permission_ids\":[\"read\"],\"expiry_id\":\"30d\",\"confirmed\":true}",
+        "headers": {
+          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
+          "X-API-Key-Request-Fingerprint": "d3b616ffe42b9f90a7f52c76487164d8c8e40b7a1d312fbfb08fdb2591339863"
+        }
+      },
+      "response": {
+        "status": 503,
+        "body": {
+          "success": false,
+          "message": "API key write outcome is unknown",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 50301
+        }
+      }
+    },
+    "api_key_update": {
+      "request": {
+        "method": "PUT",
+        "path": "/api/v1/api-keys/20000000000001",
+        "body": {
+          "expected_version": "19",
+          "name": "研究密钥",
+          "permission_ids": [
+            "read",
+            "write"
+          ],
+          "enabled": false
+        },
+        "body_text": "{\"expected_version\":\"19\",\"name\":\"研究密钥\",\"permission_ids\":[\"read\",\"write\"],\"enabled\":false}",
+        "headers": {
+          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
+          "X-API-Key-Request-Fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 2,
+            "id": "20000000000001",
+            "operation": "update",
+            "completed": true,
+            "metadata": {
+              "id": "20000000000001",
+              "name": "研究密钥",
+              "prefix": "FAKE",
+              "permission_ids": [
+                "read"
+              ],
+              "created_at": "2026-10-12T01:00:00Z",
+              "expires_at": null,
+              "last_used_at": null,
+              "status": "disabled",
+              "capabilities": {
+                "revoke": true,
+                "delete_record": false,
+                "update": true
+              },
+              "version": "20",
+              "enabled": false
+            },
+            "operation_id": "12345678-1234-4234-9234-123456789abc",
+            "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_operation_lookup": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys/operations/12345678-1234-4234-9234-123456789abc",
+        "query": {
+          "operation": "update",
+          "target_id": "20000000000001",
+          "expected_version": "19",
+          "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 2,
+            "operation_id": "12345678-1234-4234-9234-123456789abc",
+            "operation": "update",
+            "target_id": "20000000000001",
+            "expected_version": "19",
+            "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865",
+            "resolution": "pending"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_operation_resolve": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/operations/12345678-1234-4234-9234-123456789abc/resolve",
+        "body": {
+          "operation": "update",
+          "target_id": "20000000000001",
+          "expected_version": "19",
+          "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865"
+        },
+        "body_text": "{\"operation\":\"update\",\"target_id\":\"20000000000001\",\"expected_version\":\"19\",\"fingerprint\":\"920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865\"}"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 2,
+            "operation_id": "12345678-1234-4234-9234-123456789abc",
+            "operation": "update",
+            "target_id": "20000000000001",
+            "expected_version": "19",
+            "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865",
+            "resolution": "not-applied"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    }
+  }
+}
