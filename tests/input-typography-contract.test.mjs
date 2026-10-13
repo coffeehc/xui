@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+test('input families consume DESIGN control weight without changing text size',()=>{const css=readFileSync(new URL('../packages/theme/src/forms.css',import.meta.url),'utf8');assert.match(css,/:where\(\.xui-input, \.xui-textarea, \.xui-select\) \{[^}]*font: var\(--font-weight-control\) var\(--font-size-body-sm\) \/ var\(--line-height-body-sm\) var\(--font-sans\)/);});

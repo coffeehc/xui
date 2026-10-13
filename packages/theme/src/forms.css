@@ -10,7 +10,7 @@
     display: block; width: 100%; min-width: 0; min-height: var(--input-height); padding: var(--space-text-gap) var(--space-control-gap);
     border: var(--line-width-surface) solid var(--input-border-color); border-radius: var(--input-radius);
     background: var(--input-background); color: var(--input-foreground);
-    font: var(--font-weight-body) var(--font-size-body-sm) / var(--line-height-body-sm) var(--font-sans);
+    font: var(--font-weight-control) var(--font-size-body-sm) / var(--line-height-body-sm) var(--font-sans);
     transition: border-color var(--motion-duration-fast) var(--motion-easing), background-color var(--motion-duration-fast) var(--motion-easing), color var(--motion-duration-fast) var(--motion-easing);
   }
   :where(.xui-input, .xui-textarea)::placeholder { color: var(--muted-foreground); opacity: 1; }

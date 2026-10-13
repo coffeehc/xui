@@ -97,3 +97,11 @@ window.renderTableActionsCase=native=>{
  if(!native){root.render(<TableContainer aria-label="Action layout"><Table><TableBody><TableRow><TableCell><TableActions style={{maxInlineSize:'var(--layout-field-min)'}}>{labels.map(label=><Button key={label}>{label}</Button>)}</TableActions></TableCell></TableRow></TableBody></Table></TableContainer>);return;}
  root.render(null);const host=document.createElement('div');host.className='xui-table-container';host.setAttribute('role','region');host.setAttribute('aria-label','Action layout');host.innerHTML='<table class="xui-table"><tbody><tr class="xui-table-row"><td><div class="xui-table-actions" style="max-inline-size:var(--layout-field-min)">'+labels.map(label=>'<button type="button" class="xui-button">'+label+'</button>').join('')+'</div></td></tr></tbody></table>';document.body.append(host);
 };
+
+import {Textarea,NativeSelect} from '@coffeehc/xui-react/forms';
+import {Combobox} from '@coffeehc/xui-react/combobox';
+declare global{interface Window{renderInputTypographyCase:(native:boolean)=>void}}
+window.renderInputTypographyCase=native=>{
+ if(!native){root.render(<div className="xui-stack"><Field label="Text control"><Input defaultValue="Editable value"/></Field><Field label="Multiline control"><Textarea defaultValue="Editable text"/></Field><Field label="Native selection"><NativeSelect defaultValue="one"><option value="one">One</option></NativeSelect></Field><Select.Root defaultValue="one"><Select.Trigger aria-label="Themed selection"><Select.Value/></Select.Trigger><Select.Content><Select.List><Select.Item value="one">One</Select.Item></Select.List></Select.Content></Select.Root><Combobox.Root><Combobox.Input aria-label="Searchable selection"/></Combobox.Root></div>);return;}
+ root.render(null);const host=document.createElement('div');host.className='xui-stack';host.innerHTML='<label class="xui-label" for="text-control">Text control</label><input id="text-control" class="xui-input" value="Editable value"><label class="xui-label" for="multiline-control">Multiline control</label><textarea id="multiline-control" class="xui-textarea">Editable text</textarea><label class="xui-label" for="native-selection">Native selection</label><select id="native-selection" class="xui-select"><option>One</option></select>';document.body.append(host);
+};
