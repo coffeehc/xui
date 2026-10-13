@@ -6,6 +6,8 @@
 
 CheckboxGroup 显式 selectAll 字符串开启全选；只选择当前 options 中非 disabled/readOnly 的全集，不代表跨页查询全部结果。全选/清空保留未知及不可编辑 keys。部分态由同一 value 计算。未知值显示非 live 诊断并保留，不擅自清理权限。name 只赋给实际选项，全选不提交；未知值不创造隐藏表单字段，宿主必须使用受控 value 处理未知权限。
 
-required 复选组表示至少选择一个当前已知选项，通过首个可用输入的原生 customValidity 实现，不要求每项都选；零项/全 disabled 没有可验证输入，业务必须明确处理不可填写状态。只读组不阻止原表单提交。单选组使用同 name 真实 radio，浏览器负责方向键和组级 required；未给 name 时产生组内唯一名称，宿主不得给两个独立组同一 name。被选中的 readOnly 单选项锁定整组，防止另一选项隐式取消它。只读不移除表单值或焦点，disabled 继续遵守浏览器表单排除规则。原生 form reset 后恢复最新受控事实，不发业务变更；宿主需要清空应显式发布新 value。
+required 复选组表示至少选择一个当前已知选项，通过首个可用输入的原生 customValidity 实现，不要求每项都选；零项/全 disabled 没有可验证输入，业务必须明确处理不可填写状态。只读组不阻止原表单提交。单选组使用同 name 真实 radio，浏览器负责方向键和组级 required；未给 name 时产生组内唯一名称，宿主不得给两个独立组同一 name。被选中的 readOnly 单选项锁定整组，防止另一选项隐式取消它。只读不移除表单值或焦点，disabled 继续遵守浏览器表单排除规则。两端 defaultChecked 始终派生自最新受控事实，所以原生 form.reset() 返回时的 FormData 已一致；reset 后续 task 再恢复部分态，不使用可能早于浏览器默认动作的 microtask，不发业务变更；宿主需要清空应显式发布新 value。
 
 示例：[React](../examples/choice-group-react/app.tsx)、[原生](../examples/choice-group-vanilla/app.js)。独立打包/正负类型消费纳入 consumers；纯模型、DOM identity 与 SSR 单测并非真实浏览器、hydration、读屏器验证。真实键盘、required、FormData 和焦点回归由 choice-group browser suite 验证；受限执行器不得关闭 sandbox 来运行。
+
+真实 CI 首轮暴露的 reset 时序与示例 JSON 横溢出已作为回归用例保留。示例状态展示使用既有 xui-code 公开长文本断行；成组字段的长 legend/label 通过可收缩文字节点和 overflow-wrap 换行，不隐藏或裁切选项。

@@ -139,3 +139,11 @@
     .xui-input[type="range"]:is(:enabled,:disabled)::-moz-range-thumb { all: revert; }
   }
 }
+
+@layer xui-components {
+ .xui-choice-group {min-inline-size:0;max-inline-size:100%;}
+ .xui-choice-group-options {display:flex;flex-wrap:wrap;gap:var(--space-control-gap);min-inline-size:0;max-inline-size:100%;}
+ .xui-choice-group>.xui-label {max-inline-size:100%;overflow-wrap:anywhere;}
+ .xui-choice-group .xui-choice-label {min-inline-size:0;max-inline-size:100%;overflow-wrap:anywhere;}
+ .xui-choice-group .xui-choice-label>span {min-inline-size:0;overflow-wrap:anywhere;}
+}
