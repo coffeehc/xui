@@ -31,3 +31,7 @@ export * from './operation-store.js';
 export * from './search-toolbar-dom.js';
 export * from './display.js';
 export * from './display-dom.js';
+
+export * from './choice-group.js';
+
+export * from './choice-group-dom.js';

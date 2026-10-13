@@ -1236,4 +1236,9 @@ SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。sea
 
 高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和原生生命周期见 [SEARCH_TOOLBAR](SEARCH_TOOLBAR.md)。
 
+
+### 受控成组选项
+
+CheckboxGroup/RadioGroup 复用 fieldset/legend、choice 与 help/error 的既有间距、控件尺寸、焦点和错误语义 token。全选部分态复用原 indeterminate 横线；只读/禁用仍保留明确原生状态，不以颜色代替。没有新的权限引擎、字体或密度。完整受控值、诊断、校验与双端入口见 [CHOICE_GROUP](CHOICE_GROUP.md)。
+
 <!-- foundation-lifecycle:end -->

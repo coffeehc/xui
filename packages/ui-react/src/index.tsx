@@ -33,3 +33,5 @@ export * from './metric-card.js';
 export * from './password.js';
 export * from './search-toolbar.js';
 export * from './display.js';
+
+export * from './choice-group.js';

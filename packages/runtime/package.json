@@ -146,6 +146,14 @@
     "./display-dom": {
       "types": "./dist/display-dom.d.ts",
       "import": "./dist/display-dom.js"
+    },
+    "./choice-group": {
+      "types": "./dist/choice-group.d.ts",
+      "import": "./dist/choice-group.js"
+    },
+    "./choice-group-dom": {
+      "types": "./dist/choice-group-dom.d.ts",
+      "import": "./dist/choice-group-dom.js"
     }
   },
   "types": "./dist/index.d.ts"

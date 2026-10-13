@@ -78,6 +78,10 @@
 | `@coffeehc/xui-runtime/password-dom` <!-- public-entry: @coffeehc/xui-runtime/password-dom --> | [源码](../packages/runtime/src/password-dom.ts) | [合同](PASSWORD.md) | [验证](../tests/browser/password-fields.spec.mjs) |
 | `@coffeehc/xui-react/password` <!-- public-entry: @coffeehc/xui-react/password --> | [源码](../packages/ui-react/src/password.tsx) | [合同](PASSWORD.md) | [验证](../tests/browser/password-fields.spec.mjs) |
 
+| `@coffeehc/xui-react/choice-group` <!-- public-entry: @coffeehc/xui-react/choice-group --> | [源码](../packages/ui-react/src/choice-group.tsx) | [成组字段](CHOICE_GROUP.md) | [示例](../examples/choice-group-react/app.tsx) |
+| `@coffeehc/xui-runtime/choice-group` <!-- public-entry: @coffeehc/xui-runtime/choice-group --> | [源码](../packages/runtime/src/choice-group.ts) | [成组字段](CHOICE_GROUP.md) | [示例](../examples/choice-group-vanilla/app.js) |
+| `@coffeehc/xui-runtime/choice-group-dom` <!-- public-entry: @coffeehc/xui-runtime/choice-group-dom --> | [源码](../packages/runtime/src/choice-group-dom.ts) | [成组字段](CHOICE_GROUP.md) | [示例](../examples/choice-group-vanilla/app.js) |
+
 ## xui 自己定义的默认行为
 
 这些默认值来自上表源码；品牌原始值与 motion 参数仍只由 DESIGN 的受控 token 块定义，不在此复制色板。未改写的复合控件 props/parts 使用当前 Base UI peer 的声明与行为，不能根据另一个版本猜默认值。

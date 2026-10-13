@@ -118,6 +118,15 @@ for (const kind of ['vanilla','react']) {
   await copyFile(`${searchToolbar}/index.html`,`${searchToolbarOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${searchToolbarOutput}/theme-init.js`);await writeFile(`${searchToolbarOutput}/metafile.json`,JSON.stringify(searchToolbarBuild.metafile,null,2));
   const searchToolbarTypes=kind==='react'?'search-toolbar-types.tsx':'search-toolbar-native-types.ts';await copyFile(`tests/fixtures/${searchToolbarTypes}`,`${cwd}/${searchToolbarTypes}`);
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',searchToolbarTypes,...(kind==='react'?['search-toolbar/app.tsx']:[])],{cwd,stdio:'inherit'});
+  const choiceGroup=resolve(cwd,'choice-group'),choiceGroupOutput=resolve(`dist/choice-group-${kind}`);
+  await cp(`examples/choice-group-${kind}`,choiceGroup,{recursive:true});
+  const choiceGroupBuild=await build({entryPoints:[`${choiceGroup}/app.${kind==='react'?'tsx':'js'}`],outdir:choiceGroupOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(choiceGroupBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'ChoiceGroup escaped standalone install');
+  assert(!Object.keys(choiceGroupBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'ChoiceGroup requires private CSS');
+  if(kind==='vanilla')assert(!Object.keys(choiceGroupBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native ChoiceGroup imported React');
+  await copyFile(`${choiceGroup}/index.html`,`${choiceGroupOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${choiceGroupOutput}/theme-init.js`);await writeFile(`${choiceGroupOutput}/metafile.json`,JSON.stringify(choiceGroupBuild.metafile,null,2));
+  const choiceGroupTypes=kind==='react'?'choice-group-types.tsx':'choice-group-native-types.ts';await copyFile(`tests/fixtures/${choiceGroupTypes}`,`${cwd}/${choiceGroupTypes}`);
+  execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',choiceGroupTypes,...(kind==='react'?['choice-group/app.tsx']:[])],{cwd,stdio:'inherit'});
   const metricCard=resolve(cwd,'metric-card'),metricCardOutput=resolve(`dist/metric-card-${kind}`);
   await cp(`examples/metric-card-${kind}`,metricCard,{recursive:true});
   const metricCardBuild=await build({entryPoints:[`${metricCard}/app.${kind==='react'?'tsx':'js'}`],outdir:metricCardOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});

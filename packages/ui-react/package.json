@@ -151,6 +151,10 @@
     "./display": {
       "types": "./dist/display.d.ts",
       "import": "./dist/display.js"
+    },
+    "./choice-group": {
+      "types": "./dist/choice-group.d.ts",
+      "import": "./dist/choice-group.js"
     }
   },
   "types": "./dist/index.d.ts",
