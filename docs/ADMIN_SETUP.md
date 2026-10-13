@@ -38,4 +38,4 @@ React 使用一个稳定 form、非受控密码输入和稳定密码字段 ref�
 
 ### 可运行视觉验收路径
 
-执行 `pnpm build && pnpm test:consumer && pnpm preview` 后打开 `/admin-setup-react/`、`/admin-setup-vanilla/`；`?long` 仅合成长错误样例。页面不显示调试 JSON。用 `pnpm exec playwright test admin-setup.spec.mjs` 跑双端桌面 1280 / 窄屏 390 单一居中框、初始密码帮助/强度区（复用 NewPasswordFields）、长错误、unknown、三主题 200% 与键盘；截图附件分别为 admin-setup-initial、admin-setup-long-error、setup-200-percent，在 CI validation artifact 的 test-results 及 Playwright 报告可看。浏览器执行阻断时不得把这些计划截图写成已通过。
+执行 `pnpm build && pnpm test:consumer && pnpm preview` 后打开 `/admin-setup-react/`、`/admin-setup-vanilla/`；`?long` 仅合成长错误样例。页面不显示调试 JSON。用 `pnpm exec playwright test admin-setup.spec.mjs` 跑双端桌面 1280 / 窄屏 390 单一居中框、初始密码帮助/强度区（复用 NewPasswordFields）、长错误、unknown、三主题 200%、四边焦点像素与键盘；截图附件分别为 admin-setup-initial、admin-setup-long-error、setup-200-percent，在 CI validation artifact 的 test-results 及 Playwright 报告可看。浏览器执行阻断时不得把这些计划截图写成已通过。
