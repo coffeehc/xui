@@ -1,4 +1,5 @@
 @layer xui-components {
+  .xui-nav-item:focus-visible {outline-color:var(--menu-item-focus-color);}
 
   .xui-nav { display: grid; gap: var(--space-text-gap); align-content: start; }
   .xui-nav-item {
