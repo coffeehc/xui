@@ -26,3 +26,7 @@ test('React server render is a single stable public form with no secret or autom
  for(const status of ['idle','submitting','unconfirmed','complete','unavailable']){const markup=renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'创建管理员'},state:{status},policy,onSubmit(){throw new Error('SSR submitted');}}));assert.equal((markup.match(/<form\b/g)||[]).length,1);assert.equal((markup.match(/type="password"/g)||[]).length,2);assert.equal((markup.match(/<button\b/g)||[]).length,1);assert.doesNotMatch(markup,/核对|readonly|journal|receipt|sample-password/);if(status!=='idle')assert.match(markup,/disabled=""/);}
  const unavailable=renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'Setup'},state:{status:'idle'},policy:null,onSubmit(){}}));assert.equal((unavailable.match(/ disabled=""/g)||[]).length,4);
 });
+
+test('authority change during the submitting notification prevents the callback from starting',async()=>{
+ let calls=0;const controller=createAdminSetupController({state:{status:'idle'},onSubmit:()=>{calls++;return 'complete';}});controller.subscribe(()=>{if(controller.getState().status==='submitting')controller.setState({status:'unavailable'});});const credentials={username:'fixture',password:'synthetic-only'};await controller.submit(credentials);assert.equal(calls,0);assert.equal(credentials.password,'');assert.equal(controller.getState().status,'unavailable');controller.destroy();
+});

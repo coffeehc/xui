@@ -14,6 +14,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
+      - name: Install standard CJK validation fonts
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk && fc-match "sans-serif:lang=zh-cn"
       - name: Build and validate public consumers
         run: pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:consumer
       - name: Focused interaction regressions
