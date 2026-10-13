@@ -5,9 +5,20 @@ export interface ApiKeyOperationDescriptor {
   readonly operation_id:string;readonly operation:'create'|'update'|'revoke'|'delete_record';
   readonly target_id:string;readonly expected_version:string;readonly fingerprint:string;
 }
+/** Versioned custom-domain identity. All fields must be public opaque IDs, never secrets or drafts. */
+export interface ApiKeyCustomOperationDescriptor {
+  readonly schema_version:2;readonly operation_id:string;
+  /** UI intent; independent of the domain action and target. */
+  readonly operation:ApiKeyOperationDescriptor['operation'];readonly intent_target_id:string;
+  readonly action:string;readonly target_id:string;readonly expected_version:string;readonly fingerprint:string;
+}
+export type ApiKeyWriteDescriptor=ApiKeyOperationDescriptor|ApiKeyCustomOperationDescriptor;
+/** Custom adapters must return the complete authoritative identity, including pending receipts. */
+export interface ApiKeyCustomWriteReceipt {readonly descriptor:Readonly<ApiKeyCustomOperationDescriptor>;readonly resolution:ApiKeyWriteResolution}
+export type ApiKeyWriteReconciliation=ApiKeyWriteResolution|Readonly<ApiKeyCustomWriteReceipt>;
 export interface ApiKeyPendingWrite {
   readonly id:number;readonly operation:'create'|'update'|'revoke'|'delete';readonly targetId:string|null;
-  readonly status:'pending'|'uncertain';readonly descriptor?:Readonly<ApiKeyOperationDescriptor>;
+  readonly status:'pending'|'uncertain';readonly descriptor?:Readonly<ApiKeyWriteDescriptor>;
 }
 export type ApiKeyWriteResolution='applied'|'not-applied'|'pending';
 export interface ApiKeyWriteStorage {
@@ -16,7 +27,7 @@ export interface ApiKeyWriteStorage {
   /** Synchronous durable replace. Throw on any failure; null clears only this scope. */
   save:(scopeId:string,value:Readonly<ApiKeyWriteSnapshot>|null)=>void;
 }
-export interface ApiKeyWriteSnapshot {readonly schema_version:1;readonly scope_id:string;readonly descriptor:Readonly<ApiKeyOperationDescriptor>}
+export type ApiKeyWriteSnapshot=Readonly<{schema_version:1;scope_id:string;descriptor:Readonly<ApiKeyOperationDescriptor>}>|Readonly<{schema_version:2;scope_id:string;descriptor:Readonly<ApiKeyCustomOperationDescriptor>}>;
 export interface ApiKeyWriteGuardOptions {
   scopeId:string;isCurrentScope:()=>boolean;storage:ApiKeyWriteStorage;
   /** Default: the library's IndexedDB atomic store, including on non-secure intranet HTTP. */
@@ -38,12 +49,38 @@ export function parseApiKeyOperationDescriptor(value:unknown):Readonly<ApiKeyOpe
   if(d.operation==='update')parseEntityId(d.expected_version);else if(d.expected_version!=='')throw new TypeError('Unexpected operation version');
   return Object.freeze(Object.fromEntries(keys.map(key=>[key,fields[key].value]))) as unknown as Readonly<ApiKeyOperationDescriptor>;
 }
-interface Lease {readonly id:number;sent:boolean;closed:boolean;reserving:boolean;descriptor?:Readonly<ApiKeyOperationDescriptor>}
+
+/** Closed structural schema. No extension bags, accessors, symbols, response bodies or secret fields. */
+export function parseApiKeyCustomOperationDescriptor(value:unknown):Readonly<ApiKeyCustomOperationDescriptor>{
+  if(!value||typeof value!=='object'||Array.isArray(value)||![Object.prototype,null].includes(Object.getPrototypeOf(value)))throw new TypeError('Invalid custom operation descriptor');
+  const fields=Object.getOwnPropertyDescriptors(value),keys=['schema_version','operation_id','operation','intent_target_id','action','target_id','expected_version','fingerprint'];
+  if(Reflect.ownKeys(value).length!==keys.length||keys.some(key=>!fields[key]||!('value'in fields[key])))throw new TypeError('Invalid custom operation fields');
+  const d=Object.fromEntries(keys.map(key=>[key,fields[key].value]));
+  const opaque=(v:unknown)=>typeof v==='string'&&!v.includes('://')&&/^[A-Za-z0-9._:\/-]{0,256}$/.test(v);
+  if(d.schema_version!==2||typeof d.operation_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(d.operation_id)||!['create','update','revoke','delete_record'].includes(d.operation)||!opaque(d.intent_target_id)||!opaque(d.target_id)||typeof d.action!=='string'||!/^[a-z][a-z0-9._:-]{0,63}$/.test(d.action)||typeof d.expected_version!=='string'||!/^[A-Za-z0-9._:-]{0,128}$/.test(d.expected_version)||typeof d.fingerprint!=='string'||!/^[0-9a-f]{64}$/.test(d.fingerprint))throw new TypeError('Invalid custom operation descriptor');
+  if(d.operation==='create'?d.intent_target_id!=='':!d.intent_target_id)throw new TypeError('Invalid custom UI target');
+  return Object.freeze(d) as unknown as Readonly<ApiKeyCustomOperationDescriptor>;
+}
+const custom=(value:ApiKeyWriteDescriptor):value is ApiKeyCustomOperationDescriptor=>Object.hasOwn(value,'schema_version');
+function parseDescriptor(value:unknown):Readonly<ApiKeyWriteDescriptor>{
+  return value&&typeof value==='object'&&Object.hasOwn(value,'schema_version')?parseApiKeyCustomOperationDescriptor(value):parseApiKeyOperationDescriptor(value);
+}
+export function parseApiKeyWriteReconciliation(value:unknown,descriptor?:Readonly<ApiKeyWriteDescriptor>):ApiKeyWriteResolution{
+  if(descriptor&&custom(descriptor)){
+    if(!value||typeof value!=='object'||Array.isArray(value)||![Object.prototype,null].includes(Object.getPrototypeOf(value)))throw new TypeError('Custom recovery requires an identity receipt');
+    const fields=Object.getOwnPropertyDescriptors(value);
+    if(Reflect.ownKeys(value).length!==2||['descriptor','resolution'].some(key=>!fields[key]||!('value'in fields[key]))||!sameDescriptor(descriptor,parseApiKeyCustomOperationDescriptor(fields.descriptor.value)))throw new TypeError('Mismatched custom receipt');
+    value=fields.resolution.value;
+  }
+  if(!['applied','not-applied','pending'].includes(value as string))throw new TypeError('Invalid write reconciliation');
+  return value as ApiKeyWriteResolution;
+}
+interface Lease {readonly id:number;sent:boolean;closed:boolean;reserving:boolean;descriptor?:Readonly<ApiKeyWriteDescriptor>}
 interface Owner {
   persistent:boolean;active:()=>boolean;
   claim:(operation:ApiKeyPendingWrite['operation'],targetId:string|null)=>Lease|null;
   acquire:(lease:Lease,signal:AbortSignal)=>Promise<void>;
-  describe:(lease:Lease,descriptor:ApiKeyOperationDescriptor)=>Promise<void>;
+  describe:(lease:Lease,descriptor:ApiKeyWriteDescriptor)=>Promise<void>;
   locked:(id:number)=>boolean;
   sent:(lease:Lease)=>boolean;finish:(lease:Lease)=>boolean|Promise<boolean>;abandon:(lease:Lease)=>void;
   recover:<T>(id:number,signal:AbortSignal,action:()=>Promise<T>)=>Promise<T>;
@@ -53,7 +90,7 @@ interface Owner {
 /** A protection failure proves no mutation was dispatched by this attempt. */
 export class ApiKeyWriteProtectionError extends TypeError {constructor(){super('API key write protection unavailable');}}
 const cancelled=()=>new DOMException('Cancelled','AbortError');
-const sameDescriptor=(a:ApiKeyOperationDescriptor|undefined,b:ApiKeyOperationDescriptor|undefined)=>!!a&&!!b&&(['operation_id','operation','target_id','expected_version','fingerprint'] as const).every(key=>a[key]===b[key]);
+const sameDescriptor=(a:ApiKeyWriteDescriptor|undefined,b:ApiKeyWriteDescriptor|undefined)=>!!a&&!!b&&JSON.stringify(a)===JSON.stringify(b);
 const owners=new WeakMap<ApiKeyWriteGuard,Owner>(),defaults=new WeakMap<object,ApiKeyWriteGuard>();let nextWriteId=0;
 /** Durable operation identity is the cross-tab gate. It never expires or grants another operation. */
 export function createApiKeyWriteGuard(options?:ApiKeyWriteGuardOptions):ApiKeyWriteGuard {
@@ -65,13 +102,13 @@ export function createApiKeyWriteGuard(options?:ApiKeyWriteGuardOptions):ApiKeyW
   const parseSnapshot=(value:unknown)=>{
     if(value===null||value===undefined)return null;
     if(typeof value!=='object'||Array.isArray(value)||![Object.prototype,null].includes(Object.getPrototypeOf(value)))throw new TypeError('Invalid write recovery snapshot');
-    const fields=Object.getOwnPropertyDescriptors(value);if(Object.keys(fields).length!==3||['schema_version','scope_id','descriptor'].some(key=>!fields[key]||!('value'in fields[key]))||fields.schema_version.value!==1||fields.scope_id.value!==options!.scopeId)throw new TypeError('Invalid write recovery scope');
-    const descriptor=parseApiKeyOperationDescriptor(fields.descriptor.value);return Object.freeze({id:++nextWriteId,operation:descriptor.operation==='delete_record'?'delete' as const:descriptor.operation,targetId:descriptor.target_id||null,status:'uncertain' as const,descriptor});
+    const fields=Object.getOwnPropertyDescriptors(value);if(Object.keys(fields).length!==3||['schema_version','scope_id','descriptor'].some(key=>!fields[key]||!('value'in fields[key]))||![1,2].includes(fields.schema_version.value)||fields.scope_id.value!==options!.scopeId)throw new TypeError('Invalid write recovery scope');
+    const descriptor=parseDescriptor(fields.descriptor.value);if(fields.schema_version.value!==(custom(descriptor)?2:1))throw new TypeError('Mismatched recovery schema');return Object.freeze({id:++nextWriteId,operation:descriptor.operation==='delete_record'?'delete' as const:descriptor.operation,targetId:(custom(descriptor)?descriptor.intent_target_id:descriptor.target_id)||null,status:'uncertain' as const,descriptor});
   };
   const readLegacy=()=>options?parseSnapshot(options.storage.load(options.scopeId)):null;
   const parseStored=(value:string|null)=>value===null?null:parseSnapshot(JSON.parse(value));
-  const snapshot=(descriptor:ApiKeyOperationDescriptor):Readonly<ApiKeyWriteSnapshot>=>Object.freeze({schema_version:1,scope_id:options!.scopeId,descriptor});
-  const encoded=(descriptor:ApiKeyOperationDescriptor)=>JSON.stringify(snapshot(descriptor));
+  const snapshot=(descriptor:ApiKeyWriteDescriptor):Readonly<ApiKeyWriteSnapshot>=>custom(descriptor)?Object.freeze({schema_version:2,scope_id:options!.scopeId,descriptor}):Object.freeze({schema_version:1,scope_id:options!.scopeId,descriptor});
+  const encoded=(descriptor:ApiKeyWriteDescriptor)=>JSON.stringify(snapshot(descriptor));
   const store=options?(options.operationStore??createIndexedDBOperationStore()):undefined,scope='xui.api-key.v1:'+options?.scopeId;
   state=readLegacy();
   const listeners=new Set<()=>void>(),resolved=new Set<(id:number,resolution:Exclude<ApiKeyWriteResolution,'pending'>)=>void>();
@@ -93,7 +130,7 @@ export function createApiKeyWriteGuard(options?:ApiKeyWriteGuardOptions):ApiKeyW
   const hydration=options?Promise.resolve().then(async()=>{const stored=await importLegacy();if(active()&&stored)inherit(stored);}):Promise.resolve();
   // Hosts may await ready, while the normal manager automatically waits before any dispatch.
   void hydration.catch(()=>{});
-  const clear=(id:number,descriptor?:Readonly<ApiKeyOperationDescriptor>):boolean|Promise<boolean>=>{
+  const clear=(id:number,descriptor?:Readonly<ApiKeyWriteDescriptor>):boolean|Promise<boolean>=>{
     if(!active())return false;
     if(!options){if(current(id))publish(null);return true;}
     if(!descriptor){
@@ -136,7 +173,7 @@ export function createApiKeyWriteGuard(options?:ApiKeyWriteGuardOptions):ApiKeyW
     },
     async describe(lease,value){
       if(!options||!active()||!current(lease.id)||lease.sent||lease.closed)throw new TypeError('Stale write preparation');
-      const descriptor=parseApiKeyOperationDescriptor(value);if(descriptor.operation!==(state!.operation==='delete'?'delete_record':state!.operation)||descriptor.target_id!==(state!.targetId??''))throw new TypeError('Mismatched write preparation');
+      const descriptor=parseDescriptor(value);if(descriptor.operation!==(state!.operation==='delete'?'delete_record':state!.operation)||(custom(descriptor)?descriptor.intent_target_id:descriptor.target_id)!==(state!.targetId??''))throw new TypeError('Mismatched write preparation');
       lease.reserving=true;state=Object.freeze({...state!,descriptor});
       try{
         // This single committed transaction grants exactly one descriptor, even when tabs

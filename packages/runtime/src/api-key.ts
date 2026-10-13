@@ -1,7 +1,7 @@
 import {isHttpError} from './http.js';
-import {ApiKeyWriteProtectionError,apiKeyWriteOwner,type ApiKeyWriteGuard,type ApiKeyPendingWrite,type ApiKeyWriteLease,type ApiKeyWriteResolution,type ApiKeyOperationDescriptor} from './api-key-write.js';
-export {createApiKeyWriteGuard} from './api-key-write.js';
-export type {ApiKeyWriteGuard,ApiKeyPendingWrite,ApiKeyWriteResolution,ApiKeyOperationDescriptor,ApiKeyWriteStorage,ApiKeyWriteSnapshot,ApiKeyWriteGuardOptions} from './api-key-write.js';
+import {ApiKeyWriteProtectionError,apiKeyWriteOwner,parseApiKeyWriteReconciliation,type ApiKeyWriteGuard,type ApiKeyPendingWrite,type ApiKeyWriteLease,type ApiKeyWriteDescriptor,type ApiKeyWriteReconciliation} from './api-key-write.js';
+export {createApiKeyWriteGuard,parseApiKeyCustomOperationDescriptor} from './api-key-write.js';
+export type {ApiKeyWriteGuard,ApiKeyPendingWrite,ApiKeyWriteResolution,ApiKeyOperationDescriptor,ApiKeyWriteStorage,ApiKeyWriteSnapshot,ApiKeyWriteGuardOptions,ApiKeyWriteDescriptor,ApiKeyCustomOperationDescriptor,ApiKeyCustomWriteReceipt,ApiKeyWriteReconciliation} from './api-key-write.js';
 /** Native page-facade application code, shared with baseservice. Never a definite refusal. */
 const API_KEY_WRITE_OUTCOME_UNKNOWN=50301;
 /** The commit is known, but follow-up work/response is incomplete. Never replay the mutation. */
@@ -27,9 +27,9 @@ export type ApiKeyWriteIntent={operation:'create';draft:Readonly<ApiKeyDraft>}|{
 export interface ApiKeyAdapter {
   /** The v2 boundary owns one durable actor-scoped gate. Managers must use this exact owner. */
   writeGuard?:ApiKeyWriteGuard;
-  prepareWrite?:(intent:ApiKeyWriteIntent,context:{signal:AbortSignal})=>Promise<Readonly<ApiKeyOperationDescriptor>>;
+  prepareWrite?:(intent:ApiKeyWriteIntent,context:{signal:AbortSignal})=>Promise<Readonly<ApiKeyWriteDescriptor>>;
   /** Explicit mutation: may seal a never-applied request so a delayed request cannot execute. */
-  resolveWrite?:(write:Readonly<ApiKeyPendingWrite>,context:{signal:AbortSignal})=>Promise<ApiKeyWriteResolution>;
+  resolveWrite?:(write:Readonly<ApiKeyPendingWrite>,context:{signal:AbortSignal})=>Promise<ApiKeyWriteReconciliation>;
   list:(context:{signal:AbortSignal})=>Promise<readonly ApiKeyMetadata[]>;
   create:(draft:Readonly<ApiKeyDraft>,context:ApiKeyWriteContext)=>Promise<CreatedApiKey>;
   revoke:(key:Readonly<ApiKeyMetadata>,context:ApiKeyWriteContext)=>Promise<void>;
@@ -37,7 +37,7 @@ export interface ApiKeyAdapter {
   /** Deletes an already revoked management record; it does not revoke a credential or delete business data. */
   deleteRecord?:(key:Readonly<ApiKeyMetadata>,context:ApiKeyWriteContext)=>Promise<void>;
   /** Read-only authoritative reconciliation. A refreshed list alone never proves a write outcome. */
-  reconcileWrite?:(write:Readonly<ApiKeyPendingWrite>,context:{rows:readonly Readonly<ApiKeyMetadata>[];signal:AbortSignal})=>Promise<ApiKeyWriteResolution>;
+  reconcileWrite?:(write:Readonly<ApiKeyPendingWrite>,context:{rows:readonly Readonly<ApiKeyMetadata>[];signal:AbortSignal})=>Promise<ApiKeyWriteReconciliation>;
 }
 export interface ApiKeyManagerOptions {
   adapter:ApiKeyAdapter;writeGuard?:ApiKeyWriteGuard;permissions:readonly ApiKeyPermission[];expiryOptions:readonly ApiKeyExpiry[];
@@ -147,9 +147,9 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
       if(listSession!==listGeneration)throw new TypeError('A newer metadata query superseded reconciliation');
       emit({rows,hasLoaded:true});if(!current())return;
       if(!resolve&&!options.adapter.reconcileWrite){recoveryAbort=undefined;emit({recoveryBusy:false,recoveryError:labels.recoveryUnavailable});return;}
-      const resolution=await wait(()=>resolve?options.adapter.resolveWrite!(write,{signal:controller.signal}):options.adapter.reconcileWrite!(write,{rows,signal:controller.signal}),controller);if(!current())return;
+      const receipt=await wait(()=>resolve?options.adapter.resolveWrite!(write,{signal:controller.signal}):options.adapter.reconcileWrite!(write,{rows,signal:controller.signal}),controller);if(!current())return;
       if(listSession!==listGeneration)throw new TypeError('A newer metadata query superseded reconciliation');
-      if(!['applied','not-applied','pending'].includes(resolution))throw new TypeError('Invalid write reconciliation');
+      const resolution=parseApiKeyWriteReconciliation(receipt,write.descriptor);
       recoveryAbort=undefined;emit({recoveryBusy:false,recoveryError:resolution==='pending'?labels.recoveryPending:null,...(resolution==='pending'?{}:{actionError:null})});
       if(current()&&resolution!=='pending'){
         if(listSession!==listGeneration){emit({recoveryError:labels.recoveryError});return;}

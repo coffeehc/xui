@@ -17,3 +17,12 @@ export async function install(scope,{barrier=false,success=false}={}){
  }}),base=createApiKeyHttpAdapter({http,writeGuard:guard}),adapter={...base,prepareWrite:async(...args)=>{const descriptor=await base.prepareWrite(...args);if(barrier)await window.keyPrepared(descriptor);return descriptor;}},manager=createApiKeyManagerController({adapter,canCreate:true,permissions:[],expiryOptions:[{id:'never',label:'Never'}],defaultExpiryId:'never'});
  return {manager,guard,start:()=>{manager.openCreate();manager.setDraft({name:'Private draft never persisted'});return manager.submitCreate();},read:()=>store.read('xui.api-key.v1:'+scope),setReceipt:value=>{receipt=value;}};
 }
+
+import {apiKeyOperationId} from '../../packages/runtime/dist/api-key-fingerprint.js';
+export async function installCustom(scope,{barrier=false,success=false}={}){
+ let receipt='pending';const store=createIndexedDBOperationStore(),storage={load:scope=>{const value=localStorage.getItem('fixture:'+scope);return value?JSON.parse(value):null;},save:(scope,value)=>value===null?localStorage.removeItem('fixture:'+scope):localStorage.setItem('fixture:'+scope,JSON.stringify(value))};
+ const guard=createApiKeyWriteGuard({scopeId:scope,isCurrentScope:()=>true,storage});await guard.ready();
+ const adapter={writeGuard:guard,list:async()=>[],prepareWrite:async()=>{const descriptor={schema_version:2,operation_id:apiKeyOperationId(),operation:'create',intent_target_id:'',action:success?'key-create':'key-rotate',target_id:success?'/api/v1/accounts/a1/keys':'a1',expected_version:success?'':'0',fingerprint:'a'.repeat(64)};if(barrier)await window.keyPrepared(descriptor);return descriptor;},create:async(_draft,{write})=>{await window.keyDispatch(write.descriptor);if(!success)throw Error('Synthetic lost acknowledgement');return {metadata:{id:'1',name:'Synthetic',prefix:null,permissionIds:[],createdAt:null,expiresAt:null,lastUsedAt:null,status:'active'},secret:'FAKE_TRANSIENT_VALUE'};},revoke:async()=>{},reconcileWrite:async write=>({descriptor:write.descriptor,resolution:receipt})};
+ const manager=createApiKeyManagerController({adapter,canCreate:true,permissions:[],expiryOptions:[{id:'never',label:'Never'}],defaultExpiryId:'never'});
+ return {guard,manager,start:()=>{manager.openCreate();manager.setDraft({name:'Private draft never persisted'});return manager.submitCreate();},read:()=>store.read('xui.api-key.v1:'+scope),setReceipt:value=>{receipt=value;}};
+}

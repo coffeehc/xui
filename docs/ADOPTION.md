@@ -134,7 +134,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 ## 默认接口与业务能力映射
 
-先核[页面API总索引](PAGE_APIS.md)，使用同一个HTTP/auth owner连接createApiKeyHttpAdapter与createBusinessLogHttpLoader。正式Key HTTP为DTO v2，必须提供已验证server/actor/namespace绑定的持久writeGuard及isCurrentScope实时校验，manager自动复用；旧v1宿主同步升级服务端，不静默回退。配置失败不得给默认权限；required/read、可选权限和独立confirmed不合并。update编辑name/权限/enabled，以expected_version CAS；暂停恢复不是撤销，revoked不能恢复。过期撤销和撤销记录删除各自确认。未知写入descriptor跨关闭/卸载/重载保持；Lookup只读，新list与严格匹配权威receipt才解锁，列表相似/普通409不是证据。Resolve是明确独立确认的终止未执行请求动作，可能写墓碑，不能伪装只读或自动触发；结果未知继续锁，不重现secret。custom adapter仍可按原域合同提供可选update，不强迫base协议；没有持久配置不承诺reload保护。lastUsedAtPending只按后端事实显示。服务端仍负责鉴权/tenant、receipt事务锁和业务数据保留，完整合同及迁移步骤见[API_KEY](API_KEY.md)。
+先核[页面API总索引](PAGE_APIS.md)，使用同一个HTTP/auth owner连接createApiKeyHttpAdapter与createBusinessLogHttpLoader。正式Key HTTP为DTO v2，必须提供已验证server/actor/namespace绑定的持久writeGuard及isCurrentScope实时校验，manager自动复用；旧v1宿主同步升级服务端，不静默回退。配置失败不得给默认权限；required/read、可选权限和独立confirmed不合并。update编辑name/权限/enabled，以expected_version CAS；暂停恢复不是撤销，revoked不能恢复。过期撤销和撤销记录删除各自确认。未知写入descriptor跨关闭/卸载/重载保持；Lookup只读，新list与严格匹配权威receipt才解锁，列表相似/普通409不是证据。Resolve是明确独立确认的终止未执行请求动作，可能写墓碑，不能伪装只读或自动触发；结果未知继续锁，不重现secret。custom adapter仍可按原域合同提供可选update，不强迫base协议；持久恢复使用API_KEY的schema-2闭合custom identity，区分UI intent与真实domain action/opaque target/version（包含0），轮换不藏于内存Map。custom终态返回完整同identity receipt，按真实服务端合同验证后才能确认；不捏造服务器fingerprint、不凭404释放锁。没有持久配置不承诺reload保护。lastUsedAtPending只按后端事实显示。服务端仍负责鉴权/tenant、receipt事务锁和业务数据保留，完整合同及迁移步骤见[API_KEY](API_KEY.md)。
 
 两宿主[React](../examples/capabilities-react/app.tsx)/[原生](../examples/capabilities-vanilla/app.js)消费正式产物，展示[公开组合](COMPOSITIONS.md)、safe filename下载及原生页面facade。合成fetch只验证合同，不证明产品具备API Key/业务日志后端。普通程序故障和供应商凭据不得改名替代这些业务。
 
