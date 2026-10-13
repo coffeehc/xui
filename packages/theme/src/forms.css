@@ -147,3 +147,9 @@
  .xui-choice-group .xui-choice-label {min-inline-size:0;max-inline-size:100%;overflow-wrap:anywhere;}
  .xui-choice-group .xui-choice-label>span {min-inline-size:0;overflow-wrap:anywhere;}
 }
+
+@layer xui-components {
+ .xui-password-strength-summary {display:grid;grid-template-areas:"summary";}
+ .xui-password-strength-summary>span {grid-area:summary;min-inline-size:0;}
+ .xui-password-strength-reserve {visibility:hidden;}
+}

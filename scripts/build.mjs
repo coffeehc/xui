@@ -22,6 +22,9 @@ export async function buildPackages(){
       await writeFile(`${stage}/${name}.tsconfig.json`,JSON.stringify(project));
       execFileSync('node',['node_modules/typescript/bin/tsc','--project',`${stage}/${name}.tsconfig.json`],{stdio:'inherit'});
     }
+    // Ship a fixed self-contained worker as a lazy data module. Host bundlers need no worker plugin.
+    const strengthWorker=await build({entryPoints:['packages/runtime/src/password-strength-worker-entry.ts'],bundle:true,write:false,format:'iife',platform:'browser',target:'es2022',minify:true});
+    await writeFile(`${stage}/runtime/password-strength-worker-source.js`,`export const passwordStrengthWorkerSource=${JSON.stringify(strengthWorker.outputFiles[0].text)};\n`);
     await build({entryPoints:['packages/runtime/src/init.ts'],outfile:`${stage}/runtime/init.js`,format:'iife',bundle:true,minify:true,target:'es2022'});
     if(await sourceHash()!==sourceSha256)throw new Error('Source changed during build; retry the complete generation');
     const published=[],previous=[];

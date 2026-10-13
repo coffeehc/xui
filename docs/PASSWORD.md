@@ -27,21 +27,25 @@ finally { fields.current?.clear(); }
 
 ### 面向使用者的规则与当前计数
 
-默认提示为“密码长度为 {minimum}–{maximum} 个字符，可使用大小写字母、数字及 _、+、# 等符号。”范围始终来自服务端 policy。React/原生新密码字段只保存当前字符数用于展示，密码本身仍仅保留在输入框；清空/pagehide 同时将计数归零。复杂 emoji 和组合字符仍按前述技术计数规则计数，不能承诺视觉上一个图案就是一个字符。此能力不用于现有账号的登录密码限制。
+默认提示为“密码长度为 {minimum}–{maximum} 个字符，可使用大小写字母、数字及 _、+、# 等符号。”范围始终来自服务端 policy。React/原生新密码字段只保存当前字符数用于展示，密码不进入持久状态，仅在输入框和本地校验/评分调用中短暂使用；清空/pagehide 同时将计数归零。复杂 emoji 和组合字符仍按前述技术计数规则计数，不能承诺视觉上一个图案就是一个字符。此能力不用于现有账号的登录密码限制。
 
 `NewPasswordLabels` 新增可选 count/tooShort/tooLong 文案函数；原完整 labels 对象保持兼容。`getNewPasswordErrorMessage` 可传第五参数当前字符数，以显示明确“太短/太长”信息；未提供时仍返回范围规则。无效字符提示为“密码包含无法识别的字符，请重新输入。”计数和提示不引入复杂度、归一化、截断或任何密码持久化。
 
 
 ### 本地密码强度建议
 
-两端 NewPasswordFields 默认在输入暂停 150 ms 后本地估算，显示“弱 / 中 / 强”和一条改进建议。使用 MIT 的 @zxcvbn-ts/core 4.2.0、language-common 4.1.3、language-en 4.1.1，识别常见密码、顺序、重复、键盘及常见个人信息模式，不按字符种类自行打分。固定映射：评分 0–1 为弱，2 为中，3–4 为强。强度仅供参考，任何分数都不参与 readValidatedPassword 的提交许可；强制规则仍只来自服务端 policy。
+两端 NewPasswordFields 默认在输入暂停 150 ms 后本地估算。长度规则独立显示；固定短摘要显示等待输入、评估中、弱/中/强或暂不可评估。改进建议复用公开 Disclosure，默认折叠，只由用户主动展开；评分、清空及提交不会自动展开或删除摘要行。短状态按固有内容共同预留高度，已展开建议也保留稳定区域，不把长建议默认占成大块空白。使用 MIT 的 @zxcvbn-ts/core 4.2.0、language-common 4.1.3、language-en 4.1.1，识别常见密码、顺序、重复、键盘及常见个人信息模式，不按字符种类自行打分。固定映射：评分 0–1 为弱，2 为中，3–4 为强。强度仅供参考，任何分数都不参与 readValidatedPassword 的提交许可；强制规则仍只来自服务端 policy。
 
-引擎和 common/en 字典通过动态 import 首次输入时懒加载。正式独立 tarball 消费者的引擎压缩大小为原生 837,476 B、React 837,496 B；孤立示例初始静态 JS 图 gzip 约为 3 KB、72 KB（每次精确值写入 strength-bundle.json），均不含引擎和字典。这是构建产物测量，不是浏览器运行时延迟保证。入口静态依赖图与原有全库体积门禁继续检查。
+引擎和 common/en 字典在包构建时编成自包含固定 worker 源码，以动态 import 首次输入时懒加载。库在本地 Blob worker 中执行，ready 后才读取最新输入并通过本地 postMessage 发送；主线程不解析字典或执行评分，评分实例只存在于单次 worker 调用中。宿主无需 worker 打包插件；正常 ESM 动态导入拆包保留懒加载，显式关闭代码拆分的 bundler 会把模块合并进初始脚本。正式独立 tarball 消费者的引擎压缩大小为原生 约 838 KB、React 约 838 KB；孤立示例初始静态 JS 图 gzip 约为 3 KB、72 KB（每次精确值写入 strength-bundle.json），均不含引擎和字典。这是构建产物测量，不是浏览器运行时延迟保证。入口静态依赖图与原有全库体积门禁继续检查。
 
-首次离线或加载失败显示“暂时无法评估密码强度，不影响提交。”，不会假称强。字典以常见模式和英文为主，对其他语言、人名、产品上下文及新泄露密码的识别有限；“强”不保证安全。估算为限制同步 CPU 工作只处理最多 256 个 UTF-16 单元，超出显示无法评估，不截断密码，也不改变服务端策略校验。复杂 Unicode 的强制长度仍按上面的码点规则。
+首次离线、Worker 不可用、打包产物不可加载或宿主 CSP 禁止 blob worker 时，摘要显示“暂不可评估”，建议中说明不影响提交。库不修改、不要求放宽 worker-src/CSP，不会假称强。字典以常见模式和英文为主，对其他语言、人名、产品上下文及新泄露密码的识别有限；“强”不保证安全。估算为限制同步 CPU 工作只处理最多 256 个 UTF-16 单元，超出显示无法评估，不截断密码，也不改变服务端策略校验。复杂 Unicode 的强制长度仍按上面的码点规则。
 
 公开 runtime/password 提供 createPasswordStrengthController({readPassword,onChange})、PasswordStrengthState 和 getPasswordStrengthMessage。控制器 refresh/clear/destroy 只回传状态、评分、等级和提示分类，不返回密码、匹配词或猜测轨迹。常规页面直接复用 NewPasswordFields，无需另建评分 owner。NewPasswordLabels.strength 是可选的中文提示映射覆盖，旧 labels 对象兼容。
 
-输入不上传、不进入 URL、日志或 storage，不使用远程泄露查询或网络 matcher。读取输入发生在引擎加载完成后，异步等待不保存密码快照；每次输入、clear 和卸载使旧 generation 失效，迟到加载不能覆盖当前提示。pagehide/clear/destroy 同步清除输入和显示状态。评分不用于旧账号登录密码限制。字典可缓存，但每次估算使用独立 Factory，避免其内部 scoring 缓存长期引用最近密码；JavaScript 字符串无法承诺物理内存清零。
+输入不上传、不进入 URL、日志或 storage，不使用远程泄露查询或网络 matcher。读取输入发生在引擎加载完成后，异步等待不保存密码快照；每次输入、clear 和卸载使旧 generation 失效，迟到加载或评分不能覆盖当前提示；卸载通过 AbortSignal 立即终止正在加载或工作的 worker。pagehide/clear/destroy 同步清除输入和显示状态。评分不用于旧账号登录密码限制。字典可缓存，但每次估算使用独立 Factory，避免其内部 scoring 缓存长期引用最近密码；JavaScript 字符串无法承诺物理内存清零。
 
 实现依据：[zxcvbn-ts 指南](https://zxcvbn-ts.github.io/zxcvbn/guide/)、[懒加载](https://zxcvbn-ts.github.io/zxcvbn/guide/lazy-loading/)、[4.x Factory](https://zxcvbn-ts.github.io/zxcvbn/guide/migration/)。新回归覆盖常见/重复/顺序模式、有效弱密码允许提交、懒加载隔离、离线和迟到结果；真实浏览器验收见对应提交 CI，不能以本机启动被阻断代替通过。
+
+实际浏览器优化前记录：CI38408040199 合成输入的主线程长任务 React 124/56ms、原生127/99ms；这不是优化后的性能结果。worker 版本继续保存输入事件数、LongTask 和计时器延迟，须按新提交真实浏览器证据验收。
+
+NewPasswordLabels 可选 strengthSummary 映射短状态，strengthAdvice 定义 Disclosure 标题，原 strength 函数继续映射展开建议。清空保留短行与折叠入口，不保留上次评分；参考文字参与自然布局但 aria-hidden，读屏只读取当前状态。

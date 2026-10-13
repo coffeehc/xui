@@ -20,6 +20,12 @@ jobs:
         run: pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:consumer
       - name: Authentication visual acceptance
         run: pnpm exec playwright test auth-visual-system.spec.mjs login-visual.spec.mjs auth-page.spec.mjs
+      - name: Preserve authentication visual evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: authentication-visual
+          path: test-results
       - name: Focused interaction regressions
         run: pnpm exec playwright test auth-operation.spec.mjs login-layout.spec.mjs login.spec.mjs error-layout.spec.mjs capabilities.spec.mjs search-toolbar.spec.mjs display.spec.mjs choice-group.spec.mjs password-fields.spec.mjs password-strength.spec.mjs admin-setup.spec.mjs text-inputs.spec.mjs
       - name: Watch, cold start and complete browser suite
