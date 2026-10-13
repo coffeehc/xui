@@ -101,3 +101,8 @@ for(const legacy of [true,false])test(`native ${legacy?'legacy':'modern'} autofo
   assert.equal(f.doc.activeElement,f.settings);assert.deepEqual(f.events,['showModal','focus:settings']);
   assert.equal(f.dialog.getAttribute('autofocus'),'root');assert.equal(f.overview.getAttribute('autofocus'),'first');assert.equal(f.settings.getAttribute('autofocus'),'target');owner.destroy();
 });
+
+test('confirmed controlled state can open through another action while the primary trigger is disabled',()=>{
+  const f=fixture();f.trigger.disabled=true;const owner=createDialogController(f.dialog,f.trigger,{open:false});
+  owner.open();assert.equal(f.dialog.open,false);owner.syncOpen(true);assert.equal(f.dialog.open,true);owner.syncOpen(false);assert.equal(f.dialog.open,false);owner.destroy();
+});

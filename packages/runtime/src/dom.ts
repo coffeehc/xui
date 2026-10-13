@@ -62,7 +62,8 @@ export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElem
   const syncOpen=(next:boolean,details:DialogCloseDetails={reason:'imperative'})=>{
     if(dead)return;
     if(next&&!dialog.open){
-      if(disabled(trigger))return;
+      // syncOpen is the controlled owner's confirmed state. The request path
+      // still rejects disabled triggers; another enabled action may open this dialog.
       // Resolve before showModal: its synchronous focusin can otherwise replace a
       // navigation owner's roving target before initialFocus gets to read it.
       const version=++focusVersion;

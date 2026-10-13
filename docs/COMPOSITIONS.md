@@ -51,3 +51,5 @@ React 推荐组合：`<Dialog.Header closeButtonProps={{'aria-label':'关闭设�
 旧消费者迁移：删除尾部游离 X，改用 Header 的默认 CloseButton；或把原 X 的 Dialog.Close 改为 Dialog.CloseButton（二选一），不能两个一起保留。库不能从普通 Close 推断它是图标还是合法 footer Cancel，因此升级版本本身不会自动重新定位旧的游离 X。删除消费方通用定位/裁切补丁，业务草稿、onOpenChange/details.cancel、提交和权限继续归宿主；本次库修改不代表已修改任何业务仓库。
 
 回归入口：`tests/browser/focus-boundaries.spec.mjs` 使用正式打包 React/native 消费者，覆盖 Dialog、Sheet、Card/ScrollArea、嵌套卡片、双列/窄列、首末控件、invalid+focus、light/dark/system、390px 与 200% 根字体、独立 CloseButton、键盘关闭/回焦点。源码结构测试不替代真实浏览器几何和截图验收。
+
+原生 Dialog 的 `syncOpen` 同步宿主已确认的受控状态，不受最初注册 trigger 的 disabled 状态限制；同一个弹窗可能由另一项已授权动作打开（例如创建被未知写入门禁禁用时，允许打开核对/终止确认）。trigger 点击和 `open()` 请求仍拒绝 disabled，不能把 `syncOpen` 当未授权的用户请求入口。
