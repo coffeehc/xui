@@ -9,7 +9,7 @@
 | Input / Textarea | 外壳原已有字体、尺寸、边界、焦点、错误、禁用主题；保留原生 label/name/FormData/required/readOnly。InputGroup 禁用附属按钮不再出现 hover/pressed 可用反馈。 |
 | text/search/email/url/tel/password/number/date/datetime-local/month/time/week | 保留浏览器编辑、步进、清除、日期/时间输入、自动填充语义及 color-scheme。没有用遮挡或替换隐藏必要功能。 |
 | file | 补公共 `::file-selector-button` 主题、间距、边界和交互/禁用状态；保留真实文件输入、文件名、accept/multiple 和用户选择流程。 |
-| range | 补 Chromium/WebKit 和 Firefox 的公共轨道/拇指规则；min/max/step、箭头键、实际数值仍由原生 input 决定。唯一新尺度 `range-thumb-offset` 从现有轨道/图标/边框 token 派生，只在 DESIGN 定义。 |
+| range | 清除 range 浏览器默认外边距，避免 100% 宽控件超出父项；补 Chromium/WebKit 和 Firefox 的公共轨道/拇指规则；min/max/step、箭头键、实际数值仍由原生 input 决定。唯一新尺度 `range-thumb-offset` 从现有轨道/图标/边框 token 派生，只在 DESIGN 定义。 |
 | color | 补色块边界、圆角、控件高度；色块颜色仍是实际选值，不能替成品牌颜色。 |
 | Checkbox / Radio / Switch | 补真实 checkbox.indeterminate 横线和选中背景；补 aria-invalid 错误边界；维持禁用、只读 guard、键盘、RTL Switch 和 forced-colors 原生标记。Fieldset 错误亦绘制公共错误边界。 |
 | Button / IconButton | 已有公共变体、尺寸、focus、pressed、busy、disabled；修复 link 变体 disabled hover 仍变背景的遗漏。 |
@@ -41,6 +41,6 @@ HTML 不支持 file/range/color 的 readOnly。审查页明确说明这一点，
 | Calendar / GroupedCombobox / Command | 已为自定义 DOM 日期网格/列表，非系统 date/select 窗口；不新增另一套业务查询或日期状态。 |
 | Dialog / Sheet / AlertDialog | 既有主题原生 dialog 或 React 公共组合，继续由模态 owner 管理；本次选择浮层位于其所属 DOM 范围，没有新增模态 owner。 |
 
-集成预检已通过：最终共享源码的 build、typecheck、351-token check、379 项 unit，以及两端独立 tarball 消费（全部公开 ESM/CSS/types、动态入口、Button-only 和初始 gzip 预算）。本地 watch/cold-start/实际浏览器未在受限环境冒充通过，交由正常 GitHub CI 的完整 verify。真实 macOS OS 菜单、Firefox/WebKit、移动设备和读屏器未测。
+集成预检已通过：最终共享源码的 build、typecheck、351-token check、385 项 unit，以及两端独立 tarball 消费（全部公开 ESM/CSS/types、动态入口、Button-only 和初始 gzip 预算）。本地 watch/cold-start/实际浏览器未在受限环境冒充通过，交由正常 GitHub CI 的完整 verify。真实 macOS OS 菜单、Firefox/WebKit、移动设备和读屏器未测。
 
 选项细节回归：SimpleSelect 与顶栏语言浮层的相邻选项、optgroup 内部条目采用公共 space-text-gap。新增三主题/窄屏的选中+悬停截图及实际 bounding box 间距断言；真实执行结果仍以最终 CI 为准。

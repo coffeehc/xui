@@ -20,6 +20,7 @@ for(const mode of ['light','dark','system'])test(`native controls ${mode}: theme
   const input=page.getByLabel(`${type} default`,{exact:true});await expect(input).toBeVisible();
   const style=await input.evaluate(node=>{const s=getComputedStyle(node);return {height:node.getBoundingClientRect().height,border:s.borderTopWidth,font:s.fontSize};});
   expect(style.height).toBeGreaterThanOrEqual(36);expect(style.border).toBe('1px');expect(style.font).toBe('14px');
+  if(type==='range'){await expect(input).toHaveCSS('margin-left','0px');await expect(input).toHaveCSS('margin-right','0px');}
   await expect(page.getByLabel(`${type} disabled`,{exact:true})).toBeDisabled();
   await expect(page.getByLabel(`${type} invalid`,{exact:true})).toHaveCSS('border-top-color',error);
  }
@@ -35,7 +36,7 @@ for(const mode of ['light','dark','system'])test(`native controls ${mode}: theme
  const unknown=page.getByRole('progressbar',{name:'Indeterminate progress',exact:true});expect(await unknown.getAttribute('value')).toBeNull();await expect(unknown).toHaveCSS('animation-name','none');
  for(const width of [1280,390]){
   await page.setViewportSize({width,height:900});
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
+  const overflow=await page.evaluate(()=>({width:document.documentElement.scrollWidth,edges:[...document.querySelectorAll('main *')].filter(node=>node.getBoundingClientRect().right>innerWidth+1).map(node=>({tag:node.tagName,className:node.className,type:node.getAttribute('type'),right:node.getBoundingClientRect().right,margin:getComputedStyle(node).margin}))}));expect(overflow.width,JSON.stringify(overflow.edges)).toBeLessThanOrEqual(width+1);
   for(const state of ['default','disabled','readonly','invalid'])await info.attach(`${mode}-${width}-${state}.png`,{body:await page.locator(`[data-state="${state}"]`).screenshot(),contentType:'image/png'});
   await info.attach(`${mode}-${width}-actions-progress.png`,{body:await page.locator('section').last().screenshot(),contentType:'image/png'});
  }

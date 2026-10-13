@@ -115,7 +115,7 @@
   .xui-input[type="file"]:not(:disabled)::file-selector-button:active { background: var(--interaction-pressed); }
   .xui-input[type="file"]:disabled::file-selector-button { background: var(--button-disabled-background); color: var(--button-disabled-foreground); cursor: not-allowed; }
   /* Native range retains min/max/step, pointer and keyboard semantics. */
-  .xui-input[type="range"] { appearance: none; cursor: pointer; }
+  .xui-input[type="range"] { appearance: none; margin: 0; cursor: pointer; }
   .xui-input[type="range"]::-webkit-slider-runnable-track { block-size: var(--space-control-gap); border-radius: var(--radius-full); background: var(--muted); border: var(--line-width-surface) solid var(--input-border-color); }
   .xui-input[type="range"]::-moz-range-track { block-size: var(--space-control-gap); border-radius: var(--radius-full); background: var(--muted); border: var(--line-width-surface) solid var(--input-border-color); }
   .xui-input[type="range"]::-webkit-slider-thumb { appearance: none; inline-size: var(--control-icon-size); block-size: var(--control-icon-size); margin-block-start: var(--range-thumb-offset); border: var(--line-width-surface) solid var(--action-primary); border-radius: var(--radius-full); background: var(--action-primary); }

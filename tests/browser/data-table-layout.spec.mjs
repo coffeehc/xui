@@ -25,7 +25,7 @@ const selectors={
   tools:'#records-table .xui-data-table-tools',body:'#records-table .xui-data-table-body',
   grid:'#records-table > .xui-data-table-frame > .xui-data-table-body > table',thead:'#records-table > .xui-data-table-frame > .xui-data-table-body > table > thead',stickyHeader:'#records-table > .xui-data-table-frame > .xui-data-table-body > table > thead th:first-child',footer:'#records-table .xui-data-table-footer',
   count:'#records-table .xui-data-table-count',sizeField:'#records-table .xui-data-table-page-size',
-  size:'#records-table .xui-data-table-page-size select',pagination:'#records-table .xui-pagination',
+  size:'#records-table .xui-data-table-page-size button[role=combobox]',pagination:'#records-table .xui-pagination',
 };
 const table=page=>page.getByRole('table',{name:'合成记录表格',exact:true});
 // Placeholder/loading cells span all columns. Real rows still have multiple cells
@@ -486,10 +486,10 @@ for(const kind of kinds){
       const busy=await capture(page,'pagination-pending');assertFrame(busy);sameRect(initial,busy,'frame');
       expect(busy.footer.bottom).toBeLessThanOrEqual(busy.viewport.height+1.5);
     }else{
-      const immediate=await size(page).evaluate(node=>{
-        node.value='50';node.dispatchEvent(new Event('change',{bubbles:true}));
-        const state=window.dataTableDemo.owner.getState();return {status:state.status,pageSize:state.pageSize,rows:state.rows.length};
-      });
+      await size(page).click();
+      await page.evaluate(()=>document.addEventListener('click',()=>{const state=window.dataTableDemo.owner.getState();window.synchronousPageSize={status:state.status,pageSize:state.pageSize,rows:state.rows.length};},{once:true}));
+      await page.getByRole('option',{name:'50',exact:true}).click();
+      const immediate=await page.evaluate(()=>window.synchronousPageSize);
       expect(immediate,'local model confirms data synchronously in the control callback').toEqual({status:'ready',pageSize:50,rows:50});
     }
     await ready(page);await assertBounded(page,50,{label:'pagination-50'});
@@ -510,7 +510,7 @@ for(const kind of kinds){
     if(mode==='fixed-page-size'){
       await expect(size(page)).toBeDisabled();
       const before=await state(page);
-      await size(page).evaluate(node=>{node.value='50';node.dispatchEvent(new Event('change',{bubbles:true}));});
+      await size(page).evaluate(node=>{node.dispatchEvent(new MouseEvent('click',{bubbles:true}));});
       await expect(size(page)).toHaveText('20');expect((await state(page)).pageSize).toBe(before.pageSize);
     }
     if(mode!=='fixed-page-size'){

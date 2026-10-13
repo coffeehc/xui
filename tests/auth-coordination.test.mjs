@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHttpClient} from '../packages/runtime/dist/http.js';
+import {createAuthClient} from '../packages/runtime/dist/auth.js';
 import {createAuthCoordination} from '../packages/runtime/dist/auth-coordination.js';
 const deferred=()=>{let resolve;const promise=new Promise(done=>resolve=done);return {promise,resolve};};
 const flush=async()=>{for(let i=0;i<30;i++)await Promise.resolve();};
@@ -19,4 +21,32 @@ test('late old login/logout messages never invalidate a newer login; a refresh s
  await a.run(async()=>a.publish('logout'));await b.run(async()=>b.publish('login'));await b.run(async()=>b.publish('refresh'));
  harness.deliver(0,1);assert.deepEqual(eventsB,[]);harness.deliver(2,0);assert.equal(eventsA[0].kind,'login');harness.deliver(0,0);assert.equal(eventsA.length,1);
  harness.deliver(2,2);assert.equal(eventsC[0].kind,'login');harness.deliver(1,2);assert.equal(eventsC.length,1);a.close();b.close();c.close();
+});
+
+for(const kind of ['login','logout'])test(`${kind} broadcast arriving before the storage replica does not invalidate the same identity twice`,async t=>{
+ const harness=browser(t),events=[],a=createAuthCoordination('https://auth.example',()=>{}),b=createAuthCoordination('https://auth.example',event=>events.push(event));
+ a.publish(kind);const committed=new Map(harness.storage);
+ // BroadcastChannel and another tab's localStorage replica need not become visible together.
+ harness.storage.clear();harness.deliver(0,1);
+ assert.deepEqual(events.map(event=>event.kind),[kind]);
+ for(const [key,value] of committed)harness.storage.set(key,value);
+ a.publish('refresh');harness.deliver(1,1);
+ assert.deepEqual(events.map(event=>event.kind),[kind,'refresh']);a.close();b.close();
+});
+
+test('a delayed storage replica cannot cancel sibling refresh after its login notification was already applied',async t=>{
+ const harness=browser(t),held=deferred(),user={id:'42',username:'fixture',display_name:null};
+ const response=()=>new Response(JSON.stringify({success:true,message:'',payload:{schema_version:2,user,access_token:'bs-v1-sha256-access-'+'A'.repeat(43),token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString()},request_id:'',code:200}),{headers:{'Content-Type':'application/json'}});
+ const httpA=createHttpClient({baseURL:'https://auth.example',fetch:async()=>response()}),httpB=createHttpClient({baseURL:'https://auth.example',fetch:async()=>{await held.promise;return response();}});
+ const a=createAuthClient({http:httpA}),b=createAuthClient({http:httpB});
+ t.after(()=>{held.resolve();a.destroy();b.destroy();httpA.destroy();httpB.destroy();});
+ await a.login({username:'fixture',password:'FAKE_PASSWORD'});const committed=new Map(harness.storage);
+ harness.storage.clear();harness.deliver(0,1);assert.equal(b.getState().status,'unknown');
+ for(const [key,value] of committed)harness.storage.set(key,value);
+ const first=a.refresh(),second=b.refresh();const outcome=Promise.all([first,second]);
+ // Attach the rejection observer before delivering the adversarial notification.
+ const observed=outcome.then(value=>({value}),error=>({error}));
+ await first;harness.deliver(1,1);held.resolve();
+ const result=await observed;assert.equal(result.error,undefined);assert.deepEqual(result.value,[user,user]);
+ assert.equal(a.getState().status,'authenticated');assert.equal(b.getState().status,'authenticated');
 });

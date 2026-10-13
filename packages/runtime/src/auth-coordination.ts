@@ -26,7 +26,9 @@ export function createAuthCoordination(origin:string,receive:(event:AuthEpochEve
     // A newer rotation notification must not hide a missed login/logout identity change.
     if(latest.identityEpoch>known.identityEpoch){known=latest;receive({kind:latest.kind,epoch:String(latest.identityEpoch)});return;}
     if(incoming<=known.epoch||incoming<latest.epoch)return;
-    known={...known,epoch:incoming};receive({kind,epoch});
+    // The channel may arrive before this tab observes the corresponding storage write.
+    // Record identity notifications themselves so a later rotation cannot replay them.
+    known=kind==='refresh'?{...known,epoch:incoming}:{epoch:incoming,identityEpoch:incoming,kind};receive({kind,epoch});
   };
   return {
     run<T>(task:()=>Promise<T>):Promise<T>{
