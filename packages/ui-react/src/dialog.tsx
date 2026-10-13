@@ -1,3 +1,4 @@
+import {useDialogLayoutRef} from './dialog-layout.js';
 import * as React from 'react';
 import { cx, branded } from './shared.js';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
@@ -12,8 +13,9 @@ function Header({className,children,showClose=true,closeButtonProps,...props}:Di
 }
 export const Dialog = {
   Root: BaseDialog.Root, Trigger: BaseDialog.Trigger, Close: BaseDialog.Close, Header, CloseButton,
-  Content: function Content({className,keepMounted,...props}: React.ComponentProps<typeof BaseDialog.Popup> & {keepMounted?:boolean}) {
-    return <BaseDialog.Portal keepMounted={keepMounted}><BaseDialog.Backdrop className="xui-backdrop" /><BaseDialog.Popup {...props} className={branded('xui-layer xui-dialog',className)} /></BaseDialog.Portal>;
+  Content: function Content({className,keepMounted,ref,...props}: React.ComponentProps<typeof BaseDialog.Popup> & {keepMounted?:boolean}) {
+    const layoutRef=useDialogLayoutRef(ref);
+    return <BaseDialog.Portal keepMounted={keepMounted}><BaseDialog.Backdrop className="xui-backdrop" /><BaseDialog.Popup {...props} ref={layoutRef} className={branded('xui-layer xui-dialog',className)} /></BaseDialog.Portal>;
   },
   Title: function Title({className,...props}: React.ComponentProps<typeof BaseDialog.Title>) { return <BaseDialog.Title {...props} className={branded('xui-dialog-title',className)} />; },
   Description: function Description({className,...props}: React.ComponentProps<typeof BaseDialog.Description>) { return <BaseDialog.Description {...props} className={branded('xui-dialog-description',className)} />; },

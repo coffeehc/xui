@@ -1,8 +1,8 @@
 import {test,expect} from '@playwright/test';
-async function setup(page,{native,kind,mode,width,scale=1,standalone=false,noHeader=false,titleText}){
+async function setup(page,{native,kind,mode,width,scale=1,standalone=false,noHeader=false,titleText,side}){
  await page.setViewportSize({width,height:844});await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});
  await page.goto('/react/foundation-contract.html');await page.waitForFunction(()=>!!window.renderFocusCase);
- await page.evaluate(({native,kind,mode,scale,standalone,noHeader,titleText})=>{document.documentElement.dataset.theme=mode;document.documentElement.dataset.themeEffective=mode==='system'?'dark':mode;document.documentElement.style.fontSize=`${16*scale}px`;window.renderFocusCase({native,kind,standalone,noHeader,titleText});},{native,kind,mode,scale,standalone,noHeader,titleText});
+ await page.evaluate(({native,kind,mode,scale,standalone,noHeader,titleText,side})=>{document.documentElement.dataset.theme=mode;document.documentElement.dataset.themeEffective=mode==='system'?'dark':mode;document.documentElement.style.fontSize=`${16*scale}px`;window.renderFocusCase({native,kind,standalone,noHeader,titleText,side});},{native,kind,mode,scale,standalone,noHeader,titleText,side});
  if(kind!=='card')await page.getByRole('button',{name:'Open form',exact:true}).click();
 }
 async function assertFocusPaint(control){
@@ -48,14 +48,64 @@ for(const native of [false,true])test(`${native?'native':'react'} standalone clo
  await close.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form'})).toBeFocused();
 });
 
-for(const native of [false,true])for(const titleText of ['', '很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行'])test(`${native?'native':'react'} header safely handles ${titleText?'long':'empty'} title`,async({page})=>{
+for(const native of [false,true])for(const titleText of ['', '很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行'])test(`${native?'native':'react'} header safely handles ${titleText?'long':'empty'} title`,async({page},info)=>{
  await setup(page,{native,kind:'dialog',mode:'light',width:390,scale:2,titleText});const dialog=page.getByRole('dialog'),close=dialog.locator('.xui-dialog-close');await expect(close).toHaveCount(1);
  const heading=dialog.locator('.xui-dialog-heading'),[headBox,closeBox]=await Promise.all([heading.boundingBox(),close.boundingBox()]);expect(headBox.x+headBox.width).toBeLessThanOrEqual(closeBox.x+1);
  const body=dialog.locator('.xui-dialog-body'),first=body.locator('input').first(),footer=dialog.locator('.xui-dialog-footer');const geometry=await body.evaluate((node)=>{const input=node.querySelector('input'),probe=document.createElement('span');probe.style.cssText='position:absolute;visibility:hidden;width:calc(var(--focus-width) + var(--focus-offset))';node.append(probe);const reach=parseFloat(getComputedStyle(probe).width);probe.remove();return {body:node.clientHeight,control:input.getBoundingClientRect().height,reach};});
  expect(geometry.body,'The header must not consume the body editing track').toBeGreaterThanOrEqual(geometry.control+Math.max(0,geometry.reach)*2);
- const foot=await footer.boundingBox();expect(foot.y+foot.height).toBeLessThanOrEqual(844);
- await close.click();await expect(dialog).toBeHidden();
+ if(titleText){
+  await expect(dialog).toHaveAttribute('data-dialog-scroll','whole');await expect(body).toHaveCSS('overflow-y','visible');
+  await expect(close).toBeFocused();await page.keyboard.press('Tab');await expect(first).toBeFocused();await first.fill('Preserved across layout changes');
+  await dialog.hover();await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));
+  await expect.poll(async()=>{const box=await footer.boundingBox();return box.y>=0&&box.y+box.height<=844;}).toBe(true);
+  await dialog.getByRole('button',{name:'Save form',exact:true}).click();expect(await page.evaluate(()=>window.focusCaseSaves)).toBe(1);await info.attach('whole-scroll-footer.png',{body:await page.screenshot(),contentType:'image/png'});
+  await dialog.hover();await page.mouse.wheel(0,-(await dialog.evaluate(node=>node.scrollHeight)));await expect.poll(()=>dialog.evaluate(node=>node.scrollTop)).toBe(0);
+  await info.attach('whole-scroll-title-and-close.png',{body:await page.screenshot(),contentType:'image/png'});
+ }else {await expect(dialog).toHaveAttribute('data-dialog-scroll','body');const foot=await footer.boundingBox();expect(foot.y+foot.height).toBeLessThanOrEqual(844);}
+ await close.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
 });
 for(const native of [false,true])test(`${native?'native':'react'} existing body/footer without Header remains compatible`,async({page})=>{
  await setup(page,{native,kind:'dialog',mode:'dark',width:390,noHeader:true});const dialog=page.getByRole('dialog');await expect(dialog.locator('.xui-dialog-close')).toHaveCount(0);await expect(dialog.locator('.xui-dialog-header')).toHaveCount(0);await assertFocusPaint(dialog.locator('input').first());await assertFocusPaint(dialog.locator('input').last());await dialog.getByRole('button',{name:'Cancel form'}).click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form'})).toBeFocused();
+});
+
+for(const native of [false,true])test(`${native?'native':'react'} dialog changes scroll owner without remounting fields`,async({page},info)=>{
+ await setup(page,{native,kind:'dialog',mode:'dark',width:390});
+ const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body'),first=body.locator('input').first(),title=dialog.locator('.xui-dialog-title');
+ await expect(dialog).toHaveAttribute('data-dialog-scroll','body');
+ const close=dialog.getByRole('button',{name:'Dismiss form',exact:true});await expect(close).toBeFocused();await page.keyboard.press('Tab');await expect(first).toBeFocused();await first.fill('Keep this field and focus');
+ const identity=await first.evaluate(node=>{window.dialogFieldIdentity=node;return node.id;});
+ await title.evaluate(node=>node.textContent='很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行');await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+ await expect(dialog).toHaveAttribute('data-dialog-scroll','whole');await expect(body).toHaveCSS('overflow-y','visible');await expect(first).toBeFocused();await expect(first).toHaveValue('Keep this field and focus');expect(await first.evaluate(node=>node===window.dialogFieldIdentity)).toBe(true);
+ await page.setViewportSize({width:390,height:320});
+ const box=await dialog.boundingBox(),cdp=await page.context().newCDPSession(page);
+ await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+ await cdp.send('Input.synthesizeScrollGesture',{x:box.x+box.width/2,y:box.y+box.height/2,yDistance:-5000,gestureSourceType:'touch',speed:4000});
+ const footer=dialog.locator('.xui-dialog-footer');await expect.poll(async()=>{const r=await footer.boundingBox();return r.y>=0&&r.y+r.height<=320;}).toBe(true);
+ const saveBox=await dialog.getByRole('button',{name:'Save form',exact:true}).boundingBox();await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:saveBox.x+saveBox.width/2,y:saveBox.y+saveBox.height/2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await expect.poll(()=>page.evaluate(()=>window.focusCaseSaves)).toBe(1);await info.attach('short-window-touch-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cdp.detach();
+ await title.evaluate(node=>node.textContent='Short title');await page.evaluate(()=>document.documentElement.style.fontSize='100%');await page.setViewportSize({width:390,height:844});await expect(dialog).toHaveAttribute('data-dialog-scroll','body');await expect(first).toHaveValue('Keep this field and focus');expect(await first.getAttribute('id')).toBe(identity);expect(await first.evaluate(node=>node===window.dialogFieldIdentity)).toBe(true);
+ await page.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
+});
+
+test('native dialog remains reachable without ResizeObserver',async({page},info)=>{
+ await page.setViewportSize({width:390,height:480});await page.goto('/react/foundation-contract.html');await page.waitForFunction(()=>!!window.renderFocusCase);
+ await page.evaluate(()=>{const observer=window.ResizeObserver;window.ResizeObserver=undefined;try{window.renderFocusCase({native:true,kind:'dialog',titleText:'很长的标题'.repeat(12)});}finally{window.ResizeObserver=observer;}});
+ await page.getByRole('button',{name:'Open form',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog).not.toHaveAttribute('data-dialog-scroll','body');await expect(dialog.locator('.xui-dialog-body')).toHaveCSS('overflow-y','visible');
+ await dialog.hover();await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const b=await cancel.boundingBox();return b.y>=0&&b.y+b.height<=480;}).toBe(true);await info.attach('no-observer-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
+});
+
+for(const native of [false,true])for(const side of ['top','bottom'])test(`${native?'native':'react'} ${side} sheet respects its actual height budget`,async({page},info)=>{
+ await setup(page,{native,kind:'sheet',side,mode:'light',width:390,scale:2,titleText:'很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行'});const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body');await expect(dialog).toHaveAttribute('data-dialog-scroll','whole');await expect(body).toHaveCSS('overflow-y','visible');
+ await dialog.hover();await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const c=await cancel.boundingBox(),d=await dialog.boundingBox();return c.y>=d.y&&c.y+c.height<=d.y+d.height;}).toBe(true);await info.attach('fixed-height-sheet-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();
+});
+
+for(const native of [false,true])test(`${native?'native':'react'} last-field focus remains painted through both scroll-owner transitions`,async({page},info)=>{
+ await setup(page,{native,kind:'dialog',mode:'light',width:390});const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body'),last=body.locator('input').nth(17);await expect(dialog.getByRole('button',{name:'Dismiss form',exact:true})).toBeFocused();
+ for(let index=0;index<18;index++){await page.keyboard.press('Tab');await expect(body.locator('input').nth(index)).toBeFocused();}
+ await last.fill('Last field remains');
+ for(const [scale,text,mode] of [[2,'很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行','whole'],[1,'Short title','body']]){
+  await dialog.locator('.xui-dialog-title').evaluate((node,text)=>node.textContent=text,text);await page.evaluate(scale=>document.documentElement.style.fontSize=`${scale*100}%`,scale);await expect(dialog).toHaveAttribute('data-dialog-scroll',mode);await expect(last).toBeFocused();await expect(last).toHaveValue('Last field remains');
+  await expect.poll(()=>last.evaluate(node=>{const dialog=node.closest('[role="dialog"],dialog'),owner=dialog.dataset.dialogScroll==='body'?node.closest('.xui-dialog-body'):dialog,r=node.getBoundingClientRect(),s=getComputedStyle(node),reach=parseFloat(s.outlineWidth)+parseFloat(s.outlineOffset),o=owner.getBoundingClientRect(),top=o.top+owner.clientTop,left=o.left+owner.clientLeft;return r.top-reach>=Math.max(0,top)&&r.bottom+reach<=Math.min(innerHeight,top+owner.clientHeight)&&r.left-reach>=left&&r.right+reach<=left+owner.clientWidth;})).toBe(true);
+  await info.attach(`last-focus-${mode}.png`,{body:await page.screenshot(),contentType:'image/png'});
+ }
+ await page.keyboard.press('Escape');await expect(dialog).toBeHidden();
 });

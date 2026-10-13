@@ -9,7 +9,7 @@ test('scroll paint gutter is one shared owner and uses the unchanged focus reach
  for(const property of ['padding','scroll-padding'])assert.equal(rule.nodes.find(node=>node.prop===property).value,'calc(var(--focus-width) + var(--focus-offset))');
  for(const name of ['dialog','widgets'])assert.doesNotMatch(source(`packages/theme/src/${name}.css`),/padding:\s*(?:2px|4px)/);
  assert.ok(source('packages/theme/src/dialog.css').includes('margin:calc(calc(-1 * var(--focus-width)) - var(--focus-offset))'));
- assert.match(source('packages/theme/src/dialog.css'),/\.xui-dialog-body \{ overflow: auto; min-height: 0; min-inline-size:0/);
+ assert.match(source('packages/theme/src/dialog.css'),/\.xui-dialog-body \{ overflow: visible; flex: none; min-block-size: var\(--dialog-body-min-block-size\)/);
 });
 test('close action primitive retains flow; explicit header/button owns icon positioning',()=>{
  const react=source('packages/ui-react/src/dialog.tsx');assert.match(react,/Close: BaseDialog.Close, Header, CloseButton/);assert.match(react,/showClose=true/);assert.match(react,/aria-label':label='关闭'/);

@@ -33,16 +33,17 @@ import {Sheet} from '@coffeehc/xui-react/sheet';
 import {Surface} from '@coffeehc/xui-react/feedback';
 import {ScrollArea} from '@coffeehc/xui-react/scroll-area';
 import {InputGroup} from '@coffeehc/xui-react/forms';
-type FocusCase={kind:'dialog'|'sheet'|'card';native?:boolean;standalone?:boolean;noHeader?:boolean;titleText?:string};
+type FocusCase={kind:'dialog'|'sheet'|'card';side?:'start'|'end'|'top'|'bottom';native?:boolean;standalone?:boolean;noHeader?:boolean;titleText?:string};
 function FocusFields(){return <div className="xui-grid">{Array.from({length:18},(_,index)=><Field key={index} label={`Field ${index+1}`} error={index===0?'必须填写该字段':undefined}>{index===1?<InputGroup.Root><Input defaultValue="Group"/></InputGroup.Root>:<Input defaultValue={`Value ${index+1}`}/>}</Field>)}</div>;}
-function FocusCaseView({kind,standalone,noHeader,titleText='Long form 标题'}:FocusCase){
+function FocusCaseView({kind,side,standalone,noHeader,titleText='Long form 标题'}:FocusCase){
  if(kind==='card')return <Surface><ScrollArea.Root style={{height:260}}><ScrollArea.Viewport aria-label="Card form"><ScrollArea.Content><FocusFields/></ScrollArea.Content></ScrollArea.Viewport></ScrollArea.Root></Surface>;
  const Modal=kind==='sheet'?Sheet:Dialog;
- return <Modal.Root><Modal.Trigger render={<Button/>}>Open form</Modal.Trigger><Modal.Content aria-label={titleText?'Long form':'Empty heading form'}>{noHeader?<Modal.Title>{titleText}</Modal.Title>:standalone?<><Modal.Title>{titleText}</Modal.Title><Modal.CloseButton aria-label="Dismiss form"/></>:<Modal.Header closeButtonProps={{'aria-label':'Dismiss form'}}><Modal.Title>{titleText}</Modal.Title><Modal.Description>长标题和说明与关闭入口保持独立。</Modal.Description></Modal.Header>}<Modal.Body><FocusFields/><Surface><ScrollArea.Root style={{height:160}}><ScrollArea.Viewport aria-label="Nested card"><ScrollArea.Content><Field label="Nested first"><Input/></Field><p style={{height:200}}>Nested content</p><Field label="Nested last"><Input/></Field></ScrollArea.Content></ScrollArea.Viewport></ScrollArea.Root></Surface></Modal.Body><Modal.Footer><Modal.Close render={<Button variant="outline"/>}>Cancel form</Modal.Close><Button>Save form</Button></Modal.Footer></Modal.Content></Modal.Root>;
+ return <Modal.Root><Modal.Trigger render={<Button/>}>Open form</Modal.Trigger><Modal.Content {...(kind==='sheet'?{side}:{})} aria-label={titleText?'Long form':'Empty heading form'}>{noHeader?<Modal.Title>{titleText}</Modal.Title>:standalone?<><Modal.Title>{titleText}</Modal.Title><Modal.CloseButton aria-label="Dismiss form"/></>:<Modal.Header closeButtonProps={{'aria-label':'Dismiss form'}}><Modal.Title>{titleText}</Modal.Title><Modal.Description>长标题和说明与关闭入口保持独立。</Modal.Description></Modal.Header>}<Modal.Body><FocusFields/><Surface><ScrollArea.Root style={{height:160}}><ScrollArea.Viewport aria-label="Nested card"><ScrollArea.Content><Field label="Nested first"><Input/></Field><p style={{height:200}}>Nested content</p><Field label="Nested last"><Input/></Field></ScrollArea.Content></ScrollArea.Viewport></ScrollArea.Root></Surface></Modal.Body><Modal.Footer><Modal.Close render={<Button variant="outline"/>}>Cancel form</Modal.Close><Button onClick={()=>{window.focusCaseSaves++;}}>Save form</Button></Modal.Footer></Modal.Content></Modal.Root>;
 }
-declare global{interface Window{renderFocusCase:(config:FocusCase)=>void}}
+declare global{interface Window{focusCaseSaves:number;renderFocusCase:(config:FocusCase)=>void}}
 let nativeFocusCleanup:undefined|(()=>void);
 window.renderFocusCase=config=>{
+ window.focusCaseSaves=0;
  nativeFocusCleanup?.();nativeFocusCleanup=undefined;
  if(!config.native){root.render(<FocusCaseView key={JSON.stringify(config)} {...config}/>);return;}
  root.render(null);
@@ -54,7 +55,8 @@ window.renderFocusCase=config=>{
  const title=config.titleText??'Long form 标题';const heading='<h2 class="xui-dialog-title" id="native-focus-title">'+title+'</h2>';
  host.innerHTML='<button class="xui-button" type="button">Open form</button><dialog class="xui-native-dialog" aria-labelledby="native-focus-title">'+(config.noHeader?heading:config.standalone?heading+close:'<div class="xui-dialog-header"><div class="xui-dialog-heading">'+heading+'<p class="xui-dialog-description">长标题和说明与关闭入口保持独立。</p></div>'+close+'</div>')+'<div class="xui-dialog-body">'+fields+card.replaceAll('native-field-','nested-field-').replaceAll('native-error','nested-error')+'</div><div class="xui-dialog-footer"><button class="xui-button" type="button" data-xui-close>Cancel form</button><button class="xui-button" type="button">Save form</button></div></dialog>';
  const dialog=host.querySelector('dialog')!,trigger=host.querySelector('button')!;
- const controller=config.kind==='sheet'?dom.createSheetController(dialog,trigger):dom.createDialogController(dialog,trigger);
+ dialog.querySelectorAll('button').forEach(button=>{if(button.textContent==='Save form')button.addEventListener('click',()=>{window.focusCaseSaves++;});});
+ const controller=config.kind==='sheet'?dom.createSheetController(dialog,trigger,{side:config.side}):dom.createDialogController(dialog,trigger);
  nativeFocusCleanup=()=>{controller.destroy();host.remove();};
 };
 

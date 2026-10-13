@@ -170,6 +170,10 @@
     "./admin-setup-dom": {
       "types": "./dist/admin-setup-dom.d.ts",
       "import": "./dist/admin-setup-dom.js"
+    },
+    "./internal/dialog-layout": {
+      "types": "./dist/dialog-layout.d.ts",
+      "import": "./dist/dialog-layout.js"
     }
   },
   "types": "./dist/index.d.ts",

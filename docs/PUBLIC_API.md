@@ -34,6 +34,7 @@
 | `@coffeehc/xui-runtime/query` <!-- public-entry: @coffeehc/xui-runtime/query --> | [源码](../packages/runtime/src/query.ts) | [合同](HTTP.md) | [示例](../examples/http-vanilla/app.js) |
 | `@coffeehc/xui-runtime/menu-layout` <!-- public-entry: @coffeehc/xui-runtime/menu-layout --> | [源码](../packages/runtime/src/menu-layout.ts) | [合同](NAVIGATION.md) | [示例](../examples/menu-vanilla/app.js) |
 | `@coffeehc/xui-runtime/dom` <!-- public-entry: @coffeehc/xui-runtime/dom --> | [源码](../packages/runtime/src/dom.ts) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-vanilla/app.js) |
+| `@coffeehc/xui-runtime/internal/dialog-layout` <!-- public-entry: @coffeehc/xui-runtime/internal/dialog-layout --> | [内部实现](../packages/runtime/src/dialog-layout.ts) | 包间保留接线，非消费者稳定API；使用公开Dialog/Sheet | [内部类型](../packages/runtime/src/dialog-layout.ts) |
 | `@coffeehc/xui-runtime/operation-store` <!-- public-entry: @coffeehc/xui-runtime/operation-store --> | [源码](../packages/runtime/src/operation-store.ts) | [原子恢复合同](API_KEY.md#公共原子恢复存储) | [类型](../packages/runtime/src/operation-store.ts) |
 | `@coffeehc/xui-runtime/api-key` <!-- public-entry: @coffeehc/xui-runtime/api-key --> | [源码](../packages/runtime/src/api-key.ts) | [合同](API_KEY.md) | [示例](../examples/api-key-vanilla/app.js) |
 | `@coffeehc/xui-runtime/api-key-dom` <!-- public-entry: @coffeehc/xui-runtime/api-key-dom --> | [源码](../packages/runtime/src/api-key-dom.ts) | [合同](API_KEY.md) | [示例](../examples/api-key-vanilla/app.js) |

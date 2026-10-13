@@ -5,7 +5,7 @@
   "sourceVersion": "0.4.0",
   "sourceSha256": "2a66fb8762f62ae5a452ed25d9c1bd383443e637c3529fcf7df6e9f9c56cc56c",
   "contractVersion": "0.7.0",
-  "defaultTokenCount": 362,
+  "defaultTokenCount": 363,
   "changes": [
     "Clarify action-primary-foreground in the role table.",
     "Map destructive component variant to existing action-danger/action-danger-foreground; distinguish soft danger.",
@@ -19,7 +19,8 @@
     "Bound only a single extreme configured login action to max(control-height-lg, 20dvh), with internal label scrolling and a bounded state-reservation grid. The brand, form and action group remain natural height; default control and card geometry are unchanged.",
     "Rework public AuthPage hierarchy after screenshot and reference review: task description follows 28/36 title, brand/labels use existing 14/22 role, input/primary reuse existing 16/26 role with derived 44px minimum, 384px content and 434px card, 40px feedback and 12px bottom padding. Add six semantic layout/control aliases in the removable component token block; global colors and typography roots unchanged.",
     "Add derived button-padding-block-xs in the removable centralized component token block, using existing xs height, body-sm line height and the actual surface border width; no original token default changed.",
-    "Add three matching system-color Progress roles and one pending-border-style role in the removable centralized component block, with separately marked forced-colors accessibility bindings. Preserve ordinary-mode tokens and native value/max semantics; use forced-color-adjust:auto and an unfilled pending track."
+    "Add three matching system-color Progress roles and one pending-border-style role in the removable centralized component block, with separately marked forced-colors accessibility bindings. Preserve ordinary-mode tokens and native value/max semantics; use forced-color-adjust:auto and an unfilled pending track.",
+    "Add derived dialog-body-min-block-size in the removable centralized block; existing control height and focus reach define the single-owner whole-dialog fallback threshold without fixed content heights."
   ],
   "protocolBoundarySha256": "b4cdac2b00638046c4f76d2a303c9095de6cef969eb1cfc133b3c750dc3ac4de",
   "typographyOriginalCss": "    --font-size-caption: .75rem;\n    --line-height-caption: 1.125rem;\n    --font-size-body-xs: .8125rem;\n    --line-height-body-xs: 1.25rem;\n    --font-size-body-sm: .875rem;\n    --line-height-body-sm: 1.375rem;\n    --font-size-section-title: 1rem;\n    --line-height-section-title: 1.625rem;\n    --font-size-secondary-value: 1.125rem;\n    --line-height-secondary-value: 1.75rem;\n    --font-size-page-title: 1.25rem;\n    --line-height-page-title: 1.75rem;\n    --font-size-metric: 1.5rem;\n    --line-height-metric: 1.75rem;\n",

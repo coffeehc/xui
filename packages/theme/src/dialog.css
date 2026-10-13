@@ -9,7 +9,7 @@
     max-height: calc(100dvh - var(--layout-viewport-inset) * 2); padding: var(--space-section-gap);
     border: var(--line-width-surface) solid var(--surface-line); border-radius: var(--radius-2xl);
     background: var(--layer-overlay); box-shadow: var(--shadow-overlay);
-    overflow: hidden; opacity: 1;
+    overflow: auto; scrollbar-gutter: stable; scroll-padding: var(--space-section-gap); opacity: 1;
   }
   .xui-dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: var(--z-overlay); display: flex; flex-direction: column; gap: var(--space-content-gap); transition: opacity var(--motion-duration-exit) var(--motion-easing-exit), scale var(--motion-duration-exit) var(--motion-easing-exit); }
   .xui-dialog[data-starting-style], .xui-dialog[data-ending-style] { opacity: 0; scale: var(--motion-enter-scale); }
@@ -21,10 +21,13 @@
   .xui-dialog-title, .xui-dialog-description { margin: 0; }
   .xui-dialog-title { font: var(--font-weight-heading) var(--font-size-section-title) / var(--line-height-section-title) var(--font-sans); overflow-wrap: anywhere; }
   .xui-dialog-description { color: var(--muted-foreground); overflow-wrap: anywhere; }
-  .xui-dialog-body { overflow: auto; min-height: 0; min-inline-size:0; overflow-wrap: anywhere; overscroll-behavior:contain;
+  .xui-dialog-body { overflow: visible; flex: none; min-block-size: var(--dialog-body-min-block-size); min-inline-size:0; overflow-wrap: anywhere; overscroll-behavior:contain;
     /* Spend existing modal inset, preserving field alignment and dialog size. */
     margin:calc(calc(-1 * var(--focus-width)) - var(--focus-offset));
   }
+  :is(.xui-dialog,.xui-native-dialog)[data-dialog-scroll='body'] {overflow:hidden;}
+  :is(.xui-dialog,.xui-native-dialog)[data-dialog-scroll='body']>.xui-dialog-body {overflow:auto;flex:1 1 auto;}
+  :is(.xui-dialog,.xui-native-dialog):not([data-dialog-scroll='body'])>.xui-dialog-body {overflow:visible;flex:none;}
   .xui-dialog-header {display:flex;align-items:flex-start;gap:var(--space-control-gap);min-inline-size:0;flex-shrink:0;}
   .xui-dialog-heading {display:grid;gap:var(--space-text-gap);min-inline-size:0;flex:1;overflow-wrap:anywhere;}
   .xui-dialog-close {flex:none;margin-inline-start:auto;}

@@ -476,6 +476,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --layout-header-primary-min: var(--layout-field-min);
     /* shell-role-tokens:end */
     /* centralized-component-tokens:start */
+    --dialog-body-min-block-size: calc(var(--control-height) + (var(--focus-width) + var(--focus-offset)) * 2);
     --button-padding-block-xs: max(0px, calc((var(--control-height-xs) - var(--line-height-body-sm)) / 2 - var(--line-width-surface)));
     --font-scale: 1;
     --line-height-scale: var(--font-scale);
@@ -1286,5 +1287,9 @@ NumberInput、PasswordInput、SearchInput 复用 InputGroup 的唯一输入边�
 ### 最小按钮的实际内容几何
 
 xs上下内距由button-padding-block-xs按实际body-sm行高及按钮line-width-surface双边框居中推导，并下限钳制为0；border-box下默认短行24px，文字放大或换行可自然撑高，不能固定height裁字。不新增字号或密度开关；公开变量可独立覆盖，其余尺寸不随此变量改变。
+
+### Dialog 极端高度可达性
+
+常规有界窗口保持 Body 为唯一活动滚动区域且 Footer 可见。内部布局 owner 以弹层可用高度、非 Body 内容实际需求及 `dialog-body-min-block-size` 判断：该派生变量由一个普通控件高度和上下焦点绘制空间组成，不是固定内容高度。标题或操作区过长、窗口极短导致剩余空间不足时，整个弹层成为唯一滚动区域，Body 自然增长并停止自身滚动，关闭/标题/说明/操作均可滚动到达，此时不承诺 Footer 同时同屏。默认无测量/SSR/ResizeObserver 不可用时采用整体可达模式；测量就绪且预算足够才切换正常 Body 模式。不重挂内容、不修改字段/焦点事实。长标题/长说明可显式放入 Body，Header 保留关闭操作区，但既有 Header 长内容组合仍受极限可达合同保护。
 
 <!-- foundation-lifecycle:end -->
