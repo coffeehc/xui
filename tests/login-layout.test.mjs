@@ -63,3 +63,9 @@ test('public login removes cancelled-action UI and obsolete page labels',async()
   for(const key of ['cancel','signingOut','continue','logout','theme','light','dark','system','signedIn'])assert.equal(Object.hasOwn(loginPageDefaultLabels,key),false,key);
   for(const file of ['packages/ui-react/src/login.tsx','packages/runtime/src/login-dom.ts']){const source=await readFile(file,'utf8');assert.doesNotMatch(source,/labels\.cancel\b|canCancel|restoreFocus|cancel\.onclick/);}
 });
+
+test('restored reauthentication requirement renders an alert without a transient error object',()=>{
+  const markup=render({status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:true});
+  assert.match(markup,/role="alert"/);assert.match(markup,/The session state is unconfirmed/);assert.doesNotMatch(markup,/>Retry connection</);
+  assert.doesNotMatch(markup,/name="username"[^>]*disabled/);
+});

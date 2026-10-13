@@ -44,3 +44,11 @@ HTML 不支持 file/range/color 的 readOnly。审查页明确说明这一点，
 集成预检已通过：最终共享源码的 build、typecheck、351-token check、385 项 unit，以及两端独立 tarball 消费（全部公开 ESM/CSS/types、动态入口、Button-only 和初始 gzip 预算）。本地 watch/cold-start/实际浏览器未在受限环境冒充通过，交由正常 GitHub CI 的完整 verify。真实 macOS OS 菜单、Firefox/WebKit、移动设备和读屏器未测。
 
 选项细节回归：SimpleSelect 与顶栏语言浮层的相邻选项、optgroup 内部条目采用公共 space-text-gap。新增三主题/窄屏的选中+悬停截图及实际 bounding box 间距断言；真实执行结果仍以最终 CI 为准。
+
+## 已执行的视觉里程碑
+
+`b62bc1b4e64d168c1c494763e0001dd387364ad1` 的 [完整 verify](https://github.com/coffeehc/xui/actions/runs/38385385178) 已通过：385 项单测、900/900 Chromium 浏览器测试，以及构建、类型、token、watch、冷启动、独立 tarball 消费和体积预算。覆盖两端品牌/leading/RTL、三主题与窄屏选择浮层及选项间距、原生输入审查、表格组合选择、密码/登录与 62 项 Dialog/Sheet/Card 焦点边界。实际审阅了紧凑品牌、语言选项间距和窄屏 200% Dialog/Card 输入焦点截图。
+
+已解决的失败包括隐藏 select 的 display 优先级、浮层重测时重置 scrollTop、range 浏览器默认外边距和 checkbox 错误边界优先级；测试侧修正了读取隐藏桥值、跨动画帧混合几何、将根 body 锁滚动误当 fixed portal 局部裁切等量测问题。保留真实点击/键盘、可见控件、实际四边几何和业务受控事实断言。
+
+此结果不代替后续 auth 持久恢复或 Key v2 新增能力的独立 CI。真实浏览器 autofill/密码管理器 UI、Firefox/WebKit、移动 OS、系统日期/文件/颜色窗口、屏幕阅读器仍未实测；这些边界未伪报为统一样式或全面通过。

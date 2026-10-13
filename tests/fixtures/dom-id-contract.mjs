@@ -66,7 +66,8 @@ export async function mount(root){
   const tooltip=pair('tooltip');owners.push(createPopoverController(tooltip.trigger,tooltip.panel,{tooltip:true}));
   const toastRoot=host('toast'),toast=createToastController(toastRoot,{limit:5});owners.push(toast);
   const toastIds=[toast.add({title:'First'}),toast.add({title:'Second'})];
-  const login=createLoginExample(doc.location.href);models.push(login);
+  // This fixture tests DOM ID allocation with deliberately absent crypto, not durable auth.
+  const login=createLoginExample(doc.location.href,{recovery:false});models.push(login);
   owners.push(createLoginPage(host('login'),{auth:login.auth,theme,config:{...login.config,logo:undefined},onAuthenticated:login.onAuthenticated}));
   const keys=createApiKeyExample();models.push(keys);
   owners.push(createApiKeyManager(host('api-key'),{controller:keys.controller}));

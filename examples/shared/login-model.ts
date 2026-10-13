@@ -2,7 +2,7 @@ import {createHttpClient} from '@coffeehc/xui-runtime/http';
 import {createAuthClient,authEndpoints,type AuthUser,type LoginPageConfig} from '@coffeehc/xui-runtime/auth';
 import configData from './login-config.json';
 /** Synthetic facade only: no real credentials or backend are issued; HTTP mode is reserved for synthetic browser fixtures. */
-export function createLoginExample(baseURL:string){
+export function createLoginExample(baseURL:string,options:{recovery?:boolean}={}){
   const user:AuthUser={id:'42',username:'demo',display_name:'示例用户'};let session:AuthUser|null=null;
   const modes:Record<string,string>={login:'ok',logout:'ok',refresh:'ok',session:'ok'},requests:{path:string;method:string;bodyKeys:string[];hasPassword:boolean;credentials:RequestCredentials|undefined}[]=[],holds=new Map<string,(()=>void)[]>(),destinations:{userId:string;path:string}[]=[];
   const fetch:typeof globalThis.fetch=async(input,init)=>{
@@ -16,7 +16,7 @@ export function createLoginExample(baseURL:string){
     const wire=mode==='malformed'?{success:true,message:'',payload:{access_token:'FAKE_NOT_A_SESSION'},request_id:'demo:auth',code:1}:{success:status===200&&mode!=='business',message:status===200?'':'FAKE_PRIVATE_LOGIN_ERROR',payload:status===200?payload:null,request_id:'demo:auth',code:status===200&&mode!=='business'?1:-1};
     return new Response(JSON.stringify(wire),{status,headers:{'Content-Type':'application/json','X-Request-ID':'demo:auth'}});
   };
-  const parameters=new URL(baseURL).searchParams,http=createHttpClient({baseURL,fetch:parameters.get('transport')==='http'?globalThis.fetch:fetch}),auth=createAuthClient({http,recovery:{scope:'xui-login-example'},timeoutMs:parameters.has('visualAcceptance')?15000:1000,protectedPaths:['/api/business/']});
+  const parameters=new URL(baseURL).searchParams,http=createHttpClient({baseURL,fetch:parameters.get('transport')==='http'?globalThis.fetch:fetch}),auth=createAuthClient({http,recovery:options.recovery===false?undefined:{scope:'xui-login-example'},timeoutMs:parameters.has('visualAcceptance')?15000:1000,protectedPaths:['/api/business/']});
   if(parameters.get('session')==='valid')session=user;
   if(parameters.get('session')==='hold')modes.refresh='hold';
   if(parameters.has('sessionReadError')||parameters.has('sessionReadTimeout')){session=user;modes.session=parameters.has('sessionReadTimeout')?'hold':'network';}

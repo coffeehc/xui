@@ -63,10 +63,13 @@ for(const kind of ['react','vanilla']){
   });
 }
 
-for(const kind of ['react','vanilla'])test(`${kind} automatic checks are bounded and only a confirmed read timeout offers retry`,async({page})=>{
+for(const kind of ['react','vanilla'])test(`${kind} automatic unknown checks are bounded without unsafe retry`,async({page})=>{
   await page.goto(`/login-${kind}/?session=hold`);await expect(page.getByRole('status')).toHaveText('正在确认登录状态…');await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);
   await expect(page.getByRole('alert')).toHaveText('会话安全状态尚未确认，请重新登录验证。');await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);
   expect((await page.evaluate(()=>window.loginDemo.getRequests())).filter(request=>request.path.endsWith('/refresh'))).toHaveLength(1);await page.evaluate(()=>window.loginDemo.release('session'));expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
+});
+
+for(const kind of ['react','vanilla'])test(`${kind} a confirmed session read timeout offers safe retry`,async({page})=>{
   await page.goto(`/login-${kind}/?sessionReadTimeout&handoff=hold`);const retry=page.getByRole('button',{name:'重试连接'});await expect(retry).toBeVisible();
   const before=await page.evaluate(()=>{const state=window.loginDemo.auth.getState();return {reauthenticationRequired:state.reauthenticationRequired,errorKind:state.error?.kind,endpointId:state.error?.metadata.endpointId,requests:window.loginDemo.getRequests()};});expect(before.reauthenticationRequired).toBe(false);expect(before.errorKind).toBe('timeout');expect(before.endpointId).toBe('auth.session');expect(before.requests.filter(request=>request.path.endsWith('/session'))).toHaveLength(1);
   await page.evaluate(()=>{window.loginDemo.setMode('session','ok');window.loginDemo.release('session');});await retry.click();await expect.poll(()=>page.evaluate(()=>window.loginDemo.auth.getState().status==='authenticated'&&window.loginDemo.auth.getState().busy===null&&window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length===2)).toBe(true);await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();
