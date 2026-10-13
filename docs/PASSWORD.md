@@ -42,6 +42,6 @@ finally { fields.current?.clear(); }
 
 公开 runtime/password 提供 createPasswordStrengthController({readPassword,onChange})、PasswordStrengthState 和 getPasswordStrengthMessage。控制器 refresh/clear/destroy 只回传状态、评分、等级和提示分类，不返回密码、匹配词或猜测轨迹。常规页面直接复用 NewPasswordFields，无需另建评分 owner。NewPasswordLabels.strength 是可选的中文提示映射覆盖，旧 labels 对象兼容。
 
-输入不上传、不进入 URL、日志或 storage，不使用远程泄露查询或网络 matcher。读取输入发生在引擎加载完成后，异步等待不保存密码快照；每次输入、clear 和卸载使旧 generation 失效，迟到加载不能覆盖当前提示。pagehide/clear/destroy 同步清除输入和显示状态。评分不用于旧账号登录密码限制。
+输入不上传、不进入 URL、日志或 storage，不使用远程泄露查询或网络 matcher。读取输入发生在引擎加载完成后，异步等待不保存密码快照；每次输入、clear 和卸载使旧 generation 失效，迟到加载不能覆盖当前提示。pagehide/clear/destroy 同步清除输入和显示状态。评分不用于旧账号登录密码限制。字典可缓存，但每次估算使用独立 Factory，避免其内部 scoring 缓存长期引用最近密码；JavaScript 字符串无法承诺物理内存清零。
 
 实现依据：[zxcvbn-ts 指南](https://zxcvbn-ts.github.io/zxcvbn/guide/)、[懒加载](https://zxcvbn-ts.github.io/zxcvbn/guide/lazy-loading/)、[4.x Factory](https://zxcvbn-ts.github.io/zxcvbn/guide/migration/)。新回归覆盖常见/重复/顺序模式、有效弱密码允许提交、懒加载隔离、离线和迟到结果；真实浏览器验收见对应提交 CI，不能以本机启动被阻断代替通过。

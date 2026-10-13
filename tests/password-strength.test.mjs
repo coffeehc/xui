@@ -24,3 +24,6 @@ test('unmount, clear and offline failure never authorize writes or retain an inp
 test('reentrant clear or destroy during loading prevents even a late module load',async()=>{
  for(const action of ['clear','destroy']){let loads=0,owner;owner=createPasswordStrengthOwner({readPassword:()=> 'fixture',onChange:state=>{if(state.status==='loading')owner[action]();}},async()=>{loads++;return ()=>ready(4);});owner.refresh();await wait();assert.equal(loads,0);assert.equal(owner.getState().status,'idle');owner.destroy();}
 });
+test('the long-lived engine retains dictionaries, never a factory carrying the last password',async()=>{
+ const {readFile}=await import('node:fs/promises');const source=await readFile(new URL('../packages/runtime/src/password-strength-engine.ts',import.meta.url),'utf8');assert.doesNotMatch(source.split('export function estimatePasswordStrength')[0],/new ZxcvbnFactory/);assert.match(source,/new ZxcvbnFactory\(\{dictionary,graphs:adjacencyGraphs\}\)\.check\(password\)/);
+});
