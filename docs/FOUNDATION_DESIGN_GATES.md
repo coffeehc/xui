@@ -70,3 +70,5 @@ G1通过标准：逐族静态条款/token映射、单测、正式React/原生浏
 ### NativeSelect平台行高边界
 
 c83fd28安全CI确认字体500与14px已生效，原生select的computed line-height为normal，而非作者CSS的22px。Blink官方[AdjustMenuListStyle实现](https://chromium.googlesource.com/chromium/src/+/06e87fb3dc2a1c881f95eb6cd3738608b846d29a/third_party/blink/renderer/core/layout/layout_theme_default.cc#304)将menulist行高设回初始值；这仅是保留原生外观的NativeSelect边界，不适用于Input/Textarea或自绘Select/Combobox。后续回归明确断言NativeSelect normal、控件实际36px、无内部裁字滚动、500→700字重token覆写及End选择真实值；其它四类入口仍严格22px行高。平台边界不通过取消原生外观或修改默认规范值掩盖。系统OS弹层本身仍未像素统一，遵既有NativeSelect用途合同。
+
+本轮后续基础候选：xs经12项真实CI确认32px不符24px后，按DESIGN集中新增派生button-padding-block-xs（358总token，旧默认/原始SHA逆重建保持）；原12严格断言保留，新增6项variants/长中文/状态/独立覆写。choice disabled+invalid保留错误边界的既有规则移至disabled之后，填充与交互仍禁用，12项双端48态回归进入同一候选；原native-controls-audit也纳入前置验证。G2 Combobox代理focus/弹层宽度候选保留，未开展实现。
