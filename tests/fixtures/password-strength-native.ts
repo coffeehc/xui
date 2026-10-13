@@ -1,0 +1,3 @@
+import {createNewPasswordFields} from '@coffeehc/xui-runtime/password-dom';
+import '@coffeehc/xui-theme/style.css';
+const fields=createNewPasswordFields({policy:{version:1,minimum_characters:6,maximum_characters:32,counting_unit:'unicode_code_points'}}),button=document.createElement('button'),result=document.createElement('output');button.type='button';button.className='xui-button';button.textContent='Submit fixture';result.dataset.submitResult='';button.onclick=()=>result.textContent=fields.readValidatedPassword()===null?'rejected':'accepted';document.getElementById('app')!.append(fields.element,button,result);Object.assign(window,{passwordStrengthFixture:{clear:()=>fields.clear(),destroy:()=>fields.destroy()}});

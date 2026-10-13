@@ -1,3 +1,6 @@
+import type {PasswordStrengthState} from './password-strength.js';
+export {createPasswordStrengthController} from './password-strength.js';
+export type {PasswordStrengthState,PasswordStrengthHint,PasswordStrengthControllerOptions} from './password-strength.js';
 import {createAjaxResponseAdapter,type HttpClient} from './http.js';
 import {apiObject} from './native-api.js';
 
@@ -29,8 +32,13 @@ export function validateNewPassword(policy:PasswordPolicy|null,password:string,c
   if(count<current.minimum_characters||count>current.maximum_characters)return 'invalid_length';
   return password===confirmation?null:'confirmation_mismatch';
 }
-export interface NewPasswordLabels {password:string;confirmation:string;policyUnavailable:string;invalidUnicode:string;confirmationMismatch:string;length:(minimum:number,maximum:number)=>string;count?:(count:number|null)=>string;tooShort?:(minimum:number)=>string;tooLong?:(maximum:number)=>string}
-export const newPasswordLabels:Readonly<NewPasswordLabels>=Object.freeze({password:'新密码',confirmation:'确认密码',policyUnavailable:'密码规则暂不可用，请重试。',invalidUnicode:'密码包含无法识别的字符，请重新输入。',confirmationMismatch:'两次输入的密码不一致。',length:(minimum:number,maximum:number)=>`密码长度为 ${minimum}–${maximum} 个字符，可使用大小写字母、数字及 _、+、# 等符号。`,count:(count:number|null)=>count===null?'字符无法识别，请重新输入。':`已输入${count}个字符`,tooShort:(minimum:number)=>`密码太短，至少需要${minimum}个字符。`,tooLong:(maximum:number)=>`密码太长，最多可输入${maximum}个字符。`});
+export interface NewPasswordLabels {password:string;confirmation:string;policyUnavailable:string;invalidUnicode:string;confirmationMismatch:string;length:(minimum:number,maximum:number)=>string;count?:(count:number|null)=>string;tooShort?:(minimum:number)=>string;tooLong?:(maximum:number)=>string;strength?:(state:PasswordStrengthState)=>string}
+export function getPasswordStrengthMessage(state:PasswordStrengthState):string {
+ if(state.status==='idle')return '';if(state.status==='loading')return '正在评估密码强度…';if(state.status==='unavailable')return '暂时无法评估密码强度，不影响提交。';if(state.status!=='ready')return '';
+ const hint={common:'建议避开常见密码或常用单词。',sequence:'建议避开连续的字母或数字。',repeat:'建议避开重复的字符或片段。',keyboard:'建议避开连续的键盘按键。',personal:'建议避开姓名、生日等容易猜到的信息。',longer:'建议增加长度，使用不容易猜到的内容。',none:''}[state.hint];
+ return `密码强度：${{weak:'弱',medium:'中',strong:'强'}[state.level]}，仅供参考。${hint}`;
+}
+export const newPasswordLabels:Readonly<NewPasswordLabels>=Object.freeze({strength:getPasswordStrengthMessage,password:'新密码',confirmation:'确认密码',policyUnavailable:'密码规则暂不可用，请重试。',invalidUnicode:'密码包含无法识别的字符，请重新输入。',confirmationMismatch:'两次输入的密码不一致。',length:(minimum:number,maximum:number)=>`密码长度为 ${minimum}–${maximum} 个字符，可使用大小写字母、数字及 _、+、# 等符号。`,count:(count:number|null)=>count===null?'字符无法识别，请重新输入。':`已输入${count}个字符`,tooShort:(minimum:number)=>`密码太短，至少需要${minimum}个字符。`,tooLong:(maximum:number)=>`密码太长，最多可输入${maximum}个字符。`});
 export function getNewPasswordErrorMessage(error:NewPasswordError|null,policy:PasswordPolicy|null,labels:NewPasswordLabels=newPasswordLabels,count?:number|null):string|undefined{
   if(error===null)return undefined;
   if(error==='policy_unavailable'||!policy)return labels.policyUnavailable;

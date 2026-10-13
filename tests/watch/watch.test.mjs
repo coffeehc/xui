@@ -10,6 +10,8 @@ test('real watch rebuilds CSS, tokens, TSX, declarations and init; errors preser
  try{
   for(const name of ['docs','scripts','examples','packages','package.json','pnpm-lock.yaml','tsconfig.json'])await cp(name,resolve(fixture,name),{recursive:true,filter:path=>!path.includes('/dist')&&!path.includes('/node_modules')});
   await symlink(resolve('node_modules'),resolve(fixture,'node_modules'),'dir');
+  // pnpm keeps runtime dictionary dependencies in the package-local graph.
+  await symlink(resolve('packages/runtime/node_modules'),resolve(fixture,'packages/runtime/node_modules'),'dir');
   child=spawn(process.execPath,['scripts/watch.mjs'],{cwd:fixture,stdio:['ignore','pipe','pipe']});child.stdout.on('data',chunk=>log+=chunk);child.stderr.on('data',chunk=>log+=chunk);
   const status=async(predicate)=>{const end=Date.now()+30000;while(Date.now()<end){try{const state=JSON.parse(await readFile(resolve(fixture,'.artifacts/watch-status.json'),'utf8'));if(predicate(state))return state;}catch{}await sleep(100);}throw Error(`Watch timed out: ${log.slice(-4000)}`);};
   let current=await status(state=>state.state==='success');

@@ -31,7 +31,7 @@ test('policy loader uses the public endpoint and parses the envelope',async()=>{
 });
 test('shared fields render confirmation, server limits and no HTML UTF16 length gate',async()=>{
   const markup=renderToStaticMarkup(React.createElement(NewPasswordFields,{policy}));
-  assert.equal((markup.match(/type="password"/g)||[]).length,2);assert.match(markup,/确认密码/);assert.match(markup,/6–32/);assert.doesNotMatch(markup,/maxLength|minLength|pattern=|strength/i);
+  assert.equal((markup.match(/type="password"/g)||[]).length,2);assert.match(markup,/确认密码/);assert.match(markup,/6–32/);assert.doesNotMatch(markup,/maxLength|minLength|pattern=/i);
   const unavailable=renderToStaticMarkup(React.createElement(NewPasswordFields,{policy:null}));assert.equal((unavailable.match(/disabled=""/g)||[]).length,2);assert.match(unavailable,/密码规则暂不可用/);
   for(const path of ['packages/ui-react/src/password.tsx','packages/runtime/src/password-dom.ts']){const source=await readFile(path,'utf8');assert.doesNotMatch(source,/localStorage|sessionStorage|maxLength|minLength|\.trim\(|\.normalize\(|\.slice\(/);assert.match(source,/pagehide/);}
 });

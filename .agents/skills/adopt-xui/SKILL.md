@@ -57,3 +57,5 @@ xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/
 - 若产品设计要求用户/Key 对外为 hex，使用[身份编码](../../../docs/IDENTITY_ENCODING.md)的公开 idEncoding 与 baseservice Options.IDEncoding 同配。默认 decimal 不变，不复制认证流程或实体解析器，不猜两种格式；固定 HTTP Key adapter 严格校验，域 adapter 的不透明 ID 不受影响。
 
 - 文字、复制与媒体采用 [DISPLAY](../../../docs/DISPLAY.md) 的 Typography/Copyable/Separator/Tag/Image 和原生同等构建器。复用既有 token；Copyable 只写显式授权 value、失败可见、等待写入串行；Tag 删除/后续焦点由宿主稳定 key 管理；Image 必须给 alt 与尺寸/比例，不自动重试或猜代理。正式示例/负类型/资源迟到检查见专项合同，不以 DOM 模型测试冒充浏览器验收。
+
+- 新密码规则、当前计数及本地强度建议统一复用 NewPasswordFields，见 [PASSWORD](../../../docs/PASSWORD.md)。不得复制打分算法、把弱密码提示改成额外提交门禁或把输入发给远程评分服务；字典首次懒加载失败仍按服务端 policy 正常校验。

@@ -22,7 +22,7 @@
 | L05 | 匿名普通页只有一个可见主登录按钮，宽度与字段一致；错误401不显示会话检查；SSO是独立次级组 | 公共 API 页面操作 + screenshots | 未测 |
 | L06 | 反馈在主按钮之后，固定轨道默认48px（40px内容及焦点余量），只随公共文字/控件token缩放；长错误局部单一滚动，不撑高卡片；不生成取消动作，重试仅有真实用途时出现，不能占主动作宽度或隐藏占行 | idle/busy/error/长错误截图，动作与反馈rect | 未测 |
 | L07 | 检查→匿名、提交→busy→错误、断网/超时/重试时品牌、字段、主动作位置/大小变化≤1.5px；长错误在局部可滚动 | 连续状态 rect JSON + screenshot；已有 error-layout 回归 | 未测 |
-| L08 | unknown write / reauthenticationRequired 不出现可刷新重试，不自动 refresh/logout/重放；显式重新登录可恢复，密码即时清空 | auth unit + auth-bearer/login browser HTTP counts | 未测 |
+| L08 | unknown write / reauthenticationRequired 不出现可刷新重试，不自动 refresh/logout/重放；持久 unknown 保留门禁；operation-v1 仅同身份权威终态后允许显式重新登录，密码即时清空 | auth unit + auth-bearer/login browser HTTP counts | 未测 |
 | L09 | 1280/1600/390普通首屏主操作完整可见，无页面横向溢出；200%与短视口自然文档滚动到每个字段/动作。极端长主按钮独立限高并内部滚动，完整按钮与四边焦点仍可滚入视口，字段及操作组不困在局部小区域 | screenshot + viewport/scroll metrics；长品牌/长标签的按钮rect、内部滚动与键盘提交 | 未测 |
 | L10 | Tab顺序字段→主动作→SSO→实际局部辅助动作；不存在隐藏Tab停靠；输入、主按钮、反馈、SSO四边focus真实像素可见 | 实际键盘路径 + four-side pixel screenshot | 未测 |
 | L11 | light/dark/system复用一个根主题owner，系统变化不清输入；reduced-motion仍立即反馈 | existing theme/motion browser tests +截图 | 未测 |
@@ -69,3 +69,13 @@
 - 当前云Chromium按仓库正常配置启动报socket EPERM；初次28个导航用例都在启动阶段退出，没有页面断言或真实新截图。未更改安全启动配置；本批真实浏览器与全量验收等待最终提交的CI结果，不用旧2b8的布局targeted结果替代。
 
 本批最终本地预检：源码generation `8259e27d35d59327f1cafe0590c7bd70a0866346a8442f1e60137c08c9022bbe` 的dev-build/typecheck、350-token合同、364/364 unit、真实watch重建与故障恢复（127.8秒）通过；同树React/native独立tarball的全部公开exports/types、布局示例和体积门禁通过。consumer首轮工具会话中断未计通过，240秒有界重跑返回exit 0。导航浏览器文件收集51项；未本地执行页面断言，L14及全量CI仍待最终SHA的真实结果。
+
+
+## 2026-10-13 参考交互清单复核
+
+对照用户提供的[墨刀登录页交互参考](https://modao.cc/ad/blog/login-page-prototype-templates.html)复核状态和交互，不改变已确定的居中单框设计。本文历史 targeted 记录不覆盖后续提交；最新完整安全浏览器基线为 8ae5ca0 的 979 项 full browser 和 199 项 focused（CI 38400356137）。
+
+- 已有回归：普通匿名单主操作、字段 required/关联反馈、busy 禁重入、Enter 提交、网络错误可见、导航失败局部恢复、窄屏/根字号放大、Tab/四边焦点、pagehide 清密码和卸载迟到保护。对应 login、login-layout、login-visual、login-navigation、auth-operation 浏览器文件；API/真实产品不能由合成样例替代验收。
+- 异常恢复：超时或网络失败不能推断写入失败，持久 unknown 不提供盲重试；operation-v1 的核对与确认终止只针对原操作，权威终态后才允许新提交。缺少能力时保留清楚的阻塞提示。
+- 待独立验收：真实系统密码管理器/自动填充、真实读屏器、手机系统键盘、真实 BFCache 命中；现有 autocomplete/ARIA 属性和模拟生命周期测试不算这些实际结果。登录页当前没有密码显隐按钮，不能把另一个公共 PasswordInput 的能力写成登录页已接入；若接入需保持光标/焦点并补两端回归。
+- 验证码、短信、锁定解锁、注册、忘记密码、二次认证与第三方账号绑定均依赖真实后端能力。本次不为参考模板补假入口、倒计时或未实现恢复路径；多端策略以已实现认证合同为准。

@@ -153,3 +153,5 @@ Vite开发接入还须核[冷启动与依赖优化](NAVIGATION.md#vite开发模�
 ### 文字与媒体原子
 
 详情文字、长 ID、复制、可移除标签和稳定图片占位采用 [DISPLAY](DISPLAY.md) 的 React/native 正式入口。复制只传授权 value；Tag 明确移除名称及宿主焦点目标；Image 必填 alt 与预留尺寸/比例，src/retryKey 才重启资源。将已替代的页面复制状态/图片错误循环删除，保留业务值、集合、请求和授权。
+
+- 新密码规则、当前计数及本地强度建议统一复用 NewPasswordFields，见 [PASSWORD](PASSWORD.md)。不得复制打分算法、把弱密码提示改成额外提交门禁或把输入发给远程评分服务；字典首次懒加载失败仍按服务端 policy 正常校验。

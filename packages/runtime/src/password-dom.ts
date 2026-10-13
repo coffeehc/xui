@@ -1,4 +1,4 @@
-import {parsePasswordPolicy,countPasswordCodePoints,validateNewPassword,getNewPasswordErrorMessage,newPasswordLabels,type PasswordPolicy,type NewPasswordLabels} from './password.js';
+import {parsePasswordPolicy,countPasswordCodePoints,validateNewPassword,getNewPasswordErrorMessage,newPasswordLabels,createPasswordStrengthController,getPasswordStrengthMessage,type PasswordPolicy,type NewPasswordLabels} from './password.js';
 import {generateDomId} from './dom-id.js';
 
 export interface NewPasswordFieldsOptions {policy:PasswordPolicy|null;disabled?:boolean;labels?:Partial<NewPasswordLabels>;document?:Document}
@@ -14,15 +14,17 @@ export function createNewPasswordFields(options:NewPasswordFieldsOptions){
     return {input,help,error};
   });
   const count=doc.createElement('span');count.setAttribute('data-xui-password-count','');
+  const strength=doc.createElement('span');strength.setAttribute('data-xui-password-strength','');strength.setAttribute('role','status');strength.setAttribute('aria-live','polite');
+  const strengthOwner=createPasswordStrengthController({readPassword:()=>{const value=fields[0].input.value;return countPasswordCodePoints(value)===null?null:value;},onChange:state=>{strength.textContent=(labels.strength??getPasswordStrengthMessage)(state);}});
   const showCount=()=>{count.textContent=(labels.count??newPasswordLabels.count!)(countPasswordCodePoints(fields[0].input.value));};
   const clearErrors=()=>{for(const field of fields){field.error.textContent='';field.error.hidden=true;field.input.removeAttribute('aria-invalid');field.input.setAttribute('aria-describedby',field.help.id);}};
-  const clear=()=>{for(const field of fields){field.input.value='';field.input.defaultValue='';}showCount();clearErrors();};
-  const update=()=>{for(const field of fields)field.input.disabled=disabled||policy===null;fields[0].help.textContent=policy?labels.length(policy.minimum_characters,policy.maximum_characters):labels.policyUnavailable;if(policy){fields[0].help.append(' ',count);showCount();}fields[1].help.hidden=true;clearErrors();};
+  const clear=()=>{for(const field of fields){field.input.value='';field.input.defaultValue='';}strengthOwner.clear();showCount();clearErrors();};
+  const update=()=>{for(const field of fields)field.input.disabled=disabled||policy===null;fields[0].help.textContent=policy?labels.length(policy.minimum_characters,policy.maximum_characters):labels.policyUnavailable;if(policy){fields[0].help.append(' ',count,' ',strength);showCount();}fields[1].help.hidden=true;clearErrors();};
   const setPolicy=(value:PasswordPolicy|null)=>{try{policy=value===null?null:parsePasswordPolicy(value);}catch{policy=null;}update();};
-  const changed=()=>{showCount();clearErrors();};for(const field of fields)field.input.addEventListener('input',changed);
+  const changed=(event:Event)=>{showCount();clearErrors();if(event.target===fields[0].input)strengthOwner.refresh();};for(const field of fields)field.input.addEventListener('input',changed);
   doc.defaultView?.addEventListener('pagehide',clear);setPolicy(options.policy);
   return Object.freeze({element,setPolicy,setDisabled(value:boolean){disabled=value;update();},clear,
     readValidatedPassword():string|null{if(destroyed||disabled)return null;const error=validateNewPassword(policy,fields[0].input.value,fields[1].input.value);showCount();clearErrors();if(error){const field=fields[error==='confirmation_mismatch'?1:0];field.error.textContent=getNewPasswordErrorMessage(error,policy,labels,countPasswordCodePoints(fields[0].input.value))??'';field.error.hidden=false;field.input.setAttribute('aria-invalid','true');field.input.setAttribute('aria-describedby',`${field.help.id} ${field.error.id}`);field.input.focus();return null;}return fields[0].input.value;},
-    destroy(){if(destroyed)return;destroyed=true;clear();doc.defaultView?.removeEventListener('pagehide',clear);for(const field of fields)field.input.removeEventListener('input',changed);element.remove();},
+    destroy(){if(destroyed)return;destroyed=true;strengthOwner.destroy();clear();doc.defaultView?.removeEventListener('pagehide',clear);for(const field of fields)field.input.removeEventListener('input',changed);element.remove();},
   });
 }
