@@ -29,7 +29,7 @@ export function createIndexedDBOperationStore(options:IndexedDBOperationStoreOpt
         const db=request.result;if(settled){db.close();return;}db.onversionchange=()=>db.close();
         let tx:IDBTransaction,result:T;
         try{
-          tx=db.transaction('operations',mode);const store=tx.objectStore('operations'),read=store.get(scope);
+          tx=db.transaction('operations',mode,mode==='readwrite'?{durability:'strict'}:undefined);const store=tx.objectStore('operations'),read=store.get(scope);
           read.onsuccess=()=>{try{const value=read.result===undefined?null:read.result;if(!validValue(value))throw invalid();result=action(store,value);}catch{tx.abort();}};
           tx.oncomplete=()=>{db.close();if(!settled){settled=true;resolve(result);}};
           tx.onabort=()=>{db.close();fail();};tx.onerror=()=>{/* onabort is the terminal result. */};

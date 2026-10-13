@@ -37,7 +37,23 @@ wire metadata 为 id/name/prefix/permission_ids/created_at/expires_at/last_used_
 
 正式 HTTP v2 必须创建 `createApiKeyWriteGuard({scopeId,isCurrentScope,storage:{load,save}})`，再把该 guard 传给 HTTP adapter；manager 自动复用 adapter 的同一 owner，若另传不同 guard 则拒绝。scopeId 必须来自宿主已经验证的 server/账号/namespace，不能从请求参数、用户名或 origin 单独猜测。必填 isCurrentScope() 与宿主真实 auth owner 的当前三元身份比较；throw 等同 false，不得在生产中硬编码 true。claim、prepare 后、发送、响应、receipt 终态和持久清理前均复核；失效停止旧 controller/等待，隐藏其metadata与一次性值，不删除旧 scope 恢复记录。宿主在身份事件发生时同步 destroy 旧 controller，避免等待下一次读/操作才反映切换。换身份时使用该身份自己的 owner，不展示其他 scope 的 descriptor、不清除旧 scope 未决记录。scopeId 不使用 token/password/secret；服务端仍绑定真实 actor/scope 并重新鉴权。
 
-storage 是宿主提供的同步持久替换接口：`load(scopeId)` 返回 null/undefined 或快照，`save(scopeId,snapshot|null)` 成功返回 void，失败必须 throw。完整快照仅 `{schema_version:1,scope_id,descriptor}`；每个 scope 最多一个操作，每次新写前重新读取当前 scope 已保存锁，新操作受已有 owner 门禁限制，不截断恢复项。初始化验证字段白名单、版本、scope、各字符串长度/格式；失败拒绝启动，不回退无保护页面。prepare 后保存前及清理前再次读取；已出现不同 descriptor（五字段逐项比较）时继承其 uncertain，不覆盖或删除，尤其未准备完成的取消不能清除其他操作。描述符保存成功后才允许发送 HTTP。save 失败、可能部分写入或清理失败均保留锁；刷新不会绕过。同步接口不等于跨窗口原子互斥：宿主必须在其实际存储和身份生命周期中协调多窗口，不宣称 localStorage 提供事务或不同 operation ID 的业务去重。
+storage 保留宿主同步持久镜像/旧版本恢复接口：`load(scopeId)` 返回 null/undefined 或快照，`save(scopeId,snapshot|null)` 失败必须 throw。完整快照仅 `{schema_version:1,scope_id,descriptor}`，不保存草稿或凭据。初始化同步验证字段白名单、版本、scope、字符串长度/格式；已有未知 descriptor 必须保留并原子导入，绝不把新的 IndexedDB 空库视为旧请求不存在。旧镜像与原子记录冲突时两者都保留并失败关闭，需要明确核对这两个旧操作，不能择一覆盖。
+
+公共 owner 默认使用 IndexedDB 短事务作为权威跨窗口门禁。`guard.ready()` 可供宿主等待异步恢复；controller/HTTP adapter 在每次发送前自动等待，不要求产品自行实现锁。新窗口/重新加载自动读取原 scope descriptor 为 uncertain，保留原 operation_id 与五字段。不同 tab 的 prepare 可以同时完成，但原子 `compareExchange(null,descriptor)` 只有一个成功者；只有其事务提交、镜像保存成功且 scope/generation 仍有效后才允许 POST/PUT/DELETE。整个网络期间及 unknown 后记录都占住该 scope。失败者继承原 descriptor，不生成另一个请求重放它。
+
+成功/确定拒绝、确定未发送的取消，以及完整匹配权威 receipt 终态，通过精确原 descriptor 的条件事务清理。迟到清理绝不删除其他窗口的新记录。未知/超时/关闭/卸载没有自动清理、过期租约或超时接管。跨 tab 正确性来自 IndexedDB 原子事务，不是 localStorage 的 load→save、复读、sent 标记或不同 operation ID 去重；所有参与窗口必须升级为此合同。旧版本仍在运行且绕过原子门禁时不能宣称兼容并发保护。
+
+IndexedDB 在普通内网 HTTP 上也可用，不依赖安全上下文的 Web Locks、randomUUID 或 SubtleCrypto。浏览器禁用/阻止 IndexedDB、事务失败、镜像失败时发送前失败关闭，显示保护存储不可用；不会退到无保护内存写入。自定义存储适配器也必须实现真实跨上下文原子持久 CAS，不能用进程内 Map/队列或 localStorage 伪实现。
+
+### 公共原子恢复存储
+
+`@coffeehc/xui-runtime/operation-store` 导出 `createIndexedDBOperationStore({databaseName?,indexedDB?})`、`DurableOperationStore`、`IndexedDBOperationStoreOptions`。默认数据库 `xui.operation-recovery.v1`；Key scope 为 `xui.api-key.v1:` 加完整可信 scopeId，Auth 使用独立命名空间。正常产品只配置公开业务 scope/storage；特殊宿主可向 Key guard 传 `operationStore`，无需包装或复制 Key/controller。
+
+- `read(scope): Promise<string|null>` 读取原始非秘密记录。
+- `compareExchange(scope,expected,next)` 在一个 readwrite 事务内比较完整字符串，匹配才替换/删除；返回 `{exchanged,current}`，成功 current 为 next，失败为原值。必须等事务成功提交才 resolve。
+- IndexedDB 事务只做 get/put/delete，使用 strict durability，不跨网络等待、不忙循环保活、不依赖时钟。
+- caller 负责只使用白名单 canonical JSON。Key 保留原五字段及 schema/scope；Auth 保留明确 attempt/operation。禁止存密码、token、secret、草稿或响应 body。
+- 公共接口供真实原子持久适配器/确定性测试注入。测试用 Map 只是模型，真实跨页 IndexedDB另有浏览器回归，不能将模型用作生产 fallback。
 
 descriptor 仅含：
 
@@ -49,7 +65,7 @@ operation 为 create/update/revoke/delete_record；create 的 target_id 为空�
 
 每个请求生成 canonical lowercase UUIDv4 `operation_id`，仅依赖 `crypto.getRandomValues`，不要求安全上下文的 randomUUID；安全随机数不可用则发送前拒绝。指纹为 exact UTF8 `method + '\n' + canonicalPath + '\n' + exactBodyBytes` 的 SHA-256；GET 不算，DELETE 空 body。内网 HTTP 不依赖 SubtleCrypto。发送 headers `X-API-Key-Operation-ID` / `X-API-Key-Request-Fingerprint`；服务端独立重算并绑定权限/actor/scope/CAS，不能信任客户端 header。异步 prepare 后检查当前 generation/取消/owner；取消且确定未调用写 adapter 时才按 before-send 证明释放。成功响应 operation_id/fingerprint 必须逐项匹配。
 
-通用 custom adapter 不使用正式 HTTP 时仍可沿用 `createApiKeyWriteGuard()` 内存 owner，或显式接入 prepareWrite/持久 descriptor。同一个原始 adapter 默认共享 owner；重建 adapter 时保留 owner。没有持久配置的 custom adapter 不宣称整页重载保护。
+通用 custom adapter 不使用正式 HTTP 时仍可沿用 `createApiKeyWriteGuard()` 内存 owner，或显式接入 prepareWrite/持久 descriptor。同一个原始 adapter 默认共享 owner；重建 adapter 时保留 owner。没有持久配置的 custom adapter 仅保证共用单 owner 的内存门禁，不宣称跨 tab、整页重载保护。持久 custom adapter 若使用 prepareWrite，也必须遵守相同原子 descriptor 合同。
 
 ### 只读 Lookup 与显式 Resolve
 

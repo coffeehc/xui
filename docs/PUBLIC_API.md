@@ -34,6 +34,7 @@
 | `@coffeehc/xui-runtime/query` <!-- public-entry: @coffeehc/xui-runtime/query --> | [源码](../packages/runtime/src/query.ts) | [合同](HTTP.md) | [示例](../examples/http-vanilla/app.js) |
 | `@coffeehc/xui-runtime/menu-layout` <!-- public-entry: @coffeehc/xui-runtime/menu-layout --> | [源码](../packages/runtime/src/menu-layout.ts) | [合同](NAVIGATION.md) | [示例](../examples/menu-vanilla/app.js) |
 | `@coffeehc/xui-runtime/dom` <!-- public-entry: @coffeehc/xui-runtime/dom --> | [源码](../packages/runtime/src/dom.ts) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-vanilla/app.js) |
+| `@coffeehc/xui-runtime/operation-store` <!-- public-entry: @coffeehc/xui-runtime/operation-store --> | [源码](../packages/runtime/src/operation-store.ts) | [原子恢复合同](API_KEY.md#公共原子恢复存储) | [类型](../packages/runtime/src/operation-store.ts) |
 | `@coffeehc/xui-runtime/api-key` <!-- public-entry: @coffeehc/xui-runtime/api-key --> | [源码](../packages/runtime/src/api-key.ts) | [合同](API_KEY.md) | [示例](../examples/api-key-vanilla/app.js) |
 | `@coffeehc/xui-runtime/api-key-dom` <!-- public-entry: @coffeehc/xui-runtime/api-key-dom --> | [源码](../packages/runtime/src/api-key-dom.ts) | [合同](API_KEY.md) | [示例](../examples/api-key-vanilla/app.js) |
 | `@coffeehc/xui-runtime/structured-log` <!-- public-entry: @coffeehc/xui-runtime/structured-log --> | [源码](../packages/runtime/src/structured-log.ts) | [合同](LOGS.md) | [示例](../examples/log-vanilla/app.js) |
@@ -140,7 +141,7 @@ React 组合控件保留各自公开 props/ref/render/parts；Select/Combobox/Me
 
 既有button/forms/table/layout/menu-layout/login/http入口增加明确props与slots，默认兼容：link、controlSize/readOnly/InputGroup、stickyHeader、不透明状态、scrollMode默认document、登录extensions、HTTP显式nativeOrigin。所有新增名字从构建声明自动核对，默认与控制事实见WIDGETS/AUTH/NAVIGATION/HTTP，不仅是新增入口名。
 
-API Key入口追加公开 `createApiKeyWriteGuard`、`ApiKeyPendingWrite`/`ApiKeyWriteGuard`/`ApiKeyWriteResolution`/`ApiKeyWriteContext` 和controller的 `recoverUncertainWrite`，类型与范围见[API_KEY](API_KEY.md#写入保护的所有者与恢复)。保护所有者放在视图之外，guard没有任意清除方法；默认HTTP不新增推测核对路由。`lastUsedAtPending`/wire `last_used_at_pending` 都是可选明确bool。
+API Key入口追加公开 `createApiKeyWriteGuard`、`ApiKeyPendingWrite`/`ApiKeyWriteGuard`/`ApiKeyWriteResolution`/`ApiKeyWriteContext` 和controller的 `recoverUncertainWrite`，类型与范围见[API_KEY](API_KEY.md#持久写入-owner-与恢复)。保护所有者放在视图之外，guard没有任意清除方法；默认HTTP不新增推测核对路由。`lastUsedAtPending`/wire `last_used_at_pending` 都是可选明确bool。
 
 ## 应用头部与菜单文字角色补齐
 

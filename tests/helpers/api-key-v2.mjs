@@ -1,8 +1,9 @@
 // Test-only migration of archived v1 synthetic fixtures. This is NOT a product adapter
 // and is not evidence that a v1 service satisfies the v2 recovery contract.
 import {createApiKeyHttpAdapter as createV2,parseApiKeyWireMetadata as parseMetadata,parseApiKeyConfiguration as parseConfiguration} from '../../packages/runtime/dist/api-key-http.js';
+import {memoryOperationStore} from './operation-store.mjs';
 import {createApiKeyWriteGuard} from '../../packages/runtime/dist/api-key.js';
-export function persistentTestGuard(){let saved=null;return createApiKeyWriteGuard({isCurrentScope:()=>true,scopeId:'fixture:actor:namespace',storage:{load:()=>saved,save:(_scope,value)=>{saved=value;}}});}
+export function persistentTestGuard(){let saved=null;return createApiKeyWriteGuard({isCurrentScope:()=>true,scopeId:'fixture:actor:namespace',operationStore:memoryOperationStore(),storage:{load:()=>saved,save:(_scope,value)=>{saved=value;}}});}
 export const upgradeMetadata=value=>value&&typeof value==='object'?{version:'1',enabled:true,...value,capabilities:{update:false,...value.capabilities}}:value;
 export const upgradePayload=(payload,headers)=>{
  if(!payload||typeof payload!=='object')return payload;

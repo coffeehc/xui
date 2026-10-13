@@ -1,5 +1,5 @@
 import {isHttpError} from './http.js';
-import {apiKeyWriteOwner,type ApiKeyWriteGuard,type ApiKeyPendingWrite,type ApiKeyWriteLease,type ApiKeyWriteResolution,type ApiKeyOperationDescriptor} from './api-key-write.js';
+import {ApiKeyWriteProtectionError,apiKeyWriteOwner,type ApiKeyWriteGuard,type ApiKeyPendingWrite,type ApiKeyWriteLease,type ApiKeyWriteResolution,type ApiKeyOperationDescriptor} from './api-key-write.js';
 export {createApiKeyWriteGuard} from './api-key-write.js';
 export type {ApiKeyWriteGuard,ApiKeyPendingWrite,ApiKeyWriteResolution,ApiKeyOperationDescriptor,ApiKeyWriteStorage,ApiKeyWriteSnapshot,ApiKeyWriteGuardOptions} from './api-key-write.js';
 /** Native page-facade application code, shared with baseservice. Never a definite refusal. */
@@ -50,7 +50,7 @@ export interface ApiKeyManagerOptions {
   labels?:Partial<ApiKeyLabels>;
 }
 export const apiKeyDefaultLabels={
-  persistenceError:'Could not read the protected write state. No request was sent. Restore storage access before trying again.',resolveWrite:'Terminate unexecuted request and check result',resolveWarning:'This permanently prevents this request from executing if it has not started. An already applied write is not undone.',confirmResolve:'Confirm termination and check',
+  persistenceError:'Could not access protected write coordination or storage. No request was sent. Restore storage access before trying again.',resolveWrite:'Terminate unexecuted request and check result',resolveWarning:'This permanently prevents this request from executing if it has not started. An already applied write is not undone.',confirmResolve:'Confirm termination and check',
   updateWarning:'Changing permissions or disabling this key may stop existing clients. Revoked keys cannot be restored.',edit:'Edit',updateTitle:'Edit API key',enabled:'Enabled',save:'Save changes',saving:'Saving changes…',updateError:'The update result is unconfirmed. Verify the write result before saving again.',updateRejected:'The key update was rejected.',updatePending:'Closing cancels local waiting. The server may still update this key.',disabled:'Disabled',
   lastUsedAtPending:'Pending persistence',writePending:'A key management write is in progress.',writeUncertain:'The write result is unconfirmed. Key management writes are blocked until its result is checked.',checkWrite:'Check write result',checkingWrite:'Checking write result…',recoveryError:'Could not verify the write result. Writes remain blocked.',recoveryPending:'The write result is still pending. Writes remain blocked.',recoveryUnavailable:'The list was refreshed, but the service has not provided write-result verification. Writes remain blocked.',
   title:'API keys',create:'Create key',refresh:'Refresh keys',empty:'No keys',loading:'Loading keys…',listError:'Could not load keys.',retry:'Retry loading',
@@ -154,7 +154,7 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
       if(current()&&resolution!=='pending'){
         if(listSession!==listGeneration){emit({recoveryError:labels.recoveryError});return;}
         // The read has completed before releasing the gate. No write or one-time value is recovered.
-        if(!writeOwner.resolve(write.id,resolution,()=>!dead&&listSession===listGeneration)&&!dead&&guard.getState()?.id===write.id)emit({recoveryError:labels.recoveryError});else if(resolve&&!dead&&state.phase==='resolve'&&!guard.getState())close();
+        if(!await writeOwner.resolve(write.id,resolution,()=>!dead&&listSession===listGeneration,controller.signal)&&!dead&&guard.getState()?.id===write.id)emit({recoveryError:labels.recoveryError});else if(resolve&&!dead&&state.phase==='resolve'&&!guard.getState())close();
       }
     }catch{if(current()){recoveryAbort=undefined;emit({recoveryBusy:false,recoveryError:labels.recoveryError});}}
   }
@@ -162,15 +162,17 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
   async function dispatch<T>(lease:ApiKeyWriteLease,intent:ApiKeyWriteIntent,controller:AbortController,generation:number,send:(context:ApiKeyWriteContext)=>Promise<T>):Promise<T>{
     try{
       if(!ensureScope())throw new TypeError('API key scope is not current');
+      if(writeOwner.persistent)await writeOwner.acquire(lease,controller.signal);
+      if(!ensureScope()||dead||generation!==actionGeneration||controller.signal.aborted)throw new DOMException('Cancelled','AbortError');
       if(options.adapter.prepareWrite){
         const descriptor=await options.adapter.prepareWrite(intent,{signal:controller.signal});
         if(!ensureScope()||dead||generation!==actionGeneration||controller.signal.aborted||guard.getState()?.id!==lease.id)throw new DOMException('Cancelled','AbortError');
-        writeOwner.describe(lease,descriptor);
+        await writeOwner.describe(lease,descriptor);
       }
       if(!ensureScope()||dead||generation!==actionGeneration||controller.signal.aborted||!writeOwner.sent(lease))throw new DOMException('Cancelled','AbortError');
     }catch(error){
       // No adapter call occurred: this is proof of no POST, rather than an inferred HTTP outcome.
-      if(guard.getState()?.status!=='uncertain')writeOwner.finish(lease);
+      if(guard.getState()?.status!=='uncertain')await writeOwner.finish(lease);
       throw new ApiKeyBeforeSendError(error);
     }
     return send({signal:controller.signal,write:guard.getState()!});
@@ -178,6 +180,7 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
   const canUpdate=(key:Readonly<ApiKeyMetadata>)=>{const session=actionGeneration;if(!ensureScope()||dead||guard.getState()||key.status==='revoked'||!options.adapter.update||key.capabilities?.update===false||typeof key.enabled!=='boolean')return false;try{const allowed=options.canUpdate?.(key)??key.capabilities?.update??false;return !dead&&session===actionGeneration&&!guard.getState()&&allowed;}catch{return false;}};
   const canRevoke=(key:Readonly<ApiKeyMetadata>)=>{const session=actionGeneration;if(!ensureScope()||dead||guard.getState()||key.status==='revoked'||key.capabilities?.revoke===false)return false;try{const allowed=options.canRevoke?.(key)??key.capabilities?.revoke??false;return !dead&&session===actionGeneration&&!guard.getState()&&allowed;}catch{return false;}};
   const canDeleteRecord=(key:Readonly<ApiKeyMetadata>)=>{const session=actionGeneration;if(!ensureScope()||dead||guard.getState()||key.status!=='revoked'||!options.adapter.deleteRecord||key.capabilities?.deleteRecord===false)return false;try{const allowed=options.canDeleteRecord?.(key)??key.capabilities?.deleteRecord??false;return !dead&&session===actionGeneration&&!guard.getState()&&allowed;}catch{return false;}};
+  const rejected=(error:unknown,fallback:string)=>error instanceof ApiKeyBeforeSendError&&error.cause instanceof ApiKeyWriteProtectionError?labels.persistenceError:fallback;
   const uncertain=(error:unknown)=>error instanceof ApiKeyBeforeSendError?guard.getState()?.status==='uncertain':!isHttpError(error)||error.code===API_KEY_WRITE_OUTCOME_UNKNOWN||error.code===API_KEY_WRITE_COMMITTED_FOLLOWUP_FAILED||error.status===409||!(error.kind==='business'||error.kind==='http'&&error.status!==undefined&&error.status>=400&&error.status<500);
   async function submitCreate(){
     if(!ensureScope()||dead||state.phase!=='create'||state.actionBusy||guard.getState()||options.canCreate!==true)return;
@@ -195,9 +198,9 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
     if(dead||generation!==actionGeneration){writeOwner.abandon(lease);return;}
     try{const result=await wait(()=>dispatch(lease,{operation:'create',draft},controller,generation,context=>options.adapter.create(draft,context)),controller);if(!ensureScope()||dead||generation!==actionGeneration)return;
       const metadata=parseApiKeyMetadata(result.metadata);if(typeof result.secret!=='string'||!result.secret)throw new TypeError('Expected a one-time value');
-      actionAbort=undefined;actionWrite=undefined;writeOwner.finish(lease);if(dead||generation!==actionGeneration)return;phaseWriteId=undefined;secret=result.secret;const listSession=++listGeneration,previous=listAbort;listAbort=undefined;previous?.abort();if(dead||generation!==actionGeneration)return;
+      actionAbort=undefined;actionWrite=undefined;await writeOwner.finish(lease);if(!ensureScope()||dead||generation!==actionGeneration)return;phaseWriteId=undefined;secret=result.secret;const listSession=++listGeneration,previous=listAbort;listAbort=undefined;previous?.abort();if(dead||generation!==actionGeneration)return;
       emit({phase:'result',actionBusy:false,resultMetadata:metadata,copyStatus:'idle',...(listSession===listGeneration?{listBusy:false}:{}),rows:Object.freeze([...state.rows.filter(row=>row.id!==metadata.id),metadata])});
-    }catch(error){const unknown=uncertain(error);if(actionWrite===lease)actionWrite=undefined;if(unknown)writeOwner.abandon(lease);else writeOwner.finish(lease);if(!dead&&generation===actionGeneration){secret=null;actionAbort=undefined;emit({actionBusy:false,actionUncertain:unknown,actionError:unknown?labels.createError:labels.createRejected});}}
+    }catch(error){const unknown=uncertain(error);if(actionWrite===lease)actionWrite=undefined;if(unknown)writeOwner.abandon(lease);else await writeOwner.finish(lease);if(!dead&&generation===actionGeneration){secret=null;actionAbort=undefined;emit({actionBusy:false,actionUncertain:unknown,actionError:unknown?labels.createError:rejected(error,labels.createRejected)});}}
   }
   async function submitUpdate(){
     const target=state.updateTarget,session=actionGeneration,original=state.updateDraft;
@@ -213,17 +216,17 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
     if(dead||generation!==actionGeneration){writeOwner.abandon(lease);return;}
     try{const result=await wait(()=>dispatch(lease,{operation:'update',key:target,draft},controller,generation,context=>options.adapter.update!(target,draft,context)),controller);if(!ensureScope()||dead||generation!==actionGeneration)return;
       const metadata=parseApiKeyMetadata(result);if(metadata.id!==target.id)throw new TypeError('Mismatched API key update');
-      actionAbort=undefined;actionWrite=undefined;writeOwner.finish(lease);if(dead||generation!==actionGeneration)return;
+      actionAbort=undefined;actionWrite=undefined;await writeOwner.finish(lease);if(!ensureScope()||dead||generation!==actionGeneration)return;
       const listSession=++listGeneration,previous=listAbort;listAbort=undefined;previous?.abort();if(dead||generation!==actionGeneration)return;emit({...(listSession===listGeneration?{listBusy:false}:{}),rows:Object.freeze(state.rows.map(row=>row.id===target.id?metadata:row))});if(!dead&&generation===actionGeneration)close();
-    }catch(error){const unknown=uncertain(error);if(actionWrite===lease)actionWrite=undefined;if(unknown)writeOwner.abandon(lease);else writeOwner.finish(lease);if(!dead&&generation===actionGeneration){actionAbort=undefined;emit({actionBusy:false,actionUncertain:unknown,actionError:unknown?labels.updateError:labels.updateRejected});}}
+    }catch(error){const unknown=uncertain(error);if(actionWrite===lease)actionWrite=undefined;if(unknown)writeOwner.abandon(lease);else await writeOwner.finish(lease);if(!dead&&generation===actionGeneration){actionAbort=undefined;emit({actionBusy:false,actionUncertain:unknown,actionError:unknown?labels.updateError:rejected(error,labels.updateRejected)});}}
   }
   async function confirmAction(operation:'revoke'|'delete'){
     const target=state.revokeTarget,session=actionGeneration;if(dead||state.phase!==operation||state.actionBusy||guard.getState()||!target)return;
     const permitted=operation==='revoke'?canRevoke(target):canDeleteRecord(target);if(!permitted||dead||session!==actionGeneration||state.phase!==operation||state.revokeTarget!==target||state.actionBusy||guard.getState())return;
     const generation=++actionGeneration,controller=new AbortController();actionAbort=controller;const lease=claimWrite(operation,target.id);if(!lease)return;if(dead||generation!==actionGeneration){writeOwner.abandon(lease);return;}actionWrite=lease;phaseWriteId=lease.id;emit({actionBusy:true,actionError:null});if(dead||generation!==actionGeneration){writeOwner.abandon(lease);return;}
     try{const result=await wait(()=>dispatch(lease,{operation,key:target},controller,generation,context=>operation==='revoke'?options.adapter.revoke(target,context):options.adapter.deleteRecord!(target,context)),controller);if(!ensureScope()||dead||generation!==actionGeneration)return;if(result!==undefined)throw new TypeError('A successful management callback returns void');
-      actionAbort=undefined;actionWrite=undefined;writeOwner.finish(lease);if(dead||generation!==actionGeneration)return;const listSession=++listGeneration,previous=listAbort;listAbort=undefined;previous?.abort();if(dead||generation!==actionGeneration)return;emit({...(listSession===listGeneration?{listBusy:false}:{}),rows:Object.freeze(operation==='delete'?state.rows.filter(row=>row.id!==target.id):state.rows.map(row=>row.id===target.id?Object.freeze({...row,status:'revoked' as const,...(row.capabilities?{capabilities:Object.freeze({...row.capabilities,revoke:false})}:{})}):row))});if(!dead&&generation===actionGeneration)close();
-    }catch(error){const unknown=uncertain(error);if(actionWrite===lease)actionWrite=undefined;if(unknown)writeOwner.abandon(lease);else writeOwner.finish(lease);if(!dead&&generation===actionGeneration){actionAbort=undefined;emit({actionBusy:false,actionUncertain:unknown,actionError:operation==='revoke'?(unknown?labels.revokeError:labels.revokeRejected):(unknown?labels.deleteError:labels.deleteRejected)});}}
+      actionAbort=undefined;actionWrite=undefined;await writeOwner.finish(lease);if(!ensureScope()||dead||generation!==actionGeneration)return;const listSession=++listGeneration,previous=listAbort;listAbort=undefined;previous?.abort();if(dead||generation!==actionGeneration)return;emit({...(listSession===listGeneration?{listBusy:false}:{}),rows:Object.freeze(operation==='delete'?state.rows.filter(row=>row.id!==target.id):state.rows.map(row=>row.id===target.id?Object.freeze({...row,status:'revoked' as const,...(row.capabilities?{capabilities:Object.freeze({...row.capabilities,revoke:false})}:{})}):row))});if(!dead&&generation===actionGeneration)close();
+    }catch(error){const unknown=uncertain(error);if(actionWrite===lease)actionWrite=undefined;if(unknown)writeOwner.abandon(lease);else await writeOwner.finish(lease);if(!dead&&generation===actionGeneration){actionAbort=undefined;emit({actionBusy:false,actionUncertain:unknown,actionError:operation==='revoke'?(unknown?labels.revokeError:rejected(error,labels.revokeRejected)):(unknown?labels.deleteError:rejected(error,labels.deleteRejected))});}}
   }
   async function copySecret(writeText:(value:string)=>Promise<void>){
     if(!ensureScope()||dead||state.phase!=='result'||secret===null||state.copyStatus==='copying')return;const generation=++copyGeneration;emit({copyStatus:'copying'});
