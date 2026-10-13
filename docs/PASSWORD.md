@@ -36,7 +36,7 @@ finally { fields.current?.clear(); }
 
 两端 NewPasswordFields 默认在输入暂停 150 ms 后本地估算。长度规则独立显示；固定短摘要显示等待输入、评估中、弱/中/强或暂不可评估。改进建议复用公开 Disclosure，默认折叠，只由用户主动展开；评分、清空及提交不会自动展开或删除摘要行。短状态按固有内容共同预留高度，已展开建议也保留稳定区域，不把长建议默认占成大块空白。使用 MIT 的 @zxcvbn-ts/core 4.2.0、language-common 4.1.3、language-en 4.1.1，识别常见密码、顺序、重复、键盘及常见个人信息模式，不按字符种类自行打分。固定映射：评分 0–1 为弱，2 为中，3–4 为强。强度仅供参考，任何分数都不参与 readValidatedPassword 的提交许可；强制规则仍只来自服务端 policy。
 
-引擎和 common/en 字典在包构建时编成自包含固定 worker 源码，以动态 import 首次输入时懒加载。库在本地 Blob worker 中执行，ready 后才读取最新输入并通过本地 postMessage 发送；主线程不解析字典或执行评分，评分实例只存在于单次 worker 调用中。宿主无需 worker 打包插件；正常 ESM 动态导入拆包保留懒加载，显式关闭代码拆分的 bundler 会把模块合并进初始脚本。正式独立 tarball 消费者的引擎压缩大小为原生 约 838 KB、React 约 838 KB；孤立示例初始静态 JS 图 gzip 约为 3 KB、72 KB（每次精确值写入 strength-bundle.json），均不含引擎和字典。这是构建产物测量，不是浏览器运行时延迟保证。入口静态依赖图与原有全库体积门禁继续检查。
+引擎和 common/en 字典在包构建时编成自包含固定 worker 源码，以动态 import 首次输入时懒加载。库在本地 Blob worker 中执行，ready 后才读取最新输入并通过本地 postMessage 发送；主线程不解析字典或执行评分，评分实例只存在于单次 worker 调用中。宿主无需 worker 打包插件；正常 ESM 动态导入拆包保留懒加载，显式关闭代码拆分的 bundler 会把模块合并进初始脚本。正式独立 tarball 消费者的引擎压缩大小为原生 约 838 KB、React 约 838 KB；孤立示例初始静态 JS 图 gzip 约为 4 KB、72 KB（每次精确值写入 strength-bundle.json），均不含引擎和字典。这是构建产物测量，不是浏览器运行时延迟保证。入口静态依赖图与原有全库体积门禁继续检查。
 
 首次离线、Worker 不可用、打包产物不可加载或宿主 CSP 禁止 blob worker 时，摘要显示“暂不可评估”，建议中说明不影响提交。库不修改、不要求放宽 worker-src/CSP，不会假称强。字典以常见模式和英文为主，对其他语言、人名、产品上下文及新泄露密码的识别有限；“强”不保证安全。估算为限制同步 CPU 工作只处理最多 256 个 UTF-16 单元，超出显示无法评估，不截断密码，也不改变服务端策略校验。复杂 Unicode 的强制长度仍按上面的码点规则。
 
@@ -49,3 +49,5 @@ finally { fields.current?.clear(); }
 实际浏览器优化前记录：CI38408040199 合成输入的主线程长任务 React 124/56ms、原生127/99ms；这不是优化后的性能结果。worker 版本继续保存输入事件数、LongTask 和计时器延迟，须按新提交真实浏览器证据验收。
 
 NewPasswordLabels 可选 strengthSummary 映射短状态，strengthAdvice 定义 Disclosure 标题，原 strength 函数继续映射展开建议。清空保留短行与折叠入口，不保留上次评分；参考文字参与自然布局但 aria-hidden，读屏只读取当前状态。
+
+57c4afe 的安全 Chrome CI38413454627 实测：同一合成 12 次输入下，Worker 版本 React 最大计时器延迟 29.4ms、原生 34.5ms，均没有观察到 LongTask；对应优化前为149.7/151.8ms及上述长任务。这是一次 CI 样本，不能保证所有设备、首次加载网络或宿主打包方式都具有相同延迟。该提交完整1064浏览器用例通过，强度低分、离线、CSP禁Worker均不增加提交门禁。

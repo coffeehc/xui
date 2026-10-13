@@ -27,10 +27,10 @@
   .xui-data-table[data-layout='workspace'] {block-size:100%;min-block-size:var(--data-table-min-block-size);}
   .xui-data-table-tools,.xui-data-table-feedback {flex:none;min-inline-size:0;}
   .xui-data-table-tools {padding:var(--space-content-gap);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
-  .xui-data-table-frame {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(var(--control-height),1fr) auto;flex:1 1 auto;min-block-size:0;min-inline-size:0;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
+  .xui-data-table-frame {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(var(--control-height),1fr) auto;flex:1 1 auto;min-block-size:0;min-inline-size:0;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
   .xui-data-table-tools {grid-row:1;}
-  .xui-data-table-body {grid-row:3;}
-  .xui-data-table-footer {grid-row:4;}
+  .xui-data-table-body {grid-row:2;}
+  .xui-data-table-footer {grid-row:3;}
   /* One colgroup owns all tracks. Only opted-in tables stop content from resizing columns. */
   .xui-data-table-body>.xui-table[data-column-sizing] {table-layout:fixed;}
   /* With every track sized, let CSS expand from zero to the sum of the col widths. */
