@@ -159,6 +159,10 @@
     "./text-inputs": {
       "types": "./dist/text-inputs.d.ts",
       "import": "./dist/text-inputs.js"
+    },
+    "./admin-setup": {
+      "types": "./dist/admin-setup.d.ts",
+      "import": "./dist/admin-setup.js"
     }
   },
   "types": "./dist/index.d.ts",

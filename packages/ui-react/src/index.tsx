@@ -37,3 +37,4 @@ export * from './display.js';
 export * from './choice-group.js';
 
 export * from './text-inputs.js';
+export * from './admin-setup.js';

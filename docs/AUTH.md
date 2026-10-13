@@ -163,3 +163,7 @@ on a native dialog. The runtime dialog creations in API Key, Business Log,
 Structured Log and MenuLayout were also checked for this distinction. Regression
 coverage verifies computed closed display, keyboard exclusion, explicit open,
 dismissal and the existing four-sided login focus paint matrix.
+
+## 完整管理员初始化
+
+首次管理员初始化优先使用 [AdminSetupPage/createAdminSetupPage](ADMIN_SETUP.md)，由公共页拥有用户名、新密码/确认、提交与反馈，宿主保留初始化接口和权威状态。AuthPage 仍作为其它无请求认证/启动布局。不再要求产品用 AuthPage 手拼同一 setup 表单；不把初始化业务塞进 AuthClient。

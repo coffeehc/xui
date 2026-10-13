@@ -39,3 +39,5 @@ export * from './choice-group-dom.js';
 export * from './number-input.js';
 
 export * from './text-inputs-dom.js';
+export * from './admin-setup.js';
+export * from './admin-setup-dom.js';

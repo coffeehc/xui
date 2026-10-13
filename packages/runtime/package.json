@@ -162,6 +162,14 @@
     "./text-inputs-dom": {
       "types": "./dist/text-inputs-dom.d.ts",
       "import": "./dist/text-inputs-dom.js"
+    },
+    "./admin-setup": {
+      "types": "./dist/admin-setup.d.ts",
+      "import": "./dist/admin-setup.js"
+    },
+    "./admin-setup-dom": {
+      "types": "./dist/admin-setup-dom.d.ts",
+      "import": "./dist/admin-setup-dom.js"
     }
   },
   "types": "./dist/index.d.ts",

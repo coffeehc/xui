@@ -242,6 +242,17 @@ for (const kind of ['vanilla','react']) {
     await build({entryPoints:[`${login}/app.tsx`],outdir:strictOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"development"'}});
     for(const file of ['index.html','theme-init.js','mark.svg','visual.svg'])await copyFile(`${loginOutput}/${file}`,`${strictOutput}/${file}`);
   }
+  const adminSetup=resolve(cwd,'admin-setup'),adminSetupOutput=resolve(`dist/admin-setup-${kind}`);
+  await cp(`examples/admin-setup-${kind}`,adminSetup,{recursive:true});
+  const adminBuild=await build({entryPoints:[`${adminSetup}/app.${kind==='react'?'tsx':'js'}`],outdir:adminSetupOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(adminBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Admin setup escaped its standalone install');
+  let adminHtml=await readFile(`${adminSetup}/index.html`,'utf8');
+  if(kind==='react'){
+    const ssr=execFileSync('node',['--input-type=module','-e',"import React from 'react';import {renderToString} from 'react-dom/server';import {AdminSetupPage} from '@coffeehc/xui-react/admin-setup';console.log(renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'创建管理员'},state:{status:'idle'},policy:{version:1,minimum_characters:6,maximum_characters:32,counting_unit:'unicode_code_points'},onSubmit:()=>{throw Error('SSR must not submit')}})));"],{cwd,encoding:'utf8'});
+    adminHtml=adminHtml.replace('<!--ssr-->',ssr.trim());
+    execFileSync('node',[require.resolve('typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','admin-setup/app.tsx'],{cwd,stdio:'inherit'});
+  }
+  await writeFile(`${adminSetupOutput}/index.html`,adminHtml);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${adminSetupOutput}/theme-init.js`);
   const authPage=resolve(cwd,'auth-page'),authPageOutput=resolve(`dist/auth-page-${kind}`);
   await cp(`examples/auth-page-${kind}`,authPage,{recursive:true});
   const authPageBuild=await build({entryPoints:[`${authPage}/app.${kind==='react'?'tsx':'js'}`],outdir:authPageOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});

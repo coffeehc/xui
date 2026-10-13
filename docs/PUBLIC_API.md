@@ -231,3 +231,10 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 所有入口同时从各自根导出。[完整合同与双端示例](DISPLAY.md)：复制仅明确 value、串行写与旧结果隔离；Tag 删除意图/焦点由宿主；Image 显式 alt/尺寸、稳定占位与显式重试，不包含上传或查看器。
 
 NewPasswordFields（React/原生）内置本地懒加载弱/中/强建议，评分不作为提交门禁。runtime/password 的 createPasswordStrengthController 与 getPasswordStrengthMessage 公开最小无秘密状态；完整隐私、离线、字典及大小边界见 [PASSWORD](PASSWORD.md#本地密码强度建议)。
+## 完整管理员初始化页
+
+- `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup -->：createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。
+- `@coffeehc/xui-runtime/admin-setup-dom` <!-- public-entry: @coffeehc/xui-runtime/admin-setup-dom -->：createAdminSetupPage、AdminSetupPageOptions、AdminSetupPageController。
+- `@coffeehc/xui-react/admin-setup` <!-- public-entry: @coffeehc/xui-react/admin-setup -->：AdminSetupPage、AdminSetupPageProps、AdminSetupPageHandle 与共享状态类型。
+
+均从各自根入口导出。完整页面复用 AuthPage/NewPasswordFields，宿主只配置品牌、权威状态、服务端政策和提交回调。未知写入仅普通文字且锁定，不自动重发/核对，不等于登录。生命周期/迁移与双端正式示例见 [ADMIN_SETUP](ADMIN_SETUP.md)。
