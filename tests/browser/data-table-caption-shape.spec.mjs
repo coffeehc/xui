@@ -1,0 +1,22 @@
+import {test,expect} from '@playwright/test';
+import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+const source={commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),generation:JSON.parse(readFileSync('.artifacts/latest-build.json','utf8')).sourceSha256};
+for(const kind of ['react','vanilla'])for(const layout of ['natural','workspace'])for(const [width,enlarged] of [[1700,false],[390,false],[390,true]])test(`${kind} ${layout} twelve synthetic rows five fixed columns caption-only ${width} enlarged=${enlarged}`,async({page},info)=>{
+ await page.setViewportSize({width,height:900});
+ await page.goto(`/data-table-${kind}/?widths&column-mode=sized&hide-column=source&size=12&no-pagination&internal&layout=${layout}`);
+ await page.waitForFunction(()=>window.dataTableDemo?.owner.getState().status==='ready');
+ if(enlarged)await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+ const root=page.locator('#records-table'),table=root.getByRole('table',{name:'合成记录表格',exact:true}),footer=root.locator('.xui-data-table-footer');
+ await expect(table.locator('tbody tr')).toHaveCount(12);await expect(table.getByRole('columnheader')).toHaveCount(5);
+ await expect(root.locator('.xui-data-table-count')).toHaveText('已加载 12 条');await expect(root.getByRole('navigation',{name:'记录分页',exact:true})).toHaveCount(0);
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ const m=await root.evaluate(root=>{const frame=root.querySelector('.xui-data-table-frame'),body=root.querySelector('.xui-data-table-body'),table=body.querySelector('table'),footer=root.querySelector('.xui-data-table-footer'),box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};},style=getComputedStyle(footer),number=x=>parseFloat(x)||0;return {container:box(root),frame:box(frame),body:box(body),table:box(table),thead:box(table.tHead),tbody:box(table.tBodies[0]),footer:box(footer),caption:box(root.querySelector('.xui-data-table-count')),footerChildren:[...footer.children].filter(e=>e.getBoundingClientRect().height>0).map(box),footerEdges:number(style.paddingTop)+number(style.paddingBottom)+number(style.borderTopWidth)+number(style.borderBottomWidth),tracks:getComputedStyle(frame).gridTemplateRows,scrollWidth:document.documentElement.scrollWidth,viewport:innerWidth};});
+ expect(m.footer.height,'caption footer owns only its content and public padding').toBeLessThanOrEqual(Math.max(...m.footerChildren.map(x=>x.height))+m.footerEdges+1.5);
+ expect(m.scrollWidth).toBeLessThanOrEqual(m.viewport+1);
+ if(width===1700)expect(m.table.right,'all-fixed tracks retain the existing explicit width contract').toBeLessThan(m.body.right-1);
+ await info.attach('caption-shape-css-pixels',{body:JSON.stringify({source,kind,layout,width,enlarged,geometry:m}),contentType:'application/json'});
+ await info.attach('caption-shape-page',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});
+ await footer.scrollIntoViewIfNeeded();await expect(root.locator('.xui-data-table-count')).toBeInViewport();
+ await info.attach('caption-shape-footer',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});
+});
