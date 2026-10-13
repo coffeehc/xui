@@ -69,3 +69,11 @@ test('restored reauthentication requirement renders an alert without a transient
   assert.match(markup,/role="alert"/);assert.match(markup,/The previous session operation is unconfirmed/);assert.doesNotMatch(markup,/>Retry connection</);
   assert.doesNotMatch(markup,/name="username"[^>]*disabled/);
 });
+
+test('recovery controls appear only for a real unknown operation with explicit public capability',()=>{
+ const state={status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:true,recovery:{operationId:'a'.repeat(32),operation:'login',canResolve:true,reason:'operation'}};
+ const auth={getState:()=>state,subscribe:()=>()=>{},inspectRecovery:async()=>false,resolveRecovery:async()=>false};
+ const capable=render(state,{}, {auth});assert.match(capable,/>Check previous operation</);assert.match(capable,/>Terminate unfinished operation</);assert.doesNotMatch(capable,/>Cancel request</);
+ for(const candidate of [{...state,reauthenticationRequired:false},{...state,recovery:{...state.recovery,canResolve:false,reason:'bootstrap'}}])assert.doesNotMatch(render(candidate,{}, {auth:{...auth,getState:()=>candidate}}),/>Check previous operation</);
+ assert.doesNotMatch(render(state),/>Check previous operation</);
+});

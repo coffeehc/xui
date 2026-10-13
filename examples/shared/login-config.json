@@ -2,14 +2,36 @@
   "productName": "轻舟工作台",
   "title": "登录工作台",
   "description": "继续处理你的工作。",
-  "logo": {"src": "./mark.svg", "alt": "轻舟工作台"},
+  "logo": {
+    "src": "./mark.svg",
+    "alt": "轻舟工作台"
+  },
   "fallbackReturnTo": "/workspace",
   "labels": {
-    "username": "用户名", "password": "密码", "submit": "登录",
-    "checking": "正在确认登录状态…", "signingIn": "正在登录…",
-    "usernameRequired": "请填写用户名。", "passwordRequired": "请填写密码。",
-    "credentialsError": "用户名或密码不正确。", "forbidden": "当前不允许登录。", "rateLimited": "尝试过于频繁，请稍后再试。",
-    "timeout": "请求超时，请重试。", "network": "连接失败，请检查网络后重试。", "error": "登录未完成。",
-    "cancelled": "已取消本地等待，服务端可能已完成操作。", "checkSession": "重试连接", "opening": "正在进入…", "navigationError": "已登录，但暂时无法进入应用。请重试。", "retryNavigation": "重试进入", "reauthenticate": "上次会话操作结果未确认，暂时无法再次提交。"
+    "username": "用户名",
+    "password": "密码",
+    "submit": "登录",
+    "checking": "正在确认登录状态…",
+    "signingIn": "正在登录…",
+    "usernameRequired": "请填写用户名。",
+    "passwordRequired": "请填写密码。",
+    "credentialsError": "用户名或密码不正确。",
+    "forbidden": "当前不允许登录。",
+    "rateLimited": "尝试过于频繁，请稍后再试。",
+    "timeout": "请求超时，请重试。",
+    "network": "连接失败，请检查网络后重试。",
+    "error": "登录未完成。",
+    "cancelled": "已取消本地等待，服务端可能已完成操作。",
+    "checkSession": "重试连接",
+    "opening": "正在进入…",
+    "navigationError": "已登录，但暂时无法进入应用。请重试。",
+    "retryNavigation": "重试进入",
+    "reauthenticate": "上次会话操作结果未确认，暂时无法再次提交。",
+    "checkRecovery": "核对上次操作",
+    "terminateRecovery": "终止未完成操作",
+    "recoveryTitle": "确认终止未完成的会话操作？",
+    "recoveryDescription": "若原操作尚未提交，这将阻止它执行；已经提交的操作不会撤销。仅在服务端确认结果后才能重新登录。",
+    "confirmRecovery": "确认终止并核对",
+    "cancelRecovery": "保持阻止"
   }
 }

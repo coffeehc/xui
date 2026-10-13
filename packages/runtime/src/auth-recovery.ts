@@ -4,6 +4,8 @@ import {createIndexedDBOperationStore,type DurableOperationStore} from './operat
 export interface AuthRecoveryOptions {
   /** Host-declared cookie/session namespace; additionally bound to the trusted HTTP origin. */
   scope:string;
+  /** Explicit opt-in to the BaseService authoritative operation recovery protocol. */
+  protocol?:'operation-v1';
   /** Atomic durable store. Browser default: IndexedDB, including HTTP intranet origins. */
   store?:DurableOperationStore;
   /** Legacy localStorage record source, imported before any mutation. Not an atomic store. */
@@ -39,7 +41,7 @@ export function createAuthRecovery(origin:string,options:AuthRecoveryOptions|und
       let attempt:string;try{const bytes=new Uint8Array(16);globalThis.crypto.getRandomValues(bytes);attempt=Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');}catch{blocked=true;throw failure();}
       const value=JSON.stringify({version:1,attempt,operation});
       try{const result=await store.compareExchange(key,null,value);blocked=true;if(!result.exchanged||result.current!==value)throw failure();}catch{blocked=true;throw failure();}
-      const settle=async()=>{
+      const settle=async(_result?:object)=>{
         try{const result=await store.compareExchange(key,value,null);if(!result.exchanged||result.current!==null)throw failure();blocked=false;}catch{blocked=true;throw failure();}
       };
       return {

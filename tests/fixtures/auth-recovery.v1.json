@@ -1,0 +1,43 @@
+{
+  "contract": "baseservice.auth-recovery.v1",
+  "recovery_session": {
+    "schema_version": 1,
+    "scope_id": "9007199254740993",
+    "epoch": "9007199254740995"
+  },
+  "pending": {
+    "schema_version": 1,
+    "scope_id": "9007199254740993",
+    "epoch": "9007199254740995",
+    "operation_id": "0123456789abcdef0123456789abcdef",
+    "operation": "refresh",
+    "status": "pending",
+    "next_epoch": null
+  },
+  "applied": {
+    "schema_version": 1,
+    "scope_id": "9007199254740993",
+    "epoch": "9007199254740995",
+    "operation_id": "0123456789abcdef0123456789abcdef",
+    "operation": "refresh",
+    "status": "applied",
+    "next_epoch": "9007199254740996"
+  },
+  "not_applied": {
+    "schema_version": 1,
+    "scope_id": "9007199254740993",
+    "epoch": "9007199254740995",
+    "operation_id": "0123456789abcdef0123456789abcdef",
+    "operation": "refresh",
+    "status": "not_applied",
+    "next_epoch": "9007199254740996"
+  },
+  "terminal_headers": {
+    "X-Auth-Operation-ID": "0123456789abcdef0123456789abcdef",
+    "X-Auth-Scope-ID": "9007199254740993",
+    "X-Auth-Epoch": "9007199254740995",
+    "X-Auth-Operation": "refresh",
+    "X-Auth-Status": "applied",
+    "X-Auth-Next-Epoch": "9007199254740996"
+  }
+}

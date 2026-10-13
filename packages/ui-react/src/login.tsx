@@ -4,6 +4,7 @@ import type {ThemeController} from '@coffeehc/xui-runtime/theme';
 import {Button} from './button.js';
 import {Field,Input} from './forms.js';
 import {Alert} from './feedback.js';
+import {AlertDialog} from './alert-dialog.js';
 export type {AuthPageConfig,LoginPageConfig,LoginPageLayout,LoginPageLabels,AuthClient,AuthUser} from '@coffeehc/xui-runtime/auth';
 export interface AuthPageProps {
   config:AuthPageConfig;
@@ -38,6 +39,7 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
   const sessionFailed=React.useRef(false),[viewOperation,setViewOperation]=React.useState<'session'|'login'|'extension'|null>(null);
   const [extensionBusy,setExtensionBusy]=React.useState<string|null>(null),[extensionError,setExtensionError]=React.useState(false),[navigationPhase,setNavigationPhase]=React.useState<'idle'|'opening'|'failed'>('idle');
   const navigation=React.useRef<{owner:AuthClient;user:Readonly<AuthUser>|null;revision:number;phase:'idle'|'opening'|'failed'}>({owner:auth,user:null,revision:0,phase:'idle'}),navigationOptions=React.useRef({onAuthenticated,returnTo:config.returnTo});navigationOptions.current={onAuthenticated,returnTo:config.returnTo};
+  const [recoveryId,setRecoveryId]=React.useState<string|null>(null);
   const [errors,setErrors]=React.useState<{username?:string;password?:string}>({});
   const clearPassword=()=>{if(password.current){password.current.value='';password.current.defaultValue='';password.current.textContent='';}};
   const passwordRef=React.useCallback((element:HTMLInputElement|null)=>{const previous=password.current;if(previous&&previous!==element){previous.value='';previous.defaultValue='';previous.textContent='';}password.current=element;},[]);
@@ -54,6 +56,14 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
     catch{if(alive.current&&active.current&&id===revision.current&&!controller.signal.aborted){if(operation==='session')sessionFailed.current=true;else if(extensionPhase||!auth.getState().error)setExtensionError(true);queueMicrotask(()=>{if(alive.current&&active.current&&id===revision.current)feedback.current?.focus();});}}
     finally{if(credentials)credentials.password='';if(id===revision.current&&pending.current===controller&&navigation.current.owner===auth){pending.current=undefined;if(alive.current){setExtensionBusy(null);setViewOperation(null);}clearPassword();}}
   };
+  const runRecovery=async(resolve:boolean,id?:string)=>{
+    if(!alive.current||!active.current||pending.current||auth.getState().busy)return;
+    const revisionId=++revision.current,controller=new AbortController();pending.current=controller;setViewOperation('session');setExtensionError(false);setRecoveryId(null);clearPassword();
+    try{if(resolve&&id)await auth.resolveRecovery?.(id,{signal:controller.signal});else await auth.inspectRecovery?.({signal:controller.signal});}
+    catch{/* The shared auth owner retains the authoritative failure and gate. */}
+    finally{if(alive.current&&active.current&&revisionId===revision.current){pending.current=undefined;setViewOperation(null);sessionFailed.current=false;queueMicrotask(()=>{if(alive.current&&active.current)(auth.getState().reauthenticationRequired?feedback.current:username.current)?.focus();});}}
+  };
+  React.useEffect(()=>{setRecoveryId(null);},[auth]);
   React.useLayoutEffect(()=>auth.subscribe(()=>{const next=auth.getState();if(next.status==='authenticated'||next.error)clearPassword();}),[auth]);
   React.useEffect(()=>{
     alive.current=true;active.current=true;
@@ -72,6 +82,7 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
   },[auth,state.status,state.user,state.busy,state.reauthenticationRequired,viewOperation]);
   const authenticated=state.status==='authenticated',busy=!!state.busy||viewOperation!==null||extensionBusy!==null||authenticated&&!sessionFailed.current&&navigationPhase!=='failed',locked=busy||authenticated;
   const canCheck=!busy&&!state.reauthenticationRequired&&(sessionFailed.current&&!state.error||!authenticated&&state.error?.metadata.endpointId==='auth.session'&&(state.error.kind==='network'||state.error.kind==='timeout'||state.error.kind==='http'&&(state.error.status??0)>=500));
+  const canRecover=state.reauthenticationRequired&&state.recovery?.canResolve&&!!auth.inspectRecovery&&!!auth.resolveRecovery;
   const navigating=authenticated&&!state.busy&&viewOperation===null&&!sessionFailed.current,navigationFailed=navigating&&navigationPhase==='failed';
   const message=navigationFailed?labels.navigationError:navigating?labels.opening:extensionBusy??(state.reauthenticationRequired&&!state.busy&&!viewOperation?labels.reauthenticate:state.error?getLoginPageError(state.error,labels):sessionFailed.current?labels.error:labels[viewOperation==='session'||state.busy==='session'||state.busy==='refresh'?'checking':'signingIn']);
   const submitLabel=navigating?labels.opening:state.busy==='login'||viewOperation==='login'?labels.signingIn:labels.submit;
@@ -82,7 +93,7 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
     actions={<Button ref={submit} className="xui-login-submit" size="lg" data-idle-label={labels.submit} data-busy-label={labels.signingIn} type="submit" disabled={locked}><span>{submitLabel}</span><span className="xui-login-opening-reservation" aria-hidden="true">{labels.opening}</span></Button>}
     alternatives={extensions?.actions?.length?extensions.actions.map(action=><Button key={action.id} variant="outline" disabled={locked||action.disabled} onClick={()=>{if(pending.current||auth.getState().busy||auth.getState().status==='authenticated')return;clearPassword();void run('extension',undefined,action);}}>{action.label}</Button>):undefined}
     feedback={(state.reauthenticationRequired||state.error||state.busy||viewOperation||extensionBusy||extensionError||sessionFailed.current||authenticated)?<Alert ref={feedback} tabIndex={-1} tone={state.reauthenticationRequired&&!busy||navigationFailed||extensionError||sessionFailed.current||state.error&&state.error.kind!=='cancel'?'error':'info'}>{extensionError?(extensions?.errorLabel??'登录配置或认证方式暂不可用，请检查后重试。'):message}</Alert>:undefined}
-    feedbackActions={<>{canCheck&&<Button size="sm" variant="ghost" onClick={()=>run('session')}>{labels.checkSession}</Button>}{navigationFailed&&<Button size="sm" variant="ghost" onClick={()=>{const user=auth.getState().user;if(user)void openApplication(user,true);}}>{labels.retryNavigation}</Button>}</>}
+    feedbackActions={<>{canRecover&&<><Button size="sm" variant="ghost" disabled={busy} onClick={()=>void runRecovery(false)}>{labels.checkRecovery}</Button><Button size="sm" variant="outline" disabled={busy} onClick={()=>setRecoveryId(auth.getState().recovery?.operationId??null)}>{labels.terminateRecovery}</Button></>}<AlertDialog.Root open={!!recoveryId} onOpenChange={open=>{if(!open)setRecoveryId(null);}}><AlertDialog.Content><AlertDialog.Title>{labels.recoveryTitle}</AlertDialog.Title><AlertDialog.Description>{labels.recoveryDescription}</AlertDialog.Description><AlertDialog.Footer><Button variant="outline" onClick={()=>setRecoveryId(null)}>{labels.cancelRecovery}</Button><Button onClick={()=>{const id=recoveryId;if(id)void runRecovery(true,id);}}>{labels.confirmRecovery}</Button></AlertDialog.Footer></AlertDialog.Content></AlertDialog.Root>{canCheck&&<Button size="sm" variant="ghost" onClick={()=>run('session')}>{labels.checkSession}</Button>}{navigationFailed&&<Button size="sm" variant="ghost" onClick={()=>{const user=auth.getState().user;if(user)void openApplication(user,true);}}>{labels.retryNavigation}</Button>}</>}
   >
     <div className="xui-stack">
       <fieldset className="xui-login-extension" disabled={locked}>{beforeFields}</fieldset>

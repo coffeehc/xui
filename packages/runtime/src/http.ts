@@ -1,4 +1,4 @@
-import {registerHttp,inspectHttp,authOperation,type AccessLease} from './http-auth-internal.js';
+import {registerHttp,inspectHttp,authOperation,captureAuthReceipt,type AccessLease} from './http-auth-internal.js';
 /** JSON contract of coffeehc/httpx/httpxcommons. success is the business outcome; code remains required metadata. No data/msg aliases. */
 export interface AjaxResponse<T=unknown>{success:boolean;message:string;payload:T;request_id:string;code:number;redirect?:string}
 export type HttpErrorKind='cancel'|'network'|'timeout'|'http'|'parse'|'business';
@@ -141,6 +141,7 @@ export function createHttpClient(options:HttpClientOptions):HttpClient{
           if(!headers.has('accept')&&(['ajax','json'].includes(mode)||mode==='blob'&&init.detectAjaxErrors))headers.set('accept','application/json');if('json' in init&&!headers.has('content-type'))headers.set('content-type','application/json');
           const response=await send(url.href,{method,headers,body,signal:controller.signal,credentials:managed?(managed==='cookie'?'same-origin':'omit'):init.credentials??options.credentials??'same-origin',cache:init.cache,redirect:native||managed?'error':init.redirect});check();
           if((native||managed)&&response.url){let final:URL;try{final=new URL(response.url);}catch{throw new HttpError('network',{...metadata,status:response.status});}if(!sameOrigin(final)||final.username||final.password)throw new HttpError('network',{...metadata,status:response.status});}
+          captureAuthReceipt(init,response.headers);
           metadata={...metadata,status:response.status,headerRequestId:response.headers.get('X-Request-ID')??undefined,retryAfterMs:retryAfter(response.headers.get('Retry-After'))};
           if(response.status===401&&notify401){if(lease)binding!.unauthorized(lease.generation);notifyUnauthorized(new HttpError('http',metadata),epoch);}
           const context:HttpResponseContext={status:response.status,headerRequestId:metadata.headerRequestId,endpointId:init.endpointId,attempts:attempt};

@@ -16,7 +16,7 @@ export function createLoginExample(baseURL:string,options:{recovery?:boolean}={}
     const wire=mode==='malformed'?{success:true,message:'',payload:{access_token:'FAKE_NOT_A_SESSION'},request_id:'demo:auth',code:1}:{success:status===200&&mode!=='business',message:status===200?'':'FAKE_PRIVATE_LOGIN_ERROR',payload:status===200?payload:null,request_id:'demo:auth',code:status===200&&mode!=='business'?1:-1};
     return new Response(JSON.stringify(wire),{status,headers:{'Content-Type':'application/json','X-Request-ID':'demo:auth'}});
   };
-  const parameters=new URL(baseURL).searchParams,http=createHttpClient({baseURL,fetch:parameters.get('transport')==='http'?globalThis.fetch:fetch}),auth=createAuthClient({http,recovery:options.recovery===false?undefined:{scope:'xui-login-example'},timeoutMs:parameters.has('visualAcceptance')?15000:1000,protectedPaths:['/api/business/']});
+  const parameters=new URL(baseURL).searchParams,http=createHttpClient({baseURL,fetch:parameters.get('transport')==='http'?globalThis.fetch:fetch}),auth=createAuthClient({http,recovery:options.recovery===false?undefined:{scope:'xui-login-example',...(parameters.get('recoveryProtocol')==='operation-v1'?{protocol:'operation-v1' as const}:{})},timeoutMs:parameters.has('visualAcceptance')?15000:1000,protectedPaths:['/api/business/']});
   if(parameters.get('session')==='valid')session=user;
   if(parameters.get('session')==='hold')modes.refresh='hold';
   if(parameters.has('sessionReadError')||parameters.has('sessionReadTimeout')){session=user;modes.session=parameters.has('sessionReadTimeout')?'hold':'network';}

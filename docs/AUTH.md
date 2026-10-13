@@ -139,3 +139,17 @@ IndexedDB 恢复是异步的；公开 state 完成恢复后 `reauthenticationReq
 现有 Key OperationStore 的事务执行、operation 锁和 Resolve tombstone 架构可复用，但其类型要求已认证 Actor，并限制 Key action/target/version；不能直接把未认证 Auth 请求塞进 Key DTO。需独立 Auth 合同与存储事务接线。
 
 验收包含：两无 Web Locks owner 仅一 POST，未知 fetch 已结束仍不得被新 login 覆盖，reload 保留原记录，legacy 导入、store 故障零 POST、server/scope 隔离、发送前取消、迟到回执不清他人记录、正常 HTTP 首次登录和权威终态 exact clear。真正双页 HTTP IndexedDB 浏览器测试独立运行；未通过前不声明完成。
+
+### 显式 operation-v1 消费能力（独立里程碑）
+
+只有后端已实现并验证本节协议时才配置 `recovery: {scope: 'trusted-cookie-namespace', protocol: 'operation-v1'}`；不自动探测、更不对 custom AuthClient 强加。未配置 protocol 的持久门禁仍按前述保守限制工作。新消费者提供可选 `inspectRecovery({signal})` / `resolveRecovery(operationId,{signal})`，返回是否已核实终态并清理本地记录。公开 `state.recovery` 仅有 operationId、operation、canResolve、reason，不含凭据。方法不存在或没有可恢复 pending 时，公共登录页不显示额外动作。
+
+- 初次先在同一 IDB gate 中 reserve；GET `/api/v1/auth/recovery-session` 缺 Cookie 为 401，POST `{}` 才创建恢复 scope，随后 GET 必须核同一 scope/epoch。已有非法 Cookie 不新建。bootstrap 未知不自动重试，也不伪装成可 Resolve 操作；旧 v1 未知记录不补造 scope/epoch。
+- 会话 payload 严格 `{schema_version:1,scope_id,epoch}`。scope/epoch 为正十进制 int64 字符串，不能转 JS Number。login/refresh/logout 携带 `X-Auth-Operation-ID`（32 lowercase hex）、`X-Auth-Scope-ID`、`X-Auth-Epoch`、`X-Auth-Operation`。
+- 固定终态 header 为上述四项加 `X-Auth-Status`、`X-Auth-Next-Epoch`。成功只接受完全匹配的 applied；明确拒绝也必须有完全匹配的 not_applied，不能仅凭 HTTP 401/403/429 清 gate。重复合并值、缺字段、身份不符都保留原门禁；HTTP owner 仅向包内 Auth 能力投影固定字段，不公开任意 header 或 Cookie。
+- GET `/api/v1/auth/operations/{operationId}` 是核对；POST `/api/v1/auth/operations/{operationId}/resolve` 的空 body 是明确终止未提交操作。二者都携带原操作四个 header。回执严格七字段 `{schema_version:1,scope_id,epoch,operation_id,operation,status,next_epoch}`；pending 的 next_epoch 必须 null，终态必须是原 epoch 加一，不是服务器当前最新 epoch。
+- 只有用户确认原 operationId 后才 POST Resolve。返回终态后再 GET 核当前 Cookie scope 相同且 epoch 不早于回执 next_epoch，之后 exact CAS 清理原记录。applied 不重放凭据、不自动导航或自动登录；显示原登录表单，让用户明确重新登录。Lookup pending 不写服务端状态，不清记录。
+
+React / 原生 ConfigurableLoginPage/createLoginPage 使用同一能力，正常登录保持原单页；unknown 且 canResolve 才显示“核对上次操作”和“终止未完成操作”。后者打开公共确认弹窗，说明终止不撤销已提交操作，“保持阻止”只关闭弹窗，无请求。确认仅授权捕获的原 ID；卸载、切 owner、取消等待均不能释放未知记录。
+
+此节实现的模拟协议与页面测试不能替代 baseservice 真正数据库事务/HTTP Cookie/Origin 联测；生产接入须核对后端明确发布版本及实际验收结果。
