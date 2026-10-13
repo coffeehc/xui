@@ -52,6 +52,17 @@ test('Progress maps real native states to the shared track/fill and preserves ac
  for(const pseudo of ['::-webkit-progress-value','::-moz-progress-bar'])mapping(`.xui-progress${pseudo}`,{background:'var(--action-primary)'});
  mapping('.xui-progress:indeterminate',{background:'var(--interaction-selected)',animation:'xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate'});
  assert.equal(rule('.xui-progress:indeterminate','(prefers-reduced-motion:reduce)').animation,'none');
- assert.equal(rule('.xui-progress','(forced-colors:active)').appearance,'auto');
- for(const pseudo of ['::-webkit-progress-bar','::-webkit-progress-value','::-moz-progress-bar'])assert.equal(rule(`.xui-progress:is(:indeterminate,[value])${pseudo}`,'(forced-colors:active)').all,'revert');
+ const forced=rule('.xui-progress','(forced-colors:active)');assert.equal(forced.appearance,'none');assert.equal(forced.background,'var(--progress-forced-track)');assert.equal(forced.border,'var(--line-width-surface) solid var(--progress-forced-border)');assert.equal(forced['border-radius'],undefined,'Retain the normal radius-full shape');
+ assert.equal(forced['forced-color-adjust'],undefined,'Keep default auto; never opt out of the user palette');
+ for(const pseudo of ['::-webkit-progress-value','::-moz-progress-bar']){assert.equal(rule(`.xui-progress${pseudo}`,'(forced-colors:active)').background,'var(--progress-forced-fill)');assert.equal(rule(`.xui-progress:indeterminate${pseudo}`,'(forced-colors:active)').background,'transparent');}
+ assert.equal(rule('.xui-progress:indeterminate','(forced-colors:active)')['border-style'],'var(--progress-forced-pending-border-style)');
+ assert.equal(rule('.xui-progress:is(:indeterminate,[value])::-webkit-progress-bar','(forced-colors:active)').background,'var(--progress-forced-track)');
+});
+
+test('forced-color progress roles are matching system colors enforced after product overrides',async()=>{
+ const expected={'--progress-forced-track':'Canvas','--progress-forced-border':'CanvasText','--progress-forced-fill':'CanvasText','--progress-forced-pending-border-style':'dashed'};
+ for(const [name,value]of Object.entries(expected))assert.equal(light[name],value);
+ const document=await readFile('docs/DESIGN.md','utf8');const marked=document.split('/* progress-forced-colors:start */')[1]?.split('/* progress-forced-colors:end */')[0];assert.ok(marked);
+ const declarations={};postcss.parse(marked).walkDecls(node=>declarations[node.prop]=node.value);assert.deepEqual(declarations,expected);
+ assert.match(document,/@layer design-accessibility \{\s*\/\* progress-forced-colors:start/);assert.doesNotMatch(await readFile('packages/theme/src/feedback.css','utf8'),/forced-color-adjust\s*:\s*none/);
 });

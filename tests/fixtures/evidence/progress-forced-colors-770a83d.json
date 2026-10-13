@@ -1,0 +1,59 @@
+{
+  "commit": "770a83d",
+  "run": 38454862068,
+  "artifact": 11844090253,
+  "finding": "The old appearance:auto assertion passed, but every pixel below the title is Canvas; no progress track or fill is painted.",
+  "images": [
+    {
+      "file": "progress-forced-colors-770a83d-light.png",
+      "sha256": "a6df5cb3651b1aba4987a8acfb5220ae2cd92e02c6f38ee645a16ed5430e2522",
+      "width": 390,
+      "height": 222,
+      "crop": {
+        "x": 0,
+        "y": 60,
+        "width": 390,
+        "height": 162
+      },
+      "pixels": 63180,
+      "unique_rgba": [
+        [
+          255,
+          255,
+          255,
+          255
+        ]
+      ],
+      "same_bytes_for": [
+        "react",
+        "vanilla"
+      ]
+    },
+    {
+      "file": "progress-forced-colors-770a83d-dark.png",
+      "sha256": "6fcd3ebfe25f67a473d1bc6cf0b6b768c479e956dcbcff5ad76b4114bd3c79e5",
+      "width": 390,
+      "height": 222,
+      "crop": {
+        "x": 0,
+        "y": 60,
+        "width": 390,
+        "height": 162
+      },
+      "pixels": 63180,
+      "unique_rgba": [
+        [
+          0,
+          0,
+          0,
+          255
+        ]
+      ],
+      "same_bytes_for": [
+        "react",
+        "vanilla",
+        "system"
+      ]
+    }
+  ]
+}

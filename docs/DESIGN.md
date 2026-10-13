@@ -487,6 +487,11 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --a11y-hidden-size: 1px;
     --a11y-hidden-offset: calc(var(--a11y-hidden-size) * -1);
     --a11y-skip-hidden-offset: -200%;
+    /* Forced-color progress roles retain the user-agent system palette. */
+    --progress-forced-track: Canvas;
+    --progress-forced-border: CanvasText;
+    --progress-forced-fill: CanvasText;
+    --progress-forced-pending-border-style: dashed;
     --motion-feedback-opacity-start: .5;
     --motion-duration-pulse: calc(var(--motion-duration) * 10);
     --motion-duration-spin: calc(var(--motion-duration) * 8);
@@ -651,6 +656,16 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
   }
 }
 @layer design-accessibility {
+  /* progress-forced-colors:start */
+  @media (forced-colors: active) {
+    :root {
+      --progress-forced-track: Canvas;
+      --progress-forced-border: CanvasText;
+      --progress-forced-fill: CanvasText;
+      --progress-forced-pending-border-style: dashed;
+    }
+  }
+  /* progress-forced-colors:end */
   @media (prefers-reduced-motion: reduce) {
     :root {
       --motion-duration: 0ms;
@@ -1247,7 +1262,7 @@ DataTable以内部单一布局观察器测实际table/thead/首末行高度和co
 
 实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](IDENTITY_ENCODING.md)。
 
-原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止，forced-colors恢复浏览器绘制可识别轨道、进度与选择标记。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
+原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止。forced-colors下progress保持原生元素、真实value/max与未知语义，采用浏览器提供的Canvas轨道、CanvasText边界与填充；颜色只由progress-forced-track/border/fill集中定义，design-accessibility层保证它们继续取系统色，不接受品牌覆盖。使用既有line-width-surface与radius-full，保留轨道形状并补可识别边界；确定状态按原生比例填充，无value仅显示由progress-forced-pending-border-style声明的空心虚线轨道，不画合成分数或全满填充，且保留已有状态脉冲及reduced-motion静止。forced-color-adjust继续为auto，不关闭用户强制颜色机制；appearance:none仅保留原生progress内部的真实比例布局与可控CSS动效，不能把computed appearance:auto当作浏览器原生绘制已恢复的证据。Checkbox/range等选择标记继续恢复各自的浏览器绘制。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
 
 公共 SimpleSelect / bindSelectControl（包含顶栏语言入口）的浮层选项之间使用 space-text-gap（默认 4px），选项组与组内标题/选项同样保留该间距；选中与悬停背景不得垂直贴合。间距由公共样式负责，不改变选项最小高度、弹层定位或隐藏语义。
 

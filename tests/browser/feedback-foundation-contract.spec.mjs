@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
 
 // Standalone installed-package fixtures: these checks complement the existing
 // native-controls smoke test without changing display/foundation examples.
@@ -11,7 +12,7 @@ async function setup(page,kind,theme,reducedMotion='reduce'){
  await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);
  await page.evaluate(()=>document.fonts.ready);
 }
-async function color(page,token){return page.evaluate(token=>{const probe=document.createElement('span');probe.style.color=`var(${token})`;document.body.append(probe);const result=getComputedStyle(probe).color;probe.remove();return result;},token);}
+async function color(page,token){return page.evaluate(token=>{const probe=document.createElement('span');probe.style.color=token.startsWith('--')?`var(${token})`:token;document.body.append(probe);const result=getComputedStyle(probe).color;probe.remove();return result;},token);}
 async function alertColors(page,node,tone){
  for(const [property,role] of [['color','foreground'],['background-color','soft'],['border-top-color','line']])await expect(node).toHaveCSS(property,await color(page,`--status-${tone}-${role}`));
 }
@@ -33,6 +34,29 @@ async function paintedProgress(page,node,expected,info,name){
  await info.attach(`${name}.png`,{body:png,contentType:'image/png'});
  await info.attach(`${name}-pixels.json`,{body:JSON.stringify(result,null,2),contentType:'application/json'});
  for(const [index,pixel] of result.samples.entries())for(let channel=0;channel<4;channel++)expect(Math.abs(pixel[channel]-result.colors[index][channel]),`${name} sample ${index} channel ${channel}`).toBeLessThanOrEqual(2);
+}
+
+
+// Analyze actual screenshot pixels without assuming DPR or a rectangular track.
+// Four image regions see each part of the existing rounded/elliptical perimeter.
+// The archived failure below is run through the same oracle to reject blank paint.
+async function paintSummary(page,png,track,cropTop=0){return page.evaluate(async({encoded,track,cropTop})=>{
+ const image=new Image();image.src=`data:image/png;base64,${encoded}`;await image.decode();
+ const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const context=canvas.getContext('2d');context.drawImage(image,0,0);
+ const data=context.getImageData(0,0,image.width,image.height).data;context.clearRect(0,0,1,1);context.fillStyle=track;context.fillRect(0,0,1,1);const background=Array.from(context.getImageData(0,0,1,1).data);
+ const width=image.width,height=image.height-cropTop,sides={left:0,right:0,top:0,bottom:0};let inkPixels=0,interiorInk=0;
+ for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+  const at=((y+cropTop)*width+x)*4,ink=background.some((channel,index)=>Math.abs(data[at+index]-channel)>20);if(!ink)continue;inkPixels++;
+  if(x<width/4)sides.left++;else if(x>=width*3/4)sides.right++;else if(y<height/2)sides.top++;else sides.bottom++;
+  if(y===Math.floor(height/2)&&x>=width*.05&&x<width*.95)interiorInk++;
+ }
+ return {width,height,background,inkPixels,interiorInk,sides};
+},{encoded:png.toString('base64'),track,cropTop});}
+async function trackEvidence(page,node,track,info,name){
+ const png=await node.screenshot();const summary=await paintSummary(page,png,track);
+ await info.attach(`${name}.png`,{body:png,contentType:'image/png'});await info.attach(`${name}.json`,{body:JSON.stringify(summary,null,2),contentType:'application/json'});
+ for(const [side,count]of Object.entries(summary.sides))expect(count,`${name}: ${side} perimeter must actually be painted`).toBeGreaterThan(0);
+ return {png,summary};
 }
 
 for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system']){
@@ -95,13 +119,35 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
    await expect.poll(()=>changing.evaluate(element=>element.position)).toBe(position);expect(await changing.evaluate(element=>element===window.savedFeedbackProgress)).toBe(true);
    expect(await changing.getAttribute('value')).toBe(value===null?null:String(value));expect(await changing.getAttribute('aria-valuenow')).toBeNull();
   }
-  await page.addStyleTag({content:'@layer product-overrides {:root {--action-primary:rgb(31 67 103);--muted:rgb(221 229 237);--interaction-selected:rgb(165 189 213);--space-control-gap:var(--space-content-gap);}}'});
+  await page.addStyleTag({content:'@layer product-overrides {:root {--action-primary:rgb(31 67 103);--muted:rgb(221 229 237);--interaction-selected:rgb(165 189 213);--space-control-gap:var(--space-content-gap);--progress-forced-track:rgb(31 67 103);--progress-forced-border:rgb(221 229 237);--progress-forced-fill:rgb(31 67 103);--progress-forced-pending-border-style:solid;}}'});
   await page.setViewportSize({width:390,height:844});
   for(const id of ['determinate','indeterminate']){const node=page.getByTestId(`progress-${id}`);await expect(node).toHaveCSS('height','12px');await expect(node).toHaveCSS('color',await color(page,'--action-primary'));await expect(node).toHaveCSS('accent-color',await color(page,'--action-primary'));}
   await paintedProgress(page,page.getByTestId('progress-determinate'),[[.2,await color(page,'--action-primary')],[.6,await color(page,'--muted')]],info,'progress-determinate-overrides');
   await paintedProgress(page,page.getByTestId('progress-indeterminate'),[[.2,await color(page,'--interaction-selected')],[.8,await color(page,'--interaction-selected')]],info,'progress-indeterminate-overrides');
-  await page.emulateMedia({forcedColors:'active'});for(const id of ['zero','determinate','indeterminate'])await expect(page.getByTestId(`progress-${id}`)).toHaveCSS('appearance','auto');
-  await expect.poll(()=>page.getByTestId('progress-indeterminate').evaluate(element=>element.position)).toBe(-1);
+  await page.emulateMedia({forcedColors:'active'});
+  const systemTrack=await color(page,'Canvas'),systemInk=await color(page,'CanvasText');expect(systemInk).not.toBe(systemTrack);
+  // Accessibility-layer roles outrank the deliberately conflicting brand overrides.
+  await expect(page.locator('html')).toHaveCSS('--progress-forced-track','Canvas');await expect(page.locator('html')).toHaveCSS('--progress-forced-fill','CanvasText');
+  for(const [id,value,max,position]of facts){
+   const node=page.getByTestId(`progress-${id}`);await expect(node).toHaveCSS('appearance','none');await expect(node).toHaveCSS('forced-color-adjust','auto');await expect(node).toHaveCSS('border-top-color',systemInk);await expect(node).toHaveCSS('border-top-width','1px');await expect(node).toHaveCSS('border-top-style',value===null?'dashed':'solid');
+   expect(await node.evaluate(element=>({value:element.getAttribute('value'),max:element.max,position:element.position}))).toEqual({value:value===null?null:String(value),max,position});
+  }
+  const legacy=await readFile(new URL(`../fixtures/evidence/progress-forced-colors-770a83d-${theme==='light'?'light':'dark'}.png`,import.meta.url));
+  const blank=await paintSummary(page,legacy,systemTrack,60);expect(blank.inkPixels,'The retained failing screenshot must be rejected by the paint oracle').toBe(0);for(const count of Object.values(blank.sides))expect(count).toBe(0);
+  await info.attach('legacy-blank-track-oracle.json',{body:JSON.stringify(blank,null,2),contentType:'application/json'});
+  for(const [id,expected]of [['zero',[[.2,systemTrack],[.8,systemTrack]]],['determinate',[[.2,systemInk],[.6,systemTrack]]],['fractional',[[.2,systemInk],[.6,systemTrack]]],['complete',[[.2,systemInk],[.8,systemInk]]],['indeterminate',[[.2,systemTrack],[.8,systemTrack]]]])await paintedProgress(page,page.getByTestId(`progress-${id}`),expected,info,`progress-${id}-forced-colors`);
+  const zeroPaint=await trackEvidence(page,page.getByTestId('progress-zero'),systemTrack,info,'progress-zero-forced-perimeter');
+  const pendingNode=page.getByTestId('progress-indeterminate'),pendingPaint=await trackEvidence(page,pendingNode,systemTrack,info,'progress-pending-forced-perimeter');
+  expect(zeroPaint.summary.interiorInk).toBe(0);expect(pendingPaint.summary.interiorInk).toBe(0);
+  expect(pendingPaint.summary.inkPixels,'Pending is visibly dashed, not a solid zero or completed fill').toBeLessThan(zeroPaint.summary.inkPixels*.85);
+  // Raw screenshots leave animations enabled: this also detects autonomous UA
+  // indeterminate animation that CSS animation-name alone would not expose.
+  await page.waitForTimeout(250);const later=await pendingNode.screenshot();expect(later.equals(pendingPaint.png),'Reduced-motion pending pixels must remain still').toBe(true);
+  await info.attach('progress-pending-forced-still.png',{body:later,contentType:'image/png'});
+  for(const [value,max,position]of [[null,100,-1],[0,100,0],[3,8,.375]]){await page.evaluate(({value,max})=>window.setFeedbackProgress(value,max),{value,max});await expect.poll(()=>changing.evaluate(element=>element.position)).toBe(position);expect(await changing.getAttribute('value')).toBe(value===null?null:String(value));expect(await changing.getAttribute('aria-valuenow')).toBeNull();expect(await changing.evaluate(element=>element===window.savedFeedbackProgress)).toBe(true);}
   await info.attach('progress-forced-colors.png',{body:await page.locator('#progress-feedback').screenshot(),contentType:'image/png'});
+  await page.emulateMedia({forcedColors:'none'});await expect(page.getByTestId('progress-zero')).toHaveCSS('border-top-width','0px');await expect(pendingNode).toHaveCSS('animation-name','none');
+  await paintedProgress(page,page.getByTestId('progress-determinate'),[[.2,await color(page,'--action-primary')],[.6,await color(page,'--muted')]],info,'progress-forced-colors-exit');
+  await paintedProgress(page,pendingNode,[[.2,await color(page,'--interaction-selected')],[.8,await color(page,'--interaction-selected')]],info,'progress-pending-forced-colors-exit');
  });
 }

@@ -29,10 +29,16 @@
   .xui-progress:indeterminate::-webkit-progress-bar {background:var(--interaction-selected);}
   .xui-progress:indeterminate::-moz-progress-bar {background:var(--interaction-selected);}
   @media (forced-colors:active) {
-    .xui-progress {appearance:auto;}
-    .xui-progress:is(:indeterminate,[value])::-webkit-progress-bar {all:revert;}
-    .xui-progress:is(:indeterminate,[value])::-webkit-progress-value {all:revert;}
-    .xui-progress:is(:indeterminate,[value])::-moz-progress-bar {all:revert;}
+    /* Author backgrounds/borders suppress Blink's native painter even when
+       computed appearance is auto. Keep native value/max sizing, system colors
+       (forced-color-adjust remains auto), and CSS-controlled reduced motion. */
+    .xui-progress {appearance:none;background:var(--progress-forced-track);color:var(--progress-forced-fill);border:var(--line-width-surface) solid var(--progress-forced-border);}
+    .xui-progress:indeterminate {background:var(--progress-forced-track);border-style:var(--progress-forced-pending-border-style);}
+    .xui-progress:is(:indeterminate,[value])::-webkit-progress-bar {background:var(--progress-forced-track);}
+    .xui-progress::-webkit-progress-value {background:var(--progress-forced-fill);}
+    .xui-progress::-moz-progress-bar {background:var(--progress-forced-fill);}
+    .xui-progress:indeterminate::-webkit-progress-value {background:transparent;}
+    .xui-progress:indeterminate::-moz-progress-bar {background:transparent;}
   }
   @media (prefers-reduced-motion:reduce) {.xui-progress:indeterminate {animation:none;}}
   .xui-badge {display:inline-flex;gap:var(--space-text-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);font-weight:var(--font-weight-control);}
