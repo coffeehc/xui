@@ -83,6 +83,15 @@ for (const kind of ['vanilla','react']) {
   else execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',feedbackFixture],{cwd,stdio:'inherit'});
   await writeFile(`dist/${kind}/feedback-foundation-contract.html`,'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><script src="./theme-init.js"></script><link rel="stylesheet" href="./feedback-foundation-contract.css"></head><body class="xui"><div id="root"></div><script type="module" src="./feedback-foundation-contract.js"></script></body></html>');
   await writeFile(`dist/${kind}/feedback-foundation-contract-metafile.json`,JSON.stringify(feedbackBuild.metafile,null,2));
+  const inputFoundationFixture=`input-foundation-contract.${kind==='react'?'tsx':'js'}`;
+  await copyFile(`tests/fixtures/${inputFoundationFixture}`,`${cwd}/${inputFoundationFixture}`);
+  const inputFoundationBuild=await build({entryPoints:[`${cwd}/${inputFoundationFixture}`],outfile:`dist/${kind}/input-foundation-contract.js`,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(inputFoundationBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Input foundations escaped the standalone tarball install');
+  assert(!Object.keys(inputFoundationBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Input foundations require private CSS');
+  if(kind==='vanilla')assert(!Object.keys(inputFoundationBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native input foundations imported React');
+  else execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',inputFoundationFixture],{cwd,stdio:'inherit'});
+  await writeFile(`dist/${kind}/input-foundation-contract.html`,'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><script src="./theme-init.js"></script><link rel="stylesheet" href="./input-foundation-contract.css"></head><body class="xui"><div id="root"></div><script type="module" src="./input-foundation-contract.js"></script></body></html>');
+  await writeFile(`dist/${kind}/input-foundation-contract-metafile.json`,JSON.stringify(inputFoundationBuild.metafile,null,2));
   const choiceStateFixture=`choice-state-contract.${kind==='react'?'tsx':'js'}`;
   await copyFile(`tests/fixtures/${choiceStateFixture}`,`${cwd}/${choiceStateFixture}`);
   const choiceStateBuild=await build({entryPoints:[`${cwd}/${choiceStateFixture}`],outfile:`dist/${kind}/choice-state-contract.js`,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
