@@ -163,7 +163,7 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
         for (const span of node.templateSpans) scanNumber(span.expression);
         const measuredPosition = file === 'packages/runtime/src/dom.ts' && /^(?:left|top|maxWidth|maxHeight|--anchor-width|--available-height)$/.test(prop) && /^`\$\{[\s\S]+\}px`$/.test(raw) && /(?:anchor\.|contextPoint|win\.(?:innerWidth|innerHeight)|box\.|right-left|bottom-top|down\?below:above|trigger\.getBoundingClientRect\(\)\.width)/.test(raw) && !hasNumericOffset && !/["']\d+(?:px|rem)["']/.test(raw);
         const measuredSidebar = ['packages/runtime/src/menu-layout.ts', 'packages/ui-react/src/layout.tsx'].includes(file) && prop === 'blockSize' && /^`max\(var\(--nav-sidebar-min-height\), calc\(100dvh - \$\{(?:header|headerNode)\.getBoundingClientRect\(\)\.height\}px\)\)`$/.test(raw);
-        const measuredTableTrack = file === 'packages/runtime/src/data-table.ts' && prop === 'gridTemplateRows' && raw === '`auto auto minmax(${minimum}px, 1fr) auto`';
+        const measuredTableTrack = file === 'packages/runtime/src/data-table.ts' && prop === 'gridTemplateRows' && raw === '`auto minmax(${minimum}px, 1fr) auto`';
         const measuredTableMinimum = file === 'packages/runtime/src/data-table.ts' && prop === 'minBlockSize' && ['`${componentMinimum}px`', '`max(var(--data-table-min-block-size), ${componentMinimum}px)`'].includes(raw);
         // Explicit positive image dimensions are consumer data, validated before DOM writes.
         const imageWidth = file === 'packages/runtime/src/display-dom.ts' && prop === 'width' && raw === '`${options.width}px`';

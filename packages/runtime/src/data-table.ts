@@ -150,7 +150,7 @@ export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, ta
     const frameEdges = number(frameStyle.borderTopWidth) + number(frameStyle.borderBottomWidth) + number(frameStyle.paddingTop) + number(frameStyle.paddingBottom);
     const componentMinimum = Math.ceil(chrome + frameEdges + minimum);
     const rootMinimum = root.dataset.layout === 'document' ? originalMinimum : root.dataset.layout === 'workspace' ? `max(var(--data-table-min-block-size), ${componentMinimum}px)` : `${componentMinimum}px`;
-    const tracks = `auto auto minmax(${minimum}px, 1fr) auto`;
+    const tracks = `auto minmax(${minimum}px, 1fr) auto`;
     if (frame.style.gridTemplateRows !== tracks) frame.style.gridTemplateRows = tracks;
     if (root.style.minBlockSize !== rootMinimum) root.style.minBlockSize = rootMinimum;
     written = tracks;

@@ -107,7 +107,7 @@ test('the public workspace table minimum permits only its documented semantic al
 
 
 test('only the reviewed DataTable intrinsic track measurement is exempted',async()=>{
-  const measured='frame.style.gridTemplateRows=`auto auto minmax(${minimum}px, 1fr) auto`;';
+  const measured='frame.style.gridTemplateRows=`auto minmax(${minimum}px, 1fr) auto`;';
   await fixture({'packages/runtime/src/data-table.ts':measured},async root=>assert.doesNotReject(auditDesignSources({root})));
   for(const [file,source] of [
     ['packages/runtime/src/sample.ts',measured],
