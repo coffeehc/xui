@@ -76,3 +76,13 @@ test('native blank text and comments do not create an empty advanced trigger',()
   const {doc,root}=dom(),empty=doc.createElement('text'),comment=doc.createElement('comment'),fragment=doc.createDocumentFragment();empty.nodeType=3;empty.textContent='';comment.nodeType=8;fragment.append(empty,comment);let calls=0;
   const view=createSearchToolbar(root,{advanced:fragment,onExpandedChange(){calls++;}}),trigger=root.querySelector('.xui-search-toolbar-toggle');assert.equal(trigger.hidden,true);assert.equal(trigger.disabled,true);trigger.click();assert.equal(calls,0);view.destroy();
 });
+
+test('native destroy preserves a replaced host or added siblings and releases ownership',()=>{
+  for(const replace of [true,false]){
+    const {doc,root,view,original}=setup(),replacement=doc.createElement('section');
+    if(replace)root.replaceChildren(replacement);else root.append(replacement);
+    view.destroy();view.destroy();
+    assert.deepEqual(root.childNodes,[replacement]);assert.equal(original.parentNode,null);
+    const next=createSearchToolbar(root);next.destroy();assert.deepEqual(root.childNodes,[replacement]);
+  }
+});

@@ -153,3 +153,13 @@ IndexedDB 恢复是异步的；公开 state 完成恢复后 `reauthenticationReq
 React / 原生 ConfigurableLoginPage/createLoginPage 使用同一能力，正常登录保持原单页；unknown 且 canResolve 才显示“核对上次操作”和“终止未完成操作”。后者打开公共确认弹窗，说明终止不撤销已提交操作，“保持阻止”只关闭弹窗，无请求。确认仅授权捕获的原 ID；卸载、切 owner、取消等待均不能释放未知记录。
 
 此节实现的模拟协议与页面测试不能替代 baseservice 真正数据库事务/HTTP Cookie/Origin 联测；生产接入须核对后端明确发布版本及实际验收结果。
+
+实际 HTTP 接线脚本为 `tests/integration/auth-operation-http.mjs`，只接受显式 `XUI_AUTH_HTTP_FIXTURE_ORIGIN=http://127.0.0.1:<port>`，服务端必须是 baseservice 的 opt-in `TestRecoveryHTTPFixture`。脚本使用正式 xui HttpClient/AuthClient，检查真实 Fiber 路由的 bootstrap、Cookie scope 核对、终态 header、已提交丢响应后的 Lookup、pending 原 ID Resolve，以及 Resolve 先封存再释放迟到原请求。仅测试传输层模拟 Cookie jar；认证 Store 由服务端合成 fixture 提供，因此不代表浏览器 Cookie 或 PostgreSQL 原子事务验收。测试账号为固定合成材料，无真实账号与部署。
+
+Native recovery UI validation: the native login confirmation uses the existing
+`xui-native-dialog` skin, whose closed `<dialog>` retains the browser's
+`display:none` behavior. The React portal skin (`xui-dialog`) must not be placed
+on a native dialog. The runtime dialog creations in API Key, Business Log,
+Structured Log and MenuLayout were also checked for this distinction. Regression
+coverage verifies computed closed display, keyboard exclusion, explicit open,
+dismissal and the existing four-sided login focus paint matrix.

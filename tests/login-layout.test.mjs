@@ -77,3 +77,9 @@ test('recovery controls appear only for a real unknown operation with explicit p
  for(const candidate of [{...state,reauthenticationRequired:false},{...state,recovery:{...state.recovery,canResolve:false,reason:'bootstrap'}}])assert.doesNotMatch(render(candidate,{}, {auth:{...auth,getState:()=>candidate}}),/>Check previous operation</);
  assert.doesNotMatch(render(state),/>Check previous operation</);
 });
+
+test('native recovery dialog uses the native closed-dialog skin rather than the always-visible portal skin',async()=>{
+ const source=await readFile('packages/runtime/src/login-dom.ts','utf8');
+ assert.match(source,/node\('dialog','xui-layer xui-native-dialog xui-alert-dialog'\)/);
+ assert.doesNotMatch(source,/node\('dialog','[^']*\bxui-dialog\b/);
+});

@@ -25,3 +25,13 @@ for(const kind of ['react','vanilla']){
   const state=await backend(context);state.mode='bootstrap-unknown';await page.goto(`/login-${kind}/?transport=http&recoveryProtocol=operation-v1`);await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');await expect(page.getByRole('button',{name:'核对上次操作'})).toHaveCount(0);await expect(page.getByRole('button',{name:'终止未完成操作'})).toHaveCount(0);await page.reload();await expect(page.getByRole('alert')).toBeVisible();expect(state.requests.filter(r=>r.method==='POST')).toHaveLength(1);
  });
 }
+
+test('native recovery dialog stays display-none and outside keyboard focus before opening and after dismissal',async({page,context})=>{
+  await backend(context);await page.goto('/login-vanilla/?transport=http&recoveryProtocol=operation-v1');
+  const dialog=page.locator('dialog[role=alertdialog]'),username=page.getByRole('textbox',{name:'用户名',exact:true});
+  await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
+  const closed=async()=>{await expect(dialog).not.toHaveAttribute('open','');await expect(dialog).toHaveCSS('display','none');await username.focus();for(let i=0;i<8;i++){await page.keyboard.press('Tab');expect(await dialog.evaluate(node=>node.contains(document.activeElement))).toBe(false);}};
+  await closed();await login(page);await expect(page.getByRole('button',{name:'终止未完成操作'})).toBeVisible();
+  await page.getByRole('button',{name:'终止未完成操作'}).click();await expect(dialog).toBeVisible();
+  await page.getByRole('button',{name:'保持阻止'}).click();await closed();
+});

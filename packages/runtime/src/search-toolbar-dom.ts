@@ -67,5 +67,5 @@ export function createSearchToolbar(root:HTMLElement,initial:SearchToolbarOption
     }
   };
   render();root.replaceChildren(element);owners.add(root);const unpress=bindPressFeedback(element);
-  return {getElement:()=>element,getExpanded:expanded,update(next){if(dead)return;const candidate={...options,...next};validate(candidate);options=candidate;render();},destroy(){if(dead)return;dead=true;unpress();disclosure.destroy();element.remove();root.append(...original);owners.delete(root);}};
+  return {getElement:()=>element,getExpanded:expanded,update(next){if(dead)return;const candidate={...options,...next};validate(candidate);options=candidate;render();},destroy(){if(dead)return;dead=true;unpress();disclosure.destroy();if(root.childNodes.length===1&&root.childNodes[0]===element)root.replaceChildren(...original);else element.remove();owners.delete(root);}};
 }
