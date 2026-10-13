@@ -1,6 +1,6 @@
 import '@coffeehc/xui-theme/style.css';
 window.inputFoundationEvents=[];
-const main=document.createElement('main');main.className='xui-container xui-stack';main.innerHTML='<h1>Input foundation contract</h1><form id="input-foundation" class="xui-stack"><button type="button" class="xui-button" id="before-inputs">Before inputs</button></form>';document.getElementById('root').append(main);
+const main=document.createElement('main');main.className='xui-container xui-stack';main.innerHTML='<h1>Input foundation contract</h1><section class="xui-surface"><form id="input-foundation" class="xui-stack"><button type="button" class="xui-button" id="before-inputs">Before inputs</button></form></section>';document.getElementById('root').append(main);
 const form=main.querySelector('form');
 for(const kind of ['input','textarea'])for(const state of ['default','readonly','disabled'])for(const invalid of [false,true]){
  const id=`${kind}-${state}-${invalid?'invalid':'valid'}`,field=document.createElement('div'),label=document.createElement('label'),control=document.createElement(kind),help=document.createElement('p');

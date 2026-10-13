@@ -22,3 +22,7 @@
 ## 状态
 
 源码/fixture类型、语法、12项发现已通过；真实安全Chrome运行及截图审查待本批CI。没有本地禁用sandbox绕过执行器限制。生产Input/Textarea实现未因新增测试改变；若出现真实失败先保留图/trace并区分实现偏差和测试假设。
+
+## 首轮安全 CI 与消费者纠正
+
+候选 d3064c9 / CI 38460396345 的12项新增输入测试均在第一个输入框的左侧焦点几何失败：控件边框 x=0，2px outline加2px offset后为-4px。原始失败PNG/trace保留在该run的 focused-interactions artifact（11846890265）。页面只使用 Container（仅最大宽度和居中，不提供内距）；并非使用 Surface 后仍裁切。纠正双端fixture为正式 Surface / xui-surface 包裹表单，使用既有 card-padding；没有私有padding、改Input绘制或放宽四边断言。首轮在此处中断后的readonly键盘、编辑FormData等行为尚未跑完，不计通过，须新CI全部重验。

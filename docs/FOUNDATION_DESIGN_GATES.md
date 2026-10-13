@@ -102,3 +102,9 @@ Badge/Tag：DESIGN930/955写“元数据body-xs普通文字”，Typography799�
 Progress forced-colors的旧断言虽绿，人工图审发现轨道/填充完全不可见；不能结算为已满足DESIGN。下一基础批先修系统色实际绘制，并与Input/Textarea独立基础验收合并。其普通模式及其他基础展示条款通过不抵消该实图缺陷。
 
 当前冻结基础候选同时补 Input/Textarea 与真实 label 的12项正式双端验收：readonly选择范围与提交、disabled排除与真实点击/Tab、invalid加focus、独立token覆写和390px/root200%。仅新增验证；尚未实际浏览器运行，不提前标绿。Progress强制色修补的原始空白PNG、像素负例、系统色依赖和新绘制断言见 FEEDBACK_FOUNDATION_VALIDATION.md。
+
+## 有限 G1 收口范围
+
+按当前实际出口，G1清单固定为19个具名入口（Button/IconButton分别计；Typography四个parts不重复），另加真实label/help/error基础能力。12个已有专项浏览器通过记录；Input/Textarea强化矩阵及Progress修补在当前候选验收；Image/Avatar/Tag/Badge最后集中成一批18例，只补既定合同，不继续增添产品场景。Tag/Badge“普通文字”权重映射歧义保留现值，不把500写成新增规范或擅改400。OS原生子界面、实际系统读屏和跨浏览器平台结果另列，不以未测项伪造完成。
+
+d3064c9安全CI：517单测、81Auth通过；focused634/646，失败12项全在新增Input消费者首控件贴viewport的四边焦点断言。Progress6组加强像素/系统色/未知静止及Key10项精确焦点流程均通过，完整浏览器/watch/冷启动因focused失败未执行。输入fixture纠正与证据见 INPUT_FOUNDATION_VALIDATION.md；最终四展示族的有限明确合同见 MEDIA_FOUNDATION_VALIDATION.md。G1整体仍未闭环。

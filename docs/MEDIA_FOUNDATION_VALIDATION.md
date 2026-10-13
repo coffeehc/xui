@@ -35,3 +35,5 @@
 独立工作树通过 build（`dfe766430ee0`）、types、362 token/原始 DESIGN SHA256 逆重建、全量 521/521 单测（本批新增 4 项）、React/原生正式全 tarball consumer 与文档引用检查。上述检查使用对应 package scripts 的 Node 入口；未改共享主树 dist。新增 18 例已通过枚举，尚未本地执行浏览器；实际图片与运行结果交安全 CI。没有再次尝试受限环境 EPERM、关闭 Chromium sandbox、添加 skip 或预期失败。若安全 CI 的绘制/可达断言失败，本批仍是未闭环证据，不得宣称视觉通过。
 
 系统读屏器真实播报、触控、Firefox/Safari、多 OS、真实浏览器 zoom 与任意业务图片/宿主布局未由本批证明。Tag/Badge 不增加选择状态，Image 不加入上传、查看器或自动重试，Avatar 不推断业务身份或名称缩写。
+
+标签交互样本使用公开Surface/xui-surface承载（既有card-padding），避免裸Container的零viewport内距让外焦点环缺少宿主绘制空间；Avatar/Image几何样本保持原结构。四边实际像素及几何断言不改，未新增私有padding。

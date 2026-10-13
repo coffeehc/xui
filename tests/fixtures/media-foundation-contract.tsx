@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {createRoot} from 'react-dom/client';
-import {Badge} from '@coffeehc/xui-react';
+import {Badge,Surface} from '@coffeehc/xui-react';
 import {Avatar} from '@coffeehc/xui-react/avatar';
 import {Image,Tag,Typography} from '@coffeehc/xui-react/display';
 import '@coffeehc/xui-theme/style.css';
@@ -24,7 +24,7 @@ function App(){const [avatar,setAvatar]=React.useState('/media-avatar-missing.sv
   <Image src={source} alt="" width={240} height={120} data-testid="image-decorative"/>
   <Image src="" alt="长替代图" width={240} height={120} fallback={longMessage} data-testid="image-long"/>
  </section>
- <section className="xui-stack" id="labels"><h2>Tag and Badge</h2>
+ <Surface className="xui-stack" id="labels"><h2>Tag and Badge</h2>
   <button className="xui-button" type="button" id="before-tags">Before tags</button>
   <Tag label="被动标签" data-testid="tag-passive"/>
   <Tag label={longTag} removeLabel="Request removal" onRemove={()=>window.mediaRemoveIntents++} data-testid="tag-long"/>
@@ -32,6 +32,6 @@ function App(){const [avatar,setAvatar]=React.useState('/media-avatar-missing.sv
   <Badge data-testid="badge" aria-describedby="metadata-full"><span>Metadata</span><span>value</span></Badge>
   <Typography.Text as="p" id="metadata-full">{longMetadata}</Typography.Text>
   <button className="xui-button" type="button" id="after-tags">After tags</button>
- </section>
+ </Surface>
  </main>;}
 window.mediaRemoveIntents=0;createRoot(document.getElementById('root')!).render(<App/>);

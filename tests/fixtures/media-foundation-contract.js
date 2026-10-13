@@ -3,7 +3,7 @@ import {createImage,createTag,createTypographyText} from '@coffeehc/xui-runtime/
 import '@coffeehc/xui-theme/style.css';
 
 const main=document.createElement('main');main.className='xui-container xui-stack';main.setAttribute('aria-labelledby','media-title');
-main.innerHTML='<h1 id="media-title">Media foundation contract</h1><section class="xui-stack" id="avatars"><h2>Avatar</h2></section><section class="xui-stack" id="images"><h2>Image</h2></section><section class="xui-stack" id="labels"><h2>Tag and Badge</h2><button class="xui-button" type="button" id="before-tags">Before tags</button></section>';
+main.innerHTML='<h1 id="media-title">Media foundation contract</h1><section class="xui-stack" id="avatars"><h2>Avatar</h2></section><section class="xui-stack" id="images"><h2>Image</h2></section><section class="xui-surface xui-stack" id="labels"><h2>Tag and Badge</h2><button class="xui-button" type="button" id="before-tags">Before tags</button></section>';
 document.getElementById('root').append(main);
 const longName='完整头像名称与原样fallback<&>'.repeat(8)+' END-AVATAR',longMessage='长替代内容须可阅读LongUnbrokenLabel'.repeat(10)+' END-IMAGE',longTag='长标签LongUnbrokenIdentifier'.repeat(12)+' END-TAG',longMetadata='完整元数据由宿主文字入口呈现LongMetadata'.repeat(12)+' END-METADATA';
 const avatarOwners=[];for(const size of ['sm','default','lg']){const node=document.createElement('span');node.dataset.testid=`avatar-${size}`;main.querySelector('#avatars').append(node);avatarOwners.push(createAvatar(node,{name:`Avatar ${size}`,src:'/media-avatar-missing.svg',fallback:'甲',size}));}
