@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createHttpClient,HttpError} from '../packages/runtime/dist/http.js';
 import {createAuthClient,authEndpoints,parseAuthSession,resolveLoginReturnTo,resolveLoginPageConfig} from '../packages/runtime/dist/auth.js';
 const user={id:'42',username:'demo',display_name:'示例用户'},session={schema_version:2,user};
-const token=(id='A')=>'bss_'+id.repeat(42)+'A';
+const token=(id='A')=>'bs-v1-sha256-access-'+id.repeat(42)+'A';
 const issued=(id='A',extra={})=>({...session,access_token:token(id),token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString(),...extra});
 const wire=(payload=null,extra={})=>({success:true,message:'',payload,request_id:'demo:request',code:200,...extra});
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json'}});
@@ -15,6 +15,27 @@ const route=url=>new URL(url).pathname.split('/').at(-1);
 const normal=async url=>json(wire(route(url)==='session'?session:route(url)==='logout'?null:issued()));
 const cleanup=({auth,http})=>{auth.destroy();http.destroy();};
 
+test('versioned access credentials accept configured prefix shapes and reject other algorithms or purposes',async()=>{
+ for(const prefix of ['bs','xagent','xapi','a','a'.repeat(32)]){
+  const access_token=`${prefix}-v1-sha256-access-`+'A'.repeat(43);
+  const client=owner(async()=>json(wire(issued('A',{access_token}))));
+  assert.deepEqual(await client.auth.login({username:'demo',password:'FAKE_PASSWORD'}),user);
+  assert(!JSON.stringify(client.auth.getState()).includes(access_token));cleanup(client);
+ }
+ for(const access_token of [
+  'bss_'+'A'.repeat(43),
+  ...['refresh','keyh','keyr'].map(kind=>`bs-v1-sha256-${kind}-`+'A'.repeat(43)),
+  'bs-v2-sha256-access-'+'A'.repeat(43),'bs-v1-none-access-'+'A'.repeat(43),
+  'bs-v1-bcrypt-access-'+'A'.repeat(43),'bs-v1-sha512-access-'+'A'.repeat(43),
+  ...['','1a','A','a-b','a_b','中文','a'.repeat(33)].map(prefix=>`${prefix}-v1-sha256-access-`+'A'.repeat(43)),
+  token().slice(0,-1)+'B',token()+'=',token()+'\n',token().slice(0,-1)
+ ]){
+  const client=owner(async()=>json(wire(issued('A',{access_token}))));
+  await assert.rejects(client.auth.login({username:'demo',password:'FAKE_PASSWORD'}),error=>error.kind==='parse');
+  assert.equal(client.auth.getState().user,null);assert.equal(client.auth.getState().reauthenticationRequired,true);cleanup(client);
+ }
+});
+
 test('strict session v2 has only safe identity; issued secrets and aliases are rejected',()=>{
  const parsed=parseAuthSession(session);assert.deepEqual(parsed,session);assert(Object.isFrozen(parsed.user));
  for(const value of [null,user,{...session,schema_version:1},issued(),{...session,user:{...user,role:'admin'}},{...session,user:{...user,id:'042'}},{...session,user:{...user,id:'9223372036854775808'}},{...session,user:{id:'42',username:'demo'}}])assert.throws(()=>parseAuthSession(value));
@@ -22,7 +43,7 @@ test('strict session v2 has only safe identity; issued secrets and aliases are r
 });
 test('strict issued DTO rejects invalid purpose format, canonical encoding, expiry and token extras without exposing values',async()=>{
  for(const extra of [{schema_version:1},{token_type:'bearer'},{access_token:'bs_'+'A'.repeat(43)},{access_token:token().slice(0,-1)+'B'},{access_token:token()+'='},{expires_at:'2099-02-30T00:00:00Z'},{expires_at:'2000-01-01T00:00:00Z'},{expires_at:'2099-01-01T00:00:00+00:00'},{refresh_token:'FAKE_PRIVATE'}]){
-  const client=owner(async()=>json(wire(issued('A',extra))));await assert.rejects(client.auth.login({username:'demo',password:'FAKE_PASSWORD'}),error=>error.kind==='parse');assert.equal(client.auth.getState().reauthenticationRequired,true);assert(!JSON.stringify(client.auth.getState()).includes('bss_'));cleanup(client);
+  const client=owner(async()=>json(wire(issued('A',extra))));await assert.rejects(client.auth.login({username:'demo',password:'FAKE_PASSWORD'}),error=>error.kind==='parse');assert.equal(client.auth.getState().reauthenticationRequired,true);assert(!JSON.stringify(client.auth.getState()).includes('bs-v1-sha256-access-'));cleanup(client);
  }
 });
 test('one owner supplies exact auth endpoint credential modes, fixed headers, Bearer isolation and safe public snapshots',async()=>{
@@ -31,7 +52,7 @@ test('one owner supplies exact auth endpoint credential modes, fixed headers, Be
  await client.http.request('/api/business/item',{method:'POST',json:{value:1}});await client.auth.refresh();await client.auth.logout();
  assert.deepEqual(requests.map(x=>[route(x.url),x.init.method]),[['login','POST'],['session','GET'],['item','POST'],['refresh','POST'],['logout','POST']]);
  for(const {url,init} of requests){const cookie=['login','refresh','logout'].includes(route(url));assert.equal(init.credentials,cookie?'same-origin':'omit');assert.equal(init.redirect,'error');assert.equal(init.headers.get('Authorization'),cookie?null:`Bearer ${token()}`);assert.equal(init.headers.get('X-CSRF-Token'),'FAKE_CSRF');}
- assert.deepEqual(JSON.parse(requests[0].init.body),{username:'demo',password:' FAKE_PASSWORD '});assert.equal(requests[1].init.body,undefined);assert.equal(requests.at(-1).init.body,'{}');assert(!JSON.stringify(client.auth.getState()).includes('bss_'));assert.equal(client.auth.getState().status,'anonymous');cleanup(client);
+ assert.deepEqual(JSON.parse(requests[0].init.body),{username:'demo',password:' FAKE_PASSWORD '});assert.equal(requests[1].init.body,undefined);assert.equal(requests.at(-1).init.body,'{}');assert(!JSON.stringify(client.auth.getState()).includes('bs-v1-sha256-access-'));assert.equal(client.auth.getState().status,'anonymous');cleanup(client);
 });
 test('fresh owner restores cookie once before session; absent recovery becomes anonymous without looping',async()=>{
  const requests=[],client=owner(async url=>{requests.push(route(url));return normal(url);});assert.deepEqual(await client.auth.currentUser(),user);assert.deepEqual(requests,['refresh','session']);cleanup(client);
@@ -55,7 +76,7 @@ test('one refresh/session waiter abort detaches while other callers get the sing
 });
 test('logout waits for an in-flight refresh cookie mutation and drops its late local identity',async()=>{
  const held=deferred(),order=[];const client=owner(async url=>{const op=route(url);order.push(op);if(op==='refresh'){await held.promise;return json(wire(issued()));}return json(wire(null));});
- const refresh=client.auth.refresh(),failure=assert.rejects(refresh,error=>error.kind==='cancel');await flush();const logout=client.auth.logout();await flush();assert.deepEqual(order,['refresh']);held.resolve();await logout;await failure;assert.deepEqual(order,['refresh','logout']);assert.equal(client.auth.getState().status,'anonymous');assert(!JSON.stringify(client.auth.getState()).includes('bss_'));cleanup(client);
+ const refresh=client.auth.refresh(),failure=assert.rejects(refresh,error=>error.kind==='cancel');await flush();const logout=client.auth.logout();await flush();assert.deepEqual(order,['refresh']);held.resolve();await logout;await failure;assert.deepEqual(order,['refresh','logout']);assert.equal(client.auth.getState().status,'anonymous');assert(!JSON.stringify(client.auth.getState()).includes('bs-v1-sha256-access-'));cleanup(client);
 });
 test('refresh conflicts and unknown/committed/lost results block automatic retry without logout or cookie cleanup',async()=>{
  for(const failure of [()=>reject(409,40901),()=>reject(503,50301),()=>reject(503,50302),()=>{throw new Error('FAKE_PRIVATE');}]){

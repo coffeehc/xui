@@ -42,7 +42,7 @@ test('共享 hex wire 经 login/refresh/session/logout，保留原凭据隔离',
  const auth=createAuthClient({http:client,idEncoding:'hex'});
  assert.equal((await auth.login(credentials)).id,'20000000000001');assert.equal((await auth.currentUser()).id,'20000000000001');assert.equal((await auth.refresh()).id,'20000000000001');await auth.logout();
  for(const {operation,init} of seen){assert.equal(init.credentials,operation==='session'?'omit':'same-origin');assert.equal(init.redirect,'error');assert.equal(init.headers.has('Authorization'),operation==='session');}
- assert(!JSON.stringify(auth.getState()).includes('bss_'));auth.destroy();client.destroy();
+ assert(!JSON.stringify(auth.getState()).includes('bs-v1-sha256-access-'));auth.destroy();client.destroy();
 });
 
 test('hex 认证各端点拒绝非法身份，未知写入关闭后不重放',async()=>{
@@ -51,7 +51,7 @@ test('hex 认证各端点拒绝非法身份，未知写入关闭后不重放',as
   const auth=createAuthClient({http:client,idEncoding:'hex'});
   if(operation==='session')await auth.login(credentials);
   await assert.rejects(operation==='login'?auth.login(credentials):operation==='refresh'?auth.refresh():auth.currentUser(),error=>error.kind==='parse');
-  assert.equal(auth.getState().user,null);assert(!JSON.stringify(auth.getState()).includes('bss_'));
+  assert.equal(auth.getState().user,null);assert(!JSON.stringify(auth.getState()).includes('bs-v1-sha256-access-'));
   if(operation!=='session'){assert.equal(auth.getState().reauthenticationRequired,true);const before=calls;await assert.rejects(auth.refresh());assert.equal(calls,before);}
   auth.destroy();client.destroy();
  }

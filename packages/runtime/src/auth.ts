@@ -48,9 +48,10 @@ export function parseAuthSession(value:unknown,idEncoding:EntityIdEncoding='deci
   return Object.freeze({schema_version:2,user:parseUser(session.user,idEncoding)});
 }
 // This secret-bearing DTO deliberately has no public parser, return value, snapshot or cache entry.
+// Match the absolute end: JavaScript $ also accepts a trailing line terminator.
 function parseIssued(value:unknown,idEncoding:EntityIdEncoding){
   const issued=object(value,['schema_version','user','access_token','token_type','expires_at']);
-  if(issued.schema_version!==2||issued.token_type!=='Bearer'||typeof issued.access_token!=='string'||!/^bss_[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/.test(issued.access_token)||typeof issued.expires_at!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/.test(issued.expires_at))throw new TypeError('Invalid auth contract');
+  if(issued.schema_version!==2||issued.token_type!=='Bearer'||typeof issued.access_token!=='string'||!/^[a-z][a-z0-9]{0,31}-v1-sha256-access-[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048](?![\s\S])/.test(issued.access_token)||typeof issued.expires_at!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/.test(issued.expires_at))throw new TypeError('Invalid auth contract');
   const expiry=Date.parse(issued.expires_at);
   if(!Number.isFinite(expiry)||expiry<=Date.now()||new Date(expiry).toISOString().slice(0,19)!==issued.expires_at.slice(0,19))throw new TypeError('Invalid auth contract');
   return {user:parseUser(issued.user,idEncoding),value:issued.access_token,expiry};

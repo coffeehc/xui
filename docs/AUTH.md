@@ -18,7 +18,7 @@
 AuthSessionV2 = `{schema_version:2,user:{id,username,display_name}}`。
 IssuedSessionV2 在上述字段之外恰有 `access_token`、`token_type:"Bearer"`、`expires_at`。该含秘密 DTO 的解析器不公开；login/refresh 返回值只有 user。`parseAuthSession` 只接受无 token 的 session DTO。
 
-用户 id 默认是正十进制 int64 字符串；`createAuthClient({http,idEncoding:"hex"})` 与 `parseAuthSession(value,"hex")` 可明确选择小写无前缀/前导零 hex。两者范围均为正 int64，不得转JS number；未知编码立即拒绝。详见 [共享实体编码](IDENTITY_ENCODING.md)。username 非空、最多128 UTF-16单元；display_name 为null或最多256单元。拒绝额外字段、getter、旧版本、角色/权限/tenant投影。`access_token` 为47字符规范 `bss_` + 43字符无padding base64url；客户端只校验形状，不凭相同前缀猜 access/refresh purpose。expires_at 为尚未到期的UTC RFC3339；服务器默认access寿命5分钟，可由后端显式配置，不将JWT解码结果当作服务端权限。
+用户 id 默认是正十进制 int64 字符串；`createAuthClient({http,idEncoding:"hex"})` 与 `parseAuthSession(value,"hex")` 可明确选择小写无前缀/前导零 hex。两者范围均为正 int64，不得转JS number；未知编码立即拒绝。详见 [共享实体编码](IDENTITY_ENCODING.md)。username 非空、最多128 UTF-16单元；display_name 为null或最多256单元。拒绝额外字段、getter、旧版本、角色/权限/tenant投影。`access_token` 使用 `<prefix>-v1-sha256-access-<secret>`：prefix 为 `[a-z][a-z0-9]{0,31}`，secret 是32字节随机值的43字符规范无padding base64url。客户端仅接受 v1、sha256 和 access 类型的结构；服务端仍按配置前缀、凭据记录及 scope 校验，不能凭标识直接授权。此处 v1 是凭据格式版本，与 HTTP DTO 的 schema_version=2 分开；sha256 是高熵凭据摘要算法，不是密码算法，也不表示 JWT。新基线不接受旧无版本格式。expires_at 为尚未到期的UTC RFC3339；服务器默认access寿命5分钟，可由后端显式配置，不将JWT解码结果当作服务端权限。
 
 用户名提交前trim；密码不trim且最多4096字符，只在POST body使用，不进入回调、URL、storage、日志或state。返回的 identity 不是授权决策依据。
 
@@ -88,6 +88,6 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 
 ## 验证与采用
 
-[共享wire fixture](../tests/fixtures/contracts/auth.v2.json)与[baseservice a10b291](https://github.com/coffeehc/baseservice/blob/a10b291b4d562b9e282399c0e3fa89dbb02bf7c8/docs/contracts/auth.v2.json)固定字节一致（配套[后端合同](https://github.com/coffeehc/baseservice/blob/a10b291b4d562b9e282399c0e3fa89dbb02bf7c8/docs/bearer-auth-v2.md)），含issued/session/logout和8类错误。unit覆盖严格DTO/凭据隔离/恢复/多401/旧代响应/取消等待者/refresh-logout排序/不确定结果/不重放。正式React与原生消费者只用公开入口和tarball。浏览器测试覆盖原生整页导航恢复、Cookie/Authorization隔离、跨tab锁与安全通知；是否真正执行成功看[本轮验证记录](AUTH_V2_VALIDATION.md)。
+[共享wire fixture](../tests/fixtures/contracts/auth.v2.json)与[baseservice 0f5dba4](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/contracts/auth.v2.json)固定字节一致（配套[后端合同](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/bearer-auth-v2.md)），含issued/session/logout和8类错误。unit覆盖严格DTO/凭据隔离/恢复/多401/旧代响应/取消等待者/refresh-logout排序/不确定结果/不重放。正式React与原生消费者只用公开入口和tarball。浏览器测试覆盖原生整页导航恢复、Cookie/Authorization隔离、跨tab锁与安全通知；是否真正执行成功看[凭据格式验证记录](CREDENTIAL_FORMAT_VALIDATION.md)（早期会话机制记录见 [AUTH_V2_VALIDATION](AUTH_V2_VALIDATION.md)）。
 
 xAgent旧token/me/state协议不会仅改baseURL就兼容；已上线消费者需要单独授权迁移，未发布项目直接采用明确新合同。产品对外hex ID使用已提供的显式 idEncoding，并与后端 facade 同步配置，不自动接受双格式。注册、密码重置、用户生命周期和业务资源策略由实际后端/身份提供方负责。本轮不改业务项目、不部署、不生成真实凭据。

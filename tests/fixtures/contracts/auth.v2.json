@@ -24,7 +24,7 @@
         "username": "fixture",
         "display_name": null
       },
-      "access_token": "bss_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "access_token": "bs-v1-sha256-access-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
       "token_type": "Bearer",
       "expires_at": "2099-10-12T12:00:00Z"
     },

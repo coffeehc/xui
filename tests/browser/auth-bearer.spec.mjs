@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-const user={id:'9007199254740993',username:'fixture',display_name:'示例用户'},access='bss_'+'A'.repeat(43);
+const user={id:'9007199254740993',username:'fixture',display_name:'示例用户'},access='bs-v1-sha256-access-'+'A'.repeat(43);
 const wire=(payload,status=200,code=status===200?200:40101)=>({success:status===200,message:'',payload,request_id:'',code});
 const issued=()=>({schema_version:2,user,access_token:access,token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString()});
 for(const kind of ['react','vanilla']){
