@@ -36,3 +36,8 @@ test('reentrant invalidation before dispatch restores only its own pending fence
  const storage=store();let a,sends=0;const set=storage.setItem;storage.setItem=(key,value)=>{set(key,value);a.auth.expire();};
  a=owner(storage,async()=>{sends++;return response();});await assert.rejects(a.auth.refresh());assert.equal(sends,0);assert.equal(storage.data.size,0);a.destroy();
 });
+test('durable fences work without secure-context randomUUID on HTTP intranet hosts',async()=>{
+ const descriptor=Object.getOwnPropertyDescriptor(globalThis,'crypto'),crypto=globalThis.crypto;
+ Object.defineProperty(globalThis,'crypto',{configurable:true,value:{getRandomValues:crypto.getRandomValues.bind(crypto)}});
+ try{const storage=store(),a=owner(storage,async()=>response(),'intranet-session','http://intranet.example');await a.auth.refresh();assert.equal(storage.data.size,0);a.destroy();}finally{Object.defineProperty(globalThis,'crypto',descriptor);}
+});
