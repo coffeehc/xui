@@ -59,3 +59,5 @@ xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/
 - 文字、复制与媒体采用 [DISPLAY](../../../docs/DISPLAY.md) 的 Typography/Copyable/Separator/Tag/Image 和原生同等构建器。复用既有 token；Copyable 只写显式授权 value、失败可见、等待写入串行；Tag 删除/后续焦点由宿主稳定 key 管理；Image 必须给 alt 与尺寸/比例，不自动重试或猜代理。正式示例/负类型/资源迟到检查见专项合同，不以 DOM 模型测试冒充浏览器验收。
 
 - 新密码规则、当前计数及本地强度建议统一复用 NewPasswordFields，见 [PASSWORD](../../../docs/PASSWORD.md)。不得复制打分算法、把弱密码提示改成额外提交门禁或把输入发给远程评分服务；字典首次懒加载失败仍按服务端 policy 正常校验。
+
+- Custom Key adapter 的领域操作身份若不符合 Base-v2 五字段（例如 rotate、opaque target、version 0），使用 API_KEY 的闭合 custom schema2 与同一公共持久 guard，不把 rotate 伪装为 create 空目标，不另造产品 IDB 锁；终态 receipt 必须匹配完整原 descriptor。Base-v2 默认严格合同保持。
