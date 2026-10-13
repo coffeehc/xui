@@ -1,6 +1,6 @@
 # 公共新密码控件
 
-baseservice 的 authenticationservice 是新设密码策略唯一维护方。xui 通过 `loadPasswordPolicy(http,{signal})` 从公开、无需登录的 `GET /api/v1/auth/password-policy` 读取 AjaxResponse payload；字段为 `version`、`minimum_characters`、`maximum_characters`、`counting_unit: unicode_code_points`。当前服务端范围是6–32，xui不内置范围默认值，加载失败/未知版本拒绝新设提交，宿主展示重试。
+baseservice 的 authenticationservice 是新设密码策略唯一维护方。xui 通过 `loadPasswordPolicy(http,{signal})` 从公开、无需登录的 `GET /api/v1/auth/password-policy` 读取 AjaxResponse payload；即使同一HttpClient已绑定auth owner及受保护API前缀，精确GET仍公开可读，省略Cookie、不获取access、不触发refresh；字段为 `version`、`minimum_characters`、`maximum_characters`、`counting_unit: unicode_code_points`。当前服务端范围是6–32，xui不内置范围默认值，加载失败/未知版本拒绝新设提交，宿主展示重试。
 
 `@coffeehc/xui-runtime/password` 提供策略解析、加载、码点计数、校验及错误映射。新密码和确认原样比较，不修剪、不归一化、不截断；中文/emoji各按实际Unicode码点计数，组合附加符号单独计数，孤立UTF-16代理项拒绝。没有复杂度、强度评分或HTML minlength/maxlength门禁；浏览器的长度按UTF-16，不适用于这里。
 
@@ -23,4 +23,4 @@ finally { fields.current?.clear(); }
 
 旧账号登录仍使用既有ConfigurableLoginPage/createLoginPage，不调用validateNewPassword。服务端独立实施新设规则及版本化bcrypt处理，客户端检查不能代替服务端认证。
 
-验证：公共策略边界、中文/英文/emoji、组合码点、不归一化、确认错误、孤立代理项、未知策略及真实loader参数；SSR检查字段/aria公共结构与无UTF16长度门禁。React/原生交互回归在tests/browser/password-fields.spec.mjs；本次系统Chromium被环境socket限制阻止启动（普通及escalated均Operation not permitted），因此该2项浏览器用例未执行。build、typecheck和4项单元/SSR测试已通过；不宣称真实后端账号已验证。
+验证：公共策略边界、中文/英文/emoji、组合码点、不归一化、确认错误、孤立代理项、未知策略及真实loader参数；SSR检查字段/aria公共结构与无UTF16长度门禁。React/原生交互回归在tests/browser/password-fields.spec.mjs；本次系统Chromium被环境socket限制阻止启动（普通及escalated均Operation not permitted），因此该2项浏览器用例未执行。build、typecheck和5项密码单元/SSR测试及31项认证/AuthPage回归已通过；不宣称真实后端账号已验证。

@@ -4,6 +4,8 @@ import * as React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {readFile} from 'node:fs/promises';
 import {parsePasswordPolicy,validateNewPassword,countPasswordCodePoints,loadPasswordPolicy} from '../packages/runtime/dist/password.js';
+import {createHttpClient} from '../packages/runtime/dist/http.js';
+import {createAuthClient} from '../packages/runtime/dist/auth.js';
 import {NewPasswordFields} from '../packages/ui-react/dist/password.js';
 
 // 测试数据是后端公开策略样例，生产组件不复制范围常量。
@@ -32,4 +34,13 @@ test('shared fields render confirmation, server limits and no HTML UTF16 length 
   assert.equal((markup.match(/type="password"/g)||[]).length,2);assert.match(markup,/确认密码/);assert.match(markup,/6–32/);assert.doesNotMatch(markup,/maxLength|minLength|pattern=|strength/i);
   const unavailable=renderToStaticMarkup(React.createElement(NewPasswordFields,{policy:null}));assert.equal((unavailable.match(/disabled=""/g)||[]).length,2);assert.match(unavailable,/密码规则暂不可用/);
   for(const path of ['packages/ui-react/src/password.tsx','packages/runtime/src/password-dom.ts']){const source=await readFile(path,'utf8');assert.doesNotMatch(source,/localStorage|sessionStorage|maxLength|minLength|\.trim\(|\.normalize\(|\.slice\(/);assert.match(source,/pagehide/);}
+});
+
+test('public policy works through the existing auth-bound transport without acquiring a session',async()=>{
+  const requests=[];
+  const http=createHttpClient({baseURL:'https://password.example',fetch:async(url,options)=>{requests.push({url,options});return new Response(JSON.stringify({success:true,code:200,message:'',request_id:'policy-fixture',payload:policy}),{headers:{'Content-Type':'application/json'}});}});
+  const auth=createAuthClient({http,protectedPaths:['/api/v1/']});
+  try {assert.deepEqual(await loadPasswordPolicy(http),policy);assert.equal(requests.length,1);assert.equal(new URL(requests[0].url).pathname,'/api/v1/auth/password-policy');assert.equal(requests[0].options.credentials,'omit');assert.equal(requests[0].options.headers.get('Authorization'),null);assert.equal(auth.getState().status,'unknown');
+    await assert.rejects(()=>http.request('/api/v1/auth/password-policy',{method:'POST'}));await assert.rejects(()=>http.request('/api/v1/auth/login'));assert.equal(requests.length,1);
+  } finally {auth.destroy();http.destroy();}
 });

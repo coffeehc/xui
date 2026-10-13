@@ -9,9 +9,10 @@ export function parsePasswordPolicy(value:unknown):Readonly<PasswordPolicy>{
   if(policy.version!==1||policy.counting_unit!=='unicode_code_points'||!Number.isSafeInteger(policy.minimum_characters)||!Number.isSafeInteger(policy.maximum_characters)||(policy.minimum_characters as number)<1||(policy.maximum_characters as number)<(policy.minimum_characters as number))throw new TypeError('Unsupported password policy');
   return Object.freeze({version:1,minimum_characters:policy.minimum_characters as number,maximum_characters:policy.maximum_characters as number,counting_unit:'unicode_code_points'});
 }
+export const passwordPolicyEndpoint='/api/v1/auth/password-policy';
 export async function loadPasswordPolicy(http:HttpClient,{signal}:{signal?:AbortSignal}={}):Promise<Readonly<PasswordPolicy>>{
   const ajax=createAjaxResponseAdapter();
-  const result=await http.request<Readonly<PasswordPolicy>>('/api/v1/auth/password-policy',{method:'GET',signal,cache:'no-store',redirect:'error',unauthorized:'ignore',endpointId:'auth.passwordPolicy',adapter:(value,context)=>{const result=ajax(value,context);return {...result,payload:parsePasswordPolicy(result.payload)};}});
+  const result=await http.request<Readonly<PasswordPolicy>>(passwordPolicyEndpoint,{method:'GET',signal,credentials:'omit',cache:'no-store',redirect:'error',unauthorized:'ignore',endpointId:'auth.passwordPolicy',adapter:(value,context)=>{const result=ajax(value,context);return {...result,payload:parsePasswordPolicy(result.payload)};}});
   return result.payload;
 }
 /** 不裁剪、归一化或截断；拒绝 JS 孤立代理项，避免 JSON/UTF-8 替换改变密码。 */
