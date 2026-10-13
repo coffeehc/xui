@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {writeFile} from 'node:fs/promises';
+import {readableFeedback} from './auth-feedback-helpers.mjs';
 
 const ready=async(page,kind)=>{await page.goto(`/login-${kind}/`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();};
 const box=locator=>locator.evaluate(element=>{const r=element.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};});
@@ -103,14 +104,13 @@ for(const kind of ['react','vanilla']){
   }
 }
 
-for(const kind of ['react','vanilla'])test(`${kind} long credential feedback remains scrollable with large-text fields and actions reachable`,async({page},info)=>{
+for(const kind of ['react','vanilla'])test(`${kind} long credential feedback is fully readable in document flow with large-text fields and actions reachable`,async({page},info)=>{
   await page.setViewportSize({width:390,height:720});await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto(`/login-${kind}/?extensions&focus&longError`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
   await page.evaluate(()=>{document.documentElement.style.fontSize='200%';window.loginDemo.setMode('login','credentials');});
   await page.getByRole('textbox',{name:'用户名',exact:true}).fill('demo');await page.getByLabel('密码').fill('FAKE_LONG_ERROR_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();
   await expect(page.getByRole('alert')).toHaveText('用户名或密码不正确，请核对当前服务地址和账户来源后再试。'.repeat(6));
-  const scroll=page.getByRole('alert');expect(await scroll.evaluate(element=>element.scrollHeight>element.clientHeight)).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight)).toBe(true);
-  for(const end of [false,true]){await scroll.evaluate((element,end)=>{element.scrollTop=end?element.scrollHeight:0;},end);await info.attach(`${kind}-long-error-${end?'end':'start'}`,{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});}
+  expect(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight)).toBe(true);await readableFeedback(page,page.getByRole('alert'),info,`${kind}-long-error`);
   await paintedFocus(page,page.getByLabel('服务地址'),info,`${kind}-long-error-first-field`);
   await paintedFocus(page,page.getByLabel('补充说明'),info,`${kind}-long-error-last-field`);
   await paintedFocus(page,page.getByRole('button',{name:'登录',exact:true}),info,`${kind}-long-error-submit`);

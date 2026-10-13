@@ -85,3 +85,14 @@ test('native recovery dialog uses the native closed-dialog skin rather than the 
  assert.match(source,/node\('dialog','xui-layer xui-native-dialog xui-alert-dialog'\)/);
  assert.doesNotMatch(source,/node\('dialog','[^']*\bxui-dialog\b/);
 });
+
+test('submission status has one live owner outside the busy button without duplicating a visible alert',()=>{
+  const busy=render({status:'anonymous',user:null,busy:'login',error:null});
+  const actions=section(busy,'xui-login-actions','footer'),button=actions.match(/<button\b[\s\S]*?<\/button>/)[0];
+  assert.match(button,/aria-busy="true"/);assert.doesNotMatch(button,/aria-live|role="status"/);
+  assert.match(actions,/<\/button><span class="xui-login-announcement" role="status" aria-live="polite" aria-atomic="true">Signing in…<\/span>/);
+  assert.doesNotMatch(section(busy,'xui-login-feedback'),/xui-alert|Signing in/);
+  const checking=render({status:'unknown',user:null,busy:'session',error:null});
+  assert.match(section(checking,'xui-login-feedback'),/Checking your sign-in…/);
+  assert.doesNotMatch(section(checking,'xui-login-actions','footer'),/role="status"/);
+});

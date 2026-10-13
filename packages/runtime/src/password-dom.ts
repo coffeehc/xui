@@ -11,7 +11,7 @@ export function createNewPasswordFields(options:NewPasswordFieldsOptions){
   const fields=[labels.password,labels.confirmation].map(label=>{
     const root=doc.createElement('div'),name=doc.createElement('label'),input=doc.createElement('input'),help=doc.createElement('p'),error=doc.createElement('p');
     root.className='xui-field';name.className='xui-label';input.className='xui-input';help.className='xui-help';error.className='xui-error';
-    input.id=generateDomId(doc,'password');name.htmlFor=input.id;name.textContent=label;input.type='password';input.autocomplete='new-password';input.required=true;
+    input.id=generateDomId(doc,'password');name.htmlFor=input.id;name.textContent=label;const required=doc.createElement('span');required.setAttribute('aria-hidden','true');required.textContent=' *';name.append(required);input.type='password';input.autocomplete='new-password';input.required=true;
     help.id=`${input.id}-help`;error.id=`${input.id}-error`;root.append(name,input,help,error);element.append(root);
     return {input,help,error};
   });

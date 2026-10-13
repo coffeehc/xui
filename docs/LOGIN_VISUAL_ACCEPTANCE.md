@@ -20,8 +20,8 @@
 | L03 | 表单内容最大384px（含四边焦点余量），标题28/36px、label14/22px、输入/主动作16/26px，输入和主按钮至少44px；标题明确大于字段 | screenshot + JSON type/rect | 未测 |
 | L04 | label→input 8px、字段之间16px、密码→登录16px；无反馈框或隐藏辅助按钮插在密码和登录之间 | idle/error/busy screenshot + gap JSON | 未测 |
 | L05 | 匿名普通页只有一个可见主登录按钮，宽度与字段一致；错误401不显示会话检查；SSO是独立次级组 | 公共 API 页面操作 + screenshots | 未测 |
-| L06 | 反馈在主按钮之后，固定轨道默认40px（32px内容及焦点余量），只随公共文字/控件token缩放；长错误局部单一滚动，不撑高卡片；不生成取消动作，重试仅有真实用途时出现，不能占主动作宽度或隐藏占行 | idle/busy/error/长错误截图，动作与反馈rect | 未测 |
-| L07 | 检查→匿名、提交→busy→错误、断网/超时/重试时品牌、字段、主动作位置/大小变化≤1.5px；长错误在局部可滚动 | 连续状态 rect JSON + screenshot；已有 error-layout 回归 | 未测 |
+| L06 | 反馈在主按钮之后，最小轨道默认40px（32px内容及焦点余量）；多行消息自然增高、完整可读，不形成单行局部滚动窗口；独立详情使用现有Disclosure且必要后果不折叠；不生成取消动作，重试仅有真实用途时出现，不能占主动作宽度或隐藏占行 | idle/busy/error/长错误截图，动作与反馈rect | 未测 |
+| L07 | 普通短检查→匿名、提交→busy→单行凭据错误时品牌/字段/主动作位置和大小变化≤1.5px；长错误/未知及恢复动作按内容增长，控件尺寸/相对顺序和DOM保持，全文可经文档滚动访问 | 连续状态 rect JSON + screenshot；已有 error-layout 回归 | 未测 |
 | L08 | unknown write / reauthenticationRequired 不出现可刷新重试，不自动 refresh/logout/重放；持久 unknown 保留门禁；operation-v1 仅同身份权威终态后允许显式重新登录，密码即时清空 | auth unit + auth-bearer/login browser HTTP counts | 未测 |
 | L09 | 1280/1600/390普通首屏主操作完整可见，无页面横向溢出；200%与短视口自然文档滚动到每个字段/动作。极端长主按钮独立限高并内部滚动，完整按钮与四边焦点仍可滚入视口，字段及操作组不困在局部小区域 | screenshot + viewport/scroll metrics；长品牌/长标签的按钮rect、内部滚动与键盘提交 | 未测 |
 | L10 | Tab顺序字段→主动作→SSO→实际局部辅助动作；不存在隐藏Tab停靠；输入、主按钮、反馈、SSO四边focus真实像素可见 | 实际键盘路径 + four-side pixel screenshot | 未测 |
@@ -107,3 +107,12 @@
 本机Chromium正常安全配置启动在process_singleton socket()返回EPERM，未产生新渲染；未添加no-sandbox或其它安全降级。新截图、几何、状态、中文字体和真实200%等待官方Chrome安全CI。静态类型/单测/构建结果在最终版本记录，不能替代视觉查看。最终交付前必须打开新旧截图对照检查比例、可读性、空白与焦点。
 
 本轮预检：source generation `1813da04f25c` 的正式build/typecheck、357-token合同及477/477单测通过；React/原生独立tarball的全部公开ESM/CSS/types、lazy strength拆包与体积门禁通过。新增视觉+既有login-visual收集52项（收集不等于执行）。真实watch重建与错误恢复通过（187.9秒）；真实安全Chrome与新截图尚待CI。随后仅增加Agent-ready研究/规范及更新AUTH的旧尺寸描述，最终提交仍由CI重跑。
+
+
+## 57c真实图像复审后的反馈可读性修复
+
+CI38413454627、SHA57c4afe2c8c7662b08922bb21382e500720d97ea的认证artifact11823253299与focused artifact11823188955已实际查看。36个默认矩阵几何无横向溢出；12个浏览器200%实例DPR1→2、innerWidth1280→640、根字号16px不变、pinch/CSS zoom均1；所看焦点图四边完整。18组短登录idle/error/busy最大几何差0px。默认native首label实际平台字体为NotoSansCJKsc-Regular（glyphCount3），标题/品牌NotoSansCJKsc-Bold；不以声明字体栈代替证据，密码/帮助未逐节点采字体。
+
+实图暴露问题：固定40px反馈使setup长错只露一行及半截下一行；根字号200%时unknown的“不能再次提交”藏在下方。测试全绿不等于结果可读。旧L06/L07的长错误固定高/局部滚动要求因此由本轮完整显示要求替代；上方历史结果仍是当时基线记录，不当作修复通过。
+
+本轮仅修公共呈现：反馈最小高而非固定高，长消息随文档自然增长；现有slot演示完整摘要+公共Disclosure独立详情；busy只在主按钮显示一次；原生必填星号与React对齐且不进入accessible name。无新主题、调色板、业务流程或认证/评分/Key协议改动。本轮新增真实图像验收要求包括unknown关键句所有行不受任何祖先裁切、长错误首尾行可经文档访问、详情Enter/Space展开/收起/回焦点、输入DOM和值不变，以及实际submitting截图。短状态仍测零位移；必要长内容增长不作为失败，但控件本身尺寸和顺序不可变。

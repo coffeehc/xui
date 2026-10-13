@@ -80,7 +80,7 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 
 ## 完整页面与扩展
 
-配置产品名称、标题、说明、可选logo、文案、safe returnTo；默认card采用居中、自然高度的单列登录框。显式fullscreen保留相同窄框，只省略外框表面与边框；两者均无左右品牌面板或分割线，尺寸统一来自[DESIGN](DESIGN.md)。主题复用已有owner，登录页不增主题选择器或持久化副本。React和原生共用布局，窄屏/短视口/200%文字自然文档滚动，字段和动作可达。主动作后的固定反馈轨道保持checking/idle/busy/error布局稳定，长错误在局部滚动；公共尺寸、品牌组合和反馈位置见[定量登录验收](LOGIN_VISUAL_ACCEPTANCE.md)。brandVisual仍是可选inert装饰内容，放在框内顶部品牌组、默认最大80px高，窄屏隐藏；不应嵌入完整登录卡片或重复登录任务标题，公共库不识别图片文字。原checkSession文案键仍可配置，默认文字为“Retry connection”，仅在安全的session读取网络/超时/服务端失败时作为局部次动作出现；凭据401/403/429与未知写入均无此入口。自动session/refresh检查只显示局部状态；共享读取的等待者取消不等于取消底层owner，因此页面不提供该阶段的取消按钮。公共登录页已删除取消按钮及专属文案/事件，扩展等待也不自动生成取消动作。卸载、pagehide 与 auth owner 的 Abort 能力仍会终止所属等待并拒绝迟到结果，保留未知写入安全语义。页面不再承担登出管理；应用内仍可通过同一auth owner显式logout。
+配置产品名称、标题、说明、可选logo、文案、safe returnTo；默认card采用居中、自然高度的单列登录框。显式fullscreen保留相同窄框，只省略外框表面与边框；两者均无左右品牌面板或分割线，尺寸统一来自[DESIGN](DESIGN.md)。主题复用已有owner，登录页不增主题选择器或持久化副本。React和原生共用布局，窄屏/短视口/200%文字自然文档滚动，字段和动作可达。主动作后的最小反馈轨道保持普通短checking/idle/busy/error布局稳定，多行消息与必要恢复动作按内容自然增长并完整可读；公共尺寸、品牌组合和反馈位置见[定量登录验收](LOGIN_VISUAL_ACCEPTANCE.md)。brandVisual仍是可选inert装饰内容，放在框内顶部品牌组、默认最大80px高，窄屏隐藏；不应嵌入完整登录卡片或重复登录任务标题，公共库不识别图片文字。原checkSession文案键仍可配置，默认文字为“Retry connection”，仅在安全的session读取网络/超时/服务端失败时作为局部次动作出现；凭据401/403/429与未知写入均无此入口。自动session/refresh检查只显示局部状态；共享读取的等待者取消不等于取消底层owner，因此页面不提供该阶段的取消按钮。公共登录页已删除取消按钮及专属文案/事件，扩展等待也不自动生成取消动作。卸载、pagehide 与 auth owner 的 Abort 能力仍会终止所属等待并拒绝迟到结果，保留未知写入安全语义。页面不再承担登出管理；应用内仍可通过同一auth owner显式logout。
 
 导航就绪要求owner为authenticated且busy为空，并且本页等待的认证/读取已成功结算。currentUser恢复access期间的refresh结果保持busy=session，最终session核对完成才发布空闲；宿主先启动读取再挂登录页与页面自行检查使用同一个flight，StrictMode重放不会增加HTTP请求。单独refresh仍按原合同完成。旧session因新access generation而失效时，页面只提供局部读取重试，不因owner保留另一份有效access而提前导航。
 
@@ -100,7 +100,7 @@ xAgent旧token/me/state协议不会仅改baseURL就兼容；已上线消费者�
 
 ## 纯认证布局 AuthPage
 
-首次管理员设置、启动错误和其他认证入口使用 `AuthPage`（React `/login`）或 `createAuthPage`（原生 `/login-dom`），由xui统一品牌组、横纵定位、由DESIGN定义的窄表单、任务标题/说明层级、内距、全宽主动作、反馈与滚动/focus。不得拼 `xui-login-*` 私有结构、给产品补定位CSS或局部修改control-height等公共尺度。既有完整登录内部复用此组合；认证client和业务API不属于布局。
+首次管理员设置、启动错误和其他认证入口使用 `AuthPage`（React `/login`）或 `createAuthPage`（原生 `/login-dom`），由xui统一品牌组、横纵定位、由DESIGN定义的窄表单、任务标题/说明层级、内距、全宽主动作、反馈与滚动/focus。feedback槽可组合现有Disclosure承载独立长详情，必要摘要和未知后果始终在折叠区外完整显示，不截断宿主消息。不得拼 `xui-login-*` 私有结构、给产品补定位CSS或局部修改control-height等公共尺度。既有完整登录内部复用此组合；认证client和业务API不属于布局。
 
 - `config: AuthPageConfig`：productName、必填title、可选description/logo/layout，沿用登录品牌校验与fullscreen/card含义。主题继承文档根，不接第二theme owner。
 - React `children` / 原生 `content`：宿主公开Field/Input等组成的内容，不传另一整个页面或嵌套form。

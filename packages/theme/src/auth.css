@@ -32,12 +32,15 @@
   .xui-login-submit>.xui-login-opening-reservation {visibility:hidden;}
   .xui-login-submit::before {content:attr(data-idle-label);visibility:hidden;}
   .xui-login-submit::after {content:attr(data-busy-label);visibility:hidden;}
+  .xui-login-announcement {position:absolute;inline-size:var(--a11y-hidden-size);block-size:var(--a11y-hidden-size);padding:0;margin:var(--a11y-hidden-offset);overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
   .xui-login-support {inline-size:min(100%,var(--login-form-inline-size));min-inline-size:0;}
-  /* A permanent compact track keeps the whole centered card stable between
-     idle, checking, busy and failure. Only the message scrolls when long. */
-  .xui-login-feedback {display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,auto);grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);align-items:center;gap:var(--space-control-gap);block-size:var(--login-feedback-block-size);min-inline-size:0;overflow:hidden;overscroll-behavior:contain;}
-  .xui-login-feedback>.xui-alert {max-block-size:100%;min-block-size:0;overflow:auto;min-inline-size:0;padding:var(--space-text-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
-  .xui-login-feedback>.xui-button {min-inline-size:0;max-block-size:100%;overflow:auto;}
+  /* Reserve only the short status minimum. Essential feedback uses natural
+     document flow: no local clipping, hidden recovery actions or scroll trap.
+     Hosts can compose the public Disclosure in the feedback slot for details. */
+  .xui-login-feedback {display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-control-gap);min-block-size:var(--login-feedback-block-size);min-inline-size:0;}
+  .xui-login-feedback>.xui-alert {flex-grow:1;flex-shrink:0;flex-basis:100%;min-inline-size:0;padding:var(--space-text-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+  .xui-login-feedback>.xui-button {min-inline-size:0;max-inline-size:100%;}
+  .xui-login-feedback>.xui-disclosure {flex-basis:100%;min-inline-size:0;}
   .xui-login-options {display:grid;gap:var(--space-control-gap);min-block-size:0;flex-shrink:0;}
   .xui-login-extension {margin:0;padding:0;border:0;min-inline-size:0;display:grid;gap:var(--space-control-gap);}
   .xui-login-extension:empty,.xui-login-actions:empty,.xui-login-options:empty {display:none;}

@@ -1168,7 +1168,11 @@ UI是人类观察系统状态和数据、直接操作并介入Agent操作的入�
 
 层级顺序为紧凑品牌身份→任务标题→可选任务说明→常显标签/字段→唯一主动作→局部反馈。品牌名采用body-sm 14/22px、600，logo32px；任务标题使用login-title-font-size/line-height，默认28/36px，随font-scale/line-height-scale与根字号缩放，600。description属于标题说明而非品牌口号，使用body-sm 14/22px，标题到说明8px；整个标题组到首字段24px。宿主标题建议使用“登录”或“创建管理员”等任务名，不重复品牌全称；显式配置仍原样保留，不猜测删词。字段label采用body-sm 14/22px、500，输入和主动作采用已有section-title的16/26px文字尺度作为清晰的控件文字（并不改变元素语义）。login-control-height默认44px由control-height-lg+space-text-gap派生；字号增大时控件自然增高。label到input8px、字段间16px、最后字段到主动作16px；字段和主动作同宽（默认376px可操作区）。帮助与错误仍body-xs 13/20px，沿用通用颜色与间距，不增加仅登录使用的调色板、字体栈或焦点规则。
 
-反馈仍在主按钮之后，login-feedback-block-size从control-height-sm与文字内容计算，默认32px内容+四边focus余量共40px。form到support不额外叠加间隔；底部按钮边缘到卡片边缘默认57px（动作focus4+反馈40+底部12+边框1），替代旧85px空白。常驻有限轨道保持checking/idle/busy/error时主布局稳定，长错误仅在自身单一局部滚动，不扩大卡片。错误关联与必要恢复动作保持原行为。普通密码登录不显示新密码规则或强度；管理员初始化在相同布局内采用NewPasswordFields。没有虚构的注册、找回密码、SSO或验证码入口。普通凭据错误没有会话核对；安全可重试读取使用反馈旁公共ghost动作；未知写入不自动refresh/logout/重放。
+反馈仍在主按钮之后，login-feedback-block-size保留现有名称但表示最小轨道高度（默认32px内容+四边focus余量共40px），不是最大高度。form到support不额外叠加间隔；默认短状态动作后余量仍57px。普通checking/idle/提交busy/单行凭据错误保持几何稳定；多行错误、未知后果与实际恢复动作按内容自然增高，字段和主动作尺寸、相对顺序与DOM不变。不得为零位移设置大块空白、固定反馈高度、裁切或要求用户在单行消息窗口内滚动。整体居中卡片可随必要内容增长而调整位置，长页使用文档自然滚动；验收须区分这种必要增长与控件重建/尺寸跳变。
+
+必要结果摘要必须完整显示，unknown中的“不能再次提交”等后果不可隐藏在详情中。宿主有独立冗长说明时，可在现有feedback slot中组合公共Disclosure/原生createDisclosureController；默认摘要仍在外部，展开有明确名称、支持Enter/Space、全文随文档滚动，收起与回焦点保留输入。公共布局不能猜截断宿主文案、另造摘要或改变业务语义；仅给了一个长消息时显示全文。不新增详情API或业务动作。反馈动作在同一反馈区域自然换行，不与长消息争夺窄小横向空间。
+
+提交忙态仅在主按钮原位显示一次状态文案并以单一live/status语义发布，配合aria-busy和既有禁重入。与按钮不同的session核对、未知、错误与恢复信息仍在反馈区域；不能为去重隐藏重要事实。React/native必填字段按已有Field惯例显示aria-hidden星号，真实required与准确可访问名称保持。普通密码登录不显示新密码规则或强度；管理员初始化采用NewPasswordFields。没有虚构的注册、找回密码、SSO或验证码入口。安全可重试读取使用公共ghost动作；未知写入不自动refresh/logout/重放。
 
 SSO显式配置时作为主动作后的次级组。极端长主动作保留完整可访问名称，login-action-max-block-size（20dvh且至少login-control-height）限制单按钮高度并可内部滚动，保留safe center与四边focus。状态标签原位切换并滚动归零；普通通知不重挂输入或按钮。登录、初始化和纯AuthPage消费同一结构和token，不允许产品私有CSS补丁。
 

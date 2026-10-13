@@ -79,14 +79,14 @@ test('login, session and application logout do not expose page cancellation acti
   noRetry(renderLogin({status:'unknown',busy:'session',error:authError('network','auth.session')}));
 });
 
-test('shared error layout is locally scrollable, token-scaled, and needs no remote fonts/icons',async()=>{
+test('feedback is token-scaled and auth text is never constrained to a clipped local slot',async()=>{
   const css=await read('packages/theme/src/feedback.css'),auth=await read('packages/theme/src/auth.css');
   for(const selector of ['.xui-feedback-slot','.xui-data-table-feedback']){
     const rules=declarations(css,selector);assert.match(rules,/(?:^|;)\s*block-size:var\(--feedback-slot-block-size\)/);assert.match(rules,/overflow:auto/);
   }
   assert.doesNotMatch(css,/\.xui-login-feedback\b/);
   const feedback=declarations(auth,'.xui-login-feedback');
-  assert.match(feedback,/block-size:var\(--login-feedback-block-size\)/);assert.match(feedback,/overflow:hidden/);assert.match(declarations(auth,'.xui-login-feedback>.xui-alert'),/max-block-size:100%.*overflow:auto/);
+  assert.match(feedback,/min-block-size:var\(--login-feedback-block-size\)/);assert.doesNotMatch(feedback,/(?:^|;)block-size:|overflow:(?:hidden|auto|clip)/);assert.doesNotMatch(declarations(auth,'.xui-login-feedback>.xui-alert'),/max-block-size:|overflow:(?:auto|hidden|clip)/);
   for(const part of ['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets'])assert.doesNotMatch(await read(`packages/theme/src/${part}.css`),/@font-face|@import\s+['"]https?:|url\(\s*['"]?https?:/i);
 });
 test('native list views only move keyed rows when their actual order changes',async()=>{

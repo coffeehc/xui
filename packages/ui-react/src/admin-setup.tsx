@@ -24,8 +24,8 @@ export function AdminSetupPage({config,state:authority,policy:input,onSubmit,lab
  return <AuthPage config={config} brandVisual={brandVisual} form={{noValidate:true,onSubmit:()=>{
  if(locked||controller.getState().status!=='idle')return;const name=username.current?.value??'';if(!name.trim()){setUsernameError(true);username.current?.focus();return;}setUsernameError(false);
  const value=password.current?.readValidatedPassword();if(value==null)return;password.current?.clear();void controller.submit({username:name,password:value});
- }}} actions={<Button type="submit" className="xui-login-submit" size="lg" disabled={locked} aria-busy={state.status==='submitting'} data-idle-label={labels.submit} data-busy-label={labels.submitting}><span>{state.status==='submitting'?labels.submitting:labels.submit}</span></Button>}
- feedback={message?<Alert tone={state.status==='unavailable'||state.rejected?'error':'info'}>{message}</Alert>:undefined}>
+ }}} actions={<><Button type="submit" className="xui-login-submit" size="lg" disabled={locked} aria-busy={state.status==='submitting'} data-idle-label={labels.submit} data-busy-label={labels.submitting}><span>{state.status==='submitting'?labels.submitting:labels.submit}</span></Button><span className="xui-login-announcement" role={state.status==='submitting'?'status':undefined} aria-live="polite" aria-atomic="true">{state.status==='submitting'?labels.submitting:''}</span></>}
+ feedback={message&&state.status!=='submitting'?<Alert tone={state.status==='unavailable'||state.rejected?'error':'info'}>{message}</Alert>:undefined}>
  <div className="xui-stack" aria-busy={state.status==='submitting'}><Field label={labels.username} required error={usernameError?labels.usernameRequired:undefined}><Input ref={username} name="username" autoComplete="username" disabled={locked} onInput={()=>setUsernameError(false)}/></Field><NewPasswordFields ref={password} policy={policy} disabled={locked} labels={passwordLabels}/></div>
  </AuthPage>;
 }
