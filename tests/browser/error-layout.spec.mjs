@@ -1,0 +1,65 @@
+import {test,expect} from '@playwright/test';
+const settle=page=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+const rectangles=async(page,selectors)=>page.evaluate(selectors=>Object.fromEntries(Object.entries(selectors).map(([key,selector])=>{const node=document.querySelector(selector),r=node.getBoundingClientRect();return [key,{x:r.x,y:r.y,width:r.width,height:r.height}];})),selectors);
+const same=(before,after)=>{for(const key of Object.keys(before))for(const dimension of ['x','y','width','height'])expect(Math.abs(after[key][dimension]-before[key][dimension]),`${key}.${dimension} is stable`).toBeLessThanOrEqual(1.5);};
+const tableSelectors={shell:'.xui-shell',head:'.xui-data-table thead',body:'.xui-data-table-body',footer:'.xui-data-table-footer',search:'input[type=search]'};
+for(const kind of ['react','vanilla']){
+  for(const layout of ['natural','workspace','document'])for(const width of [1280,390])test(`${kind} ${layout} ${width}: long request errors and retry preserve table geometry, rows, and keyboard focus`,async({page})=>{
+    await page.setViewportSize({width,height:900});await page.emulateMedia({reducedMotion:'reduce'});
+    await page.goto(`/data-table-${kind}/?layout=${layout}&long-error`);
+    await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');
+    if(width===390)await page.evaluate(()=>document.documentElement.style.setProperty('--font-scale','2'));
+    const search=page.getByRole('searchbox',{name:'搜索记录'});await search.focus();await settle(page);
+    await page.evaluate(()=>{window.savedLayoutRow=document.querySelector('.xui-data-table tbody tr');window.savedLayoutFocus=document.activeElement;window.savedLayoutScroll=[document.scrollingElement,...document.querySelectorAll('.xui-shell-main,.xui-shell-content')].filter(Boolean).map(node=>({node,top:node.scrollTop,left:node.scrollLeft}));});
+    const initial=await rectangles(page,tableSelectors);
+    await page.evaluate(()=>{window.dataTableDemo.owner.planNext({delayMs:300,fail:true});window.dataTableDemo.owner.refresh();});
+    await expect(page.locator('.xui-data-table')).toHaveAttribute('aria-busy','true');await settle(page);same(initial,await rectangles(page,tableSelectors));
+    await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('error');await settle(page);same(initial,await rectangles(page,tableSelectors));await expect(search).toBeFocused();
+    const slot=page.locator('.xui-data-table-feedback');expect(await slot.evaluate(node=>node.scrollHeight>node.clientHeight)).toBe(true);
+    expect(await page.evaluate(()=>window.savedLayoutRow===document.querySelector('.xui-data-table tbody tr')&&document.activeElement===window.savedLayoutFocus)).toBe(true);
+    // Keyboard can reach the retry at the end of a long scrollable error.
+    const retry=slot.getByRole('button',{name:'重试',exact:true});await retry.focus();await expect(retry).toBeFocused();await expect(retry).toBeInViewport();
+    await search.focus();await page.evaluate(()=>{for(const {node,top,left} of window.savedLayoutScroll){node.scrollTop=top;node.scrollLeft=left;}window.dataTableDemo.owner.retry();});await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');await settle(page);same(initial,await rectangles(page,tableSelectors));await expect(search).toBeFocused();
+    expect(await page.evaluate(()=>window.savedLayoutRow===document.querySelector('.xui-data-table tbody tr'))).toBe(true);
+  });
+  test(`${kind} first empty load, failure and retry keep header and footer in place`,async({page})=>{
+    await page.goto(`/data-table-${kind}/?manual&empty&long-error`);await settle(page);
+    const selectors={head:'.xui-data-table thead',footer:'.xui-data-table-footer',body:'.xui-data-table-body'},initial=await rectangles(page,selectors);
+    await page.evaluate(()=>{window.dataTableDemo.owner.planNext({delayMs:300,fail:true});window.dataTableDemo.owner.load();});await expect(page.locator('.xui-data-table')).toHaveAttribute('aria-busy','true');await settle(page);same(initial,await rectangles(page,selectors));
+    await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('error');await settle(page);same(initial,await rectangles(page,selectors));
+    await page.evaluate(()=>window.dataTableDemo.owner.retry());await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');await settle(page);same(initial,await rectangles(page,selectors));
+  });
+  for(const width of [1280,390])test(`${kind} ${width}: actual offline, HTTP, business, timeout and recovery preserve loaded HTTP page`,async({page,context})=>{
+    await page.setViewportSize({width,height:900});await page.emulateMedia({reducedMotion:'reduce'});await page.goto(`/http-${kind}/`);await expect(page.locator('[data-total]')).toHaveText('共 3 条');
+    const selectors={shell:'.xui-shell',head:'thead',table:'.xui-table-container',filter:'#http-name',pagination:'.xui-data-region .xui-pagination'};
+    const input=page.getByRole('textbox',{name:'名称',exact:true});await input.fill('保留的输入');await input.focus();await settle(page);const initial=await rectangles(page,selectors),records=await page.locator('tbody').innerText();
+    const refresh=()=>page.evaluate(()=>{void window.httpDemo.owner.resource.retry();});
+    await context.setOffline(true);await refresh();await expect(page.getByRole('alert')).toContainText('读取失败');await settle(page);same(initial,await rectangles(page,selectors));await expect(input).toBeFocused();expect(await page.locator('tbody').innerText()).toBe(records);
+    await context.setOffline(false);await refresh();await expect(page.getByRole('alert')).toHaveCount(0);await expect(page.getByRole('region',{name:'记录结果',exact:true})).toHaveAttribute('aria-busy','false');await settle(page);same(initial,await rectangles(page,selectors));
+    let mode='http';const held=[];await page.route('**/api/xui-example/records?*',async route=>{if(mode==='timeout'){await new Promise(resolve=>held.push(async()=>{await route.abort().catch(()=>{});resolve();}));return;}await route.fulfill({status:mode==='http'?503:200,contentType:'application/json',body:JSON.stringify({success:false,code:9001,message:'DO_NOT_EXPOSE_SERVER_DETAIL',payload:null,request_id:'fixture'})});});
+    for(mode of ['http','business','timeout']){await refresh();await expect.poll(()=>page.evaluate(()=>window.httpDemo.owner.resource.getState().error?.kind)).toBe(mode==='http'?'http':mode);await expect(page.getByRole('alert')).toContainText('读取失败');await expect(page.getByRole('region',{name:'记录结果',exact:true})).toHaveAttribute('aria-busy','false');await settle(page);same(initial,await rectangles(page,selectors));await expect(input).toBeFocused();expect(await page.locator('tbody').innerText()).toBe(records);await expect(page.getByRole('alert')).not.toContainText('DO_NOT_EXPOSE');}
+    for(const release of held)await release();await page.unroute('**/api/xui-example/records?*');await refresh();await expect(page.getByRole('alert')).toHaveCount(0);await settle(page);same(initial,await rectangles(page,selectors));await expect(input).toHaveValue('保留的输入');
+  });
+  for(const width of [1280,390])test(`${kind} ${width}: long login errors and busy labels never resize fields or primary actions`,async({page})=>{
+    await page.setViewportSize({width,height:900});await page.emulateMedia({reducedMotion:'reduce'});await page.goto(`/login-${kind}/?longError`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
+    if(width===390)await page.evaluate(()=>document.documentElement.style.setProperty('--font-scale','2'));
+    const selectors={brand:'.xui-login-brand',username:'input[name=username]',password:'input[name=password]',submit:'.xui-login-submit',actions:'.xui-login-actions'};
+    await settle(page);const initial=await rectangles(page,selectors);
+    for(const mode of ['credentials','network','business','hold']){
+      await page.evaluate(mode=>window.loginDemo.setMode('login',mode),mode);await page.getByRole('textbox',{name:'用户名',exact:true}).fill('demo');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();
+      if(mode==='hold'){await expect(page.getByRole('button',{name:'正在登录…',exact:true})).toBeDisabled();await settle(page);same(initial,await rectangles(page,selectors));}
+      await expect(page.getByRole('alert')).toBeVisible();await settle(page);same(initial,await rectangles(page,selectors));await expect(page.getByLabel('密码')).toHaveValue('');
+      await expect(page.getByRole('button',{name:'取消等待',exact:true})).toHaveCount(0);
+    }
+    await page.evaluate(()=>window.loginDemo.release('login'));await page.evaluate(()=>window.loginDemo.setMode('login','ok'));await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByText('已登录: 示例用户',{exact:true})).toBeVisible();
+  });
+  for(const type of ['api-key','business-log','log'])test(`${kind} ${type}: retained row action survives failed refresh and recovery at identical geometry`,async({page})=>{
+    await page.setViewportSize({width:1280,height:900});await page.goto(`/${type}-${kind}/`);await expect(page.locator('tbody tr').first()).toBeVisible();
+    const demo=type==='api-key'?'apiKeyDemo':type==='business-log'?'businessLogDemo':'logDemo',operation=type==='log'?'groups':'list';
+    const action=page.locator('tbody tr').first().getByRole('button').first();await action.focus();await settle(page);const selectors={table:'.xui-table-container',head:'thead',action:'tbody tr button'},initial=await rectangles(page,selectors);
+    await page.evaluate(({demo,operation})=>{const owner=window[demo];window.savedPageAction=document.activeElement;if(owner.setBehavior)owner.setBehavior(operation,'error');else owner.setMode(operation,'error');void owner.controller.refresh();},{demo,operation});
+    await expect(page.getByRole('alert')).toBeVisible();await settle(page);same(initial,await rectangles(page,selectors));await expect(action).toBeFocused();
+    await page.evaluate(({demo,operation})=>{const owner=window[demo];if(owner.setBehavior)owner.setBehavior(operation,'ok');else owner.setMode(operation,'ok');void owner.controller.refresh();},{demo,operation});
+    await expect(page.getByRole('alert')).toHaveCount(0);await settle(page);same(initial,await rectangles(page,selectors));await expect(action).toBeFocused();expect(await page.evaluate(()=>document.activeElement===window.savedPageAction)).toBe(true);
+  });
+}

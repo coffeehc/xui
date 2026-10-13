@@ -186,3 +186,9 @@ Playwright 用真实浏览器量测组件/body/footer rect、clientHeight/scroll
 本次变更的差距、处理、未验证风险和执行状态见 [高度与分页组合验证记录](DATA_TABLE_LAYOUT_VALIDATION.md)。
 
 ACL/权限过滤后的有界扫描可连续返回空 list 与非空 next_cursor；这仍可继续翻页，不保证下一页含记录，也不表示剩余数量。仅显式 null 是 cursor 末页。DataTable 不因空行禁用下一页，React/原生都有独立回归；此补充不改变共享 fixture 的字节或 hash。
+
+## 请求失败时的几何稳定
+
+状态反馈行在 idle/ready/loading/refreshing/error 时始终占位，以共享 `--feedback-slot-block-size`（一行控件、公共内距及焦点空间）约束本地反馈，而不是固定整页高度。长错误、自定义 feedback 或重试按钮在该区域内滚动且可通过键盘到达，不撑开 frame、不挤动既有表头、行、页脚。零行的 loading/idle/empty/error 使用同一个局部占位区；底栏持续显示真实 rowCount/total，不把长错误再次塞进计数区域。
+
+现有行是否保留仍由宿主 rows 决定：普通同资源刷新应保留已确认事实；权限撤销、退出、租户或资源切换应按领域/认证规则清空，无权通过本组件继续展示。组件不缓存数据、不创建网络请求或离线 owner。见 [失败布局验证与边界](ERROR_LAYOUT_VALIDATION.md)。

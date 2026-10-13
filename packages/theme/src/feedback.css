@@ -9,6 +9,13 @@
 @layer xui-components {
   .xui-state {display:flex;align-items:flex-start;flex-direction:column;gap:var(--space-control-gap);padding:var(--space-content-gap);overflow-wrap:anywhere;animation:xui-feedback var(--motion-duration) var(--motion-easing);}
   .xui-state-error {color:var(--status-error-foreground);background:var(--status-error-soft);border-radius:var(--radius-lg);}
+  /* A local, token-scaled status track is present before requests start. Long
+     messages scroll here; they never resize the surrounding page or table. */
+  .xui-feedback-slot,.xui-data-table-feedback,.xui-login-feedback {block-size:var(--feedback-slot-block-size);min-block-size:var(--feedback-slot-block-size);min-inline-size:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:calc(var(--focus-width) + var(--focus-offset));scroll-padding:calc(var(--focus-width) + var(--focus-offset));}
+  .xui-feedback-slot .xui-state,.xui-data-table-feedback .xui-state {flex-direction:row;flex-wrap:wrap;align-items:center;}
+  .xui-feedback-slot :is(button,a,[tabindex]),.xui-data-table-feedback :is(button,a,[tabindex]) {scroll-margin:calc(var(--focus-width) + var(--focus-offset));}
+  .xui-feedback-slot:empty {overflow:hidden;}
+  .xui-reserved-action[data-inactive='true'] {visibility:hidden;pointer-events:none;}
   .xui-data-region {min-inline-size:0;min-block-size:var(--data-region-min-block-size);}
   .xui-data-region[aria-busy='true'] {border-color:var(--surface-line-strong);}
   .xui-skeleton {min-block-size:var(--control-height);inline-size:100%;background:var(--muted);border-radius:var(--radius-md);animation:xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate;}

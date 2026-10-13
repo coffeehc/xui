@@ -18,9 +18,16 @@
   /* Keep wrapped feedback inside its grid row so end padding remains scrollable. */
   .xui-login-body {overflow:auto;min-block-size:0;display:grid;grid-auto-rows:max-content;align-content:start;gap:var(--space-section-gap);overflow-wrap:anywhere;}
   .xui-login-body h1,.xui-login-body p {margin:0;}
-  .xui-login-feedback {min-block-size:var(--login-feedback-min-block-size);}
+  .xui-login-feedback {block-size:var(--login-feedback-min-block-size);min-block-size:var(--login-feedback-min-block-size);}
+  .xui-login-feedback>.xui-alert {max-block-size:100%;overflow:auto;scrollbar-gutter:stable;}
   .xui-login-actions {display:flex;flex-wrap:wrap;gap:var(--space-control-gap);flex-shrink:0;min-inline-size:0;max-block-size:var(--login-actions-max-block-size);overflow:auto;}
   .xui-login-actions>.xui-button {flex:1;min-inline-size:0;max-block-size:var(--login-action-max-block-size);overflow:auto;align-items:safe center;}
+  /* Both localized labels contribute to intrinsic size, including while hidden.
+     Only the real span is announced, so busy text cannot resize the primary action. */
+  .xui-login-actions>.xui-login-submit {display:grid;}
+  .xui-login-submit>span,.xui-login-submit::before,.xui-login-submit::after {grid-row:1;grid-column:1;min-inline-size:0;}
+  .xui-login-submit::before {content:attr(data-idle-label);visibility:hidden;}
+  .xui-login-submit::after {content:attr(data-busy-label);visibility:hidden;}
   .xui-login-extension {margin:0;padding:0;border:0;min-inline-size:0;display:grid;gap:var(--space-control-gap);}
   .xui-login-extension:empty {display:none;}
   @media (max-width:47.999rem) {

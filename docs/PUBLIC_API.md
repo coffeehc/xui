@@ -91,7 +91,7 @@
 | Sheet/AlertDialog/ContextMenu | Sheet默认end，确认initialFocus由宿主或安全取消/中性节点；context rightclick/Shift+F10，checked状态宿主拥有；details.cancel/finalFocus/嵌套生命周期见[COMPOSITIONS](COMPOSITIONS.md) |
 | Toast | 原生按 id 去重、默认限额 5（limit 可覆盖且至少 1），未给 timeoutMs 不自动消失；显式 timeout 由 performance.now 计时，hover/focus 暂停。React Provider/manager props 保留 peer 默认，不伪称两套计时行为相同；必要错误就地持续可见 |
 | Table/layout | 真实标准元素、header cell 默认 scope=col；TableContainer 为可聚焦 region，宿主给名字。SortButton type=button；striped/expandedRow/ExpandedRow/ExpandButton与逻辑stickyOffset公开；排序/选择/查询/虚拟化不由库执行。PageHeader 主标题和 actions，AppShell 默认抽屉关闭 |
-| feedback/resource | Alert 默认 info/status，error 为 alert；DataRegion busy=false；LoadingState 默认 Loading…，ErrorState 默认 Retry。resource 初始 idle、isEmpty 未声明不猜空、无 timeout/cache/请求或自动 retry；换 key 清旧值、同 key 刷新保留，hooks 只订阅 |
+| feedback/resource | Alert 默认 info/status，error 为 alert；DataRegion busy=false；显式传 feedback（含 null）时保留局部反馈槽，原生可用公开 xui-feedback-slot；LoadingState 默认 Loading…，ErrorState 默认 Retry。resource 初始 idle、isEmpty 未声明不猜空、无 timeout/cache/请求或自动 retry；换 key 清旧值、同 key 刷新保留，hooks 只订阅 |
 | MetricCard | label/value 必填且原样显示（保留0）；marker默认无、空内容不占位；section/dl/dt/dd为被动展示，未内置按钮/live角色。复用Surface/stat tokens，排列仍由Grid；[合同](METRIC_CARD.md) |
 | HTTP | 默认 GET、response=ajax、same-origin credentials、Go success=true，code 为业务元数据；普通30秒/blob120秒预算，无自动重试。空/false/null payload 合法。响应模式、headers、认证/错误/重试适配与预算见 HTTP 合同，写操作不自动重放 |
 | webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list + 可选 total/next_cursor；总数缺省未知，游标缺省未声明、null明确末页，见 LIST_PAGINATION |

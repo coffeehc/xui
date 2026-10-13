@@ -40,8 +40,8 @@ test('native slot cleanup is once-only even when one host cleanup throws',()=>{
 test('native replacing a Node with identical text removes the old interactive semantics',()=>{
   const {root,doc}=navigationDOM(),button=doc.createElement('button');button.textContent='Same';const owner=createDataTable(root,{...base,columns:[{id:'name',header:button,cell:()=> 'First'}]});owner.update({columns:[{id:'name',header:'Same',cell:()=> 'First'}]});assert.equal(root.querySelector('thead').textContent,'Same');assert.equal(root.querySelector('thead').querySelector('button'),null);owner.destroy();
 });
-test('native optional slots hide empty strings and retain numeric zero',()=>{
-  const {root}=navigationDOM(),owner=createDataTable(root,{...base,toolbar:'',feedback:'',footer:''});assert.equal(root.querySelector('.xui-data-table-tools').hidden,true);assert.equal(root.querySelector('.xui-data-table-feedback').hidden,true);assert.equal(root.querySelector('.xui-data-table-footer-extra').hidden,true);owner.update({toolbar:0,feedback:0,footer:0});for(const name of ['tools','feedback','footer-extra']){assert.equal(root.querySelector('.xui-data-table-'+name).hidden,false);assert.equal(root.querySelector('.xui-data-table-'+name).textContent,'0');}owner.destroy();
+test('native optional slots hide empty strings, reserve the status track and retain numeric zero',()=>{
+  const {root}=navigationDOM(),owner=createDataTable(root,{...base,toolbar:'',feedback:'',footer:''});assert.equal(root.querySelector('.xui-data-table-tools').hidden,true);assert.equal(root.querySelector('.xui-data-table-feedback').hidden,false);assert.equal(root.querySelector('.xui-data-table-footer-extra').hidden,true);owner.update({toolbar:0,feedback:0,footer:0});for(const name of ['tools','feedback','footer-extra']){assert.equal(root.querySelector('.xui-data-table-'+name).hidden,false);assert.equal(root.querySelector('.xui-data-table-'+name).textContent,'0');}owner.destroy();
 });
 
 test('native width tracks update, reorder, hide and clear without replacing retained rows or slots',()=>{

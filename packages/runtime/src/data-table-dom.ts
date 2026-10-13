@@ -45,8 +45,8 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
   const retry=node('button','xui-button'),error=node('div','xui-state xui-state-error'),errorTitle=node('strong','xui-strong');error.setAttribute('role','alert');retry.type='button';retry.dataset.variant='outline';error.append(errorTitle,retry);
   const loading=node('div','xui-state'),spinner=node('span','xui-spinner'),loadingText=node('span');loading.setAttribute('role','status');spinner.setAttribute('aria-hidden','true');loading.append(spinner,loadingText);
   const empty=node('div','xui-state'),emptyTitle=node('strong','xui-strong');empty.append(emptyTitle);
-  const placeholderRow=node('tr','xui-table-row'),placeholderCell=node('td');placeholderRow.append(placeholderCell);
-  const skeletonRows=Array.from({length:5},()=>{const tr=node('tr','xui-table-row'),td=node('td'),skeleton=node('div','xui-skeleton');skeleton.setAttribute('aria-hidden','true');td.append(skeleton);tr.append(td);return tr;});
+  const placeholderRow=node('tr','xui-table-row'),placeholderCell=node('td'),placeholderContent=node('div','xui-data-table-placeholder');placeholderCell.append(placeholderContent);placeholderRow.append(placeholderCell);
+  const skeletons=Array.from({length:5},()=>{const skeleton=node('div','xui-skeleton');skeleton.setAttribute('aria-hidden','true');return skeleton;});
   body.tabIndex=0;body.setAttribute('role','region');count.setAttribute('aria-live','polite');position.setAttribute('aria-live','polite');size.dataset.controlSize='default';previous.type=next.type='button';
   head.append(headerRow);table.append(colgroup,head,tbody);widthProbes.setAttribute('aria-hidden','true');body.append(widthProbes,table);sizeField.append(sizeLabel,size);pagination.append(previous,position,next);footer.append(count,sizeField,pagination,extra);frame.append(tools,feedback,body,footer);root.classList.add('xui-data-region','xui-data-table');root.setAttribute('role','region');root.replaceChildren(frame);
   const arrange=(parent:HTMLElement,children:HTMLElement[])=>{children.forEach((child,index)=>{if(parent.children[index]!==child)parent.insertBefore(child,parent.children[index]??null);});for(const child of Array.from(parent.children))if(!children.includes(child as HTMLElement))child.remove();};
@@ -98,7 +98,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     errorTitle.textContent=labels.error;retry.textContent=labels.retry;retry.hidden=!options.onRetry;retry.disabled=state.blocked;emptyTitle.textContent=options.filtered?labels.noMatches:labels.empty;loadingText.textContent=hasRows?labels.refreshing:labels.loading;
     const hasStatus=hasRows&&(state.busy||state.status==='error'),hasFeedback=options.feedback!==undefined&&options.feedback!==null&&options.feedback!=='';
     content(statusFeedback,hasStatus?(state.status==='error'?options.errorState??error:loading):null);statusFeedback.hidden=!hasStatus;
-    content(customFeedback,options.feedback);customFeedback.hidden=!hasFeedback;feedback.hidden=!hasStatus&&!hasFeedback;
+    content(customFeedback,options.feedback);customFeedback.hidden=!hasFeedback;
     const headerNodes=options.columns.map(column=>{let th=headers.get(column.id);if(!th){th=node('th');th.scope='col';headers.set(column.id,th);}content(th,column.header);if(column.ariaSort)th.setAttribute('aria-sort',column.ariaSort);else th.removeAttribute('aria-sort');if(column.sticky)th.dataset.sticky=column.sticky;else delete th.dataset.sticky;return th;});arrange(headerRow,headerNodes);for(const id of headers.keys())if(!options.columns.some(column=>column.id===id))headers.delete(id);
     const rowNodes:HTMLTableRowElement[]=[];
     options.rows.forEach((row,index)=>{
@@ -128,11 +128,11 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     for(const [key,entry]of rows)if(!keys.includes(key)){if(entry.element.contains(doc.activeElement))body.focus();for(const cell of entry.cells.values())releaseCell(cell);rows.delete(key);}
     placeholderCell.colSpan=options.columns.length;
     if(!hasRows){
-      if(state.busy){for(const tr of skeletonRows)(tr.firstElementChild as HTMLTableCellElement).colSpan=options.columns.length;content(placeholderCell,loading);rowNodes.push(...skeletonRows,placeholderRow);}
-      else {const idle=node('div','xui-state');idle.setAttribute('role','status');idle.textContent=labels.idle;content(placeholderCell,state.status==='error'?options.errorState??error:state.status==='idle'?idle:options.emptyState??empty);rowNodes.push(placeholderRow);}
+      if(state.busy){placeholderContent.replaceChildren(loading,...skeletons);rowNodes.push(placeholderRow);}
+      else {const idle=node('div','xui-state');idle.setAttribute('role','status');idle.textContent=labels.idle;content(placeholderContent,state.status==='error'?options.errorState??error:state.status==='idle'?idle:options.emptyState??empty);rowNodes.push(placeholderRow);}
     }
     arrange(tbody,rowNodes);
-    count.textContent=state.status==='loading'&&!hasRows?labels.loading:state.status==='idle'&&!hasRows?labels.idle:state.status==='error'&&!hasRows?labels.error:labels.count({rowCount:options.rows.length,total:state.total});
+    count.textContent=labels.count({rowCount:options.rows.length,total:state.total});
     sizeField.hidden=!page;sizeLabel.textContent=labels.pageSize;size.setAttribute('aria-label',labels.pageSize);size.disabled=state.blocked||!page?.onPageSizeChange;
     const currentSizes=Array.from(size.children).map(option=>(option as HTMLOptionElement).value).join(',');if(currentSizes!==state.sizes.join(','))size.replaceChildren(...state.sizes.map(value=>{const option=node('option');option.value=String(value);option.textContent=String(value);return option;}));size.value=String(page?.pageSize??'');
     const cursor=page?.mode==='cursor';

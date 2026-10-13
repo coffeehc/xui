@@ -57,7 +57,7 @@ function App(){
     meta={<p>125 条合成记录；不连接业务服务。<output aria-label="查看结果">{inspected}</output></p>}
     actions={noActions?undefined:<><Button onClick={()=>owner.refresh()} disabled={state.busy}>刷新</Button><Button variant="outline" onClick={()=>owner.refresh(true)} disabled={state.busy}>模拟失败</Button><Button variant="outline" onClick={restore} disabled={state.busy}>恢复记录</Button><Button variant="outline" onClick={owner.cancel} disabled={!state.busy}>取消请求</Button></>}/>;
   const table=<DataTable id="records-table" label="合成记录表格" layout={layout} rows={state.rows} columns={visibleColumns} rowKey={rowKey}
-    status={state.status} filtered={state.filtered} labels={tableLabels} onRetry={owner.retry} striped
+    status={state.status} filtered={state.filtered} labels={query.has('long-error')?{...tableLabels,error:tableLabels.error.repeat(30)}:tableLabels} onRetry={owner.retry} striped
     toolbar={internal?toolbar:undefined}
     feedback={query.has('nested-feedback')?<table aria-label="辅助表格"><tbody><tr><td>嵌套反馈</td></tr></tbody></table>:undefined}
     pagination={query.has('no-pagination')?undefined:query.has('cursor')?{mode:'cursor',nextCursor:state.nextCursor,hasPrevious:state.hasPrevious,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onNext:owner.next,onPrevious:owner.previous,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}}/>;

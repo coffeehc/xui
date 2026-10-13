@@ -124,3 +124,11 @@ NavigationMenu 的 renderButton/renderAction 与原生 NavigationMenuDOMOptions 
 DataTable系列使用正式/data-table与/data-table-dom入口，复用既有Table/Toolbar/Field/Pagination/DataRegion和page slots。共享DataTableLayout从runtime/data-table、runtime/data-table-dom、React/data-table与两包根导出。React DataTable/原生createDataTable默认layout='natural'，少量/零行按内容收缩，以max-block-size:100%对真实有界父级限高，只有表体滚动；auto高度父级中仍自然增长，不能凭百分比创造视口。显式workspace保持旧填满与最小高度，document即使在有界父级也不采用该上限。旧默认调用若依赖填满，须显式设置workspace；shell的公开内容区下限token与scrollMode默认不变。
 
 内部toolbar、反馈、表体、footer统一在同一frame，外部pageToolbar仍可替代内部toolbar，同组筛选只放一处。统一计数/条数/Pagination footer和表体滚动属于库，data/columns/actions/rights/query仍由宿主提供；既有受控分页不建立第二个owner。本地分页由宿主切片并发布真实total/page facts，服务端分页使用确认响应且不二次切片；null total明确不启用编号分页。原生keyed row与cell slot.update/destroy保留生命周期，见[完整合同](DATA_TABLE.md)。公共footer原本已在frame内，不证明旧XAgent已升级；本次不修改XAgent消费者。顶栏locale装饰箭头、无框状态与controls/account尺度见[顶栏控件](HEADER_CONTROLS.md)。
+
+## 局部失败反馈与离线边界
+
+React DataRegion 只在调用方提供 feedback prop（包含 null）时常驻一个反馈槽；原生同角色使用公开 `.xui-feedback-slot`。共用 `--feedback-slot-block-size`，由已有字体/控件/内距/焦点 token 派生；错误完整保留，可在局部滚动并通过键盘访问动作。`.xui-reserved-action[data-inactive='true']` 仅隐藏辅助动作的绘制，调用方同时设置 aria-hidden、tabIndex=-1 与 disabled，不得保留不可见可交互控件。
+
+DataTable 双端始终保留其状态行；登录页保留反馈与辅助动作位置，并用闲置/忙状态文案的实际尺寸约束主动作。API Key 与两类日志在现有页面局部显示请求反馈；原生列表只在实际顺序改变时移动 keyed 行，失败和同记录恢复不重建行控件。API Key 未知写入仍失败关闭，瞬时 secret 释放规则、认证与权限撤销不变。
+
+这保证已加载应用在请求失败时的结构稳定，不保证首次从未加载资源且完全离线时可用。核心主题 CSS/字体/图标不依赖远端 CDN，但宿主配置的 logo、图片或延迟模块仍依赖其资源可用性。不增加 Service Worker、凭据持久化或自动重放。实际验证范围见 [失败布局验证](ERROR_LAYOUT_VALIDATION.md)。
