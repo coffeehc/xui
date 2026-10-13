@@ -1,3 +1,5 @@
+import {createAuthRecovery,type AuthRecoveryOptions} from './auth-recovery.js';
+export type {AuthRecoveryOptions} from './auth-recovery.js';
 import {passwordPolicyEndpoint} from './password.js';
 import {HttpError,createAjaxResponseAdapter,ajaxErrorResponseAdapter,isHttpError,type HttpClient} from './http.js';
 import {authRequest,bindHttpAuth,inspectHttp,type AccessLease,type AuthOperation} from './http-auth-internal.js';
@@ -19,6 +21,8 @@ export interface AuthState {
 }
 export interface AuthClientOptions {
   http:HttpClient;timeoutMs?:number;
+  /** Omitted: legacy memory-only fencing. Configure for reload-safe cookie mutations. */
+  recovery?:AuthRecoveryOptions;
   /** 显式身份编码，默认 decimal；配置后不可自动接受另一种格式。 */
   idEncoding?:EntityIdEncoding;
   /** Explicit same-origin business routes: exact paths, or slash-terminated subtree prefixes. */
@@ -82,7 +86,7 @@ export function resolveLoginReturnTo(value:string|null|undefined,fallback='/'):s
 }
 
 /** One private access-token owner attached to the existing transport. No persistent token storage. */
-export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncoding='decimal'}:AuthClientOptions):AuthClient{
+export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncoding='decimal',recovery:recoveryOptions}:AuthClientOptions):AuthClient{
   parseEntityId('1',idEncoding);
   if(!http||!inspectHttp(http)||inspectHttp(http)!.binding)throw new TypeError('Provide one unbound shared xui HTTP client');
   if(!Number.isFinite(timeoutMs)||timeoutMs<=0||timeoutMs>2147483647)throw new RangeError('Invalid auth timeout');
@@ -94,7 +98,8 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
   const sessionAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseAuthSession(result.payload,idEncoding)};};
   const issuedAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseIssued(result.payload,idEncoding)};};
   const logoutAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);if(result.payload!==null)throw new TypeError('Invalid logout contract');return {...result,payload:null};};
-  let state:Readonly<AuthState>=Object.freeze({status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:false});
+  const recovery=createAuthRecovery(inspectHttp(http)!.origin,recoveryOptions);
+  let state:Readonly<AuthState>=Object.freeze({status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:recovery?.blocked()??false});
   let dead=false,version=0,generation=0,access:{value:string;expiry:number;generation:number}|undefined,bootstrapped=false;
   const listeners=new Set<()=>void>();
   let active:{operation:'login'|'logout';controller:AbortController;version:number}|undefined;
@@ -105,10 +110,10 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
   const emit=(patch:Partial<AuthState>)=>{state=Object.freeze({...state,...patch});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* Views cannot change credential handling. */}};
   const clear=()=>{access=undefined;generation++;};
   const current=(revision:number)=>!dead&&revision===version;
-  const invalidate=(status:AuthState['status'],required=false,error:HttpError|null=null)=>{version++;clear();sessionController?.abort();refreshController?.abort();active?.controller.abort();active=undefined;emit({status,user:null,busy:null,error,reauthenticationRequired:required});};
+  const invalidate=(status:AuthState['status'],required=false,error:HttpError|null=null)=>{required=required||(recovery?.blocked()??false);version++;clear();sessionController?.abort();refreshController?.abort();active?.controller.abort();active=undefined;emit({status,user:null,busy:null,error,reauthenticationRequired:required});};
   const coordination=createAuthCoordination(inspectHttp(http)!.origin,event=>{
     if(dead||event.kind==='refresh')return; // Rotation preserves live sibling access tokens.
-    invalidate(event.kind==='logout'?'anonymous':'unknown');bootstrapped=event.kind==='logout';
+    invalidate(event.kind==='logout'?'anonymous':'unknown',recovery?.blocked()??false);bootstrapped=event.kind==='logout';
   });
   const wait=<T>(promise:Promise<T>,signal?:AbortSignal):Promise<T>=>{
     if(!signal)return promise;if(signal.aborted)return Promise.reject(errorFor());
@@ -127,7 +132,22 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
     const timer=setTimeout(()=>{timedOut=true;controller.abort();},timeoutMs);
     let stop:()=>void=()=>{};
     const cancelled=new Promise<never>((_,reject)=>{stop=()=>reject(timedOut?new HttpError('timeout',{attempts:0,endpointId:`auth.${operation}`}):errorFor('cancel',operation));if(controller.signal.aborted)stop();else controller.signal.addEventListener('abort',stop,{once:true});});
-    const request=coordination.run(async()=>{check(revision,controller.signal);const result=await cookieRequest(operation,json,controller.signal);check(revision,controller.signal);const accepted=accept(result.payload);coordination.publish(operation);return accepted;});
+    const request=coordination.run(async()=>{
+      check(revision,controller.signal);
+      const attempt=recovery?.begin(operation);
+      // begin() is synchronous; a storage callback may still invalidate this owner.
+      // No dispatch has occurred, so this attempt can safely restore its prior fence.
+      try{check(revision,controller.signal);}catch(error){attempt?.denied();throw error;}
+      let result;
+      try{result=await cookieRequest(operation,json,controller.signal);}catch(error){
+        check(revision,controller.signal);
+        if(isHttpError(error)&&error.kind==='http'&&operation==='login'&&error.status!==undefined&&error.status>=400&&error.status<500&&error.status!==409)attempt?.denied();
+        else if(isHttpError(error)&&error.kind==='http'&&operation==='refresh'&&error.status===401)attempt?.complete();
+        throw error;
+      }
+      check(revision,controller.signal);attempt?.complete();check(revision,controller.signal);
+      const accepted=accept(result.payload);coordination.publish(operation);return accepted;
+    });
     return Promise.race([request,cancelled]).finally(()=>{clearTimeout(timer);controller.signal.removeEventListener('abort',stop);});
   };
   const recover=():Promise<Readonly<AuthUser>|null>=>{
@@ -140,7 +160,7 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
       return coordinatedRequest('refresh',{},controller,revision,payload=>received(payload as ReturnType<typeof parseIssued>,revision));
     }).catch(value=>{
       const error=normalize(value,'refresh');if(!current(revision))throw errorFor();clear();
-      if(error.status===401){http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});return null;}
+      if(error.kind==='http'&&error.status===401&&!(recovery?.blocked()??false)){http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});return null;}
       // Never retry an unknown rotation or destroy the recovery family as cleanup.
       emit({status:'unknown',user:null,busy:null,error,reauthenticationRequired:true});throw error;
     }).finally(()=>{if(refreshFlight===flight){refreshFlight=undefined;refreshController=undefined;}});
@@ -206,7 +226,7 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
         bootstrapped=true;http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});check(revision);return null;
       });
     }catch(value){const error=normalize(value,operation);if(!current(revision)||active?.version!==revision)throw errorFor();active=undefined;
-      const denied=operation==='login'&&error.status!==undefined&&error.status>=400&&error.status<500&&error.status!==409;
+      const denied=operation==='login'&&error.kind==='http'&&error.status!==undefined&&error.status>=400&&error.status<500&&error.status!==409;
       if(denied){access=priorAccess;emit({...prior,busy:null,error});}
       else {clear();emit({status:'unknown',user:null,busy:null,error,reauthenticationRequired:true});}
       throw error;

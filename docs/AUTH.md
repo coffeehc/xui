@@ -4,7 +4,7 @@
 
 ## 固定 HTTP 合同
 
-`createAuthClient({http, protectedPaths, timeoutMs, idEncoding})` 绑定宿主已有 `createHttpClient`。同一 transport 只能有一个认证 owner；不创建并行 fetch、token store 或第二个401拦截器。认证预算默认15秒。地址始终为根路径，不附加 baseURL 的路径、不猜 token/me/state 等旧路由。
+`createAuthClient({http, protectedPaths, timeoutMs, idEncoding, recovery})` 绑定宿主已有 `createHttpClient`。同一 transport 只能有一个认证 owner；不创建并行 fetch、token store 或第二个401拦截器。认证预算默认15秒。地址始终为根路径，不附加 baseURL 的路径、不猜 token/me/state 等旧路由。
 
 | 操作 | 固定端点 | 请求凭据 | 成功 payload |
 | --- | --- | --- | --- |
@@ -28,7 +28,7 @@ IssuedSessionV2 在上述字段之外恰有 `access_token`、`token_type:"Bearer
 
 ```ts
 const http = createHttpClient({baseURL: location.origin});
-const auth = createAuthClient({http, protectedPaths: ['/api/v1/orders/', '/api/v1/profile']});
+const auth = createAuthClient({http, recovery: {scope: 'my-app-primary-session'}, protectedPaths: ['/api/v1/orders/', '/api/v1/profile']});
 await auth.currentUser();
 ```
 
@@ -112,3 +112,14 @@ xAgent旧token/me/state协议不会仅改baseURL就兼容；已上线消费者�
 原生返回 `getElement()`、`getForm()`、`update(partialOptions)`、`destroy()`。`update({config})`是完整品牌配置替换；传入同一content/action Node时不搬动、不重建，不丢输入值、focus或事件。DocumentFragment按初次插入的实际子节点维护。表单提交回调/noValidate可更新，但已挂载form/section类型不可切换（需有意destroy后新建）；React同样保留固定类型。update在改变DOM前拒绝把布局本身或槽祖先作为内容。destroy只释放布局自己的监听；root仍仅包含该布局时还原原内容，若宿主已换页则保留宿主新内容。宿主领域资源仍由宿主清理。
 
 正式纯布局消费者为 [React](../examples/auth-page-react/app.tsx) / [原生](../examples/auth-page-vanilla/app.js)：三字段管理员设置，仅合成submit回调，不调用真实初始化或认证API。按[同一登录验收清单](LOGIN_VISUAL_ACCEPTANCE.md)验位置、更新identity、三主题/窄屏/200%与主动作可达；不能把示例通过当成xLead或其他产品已迁移。
+
+
+## 整页重载后的未确认写入门禁
+
+正式 baseservice HTTP 接入必须配置 `recovery: {scope: 'host-declared-session-namespace'}`。scope 表示宿主明确的 cookie/session 命名空间，不是用户名或请求内容；库再绑定可信 HTTP origin 和固定 `/api/v1/auth/` 范围。浏览器默认 localStorage；SSR 可注入仅含 getItem/setItem/removeItem 的同步持久 storage，不访问不存在的 window。省略 recovery 保持旧 memory-only 行为，不能宣称具有跨整页重载保护。AuthClient 接口未增加必需成员，自定义认证适配器不受影响。
+
+持久记录仅包含版本、随机 attempt 和操作类型，无 token、密码、Cookie、用户身份或请求体。进入原有 cookie mutation Web Lock 后，发送前先写 pending 并读回确认；读取、写入或验证失败则禁止 POST。新文档发现残留记录时，公开 `getState().reauthenticationRequired` 为 true，currentUser/refresh 不再发送。消费方显示公开重新登录反馈即可，不另造恢复状态机。
+
+只有同 attempt 的权威 refresh 成功或明确无会话 401 才清本次 pending；先前未知事实只能由显式 login 成功或权威 logout 清除。明确拒绝的 login 恢复原来的门禁。销毁、取消、过期、广播或普通 authenticated 通知不会清除持久事实；未发送前确认取消才可恢复本次写入前状态。所有删除先核对完整 attempt，迟到回执不清新 tab 记录。localStorage 自身不是原子 CAS，跨 tab 串行由已有 Web Locks 提供；没有 Web Locks 时不承诺原子串行，服务端冲突仍须 fail-closed。
+
+回归包含真实页面 reload 后零重复 refresh、显式登录恢复、注入 storage 读写失败零 POST、server/scope 隔离、拒绝登录保留未知、销毁后保留 pending 和旧回执不能清新记录。
