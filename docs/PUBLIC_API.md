@@ -73,6 +73,10 @@
 | `@coffeehc/xui-runtime/login-dom` <!-- public-entry: @coffeehc/xui-runtime/login-dom --> | [源码](../packages/runtime/src/login-dom.ts) | [合同](AUTH.md) | [示例](../examples/login-vanilla/app.js) |
 | `@coffeehc/xui-react/login` <!-- public-entry: @coffeehc/xui-react/login --> | [源码](../packages/ui-react/src/login.tsx) | [合同](AUTH.md) | [示例](../examples/login-react/app.tsx) |
 
+| `@coffeehc/xui-runtime/password` <!-- public-entry: @coffeehc/xui-runtime/password --> | [源码](../packages/runtime/src/password.ts) | [合同](PASSWORD.md) | [验证](../tests/password.test.mjs) |
+| `@coffeehc/xui-runtime/password-dom` <!-- public-entry: @coffeehc/xui-runtime/password-dom --> | [源码](../packages/runtime/src/password-dom.ts) | [合同](PASSWORD.md) | [验证](../tests/browser/password-fields.spec.mjs) |
+| `@coffeehc/xui-react/password` <!-- public-entry: @coffeehc/xui-react/password --> | [源码](../packages/ui-react/src/password.tsx) | [合同](PASSWORD.md) | [验证](../tests/browser/password-fields.spec.mjs) |
+
 ## xui 自己定义的默认行为
 
 这些默认值来自上表源码；品牌原始值与 motion 参数仍只由 DESIGN 的受控 token 块定义，不在此复制色板。未改写的复合控件 props/parts 使用当前 Base UI peer 的声明与行为，不能根据另一个版本猜默认值。
@@ -188,3 +192,9 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 ## 通用认证入口布局
 
 `@coffeehc/xui-react/login` 公开 `AuthPage` / `AuthPageProps`，`@coffeehc/xui-runtime/login-dom` 公开 `createAuthPage` / `AuthPageOptions`。`AuthPageConfig` 从runtime/auth与React/login可导入。这是无请求的品牌/表单/动作/反馈组合；`ConfigurableLoginPage` / `createLoginPage`内部复用同一结构，不要求初始化页复制私有DOM。完整合同、更新生命周期与正式消费者见[AUTH](AUTH.md#纯认证布局-authpage)。
+
+## 主题化简单选择与品牌
+
+`@coffeehc/xui-react/forms` 新增 `SimpleSelect`，接收与 `NativeSelect` 相同的 select props、option children、multiple 和 controlSize。可见控件是主题 combobox/listbox；保留原 select 作为隐藏表单/事件桥，Field 的 label/help/error 指向可见 trigger。选择会发原 input/change 事件，受控 value 仍须由宿主回传。原生 `@coffeehc/xui-runtime/dom` 导出 `bindSelectControl(select)`，返回 element/trigger/update/destroy；绑定已挂载 select 时在原位包装，未挂载则挂载 element，不能将 select 单独移出。每次改变 value/selectedOptions/options/disabled/label 后 update，销毁恢复原 select 的可见性/id/tabIndex 并释放事件/浮层。重复绑定复用存活 owner。单选关闭，多选保持浮层并支持 Escape/Tab；没有新增业务查询 owner。
+
+明确需要操作系统选择器时继续用 `NativeSelect` 或原生 select，不宣称其 OS 弹窗外观可被统一。库内 DataTable/APIKey/BusinessLog/StructuredLog 默认选择组合已切换主题控件。React `layout` 新增 `HeaderBrand`；runtime `header-controls` 新增 `createHeaderLocaleSelect`。详细布局与生命周期见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。

@@ -1,3 +1,4 @@
+import {chooseSelect} from './select-interaction.mjs';
 import {test as base,expect} from '@playwright/test';
 
 // Exercise the independent, formal-tarball consumers. Do not repair their layout
@@ -122,7 +123,7 @@ async function assertFooter(page,m,{pagination=true,compact=true}={}){
   await expect(size(page)).toHaveCount(pagination?1:0);
   await expect(page.locator(selectors.footer).getByRole('combobox',{name:'每页条数',exact:true})).toHaveCount(pagination?1:0);
   if(pagination){
-    await expect(size(page)).toHaveValue(String((await state(page)).pageSize));
+    await expect(size(page)).toHaveText(String((await state(page)).pageSize));
     expect(await size(page).locator('option').allTextContents()).toEqual(['20','50','100']);
   }
   if(compact){
@@ -476,9 +477,9 @@ for(const kind of kinds){
     if(source==='server'){
       await page.evaluate(()=>window.dataTableDemo.owner.planNext({delayMs:1500}));
       const requests=await page.evaluate(()=>window.dataTableDemo.owner.getRequests().length);
-      await size(page).selectOption('50');
+      await chooseSelect(page,size(page),'50');
       await expect(page.locator(selectors.outer)).toHaveAttribute('aria-busy','true');
-      await expect(size(page)).toBeDisabled();await expect(size(page)).toHaveValue('20');
+      await expect(size(page)).toBeDisabled();await expect(size(page)).toHaveText('20');
       await expect(rows(page)).toHaveCount(20);await expect(next(page)).toBeDisabled();
       const pending=await state(page);expect(pending.pageSize).toBe(20);expect(pending.pageIndex).toBe(0);
       expect(await page.evaluate(()=>window.dataTableDemo.owner.getRequests().length)).toBe(requests+1);
@@ -493,13 +494,13 @@ for(const kind of kinds){
     }
     await ready(page);await assertBounded(page,50,{label:'pagination-50'});
     await next(page).click();await ready(page);await expect(rows(page).first().locator('td').first()).toHaveText('51');
-    await size(page).selectOption('100');await ready(page);
+    await chooseSelect(page,size(page),'100');await ready(page);
     expect((await state(page)).pageIndex,'the single host owner resets page size to the endpoint first page').toBe(0);
     await assertBounded(page,100,{label:'pagination-100'});await scrollBodyToEnd(page);
     await next(page).click();await ready(page);await assertBounded(page,25,{label:'pagination-last'});
     await expect(page.locator(selectors.count)).toHaveText('显示 25 条，共 125 条');await expect(next(page)).toBeDisabled();
     await page.evaluate(()=>window.dataTableDemo.owner.filter('search','记录 125'));await ready(page);
-    await assertShort(page,1,{label:'pagination-one'});await expect(size(page)).toHaveValue('100');
+    await assertShort(page,1,{label:'pagination-one'});await expect(size(page)).toHaveText('100');
   });
 
   for(const mode of ['no-pagination','fixed-page-size','unknown'])test(`${kind} natural ${mode}: footer reflects only supplied page facts`,async({page})=>{
@@ -510,7 +511,7 @@ for(const kind of kinds){
       await expect(size(page)).toBeDisabled();
       const before=await state(page);
       await size(page).evaluate(node=>{node.value='50';node.dispatchEvent(new Event('change',{bubbles:true}));});
-      await expect(size(page)).toHaveValue('20');expect((await state(page)).pageSize).toBe(before.pageSize);
+      await expect(size(page)).toHaveText('20');expect((await state(page)).pageSize).toBe(before.pageSize);
     }
     if(mode!=='fixed-page-size'){
       await expect(page.getByRole('navigation',{name:'记录分页',exact:true})).toHaveCount(0);

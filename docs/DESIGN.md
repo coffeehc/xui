@@ -498,6 +498,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --feedback-slot-block-size: calc(var(--control-height) + var(--space-content-gap) * 2 + (var(--focus-width) + var(--focus-offset)) * 2);
     --data-region-min-block-size: calc(var(--control-height) * 8);
     --textarea-min-block-size: calc(var(--input-height) * 2);
+    --range-thumb-offset: calc((var(--space-control-gap) - var(--control-icon-size)) / 2 - var(--line-width-surface));
     --choice-check-width: calc(var(--spacing) * 1.5);
     --choice-check-height: calc(var(--spacing) * 2.5);
     --choice-check-rotation: 45deg;
@@ -1222,5 +1223,7 @@ DataTable以内部单一布局观察器测实际table/thead/首末行高度和co
 顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单select边界不变。forced-colors回退原生箭头，平台选项面板仍归浏览器/OS。
 
 实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](IDENTITY_ENCODING.md)。
+
+原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止，forced-colors恢复浏览器绘制可识别轨道、进度与选择标记。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
 
 <!-- foundation-lifecycle:end -->

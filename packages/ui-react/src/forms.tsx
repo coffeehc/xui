@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {bindSelectControl} from '@coffeehc/xui-runtime/dom';
 import { cx, branded } from './shared.js';
 type FieldInfo = { id: string; describedBy?: string; invalid: boolean; required: boolean };
 const FieldContext = React.createContext<FieldInfo | null>(null);
@@ -6,7 +7,7 @@ export type FieldProps = Omit<React.ComponentProps<'div'>,'children'> & { label:
 /** One native control per Field. Names/help/errors are wired without cloning children. */
 export function Field({ label, children, help, error, required = false, controlId, className, ...props }: FieldProps) {
   const autoId = React.useId();
-  const childId=(nodes:React.ReactNode):string|undefined=>{for(const child of React.Children.toArray(nodes)){if(!React.isValidElement<{id?:string;children?:React.ReactNode}>(child))continue;if([Input,Textarea,NativeSelect,Checkbox,Radio,Switch,'input','textarea','select'].includes(child.type as never)&&child.props.id)return child.props.id;if(child.type!==Fieldset){const nested=childId(child.props.children);if(nested)return nested;}}};
+  const childId=(nodes:React.ReactNode):string|undefined=>{for(const child of React.Children.toArray(nodes)){if(!React.isValidElement<{id?:string;children?:React.ReactNode}>(child))continue;if([Input,Textarea,NativeSelect,SimpleSelect,Checkbox,Radio,Switch,'input','textarea','select'].includes(child.type as never)&&child.props.id)return child.props.id;if(child.type!==Fieldset){const nested=childId(child.props.children);if(nested)return nested;}}};
   const id = controlId ?? childId(children) ?? autoId;
   const describedBy = [help ? `${id}-help` : '',error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined;
   return <FieldContext.Provider value={{ id, describedBy, invalid: Boolean(error), required }}><div {...props} className={cx('xui-field',className)}>
@@ -22,6 +23,14 @@ export function Input({className,...props}: React.ComponentProps<'input'>) { ret
 export function Textarea({className,...props}: React.ComponentProps<'textarea'>) { return <textarea {...props} {...useField(props)} className={cx('xui-textarea',className)} />; }
 export type ControlSize='sm'|'default'|'lg';
 export function NativeSelect({className,controlSize='default',...props}: React.ComponentProps<'select'>&{controlSize?:ControlSize}) { return <select {...props} {...useField(props)} data-control-size={controlSize} className={cx('xui-select',className)} />; }
+/** Themed popup selection with the same form values/events as NativeSelect. */
+export function SimpleSelect({className,controlSize='default',ref,...props}:React.ComponentProps<'select'>&{controlSize?:ControlSize}){
+  const select=React.useRef<HTMLSelectElement>(null),binding=React.useRef<ReturnType<typeof bindSelectControl>|null>(null);
+  React.useImperativeHandle(ref,()=>select.current!);
+  React.useLayoutEffect(()=>{binding.current=bindSelectControl(select.current!);return ()=>{binding.current?.destroy();binding.current=null;};},[]);
+  React.useLayoutEffect(()=>binding.current?.update());
+  return <span className="xui-select-host"><select ref={select} {...props} {...useField(props)} data-control-size={controlSize} className={cx('xui-select',className)}/></span>;
+}
 export type ChoiceProps = Omit<React.ComponentProps<'input'>,'type' | 'children'> & { label: React.ReactNode;controlSize?:ControlSize };
 function Choice({label,className,kind,controlSize='default',readOnly,onClickCapture,onKeyDownCapture,onChange,...props}: ChoiceProps & {kind:'checkbox'|'radio'|'switch'}) {
   const fieldProps = useField(props);

@@ -65,7 +65,11 @@ export function navigationDOM() {
       this.ownerDocument = doc;
       this.children = [];
       this.attributes = new Map();
-      this.style = {};
+      this.style = {
+        setProperty(name, value) { this[name] = String(value); },
+        getPropertyValue(name) { return this[name] ?? ''; },
+        removeProperty(name) { const previous = this[name] ?? ''; delete this[name]; return previous; },
+      };
       this.dataset = new Proxy({}, {
         get: (_, name) => this.getAttribute(dataName(name)) ?? undefined,
         set: (_, name, value) => { this.setAttribute(dataName(name), value); return true; },
@@ -90,6 +94,39 @@ export function navigationDOM() {
     set title(value) { this.setAttribute('title', value); }
     get type() { return this.getAttribute('type') ?? ''; }
     set type(value) { this.setAttribute('type', value); }
+    get htmlFor() { return this.getAttribute('for') ?? ''; }
+    set htmlFor(value) { this.setAttribute('for', value); }
+    get multiple() { return this.hasAttribute('multiple'); }
+    set multiple(value) { this.toggleAttribute('multiple', value); }
+    get required() { return this.hasAttribute('required'); }
+    set required(value) { this.toggleAttribute('required', value); }
+    get options() { return this.querySelectorAll('option'); }
+    get selectedOptions() { return this.options.filter(option => option.selected); }
+    get label() { return this.getAttribute('label') ?? this.textContent; }
+    set label(value) { this.setAttribute('label', value); }
+    get value() {
+      if (this.tagName === 'SELECT') return this.selectedOptions[0]?.value ?? '';
+      return this.getAttribute('value') ?? (this.tagName === 'OPTION' ? this.textContent : '');
+    }
+    set value(value) {
+      if (this.tagName !== 'SELECT') { this.setAttribute('value', value); return; }
+      let matched = false;
+      for (const option of this.options) {
+        option.selection = !matched && option.value === String(value);
+        matched ||= option.selection;
+      }
+    }
+    get selected() {
+      if (this.selection !== undefined) return this.selection;
+      const select = this.closest('select');
+      if (this.hasAttribute('selected')) return true;
+      return !!select && !select.multiple && !select.options.some(option => option.selection !== undefined || option.hasAttribute('selected')) && select.options[0] === this;
+    }
+    set selected(value) {
+      this.selection = !!value;
+      const select = this.closest('select');
+      if (value && select && !select.multiple) for (const option of select.options) if (option !== this) option.selection = false;
+    }
     get hidden() { return this.hasAttribute('hidden'); }
     set hidden(value) { this.toggleAttribute('hidden', value); }
     get disabled() { return this.hasAttribute('disabled'); }
@@ -161,7 +198,8 @@ export function navigationDOM() {
     }
     click() { if (!this.disabled) return fire(this, 'click', {button: 0}); }
   }
-  doc.createElement = tag => new Element(tag);
+  class OptGroupElement extends Element { constructor() { super('optgroup'); } }
+  doc.createElement = tag => tag.toLowerCase() === 'optgroup' ? new OptGroupElement() : new Element(tag);
   doc.createElementNS = (namespaceURI, tag) => new Element(tag, namespaceURI);
   doc.body = new Element('body');
   doc.body.parentNode = doc;
@@ -174,7 +212,19 @@ export function navigationDOM() {
   doc.defaultView = win;
   win.innerWidth = 1024;
   win.innerHeight = 768;
-  win.getComputedStyle = node => ({direction: node.direction ?? 'ltr'});
+  win.Event = Event;
+  win.HTMLOptGroupElement = OptGroupElement;
+  // Record subscriptions only: this identity fixture never invents layout or
+  // invokes resize callbacks. Browser tests own actual positioning coverage.
+  win.ResizeObserver = class {
+    targets = new Set();
+    constructor(callback) { this.callback = callback; }
+    observe(node) { this.targets.add(node); }
+    unobserve(node) { this.targets.delete(node); }
+    disconnect() { this.targets.clear(); }
+  };
+  win.visualViewport = Object.assign(new Target(), {offsetLeft: 0, offsetTop: 0, width: 1024, height: 768});
+  win.getComputedStyle = node => ({direction: node.direction ?? 'ltr', getPropertyValue: name => node.style.getPropertyValue(name)});
   const root = doc.createElement('div'), original = doc.createElement('p'), outside = doc.createElement('button');
   original.textContent = 'Original host content';
   root.append(original);

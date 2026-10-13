@@ -1,3 +1,4 @@
+import {bindSelectControl} from './dom.js';
 import {generateDomId} from './dom-id.js';
 import {getStructuredLogTable,logNatures,logSeverities,type StructuredLogController,type StructuredLogFilter,type LogRef,type LogRecordDetail} from './structured-log.js';
 import {bindPressFeedback,createDisclosureController,createDialogController} from './dom.js';
@@ -22,6 +23,7 @@ export function createStructuredLogExplorer(root:HTMLElement,{controller,writeCl
   let lastDetail:Readonly<LogRecordDetail>|null|undefined,lastDetailKey='';const copyNotice=node('div','xui-alert');
   const cached=new Map<string,{row:HTMLTableRowElement;cells:HTMLTableCellElement[];action:HTMLButtonElement}>();let cachedView='';
   const reference=(value:Readonly<LogRef>)=>{const href=controller.resolveReference(value),element=href?node('a','',`${value.kind}: ${value.id}`):node('span','',`${value.kind}: ${value.id}`);if(element instanceof doc.defaultView!.HTMLAnchorElement)element.href=href!;return element;};
+  const selectBindings=[view,...Object.values(inputs).filter((input):input is HTMLSelectElement=>input.tagName==='SELECT')].map(select=>bindSelectControl(select));
   const render=()=>{if(dead)return;const state=controller.getState(),model=getStructuredLogTable(state,labels);refresh.disabled=state.busy;refresh.setAttribute('aria-busy',String(state.busy));view.value=state.view;groupContext.hidden=allRecords.hidden=!state.groupId;groupContext.textContent=state.groupId?`${labels.groupRecords}: ${state.groupId}`:'';cancel.classList.add('xui-reserved-action');cancel.dataset.inactive=String(!state.busy);cancel.setAttribute('aria-hidden',String(!state.busy));cancel.tabIndex=state.busy?0:-1;cancel.disabled=!state.busy;
     counts.hidden=state.view!=='groups'||!state.data||!('matched_groups' in state.data);counts.textContent=state.data&&'matched_groups' in state.data?`${labels.matchedGroups}: ${state.data.matched_groups} · ${labels.matchedCount}: ${state.data.matched_entries}`:'';
     if(lastFilter!==state.filter){for(const [key,input] of Object.entries(inputs)){const value=key==='subjectKind'?state.filter.subject?.kind:key==='subjectId'?state.filter.subject?.id:(state.filter as Record<string,unknown>)[key];if(input instanceof doc.defaultView!.HTMLSelectElement){for(const option of Array.from(input.options))option.selected=Array.isArray(value)&&value.includes(option.value);}else input.value=typeof value==='string'?value:'';}lastFilter=state.filter;}
@@ -36,8 +38,8 @@ export function createStructuredLogExplorer(root:HTMLElement,{controller,writeCl
       if(detail.details_retained)for(const [label,value] of [[labels.detail,detail.detail],[labels.stack,detail.stack]] as const){const pre=node('pre','xui-code',value??labels.unknown);pre.style.whiteSpace='pre-wrap';pre.style.overflowWrap='anywhere';body.append(node('h3','xui-detail-heading',label),pre);}const attributes=node('dl','xui-details');Object.entries(detail.attributes).forEach(([key,value])=>attributes.append(node('dt','',key),node('dd','',value)));body.append(node('h3','xui-detail-heading',labels.attributes),attributes);}
     body.append(copyNotice);}
     copyNotice.hidden=state.copyStatus==='idle';copyNotice.textContent=state.copyStatus==='idle'?'':state.copyStatus==='error'?labels.copyError:labels.copied;copyNotice.dataset.tone=state.copyStatus==='error'?'error':'success';copyNotice.setAttribute('role',state.copyStatus==='error'?'alert':'status');
-    control.syncOpen(state.detailOpen);
+    for(const binding of selectBindings)binding.update();control.syncOpen(state.detailOpen);
   };
   const off=controller.subscribe(render),press=bindPressFeedback(section),release=()=>{controller.closeDetail();controller.cancel();};doc.defaultView?.addEventListener('pagehide',release);render();
-  return {getElement:()=>section,destroy(){if(dead)return;dead=true;off();press();doc.defaultView?.removeEventListener('pagehide',release);release();lastDetail=null;lastDetailKey='';body.replaceChildren();control.destroy();filters.destroy();cached.clear();root.replaceChildren(...original);owners.delete(root);}};
+  return {getElement:()=>section,destroy(){if(dead)return;dead=true;for(const binding of selectBindings)binding.destroy();off();press();doc.defaultView?.removeEventListener('pagehide',release);release();lastDetail=null;lastDetailKey='';body.replaceChildren();control.destroy();filters.destroy();cached.clear();root.replaceChildren(...original);owners.delete(root);}};
 }

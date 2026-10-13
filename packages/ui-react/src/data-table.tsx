@@ -2,7 +2,7 @@ import * as React from 'react';
 import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,type DataTableViewOptions,type DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
 import {Table,TableContainer,TableRow,TableCell,TableHeaderCell} from './table.js';
 import {Toolbar} from './layout.js';
-import {Field,NativeSelect,type FieldProps} from './forms.js';
+import {Field,SimpleSelect,type FieldProps} from './forms.js';
 import {DataRegion,LoadingState,EmptyState,ErrorState,Skeleton} from './feedback.js';
 import {Pagination} from './navigation.js';
 import {Button} from './button.js';
@@ -74,7 +74,7 @@ export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,er
       </TableContainer>
       <footer className="xui-data-table-footer">
         <span className="xui-data-table-count" aria-live="polite">{labels.count({rowCount:rows.length,total:state.total})}</span>
-        {pagination&&<label className="xui-data-table-page-size"><span>{labels.pageSize}</span><NativeSelect aria-label={labels.pageSize} value={pagination.pageSize} disabled={state.blocked||!pagination.onPageSizeChange} onChange={event=>{const size=Number(event.currentTarget.value);event.currentTarget.value=String(pagination.pageSize);if(size!==pagination.pageSize&&state.sizes.includes(size))request(()=>pagination.onPageSizeChange?.(size));}}>{state.sizes.map(size=><option value={size} key={size}>{size}</option>)}</NativeSelect></label>}
+        {pagination&&<label className="xui-data-table-page-size"><span>{labels.pageSize}</span><SimpleSelect aria-label={labels.pageSize} value={pagination.pageSize} disabled={state.blocked||!pagination.onPageSizeChange} onChange={event=>{const size=Number(event.currentTarget.value);event.currentTarget.value=String(pagination.pageSize);if(size!==pagination.pageSize&&state.sizes.includes(size))request(()=>pagination.onPageSizeChange?.(size));}}>{state.sizes.map(size=><option value={size} key={size}>{size}</option>)}</SimpleSelect></label>}
         {pagination&&pagination.mode!=='cursor'&&state.pageCount!==null&&!state.outOfRange&&<Pagination aria-label={labels.pagination} page={state.page} pageCount={state.pageCount} disabled={state.blocked||!pagination.onPageChange} previousLabel={labels.previous} nextLabel={labels.next} onPageChange={page=>request(()=>pagination.onPageChange?.(page-1+pagination.pageIndexOffset))}/>}
         {pagination?.mode==='cursor'&&<nav className="xui-pagination" aria-label={labels.pagination}>
           <Button disabled={state.blocked||!pagination.hasPrevious||!pagination.onPrevious} onClick={()=>request(pagination.hasPrevious?pagination.onPrevious:undefined)}>{labels.previous}</Button>

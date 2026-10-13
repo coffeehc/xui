@@ -1,3 +1,4 @@
+import {bindSelectControl} from './dom.js';
 /** Locale facts stay with the host's existing i18n owner. Omission is disabled. */
 export interface HeaderLocaleOption {value:string;label:string;disabled?:boolean}
 export interface HeaderLocaleOptions {
@@ -24,4 +25,17 @@ export function bindHeaderLocaleSelect(select:HTMLSelectElement,initial:HeaderLo
   const change=()=>{if(dead)return;const next=select.value;select.value=options.value;if(options.enabled&&!options.disabled&&options.options.some(item=>item.value===next&&!item.disabled)&&next!==options.value)options.onValueChange(next);};
   const binding:HeaderLocaleBinding={element,update,destroy(){if(dead)return;dead=true;select.removeEventListener('change',change);localeOwners.delete(select);if(element.parentNode)element.parentNode.insertBefore(select,element);else select.remove();element.remove();select.classList.remove('xui-header-locale');}};
   update(initial);select.addEventListener('change',change);localeOwners.set(select,binding);return binding;
+}
+
+/** A themed, controlled choice. The hidden select is a form/event bridge only. */
+export function createHeaderLocaleSelect(doc:Document,initial:HeaderLocaleOptions){
+  const select=doc.createElement('select');let options=initial,dead=false;
+  select.className='xui-select';
+  const binding=bindSelectControl(select);binding.element.classList.add('xui-header-locale-control');binding.trigger.classList.add('xui-header-locale');
+  const icon=binding.trigger.querySelector('svg')!;icon.classList.add('xui-header-locale-icon');binding.element.insertBefore(icon,binding.element.querySelector('[role="listbox"]'));
+  binding.element.querySelector('[role="listbox"]')!.classList.add('xui-header-locale-popup');
+  const update=(next:HeaderLocaleOptions)=>{if(dead)return;options=next;select.disabled=!next.enabled||!!next.disabled;select.setAttribute('aria-label',next.label??'语言');const known=next.options.some(item=>item.value===next.value);select.replaceChildren(...[...(known?[]:[{value:next.value,label:'',disabled:true}]),...next.options].map(item=>{const node=doc.createElement('option');node.value=item.value;node.textContent=item.label;node.disabled=!!item.disabled;node.hidden=!known&&item.value===next.value;return node;}));select.value=next.value;binding.update();};
+  const change=()=>{if(dead)return;const next=select.value;select.value=options.value;binding.update();if(options.enabled&&!options.disabled&&next!==options.value&&options.options.some(item=>item.value===next&&!item.disabled))options.onValueChange(next);};
+  select.addEventListener('change',change);update(initial);
+  return {element:binding.element,trigger:binding.trigger,update,destroy(){if(dead)return;dead=true;select.removeEventListener('change',change);binding.destroy();select.remove();}};
 }

@@ -170,7 +170,7 @@ for(const kind of kinds){
       const slot=await leading.boundingBox(),button=await action.boundingBox(),navigation=await toggle.boundingBox();
       expect(slot.x).toBeLessThan(navigation.x);expect(slot.x+slot.width).toBeLessThanOrEqual(navigation.x+1);near(button.width,slot.width,'intrinsic leading width is preserved');
       expect(await leading.evaluate(node=>getComputedStyle(node).flexShrink)).toBe('0');expect(await action.evaluate(node=>node.scrollWidth<=node.clientWidth+1)).toBe(true);
-      expect(await leading.evaluate(node=>!!(node.compareDocumentPosition(node.parentElement.querySelector('.xui-app-header-navigation'))&Node.DOCUMENT_POSITION_FOLLOWING)),'leading precedes navigation in DOM order').toBe(true);
+      expect(await leading.evaluate(node=>!!(node.compareDocumentPosition(node.closest('.xui-app-header-primary').querySelector('.xui-app-header-navigation'))&Node.DOCUMENT_POSITION_FOLLOWING)),'leading precedes navigation in DOM order').toBe(true);
       await action.focus();await page.keyboard.press('Tab');await expect(toggle).toBeFocused();await page.keyboard.press('Shift+Tab');await expect(action).toBeFocused();
       expect(await action.evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle!=='none')).toBe(true);
       await page.evaluate(()=>window.workspaceDemo.navigate());await expect(action).toBeFocused();await assertRetained(page);

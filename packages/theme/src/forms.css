@@ -27,13 +27,18 @@
     transition: background-color var(--motion-duration) var(--motion-easing), border-color var(--motion-duration) var(--motion-easing);
   }
   .xui-choice[type="radio"] { border-radius: var(--radius-full); }
-  .xui-choice:checked { background: var(--action-primary); border-color: var(--action-primary); }
+  .xui-choice:checked, .xui-choice[type="checkbox"]:not([role="switch"]):indeterminate { background: var(--action-primary); border-color: var(--action-primary); }
   .xui-choice[type="checkbox"]:not([role="switch"])::after {
     content: ""; width: var(--choice-check-width); height: var(--choice-check-height);
     border: solid currentColor; border-width: 0 var(--line-width-emphasis) var(--line-width-emphasis) 0;
     transform: rotate(var(--choice-check-rotation)) scale(0); transition: transform var(--motion-duration) var(--motion-easing);
   }
   .xui-choice[type="checkbox"]:not([role="switch"]):checked::after { transform: rotate(var(--choice-check-rotation)) scale(1); }
+  .xui-choice[type="checkbox"]:not([role="switch"]):indeterminate::after {
+    width: var(--space-control-gap); height: var(--line-width-emphasis); border: 0;
+    background: currentColor; transform: none;
+  }
+  .xui-choice[aria-invalid="true"] { border-color: var(--status-error-foreground); }
   .xui-choice[type="radio"]::after { content: ""; width: var(--space-control-gap); height: var(--space-control-gap); border-radius: var(--radius-full); background: var(--action-primary-foreground); transform: scale(0); transition: transform var(--motion-duration) var(--motion-easing); }
   .xui-choice[type="radio"]:checked::after { transform: scale(1); }
   .xui-choice[role="switch"] { width: var(--switch-width); height: var(--switch-height); border-radius: var(--control-height); display: inline-block; }
@@ -80,7 +85,55 @@
  .xui-input-group>.xui-input {border:0;background:transparent;flex:1;outline:none;}
  .xui-input-addon {display:inline-flex;align-items:center;gap:var(--space-text-gap);padding-inline:var(--space-control-gap);color:var(--muted-foreground);}
  .xui-input-action {border:0;background:transparent;color:var(--action-primary);font:inherit;min-block-size:var(--control-height);padding-inline:var(--space-control-gap);border-radius:var(--input-radius);cursor:pointer;transition:background-color var(--motion-duration-fast) var(--motion-easing);}
- .xui-input-action:hover {background:var(--interaction-hover);}
- .xui-input-action:active {background:var(--interaction-pressed);}
+ .xui-input-action:hover:not(:disabled) {background:var(--interaction-hover);}
+ .xui-input-action:active:not(:disabled) {background:var(--interaction-pressed);}
  .xui-input-action:disabled {color:var(--muted-foreground);cursor:not-allowed;}
+}
+
+@layer xui-components {
+  .xui-select-host {display:contents;}
+  .xui-select-control {display:inline-flex;position:relative;min-inline-size:0;max-inline-size:100%;}
+  .xui-select-control>.xui-select {display:inline-flex;align-items:center;justify-content:space-between;gap:var(--space-control-gap);text-align:start;appearance:none;}
+  .xui-select-control>.xui-select>span {min-inline-size:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .xui-select-control-icon {flex:none;inline-size:var(--control-icon-size);block-size:var(--control-icon-size);stroke-width:var(--icon-stroke-width);pointer-events:none;}
+  .xui-select-control-popup .xui-menu-item {inline-size:100%;text-align:start;}
+  .xui-select-control-popup [aria-selected='true'] {background:var(--interaction-selected);font-weight:var(--font-weight-control);}
+}
+
+@layer xui-components {
+  /* Keep the real file input, its accessible name and its selected filenames. */
+  .xui-input[type="file"] { padding: var(--space-text-gap); }
+  .xui-input[type="file"]::file-selector-button {
+    margin: 0; margin-inline-end: var(--space-control-gap); padding: var(--space-text-gap) var(--button-padding-inline-sm);
+    border: var(--line-width-surface) solid var(--surface-line); border-radius: var(--radius-sm);
+    background: var(--muted); color: var(--foreground); font: inherit; cursor: pointer;
+    transition: background-color var(--motion-duration-fast) var(--motion-easing);
+  }
+  .xui-input[type="file"]:not(:disabled)::file-selector-button:hover { background: var(--interaction-hover); }
+  .xui-input[type="file"]:not(:disabled)::file-selector-button:active { background: var(--interaction-pressed); }
+  .xui-input[type="file"]:disabled::file-selector-button { background: var(--button-disabled-background); color: var(--button-disabled-foreground); cursor: not-allowed; }
+  /* Native range retains min/max/step, pointer and keyboard semantics. */
+  .xui-input[type="range"] { appearance: none; cursor: pointer; }
+  .xui-input[type="range"]::-webkit-slider-runnable-track { block-size: var(--space-control-gap); border-radius: var(--radius-full); background: var(--muted); border: var(--line-width-surface) solid var(--input-border-color); }
+  .xui-input[type="range"]::-moz-range-track { block-size: var(--space-control-gap); border-radius: var(--radius-full); background: var(--muted); border: var(--line-width-surface) solid var(--input-border-color); }
+  .xui-input[type="range"]::-webkit-slider-thumb { appearance: none; inline-size: var(--control-icon-size); block-size: var(--control-icon-size); margin-block-start: var(--range-thumb-offset); border: var(--line-width-surface) solid var(--action-primary); border-radius: var(--radius-full); background: var(--action-primary); }
+  .xui-input[type="range"]::-moz-range-thumb { inline-size: var(--control-icon-size); block-size: var(--control-icon-size); border: var(--line-width-surface) solid var(--action-primary); border-radius: var(--radius-full); background: var(--action-primary); }
+  .xui-input[type="range"]:disabled { cursor: not-allowed; }
+  .xui-input[type="range"]:disabled::-webkit-slider-thumb { background: var(--muted-foreground); border-color: var(--muted-foreground); }
+  .xui-input[type="range"]:disabled::-moz-range-thumb { background: var(--muted-foreground); border-color: var(--muted-foreground); }
+  /* Swatch color is the actual selected user value, not a theme surface. */
+  .xui-input[type="color"] { block-size: var(--input-height); cursor: pointer; }
+  .xui-input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  .xui-input[type="color"]::-webkit-color-swatch { border: var(--line-width-surface) solid var(--input-border-color); border-radius: var(--radius-sm); }
+  .xui-input[type="color"]::-moz-color-swatch { border: var(--line-width-surface) solid var(--input-border-color); border-radius: var(--radius-sm); }
+  .xui-input[type="color"]:disabled { cursor: not-allowed; }
+  .xui-fieldset[aria-invalid="true"] { border-color: var(--status-error-foreground); }
+  @media (forced-colors: active) {
+    /* Let the UA draw an accessible range and real checked/mixed indicators. */
+    .xui-input[type="range"] { appearance: auto; }
+    .xui-input[type="range"]:is(:enabled,:disabled)::-webkit-slider-runnable-track { all: revert; }
+    .xui-input[type="range"]:is(:enabled,:disabled)::-webkit-slider-thumb { all: revert; }
+    .xui-input[type="range"]:is(:enabled,:disabled)::-moz-range-track { all: revert; }
+    .xui-input[type="range"]:is(:enabled,:disabled)::-moz-range-thumb { all: revert; }
+  }
 }

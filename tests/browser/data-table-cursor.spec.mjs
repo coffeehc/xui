@@ -1,3 +1,4 @@
+import {chooseSelect} from './select-interaction.mjs';
 import {test,expect} from '@playwright/test';
 const ready=page=>expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');
 for(const kind of ['react','vanilla'])for(const width of [1280,390]){
@@ -20,6 +21,6 @@ for(const kind of ['react','vanilla'])for(const width of [1280,390]){
     await page.setViewportSize({width,height:844});await page.goto(`/data-table-${kind}/?cursor&cursor-total&empty`);await ready(page);
     const root=page.locator('#records-table'),nav=root.getByRole('navigation',{name:'记录分页'});await expect(root.locator('.xui-data-table-count')).toHaveText('显示 0 条，共 0 条');await expect(nav.getByRole('button',{name:'下一页'})).toBeDisabled();await expect(nav).not.toContainText('/');
     expect(await page.evaluate(()=>window.dataTableDemo.owner.getState().nextCursor)).toBeNull();await page.getByRole('button',{name:'恢复记录',exact:true}).click();await ready(page);await expect(root.locator('.xui-data-table-count')).toHaveText('显示 20 条，共 125 条');await expect(nav.getByRole('button',{name:'下一页'})).toBeEnabled();await expect(nav).not.toContainText('/');
-    await nav.getByRole('button',{name:'下一页'}).click();await ready(page);await expect(nav.getByRole('button',{name:'上一页'})).toBeEnabled();await root.getByRole('combobox',{name:'每页条数'}).selectOption('50');await ready(page);await expect(root.locator('.xui-data-table-count')).toHaveText('显示 50 条，共 125 条');await expect(nav.getByRole('button',{name:'上一页'})).toBeDisabled();expect(await page.evaluate(()=>window.dataTableDemo.owner.getState().rows[0].id)).toBe('1');
+    await nav.getByRole('button',{name:'下一页'}).click();await ready(page);await expect(nav.getByRole('button',{name:'上一页'})).toBeEnabled();await chooseSelect(page,root.getByRole('combobox',{name:'每页条数'}),'50');await ready(page);await expect(root.locator('.xui-data-table-count')).toHaveText('显示 50 条，共 125 条');await expect(nav.getByRole('button',{name:'上一页'})).toBeDisabled();expect(await page.evaluate(()=>window.dataTableDemo.owner.getState().rows[0].id)).toBe('1');
   });
 }

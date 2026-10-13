@@ -1,3 +1,4 @@
+import {chooseSelect} from './select-interaction.mjs';
 import {test as base,expect} from '@playwright/test';
 
 // Both routes must be built from independently installed formal tarballs.
@@ -49,7 +50,7 @@ function normalContainer(m,key){expect(m[key].scrollHeight,`${key} has no second
 async function assertWorkspace(page,{count=20,internal=false}={}){
   await settle(page);const m=await metrics(page);
   await expect(rows(page)).toHaveCount(count);await expect(table(page).getByRole('columnheader')).toHaveText(['编号','名称','类型','范围','来源','操作']);
-  await expect(size(page)).toHaveCount(1);await expect(size(page)).toHaveValue(String(count));
+  await expect(size(page)).toHaveCount(1);await expect(size(page)).toHaveText(String(count));
   await expect(page.getByRole('group',{name:'记录筛选',exact:true})).toHaveCount(1);
   if(internal){await expect(page.locator('.xui-shell-page-toolbar:visible')).toHaveCount(0);expect(m.toolbar.y).toBeGreaterThanOrEqual(m.table.y-1);}
   else {await expect(page.locator('.xui-shell-page-toolbar:visible')).toHaveCount(1);expect(m.toolbar.bottom).toBeLessThanOrEqual(m.table.y+1);}
@@ -89,7 +90,7 @@ async function scrollToEnd(page){
   for(const key of ['document','main','content']){normalContainer(after,key);expect(after[key].scrollTop,`${key} did not scroll`).toBe(before[key].scrollTop);}
   await assertColumns(page);
 }
-async function selectSize(page,value){await size(page).selectOption(String(value));await ready(page);await expect(rows(page)).toHaveCount(value);}
+async function selectSize(page,value){await chooseSelect(page,size(page),String(value));await ready(page);await expect(rows(page)).toHaveCount(value);}
 async function saveIdentity(page){await page.evaluate(()=>{window.dataTableNodes={search:document.querySelector('input[type="search"]'),action:document.querySelector('[data-row-id="1"]'),table:document.querySelector('#records-table'),body:document.querySelector('#records-table .xui-data-table-body'),header:document.querySelector('[data-testid="record-header"]'),toolbar:document.querySelector('[data-testid="record-filters"]')};});}
 async function assertIdentity(page){expect(await page.evaluate(()=>Object.entries(window.dataTableNodes).every(([name,node])=>node.isConnected&&node===document.querySelector({search:'input[type="search"]',action:'[data-row-id="1"]',table:'#records-table',body:'#records-table .xui-data-table-body',header:'[data-testid="record-header"]',toolbar:'[data-testid="record-filters"]'}[name]))),'retained controls, page slots and region keep exact node identity').toBe(true);}
 async function reachable(control){await control.focus();await expect(control).toBeFocused();await expect(control).toBeInViewport({ratio:1});expect(await control.evaluate(node=>{const r=node.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!hit&&(node===hit||node.contains(hit));}),'focused control is not clipped or covered').toBe(true);}
@@ -154,11 +155,11 @@ for(const kind of kinds){
 
   test(`${kind}: page size has one controlled owner and cancellation restores confirmed facts`,async({page})=>{
     await setup(page,kind);await expect(size(page)).toHaveCount(1);expect(await size(page).locator('option').allTextContents()).toEqual(['20','50','100']);
-    await page.evaluate(()=>window.dataTableDemo.owner.planNext({delayMs:900,ignoreAbort:true}));const count=await requestCount(page);await size(page).selectOption('50');
-    await expect(size(page)).toHaveValue('20');await expect(size(page)).toBeDisabled();expect((await state(page)).pageSize).toBe(20);await expect(rows(page)).toHaveCount(20);
+    await page.evaluate(()=>window.dataTableDemo.owner.planNext({delayMs:900,ignoreAbort:true}));const count=await requestCount(page);await chooseSelect(page,size(page),'50');
+    await expect(size(page)).toHaveText('20');await expect(size(page)).toBeDisabled();expect((await state(page)).pageSize).toBe(20);await expect(rows(page)).toHaveCount(20);
     await size(page).evaluate(node=>{node.value='100';node.dispatchEvent(new Event('change',{bubbles:true}));});expect(await requestCount(page)).toBe(count+1);
-    await page.getByRole('button',{name:'取消请求',exact:true}).click();await expect(size(page)).toBeEnabled();await expect(size(page)).toHaveValue('20');await page.waitForTimeout(950);await expect(rows(page)).toHaveCount(20);expect((await state(page)).pageSize).toBe(20);
-    await selectSize(page,50);await expect(size(page)).toHaveValue('50');await selectSize(page,100);await expect(size(page)).toHaveValue('100');expect((await state(page)).pageIndex).toBe(0);
+    await page.getByRole('button',{name:'取消请求',exact:true}).click();await expect(size(page)).toBeEnabled();await expect(size(page)).toHaveText('20');await page.waitForTimeout(950);await expect(rows(page)).toHaveCount(20);expect((await state(page)).pageSize).toBe(20);
+    await selectSize(page,50);await expect(size(page)).toHaveText('50');await selectSize(page,100);await expect(size(page)).toHaveText('100');expect((await state(page)).pageIndex).toBe(0);
     await next(page).click();await ready(page);await expect(rows(page)).toHaveCount(25);await expect(page.locator('.xui-data-table-count')).toHaveText('显示 25 条，共 125 条');await expect(next(page)).toBeDisabled();
   });
 

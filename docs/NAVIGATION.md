@@ -282,3 +282,6 @@ const menu = createNavigationMenu(root, {items,
 同一 Node/Fragment 重传保留节点，普通 location/slot 更新不重建自组菜单；Fragment 首次转移后保留其内容，不重用已经移除的空 Fragment 恢复旧内容。替换/移除 sidebar 时只在旧焦点仍归该区域的情况下回到新可用控件，空菜单回顶栏开关或已打开 drawer 的关闭按钮。被暂时替换的自组内容生命周期仍归宿主，最终分别 destroy 其 NavigationMenu/Disclosure/ContextMenu 和订阅；createMenuLayout 不销毁自己未创建的 owner。
 
 正式富导航示例用宿主公开的 `collapsed` 与 `sidebarOpen` 状态决定 rail 内容：桌面 compact 仅保留项目图标导航及独立 action，收纳完整搜索框、组标题、组外加载按钮和成员 Disclosure；顶栏“展开导航”仍可经 Tab/Enter 到达，展开后恢复完整控件。移动 drawer 打开时恢复全部控件，不复制第二份查询或导航树，也不按私有 DOM/class 或固定像素判断视口。受控原生 drawer 明确连接 `sidebarOpen` 与 `onSidebarOpenChange`，导航关闭后仍可再次打开。
+
+
+品牌槽现在先于顶栏唯一菜单开关。桌面品牌区域自动跟随展开/紧凑侧栏宽度，toggle 对齐正文内容左边；随后为 breadcrumb/context。leading 仍位于身份区域最前，保留平台安全区。窄屏由公共布局恢复自然宽度并继续使用原 drawer，产品不补按钮/媒体监听。`HeaderBrand` 与原生公开品牌结构和迁移例子见 [HEADER_CONTROLS](HEADER_CONTROLS.md#品牌区域与内容对齐)。

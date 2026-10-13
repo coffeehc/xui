@@ -1,3 +1,4 @@
+import {bindSelectControl} from './dom.js';
 import {generateDomId} from './dom-id.js';
 import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,type DataTableViewOptions,type DataTableColumnWidth} from './data-table.js';
 export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from './data-table.js';
@@ -76,6 +77,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     guard.run(state.blocked,callback);
   };
   previous.onclick=()=>dispatch('previous');next.onclick=()=>dispatch('next');retry.onclick=()=>dispatch('retry');size.onchange=()=>{const requested=Number(size.value);size.value=String(options.pagination?.pageSize??'');dispatch('size',requested);};
+  const selectBindings=[size].map(select=>bindSelectControl(select));
   const render=()=>{
     const state=getDataTableState(options,options.rows.length),keys=validateDataTableKeys(options.rows,options.columns,options.rowKey),labels=state.labels,page=options.pagination,hasRows=options.rows.length>0;
     root.dataset.layout=state.layout;root.setAttribute('aria-label',options.label);root.setAttribute('aria-busy',String(state.busy));body.setAttribute('aria-label',options.label+' — '+labels.count({rowCount:options.rows.length,total:state.total}));table.setAttribute('aria-label',options.label);table.dataset.striped=String(!!options.striped);table.dataset.stickyHeader=String(options.stickyHeader!==false);
@@ -141,9 +143,10 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     next.disabled=state.blocked||(cursor?page.nextCursor===null||!page.onNext:!page?.onPageChange||state.pageCount===null||state.page>=state.pageCount);
 
     content(extra,options.footer);extra.hidden=options.footer===undefined||options.footer===null||options.footer==='';
+    for(const binding of selectBindings)binding.update();
     layoutOwner.update();
   };
-  const destroy=()=>{if(dead)return;dead=true;guard.destroy();layoutOwner.destroy();widthObserver?.disconnect();if(widthFrame)win.cancelAnimationFrame(widthFrame);win.removeEventListener('resize',scheduleWidths);for(const entry of rows.values())for(const cell of entry.cells.values())releaseCell(cell);rows.clear();previous.onclick=next.onclick=retry.onclick=size.onchange=null;root.replaceChildren(...original);for(const [name,value]of attributes)if(value===null)root.removeAttribute(name);else root.setAttribute(name,value);owners.delete(root);};
+  const destroy=()=>{if(dead)return;dead=true;for(const binding of selectBindings)binding.destroy();guard.destroy();layoutOwner.destroy();widthObserver?.disconnect();if(widthFrame)win.cancelAnimationFrame(widthFrame);win.removeEventListener('resize',scheduleWidths);for(const entry of rows.values())for(const cell of entry.cells.values())releaseCell(cell);rows.clear();previous.onclick=next.onclick=retry.onclick=size.onchange=null;root.replaceChildren(...original);for(const [name,value]of attributes)if(value===null)root.removeAttribute(name);else root.setAttribute(name,value);owners.delete(root);};
   try{render();}catch(error){destroy();throw error;}
   return {
     update(next:Partial<NativeDataTableOptions<T>>){if(dead)return;const proposed={...options,...next};getDataTableState(proposed,proposed.rows.length);validateDataTableKeys(proposed.rows,proposed.columns,proposed.rowKey);options=proposed;try{render();}catch(error){destroy();throw error;}},

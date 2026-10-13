@@ -55,11 +55,10 @@ test('native locale destroyed handles cannot mutate or remove a replacement bind
   const next=bindHeaderLocaleSelect(select,{...base,onValueChange:value=>newRequests.push(value)});old.destroy();old.update({...base,disabled:true});assert.equal(select.disabled,false);assert.equal(host.children[0],next.element);change(select,'en');assert.deepEqual(oldRequests,[]);assert.deepEqual(newRequests,['en']);assert.equal(select.value,'zh');next.destroy();change(select,'en');assert.deepEqual(newRequests,['en']);
 });
 
-test('React header locale has the same decorative arrow, controlled unknown and disabled options',()=>{
+test('React header locale mounts the same public native theme owner without an OS selector',async()=>{
   const html=renderToStaticMarkup(React.createElement(AppHeader,{locale:{...base,value:'unknown',disabled:true}}));
-  assert.match(html,/<span class="xui-header-locale-control"><select[^>]*class="xui-select xui-header-locale"[^>]*disabled=""/);
-  assert.match(html,/<option value="unknown" disabled="" selected=""><\/option>/);assert.match(html,/<option value="de" disabled="">Deutsch/);
-  assert.match(html,/<svg class="xui-header-locale-icon"[^>]*aria-hidden="true"[^>]*focusable="false"/);assert.equal((html.match(/<select/g)??[]).length,1);
+  assert.match(html,/data-xui-header-locale=""/);assert.doesNotMatch(html,/<select/);
+  const source=await readFile('packages/ui-react/src/layout.tsx','utf8');assert.match(source,/createHeaderLocaleSelect\(node.ownerDocument,locale\)/);assert.match(source,/binding.current\?\.update\(locale\)/);
 });
 
 test('header compactness uses existing spacing and locale styling never changes ordinary selects',async()=>{

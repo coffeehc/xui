@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {getBusinessLogSnapshot,findBusinessLogRenderer,getBusinessLogFacts,getBusinessLogTable,type BusinessLogController,type BusinessLogDetail,type BusinessLogFilter,type BusinessLogRenderer,type BusinessLogActorKind,type BusinessLogOutcome} from '@coffeehc/xui-runtime/business-log';
 import {Button} from './button.js';
-import {Field,Input,NativeSelect} from './forms.js';
+import {Field,Input,SimpleSelect} from './forms.js';
 import {PageHeader,Toolbar,Grid,Stack} from './layout.js';
 import {Disclosure} from './navigation.js';
 import {DataRegion,LoadingState,ErrorState,EmptyState,Alert,RenderBoundary} from './feedback.js';
@@ -20,7 +20,7 @@ export function BusinessLogExplorer({controller,className,headerActions,renderer
   const lastTrigger=React.useRef<HTMLButtonElement|null>(null),refresh=React.useRef<HTMLButtonElement>(null),table=getBusinessLogTable(state,labels),detail=state.detail;
   React.useEffect(()=>{const release=()=>{controller.closeDetail();controller.cancel();};window.addEventListener('pagehide',release);return()=>{window.removeEventListener('pagehide',release);release();};},[controller]);
   const input=(key:Exclude<keyof typeof draft,'actorKind'|'result'>,label:string)=><Field key={key} label={label}><Input value={draft[key]} autoComplete="off" onChange={event=>setDraft({...draft,[key]:event.target.value})}/></Field>;
-  const select=(key:'actorKind'|'result',label:string,values:readonly string[])=><Field label={label}><NativeSelect value={draft[key]} onChange={event=>setDraft({...draft,[key]:event.target.value})}>{values.map(value=><option key={value} value={value}>{value?labels[value as BusinessLogActorKind|BusinessLogOutcome]:labels.all}</option>)}</NativeSelect></Field>;
+  const select=(key:'actorKind'|'result',label:string,values:readonly string[])=><Field label={label}><SimpleSelect value={draft[key]} onChange={event=>setDraft({...draft,[key]:event.target.value})}>{values.map(value=><option key={value} value={value}>{value?labels[value as BusinessLogActorKind|BusinessLogOutcome]:labels.all}</option>)}</SimpleSelect></Field>;
   const apply=()=>controller.setFilter({since:draft.since||null,until:draft.until||null,actor:draft.actorId?{kind:draft.actorKind as BusinessLogActorKind,id:draft.actorId}:null,object:draft.objectKind||draft.objectId?{kind:draft.objectKind,id:draft.objectId}:null,event_type:draft.event_type||null,action:draft.action||null,result:draft.result as BusinessLogOutcome||null,correlation_id:draft.correlation_id||null,request_id:draft.request_id||null});
   const object=detail?.event.object,href=object?controller.resolveObject(object):null;
   return <section className={cx('xui-stack',className)}><PageHeader title={labels.title} actions={<><Button ref={refresh} disabled={state.busy} aria-busy={state.busy} onClick={()=>controller.refresh()}>{labels.refresh}</Button>{headerActions}</>}/>

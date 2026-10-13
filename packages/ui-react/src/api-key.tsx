@@ -1,7 +1,7 @@
 import * as React from 'react';
 import type {ApiKeyManagerController} from '@coffeehc/xui-runtime/api-key';
 import {Button} from './button.js';
-import {Field,Input,Textarea,NativeSelect,Fieldset,Checkbox} from './forms.js';
+import {Field,Input,Textarea,SimpleSelect,Fieldset,Checkbox} from './forms.js';
 import {PageHeader,Toolbar,Stack} from './layout.js';
 import {DataRegion,LoadingState,ErrorState,EmptyState,Alert,Badge} from './feedback.js';
 import {Table,TableContainer,TableCaption,TableHead,TableBody,TableRow,TableHeaderCell,TableCell} from './table.js';
@@ -43,7 +43,7 @@ export function ApiKeyManager({controller,className,headerActions,writeClipboard
             <Field label={labels.name} required error={state.fieldErrors.name}><Input ref={nameRef} autoFocus autoComplete="off" value={state.draft.name} disabled={state.actionBusy||!!state.writeBlock} onChange={event=>controller.setDraft({name:event.target.value})}/></Field>
             <Fieldset legend={labels.permissions} error={state.fieldErrors.permissions} disabled={state.actionBusy||!!state.writeBlock}>{options.permissions.map(item=><Checkbox key={item.id} label={item.label} title={item.description} checked={state.draft.permissionIds.includes(item.id)} disabled={item.disabled||item.required} onChange={event=>controller.setDraft({permissionIds:event.target.checked?[...state.draft.permissionIds,item.id]:state.draft.permissionIds.filter(id=>id!==item.id)})}/>)}</Fieldset>
             {options.confirmationLabel&&<Fieldset legend={labels.confirmation} error={state.fieldErrors.confirmation}><Checkbox ref={confirmationRef} label={options.confirmationLabel} required disabled={state.actionBusy||!!state.writeBlock} checked={state.draft.confirmed===true} onChange={event=>controller.setDraft({confirmed:event.target.checked})}/></Fieldset>}
-            <Field label={labels.expiry} error={state.fieldErrors.expiry}><NativeSelect value={state.draft.expiryId} disabled={state.actionBusy||!!state.writeBlock} onChange={event=>controller.setDraft({expiryId:event.target.value})}>{options.expiryOptions.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</NativeSelect></Field>
+            <Field label={labels.expiry} error={state.fieldErrors.expiry}><SimpleSelect value={state.draft.expiryId} disabled={state.actionBusy||!!state.writeBlock} onChange={event=>controller.setDraft({expiryId:event.target.value})}>{options.expiryOptions.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</SimpleSelect></Field>
           </form>}
           {state.phase==='result'&&<Stack><Field label={labels.secret}><Textarea ref={attachSecret} readOnly autoComplete="off" spellCheck={false} value={controller.readSecret()??''}/></Field>{state.copyStatus==='error'?<Alert tone="error">{labels.copyError}</Alert>:state.copyStatus!=='idle'&&<p className="xui-text" role="status">{state.copyStatus==='copying'?labels.copying:labels.copied}</p>}</Stack>}
           {(state.phase==='revoke'||state.phase==='delete')&&state.revokeTarget&&<dl className="xui-details"><dt>{labels.name}</dt><dd>{state.revokeTarget.name}</dd><dt>{labels.prefix}</dt><dd>{state.revokeTarget.prefix===null?labels.unknown:`${state.revokeTarget.prefix}…`}</dd></dl>}

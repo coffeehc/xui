@@ -1,6 +1,6 @@
 import {generateDomId} from './dom-id.js';
 import {getThemeController,type ThemeController} from './theme.js';
-import {bindHeaderLocaleSelect,isHeaderLocaleEnabled,type HeaderLocaleOptions} from './header-controls.js';
+import {createHeaderLocaleSelect,isHeaderLocaleEnabled,type HeaderLocaleOptions} from './header-controls.js';
 import {bindThemeModeButton,type ThemeModeLabels} from './theme-control.js';
 import {bindPressFeedback,createShellController,type DialogCloseDetails} from './dom.js';
 import {createNavigationMenu,indexNavigation,renderNavigationIcon,type NavigationMenuDOMOptions,type NavigationAdapter} from './navigation.js';
@@ -35,18 +35,19 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   const header=doc.createElement('header'),brand=doc.createElement('strong'),toggle=doc.createElement('button'),skip=doc.createElement('a'),main=doc.createElement('main'),dialog=doc.createElement('dialog'),title=doc.createElement('h2'),body=doc.createElement('div'),footer=doc.createElement('div'),close=doc.createElement('button');
   header.className='xui-shell-header';toggle.type='button';toggle.className='xui-button xui-shell-toggle';toggle.dataset.variant='ghost';toggle.dataset.xuiSidebarToggle='';toggle.dataset.xuiMenuToggle='';toggle.dataset.icon='true';const toggleIcon=renderNavigationIcon(doc,{paths:['M3 4h14v12H3zM7 4v12','m13 8-2 2 2 2']});toggleIcon.lastElementChild?.classList.add('xui-shell-toggle-arrow');toggle.append(toggleIcon);
   const headerPart=(name:string)=>{const node=doc.createElement('div');node.className=`xui-app-header${name?'-'+name:''}`;return node;};
-  const headerLayout=headerPart(''),primary=headerPart('primary'),secondary=headerPart('secondary'),navigationSlot=headerPart('navigation');
+  const headerLayout=headerPart(''),primary=headerPart('primary'),secondary=headerPart('secondary'),navigationSlot=headerPart('navigation'),identity=headerPart('identity');
   const slots={leading:headerPart('leading'),brand:headerPart('brand'),breadcrumb:headerPart('breadcrumb'),status:headerPart('status'),actions:headerPart('actions'),legacy:headerPart('legacy'),auxiliary:headerPart('auxiliary'),context:headerPart('context'),account:headerPart('account')};
-  const controls=headerPart('controls'),localeSelect=doc.createElement('select');let localeBinding:ReturnType<typeof bindHeaderLocaleSelect>|undefined;
+  const controls=headerPart('controls');let localeBinding:ReturnType<typeof createHeaderLocaleSelect>|undefined;
   const themeSlot=headerPart('theme'),themeButton=doc.createElement('button');themeSlot.append(themeButton);let themeInput:ThemeController|undefined,themeLabelsInput:Partial<ThemeModeLabels>|undefined,releaseTheme=()=>{};
   const slotInputs:Partial<Record<keyof typeof slots,Node|null>>={};
-  navigationSlot.append(toggle);primary.append(slots.leading,navigationSlot,slots.brand,slots.breadcrumb,slots.context);controls.append(slots.auxiliary,themeSlot);secondary.append(slots.status,slots.actions,slots.legacy,controls,slots.account);headerLayout.append(primary,secondary);header.append(headerLayout);
+  navigationSlot.append(toggle);identity.append(slots.leading,slots.brand);primary.append(identity,navigationSlot,slots.breadcrumb,slots.context);controls.append(slots.auxiliary,themeSlot);secondary.append(slots.status,slots.actions,slots.legacy,controls,slots.account);headerLayout.append(primary,secondary);header.append(headerLayout);
   const syncHeader=()=>{
     if(brand.textContent!==(options.title??''))brand.textContent=options.title??'';brand.title=options.title??'';
     const nodes={...options.headerSlots,brand:options.headerSlots?.brand===undefined?(options.title?brand:null):options.headerSlots.brand,legacy:options.header};
     for(const role of ['leading','brand','breadcrumb','status','actions','legacy','auxiliary','context','account'] as const){const node=nodes[role]??null,slot=slots[role];slot.hidden=!node;if(slotInputs[role]!==node){slot.replaceChildren(...(node?[node]:[]));slotInputs[role]=node;}slot.hidden=!hasSlotContent(slot);}
+    identity.hidden=slots.leading.hidden&&slots.brand.hidden;
     const controller=options.theme??getThemeController(doc.defaultView!);if(themeInput!==controller||themeLabelsInput!==options.themeLabels){releaseTheme();releaseTheme=bindThemeModeButton(themeButton,controller,options.themeLabels);themeInput=controller;themeLabelsInput=options.themeLabels;}
-    if(isHeaderLocaleEnabled(options.locale)){if(!localeBinding)localeBinding=bindHeaderLocaleSelect(localeSelect,options.locale);else localeBinding.update(options.locale);if(localeBinding.element.parentNode!==controls)controls.insertBefore(localeBinding.element,themeSlot);}else{if(localeSelect===doc.activeElement)themeButton.focus();localeBinding?.destroy();localeBinding=undefined;localeSelect.remove();}
+    if(isHeaderLocaleEnabled(options.locale)){if(!localeBinding)localeBinding=createHeaderLocaleSelect(doc,options.locale);else localeBinding.update(options.locale);if(localeBinding.element.parentNode!==controls)controls.insertBefore(localeBinding.element,themeSlot);}else{if(localeBinding?.element.contains(doc.activeElement))themeButton.focus();localeBinding?.destroy();localeBinding=undefined;}
   };syncHeader();
   main.className='xui-shell-main';main.id=generateDomId(doc,'xui-main');main.tabIndex=-1;skip.className='xui-skip-link';skip.href='#'+main.id;skip.textContent=options.skipLabel??'Skip to content';
   dialog.className='xui-native-dialog xui-shell-drawer xui-layer';dialog.dataset.xuiSidebarDialog='';dialog.id=generateDomId(doc,'xui-sidebar-dialog');title.className='xui-dialog-title';title.id=generateDomId(doc,'xui-navigation');dialog.setAttribute('aria-labelledby',title.id);body.className='xui-dialog-body';body.dataset.xuiSidebarContent='';footer.className='xui-dialog-footer';close.type='button';close.className='xui-button';close.dataset.variant='outline';close.dataset.xuiClose='';footer.append(close);dialog.append(title,body,footer);

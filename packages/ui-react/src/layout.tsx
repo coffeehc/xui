@@ -5,7 +5,7 @@ import { Button } from './button.js';
 import { cx } from './shared.js';
 import {ThemeModeButton} from './theme.js';
 import type {ThemeController} from '@coffeehc/xui-runtime/theme';
-import {isHeaderLocaleEnabled,type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
+import {createHeaderLocaleSelect,isHeaderLocaleEnabled,type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
 import type {ThemeModeLabels} from '@coffeehc/xui-runtime/theme-control';
 export type {HeaderLocaleOptions,HeaderLocaleOption} from '@coffeehc/xui-runtime/header-controls';
 import type {ShellScrollMode} from '@coffeehc/xui-runtime/menu-layout';
@@ -22,13 +22,12 @@ export type SectionProps=Omit<React.ComponentProps<'section'>,'title'> & {title?
 export function Section({title,actions,children,className,...props}:SectionProps){const id=React.useId();return <section aria-labelledby={title?id:undefined} {...props} className={cx('xui-section',className)}>{(title||actions)&&<header className="xui-section-header">{title&&<h2 id={id}>{title}</h2>}{actions&&<div className="xui-toolbar">{actions}</div>}</header>}{children}</section>;}
 
 function HeaderLocaleSelect({locale}:{locale:HeaderLocaleOptions}){
-  const select=React.useRef<HTMLSelectElement>(null);
-  React.useLayoutEffect(()=>{const node=select.current;return ()=>{if(node&&node.ownerDocument.activeElement===node)node.closest('.xui-app-header-controls')?.querySelector<HTMLButtonElement>('.xui-theme-mode-toggle')?.focus();};},[]);
-  return <span className="xui-header-locale-control"><select ref={select} className="xui-select xui-header-locale" aria-label={locale.label??'语言'} value={locale.value} disabled={!locale.enabled||locale.disabled} onChange={event=>{const value=event.currentTarget.value;event.currentTarget.value=locale.value;if(locale.enabled&&!locale.disabled&&value!==locale.value&&locale.options.some(item=>item.value===value&&!item.disabled))locale.onValueChange(value);}}>
-    {!locale.options.some(item=>item.value===locale.value)&&<option value={locale.value} disabled/>}
-    {locale.options.map(item=><option key={item.value} value={item.value} disabled={item.disabled}>{item.label}</option>)}
-  </select><svg className="xui-header-locale-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"><path d="m1 6 9 8 9-8"/></svg></span>;
+  const mount=React.useRef<HTMLSpanElement>(null),binding=React.useRef<ReturnType<typeof createHeaderLocaleSelect>|null>(null);
+  React.useLayoutEffect(()=>{const node=mount.current!,owner=createHeaderLocaleSelect(node.ownerDocument,locale);binding.current=owner;node.append(owner.element);return ()=>{if(owner.element.contains(node.ownerDocument.activeElement))node.closest('.xui-app-header-controls')?.querySelector<HTMLButtonElement>('.xui-theme-mode-toggle')?.focus();owner.destroy();binding.current=null;};},[]);
+  React.useLayoutEffect(()=>binding.current?.update(locale),[locale]);
+  return <span className="xui-select-host" data-xui-header-locale="" ref={mount}/>;
 }
+
 const hasContent=(value:React.ReactNode):boolean=>{
   if(value===undefined||value===null||typeof value==='boolean')return false;
   if(typeof value==='string')return value.length>0;
@@ -36,6 +35,11 @@ const hasContent=(value:React.ReactNode):boolean=>{
   if(React.isValidElement<{children?:React.ReactNode}>(value)&&value.type===React.Fragment)return hasContent(value.props.children);
   return true;
 };
+
+/** Product identity content; its region tracks the shell rail automatically. */
+export function HeaderBrand({logo,children,className,...props}:React.ComponentProps<'span'>&{logo?:React.ReactNode}){
+  return <span {...props} className={cx('xui-header-brand',className)}>{logo&&<span className="xui-header-brand-logo" aria-hidden="true">{logo}</span>}<span className="xui-header-brand-name">{children}</span></span>;
+}
 
 export interface AppHeaderSlots {
   leading?:React.ReactNode;brand?:React.ReactNode;breadcrumb?:React.ReactNode;status?:React.ReactNode;actions?:React.ReactNode;auxiliary?:React.ReactNode;context?:React.ReactNode;account?:React.ReactNode;
@@ -45,8 +49,8 @@ export type AppHeaderProps=React.ComponentProps<'div'> & AppHeaderSlots & {navig
 function AppHeaderFrame({legacyPrimary,leading,brand,breadcrumb,status,actions,auxiliary,context,account,navigation,theme,themeLabels,locale,children,className,...props}:AppHeaderProps&{legacyPrimary?:React.ReactNode}){
   const present=hasContent;
   return <div {...props} className={cx('xui-app-header',className)}>
-    <div className="xui-app-header-primary">{present(leading)&&<div className="xui-app-header-leading">{leading}</div>}{present(navigation)&&<div className="xui-app-header-navigation">{navigation}</div>}
-      {present(brand)&&<div className="xui-app-header-brand">{brand}</div>}
+    <div className="xui-app-header-primary">{(present(leading)||present(brand))&&<div className="xui-app-header-identity">{present(leading)&&<div className="xui-app-header-leading">{leading}</div>}{present(brand)&&<div className="xui-app-header-brand">{brand}</div>}</div>}
+      {present(navigation)&&<div className="xui-app-header-navigation">{navigation}</div>}
       {present(breadcrumb)&&<div className="xui-app-header-breadcrumb">{breadcrumb}</div>}
       {present(context)&&<div className="xui-app-header-context">{context}</div>}
       {present(legacyPrimary)&&<div className="xui-app-header-legacy">{legacyPrimary}</div>}

@@ -20,7 +20,21 @@
   .xui-data-region[aria-busy='true'] {border-color:var(--surface-line-strong);}
   .xui-skeleton {min-block-size:var(--control-height);inline-size:100%;background:var(--muted);border-radius:var(--radius-md);animation:xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate;}
   .xui-spinner {display:inline-block;inline-size:var(--control-icon-size);block-size:var(--control-icon-size);border:var(--line-width-emphasis) solid var(--surface-line-strong);border-inline-end-color:var(--action-primary);border-radius:var(--radius-full);animation:xui-spin var(--motion-duration-spin) linear infinite;}
-  .xui-progress {inline-size:100%;accent-color:var(--action-primary);}
+  .xui-progress {appearance:none;display:block;inline-size:100%;block-size:var(--space-control-gap);border:0;border-radius:var(--radius-full);overflow:hidden;background:var(--muted);color:var(--action-primary);accent-color:var(--action-primary);}
+  .xui-progress::-webkit-progress-bar {background:var(--muted);border-radius:var(--radius-full);}
+  .xui-progress::-webkit-progress-value {background:var(--action-primary);border-radius:var(--radius-full);}
+  .xui-progress::-moz-progress-bar {background:var(--action-primary);border-radius:var(--radius-full);}
+  /* Omitted value remains truly indeterminate; never manufacture a percent. */
+  .xui-progress:indeterminate {background:var(--interaction-selected);animation:xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate;}
+  .xui-progress:indeterminate::-webkit-progress-bar {background:var(--interaction-selected);}
+  .xui-progress:indeterminate::-moz-progress-bar {background:var(--interaction-selected);}
+  @media (forced-colors:active) {
+    .xui-progress {appearance:auto;}
+    .xui-progress:is(:indeterminate,[value])::-webkit-progress-bar {all:revert;}
+    .xui-progress:is(:indeterminate,[value])::-webkit-progress-value {all:revert;}
+    .xui-progress:is(:indeterminate,[value])::-moz-progress-bar {all:revert;}
+  }
+  @media (prefers-reduced-motion:reduce) {.xui-progress:indeterminate {animation:none;}}
   .xui-badge {display:inline-flex;gap:var(--space-text-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);font-weight:var(--font-weight-control);}
   @keyframes xui-pulse {from{opacity:var(--motion-feedback-opacity-start);}to{opacity:1;}}
   @keyframes xui-spin {to{transform:rotate(var(--motion-spin-rotation));}}

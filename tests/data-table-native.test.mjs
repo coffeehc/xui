@@ -72,7 +72,7 @@ test('native natural layout and single-frame toolbar update without replacing sc
   assert.equal(root.dataset.layout,'natural');assert.equal(root.querySelector('.xui-data-table-tools').parentElement,frame);assert.equal(body.parentElement,frame);assert.equal(footer.parentElement,frame);
   for(const layout of ['workspace','document','natural']){owner.update({layout});assert.equal(root.dataset.layout,layout);assert.equal(owner.getBody(),body);assert.equal(root.querySelector('footer'),footer);assert.equal(root.querySelector('select'),select);}
   assert.throws(()=>owner.update({layout:'fill'}),/Invalid DataTable layout/);assert.equal(root.dataset.layout,'natural');
-  owner.update({pagination:undefined,toolbar:undefined});assert.equal(select.parentElement.hidden,true);assert.equal(root.querySelector('.xui-data-table-tools').hidden,true);assert.match(root.querySelector('.xui-data-table-count').textContent,/1 loaded/);owner.destroy();
+  owner.update({pagination:undefined,toolbar:undefined});assert.equal(select.closest('.xui-data-table-page-size').hidden,true);assert.equal(root.querySelector('.xui-data-table-tools').hidden,true);assert.match(root.querySelector('.xui-data-table-count').textContent,/1 loaded/);owner.destroy();
 });
 
 test('native cursor controls pass exact tokens, retain confirmed facts, block duplicates and switch modes',async()=>{

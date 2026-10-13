@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 import {MenuLayout} from '@coffeehc/xui-react/menu-layout';
-import {AppHeader,PageHeader,SidebarFooterContent,Stack,type HeaderLocaleOptions} from '@coffeehc/xui-react/layout';
+import {AppHeader,HeaderBrand,PageHeader,SidebarFooterContent,Stack,type HeaderLocaleOptions} from '@coffeehc/xui-react/layout';
 import {Button} from '@coffeehc/xui-react/button';
 import {Input,NativeSelect} from '@coffeehc/xui-react/forms';
 import {Avatar} from '@coffeehc/xui-react/avatar';
@@ -17,9 +17,9 @@ function App(){
   const requests=React.useRef<string[]>([]),action=()=>setCount(n=>n+1),locale:HeaderLocaleOptions={enabled,disabled,value,options:languageOptions,label:labels?'Language':'语言',onValueChange:next=>{requests.current.push(next);if(!query.has('controlled'))setValue(next);}};
   window.headerDemo={setOptions,setAccountLong,setSidebarVisible,setDisabled,destroy:()=>root.unmount(),setEnabled,setValue,setSlots:setShow,update:()=>setVersion(n=>n+1),navigate:()=>setActive('two'),localize:()=>setLabels(true),getRequests:()=>requests.current,syncTheme:(mode:'light'|'dark'|'system')=>window.xuiTheme!.syncMode(mode)};
   const account=<Button size="sm" variant="ghost" onClick={action} aria-label="账号" data-testid="header-account"><Avatar.Root size="sm" aria-hidden="true" data-testid="header-account-avatar"><Avatar.Fallback>陈</Avatar.Fallback></Avatar.Root><span>{longAccount?'负责跨区域项目协作与知识库管理的长中文账号名称'.repeat(2):'账号'}</span></Button>;
-  const headerSlots={breadcrumb:<nav aria-label="位置"><a href="#project">项目</a></nav>,context:show?<Input aria-label="全局搜索" defaultValue="保留搜索"/>:undefined,status:<span data-testid="header-version">{query.has('compact')?'有新版本可升级 · ':''}更新 {version}</span>,actions:show?<Button onClick={action}>应用操作</Button>:undefined,auxiliary:show?<Button onClick={action}>扩展操作</Button>:undefined,account:show||query.has('compact')?account:undefined};
+  const headerSlots={brand:<HeaderBrand logo={<span>◈</span>}>示例工作台</HeaderBrand>,breadcrumb:<nav aria-label="位置"><a href="#project">项目</a></nav>,context:show?<Input aria-label="全局搜索" defaultValue="保留搜索"/>:undefined,status:<span data-testid="header-version">{query.has('compact')?'有新版本可升级 · ':''}更新 {version}</span>,actions:show?<Button onClick={action}>应用操作</Button>:undefined,auxiliary:show?<Button onClick={action}>扩展操作</Button>:undefined,account:show||query.has('compact')?account:undefined};
   const ordinary=<NativeSelect aria-label="普通表单选择" defaultValue="one"><option value="one">普通选项</option><option value="two">第二项</option></NativeSelect>;
-  if(query.has('direct'))return <Stack className="xui"><AppHeader brand="示例工作台" locale={locale} {...headerSlots}/>{ordinary}<p data-testid="count">{count}</p></Stack>;
+  if(query.has('direct'))return <Stack className="xui"><AppHeader locale={locale} {...headerSlots}/>{ordinary}<p data-testid="count">{count}</p></Stack>;
   return <MenuLayout items={[{id:'one',label:'总览',href:'#one',icon:'home'},{id:'two',label:'设置',href:'#two',icon:'settings'},...Array.from({length:60},(_,i)=>({id:`row-${i}`,label:`很长的中文导航项目 ${i}`,href:`#row-${i}`,icon:'file'}))]} activeId={active} title="示例工作台" label="工作导航" compactLabel="收起导航" expandLabel="展开导航" scrollMode="viewport" locale={locale}
     themeLabels={labels?{light:'Light',dark:'Dark',system:'System',switchToLight:'Switch to light',switchToDark:'Switch to dark',switchToSystem:'Follow system'}:undefined}
     headerSlots={headerSlots}
