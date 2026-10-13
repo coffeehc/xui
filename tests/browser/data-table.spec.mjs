@@ -38,7 +38,7 @@ async function setup(page,kind,{query='',theme='light',viewport=viewports[0],mot
   await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);
 }
 async function metrics(page){return page.evaluate(selectors=>{
-  const measure=node=>{if(!node||!node.getClientRects().length)return null;const r=node.getBoundingClientRect(),s=getComputedStyle(node);return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom,clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,clientHeight:node.clientHeight,scrollHeight:node.scrollHeight,scrollTop:node.scrollTop,scrollLeft:node.scrollLeft,position:s.position,overflowX:s.overflowX,overflowY:s.overflowY,borderBottom:parseFloat(s.borderBottomWidth),borderTop:parseFloat(s.borderTopWidth),paddingBottom:parseFloat(s.paddingBottom),paddingTop:parseFloat(s.paddingTop),rowGap:parseFloat(s.rowGap)||0};};
+  const measure=node=>{if(!node||!node.getClientRects().length)return null;const r=node.getBoundingClientRect(),s=getComputedStyle(node);return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom,clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,clientHeight:node.clientHeight,contentHeight:node.clientHeight-(parseFloat(s.paddingTop)||0)-(parseFloat(s.paddingBottom)||0),contentWidth:node.clientWidth-(parseFloat(s.paddingLeft)||0)-(parseFloat(s.paddingRight)||0),boxSizing:s.boxSizing,scrollHeight:node.scrollHeight,scrollTop:node.scrollTop,scrollLeft:node.scrollLeft,position:s.position,overflowX:s.overflowX,overflowY:s.overflowY,borderBottom:parseFloat(s.borderBottomWidth),borderTop:parseFloat(s.borderTopWidth),paddingBottom:parseFloat(s.paddingBottom),paddingTop:parseFloat(s.paddingTop),rowGap:parseFloat(s.rowGap)||0};};
   return {viewport:{width:innerWidth,height:innerHeight},document:measure(document.scrollingElement),...Object.fromEntries(Object.entries(selectors).map(([name,selector])=>[name,measure(document.querySelector(selector))]))};
 },selectors);}
 async function capture(page,info,label){
@@ -58,7 +58,8 @@ async function assertWorkspace(page,{count=20,internal=false}={}){
   expect(m.body.clientHeight,'table body has an actual scroll viewport').toBeGreaterThan(0);
   expect(m.body.scrollHeight,'20/50/100 rows truly overflow the body').toBeGreaterThan(m.body.clientHeight+1);
   expect(m.body.overflowY).toBe('auto');
-  near(m.table.height,m.content.clientHeight,'public DataTable fills allocated workspace');
+  near(m.table.height,m.content.contentHeight,'public DataTable fills allocated workspace content box');
+  near(m.table.width,m.content.contentWidth,'public DataTable fills allocated workspace content width');
   near(m.frame.bottom,m.table.bottom,'frame reaches table end without excess blank space');
   near(m.footer.bottom,m.frame.bottom-m.frame.borderBottom,'footer reaches frame end');
   expect(m.footer.y).toBeGreaterThanOrEqual(m.body.bottom-1.5);
@@ -196,7 +197,7 @@ for(const kind of kinds){
 
   for(const theme of ['light','dark','system'])for(const viewport of viewports)test(`${kind} cards ${theme} ${viewport.width}px: public ScrollArea/Grid/Surface consume the same fixed page slots`,async({page},info)=>{
     await setup(page,kind,{query:'?cards&size=100',theme,viewport});await expect(table(page)).toHaveCount(0);await expect(page.getByRole('group',{name:'记录筛选',exact:true})).toHaveCount(1);await expect(page.locator('.xui-shell-page-toolbar:visible')).toHaveCount(1);
-    const region=page.getByRole('region',{name:'合成记录卡片',exact:true});await expect(region.locator('.xui-surface')).toHaveCount(100);const before=await metrics(page);near(before.cards.height,before.content.clientHeight,'public card root fills allocated content');
+    const region=page.getByRole('region',{name:'合成记录卡片',exact:true});await expect(region.locator('.xui-surface')).toHaveCount(100);const before=await metrics(page);near(before.cards.height,before.content.contentHeight,'public card root fills allocated content');
     for(const key of ['document','main','content','cards'])normalContainer(before,key);expect(before.cardViewport.scrollHeight).toBeGreaterThan(before.cardViewport.clientHeight);
     await region.hover();await page.mouse.wheel(0,260);await expect.poll(()=>region.evaluate(node=>node.scrollTop)).toBeGreaterThan(0);await region.evaluate(node=>{node.scrollTop=node.scrollHeight;});await expect.poll(()=>region.evaluate(node=>node.scrollHeight-node.clientHeight-node.scrollTop)).toBeLessThanOrEqual(1.5);
     const after=await metrics(page);for(const key of ['header','toolbar','cards'])stays(before,after,key);for(const key of ['document','main','content'])normalContainer(after,key);

@@ -31,3 +31,5 @@
 此批通过情况以对应提交的build/types/unit、独立tarball消费者及实际安全CI为准，不将修复前红灯算通过。
 
 同形验证纠正：公开布局是document/workspace；原测试natural落入默认workspace，24个通过结果不能证明两个纵向模式。现document显式传layout=document及unbounded，并断言DataTable data-layout与shell data-scroll-mode均为document；workspace同样断言真实属性。1eba/a903只确认workspace已测，document修正后结果待新CI。
+
+2ebaac1后验：81Auth通过、399/496focused通过，24项workspace/Toggle真实红灯回归已转绿。91项旧Table尺寸基准把clientHeight（含padding）等同内容可用高，新增4px四边focus paint留白后相差8px；代表JSON为content.clientHeight558、paddingTop/Bottom各4、实际Table550、footer53。回归现按clientHeight减实际computed padding计算内容盒，同时额外断言满内容宽度，原滚动/边界/短内容/分页可达断言与容差不变。此为测试几何基准更正，不统一硬减8或修改生产表格。菜单3例已经通过Home焦点/禁用绘制，执行计数改在Escape后核对，因模态菜单打开时背景aria-hidden。TableActions React的滚动region本身是Tab停靠点，回归用真实有限Tab逐项到按钮，仍强断言每按钮聚焦与outline无裁切；不调用按钮focus绕过。

@@ -59,7 +59,7 @@ async function metrics(page){
       const r=node.getBoundingClientRect(),s=getComputedStyle(node);
       return {
         x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,
-        clientWidth:node.clientWidth,clientHeight:node.clientHeight,
+        clientWidth:node.clientWidth,clientHeight:node.clientHeight,contentHeight:node.clientHeight-(parseFloat(s.paddingTop)||0)-(parseFloat(s.paddingBottom)||0),contentWidth:node.clientWidth-(parseFloat(s.paddingLeft)||0)-(parseFloat(s.paddingRight)||0),boxSizing:s.boxSizing,
         scrollWidth:node.scrollWidth,scrollHeight:node.scrollHeight,
         scrollTop:node.scrollTop,scrollLeft:node.scrollLeft,
         overflowX:s.overflowX,overflowY:s.overflowY,position:s.position,display:s.display,
@@ -167,7 +167,7 @@ async function assertShort(page,count,{label=`short-${count}`,pagination=true}={
   const m=await capture(page,label);assertFrame(m);
   for(const key of ['document','main','content','body'])noVerticalScroll(m,key);
   for(const key of ['document','main','content'])noHorizontalEscape(m,key);
-  expect(m.outer.height,'short content does not fill the bounded parent').toBeLessThan(m.content.clientHeight-m.footer.height);
+  expect(m.outer.height,'short content does not fill the bounded parent').toBeLessThan(m.content.contentHeight-m.footer.height);
   // All desktop columns fit, so there is no horizontal scrollbar to include.
   near(m.body.height,m.grid.height,'body follows the actual table rather than a workspace minimum');
   near(m.lastRow.bottom,m.body.bottom,'last short row meets the footer boundary');
@@ -182,7 +182,8 @@ async function assertBounded(page,count,{label=`bounded-${count}`,layout='natura
   await expect(rows(page)).toHaveCount(count);await settle(page);
   const m=await capture(page,label);assertFrame(m);
   for(const key of ['document','main','content']){noVerticalScroll(m,key);noHorizontalEscape(m,key);}
-  near(m.outer.height,m.content.clientHeight,'long table caps at the allocated content height');
+  near(m.outer.height,m.content.contentHeight,'long table caps at the allocated content box height');
+  near(m.outer.width,m.content.contentWidth,'long table fills the allocated content box width');
   expect(m.body.scrollHeight,'long rows genuinely overflow the body').toBeGreaterThan(m.body.clientHeight+1.5);
   expect(m.body.overflowY).toBe('auto');
   // Test the measured cap, not a particular min-block-size CSS strategy. An
@@ -423,7 +424,7 @@ for(const kind of kinds){
     if(flexHost){
       expect(before.host.display,'fixture is an actual flex parent').toBe('flex');
       expect(before.host.minBlockSize,'fixture allows its flex item to shrink').toBe('0px');
-      near(before.host.height,before.content.clientHeight,'flex parent has a definite bounded block size');
+      near(before.host.height,before.content.contentHeight,'flex parent has a definite bounded block size');
     }
     for(const key of ['document','main','outer','frame','body'])noVerticalScroll(before,key);
     for(const key of ['document','main','content'])noHorizontalEscape(before,key);
@@ -460,12 +461,12 @@ for(const kind of kinds){
     await setup(page,kind,['layout=workspace','local','empty']);
     await expect(page.locator(selectors.outer)).toHaveAttribute('data-layout','workspace');
     const empty=await capture(page,'workspace-empty');assertFrame(empty);
-    near(empty.outer.height,empty.content.clientHeight,'explicit workspace fills even with no records');
+    near(empty.outer.height,empty.content.contentHeight,'explicit workspace fills even with no records');
     await page.evaluate(()=>window.dataTableDemo.owner.setEmpty(false));await ready(page);
     await page.evaluate(()=>window.dataTableDemo.owner.filter('search','记录 125'));await ready(page);
     await expect(rows(page)).toHaveCount(1);
     const one=await capture(page,'workspace-one');assertFrame(one);
-    near(one.outer.height,one.content.clientHeight,'explicit workspace fills even with one record');
+    near(one.outer.height,one.content.contentHeight,'explicit workspace fills even with one record');
     near(one.outer.height,empty.outer.height,'workspace size remains fixed across short data');
     await page.evaluate(()=>window.dataTableDemo.owner.clear());await ready(page);
     await assertBounded(page,20,{label:'workspace-long',layout:'workspace'});await scrollBodyToEnd(page);
