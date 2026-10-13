@@ -18,6 +18,14 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk && fc-match "sans-serif:lang=zh-cn"
       - name: Build and validate public consumers
         run: pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:consumer
+      - name: Basic input contract acceptance
+        run: pnpm exec playwright test input-foundation-contract.spec.mjs
+      - name: Preserve basic input evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: basic-input-contract
+          path: test-results
       - name: Authentication visual acceptance
         run: pnpm exec playwright test auth-visual-system.spec.mjs login-visual.spec.mjs auth-page.spec.mjs auth-feedback-readable.spec.mjs
       - name: Preserve authentication visual evidence
@@ -27,7 +35,7 @@ jobs:
           name: authentication-visual
           path: test-results
       - name: Focused interaction regressions
-        run: pnpm exec playwright test media-foundation-contract.spec.mjs input-foundation-contract.spec.mjs api-key-v2.spec.mjs display-foundation-contract.spec.mjs feedback-foundation-contract.spec.mjs workspace-layout.spec.mjs native-controls-audit.spec.mjs choice-state-contract.spec.mjs separator-design-contract.spec.mjs button-size-contract.spec.mjs input-typography-contract.spec.mjs button-state-contract.spec.mjs table-actions.spec.mjs design-state-regressions.spec.mjs table-design-contract.spec.mjs menu-design-contract.spec.mjs context-submenu.spec.mjs foundation-contract.spec.mjs data-table-caption-shape.spec.mjs data-table-feedback.spec.mjs data-table-widths.spec.mjs data-table-layout.spec.mjs data-table.spec.mjs api-key-atomic.spec.mjs auth-operation.spec.mjs login-layout.spec.mjs login.spec.mjs error-layout.spec.mjs capabilities.spec.mjs search-toolbar.spec.mjs display.spec.mjs choice-group.spec.mjs password-fields.spec.mjs password-strength.spec.mjs admin-setup.spec.mjs text-inputs.spec.mjs
+        run: pnpm exec playwright test media-foundation-contract.spec.mjs api-key-v2.spec.mjs display-foundation-contract.spec.mjs feedback-foundation-contract.spec.mjs workspace-layout.spec.mjs native-controls-audit.spec.mjs choice-state-contract.spec.mjs separator-design-contract.spec.mjs button-size-contract.spec.mjs input-typography-contract.spec.mjs button-state-contract.spec.mjs table-actions.spec.mjs design-state-regressions.spec.mjs table-design-contract.spec.mjs menu-design-contract.spec.mjs context-submenu.spec.mjs foundation-contract.spec.mjs data-table-caption-shape.spec.mjs data-table-feedback.spec.mjs data-table-widths.spec.mjs data-table-layout.spec.mjs data-table.spec.mjs api-key-atomic.spec.mjs auth-operation.spec.mjs login-layout.spec.mjs login.spec.mjs error-layout.spec.mjs capabilities.spec.mjs search-toolbar.spec.mjs display.spec.mjs choice-group.spec.mjs password-fields.spec.mjs password-strength.spec.mjs admin-setup.spec.mjs text-inputs.spec.mjs
       - name: Preserve focused interaction evidence
         uses: actions/upload-artifact@v4
         if: always()

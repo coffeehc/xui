@@ -47,10 +47,18 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
     await label.scrollIntoViewIfNeeded();const b=await label.boundingBox();expect(b).not.toBeNull();const point={x:b.x+b.width/2,y:b.y+b.height/2};expect(await label.evaluate((node,p)=>node.contains(document.elementFromPoint(p.x,p.y)),point)).toBe(true);await page.mouse.click(point.x,point.y);await expect(control).not.toBeFocused();
    }else{await label.click();await expect(control).toBeFocused();}
   }
-  for(const row of entries.filter(row=>row.state==='default')){const control=page.locator(`#${row.id}`);await control.fill(row.kind==='input'?'Edited 中文':'Edited line 1\nEdited line 2');}
+  const edits=[];
+  for(const row of entries.filter(row=>row.state==='default')){
+   const control=page.locator(`#${row.id}`),value=row.kind==='input'?'Edited 中文':'Edited line 1\nEdited line 2',before=await page.evaluate(()=>window.inputFoundationEvents.length);
+   await control.fill(value);await expect(control).toHaveValue(value);
+   const events=await page.evaluate(start=>window.inputFoundationEvents.slice(start),before);
+   expect(events.length).toBeGreaterThan(0);for(const event of events){expect(event.id).toBe(row.id);expect(event.isTrusted).toBe(true);expect(typeof event.inputType).toBe('string');}
+   expect(events.at(-1).value).toBe(value);edits.push({id:row.id,value,events});
+  }
   const final=await form.evaluate(form=>Object.fromEntries(new FormData(form)));
   expect(final).toEqual(Object.fromEntries(entries.filter(row=>row.state!=='disabled').map(row=>[row.id,row.state==='readonly'?row.value:row.kind==='input'?'Edited 中文':'Edited line 1\nEdited line 2'])));
-  expect(await page.evaluate(()=>window.inputFoundationEvents)).toEqual(entries.filter(row=>row.state==='default').map(row=>row.id));
+  expect(await page.evaluate(()=>window.inputFoundationEvents.map(event=>event.id).filter((id,index,ids)=>index===0||id!==ids[index-1]))).toEqual(entries.filter(row=>row.state==='default').map(row=>row.id));
+  await info.attach('input-native-edit-events.json',{body:JSON.stringify(edits,null,2),contentType:'application/json'});
   await info.attach('input-keyboard-scroll-evidence.json',{body:JSON.stringify(await page.evaluate(()=>window.inputFoundationFocusEvidence),null,2),contentType:'application/json'});
  });
  test(`${kind} ${theme}: Input and Textarea retain invalid boundaries and keyboard focus with independent tokens`,async({page},info)=>{
