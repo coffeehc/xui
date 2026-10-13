@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {build} from 'esbuild';
-// Exercise real isolation without the legacy suite's optional --no-sandbox launch flag.
+// Exercise real isolation with the normal browser sandbox enabled.
 // Hosted Ubuntu ships a stable Chrome AppArmor profile; preserve its normal sandbox.
 test.use({...(process.env.CI?{channel:'chrome'}:{}),launchOptions:{chromiumSandbox:true,args:[]}});
 let bundle;
