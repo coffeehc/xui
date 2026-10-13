@@ -66,3 +66,7 @@ G1通过标准：逐族静态条款/token映射、单测、正式React/原生浏
 - 待后续基础验证：Button xs短文本实际高度与24px合同、choice disabled+invalid边线优先级、Combobox代理键盘focus与selected可辨识。尚未修改这三项实现，也不把静态推断写成浏览器复现。
 
 - 下一选择合同待核：DESIGN中菜单min-width与Combobox/自定义选择popover-width/padding属于不同角色，当前选择皮肤存在消费差异候选。需先列各组件适用条款与冲突，再做token覆盖真实浏览器回归；不能批量给所有listbox套同宽或改规范迁就实现。
+
+### NativeSelect平台行高边界
+
+c83fd28安全CI确认字体500与14px已生效，原生select的computed line-height为normal，而非作者CSS的22px。Blink官方[AdjustMenuListStyle实现](https://chromium.googlesource.com/chromium/src/+/06e87fb3dc2a1c881f95eb6cd3738608b846d29a/third_party/blink/renderer/core/layout/layout_theme_default.cc#304)将menulist行高设回初始值；这仅是保留原生外观的NativeSelect边界，不适用于Input/Textarea或自绘Select/Combobox。后续回归明确断言NativeSelect normal、控件实际36px、无内部裁字滚动、500→700字重token覆写及End选择真实值；其它四类入口仍严格22px行高。平台边界不通过取消原生外观或修改默认规范值掩盖。系统OS弹层本身仍未像素统一，遵既有NativeSelect用途合同。
