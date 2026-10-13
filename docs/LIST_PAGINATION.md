@@ -31,11 +31,11 @@ offset 端点可省略 next_cursor；cursor 端点每次明确给出 token 或 n
 - 发现：正式 HTTP 双端示例在未知 total 时以 list.length 假造 pageCount，preview 无计数仍返回占位 0；已改为未知不显示编号翻页、无计数响应省略 total，并增加实际 HTTP 浏览器回归。
 - 发现：旧 parser 强制 total 且 decodeItem 丢弃 next_cursor；旧 DataTable 的 unknown total 仅隐藏编号控件，宿主需在 footer 外加 cursor 交互。
 - 修正：精确可选元数据与三态投影；新增显式受控 cursor 组合，保留 offset 合同与既有框内布局。
-- 计划验证：共享 wire fixture、null/缺省/0/非法元数据、双端类型/正式 tarball、受控回调与防重复、首末页/空页/失败/取消/迟到响应、宽窄屏真实 footer bounds，以及全部旧布局/列宽回归。
-- 本地 build、350 token/design checks、typecheck 与 344 项 unit 已通过（0 fail/skip），构建指纹 e7a6d60d9735；此初版双端正式 tarball/exports/types/peer/performance 也通过；随后补 HTTP 示例三行修正，最终树须重跑，不能沿用初版成绩。最终同 SHA CI 待完成。本地 Chromium/socket 已知受环境限制，不重试绕过，实际浏览器验收由 GitHub Actions 正常 pnpm verify 完成。
+- 验证覆盖：共享 wire fixture、null/缺省/0/非法元数据、双端类型/正式 tarball、受控回调与防重复、首末页/空页/失败/取消/迟到响应、宽窄屏真实 footer bounds，以及全部旧布局/列宽回归。
+- 本地 build、350 token/design checks、typecheck 与 344 项 unit 已通过（0 fail/skip），构建指纹 e7a6d60d9735；此初版双端正式 tarball/exports/types/peer/performance 也通过；随后补 HTTP 示例修正，已按下方最终结果重跑，没有沿用初版成绩。本地 Chromium/socket 已知受环境限制，不重试绕过，实际浏览器验收由 GitHub Actions 正常 pnpm verify 完成。
 - 边界：未测试真实数据库 COUNT、产品权限/生产 route、其他浏览器/OS/读屏器或生产部署。
 
-共享 fixture 的唯一源为 commons/webfacade/testdata/webfacade-list.v1.json；本仓逐字节镜像在 [tests/fixtures/webfacade-list.v1.json](../tests/fixtures/webfacade-list.v1.json)，SHA-256 为 d1d04bf74b24909dd7f8e4a27fa7b2a6fc2de17c6e8c3c79027d2450df9c4ed1。共 9 个标准有效响应、1 个 legacy nil-slice 响应、17 个无效响应；实际 HTTP adapter、parseListData、显式投影与 cursor DataTable 共同消费同一文件。后端 source SHA 待其提交后补充，不把本地未提交源码描述为已发布版本。
+共享 fixture 的唯一源为 commons/webfacade/testdata/webfacade-list.v1.json；本仓逐字节镜像在 [tests/fixtures/webfacade-list.v1.json](../tests/fixtures/webfacade-list.v1.json)，SHA-256 为 d1d04bf74b24909dd7f8e4a27fa7b2a6fc2de17c6e8c3c79027d2450df9c4ed1。共 9 个标准有效响应、1 个 legacy nil-slice 响应、17 个无效响应；实际 HTTP adapter、parseListData、显式投影与 cursor DataTable 共同消费同一文件。截至 2026-10-13 00:29 UTC，已核对后端本地提交 commons `2fd78215cf5321b9dc9b12d5f02c90567ce3cc71` 与 httpx `51e2a0a334f77ff79bf23b2ebc4c75de5a8e0814`，但两者尚未发布到远端；它们不是可采用的正式远端版本，因此不提供不可达的源码链接。共享 fixture 内容及 hash 已核实相同。后端正式发布后再固定其远端版本、完成真实端点/数据库与产品接入验收；本仓通过不能替代这些步骤。
 
 独立只读审阅核对三态、控制回调、取消历史与 count-required adapter，未发现阻断。初版 consumer 仅有既有 npm http-proxy 配置警告，退出状态为 0；没有变更环境配置。
 
@@ -45,4 +45,10 @@ ACL/权限过滤后的有界扫描可连续返回空 list 与非空 next_cursor�
 
 补修 HTTP 示例与 ACL 空页回归后的最终树重新执行：build（3822f58f81a3）、350 token/design checks、typecheck、347 项 unit（0 fail/skip），以及 React/原生独立正式 tarball 的全部 exports/types/peer/performance 检查，全部通过。648 项浏览器用例成功收集，其中新增 8 个 cursor 与 2 个真实 HTTP 无总数场景；收集不代表执行通过。
 
-代码提交后的同 SHA GitHub Actions 将运行完整 pnpm verify，含 watch、双端 tarball、cold-start 与实际 Chromium。此处记录已执行的本地结果，最终远程验收以该提交对应 workflow 终态为准；本地没有重复尝试已知受限的 Chromium/socket 路径。
+## 同 SHA 完整远程验收
+
+实现提交 `682d45317c6f1711e36f9dc5e993509d19f93fb6` 的 [CI 38326203907](https://github.com/coffeehc/xui/actions/runs/38326203907) 已 success：build 指纹同为 3822f58f81a3，347 unit（0 fail/skip）、watch、React/原生正式 tarball、cold-start 及 **648 项实际 Chromium** 全部通过（浏览器 9.8 分钟）。这是执行结果，不是用收集数代替通过数。
+
+新增 8 项 cursor 检查覆盖 React/原生 × 1280/390px 的前后翻页、真实 token、未知与已知总数、空末页、失败/重试、取消迟到、筛选/条数重置和 footer 四边 bounds；新增 2 项 HTTP 检查验证不计数响应确实省略 total、未知时不造编号页数、恢复真实总数后正常分页。既有全部列宽与布局矩阵亦通过。没有修改这些宽度/布局实现来放宽测试。
+
+本地未重复尝试已知受限的 Chromium/socket 路径。xui 前端合同与正式消费者已验证；上述未发布后端以及真实数据库/生产产品接入仍按明确边界单独完成。
