@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import postcss from 'postcss';
+import * as root from '../packages/ui-react/dist/index.js';
+import {Avatar} from '../packages/ui-react/dist/avatar.js';
+import {Image,Tag} from '../packages/ui-react/dist/display.js';
+import {Badge} from '../packages/ui-react/dist/feedback.js';
+import {createTag} from '../packages/runtime/dist/display-dom.js';
+import {navigationDOM} from './fixtures/navigation-dom.mjs';
+import {checkContract} from '../scripts/tokens.mjs';
+const css=postcss.parse((await Promise.all(['base','widgets','feedback'].map(name=>readFile(`packages/theme/src/${name}.css`,'utf8')))).join('\n'));
+const {light}=checkContract(await readFile('docs/DESIGN.md','utf8'));
+function mapping(selector,expected){const matches=[];css.walkRules(selector,node=>matches.push(node));assert.equal(matches.length,1,selector);const actual=Object.fromEntries(matches[0].nodes.filter(node=>node.type==='decl').map(node=>[node.prop,node.value]));for(const [name,value]of Object.entries(expected)){assert.equal(actual[name],value,`${selector}: ${name}`);for(const [,token]of value.matchAll(/var\((--[\w-]+)\)/g))assert.ok(token in light,token);}return actual;}
+test('media foundations preserve root/subentry identity and Badge native passive semantics',()=>{
+ for(const [name,value]of Object.entries({Avatar,Image,Tag,Badge}))assert.equal(root[name],value,name);
+ for(const part of ['Root','Image','Fallback'])assert.equal(typeof Avatar[part],'function');
+ const badge=Badge({children:'<literal>',className:'host',id:'metadata','aria-describedby':'full'});assert.equal(badge.type,'span');assert.equal(badge.props.className,'xui-badge host');assert.equal(badge.props.children,'<literal>');assert.equal(badge.props['aria-describedby'],'full');for(const name of ['role','tabIndex','aria-live','disabled'])assert.equal(badge.props[name],undefined);
+});
+test('Avatar consumes existing size, shape, surface and content fitting roles',()=>{
+ mapping('.xui-avatar',{'inline-size':'var(--control-height)','block-size':'var(--control-height)','border-radius':'var(--radius-full)',background:'var(--layer-support)',color:'var(--foreground)',overflow:'hidden'});
+ for(const [size,token]of [['sm','control-height-sm'],['lg','avatar-size-lg']])mapping(`.xui-avatar[data-size='${size}']`,{'inline-size':`var(--${token})`,'block-size':`var(--${token})`});
+ mapping('.xui-avatar-image',{'inline-size':'100%','block-size':'100%','object-fit':'cover'});mapping('.xui-avatar-fallback',{'font-weight':'var(--font-weight-control)'});
+});
+test('Image frame and placeholders use content geometry and existing feedback roles',()=>{
+ mapping('.xui-image',{'max-inline-size':'100%',position:'relative',overflow:'hidden'});mapping('.xui-image-content',{'object-fit':'contain'});mapping('.xui-image[data-fit="cover"]>.xui-image-content',{'object-fit':'cover'});
+ mapping('.xui-image-placeholder',{padding:'var(--space-control-gap)',background:'var(--muted)',color:'var(--muted-foreground)','overflow-wrap':'anywhere',overflow:'auto'});
+});
+test('Tag publishes removal intent without removing itself and metadata uses existing text metrics',()=>{
+ const {doc,root}=navigationDOM();let intents=0;const owner=createTag(doc,{label:'<literal>完整标签',removeLabel:'Request removal',onRemove:()=>intents++});root.append(owner.element);const button=owner.removeButton;button.click();assert.equal(intents,1);assert.equal(owner.element.parentNode,root);assert.equal(owner.removeButton,button);assert.equal(owner.element.firstElementChild.textContent,'<literal>完整标签');owner.destroy();
+ const badge=mapping('.xui-badge',{'font-size':'var(--font-size-body-xs)','line-height':'var(--line-height-body-xs)',gap:'var(--space-text-gap)'});assert.equal(badge.background,undefined);assert.equal(badge.border,undefined);mapping('.xui-tag-label',{'overflow-wrap':'anywhere','min-inline-size':'0'});mapping('.xui-tag>.xui-button',{flex:'none'});
+ // DESIGN's ordinary-text wording does not independently settle Badge 400/500.
+});
