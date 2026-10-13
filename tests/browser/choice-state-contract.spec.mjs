@@ -66,7 +66,7 @@ for(const kind of kinds)for(const theme of themes){
    const box=await control.boundingBox();
    expect(await control.evaluate(node=>{const r=node.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===node;}),row.id).toBe(true);
    await page.mouse.click(box.x+box.width/2,box.y+box.height/2);
-   await page.locator('label').filter({has:control}).click();
+   const label=page.locator('label').filter({has:control});const labelBox=await label.boundingBox();expect(labelBox).not.toBeNull();const point={x:labelBox.x+labelBox.width/2,y:labelBox.y+labelBox.height/2};expect(await label.evaluate((node,point)=>node.contains(document.elementFromPoint(point.x,point.y)),point)).toBe(true);await page.mouse.click(point.x,point.y);
    await expect(control).not.toBeFocused();
   }
   expect(immutable(await states(page))).toEqual(immutable(initial));expect(await page.evaluate(()=>window.choiceStateEvents)).toEqual([]);assertPaint(await states(page),expected);

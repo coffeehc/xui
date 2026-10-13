@@ -54,3 +54,7 @@ Radio/Switch 不伪造 mixed。每个 Radio 使用独立 name，样本测试单�
 本轮不再尝试已知会遇 `socket() EPERM` 的本地 Chromium，不更改 sandbox。浏览器用例和截图均交主维护者统一 CI；Playwright `--list` 仅确认 12 项能被发现，不能宣称它们已通过。
 
 没有本轮实际 computed style、像素或读屏结论，也未覆盖真实 200% 浏览器 zoom、移动 OS、所有 controlSize、RadioGroup/CheckboxGroup、字段组合或业务页面。若 CI 发现 readonly 等非本次 CSS 根因，须单独记录，不以扩大本批实现或放宽断言掩盖。
+
+## 首轮真实浏览器与行为测试更正
+
+23c70e1安全CI：6项48态颜色/错误边界/token覆写通过；6项行为用例被Playwright label.click的可操作性检查阻塞。trace精确停在label→checkbox-unchecked-disabled-valid，反复报element is not enabled，尚未执行后续readonly流程。测试改为真实鼠标在命中的label坐标点击，控件仍disabled且checked/indeterminate/事件不变断言全保留；readonly仍真实Tab/Space/方向键/控件与label点击。没有解除disabled、直接改值、增加sleep或扩大timeout。后续同SHA正式CI才可确认行为通过。
