@@ -31,3 +31,4 @@ export * from './grouped-combobox.js';
 export * from './data-table.js';
 export * from './metric-card.js';
 export * from './password.js';
+export * from './search-toolbar.js';

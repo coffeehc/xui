@@ -134,6 +134,10 @@
     "./operation-store": {
       "types": "./dist/operation-store.d.ts",
       "import": "./dist/operation-store.js"
+    },
+    "./search-toolbar-dom": {
+      "types": "./dist/search-toolbar-dom.d.ts",
+      "import": "./dist/search-toolbar-dom.js"
     }
   },
   "types": "./dist/index.d.ts"

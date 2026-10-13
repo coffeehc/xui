@@ -206,3 +206,11 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 ### Dialog / Sheet 表单组合
 
 `Dialog.Header` / `Sheet.Header` 接受 div props、`showClose?: boolean`（默认 true）及 `closeButtonProps?: React.ComponentProps<typeof BaseDialog.Close>`；默认一个右上 CloseButton，children 为标题/说明。`Dialog.CloseButton` / `Sheet.CloseButton` 是可命名图标关闭入口（默认 aria-label 为“关闭”），支持 Base UI Close props/ref/render/className。普通 `Close` 保持无定位原语以支持 Footer Cancel；Content 不自动增加关闭按钮。四边焦点绘制空间由 Dialog.Body / ScrollArea.Viewport 的公共滚动合同负责，原生结构与旧游离 X 的明确迁移见 [COMPOSITIONS](COMPOSITIONS.md#表单焦点绘制与关闭入口)。
+
+## 通用搜索与操作工具栏
+
+- `@coffeehc/xui-react/search-toolbar` <!-- public-entry: @coffeehc/xui-react/search-toolbar --> 及根入口：`SearchToolbar` / `SearchToolbarProps`，search/actions/advanced 三内容槽；defaultExpanded=false，支持 expanded/onExpandedChange，advancedLabel 与 div props/ref。
+- `@coffeehc/xui-runtime/search-toolbar-dom` <!-- public-entry: @coffeehc/xui-runtime/search-toolbar-dom --> 及根入口：`createSearchToolbar` / `SearchToolbarOptions` / `SearchToolbarController`，对应 Node/null 槽，稳定 update/getElement/getExpanded/destroy。
+- `@coffeehc/xui-theme/search-toolbar.css` <!-- public-entry: @coffeehc/xui-theme/search-toolbar.css --> 同时包含于 style/critical/components；统一尺寸和响应布局仅消费既有公共 token。
+
+默认高级区折叠，只有非空内容才显示触发器；受控请求等待宿主回传，折叠 hidden/inert 保留节点和值。搜索、筛选与主动作不引入业务 owner。完整默认、内容与更新合同见 [SEARCH_TOOLBAR](SEARCH_TOOLBAR.md)。

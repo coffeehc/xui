@@ -110,7 +110,7 @@ export function checkStyles(styles, values, runtimeVariables = []) {
     }
   });
 }
-export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets'];
+export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets','search-toolbar'];
 export async function generate(check = false, outputDirectory='packages/theme/dist') {
   const audit = await auditDesignSources();
   console.log(`Design values: ${audit.files} files, ${audit.declarations} declarations and explicit structural/runtime exceptions checked.`);

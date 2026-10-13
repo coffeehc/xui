@@ -25,6 +25,7 @@
     "./critical.css": "./dist/critical.css",
     "./auth.css": "./dist/auth.css",
     "./sheet.css": "./dist/sheet.css",
-    "./widgets.css": "./dist/widgets.css"
+    "./widgets.css": "./dist/widgets.css",
+    "./search-toolbar.css": "./dist/search-toolbar.css"
   }
 }

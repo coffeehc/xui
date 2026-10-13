@@ -53,3 +53,7 @@ React 推荐组合：`<Dialog.Header closeButtonProps={{'aria-label':'关闭设�
 回归入口：`tests/browser/focus-boundaries.spec.mjs` 使用正式打包 React/native 消费者，覆盖 Dialog、Sheet、Card/ScrollArea、嵌套卡片、双列/窄列、首末控件、invalid+focus、light/dark/system、390px 与 200% 根字体、独立 CloseButton、键盘关闭/回焦点。源码结构测试不替代真实浏览器几何和截图验收。
 
 原生 Dialog 的 `syncOpen` 同步宿主已确认的受控状态，不受最初注册 trigger 的 disabled 状态限制；同一个弹窗可能由另一项已授权动作打开（例如创建被未知写入门禁禁用时，允许打开核对/终止确认）。trigger 点击和 `open()` 请求仍拒绝 disabled，不能把 `syncOpen` 当未授权的用户请求入口。
+
+## 搜索 + 操作 + 高级区域
+
+[SearchToolbar](SEARCH_TOOLBAR.md) 组合 Toolbar/Button/DisclosureIndicator 和原生 disclosure controller，提供 search/actions/advanced 三个同名槽。它可用于已有 pageToolbar 或 DataTable.toolbar（同组筛选只放一处），不另造页面、查询或权限 owner。默认高级区折叠，defaultExpanded/expanded/onExpandedChange 分别表示初始值、受控事实与请求；长内容、窄容器、焦点绘制和 Node/Fragment 稳定更新由库负责。调用方只接公开槽/控件，无需私有 DOM/CSS 修补。

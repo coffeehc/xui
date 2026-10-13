@@ -1230,4 +1230,10 @@ DataTable以内部单一布局观察器测实际table/thead/首末行高度和co
 
 HeaderBrand logo盒使用control-height-sm，图片/SVG以contain限于盒内，不被固有尺寸或长名称撑大。桌面compact无leading时logo中心对齐nav-collapsed-width侧栏中心，补偿layout-content-inset只影响品牌，不改变toggle与内容起点；有leading保留平台安全区。
 
+### 通用搜索与操作工具栏
+
+SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。search、actions 和 advanced 是公开内容入口，不增加查询、分页、权限或请求 owner。宽屏搜索轨道采用 flex 剩余空间与 min-inline-size:0，主操作在行末；Input 的 100% 默认宽度只相对于搜索轨道，不把操作挤到下一行。操作组按 control-height、button-padding-inline、button-gap、control-icon-size 统一按钮尺寸；长标签可自然增高，同一行 stretch，不以固定高度裁切。工具栏按自身容器 40rem 既有断点换行，搜索独占一行，操作仍完整可达，不只依赖窗口宽度。
+
+高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和原生生命周期见 [SEARCH_TOOLBAR](SEARCH_TOOLBAR.md)。
+
 <!-- foundation-lifecycle:end -->
