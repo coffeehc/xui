@@ -9,7 +9,16 @@ async function assertFocusPaint(control){
  await control.focus();
  const result=await control.evaluate(node=>{
   const paint=node.closest('.xui-input-group')??node,style=getComputedStyle(paint),rect=paint.getBoundingClientRect(),reach=Math.max(0,parseFloat(style.outlineWidth)+parseFloat(style.outlineOffset));
-  const violations=[];for(let parent=paint.parentElement;parent;parent=parent.parentElement){const css=getComputedStyle(parent),box=parent.getBoundingClientRect();const left=box.left+parent.clientLeft,top=box.top+parent.clientTop,right=left+parent.clientWidth,bottom=top+parent.clientHeight;
+  const violations=[];
+  // Root/body scroll locking propagates overflow to the viewport. A fixed portal
+  // is not clipped by the body's short in-flow content box (the opener button).
+  // Check viewport paint explicitly, then every actual component clipping box.
+  const viewport=window.visualViewport,leftEdge=viewport?.offsetLeft??0,topEdge=viewport?.offsetTop??0,rightEdge=leftEdge+(viewport?.width??document.documentElement.clientWidth),bottomEdge=topEdge+(viewport?.height??document.documentElement.clientHeight);
+  if(rect.left-reach<leftEdge-1||rect.right+reach>rightEdge+1)violations.push('viewport:inline');
+  if(rect.top-reach<topEdge-1||rect.bottom+reach>bottomEdge+1)violations.push('viewport:block');
+  for(let parent=paint.parentElement;parent;parent=parent.parentElement){
+   if(parent===document.body||parent===document.documentElement)continue;
+   const css=getComputedStyle(parent),box=parent.getBoundingClientRect();const left=box.left+parent.clientLeft,top=box.top+parent.clientTop,right=left+parent.clientWidth,bottom=top+parent.clientHeight;
    if(/auto|scroll|hidden|clip/.test(css.overflowX)&&(rect.left-reach<left-1||rect.right+reach>right+1))violations.push(`${parent.className}:inline`);
    if(/auto|scroll|hidden|clip/.test(css.overflowY)&&(rect.top-reach<top-1||rect.bottom+reach>bottom+1))violations.push(`${parent.className}:block`);
   }
