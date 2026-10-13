@@ -90,3 +90,5 @@ Badge/Tag：DESIGN930/955写“元数据body-xs普通文字”，Typography799�
 仍需逐族补充独立消费证据：Typography全部tone，Surface嵌套与四边focus，Alert四tone/非颜色唯一提示，Badge明确文字角色，Avatar fallback，Spinner/Skeleton独立motion token与无重复播报，Progress值/不定值及独立轨道token。现有display行为/SSR、native-controls进度/forced-colors、widgets头像等属于已有覆盖入口，不将这些入口存在自动计为上述所有合同完成。系统读屏、浏览器自动填充/密码管理器和跨OS原生窗口边界继续单独记录。
 
 5a5896c 完整复验结论：510单测、81 Auth、600 focused、1224完整浏览器均通过；watch120.82秒、cold15.27秒通过。上述42个workspace验证基准已逐条关闭。后续纯基础验收批增加Typography全部tone和Surface内首/中/末控件的真实Tab与四边focus几何，放大文字后重复，未扩生产样式。此后新回归在CI实际执行前仍列未测。
+
+合并纯基础验收批：`feedback-foundation-contract` 再增加18项独立React/native×三主题测试，具体覆盖与非重复边界见 [反馈基础验证](FEEDBACK_FOUNDATION_VALIDATION.md)。与展示6项一起24项纳入前置门禁。合成后的516单测和类型检查通过；浏览器执行、实际像素与截图审阅留给本批CI，不把unit或仅收集用例计为渲染验收。
