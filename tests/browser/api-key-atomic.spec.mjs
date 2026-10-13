@@ -1,7 +1,8 @@
 import {test,expect} from '@playwright/test';
 import {build} from 'esbuild';
 // Exercise real isolation without the legacy suite's optional --no-sandbox launch flag.
-test.use({launchOptions:{chromiumSandbox:true,args:[]}});
+// Hosted Ubuntu ships a stable Chrome AppArmor profile; preserve its normal sandbox.
+test.use({...(process.env.CI?{channel:'chrome'}:{}),launchOptions:{chromiumSandbox:true,args:[]}});
 let bundle;
 test.beforeAll(async()=>{
  const result=await build({entryPoints:['tests/fixtures/api-key-atomic-browser.mjs'],bundle:true,write:false,format:'iife',globalName:'KeyAtomic',platform:'browser',target:'es2022',metafile:true});

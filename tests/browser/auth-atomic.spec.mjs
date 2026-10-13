@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {build} from 'esbuild';
-test.use({launchOptions:{chromiumSandbox:true,args:[]}});
+// Hosted Ubuntu ships a stable Chrome AppArmor profile; preserve its normal sandbox.
+test.use({...(process.env.CI?{channel:'chrome'}:{}),launchOptions:{chromiumSandbox:true,args:[]}});
 let bundle;
 test.beforeAll(async()=>{const result=await build({entryPoints:['tests/fixtures/auth-atomic-browser.mjs'],bundle:true,write:false,format:'iife',globalName:'AuthAtomic',platform:'browser',metafile:true});expect(Object.keys(result.metafile.inputs).filter(path=>path.includes('packages/runtime/')).every(path=>path.includes('/dist/'))).toBe(true);bundle=result.outputFiles[0].text;});
 const deferred=()=>{let resolve;const promise=new Promise(done=>resolve=done);return {promise,resolve};};
