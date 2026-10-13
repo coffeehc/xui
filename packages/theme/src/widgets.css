@@ -16,7 +16,7 @@
  .xui-accordion-panel {padding:var(--space-control-gap);overflow-wrap:anywhere;opacity:1;transition:opacity var(--motion-duration) var(--motion-easing);animation:xui-feedback var(--motion-duration) var(--motion-easing);}
  .xui-accordion-panel[data-starting-style],.xui-accordion-panel[data-ending-style] {opacity:0;}
  .xui-scroll-area {min-inline-size:0;min-block-size:0;display:flex;flex-direction:column;overflow:hidden;}
- .xui-scroll-viewport {min-inline-size:0;min-block-size:0;flex:1;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--surface-line-strong) var(--layer-support);scroll-padding:var(--space-control-gap);}
+ .xui-scroll-viewport {min-inline-size:0;min-block-size:0;flex:1;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--surface-line-strong) var(--layer-support);}
  .xui-scroll-content {min-inline-size:100%;}
  .xui-command {display:grid;gap:var(--space-text-gap);min-inline-size:0;}
  .xui-command-selected {display:flex;flex-wrap:wrap;gap:var(--space-text-gap);}
@@ -32,4 +32,9 @@
  .xui-calendar-day[data-endpoint='true'] {background:var(--action-primary);color:var(--action-primary-foreground);}
  .xui-calendar-day[aria-disabled='true'] {color:var(--muted-foreground);cursor:not-allowed;}
  .xui-calendar-weekday {text-align:center;color:var(--muted-foreground);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+}
+@layer xui-components {
+ /* The viewport is itself keyboard focusable and touches the clipped Root.
+    Its own indicator is inset; child controls use the shared paint gutter. */
+ .xui-scroll-viewport:focus-visible {outline-offset:calc(calc(-1 * var(--focus-width)) - var(--focus-offset));}
 }

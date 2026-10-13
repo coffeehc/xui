@@ -35,3 +35,19 @@ Menu / ContextMenu 的 Item、LinkItem、CheckboxItem、RadioItem、SubmenuTrigg
 `Menu.Icon` 与 `ContextMenu.Icon` 是同一公开装饰性 span slot，透传 span props/ref，默认 `aria-hidden=true`。示例 `<Menu.Item><Menu.Icon><Settings /></Menu.Icon>设置</Menu.Item>`；原生使用 `<span class="xui-menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24">…</svg></span>`。slot 与它的直接 SVG 子元素由库绑定 control-icon-size（默认16px）、不收缩；图文间距继续采用 menu-item-gap（默认8px）。SVG 自身24px属性不再改变菜单图标布局；未声明slot的普通嵌套插图不受此规则强制缩放。不要再全局覆写菜单中所有svg。
 
 `.xui-label` 与 `.xui-choice-label` 显式绑定标签字号、行高与字重；Field 仍是 label→control→help→error 的8/4/4px间距，控件 id/htmlFor/aria-describedby/aria-invalid 规则不变。choice-label 的默认36px点击区保留，不因13px文字机械缩为20px。原生 HTML 继续使用同名公开类、label for 与显式错误关联；没有为这次修复新增密度或small/large开关。
+
+## 表单焦点绘制与关闭入口
+
+Dialog.Body 与 ScrollArea.Viewport 是滚动边界：两轴裁切需要给焦点外环预留 `focus-width + focus-offset` 的四边绘制空间，仅设置 scroll-padding 不够。公共 base.css 统一拥有 padding / scroll-padding 与子控件 scroll-margin；Dialog.Body 用等值负 margin 消耗 Content 已有内距，因此字段仍与标题和 footer 对齐，长正文保持有界滚动，Content 的圆角裁切不变。ScrollArea.Viewport 在自己的内容盒中留空间，不扩宽 Root；其自身键盘焦点使用 inset 指示。InputGroup 仍只有外层一套边框和焦点，invalid 边框不被 focus 覆盖。
+
+Surface（普通 Card）、Field、Grid 本身并不裁切：Surface 已有 card-padding，不能将这次问题描述为所有卡片都损坏。Card 内套 ScrollArea、Dialog/Sheet 内套 Card 与滚动表单则由对应滚动边界承担绘制空间。宿主自行增加 overflow:hidden/auto、零内距或固定窄宽度，会建立新的裁切边界；应使用正式 ScrollArea，不通过输入框逐个补丁、全局 overflow:visible、缩小 focus token 或移除 outline 处理。
+
+React 推荐组合：`<Dialog.Header closeButtonProps={{'aria-label':'关闭设置'}}><Dialog.Title>设置</Dialog.Title><Dialog.Description>说明</Dialog.Description></Dialog.Header>`。Header 默认只生成一个 CloseButton，标题轨道可收缩/换行，关闭入口位于右上（RTL 为逻辑末端），不与文字重叠。`showClose={false}` 明确隐藏入口；`closeButtonProps` 透传 Base UI Close 的 disabled、回调、render/ref 等合同。Sheet.Header / Sheet.CloseButton 复用同一实现。需要手工标题组合时，可把一个 Dialog.CloseButton 直接放在 Content 内；它采用右上绝对定位，并为直接 Title/Description 留出位置。
+
+`Dialog.Close` / `Sheet.Close` 继续是无位置假设的关闭动作，可用在 Footer 的“取消”按钮。Content 不盲目注入第二个关闭按钮；AlertDialog 继续通过明确的确认/取消动作作决定，不增加默认 X。
+
+原生 HTML 等价：在 `.xui-native-dialog` 内使用 `.xui-dialog-header`，其中 `.xui-dialog-heading` 包含带 id 的 `.xui-dialog-title` 与可选 description；兄弟按钮采用 `type="button" class="xui-button xui-dialog-close" data-variant="ghost" data-icon="true" data-xui-close aria-label="关闭设置"`，内部 SVG 为 aria-hidden。仍由一个 createDialogController/createSheetController 处理关闭、Escape、取消和回焦点。普通 Footer 按钮只保留 data-xui-close，不添加 xui-dialog-close。
+
+旧消费者迁移：删除尾部游离 X，改用 Header 的默认 CloseButton；或把原 X 的 Dialog.Close 改为 Dialog.CloseButton（二选一），不能两个一起保留。库不能从普通 Close 推断它是图标还是合法 footer Cancel，因此升级版本本身不会自动重新定位旧的游离 X。删除消费方通用定位/裁切补丁，业务草稿、onOpenChange/details.cancel、提交和权限继续归宿主；本次库修改不代表已修改任何业务仓库。
+
+回归入口：`tests/browser/focus-boundaries.spec.mjs` 使用正式打包 React/native 消费者，覆盖 Dialog、Sheet、Card/ScrollArea、嵌套卡片、双列/窄列、首末控件、invalid+focus、light/dark/system、390px 与 200% 根字体、独立 CloseButton、键盘关闭/回焦点。源码结构测试不替代真实浏览器几何和截图验收。

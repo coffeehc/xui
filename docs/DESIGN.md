@@ -1228,4 +1228,6 @@ DataTable以内部单一布局观察器测实际table/thead/首末行高度和co
 
 公共 SimpleSelect / bindSelectControl（包含顶栏语言入口）的浮层选项之间使用 space-text-gap（默认 4px），选项组与组内标题/选项同样保留该间距；选中与悬停背景不得垂直贴合。间距由公共样式负责，不改变选项最小高度、弹层定位或隐藏语义。
 
+HeaderBrand logo盒使用control-height-sm，图片/SVG以contain限于盒内，不被固有尺寸或长名称撑大。桌面compact无leading时logo中心对齐nav-collapsed-width侧栏中心，补偿layout-content-inset只影响品牌，不改变toggle与内容起点；有leading保留平台安全区。
+
 <!-- foundation-lifecycle:end -->

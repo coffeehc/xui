@@ -16,3 +16,16 @@
   .xui-detail-heading {margin:var(--space-content-gap) 0 var(--space-control-gap);font:var(--font-weight-heading) var(--font-size-section-title)/var(--line-height-section-title) var(--font-heading);}
   .xui-code {margin:var(--space-control-gap) 0;font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere;}
 }
+
+@layer xui-components {
+  /* Scroll boundaries own focus paint space. Keep this identical for modal
+     bodies and general scroll containers; scroll-padding alone cannot paint
+     an outline outside a clipped scrollport. No change to focus tokens. */
+  :is(.xui-dialog-body,.xui-scroll-viewport) {
+    padding:calc(var(--focus-width) + var(--focus-offset));
+    scroll-padding:calc(var(--focus-width) + var(--focus-offset));
+  }
+  :is(.xui-dialog-body,.xui-scroll-viewport) :is(button,a,input,textarea,select,[tabindex],.xui-input-group) {
+    scroll-margin:calc(var(--focus-width) + var(--focus-offset));
+  }
+}

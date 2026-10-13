@@ -201,3 +201,7 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 
 
 `SimpleSelect`/`bindSelectControl` 同步 form.reset 的默认动作后事实，取消 reset 不更新，销毁后不响应；update 也重连改变后的 form owner。hidden option/optgroup 不出现在列表，disabled optgroup 不可选，组名保留。HTML select.size 只留在隐藏表单桥，不承诺原生多行常驻列表的布局；需要 OS 控件或原生 size 呈现时用 NativeSelect。React select ref 指向表单桥，不是可见 button；原生 binding.trigger 是明确的可见焦点入口。
+
+### Dialog / Sheet 表单组合
+
+`Dialog.Header` / `Sheet.Header` 接受 div props、`showClose?: boolean`（默认 true）及 `closeButtonProps?: React.ComponentProps<typeof BaseDialog.Close>`；默认一个右上 CloseButton，children 为标题/说明。`Dialog.CloseButton` / `Sheet.CloseButton` 是可命名图标关闭入口（默认 aria-label 为“关闭”），支持 Base UI Close props/ref/render/className。普通 `Close` 保持无定位原语以支持 Footer Cancel；Content 不自动增加关闭按钮。四边焦点绘制空间由 Dialog.Body / ScrollArea.Viewport 的公共滚动合同负责，原生结构与旧游离 X 的明确迁移见 [COMPOSITIONS](COMPOSITIONS.md#表单焦点绘制与关闭入口)。

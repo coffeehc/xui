@@ -11,8 +11,8 @@
   .xui-app-header {display:flex;align-items:center;flex-wrap:wrap;inline-size:100%;min-inline-size:0;gap:var(--space-control-gap) var(--space-section-gap);}
   .xui-app-header-primary {display:flex;align-items:center;flex:1 1 var(--layout-header-primary-min);min-inline-size:min(100%,var(--layout-header-primary-min));gap:var(--space-control-gap);}
   .xui-app-header-identity {display:flex;align-items:center;gap:var(--space-control-gap);min-inline-size:0;max-inline-size:100%;}
-  .xui-shell>.xui-shell-header .xui-app-header-identity {flex:0 0 calc(var(--nav-sidebar-width) - var(--space-control-gap));transition:flex-basis var(--motion-duration) var(--motion-easing);}
-  .xui-shell[data-collapsed='true']>.xui-shell-header .xui-app-header-identity {flex-basis:calc(var(--nav-collapsed-width) - var(--space-control-gap));}
+  .xui-shell>.xui-shell-header .xui-app-header-identity {flex:0 0 calc(var(--nav-sidebar-width) + var(--layout-content-inset) - var(--space-control-gap));margin-inline-start:calc(-1 * var(--layout-content-inset));padding-inline:var(--layout-content-inset) calc(var(--layout-content-inset) - var(--space-control-gap));transition:flex-basis var(--motion-duration) var(--motion-easing);}
+  .xui-shell[data-collapsed='true']>.xui-shell-header .xui-app-header-identity {flex-basis:calc(var(--nav-collapsed-width) + var(--layout-content-inset) - var(--space-control-gap));padding-inline-start:0;}
   .xui-app-header-identity>.xui-app-header-brand {flex:1 1 0;}
   .xui-app-header-leading {display:flex;align-items:center;flex:none;min-inline-size:0;max-inline-size:100%;}
   .xui-app-header-leading>* {max-inline-size:100%;}
@@ -23,8 +23,9 @@
   .xui-app-header-brand,.xui-app-header-brand>* {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .xui-app-header-brand>* {display:block;max-inline-size:100%;}
   .xui-app-header-brand>.xui-header-brand,.xui-header-brand {display:flex;align-items:center;gap:var(--space-control-gap);min-inline-size:0;}
-  .xui-header-brand-logo {display:inline-flex;flex:none;align-items:center;justify-content:center;}
-  .xui-header-brand-logo :is(img,svg) {inline-size:var(--control-height-sm);block-size:var(--control-height-sm);object-fit:contain;}
+  .xui-header-brand-logo {display:inline-flex;flex:none;align-items:center;justify-content:center;inline-size:var(--control-height-sm);block-size:var(--control-height-sm);overflow:hidden;}
+  .xui-header-brand-logo>* {max-inline-size:100%;max-block-size:100%;}
+  .xui-header-brand-logo :is(img,svg) {display:block;inline-size:100%;block-size:100%;max-inline-size:100%;max-block-size:100%;object-fit:contain;}
   .xui-header-brand-name {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .xui-app-header-brand:has(+.xui-app-header-breadcrumb:not([hidden])) {max-inline-size:var(--layout-header-brand-max);}
   .xui-app-header-breadcrumb {flex:1 1 0;min-inline-size:0;}
@@ -58,6 +59,7 @@
   .xui-shell-drawer .xui-shell-sidebar-body {display:flex;flex-direction:column;flex:1 1 0;min-block-size:0;overflow:hidden;}
   .xui-shell-drawer .xui-shell-sidebar-body>.xui-shell-sidebar-with-footer {position:static;align-self:stretch;flex:1 1 0;min-inline-size:0;inline-size:100%;}
   @media(min-width:48rem) {
+    .xui-shell[data-collapsed='true']>.xui-shell-header .xui-header-brand:has(.xui-header-brand-logo) {justify-content:center;gap:0;}
     .xui-shell[data-collapsed='true']>.xui-shell-header .xui-header-brand:has(.xui-header-brand-logo) .xui-header-brand-name {position:absolute;inline-size:var(--a11y-hidden-size);block-size:var(--a11y-hidden-size);overflow:hidden;clip-path:inset(50%);}
 
     .xui-shell-sidebar-with-footer:has(.xui-navigation-menu[data-collapsed='true']) .xui-sidebar-footer-content:has(>.xui-sidebar-footer-icon) {justify-content:center;inline-size:100%;gap:0;}
@@ -94,7 +96,7 @@
     .xui-app-header-navigation:has(>.xui-shell-toggle) {display:flex;}
     .xui-app-header-primary {flex-basis:100%;flex-wrap:wrap;}
     .xui-app-header-brand {flex:1 1 0;}
-    .xui-shell>.xui-shell-header .xui-app-header-identity,.xui-shell[data-collapsed='true']>.xui-shell-header .xui-app-header-identity {flex:1 1 0;}
+    .xui-shell>.xui-shell-header .xui-app-header-identity,.xui-shell[data-collapsed='true']>.xui-shell-header .xui-app-header-identity {flex:1 1 0;margin-inline-start:0;padding-inline:0;}
     .xui-app-header-identity {flex:1 1 0;}
     .xui-app-header-brand:has(+.xui-app-header-breadcrumb:not([hidden])) {max-inline-size:100%;}
     .xui-app-header-breadcrumb {flex-basis:100%;}

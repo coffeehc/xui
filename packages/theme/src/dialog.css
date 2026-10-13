@@ -20,6 +20,17 @@
   @starting-style { .xui-native-dialog[open] { opacity: 0; } }
   .xui-dialog-title, .xui-dialog-description { margin: 0; }
   .xui-dialog-description { color: var(--muted-foreground); }
-  .xui-dialog-body { overflow-y: auto; min-height: 0; overflow-wrap: anywhere; }
+  .xui-dialog-body { overflow: auto; min-height: 0; min-inline-size:0; overflow-wrap: anywhere; overscroll-behavior:contain;
+    /* Spend existing modal inset, preserving field alignment and dialog size. */
+    margin:calc(calc(-1 * var(--focus-width)) - var(--focus-offset));
+  }
+  .xui-dialog-header {display:flex;align-items:flex-start;gap:var(--space-control-gap);min-inline-size:0;flex-shrink:0;}
+  .xui-dialog-heading {display:grid;gap:var(--space-text-gap);min-inline-size:0;flex:1;overflow-wrap:anywhere;}
+  .xui-dialog-close {flex:none;margin-inline-start:auto;}
+  .xui-dialog-close>svg {inline-size:var(--control-icon-size);block-size:var(--control-icon-size);}
+  /* A standalone CloseButton is also supported; reserve the title text track.
+     Footer Close is deliberately excluded and retains normal flow. */
+  :is(.xui-dialog,.xui-native-dialog)>.xui-dialog-close {position:absolute;inset-block-start:var(--space-section-gap);inset-inline-end:var(--space-section-gap);}
+  :is(.xui-dialog,.xui-native-dialog):has(>.xui-dialog-close)>:is(.xui-dialog-title,.xui-dialog-description) {padding-inline-end:calc(var(--control-height) + var(--space-control-gap));}
   .xui-dialog-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-control-gap); flex-shrink: 0; }
 }

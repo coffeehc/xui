@@ -53,3 +53,5 @@ AppHeader 的内容顺序是 leading/brand → navigation toggle → breadcrumb/
 ```
 
 原生将此节点传给 headerSlots.brand，无产品宽度/定位 CSS。新增 `header-popup-brand.spec.mjs` 检查真实浮层、受控选择、长列表滚动、品牌/侧栏/正文几何和窄屏 drawer。运行结果以交付 SHA 的 CI 为准；macOS 系统/读屏器/移动 Safari 未由 Chromium 通过替代。
+
+HeaderBrand 的 logo 容器固定采用 control-height-sm，图片与 SVG 保持 contain，不因素材原始尺寸撑大顶栏。桌面 compact、无 leading 安全区时，logo 中心与 nav-collapsed-width 侧栏中心重合；补偿顶栏内容内距仅作用于品牌，不移动菜单 toggle。存在 leading 时保留该平台区域，品牌在剩余区域居中。名称继续保留可访问文本，窄屏恢复名称。
