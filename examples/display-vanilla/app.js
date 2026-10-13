@@ -8,4 +8,9 @@ const disabled=createTag(document,{label:'不可移除',disabled:true,onRemove()
 let options={src:'./display-image-a.svg',alt:'合成图片',aspectRatio:2,retryKey:0};const image=createImage(document,options);main.append(image.element);
 for(const [text,run] of [['更换图片',()=>{options={...options,src:options.src==='./display-image-a.svg'?'./display-image-b.svg':'./display-image-a.svg'};image.update(options);}],['重试图片',()=>{options={...options,retryKey:options.retryKey+1};image.update(options);} ]]){const button=document.createElement('button');button.type='button';button.className='xui-button';button.textContent=text;button.addEventListener('click',run);main.append(button);}
 const details=document.createElement('section');details.id='details';details.append(createTypographyHeading(document,{level:2,text:'详情'}));main.append(details);
+const separatorSample=document.createElement('section');separatorSample.className='xui-surface xui-stack';separatorSample.setAttribute('aria-label','Separator contract');
+const horizontal=createSeparator(document),vertical=createSeparator(document,{orientation:'vertical'}),separatorRow=document.createElement('div');
+horizontal.setAttribute('aria-label','Horizontal separator');vertical.setAttribute('aria-label','Vertical separator');separatorRow.className='xui-toolbar';
+separatorRow.append(createTypographyText(document,{text:'左侧'}),vertical,createTypographyText(document,{text:'右侧'}));
+separatorSample.append(createTypographyText(document,{text:'分隔线与区域边框使用独立线宽。'}),horizontal,separatorRow);root.append(separatorSample);
 window.addEventListener('pagehide',()=>{copy.destroy();failure.destroy();tags.forEach(tag=>tag.destroy());disabled.destroy();image.destroy();},{once:true});

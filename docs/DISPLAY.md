@@ -30,6 +30,8 @@ value、writer 或 disabled 改变使旧结果失效；仍等待旧 write 结束
 
 `Separator` / `createSeparator(document,options)` 默认 horizontal、非装饰，具有 separator 与 aria-orientation；vertical 使用父容器 stretch，宿主提供布局高度；decorative=true 使用 none/aria-hidden，不成为多余读屏节点。
 
+横竖线宽消费 `line-width-separator`，颜色消费 `separator-line`；Surface 仍独立消费 `line-width-surface`。默认均为 1px，同根 `product-overrides` 可独立覆盖分隔线宽，不改变区域边框。基础层静态证据和未测范围见 [G0/基础展示验证](FOUNDATION_DISPLAY_VALIDATION.md)。
+
 `Tag` / `createTag(document,options)` 必填安全字符串 label。被动标签没有 tab stop。
 可移除分支必须提供 onRemove 和明确 removeLabel，使用真实 type=button；disabled 不发意图。
 标签没有隐式选择状态，选择 chip 使用已有 ToggleGroup。
