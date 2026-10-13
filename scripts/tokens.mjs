@@ -45,7 +45,7 @@ export function checkContract(document) {
   const rules = [];
   tree.walkRules(rule => rules.push(rule));
   const light = declarations(rules.find(rule => rule.selector === ':root'));
-  assert.equal(Object.keys(light).length, 355, 'Default token count');
+  assert.equal(Object.keys(light).length, 350, 'Default token count');
   for (const name of ['--font-scale','--line-height-scale']) {
     const registration=tree.nodes.find(node=>node.type==='atrule'&&node.name==='property'&&node.params===name);
     assert(registration, `Missing typed ${name} registration`);

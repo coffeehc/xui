@@ -6,7 +6,9 @@ import {Field,Input} from './forms.js';
 import {Alert} from './feedback.js';
 export type {AuthPageConfig,LoginPageConfig,LoginPageLayout,LoginPageLabels,AuthClient,AuthUser} from '@coffeehc/xui-runtime/auth';
 export interface AuthPageProps {
-  config:AuthPageConfig;brandVisual?:React.ReactNode;children?:React.ReactNode;
+  config:AuthPageConfig;
+  /** Optional compact decoration in the identity header; inert and hidden on narrow screens. */
+  brandVisual?:React.ReactNode;children?:React.ReactNode;
   actions?:React.ReactNode;alternatives?:React.ReactNode;feedback?:React.ReactNode;feedbackActions?:React.ReactNode;
   form?:{noValidate?:boolean;onSubmit?:React.FormEventHandler<HTMLFormElement>};
 }
@@ -20,7 +22,7 @@ export function AuthPage({config:input,brandVisual,children,actions,alternatives
     {actions!=null&&<footer className="xui-login-actions">{actions}</footer>}
     {alternatives!=null&&<div className="xui-login-options">{alternatives}</div>}
   </div><div className="xui-login-support"><div className="xui-login-feedback">{feedback}{feedbackActions}</div></div></>;
-  return <main className="xui xui-login-page" data-layout={config.layout}><section className="xui-login-card" aria-labelledby={titleId}>
+  return <main className="xui xui-login-page" data-layout={config.layout}><section className={`xui-login-card${config.layout==='card'?' xui-surface':''}`} aria-labelledby={titleId}>
     <header className="xui-login-brand"><div className="xui-login-brand-content">
       <div className="xui-login-identity">{config.logo&&<img className="xui-login-logo" src={config.logo.src} alt={config.logo.alt} referrerPolicy="no-referrer"/>}<strong>{config.productName}</strong></div>
       {config.description&&<p className="xui-login-description">{config.description}</p>}
@@ -32,7 +34,7 @@ export function AuthPage({config:input,brandVisual,children,actions,alternatives
 export interface ConfigurableLoginPageProps {auth:AuthClient;theme:ThemeController;config:LoginPageConfig;brandVisual?:React.ReactNode;extensions?:LoginPageExtensions;beforeFields?:React.ReactNode;afterFields?:React.ReactNode;onAuthenticated?:(user:Readonly<AuthUser>,returnTo:string)=>void|Promise<void>}
 export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensions,beforeFields,afterFields,brandVisual}:ConfigurableLoginPageProps){
   const config=React.useMemo(()=>resolveLoginPageConfig(input),[input]),{labels}=config,state=React.useSyncExternalStore(auth.subscribe,auth.getState,auth.getState);
-  const username=React.useRef<HTMLInputElement>(null),password=React.useRef<HTMLInputElement|null>(null),feedback=React.useRef<HTMLDivElement>(null),revision=React.useRef(0),pending=React.useRef<AbortController|undefined>(undefined),alive=React.useRef(true),active=React.useRef(true);
+  const username=React.useRef<HTMLInputElement>(null),password=React.useRef<HTMLInputElement|null>(null),submit=React.useRef<HTMLButtonElement>(null),feedback=React.useRef<HTMLDivElement>(null),revision=React.useRef(0),pending=React.useRef<AbortController|undefined>(undefined),alive=React.useRef(true),active=React.useRef(true);
   const [extensionBusy,setExtensionBusy]=React.useState<string|null>(null),[extensionError,setExtensionError]=React.useState(false),[navigationPhase,setNavigationPhase]=React.useState<'idle'|'opening'|'failed'>('idle');
   const navigation=React.useRef<{owner:AuthClient;user:Readonly<AuthUser>|null;revision:number;phase:'idle'|'opening'|'failed'}>({owner:auth,user:null,revision:0,phase:'idle'}),navigationOptions=React.useRef({onAuthenticated,returnTo:config.returnTo});navigationOptions.current={onAuthenticated,returnTo:config.returnTo};
   const [errors,setErrors]=React.useState<{username?:string;password?:string}>({});
@@ -65,9 +67,12 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
   const cancel=()=>{restoreFocus.current=true;revision.current++;pending.current?.abort();pending.current=undefined;setExtensionBusy(null);clearPassword();};
   const navigationFailed=authenticated&&navigationPhase==='failed';
   const message=navigationFailed?labels.navigationError:authenticated?labels.opening:extensionBusy??(state.error?(state.reauthenticationRequired?labels.reauthenticate:getLoginPageError(state.error,labels)):labels[state.busy==='session'||state.busy==='refresh'?'checking':'signingIn']);
+  const submitLabel=authenticated?labels.opening:state.busy==='login'?labels.signingIn:labels.submit;
+  // A new label starts in view; unrelated renders preserve deliberate label scrolling.
+  React.useLayoutEffect(()=>{if(submit.current)submit.current.scrollTop=0;},[submitLabel]);
   return <AuthPage config={config} brandVisual={brandVisual}
     form={{noValidate:true,onSubmit:event=>{event.preventDefault();if(auth.getState().status==='authenticated'||auth.getState().busy||pending.current||!active.current)return;const credentials={username:username.current?.value??'',password:password.current?.value??''},next={username:credentials.username.trim()?undefined:labels.usernameRequired,password:credentials.password?undefined:labels.passwordRequired};setErrors(next);if(next.username||next.password){(next.username?username:password).current?.focus();return;}clearPassword();void run('login',credentials);}}}
-    actions={<Button className="xui-login-submit" size="lg" data-idle-label={labels.submit} data-busy-label={labels.signingIn} type="submit" disabled={locked}><span>{authenticated?labels.opening:state.busy==='login'?labels.signingIn:labels.submit}</span><span className="xui-login-opening-reservation" aria-hidden="true">{labels.opening}</span></Button>}
+    actions={<Button ref={submit} className="xui-login-submit" size="lg" data-idle-label={labels.submit} data-busy-label={labels.signingIn} type="submit" disabled={locked}><span>{submitLabel}</span><span className="xui-login-opening-reservation" aria-hidden="true">{labels.opening}</span></Button>}
     alternatives={extensions?.actions?.length?extensions.actions.map(action=><Button key={action.id} variant="outline" disabled={locked||action.disabled} onClick={()=>{if(pending.current||auth.getState().busy||auth.getState().status==='authenticated')return;clearPassword();void run('extension',undefined,action);}}>{action.label}</Button>):undefined}
     feedback={(state.error||state.busy||extensionBusy||extensionError||authenticated)?<Alert ref={feedback} tabIndex={-1} tone={navigationFailed||extensionError||state.error&&state.error.kind!=='cancel'?'error':'info'}>{extensionError?(extensions?.errorLabel??'登录配置或认证方式暂不可用，请检查后重试。'):message}</Alert>:undefined}
     feedbackActions={<>{canCancel&&<Button size="sm" variant="ghost" onClick={cancel}>{labels.cancel}</Button>}{canCheck&&<Button size="sm" variant="ghost" onClick={()=>run('session')}>{labels.checkSession}</Button>}{navigationFailed&&<Button size="sm" variant="ghost" onClick={()=>{const user=auth.getState().user;if(user)void openApplication(user,true);}}>{labels.retryNavigation}</Button>}</>}

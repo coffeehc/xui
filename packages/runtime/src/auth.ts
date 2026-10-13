@@ -221,6 +221,7 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
 
 export const loginPageDefaultLabels={username:'Username',password:'Password',submit:'Sign in',cancel:'Cancel request',checking:'Checking your sign-in…',signingIn:'Signing in…',signingOut:'Signing out…',continue:'Continue',logout:'Sign out',theme:'Appearance',light:'Light',dark:'Dark',system:'System',usernameRequired:'Enter your username.',passwordRequired:'Enter your password.',credentialsError:'The username or password is incorrect.',forbidden:'Sign in is not allowed.',rateLimited:'Too many attempts. Try again later.',timeout:'The request timed out. Please try again.',network:'Could not connect. Check your connection and try again.',error:'Sign in could not be completed.',cancelled:'Waiting cancelled. The server may have completed the request.',signedIn:'Signed in',checkSession:'Retry connection',opening:'Opening app…',navigationError:'You are signed in, but the app could not be opened. Try again.',retryNavigation:'Try opening app again',reauthenticate:'The session state is unconfirmed. Sign in again to verify it.'} as const;
 export type LoginPageLabels={ [Key in keyof typeof loginPageDefaultLabels]:string };
+/** Both layouts are centered single columns; fullscreen omits the card surface. */
 export type LoginPageLayout='fullscreen'|'card';
 export interface LoginPageConfig {layout?:LoginPageLayout;productName:string;title?:string;description?:string;logo?:{src:string;alt?:string};returnTo?:string;fallbackReturnTo?:string;labels?:Partial<LoginPageLabels>}
 /** Presentation only; domain forms and requests remain owned by the host. */
@@ -230,7 +231,7 @@ export function resolveLoginPageConfig(input:LoginPageConfig){
   const labels=Object.freeze(Object.fromEntries(Object.entries(loginPageDefaultLabels).map(([key,value])=>[key,input.labels?.[key as keyof LoginPageLabels]===undefined?value:string(input.labels[key as keyof LoginPageLabels],300)]))) as Readonly<LoginPageLabels>;
   let logo:Readonly<{src:string;alt:string}>|undefined;
   if(input.logo){let url:URL;try{url=new URL(input.logo.src,'https://xui.invalid');}catch{throw new TypeError('Invalid login logo');}if(!['http:','https:'].includes(url.protocol)||url.username||url.password||input.logo.src.length>2048)throw new TypeError('Invalid login logo');logo=Object.freeze({src:input.logo.src,alt:input.logo.alt??input.productName});}
-  const layout=input.layout??'fullscreen';if(layout!=='fullscreen'&&layout!=='card')throw new TypeError('Invalid login layout');
+  const layout=input.layout??'card';if(layout!=='fullscreen'&&layout!=='card')throw new TypeError('Invalid login layout');
   return Object.freeze({layout,productName:string(input.productName,128),title:string(input.title??labels.submit,200),description:input.description===undefined?undefined:string(input.description,600),logo,returnTo:resolveLoginReturnTo(input.returnTo,input.fallbackReturnTo),labels});
 }
 export function getLoginPageError(error:HttpError,labels:Readonly<LoginPageLabels>):string{

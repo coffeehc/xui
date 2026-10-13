@@ -15,15 +15,15 @@
 
 | ID | 预期 | 验收方法 / 证据 | 实测与状态 |
 | --- | --- | --- | --- |
-| L01 | 默认双分区铺满视口，无外部卡片；窄屏品牌在上、表单在下；显式 card 保留 | 真实截图 + panel rect | 未测 |
-| L02 | 身份行先于说明与装饰图；logo 40px、品牌名 20/28px；三者在同一有界组，不再出现插画后孤立大 logo | 可选图 desktop 截图 + DOM 顺序、rect、computed type | 未测 |
+| L01 | 默认 card 居中单列窄框，最大450px、自然高度；1280/1600/390均无左右品牌面板或分割线。显式 fullscreen 同列仅省略外框皮肤 | 双端、两模式真实截图 + card/brand/form rect | 未测 |
+| L02 | 紧凑身份行在框内顶部，先于说明与登录标题；logo 32px、品牌名 16/26px。可选装饰图 inert、最大80px高、窄屏隐藏 | 默认无图与可选图 desktop 截图 + DOM 顺序、rect、computed type | 未测 |
 | L03 | 表单内容最大 400px（含四边焦点余量），标题 32/40px、label 13/20px、输入文字 14/22px、主按钮至少40px；标题明确大于字段 | screenshot + JSON type/rect | 未测 |
 | L04 | label→input 8px、字段之间16px、密码→登录16px；无反馈框或隐藏辅助按钮插在密码和登录之间 | idle/error/busy screenshot + gap JSON | 未测 |
 | L05 | 匿名普通页只有一个可见主登录按钮，宽度与字段一致；错误401不显示会话检查；SSO是独立次级组 | 公共 API 页面操作 + screenshots | 未测 |
-| L06 | 反馈在主按钮之后，空状态仅保留40px内容轨道及焦点余量；长反馈向下使用剩余轨道，最多12rem再单一滚动；取消/重试仅有真实用途时出现，不能占主动作宽度或隐藏占行 | idle/busy/error截图，动作与反馈rect | 未测 |
+| L06 | 反馈在主按钮之后，固定轨道默认48px（40px内容及焦点余量），只随公共文字/控件token缩放；长错误局部单一滚动，不撑高卡片；取消/重试仅有真实用途时出现，不能占主动作宽度或隐藏占行 | idle/busy/error/长错误截图，动作与反馈rect | 未测 |
 | L07 | 检查→匿名、提交→busy→错误、断网/超时/重试时品牌、字段、主动作位置/大小变化≤1.5px；长错误在局部可滚动 | 连续状态 rect JSON + screenshot；已有 error-layout 回归 | 未测 |
 | L08 | unknown write / reauthenticationRequired 不出现可刷新重试，不自动 refresh/logout/重放；显式重新登录可恢复，密码即时清空 | auth unit + auth-bearer/login browser HTTP counts | 未测 |
-| L09 | 1280/390普通首屏主操作完整可见，无页面横向溢出；200%与短视口可滚动到每个字段/动作 | screenshot + viewport/scroll metrics | 未测 |
+| L09 | 1280/1600/390普通首屏主操作完整可见，无页面横向溢出；200%与短视口自然文档滚动到每个字段/动作。极端长主按钮独立限高并内部滚动，完整按钮与四边焦点仍可滚入视口，字段及操作组不困在局部小区域 | screenshot + viewport/scroll metrics；长品牌/长标签的按钮rect、内部滚动与键盘提交 | 未测 |
 | L10 | Tab顺序字段→主动作→SSO→实际局部辅助动作；不存在隐藏Tab停靠；输入、主按钮、反馈、SSO四边focus真实像素可见 | 实际键盘路径 + four-side pixel screenshot | 未测 |
 | L11 | light/dark/system复用一个根主题owner，系统变化不清输入；reduced-motion仍立即反馈 | existing theme/motion browser tests +截图 | 未测 |
 | L13 | 三字段setup复用同一定位owner，表单不贴顶、标题/字段/主动作尺度同登录；动态更新保留表单/输入DOM、值、事件和焦点；零自动认证请求 | setup三主题×双端×1280/390实际截图与JSON；update/submit请求计数 | 未测 |
@@ -34,16 +34,28 @@
 
 新增测试应把成功截图写入 `testInfo.outputPath` 并附加 JSON 实测数据；CI 的 test-results 产物提供原始证据。截图必须实际浏览器渲染，再由人或图像查看工具检查品牌构图、比例与裁切。DOM、computed style、测试收集、构建成功不能代替视觉检查。
 
-当前状态为已实施、待最终真实浏览器验收，以上逐项尚未测完；云执行器 Chromium 启动受到 EPERM 限制，不改变安全启动配置或以伪造截图绕过。完成后记录最终 SHA、每项通过/失败/未测与实际证据。真实产品、真实后端、其他浏览器和移动 OS 未覆盖时继续明确标记未测。
+本次单列布局已完成本机 targeted 验收；完整标准的覆盖范围、证据和未执行项见下方本版本记录。真实产品、真实后端、其他浏览器和移动 OS 未覆盖时继续明确标记未测。
 
-## 最终源码树预检（非视觉验收）
+## 前次双区版本的源码树预检（历史，非本次验收）
 
-2026-10-13，源码 generation `c8ffa0157d019e52c5c593b5a712afa9efe5aa6a4bcf19a93973ac5bfbe9edc5`：
+以下记录对应改版前的双分区版本，不能证明当前单列布局通过。2026-10-13，源码 generation `c8ffa0157d019e52c5c593b5a712afa9efe5aa6a4bcf19a93973ac5bfbe9edc5`：
 
 - 正式包 build、完整开发示例构建、355-token 合同、typecheck、361/361 unit 通过。
 - React/原生独立 tarball 的全部公开入口、类型、peer、体积门禁通过；含纯 AuthPage setup 与开发态 StrictMode 登录消费者。
 - 本地 watch 两次在首轮30秒等待超时，未通过。直接运行同路径 dev-build 成功耗时40.447秒；这说明本地运行超过等待期限，不代表已排除构建缺陷。保留原门禁，待 CI 原样执行。
 - `auth-page.spec.mjs`、`login-navigation.spec.mjs`、`login-visual.spec.mjs`收集65项，目标包含36张登录 idle/error/busy、12张setup主矩阵及额外焦点/导航图。仅收集，未在受限执行器启动浏览器，不证明像素、几何或视觉通过。
-- cold-start 同样需要 Chromium，留给允许的 CI 与完整browser门禁；尚未运行。persisted pagehide/pageshow测试是浏览器生命周期事件模拟，不能当作真实 BFCache 命中验收。
+- 当时云执行器 Chromium 启动受到 EPERM 限制；cold-start 同样需要 Chromium，尚未运行。persisted pagehide/pageshow测试是浏览器生命周期事件模拟，不能当作真实 BFCache 命中验收。
 
-最终commit、完整CI与逐项实测待补；真实浏览器zoom、真实BFCache命中、其他浏览器/OS和产品实接仍未测。
+上方表格记录完整验收标准；本 generation 的 targeted 检查与未覆盖范围见下方记录。真实浏览器zoom、真实BFCache命中、其他浏览器/OS和产品实接仍未测。
+
+## 本次单列版本 targeted 验收记录（2026-10-13）
+
+本段记录最终 source generation `c856d2e661fb`。上方验收表是完整标准；本轮通过的目标子集、未执行范围和证据以本段为准，不代表完整 `pnpm verify`、CI 或其他浏览器已通过。
+
+- 最终源码 `node scripts/dev-build.mjs`（含typecheck）通过，generation `c856d2e661fb`；`pnpm check:tokens` 为350 tokens、215个设计文件通过；最终源码后的 `pnpm test:unit` 为360/360通过。
+- `pnpm build` 在 package generation `2682b758ae24` 通过。其后只增加React/native提交按钮标签改变时的滚动归位逻辑；最终 `c856d2e661fb` 由 `dev-build` 构建并用于下方浏览器测试。`pnpm test:consumer` 对 `2682b758ae24` 包生成的React和原生tarball通过（公开exports/types、布局入口、Button-only贡献与gzip门禁）；未将其标成最终 `c856d2e661fb` 的独立消费者测试。
+- `pnpm exec playwright test tests/browser/login-layout.spec.mjs tests/browser/login-visual.spec.mjs tests/browser/login.spec.mjs tests/browser/login-extensions.spec.mjs tests/browser/auth-page.spec.mjs --workers=2` 为151/151通过：五个文件原有149项，加上长主按钮React/native各一项。默认 card 与显式 fullscreen 都是居中窄单列；React/native在 light/dark/system 下覆盖1280、1600和390宽度；checking、idle、busy、错误、长错误、SSO、扩展字段、局部安全读取重试及setup均通过。200%根字号、390×320短视口、文档自然滚动和四边焦点像素也在此批覆盖。
+- 长主按钮专项检查了390×720、200%根字号与超长品牌/按钮名：按钮最高144px、按钮本身可滚动且完整 accessible name 保留；滚至长标签末端后，普通认证通知不重置滚动，提交到busy会归位，使短busy标签完全落在可视控制区；长按钮四边焦点像素通过。此前观察到的超高按钮和busy短标签被推离可视区问题已由本generation的单按钮限高与状态滚动归位修复。
+- `pnpm exec playwright test tests/browser/error-layout.spec.mjs --grep login --workers=2` 为4/4通过（React/native × 1280/390）。最终源码后的360项 unit 验证了现有认证行为；本轮没有修改认证时序。
+- 截图与几何JSON保存在 `test-results/login-final-evidence/`。默认样本包括React light 1280、native dark 390；setup包括React/native的light 1280与dark 390；长主按钮两端的四边焦点图也保留。父级检查了React浅色桌面、深色窄屏和长主按钮焦点图；独立review检查了setup图及默认双端布局样本。
+- 未运行完整 `pnpm verify`/watch，也未运行全仓浏览器套件。额外 login-navigation、StrictMode 导航矩阵未纳入最终targeted batch，L14仍未完成；真实BFCache命中、真实浏览器zoom、其他浏览器/OS、真实产品与后端仍未测。初始额外navigation探查观察到既有refresh→session期间的短暂authenticated状态及宿主导航时序；视觉恢复/焦点用例使用示例已有 `handoff=hold` 隔离宿主导航，只验证本次布局范围，未修复或声称修复认证时序。

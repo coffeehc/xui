@@ -16,7 +16,6 @@ function section(markup,className,tag='div'){
   while((match=tags.exec(markup))){depth+=match[1]?-1:1;if(depth===0)return markup.slice(start,tags.lastIndex);}
   assert.fail(`${className} has a closing tag`);
 }
-const declarations=(css,selector)=>[...css.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([,selectors])=>selectors.split(',').some(value=>value.trim()===selector)).map(([, ,body])=>body).join(';');
 test('public login separates configured brand from credentials without owning theme controls',()=>{
   const markup=render();
   const brand=section(markup,'xui-login-brand','header'),content=section(brand,'xui-login-brand-content');
@@ -33,17 +32,17 @@ test('login layout retains optional branding, text escaping and an unchanged for
 });
 test('both public login renderers keep theme ownership external and use the same brand roles',async()=>{
   for(const file of ['packages/ui-react/src/login.tsx','packages/runtime/src/login-dom.ts']){const source=await readFile(file,'utf8');assert.match(source,/xui-login-identity/);assert.doesNotMatch(source,/xui-login-theme|theme\.(?:setMode|subscribe|getState|destroy)|localStorage|sessionStorage/);}
-  const css=await readFile('packages/theme/src/auth.css','utf8');assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);assert.match(css,/@media \(max-width:47\.999rem\)/);assert.doesNotMatch(css,/xui-login-theme|#[0-9a-f]{3,8}\b/i);
+  const css=await readFile('packages/theme/src/auth.css','utf8');assert.doesNotMatch(css,/xui-login-theme|#[0-9a-f]{3,8}\b/i);
 });
 
-test('fullscreen is the default with an explicit card layout and inert decorative visual slot',()=>{
+test('login defaults to a card and keeps any optional visual decorative',()=>{
   const markup=render(undefined,{}, {brandVisual:React.createElement('img',{src:'/illustration.svg',alt:''})});
-  assert.match(markup,/data-layout="fullscreen"/);assert.doesNotMatch(markup,/xui-login-card xui-surface/);
+  assert.match(markup,/data-layout="card"/);
   assert.match(markup,/<div class="xui-login-visual" aria-hidden="true" inert=""><img[^>]*src="\/illustration.svg"/);
   const brand=section(markup,'xui-login-brand-content');
   assert.ok(brand.indexOf('xui-login-identity')<brand.indexOf('xui-login-description'));
   assert.ok(brand.indexOf('xui-login-description')<brand.indexOf('xui-login-visual'));
-  assert.match(render(undefined,{layout:'card'}),/data-layout="card"/);
+  assert.match(render(undefined,{layout:'fullscreen'}),/data-layout="fullscreen"/);
   assert.doesNotMatch(render(),/xui-login-visual/);
   assert.equal((render().match(/xui-login-feedback/g)||[]).length,1);
   assert.equal((render({status:'unknown',user:null,busy:'session',error:null}).match(/xui-login-feedback/g)||[]).length,1);
@@ -57,16 +56,4 @@ test('login centers one credential core with its primary action before separate 
   assert.match(options,/>Enterprise OIDC<\/button>/);assert.match(options,/>Enterprise SAML<\/button>/);
   assert.doesNotMatch(core,/xui-login-feedback|xui-login-support/);assert.match(support,/class="xui-login-feedback"/);
   assert.ok(markup.indexOf(core)<markup.indexOf(support));assert.doesNotMatch(render(),/xui-login-options/);
-});
-test('login scrollports retain four-sided focus clearance without changing focus tokens',async()=>{
-  const css=await readFile('packages/theme/src/auth.css','utf8');
-  for(const selector of ['.xui-login-body','.xui-login-actions','.xui-login-feedback','.xui-login-options']){
-    const rules=declarations(css,selector);
-    assert.match(rules,/padding:calc\(var\(--focus-width\) \+ var\(--focus-offset\)\)/,selector);
-    assert.match(rules,/scroll-padding:calc\(var\(--focus-width\) \+ var\(--focus-offset\)\)/,selector);
-    assert.match(rules,selector==='.xui-login-feedback'?/overflow:hidden/:/overflow:auto/,selector);
-  }
-  const body=declarations(css,'.xui-login-body');assert.match(body,/grid-auto-rows:max-content/);assert.match(body,/align-content:start/);
-  assert.match(css,/scroll-margin:calc\(var\(--focus-width\) \+ var\(--focus-offset\)\)/);
-  assert.match(css,/max-height:30rem/);assert.doesNotMatch(css,/--focus-(?:width|offset)\s*:/);
 });

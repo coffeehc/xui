@@ -51,7 +51,7 @@ for(const kind of ['react','vanilla']){
       await expect(page.getByRole('alert')).toBeVisible();await settle(page);same(initial,await rectangles(page,selectors));await expect(page.getByLabel('密码')).toHaveValue('');
       await expect(page.getByRole('button',{name:'取消等待',exact:true})).toHaveCount(0);
     }
-    await page.evaluate(()=>window.loginDemo.release('login'));await page.evaluate(()=>window.loginDemo.setMode('login','ok'));await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByText('已登录: 示例用户',{exact:true})).toBeVisible();
+    await page.evaluate(()=>window.loginDemo.release('login'));await page.evaluate(()=>window.loginDemo.setMode('login','ok'));await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toHaveLength(1);
   });
   for(const type of ['api-key','business-log','log'])test(`${kind} ${type}: retained row action survives failed refresh and recovery at identical geometry`,async({page})=>{
     await page.setViewportSize({width:1280,height:900});await page.goto(`/${type}-${kind}/`);await expect(page.locator('tbody tr').first()).toBeVisible();

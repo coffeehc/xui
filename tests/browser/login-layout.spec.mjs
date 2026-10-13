@@ -1,8 +1,11 @@
 import {test,expect} from '@playwright/test';
+import {writeFile} from 'node:fs/promises';
 
 const ready=async(page,kind)=>{await page.goto(`/login-${kind}/`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();};
 const box=locator=>locator.evaluate(element=>{const r=element.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};});
 const settle=page=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+const loginGeometry=async page=>page.evaluate(()=>Object.fromEntries(Object.entries({brand:'.xui-login-brand',form:'.xui-login-form',title:'.xui-login-body h1',username:'input[name=username]',password:'input[name=password]',submit:'.xui-login-submit',actions:'.xui-login-actions',feedback:'.xui-login-feedback'}).map(([name,selector])=>{const r=document.querySelector(selector).getBoundingClientRect();return [name,{x:r.x,y:r.y,width:r.width,height:r.height}];})));
+const expectSameGeometry=(before,after)=>{for(const [name,rect] of Object.entries(before))for(const key of Object.keys(rect))expect(Math.abs(after[name][key]-rect[key]),`${name}.${key} remains stable`).toBeLessThanOrEqual(1.5);};
 for(const kind of ['react','vanilla']){
   for(const stored of ['light','dark','system',null,'invalid']){
     test(`${kind} login inherits ${stored??'missing'} preference before app and never adds a theme selector`,async({page})=>{
@@ -28,17 +31,19 @@ for(const kind of ['react','vanilla']){
       await page.reload();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.locator('html')).toHaveAttribute('data-theme',expectedMode);
     });
   }
-  for(const appearance of ['light','dark','system'])for(const width of [1280,390]){
-    test(`${kind} public login splits brand and form: ${appearance}, ${width}px`,async({page},info)=>{
+  for(const appearance of ['light','dark','system'])for(const width of [1280,1600,390]){
+    test(`${kind} public login stays centered in one column: ${appearance}, ${width}px`,async({page},info)=>{
       await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});
       await page.addInitScript(appearance=>localStorage.setItem('ui.theme.mode',appearance),appearance);
       await ready(page,kind);await settle(page);
-      const brand=await box(page.locator('.xui-login-brand')),form=await box(page.locator('.xui-login-form')),card=await box(page.locator('.xui-login-card'));
-      if(width>767){expect(brand.right).toBeCloseTo(form.x,1);expect(brand.y).toBeCloseTo(form.y,1);expect(brand.width/card.width).toBeGreaterThan(.4);expect(form.width/card.width).toBeGreaterThan(.4);}
-      else {expect(brand.bottom).toBeCloseTo(form.y,1);expect(brand.x).toBeCloseTo(form.x,1);expect(form.width).toBeCloseTo(brand.width,1);}
+      const brand=await box(page.locator('.xui-login-brand')),form=await box(page.locator('.xui-login-form')),content=await box(page.locator('.xui-login-content')),card=await box(page.locator('.xui-login-card'));
+      expect(card.x).toBeGreaterThanOrEqual(0);expect(card.right).toBeLessThanOrEqual(width);expect(Math.abs((card.x+card.width/2)-width/2)).toBeLessThanOrEqual(1);
+      expect(content.width).toBeLessThanOrEqual(400);expect(content.x).toBeGreaterThanOrEqual(card.x);expect(content.right).toBeLessThanOrEqual(card.right);
+      expect(brand.bottom).toBeLessThanOrEqual(form.y);expect(brand.x).toBeGreaterThanOrEqual(card.x);expect(form.right).toBeLessThanOrEqual(card.right);
+      if(width===390)expect(card.width).toBeLessThanOrEqual(390);else expect(card.width).toBeLessThanOrEqual(450);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeInViewport();
       await expect(page.locator('.xui-login-brand strong')).toHaveText('轻舟工作台');await expect(page.locator('.xui-login-description')).toHaveText('继续处理你的工作。');await expect(page.getByRole('heading',{name:'登录工作台'})).toBeVisible();
-      expect(await page.locator('.xui-login-brand').evaluate(element=>getComputedStyle(element).backgroundColor)).not.toBe(await page.locator('.xui-login-card').evaluate(element=>getComputedStyle(element).backgroundColor));
+      await expect(page.locator('.xui-login-visual')).toBeHidden();await expect(page.locator('.xui-login-visual img')).toHaveCount(0);
       const path=info.outputPath(`login-${kind}-${appearance}-${width}.png`);await page.screenshot({path,animations:'disabled'});await info.attach('login-layout',{path,contentType:'image/png'});
     });
   }
@@ -54,33 +59,34 @@ async function paintedFocus(page,locator,info,name){
   expect(metrics.width).toBeGreaterThan(0);
   const png=await page.screenshot({animations:'disabled'});
   const pixels=await page.evaluate(async({encoded,metrics})=>{const image=new Image();image.src='data:image/png;base64,'+encoded;await image.decode();const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);const ratio=image.width/metrics.viewport.width;const samples=metrics.points.map(([x,y])=>Array.from(ctx.getImageData(Math.round(x*ratio),Math.round(y*ratio),1,1).data));ctx.fillStyle=metrics.outline;ctx.fillRect(0,0,1,1);return {samples,expected:Array.from(ctx.getImageData(0,0,1,1).data)};},{encoded:png.toString('base64'),metrics});
-  await info.attach(name,{body:png,contentType:'image/png'});
+  const path=info.outputPath(name+'.png');await writeFile(path,png);await info.attach(name,{path,contentType:'image/png'});
   await info.attach(name+'-focus-pixels',{body:JSON.stringify({metrics,pixels},null,2),contentType:'application/json'});
   for(const [index,pixel] of pixels.samples.entries())for(let channel=0;channel<3;channel++)expect(Math.abs(pixel[channel]-pixels.expected[channel]),`${name}: ${['left','right','top','bottom'][index]} outline must be painted`).toBeLessThanOrEqual(20);
 }
 for(const kind of ['react','vanilla']){
-  test(`${kind} fullscreen panels cover the viewport and explicit card remains opt-in`,async({page})=>{
-    for(const size of [{width:1280,height:800},{width:1600,height:900},{width:390,height:800}]){
-      await page.setViewportSize(size);await ready(page,kind);
-      const bounds=await box(page.locator('.xui-login-card'));
-      expect(bounds).toEqual({x:0,y:0,right:size.width,bottom:size.height,width:size.width,height:size.height});
-      expect(await page.locator('.xui-login-card').evaluate(element=>({border:getComputedStyle(element).borderTopWidth,radius:getComputedStyle(element).borderTopLeftRadius}))).toEqual({border:'0px',radius:'0px'});
-      await expect(page.locator('.xui-login-page')).toHaveAttribute('data-layout','fullscreen');
+  test(`${kind} default and fullscreen modes keep the narrow single-column login usable`,async({page})=>{
+    for(const layout of ['card','fullscreen'])for(const size of [{width:1280,height:800},{width:1600,height:900},{width:390,height:800}]){
+      await page.setViewportSize(size);await page.goto(`/login-${kind}/${layout==='card'?'':'?layout=fullscreen'}`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
+      const card=await box(page.locator('.xui-login-card')),content=await box(page.locator('.xui-login-content')),brand=await box(page.locator('.xui-login-brand')),form=await box(page.locator('.xui-login-form'));
+      expect(Math.abs((card.x+card.width/2)-size.width/2)).toBeLessThanOrEqual(1);expect(card.width).toBeLessThanOrEqual(Math.min(size.width,450));expect(content.width).toBeLessThanOrEqual(400);
+      expect(brand.bottom).toBeLessThanOrEqual(form.y);await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toBeInViewport();await expect(page.getByLabel('密码')).toBeInViewport();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeInViewport();
+      await expect(page.locator('.xui-login-page')).toHaveAttribute('data-layout',layout);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     }
-    await page.setViewportSize({width:1280,height:800});await page.goto(`/login-${kind}/?layout=card`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
-    const card=await box(page.locator('.xui-login-card'));expect(card.x).toBeGreaterThan(0);expect(card.y).toBeGreaterThan(0);expect(card.width).toBeLessThan(1280);
   });
-  test(`${kind} decorative visual keeps shared branding and cannot steal keyboard focus`,async({page})=>{
+  test(`${kind} optional visual stays compact, decorative and absent from the default login`,async({page})=>{
+    await ready(page,kind);await expect(page.locator('.xui-login-visual')).toBeHidden();await expect(page.locator('.xui-login-visual img')).toHaveCount(0);
     await page.goto(`/login-${kind}/?visual`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
     await expect(page.locator('.xui-login-visual')).toBeVisible();await expect(page.locator('.xui-login-visual')).toHaveAttribute('aria-hidden','true');expect(await page.locator('.xui-login-visual').evaluate(element=>element.inert)).toBe(true);
     await expect.poll(()=>page.locator('.xui-login-visual img').evaluate(image=>image.complete&&image.naturalWidth>0)).toBe(true);
+    expect((await box(page.locator('.xui-login-visual'))).height).toBeLessThanOrEqual(80);
     await page.setViewportSize({width:390,height:800});await expect(page.locator('.xui-login-visual')).toBeHidden();await expect(page.locator('.xui-login-identity strong')).toBeVisible();await expect(page.getByLabel('密码')).toBeInViewport();
   });
   test(`${kind} initial session checking and one-line error preserve field positions`,async({page})=>{
     await page.goto(`/login-${kind}/?session=hold`);await expect(page.getByRole('status')).toHaveText('正在确认登录状态…');
-    const username=page.getByRole('textbox',{name:'用户名',exact:true}),initial=await box(username);
-    await page.evaluate(()=>window.loginDemo.release('session'));await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();expect(await box(username)).toEqual(initial);
-    await page.evaluate(()=>window.loginDemo.setMode('login','credentials'));await username.fill('demo');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('alert')).toHaveText('用户名或密码不正确。');expect(await box(username)).toEqual(initial);
+    const username=page.getByRole('textbox',{name:'用户名',exact:true}),initial=await loginGeometry(page);
+    await page.evaluate(()=>window.loginDemo.release('session'));await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();expectSameGeometry(initial,await loginGeometry(page));
+    await page.evaluate(()=>window.loginDemo.setMode('login','credentials'));await username.fill('demo');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('alert')).toHaveText('用户名或密码不正确。');expectSameGeometry(initial,await loginGeometry(page));
   });
   for(const appearance of ['light','dark','system'])for(const mode of ['desktop','narrow','large-text','short-height']){
     test(`${kind} four painted focus sides: ${appearance}, ${mode}`,async({page},info)=>{
@@ -103,7 +109,7 @@ for(const kind of ['react','vanilla'])test(`${kind} long credential feedback rem
   await page.evaluate(()=>{document.documentElement.style.fontSize='200%';window.loginDemo.setMode('login','credentials');});
   await page.getByRole('textbox',{name:'用户名',exact:true}).fill('demo');await page.getByLabel('密码').fill('FAKE_LONG_ERROR_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();
   await expect(page.getByRole('alert')).toHaveText('用户名或密码不正确，请核对当前服务地址和账户来源后再试。'.repeat(6));
-  const scroll=page.getByRole('alert');expect(await scroll.evaluate(element=>element.scrollHeight>element.clientHeight)).toBe(true);expect(await page.locator('.xui-login-body').evaluate(element=>element.scrollHeight>element.clientHeight)).toBe(true);
+  const scroll=page.getByRole('alert');expect(await scroll.evaluate(element=>element.scrollHeight>element.clientHeight)).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight)).toBe(true);
   for(const end of [false,true]){await scroll.evaluate((element,end)=>{element.scrollTop=end?element.scrollHeight:0;},end);await info.attach(`${kind}-long-error-${end?'end':'start'}`,{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});}
   await paintedFocus(page,page.getByLabel('服务地址'),info,`${kind}-long-error-first-field`);
   await paintedFocus(page,page.getByLabel('补充说明'),info,`${kind}-long-error-last-field`);
@@ -115,5 +121,9 @@ for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','s
   await page.setViewportSize(mode==='desktop'?{width:1280,height:800}:mode==='short-height'?{width:390,height:320}:{width:390,height:800});await page.emulateMedia({colorScheme:appearance==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),appearance);
   await page.goto(`/login-${kind}/?extensions&visualAcceptance`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();if(mode==='large-text')await page.evaluate(()=>document.documentElement.style.fontSize='200%');await page.evaluate(()=>window.loginDemo.setExtensionMode('hold'));await page.getByRole('button',{name:'企业 OIDC 登录'}).click();
   await paintedFocus(page,page.getByRole('button',{name:'取消等待'}),info,`${kind}-${appearance}-${mode}-cancel`);await page.getByRole('button',{name:'取消等待'}).click();await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toBeFocused();await page.evaluate(()=>window.loginDemo.releaseExtension());
-  await page.goto(`/login-${kind}/?sessionReadError&visualAcceptance`);await expect(page.getByRole('button',{name:'重试连接'})).toBeVisible();if(mode==='large-text')await page.evaluate(()=>document.documentElement.style.fontSize='200%');await paintedFocus(page,page.getByRole('button',{name:'重试连接'}),info,`${kind}-${appearance}-${mode}-retry`);
+  await page.goto(`/login-${kind}/?sessionReadError&handoff=hold&visualAcceptance`);await expect(page.getByRole('button',{name:'重试连接'})).toBeVisible();await expect.poll(()=>page.evaluate(()=>{const state=window.loginDemo.auth.getState();return state.error?.metadata.endpointId==='auth.session'&&state.error.kind==='network'&&!state.reauthenticationRequired;})).toBe(true);if(mode==='large-text')await page.evaluate(()=>document.documentElement.style.fontSize='200%');await paintedFocus(page,page.getByRole('button',{name:'重试连接'}),info,`${kind}-${appearance}-${mode}-retry`);
+});
+for(const kind of ['react','vanilla'])test(`${kind} long configured primary stays scrollable, keeps busy text visible and paints all focus sides`,async({page},info)=>{
+  await page.setViewportSize({width:390,height:720});const label='立即登录企业统一身份认证工作台'.repeat(8);await page.goto(`/login-${kind}/?productName=${encodeURIComponent('工作台'.repeat(42))}&submitLabel=${encodeURIComponent(label)}&visualAcceptance`);const submit=page.locator('.xui-login-submit');await expect(submit).toBeEnabled();await page.evaluate(()=>{document.documentElement.style.fontSize='200%';document.documentElement.style.setProperty('--font-sans','monospace');});await submit.evaluate(element=>element.scrollIntoView({block:'nearest'}));await settle(page);await expect(submit).toHaveAccessibleName(label);const idle=await submit.evaluate(element=>({rect:element.getBoundingClientRect().toJSON(),height:element.clientHeight,scrollHeight:element.scrollHeight,scrollTop:element.scrollTop,outline:getComputedStyle(element).outlineStyle}));expect(idle.rect.y).toBeGreaterThanOrEqual(0);expect(idle.rect.bottom).toBeLessThanOrEqual(720);expect(idle.rect.height).toBeLessThanOrEqual(144);expect(idle.scrollHeight).toBeGreaterThan(idle.height);expect(idle.scrollTop).toBe(0);await submit.evaluate(element=>element.scrollTop=element.scrollHeight);expect(await submit.evaluate(element=>element.scrollTop)).toBeGreaterThan(0);await submit.evaluate(element=>element.scrollTop=0);await paintedFocus(page,submit,info,`${kind}-long-primary-focus`);
+  await page.getByRole('textbox',{name:'用户名',exact:true}).fill('demo');await page.getByLabel('密码').fill('FAKE_LONG_ACTION_PASSWORD');await submit.evaluate(element=>element.scrollTop=element.scrollHeight);expect(await submit.evaluate(element=>element.scrollTop)).toBeGreaterThan(0);await page.evaluate(()=>window.loginDemo.repeatAuthNotification());expect(await submit.evaluate(element=>element.scrollTop)).toBeGreaterThan(0);await page.evaluate(()=>window.loginDemo.setMode('login','hold'));await submit.click();await expect.poll(()=>page.evaluate(()=>window.loginDemo.auth.getState().busy)).toBe('login');await expect(submit).toBeDisabled();const busy=await submit.evaluate(element=>{const r=element.getBoundingClientRect(),label=element.querySelector('span').getBoundingClientRect(),contentTop=r.top+element.clientTop,contentBottom=contentTop+element.clientHeight;return {button:{top:r.top,right:r.right,bottom:r.bottom,left:r.left,contentTop,contentBottom,scrollTop:element.scrollTop},label:{top:label.top,right:label.right,bottom:label.bottom,left:label.left},text:element.querySelector('span').textContent};});expect(busy.button.scrollTop).toBe(0);expect(busy.text).toBe('正在登录…');expect(busy.label.top).toBeGreaterThanOrEqual(busy.button.contentTop);expect(busy.label.bottom).toBeLessThanOrEqual(busy.button.contentBottom);expect(busy.label.left).toBeGreaterThanOrEqual(busy.button.left);expect(busy.label.right).toBeLessThanOrEqual(busy.button.right);await expect(submit).toHaveAccessibleName('正在登录…');await page.getByRole('button',{name:'取消等待'}).click();await page.evaluate(()=>window.loginDemo.release('login'));
 });

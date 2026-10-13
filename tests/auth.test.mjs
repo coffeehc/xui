@@ -114,7 +114,7 @@ test('auth subscriptions may expire or destroy during completion without returni
 test('safe login navigation and presentation retain existing behavior',()=>{
  for(const value of ['https://auth.example/app','//evil.example','/\\evil.example','/a/..//evil.example/path','/%252e%252e//evil.example/path','/%255cevil.example','/%0d%0aLocation:evil','/login','/%6cogin','/%ZZ',' /app'])assert.equal(resolveLoginReturnTo(value,'/safe'),'/safe',value);
  assert.equal(resolveLoginReturnTo('/app?tab=one&password=FAKE&access_token=FAKE&refresh_token=FAKE&code=FAKE&API_KEY=FAKE#FAKE'),'/app?tab=one');
- assert.equal(resolveLoginPageConfig({productName:'产品'}).layout,'fullscreen');assert.equal(resolveLoginPageConfig({productName:'产品',layout:'card'}).layout,'card');for(const layout of ['wide','',1,{}])assert.throws(()=>resolveLoginPageConfig({productName:'产品',layout}));
+ assert.equal(resolveLoginPageConfig({productName:'产品'}).layout,'card');assert.equal(resolveLoginPageConfig({productName:'产品',layout:'fullscreen'}).layout,'fullscreen');for(const layout of ['wide','',1,{}])assert.throws(()=>resolveLoginPageConfig({productName:'产品',layout}));
 });
 
 test('shared baseservice emitted-wire fixture roundtrips without unsafe int64 conversion',async()=>{

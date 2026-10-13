@@ -90,8 +90,7 @@ test('shared error layout is locally scrollable, token-scaled, and needs no remo
   }
   assert.doesNotMatch(css,/\.xui-login-feedback\b/);
   const feedback=declarations(auth,'.xui-login-feedback');
-  assert.match(feedback,/min-block-size:var\(--login-feedback-min-block-size\)/);assert.match(feedback,/max-block-size:var\(--login-feedback-max-block-size\)/);assert.match(feedback,/overflow:hidden/);assert.match(declarations(auth,'.xui-login-feedback>.xui-alert'),/max-block-size:100%.*overflow:auto/);
-  assert.doesNotMatch(feedback,/(?:^|;)\s*block-size:/);
+  assert.match(feedback,/block-size:var\(--login-feedback-block-size\)/);assert.match(feedback,/overflow:hidden/);assert.match(declarations(auth,'.xui-login-feedback>.xui-alert'),/max-block-size:100%.*overflow:auto/);
   for(const part of ['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets'])assert.doesNotMatch(await read(`packages/theme/src/${part}.css`),/@font-face|@import\s+['"]https?:|url\(\s*['"]?https?:/i);
 });
 test('native list views only move keyed rows when their actual order changes',async()=>{
