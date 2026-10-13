@@ -16,13 +16,13 @@ for(const kind of ['react','native'])test(`${kind} shared password fields valida
   await page.goto('/react/');await page.addScriptTag({content:source});await page.evaluate(kind=>window.mountPassword(kind),kind);
   // Label text includes the aria-hidden required marker; accessible names must not.
   const password=page.getByLabel(/^新密码(?:\s*\*)?$/),confirmation=page.getByLabel(/^确认密码(?:\s*\*)?$/);
-  await expect(password).toBeVisible();await expect(password).toHaveAccessibleName('新密码');await expect(confirmation).toHaveAccessibleName('确认密码');
-  for(const [value,valid] of [['a'.repeat(5),false],['a'.repeat(6),true],['中'.repeat(32),true],['😀'.repeat(32),true],['😀'.repeat(33),false],['      ',true],['e\u0301e\u0301e\u0301',true]]){
-    await password.fill(value);await confirmation.fill(value);expect(await page.evaluate(()=>window.passwordFixture.read())).toBe(valid?value:null);
-    if(!valid){await expect(password).toHaveAttribute('aria-invalid','true');await expect(password).toBeFocused();}
+  await expect(page.getByText('密码长度为 6–32 个字符，可使用大小写字母、数字及 _、+、# 等符号。',{exact:false})).toBeVisible();await expect(page.locator('[data-xui-password-count]')).toHaveText('已输入0个字符');await expect(password).toBeVisible();await expect(password).toHaveAccessibleName('新密码');await expect(confirmation).toHaveAccessibleName('确认密码');
+  for(const [value,valid] of [['a'.repeat(5),false],['a'.repeat(6),true],['中'.repeat(32),true],['😀'.repeat(32),true],['😀'.repeat(33),false],['      ',true],['e\u0301e\u0301e\u0301',true],['👨‍👩‍👧‍👦',true]]){
+    await password.fill(value);await expect(page.locator('[data-xui-password-count]')).toHaveText(`已输入${[...value].length}个字符`);await confirmation.fill(value);expect(await page.evaluate(()=>window.passwordFixture.read())).toBe(valid?value:null);
+    if(!valid){await expect(page.getByText([...value].length<6?'密码太短，至少需要6个字符。':'密码太长，最多可输入32个字符。',{exact:true})).toBeVisible();await expect(password).toHaveAttribute('aria-invalid','true');await expect(password).toBeFocused();}
   }
   await password.fill('abcdef');await confirmation.fill('abcdeg');expect(await page.evaluate(()=>window.passwordFixture.read())).toBeNull();await expect(confirmation).toBeFocused();await expect(page.getByText('两次输入的密码不一致。')).toBeVisible();
   await confirmation.fill('abcdef');expect(await page.evaluate(()=>window.passwordFixture.read())).toBe('abcdef');
-  await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pagehide')));await expect(password).toHaveValue('');await expect(confirmation).toHaveValue('');
+  await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pagehide')));await expect(password).toHaveValue('');await expect(confirmation).toHaveValue('');await expect(page.locator('[data-xui-password-count]')).toHaveText('已输入0个字符');
   await password.fill('abcdef');await confirmation.fill('abcdef');await page.evaluate(()=>window.passwordFixture.destroy());expect(await page.evaluate(()=>window.detachedPasswords.map(field=>field.value))).toEqual(['','']);
 });

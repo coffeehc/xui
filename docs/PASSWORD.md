@@ -24,3 +24,9 @@ finally { fields.current?.clear(); }
 旧账号登录仍使用既有ConfigurableLoginPage/createLoginPage，不调用validateNewPassword。服务端独立实施新设规则及版本化bcrypt处理，客户端检查不能代替服务端认证。
 
 验证：公共策略边界、中文/英文/emoji、组合码点、不归一化、确认错误、孤立代理项、未知策略及真实loader参数；SSR检查字段/aria公共结构与无UTF16长度门禁。React/原生交互回归在tests/browser/password-fields.spec.mjs；本次系统Chromium被环境socket限制阻止启动（普通及escalated均Operation not permitted），因此该2项浏览器用例未执行。build、typecheck和5项密码单元/SSR测试及31项认证/AuthPage回归已通过；不宣称真实后端账号已验证。
+
+### 面向使用者的规则与当前计数
+
+默认提示为“密码长度为 {minimum}–{maximum} 个字符，可使用大小写字母、数字及 _、+、# 等符号。”范围始终来自服务端 policy。React/原生新密码字段只保存当前字符数用于展示，密码本身仍仅保留在输入框；清空/pagehide 同时将计数归零。复杂 emoji 和组合字符仍按前述技术计数规则计数，不能承诺视觉上一个图案就是一个字符。此能力不用于现有账号的登录密码限制。
+
+`NewPasswordLabels` 新增可选 count/tooShort/tooLong 文案函数；原完整 labels 对象保持兼容。`getNewPasswordErrorMessage` 可传第五参数当前字符数，以显示明确“太短/太长”信息；未提供时仍返回范围规则。无效字符提示为“密码包含无法识别的字符，请重新输入。”计数和提示不引入复杂度、归一化、截断或任何密码持久化。

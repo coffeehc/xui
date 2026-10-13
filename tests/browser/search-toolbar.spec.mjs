@@ -79,7 +79,7 @@ for(const kind of ['react','vanilla']){
       const toggle=page.getByRole('button',{name:'高级筛选',exact:true});await toggle.focus();await page.keyboard.press('Enter');await expect(page.getByLabel('Default owner',{exact:true})).toBeVisible();
       const paint=await focusPaint(page.getByLabel('Default notes',{exact:true}));expect(paint.clipped).toEqual([]);expect(paint.left).toBeGreaterThanOrEqual(0);expect(paint.right).toBeLessThanOrEqual(paint.viewport+1);
       const measured=await geometry(page);expect(measured.actions.y).toBeGreaterThanOrEqual(measured.search.bottom);
-      await info.attach(`${kind}-${mode}-browser-200.json`,{body:JSON.stringify({zoom,before,after,measured}),contentType:'application/json'});await info.attach(`${kind}-${mode}-browser-200.png`,{body:await page.screenshot({fullPage:true}),contentType:'image/png'});
+      await info.attach(`${kind}-${mode}-browser-200.json`,{body:JSON.stringify({zoom,before,after,measured}),contentType:'application/json'});await info.attach(`${kind}-${mode}-browser-200.png`,{body:await page.screenshot({scale:'css',animations:'disabled'}),contentType:'image/png'});await page.evaluate(()=>scrollTo(0,0));await info.attach(`${kind}-${mode}-browser-200-top.png`,{body:await page.screenshot({scale:'css',animations:'disabled'}),contentType:'image/png'});
     }finally{await context.close();}
   });
 }

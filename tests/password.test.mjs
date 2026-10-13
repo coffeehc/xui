@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {readFile} from 'node:fs/promises';
-import {parsePasswordPolicy,validateNewPassword,countPasswordCodePoints,loadPasswordPolicy} from '../packages/runtime/dist/password.js';
+import {parsePasswordPolicy,validateNewPassword,countPasswordCodePoints,loadPasswordPolicy,newPasswordLabels,getNewPasswordErrorMessage} from '../packages/runtime/dist/password.js';
 import {createHttpClient} from '../packages/runtime/dist/http.js';
 import {createAuthClient} from '../packages/runtime/dist/auth.js';
 import {NewPasswordFields} from '../packages/ui-react/dist/password.js';
@@ -43,4 +43,15 @@ test('public policy works through the existing auth-bound transport without acqu
   try {assert.deepEqual(await loadPasswordPolicy(http),policy);assert.equal(requests.length,1);assert.equal(new URL(requests[0].url).pathname,'/api/v1/auth/password-policy');assert.equal(requests[0].options.credentials,'omit');assert.equal(requests[0].options.headers.get('Authorization'),null);assert.equal(auth.getState().status,'unknown');
     await assert.rejects(()=>http.request('/api/v1/auth/password-policy',{method:'POST'}));await assert.rejects(()=>http.request('/api/v1/auth/login'));assert.equal(requests.length,1);
   } finally {auth.destroy();http.destroy();}
+});
+
+test('password rules explain accepted characters and length without implementation jargon',()=>{
+ assert.equal(newPasswordLabels.length(6,32),'密码长度为 6–32 个字符，可使用大小写字母、数字及 _、+、# 等符号。');
+ assert.equal(newPasswordLabels.count(7),'已输入7个字符');
+ assert.equal(getNewPasswordErrorMessage('invalid_unicode',policy),'密码包含无法识别的字符，请重新输入。');
+ assert.equal(getNewPasswordErrorMessage('invalid_length',policy,newPasswordLabels,5),'密码太短，至少需要6个字符。');
+ assert.equal(getNewPasswordErrorMessage('invalid_length',policy,newPasswordLabels,33),'密码太长，最多可输入32个字符。');
+ assert.match(newPasswordLabels.length(2,9),/2–9/);
+ const markup=renderToStaticMarkup(React.createElement(NewPasswordFields,{policy}));assert.doesNotMatch(markup,/Unicode|码点|UTF-16/);assert.match(markup,/已输入0个字符/);
+ assert.equal(countPasswordCodePoints('👨‍👩‍👧‍👦'),7);
 });

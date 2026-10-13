@@ -29,12 +29,14 @@ export function validateNewPassword(policy:PasswordPolicy|null,password:string,c
   if(count<current.minimum_characters||count>current.maximum_characters)return 'invalid_length';
   return password===confirmation?null:'confirmation_mismatch';
 }
-export interface NewPasswordLabels {password:string;confirmation:string;policyUnavailable:string;invalidUnicode:string;confirmationMismatch:string;length:(minimum:number,maximum:number)=>string}
-export const newPasswordLabels:Readonly<NewPasswordLabels>=Object.freeze({password:'新密码',confirmation:'确认密码',policyUnavailable:'密码规则暂不可用，请重试。',invalidUnicode:'密码包含无效的 Unicode 字符。',confirmationMismatch:'两次输入的密码不一致。',length:(minimum:number,maximum:number)=>`密码须为 ${minimum}–${maximum} 个 Unicode 码点，中文和 emoji 按相同规则计数。`});
-export function getNewPasswordErrorMessage(error:NewPasswordError|null,policy:PasswordPolicy|null,labels:NewPasswordLabels=newPasswordLabels):string|undefined{
+export interface NewPasswordLabels {password:string;confirmation:string;policyUnavailable:string;invalidUnicode:string;confirmationMismatch:string;length:(minimum:number,maximum:number)=>string;count?:(count:number|null)=>string;tooShort?:(minimum:number)=>string;tooLong?:(maximum:number)=>string}
+export const newPasswordLabels:Readonly<NewPasswordLabels>=Object.freeze({password:'新密码',confirmation:'确认密码',policyUnavailable:'密码规则暂不可用，请重试。',invalidUnicode:'密码包含无法识别的字符，请重新输入。',confirmationMismatch:'两次输入的密码不一致。',length:(minimum:number,maximum:number)=>`密码长度为 ${minimum}–${maximum} 个字符，可使用大小写字母、数字及 _、+、# 等符号。`,count:(count:number|null)=>count===null?'字符无法识别，请重新输入。':`已输入${count}个字符`,tooShort:(minimum:number)=>`密码太短，至少需要${minimum}个字符。`,tooLong:(maximum:number)=>`密码太长，最多可输入${maximum}个字符。`});
+export function getNewPasswordErrorMessage(error:NewPasswordError|null,policy:PasswordPolicy|null,labels:NewPasswordLabels=newPasswordLabels,count?:number|null):string|undefined{
   if(error===null)return undefined;
   if(error==='policy_unavailable'||!policy)return labels.policyUnavailable;
   if(error==='invalid_unicode')return labels.invalidUnicode;
   if(error==='confirmation_mismatch')return labels.confirmationMismatch;
+  if(typeof count==='number'&&count<policy.minimum_characters)return (labels.tooShort??newPasswordLabels.tooShort!)(policy.minimum_characters);
+  if(typeof count==='number'&&count>policy.maximum_characters)return (labels.tooLong??newPasswordLabels.tooLong!)(policy.maximum_characters);
   return labels.length(policy.minimum_characters,policy.maximum_characters);
 }
