@@ -182,7 +182,7 @@ AppHeader/AppShell/MenuLayout与原生MenuLayoutOptions同型theme?:ThemeControl
 
 `ShellScrollMode`从runtime/menu-layout及根导出，并由React/layout及根重新导出；AppShellProps/MenuLayoutProps/MenuLayoutOptions.scrollMode接受document（默认）/viewport（旧main滚动）/workspace（content填满剩余高度）。workspace以库内flex/min-block-size链分配真实header和page slots以外的空间，不强制业务滚动区域、窗口集成或路由恢复策略。
 
-AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null）；独立AppHeader直接接受leading。顺序为leading→自动navigation→brand→breadcrumb→context，默认空；同Node/Fragment与普通React协调保持稳定。宿主提供平台/全屏事实、尺寸和drag/no-drag语义，库没有OS默认像素。完整[合同](LAYOUT_SLOTS.md)、[React正式消费者](../examples/workspace-react/app.tsx)、[原生正式消费者](../examples/workspace-vanilla/app.js)及[验证记录](WORKSPACE_VALIDATION.md)。
+AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null）；独立AppHeader直接接受leading。顺序为leading→brand→自动navigation→breadcrumb→context，默认空；同Node/Fragment与普通React协调保持稳定。宿主提供平台/全屏事实、尺寸和drag/no-drag语义，库没有OS默认像素。完整[合同](LAYOUT_SLOTS.md)、[React正式消费者](../examples/workspace-react/app.tsx)、[原生正式消费者](../examples/workspace-vanilla/app.js)及[验证记录](WORKSPACE_VALIDATION.md)。
 
 ## 富导航行扩展
 
@@ -238,3 +238,7 @@ NewPasswordFields（React/原生）内置本地懒加载弱/中/强建议，评�
 - `@coffeehc/xui-react/admin-setup` <!-- public-entry: @coffeehc/xui-react/admin-setup -->：AdminSetupPage、AdminSetupPageProps、AdminSetupPageHandle 与共享状态类型。
 
 均从各自根入口导出。完整页面复用 AuthPage/NewPasswordFields，宿主只配置品牌、权威状态、服务端政策和提交回调。未知写入仅普通文字且锁定，不自动重发/核对，不等于登录。生命周期/迁移与双端正式示例见 [ADMIN_SETUP](ADMIN_SETUP.md)。
+
+### 表格行操作布局
+
+`TableActions` 从 React 根入口及 `@coffeehc/xui-react/table` 导出，是只负责换行与 `table-action-gap` 的 div 子部件，接受标准 div props/ref。原生采用同一公开 `.xui-table-actions` 容器。APIKey 双端复用此布局；按钮标签、排序、权限、写入和回执仍由原业务 owner 持有。长标签允许换行，表格单元格保留焦点间隙，不用相邻按钮粘合代替组布局。

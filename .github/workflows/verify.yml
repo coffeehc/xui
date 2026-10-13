@@ -27,7 +27,7 @@ jobs:
           name: authentication-visual
           path: test-results
       - name: Focused interaction regressions
-        run: pnpm exec playwright test design-state-regressions.spec.mjs table-design-contract.spec.mjs menu-design-contract.spec.mjs context-submenu.spec.mjs foundation-contract.spec.mjs data-table-caption-shape.spec.mjs data-table-feedback.spec.mjs data-table-widths.spec.mjs data-table-layout.spec.mjs data-table.spec.mjs api-key-atomic.spec.mjs auth-operation.spec.mjs login-layout.spec.mjs login.spec.mjs error-layout.spec.mjs capabilities.spec.mjs search-toolbar.spec.mjs display.spec.mjs choice-group.spec.mjs password-fields.spec.mjs password-strength.spec.mjs admin-setup.spec.mjs text-inputs.spec.mjs
+        run: pnpm exec playwright test table-actions.spec.mjs design-state-regressions.spec.mjs table-design-contract.spec.mjs menu-design-contract.spec.mjs context-submenu.spec.mjs foundation-contract.spec.mjs data-table-caption-shape.spec.mjs data-table-feedback.spec.mjs data-table-widths.spec.mjs data-table-layout.spec.mjs data-table.spec.mjs api-key-atomic.spec.mjs auth-operation.spec.mjs login-layout.spec.mjs login.spec.mjs error-layout.spec.mjs capabilities.spec.mjs search-toolbar.spec.mjs display.spec.mjs choice-group.spec.mjs password-fields.spec.mjs password-strength.spec.mjs admin-setup.spec.mjs text-inputs.spec.mjs
       - name: Preserve focused interaction evidence
         uses: actions/upload-artifact@v4
         if: always()

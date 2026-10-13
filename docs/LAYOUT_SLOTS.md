@@ -30,7 +30,7 @@ React 的 AppShell/MenuLayout 接收 ReactNode；原生 createMenuLayout 接收 
 
 富业务自组导航使用完整sidebar区域，不能把整份导航塞进sidebarHeader的限高槽。原生新增sidebar的节点保留、null恢复、替换焦点与清理边界见[导航合同](NAVIGATION.md#原生完整自组-sidebar)。
 
-Tab按真实DOM顺序经过primary（leading、导航、品牌、路径、context）、secondary（状态、actions、旧header、auxiliary、语言、主题、account），然后侧栏/正文；不使用正tabindex重排。打开抽屉仍采用原模态焦点限制；关闭回同一个顶栏菜单开关。关闭当前聚焦的语言入口会把焦点移到相邻主题按钮。槽自身交互语义/disabled/busy由其组件或宿主拥有。
+Tab按真实DOM顺序经过primary（leading、品牌、导航、路径、context）、secondary（状态、actions、旧header、auxiliary、语言、主题、account），然后侧栏/正文；不使用正tabindex重排。打开抽屉仍采用原模态焦点限制；关闭回同一个顶栏菜单开关。关闭当前聚焦的语言入口会把焦点移到相邻主题按钮。槽自身交互语义/disabled/busy由其组件或宿主拥有。
 
 ## 有界工作区与滚动所有权
 

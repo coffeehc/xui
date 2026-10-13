@@ -14,3 +14,6 @@ export function TableExpandedRow({colSpan,children,className,...props}:React.Com
 export function TableExpandButton({expanded,controls,className,...props}:React.ComponentProps<'button'>&{expanded:boolean;controls:string}){return <button type="button" {...props} aria-expanded={expanded} aria-controls={controls} className={cx('xui-sort-button',className)}/>;}
 /** Host owns aria-sort on the th and the actual ordering; one click, one callback. */
 export function SortButton({className,...props}:React.ComponentProps<'button'>){return <button type="button" {...props} className={cx('xui-sort-button',className)}/>;}
+
+/** Visual row-action layout only; the host retains labels, permissions and callbacks. */
+export function TableActions({className,...props}:React.ComponentProps<'div'>){return <div {...props} className={cx('xui-table-actions',className)}/>;}

@@ -89,3 +89,11 @@ window.renderWorkspaceFocusCase=config=>{
  const owner=createMenuLayout(host,{theme,scrollMode:'workspace',items:[{id:'overview',label:'Overview',href:'#overview'}],activeId:'overview',label:'Workspace navigation',headerSlots:{brand},content});
  workspaceFocusCleanup=()=>{owner.destroy();host.remove();};
 };
+
+import {TableActions,TableContainer,Table,TableBody,TableRow,TableCell} from '@coffeehc/xui-react/table';
+declare global {interface Window {renderTableActionsCase:(native:boolean)=>void}}
+window.renderTableActionsCase=native=>{
+ const labels=['编辑这条记录并保留完整文字','撤销这条记录的权限','删除已经撤销的记录'];
+ if(!native){root.render(<TableContainer aria-label="Action layout"><Table><TableBody><TableRow><TableCell><TableActions style={{maxInlineSize:'var(--layout-field-min)'}}>{labels.map(label=><Button key={label}>{label}</Button>)}</TableActions></TableCell></TableRow></TableBody></Table></TableContainer>);return;}
+ root.render(null);const host=document.createElement('div');host.className='xui-table-container';host.setAttribute('role','region');host.setAttribute('aria-label','Action layout');host.innerHTML='<table class="xui-table"><tbody><tr class="xui-table-row"><td><div class="xui-table-actions" style="max-inline-size:var(--layout-field-min)">'+labels.map(label=>'<button type="button" class="xui-button">'+label+'</button>').join('')+'</div></td></tr></tbody></table>';document.body.append(host);
+};
