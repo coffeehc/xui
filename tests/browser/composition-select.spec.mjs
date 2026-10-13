@@ -1,3 +1,4 @@
+import {expectOptionSpacing} from './option-spacing.mjs';
 import {test,expect} from '@playwright/test';
 for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])for(const width of [1280,390]){
   test(`${kind} ${theme} ${width}: table page-size uses a themed keyboard popup`,async({page},info)=>{
@@ -10,7 +11,7 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
     await expect(trigger).toHaveJSProperty('tagName','BUTTON');await expect(page.locator('.xui-data-table-page-size select')).toBeHidden();expect(await trigger.locator('span').evaluate(node=>node.scrollWidth<=node.clientWidth+1)).toBe(true);
     await trigger.focus();await page.keyboard.press('ArrowDown');
     const id=await trigger.getAttribute('aria-controls'),popup=page.locator(`[id=${JSON.stringify(id)}]`);
-    await expect(popup).toBeVisible();
+    await expect(popup).toBeVisible();await expectOptionSpacing(popup.getByRole('option'));
     const measured=await popup.evaluate(element=>{const r=element.getBoundingClientRect(),s=getComputedStyle(element);return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:innerWidth,height:innerHeight,background:s.backgroundColor,border:s.borderTopStyle,font:s.fontFamily};});
     expect(measured.left).toBeGreaterThanOrEqual(0);expect(measured.top).toBeGreaterThanOrEqual(0);
     expect(measured.right).toBeLessThanOrEqual(measured.width);expect(measured.bottom).toBeLessThanOrEqual(measured.height);

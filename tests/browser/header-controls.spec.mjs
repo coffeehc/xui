@@ -1,3 +1,4 @@
+import {expectOptionSpacing} from './option-spacing.mjs';
 import {test as base,expect} from '@playwright/test';
 const test=base.extend({page:async({page},use,info)=>{const errors=[];page.on('pageerror',error=>errors.push(error.message));await use(page);await info.attach('browser-errors.json',{body:JSON.stringify(errors),contentType:'application/json'});expect(errors).toEqual([]);}});
 const toggle=page=>page.locator('.xui-theme-mode-toggle');
@@ -52,5 +53,17 @@ for(const kind of ['react','vanilla'])test(`${kind} compact sidebar header and f
     expect(box.width).toBeCloseTo(36,1);expect(box.x-rail.x).toBeCloseTo(12,1);expect(rail.x+rail.width-box.x-box.width).toBeCloseTo(12,1);
     expect(icon.x).toBeGreaterThanOrEqual(box.x);expect(icon.x+icon.width).toBeLessThanOrEqual(box.x+box.width);
     expect(await button.evaluate(node=>node.scrollWidth<=node.clientWidth+1)).toBe(true);
+  }
+});
+
+for(const kind of ['react','vanilla'])test(`${kind} locale option backgrounds retain shared spacing in themes and narrow windows`,async({page},info)=>{
+  await setup(page,kind,'?locale');
+  for(const mode of ['light','dark','system'])for(const width of [1280,390]){
+    await page.setViewportSize({width,height:844});await page.evaluate(mode=>window.xuiTheme.setMode(mode),mode);
+    const trigger=page.getByRole('combobox',{name:'语言',exact:true});await trigger.click();
+    const popup=page.locator(`[id=${JSON.stringify(await trigger.getAttribute('aria-controls'))}]`);await expect(popup).toBeVisible();
+    await popup.getByRole('option',{name:'English',exact:true}).hover();await expectOptionSpacing(popup.getByRole('option'));
+    await info.attach(`${kind}-${mode}-${width}-locale-spacing`,{body:await popup.screenshot({animations:'disabled'}),contentType:'image/png'});
+    await page.keyboard.press('Escape');await expect(popup).toBeHidden();await expect(trigger).toBeFocused();
   }
 });

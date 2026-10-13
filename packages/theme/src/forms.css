@@ -97,6 +97,7 @@
   .xui-select-control>.xui-select {display:inline-flex;align-items:center;justify-content:space-between;gap:var(--space-control-gap);text-align:start;appearance:none;}
   .xui-select-control>.xui-select>span {min-inline-size:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .xui-select-control-icon {flex:none;inline-size:var(--control-icon-size);block-size:var(--control-icon-size);stroke-width:var(--icon-stroke-width);pointer-events:none;}
+  .xui-select-control-popup > :not(:first-child), .xui-select-control-popup > [role='group'] > :not(:first-child) {margin-block-start:var(--space-text-gap);}
   .xui-select-control-popup .xui-menu-item {inline-size:100%;text-align:start;}
   .xui-select-control-popup [aria-selected='true'] {background:var(--interaction-selected);font-weight:var(--font-weight-control);}
 }

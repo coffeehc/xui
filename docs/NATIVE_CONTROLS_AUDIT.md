@@ -34,11 +34,13 @@ HTML 不支持 file/range/color 的 readOnly。审查页明确说明这一点，
 | 公开组件 | 处理与验证边界 |
 | --- | --- |
 | NativeSelect / 原生 select / bindHeaderLocaleSelect | 明确保留 OS 选择合同；普通表单边界回归保留，不把 CSS appearance 当作系统菜单统一。 |
-| SimpleSelect / bindSelectControl / 顶栏 locale | 共享主题 button/combobox + listbox；单/多选、禁用、隐藏表单值、label/help/error、受控回传与销毁。新增单测 5 项；浏览器通过状态需看同提交 CI。 |
+| SimpleSelect / bindSelectControl / 顶栏 locale | 共享主题 button/combobox + listbox；单/多选、禁用、隐藏表单值、label/help/error、受控回传与销毁。新增单测覆盖表单 reset、取消 reset 与 optgroup；浏览器通过状态需看同提交 CI。 |
 | DataTable / API Key / BusinessLog / StructuredLog | 两端内部默认选择入口全部迁到上述公共组合，包含分页条数、有效期、筛选和错误日志多选；业务请求/写入门禁/值所有者保留。 |
 | React Select / Combobox / Menu / ContextMenu / Popover / Tooltip | 原已使用正式 Portal/Positioner 与公共主题层；未发现 OS select 弹窗替代问题，保持现有 props/位置扩展。 |
 | 原生 createPopoverController / ContextMenu / 子菜单 / Tooltip | 补测量后的安全边距、RTL、可用高度、翻转与约束；观察触发器/内容 resize 和 visualViewport。移除旧只按 layout viewport 0 边界计算的局限；共享 owner 处理关闭/层级/回焦点。 |
 | Calendar / GroupedCombobox / Command | 已为自定义 DOM 日期网格/列表，非系统 date/select 窗口；不新增另一套业务查询或日期状态。 |
 | Dialog / Sheet / AlertDialog | 既有主题原生 dialog 或 React 公共组合，继续由模态 owner 管理；本次选择浮层位于其所属 DOM 范围，没有新增模态 owner。 |
 
-集成预检已通过：最终共享源码的 build、typecheck、351-token check、374 项 unit，以及两端独立 tarball 消费（全部公开 ESM/CSS/types、动态入口、Button-only 和初始 gzip 预算）。本地 watch/cold-start/实际浏览器未在受限环境冒充通过，交由正常 GitHub CI 的完整 verify。真实 macOS OS 菜单、Firefox/WebKit、移动设备和读屏器未测。
+集成预检已通过：最终共享源码的 build、typecheck、351-token check、379 项 unit，以及两端独立 tarball 消费（全部公开 ESM/CSS/types、动态入口、Button-only 和初始 gzip 预算）。本地 watch/cold-start/实际浏览器未在受限环境冒充通过，交由正常 GitHub CI 的完整 verify。真实 macOS OS 菜单、Firefox/WebKit、移动设备和读屏器未测。
+
+选项细节回归：SimpleSelect 与顶栏语言浮层的相邻选项、optgroup 内部条目采用公共 space-text-gap。新增三主题/窄屏的选中+悬停截图及实际 bounding box 间距断言；真实执行结果仍以最终 CI 为准。
