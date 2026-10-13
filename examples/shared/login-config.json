@@ -10,6 +10,6 @@
     "usernameRequired": "请填写用户名。", "passwordRequired": "请填写密码。",
     "credentialsError": "用户名或密码不正确。", "forbidden": "当前不允许登录。", "rateLimited": "尝试过于频繁，请稍后再试。",
     "timeout": "请求超时，请重试。", "network": "连接失败，请检查网络后重试。", "error": "登录未完成。",
-    "cancelled": "已取消本地等待，服务端可能已完成操作。", "checkSession": "重试连接", "opening": "正在进入…", "navigationError": "已登录，但暂时无法进入应用。请重试。", "retryNavigation": "重试进入", "reauthenticate": "会话安全状态尚未确认，请重新登录验证。"
+    "cancelled": "已取消本地等待，服务端可能已完成操作。", "checkSession": "重试连接", "opening": "正在进入…", "navigationError": "已登录，但暂时无法进入应用。请重试。", "retryNavigation": "重试进入", "reauthenticate": "上次会话操作结果未确认，暂时无法再次提交。"
   }
 }

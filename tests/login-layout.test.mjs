@@ -66,6 +66,6 @@ test('public login removes cancelled-action UI and obsolete page labels',async()
 
 test('restored reauthentication requirement renders an alert without a transient error object',()=>{
   const markup=render({status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:true});
-  assert.match(markup,/role="alert"/);assert.match(markup,/The session state is unconfirmed/);assert.doesNotMatch(markup,/>Retry connection</);
+  assert.match(markup,/role="alert"/);assert.match(markup,/The previous session operation is unconfirmed/);assert.doesNotMatch(markup,/>Retry connection</);
   assert.doesNotMatch(markup,/name="username"[^>]*disabled/);
 });

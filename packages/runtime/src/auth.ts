@@ -109,6 +109,8 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
   const normalize=(error:unknown,operation:AuthOperation)=>isHttpError(error)?new HttpError(error.kind,error.metadata):new HttpError('parse',{attempts:0,endpointId:`auth.${operation}`});
   const emit=(patch:Partial<AuthState>)=>{state=Object.freeze({...state,...patch});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* Views cannot change credential handling. */}};
   const clear=()=>{access=undefined;generation++;};
+  // IndexedDB restoration is asynchronous and never sends a cookie request.
+  if(recovery)void recovery.inspect().then(()=>{if(!dead&&version===0&&!active&&!refreshFlight&&!sessionFlight&&recovery.blocked())emit({reauthenticationRequired:true});},()=>{if(!dead&&version===0&&!active&&!refreshFlight&&!sessionFlight)emit({reauthenticationRequired:true});});
   const current=(revision:number)=>!dead&&revision===version;
   const invalidate=(status:AuthState['status'],required=false,error:HttpError|null=null)=>{required=required||(recovery?.blocked()??false);version++;clear();sessionController?.abort();refreshController?.abort();active?.controller.abort();active=undefined;emit({status,user:null,busy:null,error,reauthenticationRequired:required});};
   const coordination=createAuthCoordination(inspectHttp(http)!.origin,event=>{
@@ -134,18 +136,18 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
     const cancelled=new Promise<never>((_,reject)=>{stop=()=>reject(timedOut?new HttpError('timeout',{attempts:0,endpointId:`auth.${operation}`}):errorFor('cancel',operation));if(controller.signal.aborted)stop();else controller.signal.addEventListener('abort',stop,{once:true});});
     const request=coordination.run(async()=>{
       check(revision,controller.signal);
-      const attempt=recovery?.begin(operation);
-      // begin() is synchronous; a storage callback may still invalidate this owner.
+      const attempt=await recovery?.begin(operation);
+      // Reservation is asynchronous; recheck ownership before dispatch.
       // No dispatch has occurred, so this attempt can safely restore its prior fence.
-      try{check(revision,controller.signal);}catch(error){attempt?.denied();throw error;}
+      try{check(revision,controller.signal);}catch(error){await attempt?.denied();throw error;}
       let result;
       try{result=await cookieRequest(operation,json,controller.signal);}catch(error){
         check(revision,controller.signal);
-        if(isHttpError(error)&&error.kind==='http'&&operation==='login'&&error.status!==undefined&&error.status>=400&&error.status<500&&error.status!==409)attempt?.denied();
-        else if(isHttpError(error)&&error.kind==='http'&&operation==='refresh'&&error.status===401)attempt?.complete();
+        if(isHttpError(error)&&error.kind==='http'&&operation==='login'&&error.status!==undefined&&error.status>=400&&error.status<500&&error.status!==409)await attempt?.denied();
+        else if(isHttpError(error)&&error.kind==='http'&&operation==='refresh'&&error.status===401)await attempt?.complete();
         throw error;
       }
-      check(revision,controller.signal);attempt?.complete();check(revision,controller.signal);
+      check(revision,controller.signal);await attempt?.complete();check(revision,controller.signal);
       const accepted=accept(result.payload);coordination.publish(operation);return accepted;
     });
     return Promise.race([request,cancelled]).finally(()=>{clearTimeout(timer);controller.signal.removeEventListener('abort',stop);});
@@ -162,7 +164,7 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
       const error=normalize(value,'refresh');if(!current(revision))throw errorFor();clear();
       if(error.kind==='http'&&error.status===401&&!(recovery?.blocked()??false)){http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});return null;}
       // Never retry an unknown rotation or destroy the recovery family as cleanup.
-      emit({status:'unknown',user:null,busy:null,error,reauthenticationRequired:true});throw error;
+      emit({status:'unknown',user:null,busy:null,error:error.code==='AUTH_REAUTHENTICATION_REQUIRED'?null:error,reauthenticationRequired:true});throw error;
     }).finally(()=>{if(refreshFlight===flight){refreshFlight=undefined;refreshController=undefined;}});
     refreshFlight=flight;emit({status:'unknown',user:null,busy:'refresh',error:null});return flight;
   };
@@ -247,7 +249,7 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
   return client;
 }
 
-export const loginPageDefaultLabels={username:'Username',password:'Password',submit:'Sign in',checking:'Checking your sign-in…',signingIn:'Signing in…',usernameRequired:'Enter your username.',passwordRequired:'Enter your password.',credentialsError:'The username or password is incorrect.',forbidden:'Sign in is not allowed.',rateLimited:'Too many attempts. Try again later.',timeout:'The request timed out. Please try again.',network:'Could not connect. Check your connection and try again.',error:'Sign in could not be completed.',cancelled:'Waiting cancelled. The server may have completed the request.',checkSession:'Retry connection',opening:'Opening app…',navigationError:'You are signed in, but the app could not be opened. Try again.',retryNavigation:'Try opening app again',reauthenticate:'The session state is unconfirmed. Sign in again to verify it.'} as const;
+export const loginPageDefaultLabels={username:'Username',password:'Password',submit:'Sign in',checking:'Checking your sign-in…',signingIn:'Signing in…',usernameRequired:'Enter your username.',passwordRequired:'Enter your password.',credentialsError:'The username or password is incorrect.',forbidden:'Sign in is not allowed.',rateLimited:'Too many attempts. Try again later.',timeout:'The request timed out. Please try again.',network:'Could not connect. Check your connection and try again.',error:'Sign in could not be completed.',cancelled:'Waiting cancelled. The server may have completed the request.',checkSession:'Retry connection',opening:'Opening app…',navigationError:'You are signed in, but the app could not be opened. Try again.',retryNavigation:'Try opening app again',reauthenticate:'The previous session operation is unconfirmed. Another submission is temporarily blocked.'} as const;
 export type LoginPageLabels={ [Key in keyof typeof loginPageDefaultLabels]:string };
 /** Both layouts are centered single columns; fullscreen omits the card surface. */
 export type LoginPageLayout='fullscreen'|'card';

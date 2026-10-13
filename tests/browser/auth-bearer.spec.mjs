@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 const user={id:'9007199254740993',username:'fixture',display_name:'示例用户'},access='bs-v1-sha256-access-'+'A'.repeat(43);
 const wire=(payload,status=200,code=status===200?200:40101)=>({success:status===200,message:'',payload,request_id:'',code});
+const readGate=page=>page.evaluate(()=>new Promise((resolve,reject)=>{const request=indexedDB.open('xui.operation-recovery.v1',1);request.onerror=()=>reject(request.error);request.onsuccess=()=>{const db=request.result,tx=db.transaction('operations'),store=tx.objectStore('operations'),read=store.getAll();read.onsuccess=()=>resolve(read.result);tx.oncomplete=()=>db.close();};}));
 const issued=()=>({schema_version:2,user,access_token:access,token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString()});
 for(const kind of ['react','vanilla']){
  test(`${kind} default full-page navigation restores memory access with HttpOnly recovery cookie and omits cookie from session`,async({page,context})=>{
@@ -26,14 +27,14 @@ for(const kind of ['react','vanilla']){
   expect(await page.evaluate(()=>document.cookie)).not.toContain('FAKE_RECOVERY');expect(await page.evaluate(()=>JSON.stringify(window.loginDemo.auth.getState())+JSON.stringify(localStorage)+JSON.stringify(sessionStorage))).not.toContain(access);
   await page.getByRole('button',{name:'退出登录',exact:true}).click();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();expect(requests.at(-1)).toMatchObject({operation:'logout',authorization:null});expect(requests.at(-1).cookie).toContain('FAKE_RECOVERY_2');
  });
- test(`${kind} unconfirmed bootstrap shows explicit re-login and never automatically repeats refresh`,async({page})=>{
+ test(`${kind} unconfirmed bootstrap shows blocked recovery and never automatically repeats refresh`,async({page})=>{
   let refreshes=0;
   await page.route('**/api/v1/auth/**',async route=>{const op=new URL(route.request().url()).pathname.split('/').at(-1);if(op==='refresh'){refreshes++;await route.fulfill({status:409,contentType:'application/json',body:JSON.stringify(wire(null,409,40901))});}else await route.fulfill({contentType:'application/json',body:JSON.stringify(wire(issued()))});});
-  await page.goto(`/login-${kind}/?transport=http`);await expect(page.getByRole('alert')).toHaveText('会话安全状态尚未确认，请重新登录验证。');await expect(page.getByRole('button',{name:'重试连接',exact:true})).toHaveCount(0);
+  await page.goto(`/login-${kind}/?transport=http`);await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');await expect(page.getByRole('button',{name:'重试连接',exact:true})).toHaveCount(0);
   const failure=await page.evaluate(async()=>{try{await window.loginDemo.auth.currentUser();}catch{}try{await window.loginDemo.auth.refresh();}catch{}return window.loginDemo.auth.getState().reauthenticationRequired;});expect(failure).toBe(true);expect(refreshes).toBe(1);
-  await page.reload();await expect(page.getByRole('alert')).toHaveText('会话安全状态尚未确认，请重新登录验证。');expect(refreshes).toBe(1);expect(await page.evaluate(()=>window.loginDemo.auth.getState().reauthenticationRequired)).toBe(true);
-  const restored=await page.evaluate(()=>({error:window.loginDemo.auth.getState().error,required:window.loginDemo.auth.getState().reauthenticationRequired}));expect(restored).toEqual({error:null,required:true});const gateBefore=await page.evaluate(()=>Object.entries(localStorage).filter(([key])=>key.startsWith('xui.auth.recovery.v1:')));expect(gateBefore).toHaveLength(1);await page.evaluate(async()=>{try{await window.loginDemo.auth.currentUser();}catch{}try{await window.loginDemo.auth.refresh();}catch{}});expect(refreshes).toBe(1);expect(await page.evaluate(()=>Object.entries(localStorage).filter(([key])=>key.startsWith('xui.auth.recovery.v1:')))).toEqual(gateBefore);
-  await page.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();expect(refreshes).toBe(1);
+  await page.reload();await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');expect(refreshes).toBe(1);expect(await page.evaluate(()=>window.loginDemo.auth.getState().reauthenticationRequired)).toBe(true);
+  const restored=await page.evaluate(()=>({error:window.loginDemo.auth.getState().error,required:window.loginDemo.auth.getState().reauthenticationRequired}));expect(restored).toEqual({error:null,required:true});const gateBefore=await readGate(page);expect(gateBefore).toHaveLength(1);await page.evaluate(async()=>{try{await window.loginDemo.auth.currentUser();}catch{}try{await window.loginDemo.auth.refresh();}catch{}});expect(refreshes).toBe(1);expect(await readGate(page)).toEqual(gateBefore);
+  await page.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');expect(refreshes).toBe(1);expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
  });
 }
 
@@ -63,16 +64,16 @@ test('same-origin tabs serialize recovery cookies with Web Locks and broadcast n
 for(const kind of ['react','vanilla']){
  test(`${kind} persistent recovery storage failure prevents all cookie POSTs`,async({page})=>{
   let posts=0;await page.route('**/api/v1/auth/**',async route=>{posts++;await route.fulfill({contentType:'application/json',body:JSON.stringify(wire(issued()))});});
-  await page.addInitScript(()=>{const set=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.startsWith('xui.auth.recovery.v1:'))throw new DOMException('Synthetic quota','QuotaExceededError');return set.call(this,key,value);};});
-  await page.goto(`/login-${kind}/?transport=http`);await expect(page.getByRole('alert')).toHaveText('会话安全状态尚未确认，请重新登录验证。');
+  await page.addInitScript(()=>{IDBFactory.prototype.open=function(){throw new DOMException('Synthetic denial','SecurityError');};});
+  await page.goto(`/login-${kind}/?transport=http`);await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');
   await page.evaluate(async()=>{for(const run of [()=>window.loginDemo.auth.refresh(),()=>window.loginDemo.auth.login({username:'fixture',password:'FAKE_PASSWORD'}),()=>window.loginDemo.auth.logout()])try{await run();}catch{}});
   expect(posts).toBe(0);expect(await page.evaluate(()=>window.loginDemo.auth.getState().reauthenticationRequired)).toBe(true);
  });
  test(`${kind} transport-unknown refresh survives real reload without automatic resend`,async({page})=>{
   let refreshes=0;await page.route('**/api/v1/auth/**',async route=>{if(new URL(route.request().url()).pathname.endsWith('/refresh')){refreshes++;await route.abort('failed');}else await route.fulfill({contentType:'application/json',body:JSON.stringify(wire(issued()))});});
-  await page.goto(`/login-${kind}/?transport=http`);await expect(page.getByRole('alert')).toHaveText('会话安全状态尚未确认，请重新登录验证。');
-  await page.reload();await expect(page.getByRole('alert')).toHaveText('会话安全状态尚未确认，请重新登录验证。');expect(refreshes).toBe(1);
-  await page.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();expect(refreshes).toBe(1);
+  await page.goto(`/login-${kind}/?transport=http`);await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');
+  await page.reload();await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');expect(refreshes).toBe(1);
+  await page.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await page.getByLabel('密码').fill('FAKE_PASSWORD');await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');expect(refreshes).toBe(1);expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
   expect(await page.evaluate(()=>Object.keys(localStorage).filter(key=>key.startsWith('xui.auth.recovery.v1:')))).toEqual([]);
  });
 }

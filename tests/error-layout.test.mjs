@@ -69,7 +69,7 @@ test('unconfirmed writes and reauthentication-required states never offer sessio
   }
   for(const [kind,status] of [['network'],['timeout'],['http',500],['http',503]]){
     const html=renderLogin({status:'unknown',reauthenticationRequired:true,error:authError(kind,'auth.session',status)});
-    noRetry(html);assert.match(loginFeedback(html),/The session state is unconfirmed\. Sign in again to verify it\./);
+    noRetry(html);assert.match(loginFeedback(html),/The previous session operation is unconfirmed\. Another submission is temporarily blocked\./);
   }
 });
 test('login, session and application logout do not expose page cancellation actions',()=>{

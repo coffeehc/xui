@@ -65,7 +65,7 @@ for(const kind of ['react','vanilla']){
 
 for(const kind of ['react','vanilla'])test(`${kind} automatic unknown checks are bounded without unsafe retry`,async({page})=>{
   await page.goto(`/login-${kind}/?session=hold`);await expect(page.getByRole('status')).toHaveText('正在确认登录状态…');await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);
-  await expect(page.getByRole('alert')).toHaveText('会话安全状态尚未确认，请重新登录验证。');await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);
+  await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);
   expect((await page.evaluate(()=>window.loginDemo.getRequests())).filter(request=>request.path.endsWith('/refresh'))).toHaveLength(1);await page.evaluate(()=>window.loginDemo.release('session'));expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
 });
 

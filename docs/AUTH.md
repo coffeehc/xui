@@ -49,26 +49,26 @@ access和expiry只存在闭包内存，public AuthState、login/refresh/currentU
 - 已发送业务请求的401只对它使用的access generation失效，合并一个refresh；原业务请求仍拒绝401，绝不自动重放写入。旧代迟到401不会清掉较新login/refresh结果。403不触发refresh，不变成“未登录”。若宿主要重读，必须明确是幂等读，由该领域owner最多重试一次；该auth owner禁止generic retry。
 - 同tab refresh和session核对singleflight。取消一个调用者的signal仅撤销该等待者，不取消其他等待者共享的刷新。显式auth.cancel/destroy才取消owner执行并抛弃迟到结果。
 - login/refresh/logout按本地队列串行；支持Web Locks的浏览器还按同origin锁跨tab串行。logout先清本地access，等待已在途refresh完成后使用浏览器最新恢复cookie撤销整个family。新login/退出意图阻止旧请求恢复旧identity。
-- BroadcastChannel只发 `{kind:login|refresh|logout,epoch}`，不发token或user；localStorage的`xui.auth.v2:<origin>:epoch`仅保存epoch/identityEpoch/kind安全排序元数据，拒绝迟到旧广播覆盖较新登录，不保存任何用户或凭据。login/logout通知清理其他tab旧身份；refresh不废掉有效兄弟access。无Web Locks/广播、同源其他非xui客户端、网络丢响应和延迟Set-Cookie不承诺无缝恢复，由后端非破坏性409和显式重新登录处理。
+- BroadcastChannel只发 `{kind:login|refresh|logout,epoch}`，不发token或user；localStorage的`xui.auth.v2:<origin>:epoch`仅保存epoch/identityEpoch/kind安全排序元数据，拒绝迟到旧广播覆盖较新登录，不保存任何用户或凭据。login/logout通知清理其他tab旧身份；refresh不废掉有效兄弟access。无Web Locks/广播、同源其他非xui客户端、网络丢响应和延迟Set-Cookie不承诺无缝恢复，须按后端权威终态处理；持久 unknown 不允许新登录覆盖，见下文。
 
 不要保留旧 `onUnauthorized:()=>auth.expire()` 作为第二个失效owner。managed Bearer由auth按generation处理401；宿主订阅认证变化并清理所属resource、私密草稿、连接和业务缓存。HTTP onUnauthorized可观察事实，但不要在其中再次清理/触发refresh或重放。
 
-## 不确定结果与重新登录
+## 不确定结果与权威恢复
 
 | HTTP / code | 含义 | 前端行为 |
 | --- | --- | --- |
 | 400 / 40001 | 无效认证请求 | 显示安全错误 |
 | 401 / 40101 | 无效/过期/撤销/错误用途/登录拒绝 | session/refresh匿名；login拒绝可保留之前已确认会话 |
 | 403 / 40301 | 已认证但kind/scope/resource被拒绝 | 不刷新、不重放 |
-| 409 / 40901 | 旧恢复凭据已消费，refresh竞争 | 不清cookie、不撤family，要求重新登录验证 |
+| 409 / 40901 | 旧恢复凭据已消费，refresh竞争 | 不清cookie、不撤family，要求核实权威恢复终态 |
 | 429 / 42901 | 限速 | 不自动重试 |
 | 503 / 50301 | mutation提交结果未知 | 不重发、不签发、不清cookie、不假称退出 |
-| 503 / 50302 | 已提交但后续失败 | 不假称回滚，同样要求重新登录验证 |
+| 503 / 50302 | 已提交但后续失败 | 不假称回滚，同样要求核实权威恢复终态 |
 | 503 / 50300 | 依赖不可用 | 保留失败事实 |
 
-任何refresh失败（除明确401）、不确定login/logout、网络丢响应、执行取消或超时都会清access并设unknown + reauthenticationRequired。此时currentUser/refresh/业务请求不会再盲试cookie；页面显示“请重新登录验证”，不提供会触发重复rotation的“核对会话”。新的显式login才能建立安全新会话。取消一个共享等待者不等于执行取消，不能污染成功的其他等待者。
+任何refresh失败（除明确401）、不确定login/logout、网络丢响应、执行取消或超时都会清access并设unknown + reauthenticationRequired。此时currentUser/refresh/业务请求不会再盲试cookie；页面显示未确认操作提示，不提供会触发重复rotation的“核对会话”。memory-only 适配保留原显式登录行为；启用持久 recovery 时必须先取得权威恢复终态，见本文发布限制。取消一个共享等待者不等于执行取消，不能污染成功的其他等待者。
 
-本轮不实现KMS/加密秘密重放回执，网络丢失rotation响应可能必须重新登录。JS不能撤回已执行Set-Cookie，不能从HttpOnly cookie读取秘密，不能将失败logout宣称安全退出；也不使用logout作为refresh失败的补救动作。服务端的current family/revocation事实才是最终依据。
+本轮不实现KMS/加密秘密重放回执，网络丢失rotation响应需先取得权威终态，之后才可重新登录。JS不能撤回已执行Set-Cookie，不能从HttpOnly cookie读取秘密，不能将失败logout宣称安全退出；也不使用logout作为refresh失败的补救动作。服务端的current family/revocation事实才是最终依据。
 
 ## Cookie、CSRF与后端责任
 
@@ -114,12 +114,28 @@ xAgent旧token/me/state协议不会仅改baseURL就兼容；已上线消费者�
 正式纯布局消费者为 [React](../examples/auth-page-react/app.tsx) / [原生](../examples/auth-page-vanilla/app.js)：三字段管理员设置，仅合成submit回调，不调用真实初始化或认证API。按[同一登录验收清单](LOGIN_VISUAL_ACCEPTANCE.md)验位置、更新identity、三主题/窄屏/200%与主动作可达；不能把示例通过当成xLead或其他产品已迁移。
 
 
-## 整页重载后的未确认写入门禁
+## 整页重载与跨窗口的未确认写入门禁
 
-正式 baseservice HTTP 接入必须配置 `recovery: {scope: 'host-declared-session-namespace'}`。scope 表示宿主明确的 cookie/session 命名空间，不是用户名或请求内容；库再绑定可信 HTTP origin 和固定 `/api/v1/auth/` 范围。浏览器默认 localStorage；SSR 可注入仅含 getItem/setItem/removeItem 的同步持久 storage，不访问不存在的 window。省略 recovery 保持旧 memory-only 行为，不能宣称具有跨整页重载保护。AuthClient 接口未增加必需成员，自定义认证适配器不受影响。
+正式 baseservice HTTP 接入必须配置 `recovery: {scope: 'host-declared-session-namespace'}`。scope 是宿主声明的 cookie/session 命名空间，不是用户名或请求内容；库绑定可信 HTTP origin 和固定 `/api/v1/auth/` 范围。浏览器默认使用公共 IndexedDB operation-store 的短事务 CAS，普通 HTTP 内网也适用，不依赖 secure-context Web Locks。非浏览器宿主注入 `recovery.store: DurableOperationStore`，必须提供真正持久、原子的 compareExchange；不能用 localStorage 的 read-then-write 冒充。省略 recovery 保持 legacy memory-only，不能宣称跨整页重载或跨窗口保护。自定义 AuthClient 接口不增加必需成员。
 
-持久记录仅包含版本、随机 attempt 和操作类型，无 token、密码、Cookie、用户身份或请求体。进入原有 cookie mutation Web Lock 后，发送前先写 pending 并读回确认；读取、写入或验证失败则禁止 POST。新文档发现残留记录时，公开 `getState().reauthenticationRequired` 为 true，currentUser/refresh 不再发送。消费方显示公开重新登录反馈即可，不另造恢复状态机。
+记录严格只有 version、随机 attempt、operation，不含 token、密码、Cookie、用户身份或请求体。每次 cookie POST 前先原子 reserve 空位，提交完成后才发送；失败禁止 POST。已有未知记录禁止 login/refresh/logout 覆盖，不靠租约、时间或新窗口偷取。只有同 attempt 的权威成功响应、明确无会话 refresh 401、确定未应用的 login 拒绝，或发送前确证取消，才 exact CAS 清除自己的记录。fetch Promise 因网络、超时或 abort 结束不等于服务端操作终止；销毁、普通 authenticated 广播和 GET session 都不能清门禁。
 
-只有同 attempt 的权威 refresh 成功或明确无会话 401 才清本次 pending；先前未知事实只能由显式 login 成功或权威 logout 清除。明确拒绝的 login 恢复原来的门禁。销毁、取消、过期、广播或普通 authenticated 通知不会清除持久事实；未发送前确认取消才可恢复本次写入前状态。所有删除先核对完整 attempt，迟到回执不清新 tab 记录。localStorage 自身不是原子 CAS，跨 tab 串行由已有 Web Locks 提供；没有 Web Locks 时不承诺原子串行，服务端冲突仍须 fail-closed。
+旧 `recovery.storage` 仅作为 localStorage 记录迁移来源，不再充当原子 owner。旧残留按严格白名单导入空 IDB；旧记录仍保留，冲突/损坏/不可读取都 fail closed，不因新数据库为空而发送。不支持与仍会覆盖旧存储的旧版本客户端混用；升级时须确保同源参与认证写入的客户端使用同一新合同。
 
-回归包含真实页面 reload 后零重复 refresh、显式登录恢复、注入 storage 读写失败零 POST、server/scope 隔离、拒绝登录保留未知、销毁后保留 pending 和旧回执不能清新记录。
+IndexedDB 恢复是异步的；公开 state 完成恢复后 `reauthenticationRequired` 为 true，未发送请求时 error 可以为 null。页面稳定显示“上次会话操作结果未确认，暂时无法再次提交。”。不要求产品另造 guard、清 storage、注销补救或不断重试。首次无残留的正常 HTTP 登录可用；存储不可用则发送前关闭。
+
+### 发布限制：未知结果的服务端恢复协议尚未实现
+
+本次原子门禁修复跨窗口覆盖，但未知结果之后的显式登录不再绕过门禁。此行为比旧版本保守，升级说明必须明确：正常首次登录通过不代表未知状态完整可恢复。现有 baseservice Auth facade 没有权威操作回执或 fence，因此本版本不能安全自动解除未知状态；不要把提示解释为后台已有核实任务。旧 custom AuthClient 保持自己的协议与能力，不能把该限制强加成未经验证的后端迁移。
+
+最小后端协议需求（待独立实现与验收）：
+
+1. 可信 cookie-session scope：在未认证 login 阶段也能绑定同一浏览器恢复会话。由服务端签名/HttpOnly 会话关联或同等可信机制建立，不能相信客户端用户名、任意 actor 字符串或密码摘要；需 CSRF、来源检查与防枚举策略。
+2. 每次 login/refresh/logout 带公开、不含秘密的 operation ID，服务端在同一 scope 下校验操作类别/身份，返回最小 `pending/applied/not_applied` 权威回执；不返回、存储或重放 token、密码、Cookie、请求体。
+3. reserve/执行/终态必须与 CreateFamily、RotateRefresh、RevokeSession 的实际数据库事务绑定，不能先写回执后另做认证变更。相同 operation 重试不重复执行，也不能向新客户端重放凭据。
+4. 明确恢复动作需原子 Resolve/fence：若操作尚未提交，封存为 not_applied 并使迟到执行确定拒绝；若已提交，返回 applied。需要 session epoch/fence 防止旧未确认 rotation/revoke 迟到改变新登录状态。仅查询“当前已登录”不能证明旧请求不会稍后提交。
+5. 客户端只在核实完全匹配 scope、attempt、operation 的终态后 exact CAS 清理；保留 pending 与身份不匹配记录。不自动执行 Resolve、不按超时推测未应用；显式恢复动作及其不可逆含义须公开组合表达。
+
+现有 Key OperationStore 的事务执行、operation 锁和 Resolve tombstone 架构可复用，但其类型要求已认证 Actor，并限制 Key action/target/version；不能直接把未认证 Auth 请求塞进 Key DTO。需独立 Auth 合同与存储事务接线。
+
+验收包含：两无 Web Locks owner 仅一 POST，未知 fetch 已结束仍不得被新 login 覆盖，reload 保留原记录，legacy 导入、store 故障零 POST、server/scope 隔离、发送前取消、迟到回执不清他人记录、正常 HTTP 首次登录和权威终态 exact clear。真正双页 HTTP IndexedDB 浏览器测试独立运行；未通过前不声明完成。
