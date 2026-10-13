@@ -124,7 +124,7 @@ async function assertFooter(page,m,{pagination=true,compact=true}={}){
   await expect(page.locator(selectors.footer).getByRole('combobox',{name:'每页条数',exact:true})).toHaveCount(pagination?1:0);
   if(pagination){
     await expect(size(page)).toHaveText(String((await state(page)).pageSize));
-    expect(await size(page).locator('option').allTextContents()).toEqual(['20','50','100']);
+    expect(await page.locator(`[id=${JSON.stringify(await size(page).getAttribute('aria-controls'))}] [role=option]`).allTextContents()).toEqual(['20','50','100']);
   }
   if(compact){
     const centers=m.footerChildren.map(child=>child.y+child.height/2);

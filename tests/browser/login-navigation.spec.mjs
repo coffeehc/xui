@@ -46,7 +46,7 @@ for(const kind of ['react','vanilla'])test(`${kind} a default navigation target 
 });
 
 for(const kind of ['react','react-strict','vanilla'])test(`${kind} a refreshed user object with the same verified id does not repeat navigation`,async({page})=>{
-  await page.goto(`/login-${kind}/?session=valid&preconfirmed&handoff=hold&visualAcceptance`);await expect.poll(()=>page.evaluate(()=>window.loginDemo?.getHandoffCalls())).toBe(1);
+  await page.goto(`/login-${kind}/?session=valid&preconfirmed&handoff=hold&visualAcceptance`);await page.waitForFunction(()=>!!window.loginDemo);await expect.poll(()=>page.evaluate(()=>window.loginDemo?.getHandoffCalls())).toBe(1);
   const replaced=await page.evaluate(async()=>{const before=window.loginDemo.auth.getState().user;await window.loginDemo.auth.refresh();return before!==window.loginDemo.auth.getState().user&&before.id===window.loginDemo.auth.getState().user.id;});expect(replaced).toBe(true);expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(destination(page)).toBeVisible();
 });
 test('development StrictMode replays effects without duplicating or losing the current navigation rejection',async({page})=>{
@@ -98,7 +98,7 @@ for(const kind of ['react','react-strict','vanilla']){
     expect((await page.evaluate(()=>window.loginDemo.getRequests())).map(request=>request.path.split('/').at(-1))).toEqual(['refresh','session']);
   });
   test(`${kind} a host rejection during refresh remains a local navigation retry`,async({page})=>{
-    await page.goto(`/login-${kind}/?session=valid&preconfirmed&handoff=hold&visualAcceptance`);await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
+    await page.goto(`/login-${kind}/?session=valid&preconfirmed&handoff=hold&visualAcceptance`);await page.waitForFunction(()=>!!window.loginDemo);await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
     await page.evaluate(()=>{window.loginDemo.setMode('refresh','hold');window.refreshForNavigation=window.loginDemo.auth.refresh();});await expect.poll(()=>page.evaluate(()=>window.loginDemo.auth.getState().busy)).toBe('refresh');
     await page.evaluate(async()=>{window.loginDemo.releaseHandoff(true);await new Promise(resolve=>setTimeout(resolve,0));window.loginDemo.release('refresh');await window.refreshForNavigation;});await expect(page.getByRole('button',{name:'重试进入'})).toBeEnabled();
     await page.evaluate(()=>window.loginDemo.repeatAuthNotification());expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);const requests=await page.evaluate(()=>window.loginDemo.getRequests());await page.evaluate(()=>window.loginDemo.setHandoffMode('ok'));await page.getByRole('button',{name:'重试进入'}).click();await expect(destination(page)).toBeVisible();expect(await page.evaluate(()=>window.loginDemo.getRequests())).toEqual(requests);

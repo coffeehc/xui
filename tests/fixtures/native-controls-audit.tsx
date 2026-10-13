@@ -17,7 +17,7 @@ function App(){
   const binding=bindReadonlyChoice(document.getElementById('native-readonly') as HTMLInputElement);
   return ()=>binding.destroy();
  },[]);
- return <main className="xui-container xui-stack">
+ return <main className="xui xui-container xui-stack">
   <h1>Native control audit</h1>
   <form id="audit-form" className="xui-stack" onSubmit={event=>event.preventDefault()}>
    {states.map(state=><section key={state} className="xui-stack" data-state={state}>

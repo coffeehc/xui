@@ -118,3 +118,14 @@ test('binding transfers initial focus and respects host tabindex without changin
 test('hidden form bridge stays excluded from accessibility and restores its original aria fact',()=>{
   const f=fixture(),owner=bindSelectControl(f.select);assert.equal(f.select.getAttribute('aria-hidden'),'true');owner.destroy();assert.equal(f.select.getAttribute('aria-hidden'),null);
 });
+
+test('popup remeasurement preserves scrolling when a temporary larger cap clamps the viewport', async () => {
+  const {createPopoverController}=await import('../packages/runtime/dist/dom.js');
+  const f=navigationDOM(),trigger=f.doc.createElement('button'),popup=f.doc.createElement('div');
+  f.root.append(trigger,popup);popup.scrollTop=600;popup.scrollLeft=20;
+  let cap='',measurements=0;Object.defineProperty(popup.style,'maxHeight',{get:()=>cap,set:value=>{measurements++;cap=value;popup.scrollTop=Math.max(0,popup.scrollTop-100);}});
+  const owner=createPopoverController(trigger,popup);owner.open();
+  assert.equal(popup.scrollTop,600);assert.equal(popup.scrollLeft,20);
+  const measured=measurements;fire(popup,'scroll');assert.equal(measurements,measured,'internal scrolling does not reposition its own popup');
+  owner.destroy();
+});

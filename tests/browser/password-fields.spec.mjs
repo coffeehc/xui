@@ -7,8 +7,8 @@ import * as React from 'react';import {createRoot} from 'react-dom/client';
 import {NewPasswordFields} from '@coffeehc/xui-react/password';
 import {createNewPasswordFields} from '@coffeehc/xui-runtime/password-dom';
 const policy={version:1,minimum_characters:6,maximum_characters:32,counting_unit:'unicode_code_points'};
-window.mountPassword=(kind)=>{let handle=null,root=null;const host=document.createElement('div');document.body.append(host);
-if(kind==='react'){root=createRoot(host);root.render(React.createElement(NewPasswordFields,{policy,ref:value=>handle=value}));}
+window.mountPassword=(kind)=>{let handle=null,root=null;const host=document.createElement('div');host.className='xui';document.body.append(host);
+if(kind==='react'){root=createRoot(host,{identifierPrefix:'password-fixture-'});root.render(React.createElement(NewPasswordFields,{policy,ref:value=>handle=value}));}
 else{handle=createNewPasswordFields({policy});host.append(handle.element);}
 window.passwordFixture={read:()=>handle.readValidatedPassword(),clear:()=>handle.clear(),destroy:()=>{window.detachedPasswords=[...host.querySelectorAll('input')];if(root)root.unmount();else handle.destroy();}};};`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',platform:'browser',jsx:'automatic',target:'es2022'});source=result.outputFiles[0].text;
 });

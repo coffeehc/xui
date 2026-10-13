@@ -154,10 +154,10 @@ for(const kind of kinds){
   });
 
   test(`${kind}: page size has one controlled owner and cancellation restores confirmed facts`,async({page})=>{
-    await setup(page,kind);await expect(size(page)).toHaveCount(1);expect(await size(page).locator('option').allTextContents()).toEqual(['20','50','100']);
+    await setup(page,kind);await expect(size(page)).toHaveCount(1);expect(await page.locator(`[id=${JSON.stringify(await size(page).getAttribute('aria-controls'))}] [role=option]`).allTextContents()).toEqual(['20','50','100']);
     await page.evaluate(()=>window.dataTableDemo.owner.planNext({delayMs:900,ignoreAbort:true}));const count=await requestCount(page);await chooseSelect(page,size(page),'50');
     await expect(size(page)).toHaveText('20');await expect(size(page)).toBeDisabled();expect((await state(page)).pageSize).toBe(20);await expect(rows(page)).toHaveCount(20);
-    await size(page).evaluate(node=>{node.value='100';node.dispatchEvent(new Event('change',{bubbles:true}));});expect(await requestCount(page)).toBe(count+1);
+    await size(page).evaluate(node=>{node.dispatchEvent(new MouseEvent('click',{bubbles:true}));});expect(await requestCount(page)).toBe(count+1);
     await page.getByRole('button',{name:'取消请求',exact:true}).click();await expect(size(page)).toBeEnabled();await expect(size(page)).toHaveText('20');await page.waitForTimeout(950);await expect(rows(page)).toHaveCount(20);expect((await state(page)).pageSize).toBe(20);
     await selectSize(page,50);await expect(size(page)).toHaveText('50');await selectSize(page,100);await expect(size(page)).toHaveText('100');expect((await state(page)).pageIndex).toBe(0);
     await next(page).click();await ready(page);await expect(rows(page)).toHaveCount(25);await expect(page.locator('.xui-data-table-count')).toHaveText('显示 25 条，共 125 条');await expect(next(page)).toBeDisabled();

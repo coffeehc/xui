@@ -121,7 +121,7 @@ export function createPopoverController(trigger:HTMLElement,popup:HTMLElement,op
   const stack=popupStacks.get(doc)??[];popupStacks.set(doc,stack);
   // Resolve semantic CSS lengths (including rem/calc overrides) using a non-layout probe.
   const measure=doc.createElement('span');measure.setAttribute('aria-hidden','true');measure.style.cssText='position:fixed;visibility:hidden;pointer-events:none;inline-size:var(--layout-viewport-inset);block-size:var(--floating-offset);';
-  const position=()=>{if(!open)return;
+  const position=()=>{if(!open)return;const scrollTop=popup.scrollTop,scrollLeft=popup.scrollLeft;
     popup.style.position='fixed';popup.style.inset='auto';popup.style.margin='0';
     popup.append(measure);const lengths=measure.getBoundingClientRect();measure.remove();
     const inset=lengths.width,gap=lengths.height,viewport=win.visualViewport;
@@ -134,6 +134,8 @@ export function createPopoverController(trigger:HTMLElement,popup:HTMLElement,op
     else if(contextPoint){x=contextPoint.x;y=contextPoint.y;}
     else {const below=Math.max(0,bottom-anchor.bottom-gap),above=Math.max(0,anchor.top-gap-top);const down=box.height<=below||below>=above;side=down?'bottom':'top';popup.style.maxHeight=`${down?below:above}px`;popup.style.setProperty('--available-height',`${down?below:above}px`);box=popup.getBoundingClientRect();x=rtl?anchor.right-box.width:anchor.left;y=down?anchor.bottom+gap:anchor.top-gap-box.height;}
     popup.dataset.side=side;popup.style.left=`${Math.max(left,Math.min(x,right-box.width))}px`;popup.style.top=`${Math.max(top,Math.min(y,bottom-box.height))}px`;
+    // Measuring with a temporary viewport-sized cap must not clamp away the user's scroll position.
+    popup.scrollTop=scrollTop;popup.scrollLeft=scrollLeft;
   };
   const syncOpen=(next:boolean)=>{if(dead||next===open)return;open=next;const index=stack.indexOf(popup);if(index>=0)stack.splice(index,1);if(open){popup.showPopover();stack.push(popup);position();}else{popup.hidePopover();}if(!options.tooltip&&!options.contextMenu)trigger.setAttribute('aria-expanded',String(open));};
   const request=(next:boolean,reason:string,event?:Event)=>{if(dead||(next&&disabled(trigger))||next===open)return;if(change(popup,next,reason,event,details=>options.onOpenChange?.(next,details))&&!controlled)syncOpen(next);};
@@ -157,7 +159,7 @@ export function createPopoverController(trigger:HTMLElement,popup:HTMLElement,op
   };
   const disabledClick=(event:MouseEvent)=>{const item=(event.target as HTMLElement).closest<HTMLElement>('[role^="menuitem"]');if(item&&disabled(item)){event.preventDefault();event.stopImmediatePropagation();}};
   const itemClick=(event:MouseEvent)=>{if(event.defaultPrevented)return;const item=(event.target as HTMLElement).closest<HTMLElement>('[role^="menuitem"]');if(item&&disabled(item)){event.preventDefault();event.stopImmediatePropagation();}else if(item&&menu&&(item.getAttribute('role')==='menuitem'&&item.getAttribute('aria-haspopup')!=='menu'||item.dataset.close==='true')){request(false,'select',event);if(!open)restoreMenuFocus();}};
-  const scroll=(event:Event)=>{if(options.contextMenu&&open&&!popup.contains(event.target as Node))request(false,'scroll',event);else position();};
+  const scroll=(event:Event)=>{if(popup.contains(event.target as Node))return;if(options.contextMenu&&open)request(false,'scroll',event);else position();};
   const focus=()=>{if(options.tooltip&&!touch)request(true,'focus');};const blur=(event:FocusEvent)=>{if(open&&!popup.contains(event.relatedTarget as Node)&&options.tooltip)request(false,'blur',event);};
   const enter=(event:PointerEvent)=>{if(options.tooltip&&event.pointerType==='mouse')request(true,'hover',event);};const leave=(event:PointerEvent)=>{if(options.tooltip&&doc.activeElement!==trigger)request(false,'hover',event);};
   trigger.addEventListener('click',click);trigger.addEventListener('contextmenu',context);trigger.addEventListener('pointerdown',pointer);trigger.addEventListener('focus',focus);trigger.addEventListener('blur',blur);trigger.addEventListener('pointerenter',enter);trigger.addEventListener('pointerleave',leave);

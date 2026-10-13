@@ -6,9 +6,9 @@ test.beforeAll(async()=>{
  const result=await build({stdin:{contents:`
 import * as React from 'react';import {createRoot} from 'react-dom/client';
 import {SimpleSelect,Field} from '@coffeehc/xui-react/forms';import {bindSelectControl} from '@coffeehc/xui-runtime/dom';
-const root=document.createElement('div');document.body.append(root);
+const root=document.createElement('div');root.className='xui';document.body.append(root);
 window.mountSelect=kind=>{const options=[React.createElement('option',{value:'a',key:'a'},'Alpha'),React.createElement('optgroup',{label:'Visible group',key:'group'},React.createElement('option',{value:'b'},'Beta'),React.createElement('option',{value:'c'},'Gamma')),React.createElement('optgroup',{label:'Hidden group',hidden:true,key:'hidden'},React.createElement('option',{value:'h'},'Hidden value'))];let binding,react;
- if(kind==='react'){react=createRoot(root);react.render(React.createElement('form',null,React.createElement(Field,{label:'Choice'},React.createElement(SimpleSelect,{name:'choice',defaultValue:'a'},...options))));}
+ if(kind==='react'){react=createRoot(root,{identifierPrefix:'select-fixture-'});react.render(React.createElement('form',null,React.createElement(Field,{label:'Choice'},React.createElement(SimpleSelect,{name:'choice',defaultValue:'a'},...options))));}
  else {root.innerHTML='<form><label for="choice">Choice</label><select id="choice" name="choice"><option value="a" selected>Alpha</option><optgroup label="Visible group"><option value="b">Beta</option><option value="c">Gamma</option></optgroup><optgroup label="Hidden group" hidden><option value="h">Hidden value</option></optgroup></select></form>';binding=bindSelectControl(root.querySelector('select'));}
  window.selectForm={reset:cancel=>{const form=root.querySelector('form');if(cancel)form.addEventListener('reset',event=>event.preventDefault(),{once:true});form.reset();},value:()=>new FormData(root.querySelector('form')).get('choice'),destroy:()=>{if(react)react.unmount();else binding.destroy();}};
 };`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',platform:'browser',jsx:'automatic',target:'es2022'});source=result.outputFiles[0].text;
