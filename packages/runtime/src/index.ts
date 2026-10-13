@@ -25,3 +25,5 @@ export * from './grouped-combobox.js';
 export * from './grouped-combobox-dom.js';
 export * from './data-table.js';
 export * from './data-table-dom.js';
+export * from './password.js';
+export * from './password-dom.js';

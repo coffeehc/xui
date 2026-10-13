@@ -139,6 +139,10 @@
     "./metric-card": {
       "types": "./dist/metric-card.d.ts",
       "import": "./dist/metric-card.js"
+    },
+    "./password": {
+      "types": "./dist/password.d.ts",
+      "import": "./dist/password.js"
     }
   },
   "types": "./dist/index.d.ts",

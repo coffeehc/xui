@@ -122,6 +122,14 @@
     "./data-table-dom": {
       "types": "./dist/data-table-dom.d.ts",
       "import": "./dist/data-table-dom.js"
+    },
+    "./password": {
+      "types": "./dist/password.d.ts",
+      "import": "./dist/password.js"
+    },
+    "./password-dom": {
+      "types": "./dist/password-dom.d.ts",
+      "import": "./dist/password-dom.js"
     }
   },
   "types": "./dist/index.d.ts"
