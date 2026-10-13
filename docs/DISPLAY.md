@@ -48,7 +48,7 @@ onRemove 只发删除意图，不自动删除 DOM 或猜邻居。宿主更新其
 内容图片在占位阶段保留 alt 与状态的可访问描述；装饰图片占位 aria-hidden。加载后只暴露真实 img 的 alt。
 加载/错误回调 onStatusChange 报告实际资源事件；空 src 直接错误，不对当前页面发送空地址图片请求。
 
-src 或显式 retryKey 改变才创建新资源；旧 img 事件不能覆盖新图。fallback 不是第二个 URL，不递归重试、不猜 CORS 代理；重试由宿主变更 retryKey 发起。原生 update 接收完整 options，校验失败不改变旧状态；destroy 断开事件并移除节点。React 更新保留外框，切换 keyed 资源隔离旧事件，卸载无迟到状态回写。
+src 或显式 retryKey 改变才创建新资源；旧 img 事件不能覆盖新图。fallback 不是第二个 URL，不递归重试、不猜 CORS 代理；重试由宿主变更 retryKey 发起。原生 update 接收完整 options，校验失败不改变旧状态；destroy 断开事件并移除节点。React 更新保留外框，切换 keyed 资源隔离旧事件，卸载无迟到状态回写。SSR hydration 会读取当前 img.complete/naturalWidth，接续挂载前已完成的资源，不等待已经错过的 load/error 事件。
 
 ## 检查边界
 

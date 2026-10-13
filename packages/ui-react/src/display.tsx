@@ -27,10 +27,10 @@ export function Copyable({value,disabled=false,writeText,labels:overrides,onStat
 }
 export type ImageProps=ImageOptions & Omit<React.ComponentProps<'span'>,'children'|'onLoad'|'onError'>;
 function ImageResource({src,alt,retryKey,fallback='图片无法加载',loadingLabel='图片加载中',onStatusChange}:{src:string;alt:string;retryKey?:string|number;fallback?:string;loadingLabel?:string;onStatusChange?:(status:ImageStatus)=>void}){
-  const [status,setStatus]=React.useState<ImageStatus>(src?'loading':'error'),active=React.useRef(true);
-  React.useLayoutEffect(()=>{active.current=true;return()=>{active.current=false;};},[]);
-  const complete=(next:ImageStatus)=>{if(active.current){setStatus(next);onStatusChange?.(next);}};
-  return <><img className="xui-image-content" src={src||undefined} alt={alt} hidden={status!=='loaded'} onLoad={()=>complete('loaded')} onError={()=>complete('error')}/>{status!=='loaded'&&<span className={status==='loading'?'xui-image-placeholder xui-skeleton':'xui-image-placeholder'} role={alt?'img':undefined} aria-label={alt?`${alt}：${status==='loading'?loadingLabel:fallback}`:undefined} aria-hidden={!alt||undefined}>{status==='error'?fallback:loadingLabel}</span>}</>;
+  const [status,setStatus]=React.useState<ImageStatus>(src?'loading':'error'),active=React.useRef(true),image=React.useRef<HTMLImageElement>(null),settled=React.useRef<ImageStatus|null>(null);
+  const complete=(next:ImageStatus)=>{if(active.current&&settled.current!==next){settled.current=next;setStatus(next);onStatusChange?.(next);}};
+  React.useLayoutEffect(()=>{active.current=true;const node=image.current;if(src&&node?.complete)complete(node.naturalWidth>0?'loaded':'error');return()=>{active.current=false;};},[]);
+  return <><img ref={image} className="xui-image-content" src={src||undefined} alt={alt} hidden={status!=='loaded'} onLoad={()=>complete('loaded')} onError={()=>complete('error')}/>{status!=='loaded'&&<span className={status==='loading'?'xui-image-placeholder xui-skeleton':'xui-image-placeholder'} role={alt?'img':undefined} aria-label={alt?`${alt}：${status==='loading'?loadingLabel:fallback}`:undefined} aria-hidden={!alt||undefined}>{status==='error'?fallback:loadingLabel}</span>}</>;
 }
 /** Changing src or retryKey replaces only the resource, preserving the reserved frame. */
 export function Image({src,alt,width,height,aspectRatio,fit='contain',retryKey,fallback,loadingLabel,onStatusChange,className,style,...props}:ImageProps){

@@ -17,7 +17,7 @@ jobs:
       - name: Build and validate public consumers
         run: pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:consumer
       - name: Focused interaction regressions
-        run: pnpm exec playwright test auth-operation.spec.mjs login-layout.spec.mjs login.spec.mjs error-layout.spec.mjs capabilities.spec.mjs search-toolbar.spec.mjs
+        run: pnpm exec playwright test auth-operation.spec.mjs login-layout.spec.mjs login.spec.mjs error-layout.spec.mjs capabilities.spec.mjs search-toolbar.spec.mjs display.spec.mjs
       - name: Watch, cold start and complete browser suite
         run: pnpm test:watch && pnpm test:cold-start && pnpm test:browser
       - uses: actions/upload-artifact@v4

@@ -8,3 +8,5 @@
 - 真实浏览器 200% zoom、触屏 OS、人工读屏与其他浏览器未执行；需要受支持的安全浏览器环境继续验。字体放大/deviceScaleFactor 不作为真实 zoom 的替代。
 - cold-start 原有测试在本基线硬编码 --no-sandbox；本任务未运行该不安全分支，交主 owner 的安全 CI 统一处理。根 pnpm verify 未整体通过：pnpm 的运行前自动安装尝试写入只读 /home/agent 路径，本任务直接执行同名 package scripts 的 Node/tsc 命令，不改目录权限。
 - 这些是公共合成示例，不证明 xapi、Argus、xquant 或 xAgent 已采用，也不涉及真实凭据、用户业务数据、认证后端、部署或本地电脑。
+
+集成补充：合并 SearchToolbar 后全仓 450 单元通过；新增已加载图片先于 hydration 的专用浏览器回归，并为三主题/三宽度矩阵保存截图。新截图与该回归须等待正式 CI 实跑，不以本地编译代替。

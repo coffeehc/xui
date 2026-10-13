@@ -23,13 +23,23 @@ for(const kind of ['react','vanilla']){
   await expect(page.getByRole('img',{name:'合成图片：图片无法加载',exact:true})).toBeVisible();expect(requests).toBe(1);const failed=await frame.boundingBox();expect(failed.height).toBeCloseTo(before.height,1);expect(failed.width).toBeCloseTo(before.width,1);
   await page.getByRole('button',{name:'重试图片'}).click();await expect(page.locator('img[alt="合成图片"]')).toBeVisible();expect(requests).toBe(2);const loaded=await frame.boundingBox();expect(loaded.height).toBeCloseTo(before.height,1);
  });
- for(const width of [1440,390,320])test(`${kind}: ${width}px theme/reduced-motion/forced-colors retain content`,async({page})=>{
+ for(const width of [1440,390,320])test(`${kind}: ${width}px theme/reduced-motion/forced-colors retain content`,async({page},info)=>{
   await page.setViewportSize({width,height:900});await page.route('**/display-image-a.svg',route=>route.fulfill({contentType:'image/svg+xml',body:svg}));await page.goto(`/display-${kind}/`);
-  for(const theme of ['light','dark']){await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);await expect(page.getByRole('button',{name:'移除标签 2',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
+  for(const theme of ['light','dark','system']){await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);await expect(page.getByRole('button',{name:'移除标签 2',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await info.attach(`${kind}-${width}-${theme}`,{body:await page.screenshot({fullPage:true,animations:'disabled'}),contentType:'image/png'});}
   await page.evaluate(()=>delete document.documentElement.dataset.theme);await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce',forcedColors:'active'});await expect(page.getByRole('button',{name:'复制',exact:true}).first()).toBeVisible();await page.emulateMedia({colorScheme:'light'});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  });
 }
 
 test('React hydrates Node-rendered display without mismatches and binds copy intent',async({page})=>{
  const errors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto('/display-react/hydrate.html');await expect(page.getByRole('heading',{name:'Hydrated display'})).toBeVisible();await page.getByRole('button',{name:'复制',exact:true}).click();await expect(page.getByRole('status')).toHaveText('已复制');expect(await page.evaluate(()=>window.hydrationErrors)).toEqual([]);expect(errors).toEqual([]);
+});
+
+test('React hydration recognizes an image loaded before event handlers attach',async({page})=>{
+ let release;await page.route('**/display-react/hydrate.js',route=>new Promise(resolve=>{release=async()=>{await route.continue();resolve();};}));
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto('/display-react/hydrate.html',{waitUntil:'commit'});
+ const image=page.locator('img[alt="Synthetic image"]');await expect(image).toBeAttached();
+ await expect.poll(()=>image.evaluate(node=>node.complete&&node.naturalWidth>0)).toBe(true);
+ await expect(image).toBeHidden();await expect.poll(()=>typeof release).toBe('function');await release();
+ await expect(image).toBeVisible();await expect(page.locator('.xui-image-placeholder')).toHaveCount(0);
+ expect(await page.evaluate(()=>window.hydrationErrors)).toEqual([]);expect(errors).toEqual([]);
 });
