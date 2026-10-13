@@ -20,4 +20,5 @@ createRoot(document.getElementById('root')!).render(<main className="xui-stack">
   <div className="xui-toolbar">{(['xs','sm','default','lg'] as const).map(size=><Button key={size} size={size} data-testid={`size-${size}-text`}><Icon/>Save</Button>)}</div>
   <div className="xui-toolbar">{(['xs','sm','default','lg'] as const).map(size=><IconButton key={size} size={size} data-testid={`size-${size}-icon`} aria-label={`${size} save`}><Icon/></IconButton>)}</div>
  </section>
+ <section className="xui-surface"><h2>Extra small states</h2>{variants.map(variant=><div key={variant} className="xui-toolbar">{states.map(state=><Button key={state} size="xs" variant={variant} data-testid={`xs-${variant}-${state}`} disabled={state.startsWith('disabled')} aria-busy={state.includes('busy')||undefined}><Icon/>保存</Button>)}<Button size="xs" variant={variant} data-testid={`xs-${variant}-long`} style={{maxInlineSize:'var(--layout-field-min)'}}>保存完整的中文操作名称并允许它自然换行</Button></div>)}</section>
 </main>);

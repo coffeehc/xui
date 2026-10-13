@@ -22,7 +22,7 @@
   .xui-button[data-variant="link"] {background:transparent;border-color:transparent;color:var(--action-primary);text-decoration-line:underline;text-underline-offset:var(--space-text-gap);}
   .xui-button[data-variant="link"]:hover:not(:disabled,[aria-disabled="true"],[data-disabled]) {background:var(--interaction-hover);}
   .xui-button[data-size="sm"] { min-height: var(--control-height-sm); padding-inline: var(--button-padding-inline-sm); }
-  .xui-button[data-size="xs"] { min-height: var(--control-height-xs); padding-inline: var(--space-control-gap); gap: var(--space-text-gap); }
+  .xui-button[data-size="xs"] { min-height: var(--control-height-xs); padding-block:var(--button-padding-block-xs); padding-inline: var(--space-control-gap); gap: var(--space-text-gap); }
   .xui-button[data-size="lg"] { min-height: var(--control-height-lg); padding-inline: var(--space-section-gap); gap: var(--space-control-gap); }
   .xui-button[data-icon="true"] { width: var(--button-height); height: var(--button-height); padding: 0; flex-shrink: 0; }
   .xui-button[data-icon="true"][data-size="xs"] { width: var(--control-height-xs); height: var(--control-height-xs); }

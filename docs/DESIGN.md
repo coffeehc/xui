@@ -476,6 +476,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --layout-header-primary-min: var(--layout-field-min);
     /* shell-role-tokens:end */
     /* centralized-component-tokens:start */
+    --button-padding-block-xs: max(0px, calc((var(--control-height-xs) - var(--line-height-body-sm)) / 2 - var(--line-width-surface)));
     --font-scale: 1;
     --line-height-scale: var(--font-scale);
     --radius-full: 50%;
@@ -1266,5 +1267,9 @@ CheckboxGroup/RadioGroup 复用 fieldset/legend、choice 与 help/error 的既�
 ### 专用输入组合
 
 NumberInput、PasswordInput、SearchInput 复用 InputGroup 的唯一输入边界与既有 input-action、control-height、control-icon-size、焦点和禁用 token。数字草稿/确认值分开，密码仅显隐与清理，搜索仅提交/清除意图；没有新颜色、密度、请求或认证 owner。帮助/错误继续采用 Field/native field 的关联。行为和安全边界见 [TEXT_INPUTS](TEXT_INPUTS.md)。
+
+### 最小按钮的实际内容几何
+
+xs上下内距由button-padding-block-xs按实际body-sm行高及按钮line-width-surface双边框居中推导，并下限钳制为0；border-box下默认短行24px，文字放大或换行可自然撑高，不能固定height裁字。不新增字号或密度开关；公开变量可独立覆盖，其余尺寸不随此变量改变。
 
 <!-- foundation-lifecycle:end -->

@@ -30,3 +30,6 @@ for(const kind of ['text','icon']){
  sizeSection.append(row);
 }
 root.append(sizeSection);
+
+const xsSection=node('section');xsSection.className='xui-surface';xsSection.append(node('h2','Extra small states'));
+for(const variant of variants){const row=node('div');row.className='xui-toolbar';for(const state of states){const button=node('button');button.type='button';button.className='xui-button';button.dataset.size='xs';button.dataset.variant=variant;button.dataset.testid=`xs-${variant}-${state}`;button.disabled=state.startsWith('disabled');if(state.includes('busy'))button.setAttribute('aria-busy','true');button.append(root.querySelector('svg').cloneNode(true),document.createTextNode('保存'));row.append(button);}const long=node('button','保存完整的中文操作名称并允许它自然换行');long.type='button';long.className='xui-button';long.dataset.size='xs';long.dataset.variant=variant;long.dataset.testid=`xs-${variant}-long`;long.style.maxInlineSize='var(--layout-field-min)';row.append(long);xsSection.append(row);}root.append(xsSection);
