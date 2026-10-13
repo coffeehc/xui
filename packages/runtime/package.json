@@ -130,6 +130,10 @@
     "./password-dom": {
       "types": "./dist/password-dom.d.ts",
       "import": "./dist/password-dom.js"
+    },
+    "./operation-store": {
+      "types": "./dist/operation-store.d.ts",
+      "import": "./dist/operation-store.js"
     }
   },
   "types": "./dist/index.d.ts"
