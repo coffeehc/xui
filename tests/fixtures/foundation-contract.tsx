@@ -57,3 +57,35 @@ window.renderFocusCase=config=>{
  const controller=config.kind==='sheet'?dom.createSheetController(dialog,trigger):dom.createDialogController(dialog,trigger);
  nativeFocusCleanup=()=>{controller.destroy();host.remove();};
 };
+
+// Formal public consumers for the workspace scrollport focus contract. There
+// is deliberately no host padding, inset-outline override, or private shell DOM.
+import {AppShell} from '@coffeehc/xui-react/layout';
+import {createMenuLayout} from '@coffeehc/xui-runtime/menu-layout';
+import {getThemeController,type ThemeMode} from '@coffeehc/xui-runtime/theme';
+type WorkspaceFocusCase={native?:boolean;mode:ThemeMode};
+function WorkspaceFocusFields(){return <div className="xui-stack">
+ <Input aria-label="Workspace first" defaultValue="Keep first draft"/>
+ <InputGroup.Root><InputGroup.Addon aria-hidden="true">@</InputGroup.Addon><InputGroup.Input aria-label="Workspace grouped" defaultValue="Keep grouped draft"/></InputGroup.Root>
+ <div aria-hidden="true" style={{blockSize:'100dvh'}}/>
+ <Input aria-label="Workspace last" defaultValue="Keep last draft"/>
+</div>;}
+declare global{interface Window{renderWorkspaceFocusCase:(config:WorkspaceFocusCase)=>void}}
+let workspaceFocusCleanup:undefined|(()=>void);
+window.renderWorkspaceFocusCase=config=>{
+ workspaceFocusCleanup?.();workspaceFocusCleanup=undefined;
+ nativeFocusCleanup?.();nativeFocusCleanup=undefined;
+ const theme=getThemeController(window);theme.setMode(config.mode);
+ if(!config.native){root.render(<AppShell key={`workspace-${config.mode}`} theme={theme} scrollMode="workspace" headerSlots={{brand:'Workspace focus'}} sidebar={<nav aria-label="Workspace navigation"><a href="#overview">Overview</a></nav>}><WorkspaceFocusFields/></AppShell>);return;}
+ root.render(null);
+ const host=document.createElement('div');document.body.append(host);
+ const content=document.createElement('div');content.className='xui-stack';
+ const input=(label:string,value:string)=>{const node=document.createElement('input');node.className='xui-input';node.setAttribute('aria-label',label);node.value=value;return node;};
+ const group=document.createElement('div');group.className='xui-input-group';
+ const addon=document.createElement('span');addon.className='xui-input-addon';addon.setAttribute('aria-hidden','true');addon.textContent='@';group.append(addon,input('Workspace grouped','Keep grouped draft'));
+ const spacer=document.createElement('div');spacer.setAttribute('aria-hidden','true');spacer.style.blockSize='100dvh';
+ content.append(input('Workspace first','Keep first draft'),group,spacer,input('Workspace last','Keep last draft'));
+ const brand=document.createElement('span');brand.textContent='Workspace focus';
+ const owner=createMenuLayout(host,{theme,scrollMode:'workspace',items:[{id:'overview',label:'Overview',href:'#overview'}],activeId:'overview',label:'Workspace navigation',headerSlots:{brand},content});
+ workspaceFocusCleanup=()=>{owner.destroy();host.remove();};
+};
