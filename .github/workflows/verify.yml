@@ -18,6 +18,14 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk && fc-match "sans-serif:lang=zh-cn"
       - name: Build and validate public consumers
         run: pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:consumer
+      - name: Dialog foundation acceptance
+        run: pnpm exec playwright test dialog-readability.spec.mjs focus-boundaries.spec.mjs
+      - name: Preserve dialog foundation evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dialog-foundation-contract
+          path: test-results
       - name: Basic input contract acceptance
         run: pnpm exec playwright test input-foundation-contract.spec.mjs
       - name: Preserve basic input evidence

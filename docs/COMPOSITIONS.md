@@ -57,3 +57,5 @@ React 推荐组合：`<Dialog.Header closeButtonProps={{'aria-label':'关闭设�
 ## 搜索 + 操作 + 高级区域
 
 [SearchToolbar](SEARCH_TOOLBAR.md) 组合 Toolbar/Button/DisclosureIndicator 和原生 disclosure controller，提供 search/actions/advanced 三个同名槽。它可用于已有 pageToolbar 或 DataTable.toolbar（同组筛选只放一处），不另造页面、查询或权限 owner。默认高级区折叠，defaultExpanded/expanded/onExpandedChange 分别表示初始值、受控事实与请求；长内容、窄容器、焦点绘制和 Node/Fragment 稳定更新由库负责。调用方只接公开槽/控件，无需私有 DOM/CSS 修补。
+
+长风险说明放在 `Dialog.Body` 内的 `Dialog.Description`（原生仍是带唯一id的 `.xui-dialog-description`），使说明与表单共用一个滚动owner；Dialog 的 aria-describedby 仍指向该完整原文。短介绍可继续位于Header。不能让长说明作为独立固定轨挤掉表单，亦不能只用固定高度裁切正文。当前长标题/极端短窗口的整体可达边界按 DIALOG_READABILITY_VALIDATION 的真实矩阵验证，不以右上X存在代替正文和Footer可达。

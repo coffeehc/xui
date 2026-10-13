@@ -19,7 +19,8 @@
   .xui-native-dialog:not([open]) { opacity: 0; }
   @starting-style { .xui-native-dialog[open] { opacity: 0; } }
   .xui-dialog-title, .xui-dialog-description { margin: 0; }
-  .xui-dialog-description { color: var(--muted-foreground); }
+  .xui-dialog-title { font: var(--font-weight-heading) var(--font-size-section-title) / var(--line-height-section-title) var(--font-sans); overflow-wrap: anywhere; }
+  .xui-dialog-description { color: var(--muted-foreground); overflow-wrap: anywhere; }
   .xui-dialog-body { overflow: auto; min-height: 0; min-inline-size:0; overflow-wrap: anywhere; overscroll-behavior:contain;
     /* Spend existing modal inset, preserving field alignment and dialog size. */
     margin:calc(calc(-1 * var(--focus-width)) - var(--focus-offset));

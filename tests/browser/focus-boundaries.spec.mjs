@@ -50,7 +50,11 @@ for(const native of [false,true])test(`${native?'native':'react'} standalone clo
 
 for(const native of [false,true])for(const titleText of ['', '很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行'])test(`${native?'native':'react'} header safely handles ${titleText?'long':'empty'} title`,async({page})=>{
  await setup(page,{native,kind:'dialog',mode:'light',width:390,scale:2,titleText});const dialog=page.getByRole('dialog'),close=dialog.locator('.xui-dialog-close');await expect(close).toHaveCount(1);
- const heading=dialog.locator('.xui-dialog-heading'),[headBox,closeBox]=await Promise.all([heading.boundingBox(),close.boundingBox()]);expect(headBox.x+headBox.width).toBeLessThanOrEqual(closeBox.x+1);await close.click();await expect(dialog).toBeHidden();
+ const heading=dialog.locator('.xui-dialog-heading'),[headBox,closeBox]=await Promise.all([heading.boundingBox(),close.boundingBox()]);expect(headBox.x+headBox.width).toBeLessThanOrEqual(closeBox.x+1);
+ const body=dialog.locator('.xui-dialog-body'),first=body.locator('input').first(),footer=dialog.locator('.xui-dialog-footer');const geometry=await body.evaluate((node)=>{const input=node.querySelector('input'),probe=document.createElement('span');probe.style.cssText='position:absolute;visibility:hidden;width:calc(var(--focus-width) + var(--focus-offset))';node.append(probe);const reach=parseFloat(getComputedStyle(probe).width);probe.remove();return {body:node.clientHeight,control:input.getBoundingClientRect().height,reach};});
+ expect(geometry.body,'The header must not consume the body editing track').toBeGreaterThanOrEqual(geometry.control+Math.max(0,geometry.reach)*2);
+ const foot=await footer.boundingBox();expect(foot.y+foot.height).toBeLessThanOrEqual(844);
+ await close.click();await expect(dialog).toBeHidden();
 });
 for(const native of [false,true])test(`${native?'native':'react'} existing body/footer without Header remains compatible`,async({page})=>{
  await setup(page,{native,kind:'dialog',mode:'dark',width:390,noHeader:true});const dialog=page.getByRole('dialog');await expect(dialog.locator('.xui-dialog-close')).toHaveCount(0);await expect(dialog.locator('.xui-dialog-header')).toHaveCount(0);await assertFocusPaint(dialog.locator('input').first());await assertFocusPaint(dialog.locator('input').last());await dialog.getByRole('button',{name:'Cancel form'}).click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form'})).toBeFocused();

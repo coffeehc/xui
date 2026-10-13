@@ -38,9 +38,9 @@ export function ApiKeyManager({controller,className,headerActions,writeClipboard
     <Dialog.Root open={state.phase!=='closed'} onOpenChange={open=>{if(!open)controller.close();}}>
       <Dialog.Content ref={dialogRef} finalFocus={finalFocus}>
         <Dialog.Title>{state.phase==='resolve'?labels.resolveWrite:editing?labels.updateTitle:state.phase==='result'?labels.resultTitle:state.phase==='delete'?labels.deleteTitle:state.phase==='revoke'?labels.revokeTitle:labels.createTitle}</Dialog.Title>
+        <Dialog.Body className="xui-stack">
         {state.phase==='result'&&<Dialog.Description>{labels.oneTime}</Dialog.Description>}{state.phase==='revoke'&&<Dialog.Description>{labels.revokeWarning}</Dialog.Description>}{state.phase==='delete'&&<Dialog.Description>{labels.deleteWarning}</Dialog.Description>}
         {editing&&<Dialog.Description>{labels.updateWarning}</Dialog.Description>}{state.phase==='resolve'&&<Dialog.Description>{labels.resolveWarning}</Dialog.Description>}
-        <Dialog.Body>
           {(state.phase==='create'||editing)&&<form id={formId} noValidate className="xui-stack" onSubmit={event=>{event.preventDefault();void submit();}}>
             <Field label={labels.name} required error={state.fieldErrors.name}><Input ref={nameRef} autoFocus autoComplete="off" value={draft.name} disabled={state.actionBusy||!!state.writeBlock} onChange={event=>setDraft({name:event.target.value})}/></Field>
             <Fieldset legend={labels.permissions} error={state.fieldErrors.permissions} disabled={state.actionBusy||!!state.writeBlock}>{options.permissions.map(item=><Checkbox key={item.id} label={item.label} title={item.description} checked={draft.permissionIds.includes(item.id)} disabled={item.disabled||item.required} onChange={event=>setDraft({permissionIds:event.target.checked?[...draft.permissionIds,item.id]:draft.permissionIds.filter(id=>id!==item.id)})}/>)}</Fieldset>
