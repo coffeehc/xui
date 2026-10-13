@@ -20,7 +20,7 @@
 
 上一布局里程碑c6e4778为494unit、81Auth视觉、410focused、1094完整浏览器通过。后续同形12行五固定列、caption/分页的24项用例用于进一步匹配用户反馈；不把当前全固定宽度合同暗改成默认铺满。
 
-首轮1eba74e安全CI：497unit、81Auth、463/466focused通过；三个React菜单用例错误假定Shift+F10后直接聚焦首项。真实trace/截图及BaseUI实现显示初始focus进入menu容器，随后Home定位首项。回归现保留Shift+F10→菜单内focus→真实Home→首项focus/变量颜色→禁用交互→Escape回焦点，未手工focus条目或移除键盘断言。24项同形表格与6项表格文字变量矩阵全部通过；完整browser因前置失败未运行。
+首轮1eba74e安全CI：497unit、81Auth、463/466focused通过；三个React菜单用例错误假定Shift+F10后直接聚焦首项。真实trace/截图及BaseUI实现显示初始focus进入menu容器，随后Home定位首项。回归现保留Shift+F10→菜单内focus→真实Home→首项focus/变量颜色→禁用交互→Escape回焦点，未手工focus条目或移除键盘断言。24项同形表格断言与6项表格文字变量矩阵通过，但随后证据复核发现natural测试参数未被示例识别，两组都运行workspace，document实际未测；完整browser因前置失败未运行。
 
 ## 第二批实际状态与布局偏差
 
@@ -29,3 +29,5 @@
 - LAYOUT_SLOTS/PUBLIC_API过期Tab顺序修为leading→brand→navigation→breadcrumb，与现有已批准实现一致。
 
 此批通过情况以对应提交的build/types/unit、独立tarball消费者及实际安全CI为准，不将修复前红灯算通过。
+
+同形验证纠正：公开布局是document/workspace；原测试natural落入默认workspace，24个通过结果不能证明两个纵向模式。现document显式传layout=document及unbounded，并断言DataTable data-layout与shell data-scroll-mode均为document；workspace同样断言真实属性。1eba/a903只确认workspace已测，document修正后结果待新CI。

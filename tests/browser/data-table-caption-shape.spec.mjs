@@ -2,12 +2,13 @@ import {test,expect} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const source={commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),generation:JSON.parse(readFileSync('.artifacts/latest-build.json','utf8')).sourceSha256};
-for(const kind of ['react','vanilla'])for(const layout of ['natural','workspace'])for(const paginated of [false,true])for(const [width,enlarged] of [[1700,false],[390,false],[390,true]])test(`${kind} ${layout} twelve synthetic rows five fixed columns pagination=${paginated} ${width} enlarged=${enlarged}`,async({page},info)=>{
+for(const kind of ['react','vanilla'])for(const layout of ['document','workspace'])for(const paginated of [false,true])for(const [width,enlarged] of [[1700,false],[390,false],[390,true]])test(`${kind} ${layout} twelve synthetic rows five fixed columns pagination=${paginated} ${width} enlarged=${enlarged}`,async({page},info)=>{
  await page.setViewportSize({width,height:900});
- await page.goto(`/data-table-${kind}/?widths&column-mode=sized&hide-column=source&size=12&${paginated?'':'no-pagination&'}internal&layout=${layout}`);
+ await page.goto(`/data-table-${kind}/?widths&column-mode=sized&hide-column=source&size=12&${paginated?'':'no-pagination&'}internal&layout=${layout}${layout==='document'?'&unbounded':''}`);
  await page.waitForFunction(()=>window.dataTableDemo?.owner.getState().status==='ready');
  if(enlarged)await page.evaluate(()=>document.documentElement.style.fontSize='200%');
  const root=page.locator('#records-table'),table=root.getByRole('table',{name:'合成记录表格',exact:true}),footer=root.locator('.xui-data-table-footer');
+ await expect(root).toHaveAttribute('data-layout',layout);await expect(page.locator('.xui-shell')).toHaveAttribute('data-scroll-mode',layout);
  await expect(table.locator('tbody tr')).toHaveCount(12);await expect(table.getByRole('columnheader')).toHaveCount(5);
  await expect(root.locator('.xui-data-table-count')).toHaveText(paginated?'显示 12 条，共 125 条':'已加载 12 条');await expect(root.getByRole('navigation',{name:'记录分页',exact:true})).toHaveCount(paginated?1:0);
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
