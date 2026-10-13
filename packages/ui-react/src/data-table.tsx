@@ -5,8 +5,9 @@ import {Toolbar} from './layout.js';
 import {Field,NativeSelect,type FieldProps} from './forms.js';
 import {DataRegion,LoadingState,EmptyState,ErrorState,Skeleton} from './feedback.js';
 import {Pagination} from './navigation.js';
+import {Button} from './button.js';
 import {cx} from './shared.js';
-export type {DataTablePagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
+export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
 export interface DataTableCellContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
 export interface DataTableColumn<T> {
   id:string; header:React.ReactNode; cell:(row:T,context:DataTableCellContext)=>React.ReactNode;
@@ -19,7 +20,7 @@ export interface DataTableProps<T> extends DataTableViewOptions {
   rowState?:(row:T)=>{selected?:boolean;expanded?:boolean};
   /** Use this OR the existing pageToolbar slot, never duplicate controls in both. */
   toolbar?:React.ReactNode; emptyState?:React.ReactNode; errorState?:React.ReactNode; feedback?:React.ReactNode;
-  /** Optional host cursor controls; no numbered pagination is fabricated for unknown total. */
+  /** Optional supplementary footer content; standard cursor controls are supplied by pagination. */
   footer?:React.ReactNode;
   striped?:boolean; stickyHeader?:boolean;
   className?:string; id?:string;
@@ -74,7 +75,11 @@ export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,er
       <footer className="xui-data-table-footer">
         <span className="xui-data-table-count" aria-live="polite">{state.status==='loading'&&!hasRows?labels.loading:state.status==='idle'&&!hasRows?labels.idle:state.status==='error'&&!hasRows?labels.error:labels.count({rowCount:rows.length,total:state.total})}</span>
         {pagination&&<label className="xui-data-table-page-size"><span>{labels.pageSize}</span><NativeSelect aria-label={labels.pageSize} value={pagination.pageSize} disabled={state.blocked||!pagination.onPageSizeChange} onChange={event=>{const size=Number(event.currentTarget.value);event.currentTarget.value=String(pagination.pageSize);if(size!==pagination.pageSize&&state.sizes.includes(size))request(()=>pagination.onPageSizeChange?.(size));}}>{state.sizes.map(size=><option value={size} key={size}>{size}</option>)}</NativeSelect></label>}
-        {pagination&&state.pageCount!==null&&!state.outOfRange&&<Pagination aria-label={labels.pagination} page={state.page} pageCount={state.pageCount} disabled={state.blocked||!pagination.onPageChange} previousLabel={labels.previous} nextLabel={labels.next} onPageChange={page=>request(()=>pagination.onPageChange?.(page-1+pagination.pageIndexOffset))}/>}
+        {pagination&&pagination.mode!=='cursor'&&state.pageCount!==null&&!state.outOfRange&&<Pagination aria-label={labels.pagination} page={state.page} pageCount={state.pageCount} disabled={state.blocked||!pagination.onPageChange} previousLabel={labels.previous} nextLabel={labels.next} onPageChange={page=>request(()=>pagination.onPageChange?.(page-1+pagination.pageIndexOffset))}/>}
+        {pagination?.mode==='cursor'&&<nav className="xui-pagination" aria-label={labels.pagination}>
+          <Button disabled={state.blocked||!pagination.hasPrevious||!pagination.onPrevious} onClick={()=>request(pagination.hasPrevious?pagination.onPrevious:undefined)}>{labels.previous}</Button>
+          <Button disabled={state.blocked||pagination.nextCursor===null||!pagination.onNext} onClick={()=>{const cursor=pagination.nextCursor;if(cursor!==null)request(pagination.onNext?()=>pagination.onNext!(cursor):undefined);}}>{labels.next}</Button>
+        </nav>}
         {hasContent(footer)&&<div className="xui-data-table-footer-extra">{footer}</div>}
       </footer>
     </div>

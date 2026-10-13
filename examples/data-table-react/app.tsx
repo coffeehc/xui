@@ -12,7 +12,7 @@ import '@coffeehc/xui-runtime/init.js';
 import '@coffeehc/xui-theme/style.css';
 
 const query=new URLSearchParams(location.search);
-const owner=createDataTableExample({pageSize:Number(query.get('size')??20),offset:Number(query.get('offset')??0),empty:query.has('empty'),unknown:query.has('unknown'),local:query.has('local')});
+const owner=createDataTableExample({pageSize:Number(query.get('size')??20),offset:Number(query.get('offset')??0),empty:query.has('empty'),unknown:query.has('unknown')||query.has('cursor')&&!query.has('cursor-total'),local:query.has('local'),cursor:query.has('cursor')});
 const root=createRoot(document.getElementById('root')!);
 const cards=query.has('cards'),internal=query.has('internal')&&!cards;
 const layout=query.get('layout')==='workspace'?'workspace':query.get('layout')==='document'?'document':undefined;
@@ -60,7 +60,7 @@ function App(){
     status={state.status} filtered={state.filtered} labels={tableLabels} onRetry={owner.retry} striped
     toolbar={internal?toolbar:undefined}
     feedback={query.has('nested-feedback')?<table aria-label="辅助表格"><tbody><tr><td>嵌套反馈</td></tr></tbody></table>:undefined}
-    pagination={query.has('no-pagination')?undefined:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}}/>;
+    pagination={query.has('no-pagination')?undefined:query.has('cursor')?{mode:'cursor',nextCursor:state.nextCursor,hasPrevious:state.hasPrevious,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onNext:owner.next,onPrevious:owner.previous,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}}/>;
   // The existing public ScrollArea root takes the same allocated workspace height.
   // Grid/Surface provide the public card layout and skin; no private table/shell CSS is copied.
   const cardView=<ScrollArea.Root style={{blockSize:'100%'}} data-testid="record-cards"><ScrollArea.Viewport aria-label="合成记录卡片"><ScrollArea.Content>

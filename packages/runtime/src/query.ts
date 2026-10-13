@@ -30,14 +30,14 @@ export function serializeWebfacadeQuery(query:WebfacadeQuery,contract:WebfacadeC
   const sort=query.sort??[],used=new Set<string>();for(const item of sort){if(!sortFields.has(item.field)||used.has(item.field)||!['asc','desc'].includes(item.order))throw new TypeError('Unknown, duplicate or invalid sort');used.add(item.field);}if(sort.length)params.set('sort',sort.map(item=>item.field).join(','));for(const item of sort)params.set('sort_'+item.field,item.order);
   return params;
 }
-/** The wire permits Go nil slices. Nothing in HTTP implicitly normalizes them. */
-export interface ListData<T>{list:readonly T[]|null;total:number}
+/** commons/webfacade ListData. Omitted metadata stays omitted; null cursor is an explicit end. */
+export interface ListData<T>{list:readonly T[]|null;total?:number;next_cursor?:string|null}
 export function parseListData<T=unknown>(value:unknown,decodeItem?:(value:unknown)=>T):ListData<T>{
   if(!value||typeof value!=='object'||Array.isArray(value))throw new TypeError('Expected ListData');const body=value as Record<string,unknown>;
-  if(!Object.hasOwn(body,'list')||body.list!==null&&!Array.isArray(body.list)||typeof body.total!=='number'||!Number.isSafeInteger(body.total)||body.total<0)throw new TypeError('Invalid ListData fields or unsafe total');
-  if(decodeItem&&body.list!==null)return {list:(body.list as unknown[]).map(decodeItem),total:body.total};return value as ListData<T>;
+  if(!Object.hasOwn(body,'list')||body.list!==null&&!Array.isArray(body.list)||Object.hasOwn(body,'total')&&(typeof body.total!=='number'||!Number.isSafeInteger(body.total)||body.total<0)||Object.hasOwn(body,'next_cursor')&&body.next_cursor!==null&&(typeof body.next_cursor!=='string'||!body.next_cursor.length||new TextEncoder().encode(body.next_cursor).byteLength>4096))throw new TypeError('Invalid ListData fields or unsafe total');
+  if(decodeItem&&body.list!==null)return {list:(body.list as unknown[]).map(decodeItem),...(Object.hasOwn(body,'total')?{total:body.total as number}:{}),...(Object.hasOwn(body,'next_cursor')?{next_cursor:body.next_cursor as string|null}:{})};return value as ListData<T>;
 }
-/** Explicit UI projection: null list to [], unknown unrequested total to null. */
-export function toListPage<T>(wire:ListData<T>,options:{returnTotal:boolean}):{list:readonly T[];total:number|null}{
-  const valid=parseListData<T>(wire);if(typeof options.returnTotal!=='boolean')throw new TypeError('returnTotal must be explicit');return {list:valid.list??[],total:options.returnTotal?valid.total:null};
+/** Explicit UI projection: unknown total is null; an undeclared cursor is not an end cursor. */
+export function toListPage<T>(wire:ListData<T>,options:{returnTotal:boolean}):{list:readonly T[];total:number|null;nextCursor?:string|null}{
+  const valid=parseListData<T>(wire);if(typeof options.returnTotal!=='boolean')throw new TypeError('returnTotal must be explicit');return {list:valid.list??[],total:options.returnTotal&&Object.hasOwn(valid,'total')?valid.total!:null,...(Object.hasOwn(valid,'next_cursor')?{nextCursor:valid.next_cursor}:{})};
 }

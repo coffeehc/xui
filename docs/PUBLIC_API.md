@@ -94,7 +94,7 @@
 | feedback/resource | Alert 默认 info/status，error 为 alert；DataRegion busy=false；LoadingState 默认 Loading…，ErrorState 默认 Retry。resource 初始 idle、isEmpty 未声明不猜空、无 timeout/cache/请求或自动 retry；换 key 清旧值、同 key 刷新保留，hooks 只订阅 |
 | MetricCard | label/value 必填且原样显示（保留0）；marker默认无、空内容不占位；section/dl/dt/dd为被动展示，未内置按钮/live角色。复用Surface/stat tokens，排列仍由Grid；[合同](METRIC_CARD.md) |
 | HTTP | 默认 GET、response=ajax、same-origin credentials、Go success=true，code 为业务元数据；普通30秒/blob120秒预算，无自动重试。空/false/null payload 合法。响应模式、headers、认证/错误/重试适配与预算见 HTTP 合同，写操作不自动重放 |
-| webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list/total，未请求总数的 total 不代表真实零 |
+| webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list + 可选 total/next_cursor；总数缺省未知，游标缺省未声明、null明确末页，见 LIST_PAGINATION |
 | API Key | 首次读取由宿主 refresh；canCreate明确true才创建、撤销/删除需capability或明确宿主许可；过期可按授权撤销，删除仅已撤销管理记录。required权限与独立confirmed保留；默认HTTP facade/routes在API_KEY与PAGE_APIS，单一写入owner，未知结果不重复提交；完整值仅瞬时结果 |
 | 业务日志 | 显式首次 refresh，page size=50（1–200），两宿主共享loader，默认原生HTTP facade见PAGE_APIS，auth/scope由宿主；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
 | 登录页/auth | 一个已有 HTTP/auth/theme owner；默认 fullscreen 全视口分区、显式 card 旧卡片、装饰 brandVisual、四边焦点安全滚动；固定 Bearer v2 login/refresh/logout/session、严格schema_version=2、access仅内存/不公开，protectedPaths声明业务端点并强制omit/error，timeout=15000ms、no retry、no-store、上下文401、未知结果需重新登录。页面挂载先恢复再核会话，配置文本/logo，returnTo安全fallback `/`，没有callback则同源根路径导航；密码瞬时DOM，退出未知不假称成功，详见 AUTH |

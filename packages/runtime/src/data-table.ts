@@ -28,6 +28,7 @@ export type DataTableStatus = 'idle' | 'loading' | 'ready' | 'refreshing' | 'err
 /** natural caps content to a bounded parent; workspace fills it; document is unbounded. */
 export type DataTableLayout = 'natural' | 'workspace' | 'document';
 export interface DataTablePagination {
+  mode?: 'offset';
   /** Wire/query index and the endpoint's explicit index offset. No implicit 0/1 conversion. */
   pageIndex: number;
   pageIndexOffset: number;
@@ -37,6 +38,19 @@ export interface DataTablePagination {
   pageSizeOptions?: readonly number[];
   onPageChange?: (pageIndex: number) => void;
   /** Host decides/reset pageIndex, confirms data, then publishes the next facts. */
+  onPageSizeChange?: (pageSize: number) => void;
+}
+/** Controlled cursor facts. The host owns previous-cursor history and response confirmation. */
+export interface DataTableCursorPagination {
+  mode: 'cursor';
+  pageSize: number;
+  total: number | null;
+  /** Nonempty opaque server cursor, or explicit null at the end. Never inferred from row count. */
+  nextCursor: string | null;
+  hasPrevious: boolean;
+  pageSizeOptions?: readonly number[];
+  onNext?: (cursor: string) => void;
+  onPrevious?: () => void;
   onPageSizeChange?: (pageSize: number) => void;
 }
 export interface DataTableCount {rowCount: number; total: number | null}
@@ -54,7 +68,7 @@ export interface DataTableViewOptions {
   label: string; status?: DataTableStatus; disabled?: boolean; filtered?: boolean;
   /** Defaults to natural. Explicit workspace preserves the former fill behavior. */
   layout?: DataTableLayout;
-  pagination?: DataTablePagination; labels?: Partial<DataTableLabels>; onRetry?: () => void;
+  pagination?: DataTablePagination | DataTableCursorPagination; labels?: Partial<DataTableLabels>; onRetry?: () => void;
 }
 export function getDataTableState(options: DataTableViewOptions, rowCount: number) {
   if (!options.label?.trim()) throw new TypeError('DataTable needs an accessible label');
@@ -66,11 +80,17 @@ export function getDataTableState(options: DataTableViewOptions, rowCount: numbe
   const pagination = options.pagination;
   let page = 1, pageCount: number | null = null, sizes: readonly number[] = [];
   if (pagination) {
-    const {pageIndex,pageIndexOffset,pageSize,total} = pagination;
-    if (!Number.isSafeInteger(pageIndexOffset) || pageIndexOffset < 0 || !Number.isSafeInteger(pageIndex) || pageIndex < pageIndexOffset || !Number.isSafeInteger(pageSize) || pageSize < 1 || total !== null && (!Number.isSafeInteger(total) || total < 0)) throw new TypeError('DataTable requires explicit valid page facts');
-    page = pageIndex - pageIndexOffset + 1;
-    pageCount = total === null ? null : Math.max(1,Math.ceil(total / pageSize));
-    if (!Number.isSafeInteger(page)) throw new TypeError('Unsafe DataTable page');
+    const {pageSize,total} = pagination;
+    if (!Number.isSafeInteger(pageSize) || pageSize < 1 || total !== null && (!Number.isSafeInteger(total) || total < 0)) throw new TypeError('DataTable requires explicit valid page facts');
+    if (pagination.mode === 'cursor') {
+      if (typeof pagination.hasPrevious !== 'boolean' || pagination.nextCursor !== null && (typeof pagination.nextCursor !== 'string' || !pagination.nextCursor.length)) throw new TypeError('DataTable requires explicit cursor facts');
+    } else {
+      const {pageIndex,pageIndexOffset} = pagination;
+      if (pagination.mode !== undefined && pagination.mode !== 'offset' || !Number.isSafeInteger(pageIndexOffset) || pageIndexOffset < 0 || !Number.isSafeInteger(pageIndex) || pageIndex < pageIndexOffset) throw new TypeError('DataTable requires explicit valid page facts');
+      page = pageIndex - pageIndexOffset + 1;
+      pageCount = total === null ? null : Math.max(1,Math.ceil(total / pageSize));
+      if (!Number.isSafeInteger(page)) throw new TypeError('Unsafe DataTable page');
+    }
     // A stale/out-of-range query is still visible; do not silently clamp or request another page.
     sizes = pagination.pageSizeOptions ?? [pageSize];
     if (!sizes.length || new Set(sizes).size !== sizes.length || sizes.some(size => !Number.isSafeInteger(size) || size < 1) || !sizes.includes(pageSize)) throw new TypeError('DataTable page sizes must be positive, unique and contain the confirmed size');

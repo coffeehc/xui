@@ -13,7 +13,7 @@ description: 接入、迁移或评审采用 xui 的 React/原生前端页面，�
 
 ## 统一品牌、前端体系与通用API
 
-xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/PAGE_APIS.md)，按实际commons/webfacade与httpx原生request/query/response/error定义指导采用项目在自身授权范围主动标准化自有普通业务API后端。旧协议adapter仅为明确临时迁移：列来源SHA、准确映射、保留能力/鉴权、目标合同与移除条件；不能长期另造通用协议。xui任务本身不授权改产品后端、baseservice或commons，也不授权删除生产数据、重置或部署。已上线xAgent另评估升级兼容。
+xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/PAGE_APIS.md)，按统一commons/webfacade的request/query/response/error定义（旧httpx仅保留明确迁移兼容）指导采用项目在自身授权范围主动标准化自有普通业务API后端。旧协议adapter仅为明确临时迁移：列来源SHA、准确映射、保留能力/鉴权、目标合同与移除条件；不能长期另造通用协议。xui任务本身不授权改产品后端、baseservice或commons，也不授权删除生产数据、重置或部署。已上线xAgent另评估升级兼容。
 
 行业标准优先：OAuth2/OIDC/SAML保持原协议，第三方按对方API/错误格式；adapter在宿主内部边界明确转换，不强迫第三方AjaxResponse。此正常协议边界不按旧升级兼容桥梁删除。平台API Key是自有平台向Agent/集成签发的凭据，不是provider key；自身业务日志不是第三方响应或程序故障记录。唯一通用边界见[DESIGN](../../../docs/DESIGN.md#规范强度与职责)。
 
@@ -50,7 +50,7 @@ xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/
 
 - 富业务导航（子树、图标、描述、独立配置按钮、ContextMenu、未知total/cursor）采用[NAVIGATION公开扩展](../../../docs/NAVIGATION.md#富条目独立行尾动作与上下文菜单)和双端rich-navigation正式消费者；复用Input、Section/Disclosure、各组NavigationMenu和组外加载按钮。原有children/resolveIcon/renderLabel/renderLink不是缺口；使用renderButton/renderAction及原生slots/decorator，不把互动控件塞进label/option，不添加消费方stopPropagation。导航按单roving停靠，辅助动作不导航；请求/游标/防重复/取消/迟到丢弃属于宿主，GroupedCombobox仍是简单选择且不杜撰pageCount。
 
-- 标准列表优先采用[公共DataTable](../../../docs/DATA_TABLE.md)和既有workspace/pageHeader/pageToolbar。表格layout默认natural：少量/零行自然收缩，仅实际有界父级中限高并滚动表体，auto高度父级仍自然增长；显式workspace保留旧填满/最小高度，document即使在有界父级也无该上限。依赖旧默认的调用须明确layout='workspace'；shell scrollMode与公开内容区下限token不变。内部toolbar与反馈/表体/footer共用frame，外部pageToolbar仍支持，同组筛选只放一处。移除产品重复DataTableShell/筛选/footer/分割线CSS，保留data/columns/rowKey/权限/查询与业务回调。pageIndexOffset与ListData真实total显式传入，既有分页保持受控；本地数据由宿主切片并发布事实，服务端已分页rows不得二次切片或新增query owner。未知total不伪造页码，刷新保行、零行保表头、分页条数唯一且底栏可达，原生cell slot释放。公开通用footer原本在frame内不证明旧XAgent升级；须另核固定SHA和真实消费页，本轮不修改XAgent。顶栏[语言/主题/账号](../../../docs/HEADER_CONTROLS.md)默认合同不需要宿主穿透样式。
+- 标准列表优先采用[公共DataTable](../../../docs/DATA_TABLE.md)和既有workspace/pageHeader/pageToolbar。表格layout默认natural：少量/零行自然收缩，仅实际有界父级中限高并滚动表体，auto高度父级仍自然增长；显式workspace保留旧填满/最小高度，document即使在有界父级也无该上限。依赖旧默认的调用须明确layout='workspace'；shell scrollMode与公开内容区下限token不变。内部toolbar与反馈/表体/footer共用frame，外部pageToolbar仍支持，同组筛选只放一处。移除产品重复DataTableShell/筛选/footer/分割线CSS，保留data/columns/rowKey/权限/查询与业务回调。offset的pageIndexOffset与ListData真实total显式传入，既有分页保持受控；服务端不计算总数时省略total而不是假0，cursor按[列表合同](../../../docs/LIST_PAGINATION.md)采用显式DataTableCursorPagination，next_cursor缺省不等于末页，null才明确结束；本地数据由宿主切片并发布事实，服务端已分页rows不得二次切片或新增query owner。未知total不伪造页码，刷新保行、零行保表头、分页条数唯一且底栏可达，原生cell slot释放。公开通用footer原本在frame内不证明旧XAgent升级；须另核固定SHA和真实消费页，本轮不修改XAgent。顶栏[语言/主题/账号](../../../docs/HEADER_CONTROLS.md)默认合同不需要宿主穿透样式。
 
 - 独立指标展示采用[公共MetricCard](../../../docs/METRIC_CARD.md)，已有 Surface 拼卡可改为 label/value/marker 三个公开内容入口；名称、最终格式化值和颜色语义仍归宿主。卡片复用 Surface 和现有统计 token，排列保留调用方 Grid，不内置业务指标清单或专属网格；原生采用同页公开 dl/dt/dd 结构。
 

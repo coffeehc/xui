@@ -1211,7 +1211,7 @@ DataTable以内部单一布局观察器测实际table/thead/首末行高度和co
 
 列宽属于宿主列内容或用户尺寸配置，可通过公共 width 提供数字像素、CSS 长度、百分比和 calc()/clamp()；这不是重定义品牌色、字体、间距或装饰 token 的许可。库用非交互、零高测量轨道让浏览器以表体可用宽度解析百分比表达式，再由同一 colgroup 统一表头与数据列；测量不得制造滚动范围、可访问节点或另一套宿主布局逻辑，更新/销毁必须释放观察。未配置宽度保持原有自动表格算法，完整取舍及长内容边界见 DataTable 合同。
 
-空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，既有分页保持受控；本地分页由宿主筛选/排序后切片并发布事实，服务端分页保留确认响应且不二次切片。未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。完整API与双端公共消费见[DataTable](DATA_TABLE.md)。
+空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，既有分页保持受控；本地分页由宿主筛选/排序后切片并发布事实，服务端分页保留确认响应且不二次切片。未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。列表wire由commons/webfacade统一：total省略表示未计算，0是真实零；next_cursor缺失表示未声明，非空字符串是opaque续页token，null是cursor明确末页，可与total共存。DataTable保留旧offset类型与默认值，新增显式cursor受控模式复用框内前后控件；即使有total也不算编号页数，宿主唯一owner负责历史与响应确认。完整API与双端公共消费见[DataTable](DATA_TABLE.md)。
 
 顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单select边界不变。forced-colors回退原生箭头，平台选项面板仍归浏览器/OS。
 

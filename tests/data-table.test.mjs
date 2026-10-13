@@ -103,3 +103,33 @@ test('layout CSS keeps natural sizing independent of DataRegion import order and
   assert.match(css,/\.xui-data-table\[data-layout='workspace'\]\s*\{[^}]*min-block-size:var\(--data-table-min-block-size\);/);
   assert.doesNotMatch(css,/min-block-size:min-content/);
 });
+
+test('cursor pagination requires explicit end/previous facts and never derives numbered pages even with total',()=>{
+  const cursor={mode:'cursor',pageSize:20,total:null,nextCursor:'opaque + / 中文',hasPrevious:false};
+  for(const total of [null,0,100]){const state=getDataTableState({label:'Records',pagination:{...cursor,total}},20);assert.equal(state.pageCount,null);assert.equal(state.outOfRange,false);const markup=render({pagination:{...cursor,total,onNext:()=>{}}});assert.match(markup,/class="xui-pagination"/);assert.doesNotMatch(markup,/1 \/ [0-9]/);assert.match(markup,/Next page/);}
+  for(const invalid of [{...cursor,nextCursor:undefined},{...cursor,nextCursor:''},{...cursor,hasPrevious:undefined},{...cursor,hasPrevious:1},{...cursor,total:undefined},{...cursor,pageSize:0},{...pagination,mode:'invented'}])assert.throws(()=>getDataTableState({label:'Records',pagination:invalid},20),TypeError);
+  const end=render({pagination:{...cursor,nextCursor:null,hasPrevious:true,onPrevious:()=>{}}});assert.match(end,/Next page/);assert.doesNotMatch(end,/opaque/);
+});
+
+test('cursor example commits exact server tokens/history only after success, cancels late reads and resets filters',async()=>{
+  const {build}=await import('esbuild');
+  const built=await build({entryPoints:['examples/shared/data-table-model.ts'],bundle:true,write:false,format:'esm',platform:'node',target:'es2022'});
+  const {createDataTableExample}=await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].contents).toString('base64')}`);
+  const owner=createDataTableExample({cursor:true,unknown:true,pageSize:100});
+  const waitFor=async(condition)=>{const until=Date.now()+3000;while(!condition()){if(Date.now()>until)throw Error('Cursor example did not settle');await new Promise(resolve=>setTimeout(resolve,5));}};
+  const plan=()=>owner.planNext({delayMs:5});plan();owner.load();await waitFor(()=>owner.getState().status==='ready');let state=owner.getState();assert.equal(state.total,null);assert.equal(state.rows.length,100);assert.equal(state.hasPrevious,false);assert.equal(state.nextCursor,'fixture:+/100');
+  const token=state.nextCursor;plan();owner.next(token);assert.equal(owner.getState().nextCursor,token);assert.equal(owner.getState().hasPrevious,false);await waitFor(()=>owner.getState().status==='ready');state=owner.getState();assert.equal(state.rows.length,25);assert.equal(state.rows[0].id,'101');assert.equal(state.nextCursor,null);assert.equal(state.hasPrevious,true);
+  plan();owner.previous();await waitFor(()=>owner.getState().status==='ready');assert.equal(owner.getState().rows[0].id,'1');assert.equal(owner.getState().hasPrevious,false);
+  owner.planNext({delayMs:80,ignoreAbort:true});owner.next(token);owner.cancel();await new Promise(resolve=>setTimeout(resolve,100));assert.equal(owner.getState().rows[0].id,'1');assert.equal(owner.getState().hasPrevious,false);
+  owner.planNext({delayMs:5,fail:true});owner.next(token);await waitFor(()=>owner.getState().status==='error');assert.equal(owner.getState().hasPrevious,false);assert.equal(owner.getState().nextCursor,token);plan();owner.retry();await waitFor(()=>owner.getState().status==='ready');assert.equal(owner.getState().hasPrevious,true);
+  owner.planNext({delayMs:80,ignoreAbort:true});owner.filter('search','记录 1');plan();owner.filter('search','记录 125');await waitFor(()=>owner.getState().status==='ready');await new Promise(resolve=>setTimeout(resolve,100));assert.equal(owner.getState().rows.length,1);assert.equal(owner.getState().rows[0].id,'125');assert.equal(owner.getState().nextCursor,null);assert.equal(owner.getState().hasPrevious,false);
+  for(const request of owner.getRequests().map(JSON.parse)){assert.equal(request.return_total,false);assert.equal('page_index' in request,false);assert.equal('total' in request,false);}
+  assert.equal(JSON.parse(owner.getRequests()[1]).cursor,token);owner.destroy();
+});
+
+test('React empty cursor body does not turn an explicit continuation token into end-of-list',()=>{
+  for(const nextCursor of ['scan:one','scan:two']){
+    const markup=render({rows:[],pagination:{mode:'cursor',pageSize:20,total:null,nextCursor,hasPrevious:false,onNext:()=>{}}});
+    assert.match(markup,/No records yet/);const next=markup.match(/<button([^>]*)>Next page<\/button>/);assert.ok(next);assert.doesNotMatch(next[1],/disabled/);
+  }
+});

@@ -1,6 +1,6 @@
 import {generateDomId} from './dom-id.js';
 import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,type DataTableViewOptions,type DataTableColumnWidth} from './data-table.js';
-export type {DataTablePagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from './data-table.js';
+export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from './data-table.js';
 export type DataTableContent = Node | string | number | null | undefined;
 export interface NativeDataTableCellContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
 export interface NativeDataTableCellSlot<T> {element:Node;update?:(row:T,context:NativeDataTableCellContext)=>void;destroy?:()=>void}
@@ -69,8 +69,10 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     let callback:(()=>void)|undefined;
     if(action==='retry')callback=options.onRetry;
     else if(action==='size'&&page&&requestedSize!==page.pageSize&&state.sizes.includes(requestedSize!))callback=page.onPageSizeChange?()=>page.onPageSizeChange!(requestedSize!):undefined;
-    else if(page&&state.pageCount!==null&&!state.outOfRange&&action==='previous'&&state.page>1)callback=page.onPageChange?()=>page.onPageChange!(page.pageIndex-1):undefined;
-    else if(page&&state.pageCount!==null&&!state.outOfRange&&action==='next'&&state.page<state.pageCount)callback=page.onPageChange?()=>page.onPageChange!(page.pageIndex+1):undefined;
+    else if(page?.mode==='cursor'&&action==='previous'&&page.hasPrevious)callback=page.onPrevious;
+    else if(page?.mode==='cursor'&&action==='next'&&page.nextCursor!==null)callback=page.onNext?()=>page.onNext!(page.nextCursor!):undefined;
+    else if(page&&page.mode!=='cursor'&&state.pageCount!==null&&!state.outOfRange&&action==='previous'&&state.page>1)callback=page.onPageChange?()=>page.onPageChange!(page.pageIndex-1):undefined;
+    else if(page&&page.mode!=='cursor'&&state.pageCount!==null&&!state.outOfRange&&action==='next'&&state.page<state.pageCount)callback=page.onPageChange?()=>page.onPageChange!(page.pageIndex+1):undefined;
     guard.run(state.blocked,callback);
   };
   previous.onclick=()=>dispatch('previous');next.onclick=()=>dispatch('next');retry.onclick=()=>dispatch('retry');size.onchange=()=>{const requested=Number(size.value);size.value=String(options.pagination?.pageSize??'');dispatch('size',requested);};
@@ -133,7 +135,11 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     count.textContent=state.status==='loading'&&!hasRows?labels.loading:state.status==='idle'&&!hasRows?labels.idle:state.status==='error'&&!hasRows?labels.error:labels.count({rowCount:options.rows.length,total:state.total});
     sizeField.hidden=!page;sizeLabel.textContent=labels.pageSize;size.setAttribute('aria-label',labels.pageSize);size.disabled=state.blocked||!page?.onPageSizeChange;
     const currentSizes=Array.from(size.children).map(option=>(option as HTMLOptionElement).value).join(',');if(currentSizes!==state.sizes.join(','))size.replaceChildren(...state.sizes.map(value=>{const option=node('option');option.value=String(value);option.textContent=String(value);return option;}));size.value=String(page?.pageSize??'');
-    pagination.hidden=!page||state.pageCount===null||state.outOfRange;pagination.setAttribute('aria-label',labels.pagination);previous.textContent=labels.previous;next.textContent=labels.next;position.textContent=state.page+' / '+state.pageCount;previous.disabled=state.blocked||!page?.onPageChange||state.page<=1;next.disabled=state.blocked||!page?.onPageChange||state.pageCount===null||state.page>=state.pageCount;
+    const cursor=page?.mode==='cursor';
+    pagination.hidden=!page||!cursor&&(state.pageCount===null||state.outOfRange);pagination.setAttribute('aria-label',labels.pagination);previous.textContent=labels.previous;next.textContent=labels.next;position.hidden=cursor;position.textContent=cursor?'':state.page+' / '+state.pageCount;
+    previous.disabled=state.blocked||(cursor?!page.hasPrevious||!page.onPrevious:!page?.onPageChange||state.page<=1);
+    next.disabled=state.blocked||(cursor?page.nextCursor===null||!page.onNext:!page?.onPageChange||state.pageCount===null||state.page>=state.pageCount);
+
     content(extra,options.footer);extra.hidden=options.footer===undefined||options.footer===null||options.footer==='';
     layoutOwner.update();
   };

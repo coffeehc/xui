@@ -74,3 +74,23 @@ test('native natural layout and single-frame toolbar update without replacing sc
   assert.throws(()=>owner.update({layout:'fill'}),/Invalid DataTable layout/);assert.equal(root.dataset.layout,'natural');
   owner.update({pagination:undefined,toolbar:undefined});assert.equal(select.parentElement.hidden,true);assert.equal(root.querySelector('.xui-data-table-tools').hidden,true);assert.match(root.querySelector('.xui-data-table-count').textContent,/1 loaded/);owner.destroy();
 });
+
+test('native cursor controls pass exact tokens, retain confirmed facts, block duplicates and switch modes',async()=>{
+  const {root}=navigationDOM(),requests=[];
+  const cursor={mode:'cursor',pageSize:20,total:null,nextCursor:'opaque + / 中文',hasPrevious:false,onNext:value=>requests.push(['next',value]),onPrevious:()=>requests.push(['previous'])};
+  const owner=createDataTable(root,{...base,pagination:cursor}),next=find(root,'Next page'),previous=find(root,'Previous page'),nav=root.querySelector('.xui-pagination');
+  assert.equal(nav.hidden,false);assert.equal(previous.disabled,true);assert.doesNotMatch(nav.textContent,/\//);next.click();next.click();assert.deepEqual(requests,[['next',cursor.nextCursor]]);assert.equal(next.disabled,false);
+  await Promise.resolve();owner.update({status:'refreshing'});next.click();assert.equal(requests.length,1);
+  owner.update({status:'ready',pagination:{...cursor,nextCursor:null,hasPrevious:true,total:25}});assert.equal(next.disabled,true);assert.equal(previous.disabled,false);previous.click();assert.deepEqual(requests.at(-1),['previous']);assert.equal(root.querySelector('.xui-pagination'),nav);
+  await Promise.resolve();owner.update({disabled:true});previous.click();assert.equal(requests.length,2);owner.update({disabled:false,pagination:{...page,onPageChange:value=>requests.push(['page',value])}});assert.match(nav.textContent,/1 \/ 7/);next.click();assert.deepEqual(requests.at(-1),['page',1]);
+  await Promise.resolve();owner.update({pagination:{...cursor,onNext:undefined}});next.click();assert.equal(next.disabled,true);assert.equal(requests.length,3);owner.destroy();previous.click();next.click();assert.equal(requests.length,3);
+});
+
+test('consecutive ACL-empty cursor pages keep next enabled until an explicit null token',async()=>{
+  const {root}=navigationDOM(),requests=[];
+  const pagination={mode:'cursor',pageSize:20,total:null,nextCursor:'scan:one',hasPrevious:false,onNext:cursor=>requests.push(cursor)};
+  const owner=createDataTable(root,{...base,rows:[],pagination}),next=find(root,'Next page');
+  assert.equal(next.disabled,false);assert.equal(root.querySelector('tbody').textContent,'No records yet');next.click();assert.deepEqual(requests,['scan:one']);await Promise.resolve();
+  owner.update({rows:[],pagination:{...pagination,nextCursor:'scan:two',hasPrevious:true}});assert.equal(next.disabled,false);next.click();assert.deepEqual(requests,['scan:one','scan:two']);await Promise.resolve();
+  owner.update({rows:[],pagination:{...pagination,nextCursor:null,hasPrevious:true}});assert.equal(next.disabled,true);next.click();assert.equal(requests.length,2);owner.destroy();
+});

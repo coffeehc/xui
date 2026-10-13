@@ -45,7 +45,7 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 | --- | --- | --- |
 | NavItem 语义与链接组合 | 本地实现，验证结果随提交交付 | 省略 selected 保留 aria-current，显式 selected 优先；公开 render 组合一个链接，默认选中样式；ref/事件合并、disabled、修改键/中键/target/download |
 | 数据驱动 Menu + Layout | 已实现；本步骤独立验证与提交 | NavigationMenu/MenuLayout 与 createNavigationMenu/createMenuLayout；React/原生同源数据，一次 activeId/location 与导航适配；分组/子项/展开/紧凑/窄屏、键盘、更新与生命周期、导航时 shell 身份稳定 |
-| HTTP 与共享列表契约 | 已实现，本步骤独立验证 | 零框架传输、显式模式/response adapter、错误/status/Abort/timeout、默认不重试；共享列表默认 Go ListData 的 list/total，HTTP 保留原样 payload；来源与实现同步记录 |
+| HTTP 与共享列表契约 | 已实现，本步骤独立验证 | 零框架传输、显式模式/response adapter、错误/status/Abort/timeout、默认不重试；共享列表 Go ListData 的 list + 可选 total/next_cursor（精确三态见 LIST_PAGINATION），HTTP 保留原样 payload；来源与实现同步记录 |
 | API Key 通用管理组件 | 已实现，本步骤独立验证 | 共享安全元数据、列表/创建/权限与有效期/一次性结果/明确复制/撤销确认；不生成真实密钥，不复制产品权限模型，后端生成与鉴权，默认脱敏与不持久化 |
 | 可扩展业务日志 | 已实现，两宿主独立消费 | 固定公共字段 + event_type/schema_version + 业务 JSON payload；list/detail loader、过滤/cursor/权限/安全回退/注册 renderer；默认原生HTTP adapter已实现，真实后端未集成，见 [BUSINESS_LOGS](BUSINESS_LOGS.md) |
 | Sheet/AlertDialog/ContextMenu与表格扩展 | 已实现，最终统一验证见交付 | 复用Dialog/Menu/表格原子，公开逻辑side、cancel/focus、条纹/展开/sticky，见[COMPOSITIONS](COMPOSITIONS.md) |

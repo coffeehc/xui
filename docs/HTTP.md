@@ -8,7 +8,7 @@
 
 通过正常 Git 读取的来源：
 
-- [httpx@71f05d5 models.go](https://github.com/coffeehc/httpx/blob/71f05d5b635643313d5e1820f4a6bf1f61300f8e/httpxcommons/models.go)：AjaxResponse 为 success/message/payload/request_id/code/redirect；IsSuccess() 只返回 Success，Code 为无 omitempty 的 int64；ListData 为 list/total。
+- [httpx@71f05d5 models.go](https://github.com/coffeehc/httpx/blob/71f05d5b635643313d5e1820f4a6bf1f61300f8e/httpxcommons/models.go)：AjaxResponse 为 success/message/payload/request_id/code/redirect；IsSuccess() 只返回 Success，Code 为无 omitempty 的 int64；该旧版本 ListData 为 list/total；新统一 owner 与可选字段合同见 [列表合同](LIST_PAGINATION.md)。
 - [同提交 utils.go](https://github.com/coffeehc/httpx/blob/71f05d5b635643313d5e1820f4a6bf1f61300f8e/httpxcommons/utils.go)：SendSuccess 的 code 由调用者传入；错误 success=false、payload=null，request_id 可能为空。
 - [xagent@29139f7 成功调用](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/workgroup_endpoint.go) 与 [middleware](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/internal/services/apiserver/middlewares.go)：这里使用成功 code=1，X-Request-ID 单独返回；401/403 是不同 HTTP 事实。只读引用，没有改产品。
 - [commons@896d1e7 query.go](https://github.com/coffeehc/commons/blob/896d1e7a80ec902cfdf739f67a82b7f49aa2b403/webfacade/query.go)、[query_test.go](https://github.com/coffeehc/commons/blob/896d1e7a80ec902cfdf739f67a82b7f49aa2b403/webfacade/query_test.go)、[select.go](https://github.com/coffeehc/commons/blob/896d1e7a80ec902cfdf739f67a82b7f49aa2b403/dbsource/sqlbuilder/select.go)：URL query；pageIndexOffset/maxPageSize 由接口决定。ParsePageQuery 无全局默认大小；BuildQuery 的缺省 30 和 AppendLimit 的 size=0 不分页也不是所有接口通用约定。
@@ -63,13 +63,18 @@ filters 只能用声明字段和显式 codec。queryCodecs 为 string/int64/numb
 
 existing params 复制后清除旧受管过滤/排序和无语义 field，保留宿主无关参数。page_size 是正 safe integer，page_index 不低于 endpoint offset，可选上限超限拒绝，不能默默改接口行为。
 
-parseListData 仅接受 list 数组/null、非负 safe integer total；不猜 items/data/result，拒绝 int64 精度丢失，可显式 decodeItem。toListPage(wire,{returnTotal}) 才把 null list→[]，未请求 total→null；占位 total=0 不能当“零条记录”。其他 payload/cursor 协议另设 adapter；[结构化日志](LOGS.md) 使用独立 cursor 合同，不能套此分页/排序。
+parseListData 接受必有的 list 数组（兼容旧 httpx nil slice 的 null）、可选非负 safe integer total、可选 next_cursor（非空、最多 4096 UTF-8 字节的 opaque string 或显式 null）。缺失 total 表示未计算/未知，0 才是真实零；存在但 null/不安全整数/字符串 total 拒绝。next_cursor 缺失表示未声明游标状态，null 才表示明确末页；decodeItem 保留元数据存在性，不猜 items/data/result。
+
+toListPage(wire,{returnTotal}) 显式将 null list→[]；未请求或缺失 total→null；只有 wire 提供 next_cursor 才提供 nextCursor，保留 null 与非空字符串。不会把缺失 cursor 变成末页，也不生成 total/pageCount/hasMore。标准新后端使用 commons/webfacade，AjaxResponse success/message/payload/request_id/code/redirect 的成功判断不变；ListData 精确 wire 和共享 fixture 见 [列表合同](LIST_PAGINATION.md)。
+
+请求 cursor 的参数名、合法排序和 token 约束仍由 endpoint 明确声明；现有 serializeWebfacadeQuery 仍只序列化已发布的 offset query，不擅自添加 cursor 参数或兼容猜测。已有 API Key 全量读取与业务日志 offset adapter 明确请求并要求 total；缺失时失败关闭，而不是猜末页/无限抓取。业务日志领域 cursor 扩展合同另见 BUSINESS_LOGS，不混淆已有 page/snapshot 结构。
+
 
 ## 可运行接入与迁移
 
 已编译运行的 [React 页面](../examples/http-react/app.tsx)、[原生页面](../examples/http-vanilla/app.js)/[HTML](../examples/http-vanilla/index.html) 共用 [typed endpoint model](../examples/shared/http-model.ts)，仅导入公开组件/工厂和 CSS。独立 tarball、types 与真实 fetch 由 [consumer](../scripts/consumers.mjs) 和 [浏览器检查](../tests/browser/http.spec.mjs) 验证。
 
-根目录 pnpm build、pnpm test:consumer、pnpm preview 后访问 /http-react/ 或 /http-vanilla/；本地 /api/xui-example/records 是明确合成 fixture，页基数0/上限50不是产品默认合同，不访问真实后端。
+根目录 pnpm build、pnpm test:consumer、pnpm preview 后访问 /http-react/ 或 /http-vanilla/；本地 /api/xui-example/records 是明确合成 fixture，页基数0/上限50不是产品默认合同，不访问真实后端。不请求 total 时 fixture 省略字段，双端示例显示未知并隐藏编号翻页，不以当前页 list.length 伪造 pageCount；需要游标使用 DataTable 的显式 cursor 模式。
 
 迁移先检查旧请求承载的 headers/credentials、权限、缓存/去重、认证、日志、取消、上传/下载及业务恢复；保留必要行为，再收敛一个 transport/auth/error/resource owner。采用默认协议的产品使用准确 Go envelope/list/query，不保留长期别名猜测链；对已上线xAgent，暂不符合的接口须在升级方案采用明确、有限、有移除计划的adapter；未发布项目直接改用新合同，不增加旧字段/旧code兼容链。正常领域adapter按公开接口连接业务，详见[发布状态原则](ADOPTION.md#发布状态与升级原则)。
 
@@ -77,7 +82,7 @@ parseListData 仅接受 list 数组/null、非负 safe integer total；不猜 it
 
 ## 非2xx结构化错误与临时迁移桥梁
 
-本轮只读核对xLead@e766fb2a67d11880fd5f1db4d3b693511219017c的[http.go](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/plugin/api/http.go)与[api.js](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/web/api.js)：其非2xx为`{error:{code:string,message:string,request_id:string}}`，没有已声明details字段。临时使用createJsonApiErrorAdapter精确映射该对象；不支持猜测顶层code/msg或JSON:API errors数组。长期目标是由采用项目在自身授权范围改成原生httpx，不把桥梁当第二套永久通用合同。
+本轮只读核对xLead@e766fb2a67d11880fd5f1db4d3b693511219017c的[http.go](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/plugin/api/http.go)与[api.js](https://github.com/coffeehc/xlead/blob/e766fb2a67d11880fd5f1db4d3b693511219017c/web/api.js)：其非2xx为`{error:{code:string,message:string,request_id:string}}`，没有已声明details字段。临时使用createJsonApiErrorAdapter精确映射该对象；不支持猜测顶层code/msg或JSON:API errors数组。长期目标是由采用项目在自身授权范围改成统一commons/webfacade，不把桥梁当第二套永久通用合同。
 
 ErrorResponseAdapter可在client或单request明确配置；原生默认adapter保留Go字段，页面默认adapters显式选原生解析，并固定Accept:application/json及JSON写入Content-Type:application/json；保留其他宿主headers，不继承临时旧编码协议。HTTP status与业务code分开；任何body解析/投影失败保持HTTP事实和readFailure，不伪造成功。解码后结构化投影上限为64KiB JSON响应（当前先完整读取，非流式读取上限），message最多2048字符；details需显式allowlist投影，最多16KiB/depth8/512节点，拒绝函数/getter/prototype/cycle/unsafe整数。投影限制不等于后端脱敏；不能全量日志或直接弹出原始敏感响应。
 

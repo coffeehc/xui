@@ -31,6 +31,35 @@ test('codecs are explicit, preserve int64 strings, reject implicit arrays/object
 });
 test('ListData validates exact list/total, retains null until explicit projection, and marks unrequested count unknown',()=>{
   const wire={list:null,total:0};assert.equal(parseListData(wire),wire);assert.equal(parseListData(wire).list,null);assert.deepEqual(toListPage(wire,{returnTotal:false}),{list:[],total:null});assert.deepEqual(toListPage(wire,{returnTotal:true}),{list:[],total:0});
-  for(const invalid of [{items:[],total:0},{list:[]},{list:'bad',total:1},{list:[],total:9007199254740992},{list:[],total:-1},{list:[],total:'10'}])assert.throws(()=>parseListData(invalid),TypeError);
+  for(const invalid of [{items:[],total:0},{list:[],total:null},{list:'bad',total:1},{list:[],total:9007199254740992},{list:[],total:-1},{list:[],total:'10'}])assert.throws(()=>parseListData(invalid),TypeError);
   assert.deepEqual(parseListData({list:['a'],total:1},value=>({name:value})),{list:[{name:'a'}],total:1});
+});
+
+test('ListData preserves optional count and cursor three-state metadata without inventing a total or an end',()=>{
+  for(const wire of [{list:[]},{list:null,total:0},{list:['row'],next_cursor:'opaque + / 中文'},{list:[],next_cursor:null},{list:['row'],total:25,next_cursor:'next'}]){
+    assert.equal(parseListData(wire),wire);
+    const decoded=parseListData(wire,value=>({value}));
+    assert.equal(Object.hasOwn(decoded,'total'),Object.hasOwn(wire,'total'));
+    assert.equal(Object.hasOwn(decoded,'next_cursor'),Object.hasOwn(wire,'next_cursor'));
+    const page=toListPage(decoded,{returnTotal:true});assert.equal(page.total,wire.total??null);
+    assert.equal(Object.hasOwn(page,'nextCursor'),Object.hasOwn(wire,'next_cursor'));assert.equal(page.nextCursor,wire.next_cursor);
+    assert.equal(toListPage(decoded,{returnTotal:false}).total,null);
+  }
+  for(const next_cursor of ['',0,false,{},[],undefined])assert.throws(()=>parseListData({list:[],next_cursor}),TypeError);
+  for(const total of [null,undefined,-1,1.5,Infinity,Number.MAX_SAFE_INTEGER+1,'0'])assert.throws(()=>parseListData({list:[],total}),TypeError);
+});
+
+test('cursor tokens preserve exact UTF-8 bytes within the shared 4096-byte bound',()=>{
+  for(const token of ['a'.repeat(4096),'界'.repeat(1365)+'a','  opaque + / %  '])assert.equal(parseListData({list:[],next_cursor:token}).next_cursor,token);
+  for(const token of ['a'.repeat(4097),'界'.repeat(1366)])assert.throws(()=>parseListData({list:[],next_cursor:token}),TypeError);
+});
+
+test('projection does not promote inherited metadata into optional wire fields',()=>{
+ const wire=Object.assign(Object.create({total:99,next_cursor:'inherited'}),{list:[]});
+ assert.deepEqual(toListPage(wire,{returnTotal:true}),{list:[],total:null});
+ assert.deepEqual(parseListData(wire,item=>item),{list:[]});
+});
+
+test('ACL-empty cursor pages preserve continuation rather than infer an end from list length',()=>{
+ for(const next_cursor of ['scan:one','scan:two'])assert.deepEqual(toListPage({list:[],next_cursor},{returnTotal:false}),{list:[],total:null,nextCursor:next_cursor});
 });

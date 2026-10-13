@@ -19,7 +19,7 @@ export function parseApiKeyConfiguration(value:unknown):Readonly<ApiKeyConfigura
   if(new Set(permissions.map(item=>item.id)).size!==permissions.length||new Set(expiryOptions.map(item=>item.id)).size!==expiryOptions.length||!expiryOptions.some(item=>item.id===defaultExpiryId)||new Set(defaultPermissionIds).size!==defaultPermissionIds.length||defaultPermissionIds.some(id=>!permissions.some(item=>item.id===id&&!item.disabled))||permissions.some(item=>item.required&&item.disabled)||wire.confirmation_label!==null&&(typeof wire.confirmation_label!=='string'||!wire.confirmation_label.trim()||wire.confirmation_label.length>2048))throw new TypeError('Invalid API key configuration');
   return Object.freeze({permissions,expiryOptions,defaultPermissionIds,defaultExpiryId,canCreate:apiBoolean(wire.can_create),confirmationLabel:wire.confirmation_label===null?undefined:wire.confirmation_label as string});
 }
-/** Default xui page facade over native httpx AjaxResponse and ListData/webfacade page query. */
+/** Default xui page facade over webfacade AjaxResponse, counted ListData and explicit page query. */
 export function createApiKeyHttpAdapter({http,timeoutMs=30000,pageSize=100,maxRecords=5000,idEncoding='decimal'}:ApiKeyHttpOptions):ApiKeyHttpAdapter{
   parseEntityId('1',idEncoding);
   if(!Number.isFinite(timeoutMs)||timeoutMs<=0||timeoutMs>2147483647||!Number.isSafeInteger(pageSize)||pageSize<1||pageSize>200||!Number.isSafeInteger(maxRecords)||maxRecords<pageSize||maxRecords>100000)throw new TypeError('Invalid API key HTTP budget');

@@ -5,7 +5,7 @@ import '@coffeehc/xui-runtime/init.js';
 import '@coffeehc/xui-theme/style.css';
 
 const query=new URLSearchParams(location.search),doc=document,root=doc.getElementById('root');
-const owner=createDataTableExample({pageSize:Number(query.get('size')??20),offset:Number(query.get('offset')??0),empty:query.has('empty'),unknown:query.has('unknown'),local:query.has('local')});
+const owner=createDataTableExample({pageSize:Number(query.get('size')??20),offset:Number(query.get('offset')??0),empty:query.has('empty'),unknown:query.has('unknown')||query.has('cursor')&&!query.has('cursor-total'),local:query.has('local'),cursor:query.has('cursor')});
 const cards=query.has('cards'),internal=query.has('internal')&&!cards;
 const layout=query.get('layout')==='workspace'?'workspace':query.get('layout')==='document'?'document':undefined;
 const noSearch=query.has('no-search'),noActions=query.has('no-actions');
@@ -53,7 +53,7 @@ const widths={id:112,name:'clamp(12rem, 35%, 28rem)',kind:'calc(10% + 1rem)',sou
 const visibleColumns=()=>columns.filter(column=>!columnView.hidden.includes(column.id)&&(!noActions||column.id!=='actions')).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'?160:undefined):widths[column.id]}));
 const feedbackTable=element('table'),feedbackBody=element('tbody'),feedbackRow=element('tr');feedbackTable.setAttribute('aria-label','辅助表格');feedbackRow.append(element('td','嵌套反馈'));feedbackBody.append(feedbackRow);feedbackTable.append(feedbackBody);
 const tableRoot=element('section');tableRoot.id='records-table';
-const tableOptions=()=>{const state=owner.getState();return {label:'合成记录表格',layout,rows:state.rows,columns:visibleColumns(),rowKey,status:state.status,filtered:state.filtered,labels:tableLabels,onRetry:owner.retry,striped:true,toolbar:internal&&!noSearch?toolbar:undefined,feedback:query.has('nested-feedback')?feedbackTable:undefined,pagination:query.has('no-pagination')?undefined:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}};};
+const tableOptions=()=>{const state=owner.getState();return {label:'合成记录表格',layout,rows:state.rows,columns:visibleColumns(),rowKey,status:state.status,filtered:state.filtered,labels:tableLabels,onRetry:owner.retry,striped:true,toolbar:internal&&!noSearch?toolbar:undefined,feedback:query.has('nested-feedback')?feedbackTable:undefined,pagination:query.has('no-pagination')?undefined:query.has('cursor')?{mode:'cursor',nextCursor:state.nextCursor,hasPrevious:state.hasPrevious,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onNext:owner.next,onPrevious:owner.previous,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions:[20,50,100],onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}};};
 const table=cards?undefined:createDataTable(tableRoot,tableOptions());
 // These classes are the documented public ScrollArea/Grid/Surface native structure.
 const cardRoot=element('div',undefined,'xui-scroll-area');cardRoot.style.blockSize='100%';cardRoot.dataset.testid='record-cards';

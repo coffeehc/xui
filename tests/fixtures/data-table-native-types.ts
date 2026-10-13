@@ -49,3 +49,18 @@ for(const layout of [naturalLayout,workspaceLayout,documentLayout]) {
 const invalidLayout:DataTableLayout='viewport';
 // @ts-expect-error Native options use the shared layout contract.
 const invalidLayoutTable=createDataTable(document.createElement('section'),{rows,columns,rowKey:row=>row.id,label:'Invalid layout',layout:'auto'});
+
+import type {DataTableCursorPagination} from '@coffeehc/xui-runtime/data-table-dom';
+import type {DataTableCursorPagination as SharedCursorPagination} from '@coffeehc/xui-runtime/data-table';
+import type {DataTableCursorPagination as RootCursorPagination} from '@coffeehc/xui-runtime';
+import {parseListData,toListPage,type ListData} from '@coffeehc/xui-runtime/query';
+const cursorWire:ListData<Row>={list:rows,next_cursor:'opaque'};
+const cursorPage=toListPage(parseListData(cursorWire),{returnTotal:false});
+const cursorPagination:DataTableCursorPagination={mode:'cursor',pageSize:20,total:cursorPage.total,nextCursor:'opaque',hasPrevious:false,onNext:cursor=>{cursor.toUpperCase();}};
+const sharedCursor:SharedCursorPagination=cursorPagination;
+const rootCursor:RootCursorPagination=sharedCursor;
+// @ts-expect-error cursor end must be explicitly known
+const missingNextCursor:DataTableCursorPagination={mode:'cursor',pageSize:20,total:null,hasPrevious:false};
+// @ts-expect-error cursor controls never accept numbered-page callbacks
+const cursorWithPages:DataTableCursorPagination={...cursorPagination,onPageChange:()=>{}};
+const cursorTable=createDataTable(document.createElement("section"),{rows,columns,rowKey:row=>row.id,label:"Cursor records",pagination:rootCursor});cursorTable.destroy();

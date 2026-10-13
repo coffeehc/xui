@@ -39,3 +39,13 @@ for(const kind of ['react','vanilla']){
     await page.evaluate(()=>window.httpDemo.destroy());const errors=await page.evaluate(()=>window.httpDemo.owner.client.request('records').catch(error=>error.kind));expect(errors).toBe('cancel');
   });
 }
+
+for(const kind of ['react','vanilla']){
+  test(`${kind} omitted total is unknown and never uses current-page length as numbered page count`,async({page})=>{
+    await page.goto(`/http-${kind}/`);await expect(page.locator('[data-total]')).toHaveText('共 3 条');
+    const response=page.waitForResponse(value=>value.url().includes('/api/xui-example/records?')&&new URL(value.url()).searchParams.get('return_total')==='false');
+    await page.evaluate(()=>window.httpDemo.owner.load({page_index:0,page_size:2,return_total:false,sort:[{field:'name',order:'asc'}]}));
+    expect(Object.hasOwn((await (await response).json()).payload,'total')).toBe(false);await expect(page.locator('[data-total]')).toHaveText('共 未知 条');await expect(page.locator('tbody tr')).toHaveCount(2);await expect(page.locator('.xui-pagination:visible')).toHaveCount(0);
+    await page.getByRole('button',{name:'刷新记录'}).click();await expect(page.locator('[data-total]')).toHaveText('共 3 条');await expect(page.locator('.xui-pagination:visible')).toHaveCount(1);
+  });
+}

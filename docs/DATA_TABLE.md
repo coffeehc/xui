@@ -2,7 +2,7 @@
 
 正式入口：React `@coffeehc/xui-react/data-table`；原生 `@coffeehc/xui-runtime/data-table-dom`；共享事实与类型 `@coffeehc/xui-runtime/data-table`。三者也从各自根入口导出。默认皮肤属于公共 `@coffeehc/xui-theme/table.css`，完整 `style.css` 已包含它。原有 Table/TableContainer、Toolbar/Field、Pagination、DataRegion/反馈原语保持原语合同，不会自动升级所有旧表格。
 
-完整消费者：[React](../examples/data-table-react/app.tsx)、[原生](../examples/data-table-vanilla/app.js)，共用[合成只读模型](../examples/shared/data-table-model.ts)。它们只安装正式 tarball，不依赖 `packages/src` alias、私有 CSS、产品 DOM 或真实业务服务。默认示例使用自然高度；`?layout=workspace` / `?layout=document` 对比显式布局，`?unbounded` 检查无高度边界，`?local` 演示宿主本地分页，`?no-search`、`?no-actions`、`?no-pagination`、`?fixed-page-size` 检查可选能力。本页不代表任何产品完成迁移。
+完整消费者：[React](../examples/data-table-react/app.tsx)、[原生](../examples/data-table-vanilla/app.js)，共用[合成只读模型](../examples/shared/data-table-model.ts)。它们只安装正式 tarball，不依赖 `packages/src` alias、私有 CSS、产品 DOM 或真实业务服务。默认示例使用自然高度；`?layout=workspace` / `?layout=document` 对比显式布局，`?unbounded` 检查无高度边界，`?local` 演示宿主本地分页，`?cursor` 演示不请求总数的服务端游标（`?cursor-total` 可同时带真实总数），`?no-search`、`?no-actions`、`?no-pagination`、`?fixed-page-size` 检查可选能力。本页不代表任何产品完成迁移。
 
 ## 责任与最小接口
 
@@ -120,11 +120,33 @@ const pagination = {
 - 本地分页：宿主持有完整记录和查询状态，先筛选/排序，再按 `(pageIndex - pageIndexOffset) * pageSize` 切出当前页，发布切片 rows、筛选后真实 total 和已确认 page facts。查询或条数改变时由同一宿主 owner 重置/校正页码。
 - 服务端分页：宿主发请求，并以已确认响应对应的 rows、pageIndex、pageSize、total 更新表格；等待/失败期间保留旧确认事实。服务端已分页的 rows 不得再做一次本地切片。
 
-`pageIndexOffset` 必须显式指定 endpoint 页基数，不默认猜 0 或 1。共享 `WebfacadeQuery` 使用真实 `page_index/page_size/return_total`；`parseListData` 验证真实 `list/total`，`toListPage(wire,{returnTotal})` 把未请求的总数投影为 null。组件不调用 HTTP、解析 envelope、猜字段或建立第二个 query/resource owner。
+`pageIndexOffset` 必须显式指定 endpoint 页基数，不默认猜 0 或 1。共享 `WebfacadeQuery` 使用真实 `page_index/page_size/return_total`；`parseListData` 验证真实 `list` 与可选 `total/next_cursor`，`toListPage(wire,{returnTotal})` 把未请求的总数投影为 null。组件不调用 HTTP、解析 envelope、猜字段或建立第二个 query/resource owner。
 
 已知 total 时只做明确视图投影：`page = pageIndex - pageIndexOffset + 1`，`pageCount = max(1, ceil(total/pageSize))`。用户点击发出原 wire 基数 index；事实仍保持旧值，直到宿主确认下一组 rows/page facts 后更新，服务端场景以响应确认为准。每页条数只在 footer 出现一次，和真实已显示条数、已知总数与分页在同一公共区域；pageSize 更改只发请求，宿主决定是否回 endpoint 第一页。pageSizeOptions 必须为正的唯一整数并包含已确认值。省略 `onPageSizeChange` 表示条数不可编辑，保留唯一禁用条数控件；不应在 toolbar 再放一个条数选择器。
 
-`total:null` 只显示真实已加载数，不生成编号 Pagination，也不从满页/短页/数组长度猜 pageCount 或 hasMore。可使用 footer 放宿主已有 cursor 控件；本轮不提供 cursor 链/上一页历史/hasMore owner，不能把该插槽称为完整 cursor 分页组合。无 pagination 则为未分页列表，只显示已加载数。已知 total 缩小导致当前 page 超范围时，组件保留事实而隐藏无效编号控件；宿主须在同一查询 owner 中协调过期页或提供恢复入口，不静默 clamp/自动发请求。
+旧 `DataTablePagination` 保留原字段和默认 offset 行为，可显式 `mode:'offset'`。其中 `total:null` 只显示真实已加载数并隐藏编号 Pagination，不从满页/短页/数组长度猜 pageCount 或 hasMore。无 pagination 则为未分页列表，只显示已加载数。
+
+游标服务采用新增的 `DataTableCursorPagination`，与旧 offset 类型同由 React、原生及 runtime 公开入口导出：
+
+```ts
+const pagination: DataTableCursorPagination = {
+  mode: 'cursor',
+  pageSize: confirmed.pageSize,
+  total: confirmed.total, // number | null；无需每页 COUNT
+  nextCursor: confirmed.nextCursor, // 非空 opaque string | null（明确末页）
+  hasPrevious: history.length > 1,
+  onNext: cursor => requestNext(cursor), // 原样传回服务端 token
+  onPrevious: () => requestPrevious(), // 历史由已有宿主 owner 管理
+  pageSizeOptions: [20, 50, 100],
+  onPageSizeChange: size => resetQuerySize(size),
+};
+```
+
+cursor 模式复用框内同一计数、条数控件和分页区域，只显示上一页/下一页。即使有 total 也不构造页码或页数，不接受 `onPageChange`。`hasPrevious:false`、`nextCursor:null` 或缺对应回调会禁用该动作；busy/disabled 与旧模式同样受控。服务端 `next_cursor` 缺省不等于末页：宿主 cursor adapter 必须要求字段存在，不能用 `?? null` 把未声明变成末页。HTTP 的 wire 使用 snake_case，组件 view facts 使用 camelCase，精确转换见 [列表合同](LIST_PAGINATION.md)。
+
+上一页历史、查询/排序变化后重置、请求预算、失败重试、取消和迟到结果仍由唯一宿主 resource/query owner 管理。仅成功确认响应才推进历史和 rows；失败/取消不推进。组件不把 cursor 当作 URL/页码、不解码或生成 token，不自动缓存 total，不用数组长度推断后页。新增组合替代标准游标按钮的宿主外拼，`footer` 仍可放补充业务内容；不要重复两组翻页 owner。
+
+已知 total 缩小导致当前 page 超范围时，组件保留事实而隐藏无效编号控件；宿主须在同一查询 owner 中协调过期页或提供恢复入口，不静默 clamp/自动发请求。
 
 busy/disabled 阻止重复分页、条数和默认重试，另有同步单事件轮重入门禁。宿主必须同步发布 loading/refreshing，等待期间保持 busy，并在成功、失败、拒绝或取消后更新；组件不猜 Promise 完成，不自动重试写操作。回调结束并不表示请求成功。
 
@@ -162,3 +184,5 @@ cell: (row) => {
 Playwright 用真实浏览器量测组件/body/footer rect、clientHeight/scrollHeight，并实际把表体滚到尾部；验收需区分 natural 的少行/零行收缩、多行有界滚动及 auto 父级自然流，显式 workspace 填满和 document 取消上限，并覆盖缺搜索、动作、分页及固定条数的组合；同时检查页头/搜索 rect 不变、分页仍可见、横向滚动/列对齐、窄屏换行、键盘/取消、三主题与 reduced-motion、0/20/50/100条和长中文、刷新失败恢复、200%与超高页头可达性。代码存在或 overflow 字符串正确不等于验收通过；实际通过/失败/未跑以对应 SHA 的执行证据为准。没有真实产品查询、产品 slot 迁移、部署、Wails、移动 OS、读屏器、Firefox/Safari、SSR hydration 或性能通过声明。
 
 本次变更的差距、处理、未验证风险和执行状态见 [高度与分页组合验证记录](DATA_TABLE_LAYOUT_VALIDATION.md)。
+
+ACL/权限过滤后的有界扫描可连续返回空 list 与非空 next_cursor；这仍可继续翻页，不保证下一页含记录，也不表示剩余数量。仅显式 null 是 cursor 末页。DataTable 不因空行禁用下一页，React/原生都有独立回归；此补充不改变共享 fixture 的字节或 hash。

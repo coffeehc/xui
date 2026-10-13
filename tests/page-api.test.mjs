@@ -67,3 +67,11 @@ test('native API key access persistence maps only the declared optional boolean'
  for(const pending of [null,'true',0])assert.throws(()=>parseApiKeyWireMetadata(metadata({last_used_at_pending:pending})),TypeError);
  assert.throws(()=>parseApiKeyWireMetadata(metadata({last_access_pending:true})),TypeError);
 });
+
+test('count-required native offset adapters reject optional-total payloads without guessing completion',async()=>{
+ const signal=new AbortController().signal;
+ for(const payload of [{list:[]},{list:[],next_cursor:null},{list:[],next_cursor:'more'}]){
+  await assert.rejects(createApiKeyHttpAdapter({http:http(async()=>json(wire(payload)))}).list({signal}),error=>error.kind==='parse');
+  await assert.rejects(createBusinessLogHttpLoader({http:http(async()=>json(wire(payload)))}).list({filter:{},page:{index:0,size:2,cursor:null}},{signal}),error=>error.kind==='parse');
+ }
+});

@@ -2,7 +2,7 @@
 
 这是接入入口，引用同一份规范、公开类型和已运行的例子，不另定义品牌默认值。当前包为 private 0.1.0；采用前固定 Git SHA/本地 tarball 并核对 [全部公开入口与默认行为](PUBLIC_API.md)。菜单布局、HTTP/query、可配置登录页、API Key 管理和可扩展业务日志已实现；默认API Key/业务日志HTTP adapters已实现；产品真实认证、密钥、业务日志服务尚未集成。此前结构化错误查询是独立错误观察能力，不是业务日志。Codex 流程见 [adopt-xui](../.agents/skills/adopt-xui/SKILL.md)，随仓库 checkout 使用，没有安装到用户电脑或全局 skill 工作区。
 
-xui用于统一品牌、前端体系和通用前后端接口。采用项目应在自身授权范围主动使用原生commons/webfacade和httpx标准化自有普通业务API；旧协议adapter仅作注明来源、映射、目标与移除条件的临时桥梁。必须遵循的协议、默认HTTP adapters和领域扩展边界见[页面API总索引](PAGE_APIS.md)。不能以保留旧协议为长期架构目标，也不能因此削减业务能力、鉴权或已上线xAgent的升级保护。
+xui用于统一品牌、前端体系和通用前后端接口。采用项目应在自身授权范围主动使用统一commons/webfacade标准化自有普通业务API；旧httpx响应由迁移边界保持兼容，不能新增第二协议owner；旧协议adapter仅作注明来源、映射、目标与移除条件的临时桥梁。必须遵循的协议、默认HTTP adapters和领域扩展边界见[页面API总索引](PAGE_APIS.md)。不能以保留旧协议为长期架构目标，也不能因此削减业务能力、鉴权或已上线xAgent的升级保护。
 
 行业标准与第三方接入边界遵循[唯一通用规范](DESIGN.md#规范强度与职责)：OAuth2/OIDC/SAML等保持标准，第三方按其API与错误合同，宿主只在内部边界明确转换，不强制外部AjaxResponse。标准协议和第三方adapter不按旧协议迁移桥梁删除。平台API Key由自有平台向Agent/集成签发凭据，与provider key分开；自身业务日志与第三方响应、程序故障记录分开。
 
@@ -138,7 +138,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 两宿主[React](../examples/capabilities-react/app.tsx)/[原生](../examples/capabilities-vanilla/app.js)消费正式产物，展示[公开组合](COMPOSITIONS.md)、safe filename下载及原生页面facade。合成fetch只验证合同，不证明产品具备API Key/业务日志后端。普通程序故障和供应商凭据不得改名替代这些业务。
 
-已上线xAgent的bearer/token/me/state与固定Bearer v2登录合同不同，须单独升级评估；临时桥梁保留旧鉴权/业务、明确目标与移除条件。未发布项目直接向原生commons/webfacade/httpx标准化，由该项目自身授权实施。这里不授权修改后端、baseservice/commons、删除业务数据或部署。
+已上线xAgent的bearer/token/me/state与固定Bearer v2登录合同不同，须单独升级评估；临时桥梁保留旧鉴权/业务、明确目标与移除条件。未发布项目直接向统一commons/webfacade标准化，由该项目自身授权实施。这里不授权修改后端、baseservice/commons、删除业务数据或部署。
 
 Vite开发接入还须核[冷启动与依赖优化](NAVIGATION.md#vite开发模式的已复现依赖优化刷新)：初始扫描看不到的lazy deep imports可在首次访问触发重新优化/full-reload；提前include实际正式入口并保留peer dedupe，分别验冷/暖cache。不把参考生产消费者无刷新当dev验收，也不靠等待、禁HMR或吞错解决。
 

@@ -24,7 +24,7 @@ function App(){
     {count>0&&<Alert tone="warning">需要重新认证。认证请求已交给宿主处理：<span data-auth-count>{count}</span></Alert>}
     <DataRegion aria-label="记录结果" busy={state.busy} feedback={state.busy?<LoadingState>{state.hasValue?'正在刷新，保留现有记录。':'正在读取记录。'}</LoadingState>:state.status==='error'?<ErrorState title="读取失败" onRetry={()=>owner.resource.retry()} retryLabel="重试读取">{getHttpErrorMessage(state.error)}</ErrorState>:null}>
       {state.hasValue&&<><p role="status" data-total>共 {state.value!.total??'未知'} 条</p>{state.value!.list.length?<TableContainer aria-label="参考记录表格"><Table><TableCaption>合成参考记录</TableCaption><TableHead><TableRow><TableHeaderCell scope="col">名称</TableHeaderCell><TableHeaderCell scope="col">创建时间</TableHeaderCell></TableRow></TableHead><TableBody>{state.value!.list.map(record=><TableRow key={record.id}><TableCell>{record.name}</TableCell><TableCell>{record.created}</TableCell></TableRow>)}</TableBody></Table></TableContainer>:<EmptyState title="没有匹配记录"/>}
-      <Pagination page={query.page_index-contract.pageIndexOffset+1} pageCount={Math.max(1,Math.ceil((state.value!.total??state.value!.list.length)/query.page_size))} onPageChange={page=>change({...query,page_index:page-1+contract.pageIndexOffset})} disabled={state.busy} previousLabel="上一页" nextLabel="下一页"/></>}
+      {state.value!.total!==null&&<Pagination page={query.page_index-contract.pageIndexOffset+1} pageCount={Math.max(1,Math.ceil(state.value!.total/query.page_size))} onPageChange={page=>change({...query,page_index:page-1+contract.pageIndexOffset})} disabled={state.busy} previousLabel="上一页" nextLabel="下一页"/>}</>}
     </DataRegion>
   </Stack></MenuLayout>;
 }
