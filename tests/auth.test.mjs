@@ -130,8 +130,8 @@ test('late old-generation 401 cannot notify external onUnauthorized after a new 
 
 
 test('late session responses cannot clear a newer refreshed access generation',async()=>{
- for(const status of [200,401]){const held=deferred();let sessions=0;const client=owner(async url=>{if(route(url)==='login')return json(wire(issued()));if(route(url)==='refresh')return json(wire(issued('E')));sessions++;return held.promise;});
- await client.auth.login({username:'demo',password:'FAKE'});const checking=client.auth.currentUser(),failure=assert.rejects(checking,error=>error.kind==='cancel');await flush();await client.auth.refresh();held.resolve(status===200?json(wire(session)):reject(401));await failure;assert.equal(sessions,1);assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().reauthenticationRequired,false);cleanup(client);}
+ for(const status of [200,401]){const held=deferred(),newUser={...user,id:'43',username:'new-user'};let sessions=0;const client=owner(async url=>{if(route(url)==='login')return json(wire(issued()));if(route(url)==='refresh')return json(wire(issued('E',{user:newUser})));sessions++;return held.promise;});
+ await client.auth.login({username:'demo',password:'FAKE'});const checking=client.auth.currentUser(),failure=assert.rejects(checking,error=>error.kind==='cancel');await flush();await client.auth.refresh();held.resolve(status===200?json(wire(session)):reject(401));await failure;assert.deepEqual(client.auth.getState().user,newUser);assert.equal(sessions,1);assert.equal(client.auth.getState().busy,null);assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().reauthenticationRequired,false);cleanup(client);}
 });
 
 test('local missing-access rejection never fabricates an HTTP 401 notification',async()=>{
@@ -146,4 +146,31 @@ test('a reentrant refresh cannot turn a successful login return into null or ove
  const client=owner(normal);let started=false,refreshing;
  client.auth.subscribe(()=>{if(!started&&client.auth.getState().status==='authenticated'){started=true;refreshing=client.auth.refresh();}});
  await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.kind==='cancel');assert.deepEqual(await refreshing,user);assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().reauthenticationRequired,false);cleanup(client);
+});
+
+test('currentUser never publishes idle authenticated before its final session read settles',async()=>{
+ for(const outcome of ['ok','anonymous','forbidden','network','malformed']){
+  const held=deferred(),requests=[],snapshots=[],client=owner(async url=>{requests.push(route(url));if(route(url)==='refresh')return json(wire(issued()));await held.promise;if(outcome==='network')throw new Error('synthetic network');return outcome==='anonymous'?reject(401):outcome==='forbidden'?reject(403):outcome==='malformed'?json(wire({schema_version:1,user})):json(wire(session));});
+  const off=client.auth.subscribe(()=>snapshots.push(client.auth.getState()));
+  const checking=client.auth.currentUser(),result=checking.then(value=>({value}),error=>({error}));await flush();
+  assert.deepEqual(requests,['refresh','session']);assert.equal(client.auth.getState().busy,'session');assert(!snapshots.some(state=>state.status==='authenticated'&&state.busy===null));
+  held.resolve();const final=await result;
+  if(outcome==='ok'){assert.deepEqual(final.value,user);assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().busy,null);}
+  else {assert(outcome==='anonymous'?final.value===null:final.error instanceof HttpError);assert(!snapshots.some(state=>state.status==='authenticated'&&state.busy===null));}
+  off();cleanup(client);
+ }
+});
+test('a standalone refresh still publishes authenticated readiness without inventing a session request',async()=>{
+ const requests=[],client=owner(async url=>{requests.push(route(url));return json(wire(issued()));});
+ assert.deepEqual(await client.auth.refresh(),user);assert.deepEqual(requests,['refresh']);assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().busy,null);cleanup(client);
+});
+test('currentUser readiness is shared when an observer joins at the recovered-access notification',async()=>{
+ const held=deferred(),requests=[],client=owner(async url=>{requests.push(route(url));if(route(url)==='session')await held.promise;return normal(url);});let joined;
+ const off=client.auth.subscribe(()=>{if(!joined&&client.auth.getState().status==='authenticated'){joined=client.auth.currentUser();}});
+ const first=client.auth.currentUser();await flush();assert(joined);assert.deepEqual(requests,['refresh','session']);assert.equal(client.auth.getState().busy,'session');held.resolve();assert.deepEqual(await first,user);assert.deepEqual(await joined,user);assert.equal(client.auth.getState().busy,null);off();cleanup(client);
+});
+test('a new login is not left checking by an aborted older session flight',async()=>{
+ const held=deferred(),client=owner(async url=>{if(route(url)==='session')await held.promise;return normal(url);});await client.auth.login({username:'demo',password:'FAKE'});
+ const checking=client.auth.currentUser(),cancelled=assert.rejects(checking,error=>error.kind==='cancel');await flush();assert.equal(client.auth.getState().busy,'session');
+ await client.auth.login({username:'demo',password:'FAKE'});assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().busy,null);held.resolve();await cancelled;assert.equal(client.auth.getState().busy,null);cleanup(client);
 });

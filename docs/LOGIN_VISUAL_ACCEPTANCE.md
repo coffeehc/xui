@@ -59,3 +59,13 @@
 - `pnpm exec playwright test tests/browser/error-layout.spec.mjs --grep login --workers=2` 为4/4通过（React/native × 1280/390）。最终源码后的360项 unit 验证了现有认证行为；本轮没有修改认证时序。
 - 截图与几何JSON保存在 `test-results/login-final-evidence/`。默认样本包括React light 1280、native dark 390；setup包括React/native的light 1280与dark 390；长主按钮两端的四边焦点图也保留。父级检查了React浅色桌面、深色窄屏和长主按钮焦点图；独立review检查了setup图及默认双端布局样本。
 - 未运行完整 `pnpm verify`/watch，也未运行全仓浏览器套件。额外 login-navigation、StrictMode 导航矩阵未纳入最终targeted batch，L14仍未完成；真实BFCache命中、真实浏览器zoom、其他浏览器/OS、真实产品与后端仍未测。初始额外navigation探查观察到既有refresh→session期间的短暂authenticated状态及宿主导航时序；视觉恢复/焦点用例使用示例已有 `handoff=hold` 隔离宿主导航，只验证本次布局范围，未修复或声称修复认证时序。
+
+## 后续导航时序修复（2026-10-13）
+
+本批保持2b8居中布局与全部视觉token不变，只修共享owner就绪边界和双端导航生命周期：currentUser的refresh中间结果不再发布空闲；页面等待自己的认证/读取完成，失效读取不因另一份有效access而导航；同id刷新不重复导航。宿主回调在刷新期间失败仍保留局部手动重试，页面卸载/旧owner/过期waiter不触发迟到导航。
+
+- 验收新增：宿主先发起session再挂页、最终session held/失败/匿名、旧session被新generation淘汰、隐藏期间读取完成后恢复、StrictMode加入共享读取、owner替换、刷新期间host callback失败；保留原直接目标页DOM序列与HTTP/回调计数。生命周期事件模拟不等于真实BFCache命中。
+- currentUser三类owner边界单测已补：最终read前不能发布authenticated+idle、独立refresh仍完成且不增session、在恢复access通知时加入同一flight；另覆盖新login不被旧session的busy残留阻塞。
+- 当前云Chromium按仓库正常配置启动报socket EPERM；初次28个导航用例都在启动阶段退出，没有页面断言或真实新截图。未更改安全启动配置；本批真实浏览器与全量验收等待最终提交的CI结果，不用旧2b8的布局targeted结果替代。
+
+本批最终本地预检：源码generation `8259e27d35d59327f1cafe0590c7bd70a0866346a8442f1e60137c08c9022bbe` 的dev-build/typecheck、350-token合同、364/364 unit、真实watch重建与故障恢复（127.8秒）通过；同树React/native独立tarball的全部公开exports/types、布局示例和体积门禁通过。consumer首轮工具会话中断未计通过，240秒有界重跑返回exit 0。导航浏览器文件收集51项；未本地执行页面断言，L14及全量CI仍待最终SHA的真实结果。

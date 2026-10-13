@@ -98,7 +98,7 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
   const listeners=new Set<()=>void>();
   let active:{operation:'login'|'logout';controller:AbortController;version:number}|undefined;
   let refreshFlight:Promise<Readonly<AuthUser>|null>|undefined,refreshController:AbortController|undefined;
-  let sessionFlight:Promise<Readonly<AuthUser>|null>|undefined,sessionController:AbortController|undefined;
+  let sessionFlight:Promise<Readonly<AuthUser>|null>|undefined,sessionController:AbortController|undefined,sessionVersion:number|undefined;
   const errorFor=(kind:'cancel'|'http'='cancel',operation?:AuthOperation)=>new HttpError(kind,{attempts:0,endpointId:operation?`auth.${operation}`:undefined,...(kind==='http'?{status:401,code:'AUTH_REAUTHENTICATION_REQUIRED'}:{})});
   const normalize=(error:unknown,operation:AuthOperation)=>isHttpError(error)?new HttpError(error.kind,error.metadata):new HttpError('parse',{attempts:0,endpointId:`auth.${operation}`});
   const emit=(patch:Partial<AuthState>)=>{state=Object.freeze({...state,...patch});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* Views cannot change credential handling. */}};
@@ -116,7 +116,9 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
   const check=(revision:number,signal?:AbortSignal)=>{if(!current(revision)||signal?.aborted)throw errorFor();};
   const received=(issued:ReturnType<typeof parseIssued>,revision:number)=>{
     check(revision);const acceptedGeneration=++generation;access={value:issued.value,expiry:issued.expiry,generation:acceptedGeneration};bootstrapped=true;http.resetUnauthorized();
-    emit({status:'authenticated',user:issued.user,busy:null,error:null,reauthenticationRequired:false});check(revision);if(access?.generation!==acceptedGeneration||state.user!==issued.user)throw errorFor();return issued.user;
+    // Issuing access during currentUser is not completion of its required session read.
+    const checking=!!sessionFlight&&sessionVersion===revision&&!sessionController?.signal.aborted;
+    emit({status:'authenticated',user:issued.user,busy:checking?'session':null,error:null,reauthenticationRequired:false});check(revision);if(access?.generation!==acceptedGeneration||state.user!==issued.user)throw errorFor();return issued.user;
   };
   const cookieRequest=(operation:'login'|'refresh'|'logout',json:unknown,signal:AbortSignal)=>authRequest(http,operation,authEndpoints[operation],{method:'POST',json,headers:{Accept:'application/json','Content-Type':'application/json'},signal,timeoutMs,response:'ajax',errorAdapter:ajaxErrorResponseAdapter,adapter:operation==='logout'?logoutAdapter:issuedAdapter,endpointId:`auth.${operation}`,cache:'no-store',credentials:'same-origin',redirect:'error',unauthorized:'ignore'});
   const coordinatedRequest=<T>(operation:'login'|'refresh'|'logout',json:unknown,controller:AbortController,revision:number,accept:(payload:unknown)=>T)=>{
@@ -171,7 +173,7 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
     if(options.signal?.aborted)return Promise.reject(errorFor());
     if(state.reauthenticationRequired)return Promise.reject(state.error??errorFor('http','session'));
     if(!access&&bootstrapped&&state.status==='anonymous')return Promise.resolve(null);
-    const revision=version,controller=new AbortController();let observedGeneration:number|undefined;sessionController=controller;
+    const revision=version,controller=new AbortController();let observedGeneration:number|undefined;sessionController=controller;sessionVersion=revision;
     const flight=Promise.resolve().then(async()=>{
       try{
         const lease=await acquire(controller.signal);observedGeneration=lease.generation;check(revision,controller.signal);emit({busy:'session',error:null});
@@ -182,8 +184,11 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
         if(error.status===401&&!state.reauthenticationRequired){clear();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});return null;}
         if(!state.reauthenticationRequired){if(error.status!==403)clear();emit({status:'unknown',user:null,busy:null,error});}throw error;
       }
-    }).finally(()=>{if(sessionFlight===flight){sessionFlight=undefined;sessionController=undefined;}});
-    sessionFlight=flight;return wait(flight,options.signal);
+    }).finally(()=>{if(sessionFlight===flight){sessionFlight=undefined;sessionController=undefined;sessionVersion=undefined;
+      // A newer refresh may keep valid access after rejecting an obsolete read.
+      if(current(revision)&&access&&state.status==='authenticated'&&state.busy==='session')emit({busy:null});
+    }});
+    sessionFlight=flight;emit({busy:'session',error:null});return wait(flight,options.signal);
   };
   const mutate=async(operation:'login'|'logout',json:unknown,options:AuthRequestOptions)=>{
     if(dead||active||options.signal?.aborted)throw errorFor();

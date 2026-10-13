@@ -18,10 +18,10 @@ async function checkEvidence(page,info,name){
 for(const kind of ['react','react-strict','vanilla']){
   test(`${kind} a confirmed login keeps the form until one direct host navigation`,async({page},info)=>{
     await page.goto(`/login-${kind}/?handoff=hold&visualAcceptance`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await fill(page);await startRecording(page);
-    await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('button',{name:'正在进入…',exact:true})).toBeDisabled();await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);await expect(page.getByLabel('密码')).toHaveValue('');await expect(page.getByLabel('用户名',{exact:true})).toBeDisabled();
+    await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('button',{name:'正在进入…',exact:true})).toBeDisabled();await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);await expect(page.getByLabel('密码')).toHaveValue('');await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toBeDisabled();
     await page.evaluate(()=>{for(let i=0;i<4;i++)window.loginDemo.repeatAuthNotification();document.querySelector('form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
     expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);expect((await page.evaluate(()=>window.loginDemo.getRequests())).filter(request=>request.path.endsWith('/login'))).toHaveLength(1);await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);
-    await page.screenshot({path:info.outputPath(`${kind}-direct-handoff.png`),animations:'disabled'});await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(destination(page)).toBeVisible();await checkEvidence(page,info,`${kind}-direct-handoff`);expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([{userId:'42',path:'/workspace'}]);
+    await page.screenshot({path:info.outputPath(`${kind}-direct-handoff.png`),animations:'disabled'});await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(destination(page)).toBeVisible();await page.screenshot({path:info.outputPath(`${kind}-direct-destination.png`),animations:'disabled'});await checkEvidence(page,info,`${kind}-direct-handoff`);expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([{userId:'42',path:'/workspace'}]);
   });
   test(`${kind} an owner-confirmed initial session opens the target once without a login or confirmation screen`,async({page},info)=>{
     await page.addInitScript(()=>{window.initialNavigationFrames=[];new MutationObserver(()=>{const page=document.querySelector('.xui-login-page');if(page)window.initialNavigationFrames.push([...page.querySelectorAll('button')].some(button=>['进入应用','退出登录'].includes(button.textContent))||page.textContent.includes('已登录:'));}).observe(document,{childList:true,subtree:true,attributes:true,characterData:true});});
@@ -32,7 +32,7 @@ for(const kind of ['react','react-strict','vanilla']){
 for(const kind of ['react','vanilla'])for(const source of ['login','session'])for(const failure of ['throw','reject'])test(`${kind} ${source} host navigation ${failure} retries only opening the target`,async({page},info)=>{
   await page.goto(`/login-${kind}/?handoff=${failure}&visualAcceptance${source==='session'?'&session=valid':''}`);
   if(source==='login'){await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await fill(page);await page.getByRole('button',{name:'登录',exact:true}).click();}
-  await expect(page.getByRole('alert')).toHaveText('已登录，但暂时无法进入应用。请重试。');await expect(page.getByRole('button',{name:'重试进入'})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);await expect(page.getByLabel('密码')).toHaveValue('');await expect(page.getByLabel('用户名',{exact:true})).toBeDisabled();
+  await expect(page.getByRole('alert')).toHaveText('已登录，但暂时无法进入应用。请重试。');await expect(page.getByRole('button',{name:'重试进入'})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);await expect(page.getByLabel('密码')).toHaveValue('');await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toBeDisabled();
   const requests=await page.evaluate(()=>window.loginDemo.getRequests());expect(await page.evaluate(()=>window.loginDemo.auth.getState().status)).toBe('authenticated');expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);await page.evaluate(()=>{window.loginDemo.repeatAuthNotification();window.loginDemo.setHandoffMode('ok');});expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
   await page.screenshot({path:info.outputPath(`${kind}-${source}-${failure}-navigation-error.png`),animations:'disabled'});await page.getByRole('button',{name:'重试进入'}).click();await expect(destination(page)).toBeVisible();expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(2);expect(await page.evaluate(()=>window.loginDemo.getRequests())).toEqual(requests);expect(requests.filter(request=>request.path.endsWith('/login'))).toHaveLength(source==='login'?1:0);expect(requests.filter(request=>request.path.endsWith('/logout'))).toHaveLength(0);
 });
@@ -60,3 +60,53 @@ for(const kind of ['react','vanilla']){
     await page.goto(`/login-${kind}/?session=valid&handoff=hold&visualAcceptance`);await expect.poll(()=>page.evaluate(()=>window.loginDemo?.getHandoffCalls())).toBe(1);const before=await page.evaluate(()=>window.loginDemo.getRequests());await page.evaluate(async()=>{window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));window.loginDemo.releaseHandoff(true);await new Promise(resolve=>setTimeout(resolve,0));window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));});await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(2);await expect(page.getByRole('alert')).toHaveCount(0);expect(await page.evaluate(()=>window.loginDemo.getRequests())).toEqual(before);await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(destination(page)).toBeVisible();
   });
 }
+
+// Hold the final owner read, not merely its preceding refresh notification.
+for(const kind of ['react','react-strict','vanilla']){
+  for(const prechecking of [false,true])test(`${kind} waits for its final session result before one direct navigation (host started: ${prechecking})`,async({page},info)=>{
+    await page.goto(`/login-${kind}/?sessionReadTimeout&handoff=hold&visualAcceptance${prechecking?'&prechecking':''}`);
+    await expect.poll(()=>page.evaluate(()=>window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length)).toBe(1);
+    await expect(page.getByRole('status')).toHaveText('正在确认登录状态…');await startRecording(page);
+    await page.evaluate(()=>{for(let i=0;i<4;i++)window.loginDemo.repeatAuthNotification();});
+    expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(0);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeDisabled();
+    await page.screenshot({path:info.outputPath(`${kind}-final-session-pending.png`),animations:'disabled'});
+    await page.evaluate(()=>window.loginDemo.release('session'));await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
+    await checkEvidence(page,info,`${kind}-final-session`);await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(destination(page)).toBeVisible();
+    expect((await page.evaluate(()=>window.loginDemo.getRequests())).map(request=>request.path.split('/').at(-1))).toEqual(['refresh','session']);
+  });
+  test(`${kind} a final session read failure never navigates and retries only that read`,async({page})=>{
+    await page.goto(`/login-${kind}/?sessionReadError&handoff=hold&visualAcceptance`);await expect(page.getByRole('button',{name:'重试连接'})).toBeEnabled();
+    expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(0);const before=await page.evaluate(()=>window.loginDemo.getRequests());
+    await page.evaluate(()=>window.loginDemo.setMode('session','ok'));await page.getByRole('button',{name:'重试连接'}).click();await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
+    const requests=await page.evaluate(()=>window.loginDemo.getRequests());expect(requests.filter(request=>request.path.endsWith('/login')||request.path.endsWith('/logout'))).toHaveLength(0);expect(requests.filter(request=>request.path.endsWith('/session'))).toHaveLength(2);expect(before.filter(request=>request.path.endsWith('/session'))).toHaveLength(1);
+  });
+  test(`${kind} an anonymous final session does not navigate`,async({page})=>{
+    await page.goto(`/login-${kind}/?sessionReadTimeout&handoff=hold&visualAcceptance`);await expect.poll(()=>page.evaluate(()=>window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length)).toBe(1);
+    await page.evaluate(()=>{window.loginDemo.setSession(null);window.loginDemo.release('session');});await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(0);
+  });
+  test(`${kind} an obsolete session generation cannot navigate from a newer refresh`,async({page})=>{
+    await page.goto(`/login-${kind}/?sessionReadTimeout&handoff=hold&visualAcceptance`);await expect.poll(()=>page.evaluate(()=>window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length)).toBe(1);
+    await page.evaluate(()=>window.loginDemo.auth.refresh());expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(0);
+    await page.evaluate(()=>window.loginDemo.release('session'));await expect(page.getByRole('button',{name:'重试连接'})).toBeEnabled();await page.evaluate(()=>window.loginDemo.repeatAuthNotification());expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(0);
+    const before=await page.evaluate(()=>window.loginDemo.getRequests());await page.evaluate(()=>window.loginDemo.setMode('session','ok'));await page.getByRole('button',{name:'重试连接'}).click();await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
+    expect((await page.evaluate(()=>window.loginDemo.getRequests())).slice(before.length).map(request=>request.path.split('/').at(-1))).toEqual(['session']);
+  });
+  test(`${kind} a session completed while hidden is consumed without another read on persisted return`,async({page})=>{
+    await page.goto(`/login-${kind}/?sessionReadTimeout&handoff=hold&visualAcceptance`);await expect.poll(()=>page.evaluate(()=>window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length)).toBe(1);
+    await page.evaluate(()=>{window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));window.loginDemo.release('session');});await expect.poll(()=>page.evaluate(()=>window.loginDemo.auth.getState().busy)).toBe(null);
+    expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(0);await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
+    expect((await page.evaluate(()=>window.loginDemo.getRequests())).map(request=>request.path.split('/').at(-1))).toEqual(['refresh','session']);
+  });
+  test(`${kind} a host rejection during refresh remains a local navigation retry`,async({page})=>{
+    await page.goto(`/login-${kind}/?session=valid&preconfirmed&handoff=hold&visualAcceptance`);await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
+    await page.evaluate(()=>{window.loginDemo.setMode('refresh','hold');window.refreshForNavigation=window.loginDemo.auth.refresh();});await expect.poll(()=>page.evaluate(()=>window.loginDemo.auth.getState().busy)).toBe('refresh');
+    await page.evaluate(async()=>{window.loginDemo.releaseHandoff(true);await new Promise(resolve=>setTimeout(resolve,0));window.loginDemo.release('refresh');await window.refreshForNavigation;});await expect(page.getByRole('button',{name:'重试进入'})).toBeEnabled();
+    await page.evaluate(()=>window.loginDemo.repeatAuthNotification());expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);const requests=await page.evaluate(()=>window.loginDemo.getRequests());await page.evaluate(()=>window.loginDemo.setHandoffMode('ok'));await page.getByRole('button',{name:'重试进入'}).click();await expect(destination(page)).toBeVisible();expect(await page.evaluate(()=>window.loginDemo.getRequests())).toEqual(requests);
+  });
+}
+for(const kind of ['react','react-strict'])test(`${kind} replacing the owner discards an old session waiter`,async({page})=>{
+  await page.goto(`/login-${kind}/?sessionReadTimeout&handoff=hold&visualAcceptance`);await expect.poll(()=>page.evaluate(()=>window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length)).toBe(1);
+  await page.evaluate(()=>{window.replacementLogin=window.loginDemo.replaceAuthOwner();});await expect.poll(()=>page.evaluate(()=>window.replacementLogin.getRequests().filter(request=>request.path.endsWith('/session')).length)).toBe(1);
+  await page.evaluate(()=>window.loginDemo.release('session'));await expect.poll(()=>page.evaluate(()=>window.loginDemo.auth.getState().busy)).toBe(null);expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(0);expect(await page.evaluate(()=>window.replacementLogin.getHandoffCalls())).toBe(0);
+  await page.evaluate(()=>window.replacementLogin.release('session'));await expect.poll(()=>page.evaluate(()=>window.replacementLogin.getHandoffCalls())).toBe(1);expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(0);
+});
