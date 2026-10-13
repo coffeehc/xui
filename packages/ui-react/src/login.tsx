@@ -72,7 +72,7 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
   },[auth,state.status,state.user,state.busy,state.reauthenticationRequired,viewOperation]);
   const authenticated=state.status==='authenticated',busy=!!state.busy||viewOperation!==null||extensionBusy!==null||authenticated&&!sessionFailed.current&&navigationPhase!=='failed',locked=busy||authenticated;
   const canCheck=!busy&&!state.reauthenticationRequired&&(sessionFailed.current&&!state.error||!authenticated&&state.error?.metadata.endpointId==='auth.session'&&(state.error.kind==='network'||state.error.kind==='timeout'||state.error.kind==='http'&&(state.error.status??0)>=500));
-  const canCancel=extensionBusy!==null||state.busy==='login';
+  const canCancel=viewOperation==='extension'&&extensionBusy!==null;
   const restoreFocus=React.useRef(false);
   React.useLayoutEffect(()=>{if(restoreFocus.current&&!locked){restoreFocus.current=false;username.current?.focus();}},[locked]);
   const cancel=()=>{restoreFocus.current=true;revision.current++;pending.current?.abort();pending.current=undefined;setViewOperation(null);setExtensionBusy(null);clearPassword();};
