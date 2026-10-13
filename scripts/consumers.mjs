@@ -74,6 +74,15 @@ for (const kind of ['vanilla','react']) {
   else execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',buttonStateFixture],{cwd,stdio:'inherit'});
   await writeFile(`dist/${kind}/button-state-contract.html`,'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><script src="./theme-init.js"></script><link rel="stylesheet" href="./button-state-contract.css"></head><body class="xui"><div id="root"></div><script type="module" src="./button-state-contract.js"></script></body></html>');
   await writeFile(`dist/${kind}/button-state-contract-metafile.json`,JSON.stringify(buttonStateBuild.metafile,null,2));
+  const choiceStateFixture=`choice-state-contract.${kind==='react'?'tsx':'js'}`;
+  await copyFile(`tests/fixtures/${choiceStateFixture}`,`${cwd}/${choiceStateFixture}`);
+  const choiceStateBuild=await build({entryPoints:[`${cwd}/${choiceStateFixture}`],outfile:`dist/${kind}/choice-state-contract.js`,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(choiceStateBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Choice states escaped the standalone tarball install');
+  assert(!Object.keys(choiceStateBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Choice states require private CSS');
+  if(kind==='vanilla')assert(!Object.keys(choiceStateBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native choice states imported React');
+  else execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',choiceStateFixture],{cwd,stdio:'inherit'});
+  await writeFile(`dist/${kind}/choice-state-contract.html`,'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><script src="./theme-init.js"></script><link rel="stylesheet" href="./choice-state-contract.css"></head><body class="xui"><div id="root"></div><script type="module" src="./choice-state-contract.js"></script></body></html>');
+  await writeFile(`dist/${kind}/choice-state-contract-metafile.json`,JSON.stringify(choiceStateBuild.metafile,null,2));
   if (kind === 'react') {
     await copyFile('tests/fixtures/peer-contract.tsx',`${cwd}/peer-contract.tsx`);
     const fixture = await build({entryPoints:[`${cwd}/peer-contract.tsx`],outfile:'dist/react/peer-contract.js',bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});

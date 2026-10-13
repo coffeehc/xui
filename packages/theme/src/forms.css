@@ -38,7 +38,6 @@
     width: var(--space-control-gap); height: var(--line-width-emphasis); border: 0;
     background: currentColor; transform: none;
   }
-  .xui-choice[aria-invalid="true"] { border-color: var(--status-error-foreground); }
   .xui-choice[type="radio"]::after { content: ""; width: var(--space-control-gap); height: var(--space-control-gap); border-radius: var(--radius-full); background: var(--action-primary-foreground); transform: scale(0); transition: transform var(--motion-duration) var(--motion-easing); }
   .xui-choice[type="radio"]:checked::after { transform: scale(1); }
   .xui-choice[role="switch"] { width: var(--switch-width); height: var(--switch-height); border-radius: var(--control-height); display: inline-block; }
@@ -52,6 +51,9 @@
   .xui-choice:disabled { border-color: var(--muted-foreground); background: var(--muted); color: var(--muted-foreground); cursor: not-allowed; }
   .xui-choice[role="switch"]:disabled::before { background: var(--muted-foreground); }
   .xui-choice[type="radio"]:disabled::after { background: var(--muted-foreground); }
+  /* Disabling a choice does not clear its existing error. Keep the disabled
+     fill/indicator while the equal-specificity invalid border wins. */
+  .xui-choice[aria-invalid="true"] { border-color: var(--status-error-foreground); }
   @media (prefers-reduced-motion: reduce) {
     .xui-choice::after { transition: none; }
   }
