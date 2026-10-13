@@ -59,7 +59,7 @@ async function metrics(page){
       return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom,
         clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,clientHeight:node.clientHeight,scrollHeight:node.scrollHeight,scrollTop:node.scrollTop,scrollLeft:node.scrollLeft,
         display:s.display,position:s.position,overflowY:s.overflowY,flexDirection:s.flexDirection,flexShrink:s.flexShrink,flexGrow:s.flexGrow,minBlockSize:s.minBlockSize,
-        paddingTop:parseFloat(s.paddingTop),paddingBottom:parseFloat(s.paddingBottom),borderTop:parseFloat(s.borderTopWidth),borderBottom:parseFloat(s.borderBottomWidth),
+        paddingTop:parseFloat(s.paddingTop),paddingBottom:parseFloat(s.paddingBottom),paddingLeft:parseFloat(s.paddingLeft),paddingRight:parseFloat(s.paddingRight),borderLeft:parseFloat(s.borderLeftWidth),boxSizing:s.boxSizing,borderTop:parseFloat(s.borderTopWidth),borderBottom:parseFloat(s.borderBottomWidth),
         marginTop:parseFloat(s.marginTop),marginBottom:parseFloat(s.marginBottom),rowGap:parseFloat(s.rowGap)||0};
     };
     const root=document.scrollingElement;
@@ -78,7 +78,10 @@ async function assertWorkspace(page,{slots=true,long=true,shellHeight}={}){
   expect(m.slots).toHaveLength(slots?3:0);
   const chrome=m.slots.reduce((sum,slot)=>sum+slot.height+slot.marginTop+slot.marginBottom,0);
   const remaining=m.main.height-m.main.paddingTop-m.main.paddingBottom-m.main.borderTop-m.main.borderBottom-chrome-m.main.rowGap*m.slots.length;
-  near(m.content.height,remaining,'content receives the remaining definite height');near(m.workspace.height,m.content.clientHeight,'100% host workspace resolves against content');
+  near(m.content.height,remaining,'content receives the remaining definite height');near(m.workspace.height,m.content.clientHeight-m.content.paddingTop-m.content.paddingBottom,'100% host workspace resolves against content box');
+  near(m.workspace.width,m.content.clientWidth-m.content.paddingLeft-m.content.paddingRight,'host workspace fills content box width');
+  near(m.workspace.x,m.content.x+m.content.borderLeft+m.content.paddingLeft,'workspace starts at content box left');
+  near(m.workspace.y,m.content.y+m.content.borderTop+m.content.paddingTop,'workspace starts at content box top');
   for(const [name,region] of [['main',m.main],['content',m.content],['workspace',m.workspace]]){
     expect(region.scrollHeight,`${name} has no competing vertical scroll range`).toBeLessThanOrEqual(region.clientHeight+1);
     expect(region.scrollWidth,`${name} has no horizontal overflow`).toBeLessThanOrEqual(region.clientWidth+1);

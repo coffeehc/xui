@@ -72,3 +72,11 @@ G1通过标准：逐族静态条款/token映射、单测、正式React/原生浏
 c83fd28安全CI确认字体500与14px已生效，原生select的computed line-height为normal，而非作者CSS的22px。Blink官方[AdjustMenuListStyle实现](https://chromium.googlesource.com/chromium/src/+/06e87fb3dc2a1c881f95eb6cd3738608b846d29a/third_party/blink/renderer/core/layout/layout_theme_default.cc#304)将menulist行高设回初始值；这仅是保留原生外观的NativeSelect边界，不适用于Input/Textarea或自绘Select/Combobox。后续回归明确断言NativeSelect normal、控件实际36px、无内部裁字滚动、500→700字重token覆写及End选择真实值；其它四类入口仍严格22px行高。平台边界不通过取消原生外观或修改默认规范值掩盖。系统OS弹层本身仍未像素统一，遵既有NativeSelect用途合同。
 
 本轮后续基础候选：xs经12项真实CI确认32px不符24px后，按DESIGN集中新增派生button-padding-block-xs（358总token，旧默认/原始SHA逆重建保持）；原12严格断言保留，新增6项variants/长中文/状态/独立覆写。choice disabled+invalid保留错误边界的既有规则移至disabled之后，填充与交互仍禁用，12项双端48态回归进入同一候选；原native-controls-audit也纳入前置验证。G2 Combobox代理focus/弹层宽度候选保留，未开展实现。
+
+### ba525f0 实际门禁与遗留几何基准
+
+CI 38443173192：510 单测、81 Auth 视觉、558 focused 全部通过（零跳过/零重试），watch 181.86 秒及冷启动 18.83 秒通过；完整浏览器 1182/1224 通过，42 项 workspace-layout 均止于同一旧高度基准。逐条日志仅有五组尺寸差异，全部差值对应实际上下 focus padding；390px 代表 trace 为 content clientHeight 590、paddingTop/Bottom 各4、workspace 582。实图中 composer 与 page footer 完整位于首屏，document无横纵溢出。
+
+漏掉的专项现改用 computed clientHeight 减上下 padding 作为百分比高度包含块，并补横向内容盒宽度及左上起点强断言，不写固定减8、不改变1px容差。全部滚动、footer/composer可见、短/空内容、DOM/focus保持断言保留；该专项纳入前置检查，随后仍跑完整套件。生产未改变，修复后结果待新CI。
+
+本候选已实际通过的基础修复包括 Button 六variant禁用16例、原严格尺寸12例及xs追加6例、输入字体/NativeSelect平台边界6例、Separator独立线宽6例、choice绘制/真实禁用与只读交互12例，以及原生控件4例。这里只结算这些基础条款，不代表Typography/Surface/其他展示族全部token与可访问性门禁完成。G2候选继续后置；OS弹层、自动填充/密码管理器、系统读屏与多OS字体仍明确未全面测。
