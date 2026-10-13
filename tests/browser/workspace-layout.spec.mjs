@@ -161,10 +161,10 @@ for(const kind of kinds){
       await retainNodes(page);await draft(page).focus();await page.evaluate(()=>window.workspaceDemo.setSlots(true));await assertWorkspace(page);await expect(draft(page)).toBeFocused();await assertRetained(page);
     });
 
-    test(`${kind} workspace ${viewport.width}px: optional leading slot precedes the sole toggle without reserved blank space`,async({page},info)=>{
+    test(`${kind} workspace ${viewport.width}px: optional leading slot precedes brand and the sole toggle without its own blank space`,async({page},info)=>{
       await setup(page,kind,{viewport});await assertWorkspace(page);await retainNodes(page);
       const primary=page.locator('.xui-app-header-primary'),toggle=navToggle(page);const empty=await toggle.boundingBox(),start=await primary.boundingBox();
-      await expect(page.locator('.xui-app-header-leading:visible')).toHaveCount(0);await expect(page.getByRole('button',{name:'Platform action',exact:true})).toHaveCount(0);near(empty.x,start.x,'absent leading reserves no inline space');
+      await expect(page.locator('.xui-app-header-leading:visible')).toHaveCount(0);await expect(page.getByRole('button',{name:'Platform action',exact:true})).toHaveCount(0);near((await page.locator('.xui-app-header-brand').boundingBox()).x,start.x,'absent leading reserves no inline space before brand');expect(empty.x).toBeGreaterThan(start.x);
       await draft(page).focus();await page.evaluate(()=>window.workspaceDemo.setLeading(true));await expect(draft(page)).toBeFocused();await assertRetained(page);
       const action=page.getByRole('button',{name:'Platform action',exact:true}),leading=page.locator('.xui-app-header-leading');await expect(action).toBeVisible();await expect(toggle).toHaveCount(1);
       const slot=await leading.boundingBox(),button=await action.boundingBox(),navigation=await toggle.boundingBox();

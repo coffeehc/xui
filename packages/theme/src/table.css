@@ -49,6 +49,8 @@
   .xui-data-table-count {flex:1 1 auto;min-inline-size:0;}
   .xui-data-table-page-size {display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-control-gap);min-inline-size:0;}
   .xui-data-table-page-size>.xui-select {inline-size:auto;max-inline-size:100%;}
+  .xui-data-table-page-size .xui-select-control {flex:none;}
+  .xui-data-table-page-size .xui-select-control>.xui-select {inline-size:auto;max-inline-size:100%;}
   .xui-data-table-footer>.xui-pagination {flex-wrap:wrap;}
   .xui-data-table-footer .xui-button {white-space:normal;overflow-wrap:anywhere;}
   .xui-data-table-toolbar {align-items:flex-end;}

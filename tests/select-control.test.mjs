@@ -95,3 +95,26 @@ test('destroy restores host attributes and stale handles cannot disturb a new bi
   assert.equal(second.trigger.textContent, '中文');
   second.destroy();
 });
+
+test('form reset reads post-default facts, respects cancellation and releases former forms',async()=>{
+  const f=fixture(),first=new EventTarget(),second=new EventTarget();f.select.form=first;const owner=bindSelectControl(f.select);
+  f.select.value='zh';owner.update();const reset=new Event('reset',{cancelable:true});first.dispatchEvent(reset);f.select.value='en';await Promise.resolve();assert.equal(owner.trigger.textContent,'English');
+  f.select.value='zh';owner.update();const canceled=new Event('reset',{cancelable:true});canceled.preventDefault();first.dispatchEvent(canceled);await Promise.resolve();assert.equal(owner.trigger.textContent,'中文');
+  f.select.form=second;owner.update();f.select.value='en';first.dispatchEvent(new Event('reset'));await Promise.resolve();assert.equal(owner.trigger.textContent,'中文');second.dispatchEvent(new Event('reset'));await Promise.resolve();assert.equal(owner.trigger.textContent,'English');
+  second.dispatchEvent(new Event('reset'));owner.destroy();await Promise.resolve();assert.equal(f.root.querySelector('.xui-select-control'),null);
+});
+
+test('hidden optgroups stay hidden and group labels remain visible',()=>{
+  const f=fixture(),hidden=f.doc.createElement('optgroup'),visible=f.doc.createElement('optgroup');hidden.hidden=true;hidden.label='Hidden group';visible.label='Visible group';
+  const hiddenOption=f.doc.createElement('option'),visibleOption=f.doc.createElement('option');hiddenOption.value='secret';hiddenOption.textContent='Hidden value';visibleOption.value='grouped';visibleOption.textContent='Grouped value';hidden.append(hiddenOption);visible.append(visibleOption);f.select.append(hidden,visible);
+  const owner=bindSelectControl(f.select);assert.ok(!owner.element.querySelectorAll('[role="option"]').some(node=>node.textContent==='Hidden value'));assert.equal(owner.element.querySelector('[role="group"]').getAttribute('aria-label'),'Visible group');owner.destroy();
+});
+
+test('binding transfers initial focus and respects host tabindex without changing the bridge fact',()=>{
+  const f=fixture();f.select.tabIndex=-1;f.select.focus();const owner=bindSelectControl(f.select);assert.equal(f.doc.activeElement,owner.trigger);assert.equal(owner.trigger.tabIndex,-1);
+  f.select.tabIndex=2;owner.update();assert.equal(owner.trigger.tabIndex,2);owner.destroy();assert.equal(f.select.tabIndex,2);
+});
+
+test('hidden form bridge stays excluded from accessibility and restores its original aria fact',()=>{
+  const f=fixture(),owner=bindSelectControl(f.select);assert.equal(f.select.getAttribute('aria-hidden'),'true');owner.destroy();assert.equal(f.select.getAttribute('aria-hidden'),null);
+});

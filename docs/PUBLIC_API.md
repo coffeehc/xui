@@ -195,6 +195,9 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 
 ## 主题化简单选择与品牌
 
-`@coffeehc/xui-react/forms` 新增 `SimpleSelect`，接收与 `NativeSelect` 相同的 select props、option children、multiple 和 controlSize。可见控件是主题 combobox/listbox；保留原 select 作为隐藏表单/事件桥，Field 的 label/help/error 指向可见 trigger。选择会发原 input/change 事件，受控 value 仍须由宿主回传。原生 `@coffeehc/xui-runtime/dom` 导出 `bindSelectControl(select)`，返回 element/trigger/update/destroy；绑定已挂载 select 时在原位包装，未挂载则挂载 element，不能将 select 单独移出。每次改变 value/selectedOptions/options/disabled/label 后 update，销毁恢复原 select 的可见性/id/tabIndex 并释放事件/浮层。重复绑定复用存活 owner。单选关闭，多选保持浮层并支持 Escape/Tab；没有新增业务查询 owner。
+`@coffeehc/xui-react/forms` 新增 `SimpleSelect`，接收 select 的表单值/事件 props、option/optgroup children、multiple 和 controlSize。可见控件是主题 combobox/listbox；保留原 select 作为隐藏表单/事件桥，Field 的 label/help/error 指向可见 trigger。选择会发原 input/change 事件，受控 value 仍须由宿主回传。原生 `@coffeehc/xui-runtime/dom` 导出 `bindSelectControl(select)`，返回 element/trigger/update/destroy；绑定已挂载 select 时在原位包装，未挂载则挂载 element，不能将 select 单独移出。每次改变 value/selectedOptions/options/disabled/label 后 update，销毁恢复原 select 的可见性/id/tabIndex 并释放事件/浮层。重复绑定复用存活 owner。单选关闭，多选保持浮层并支持 Escape/Tab；没有新增业务查询 owner。
 
 明确需要操作系统选择器时继续用 `NativeSelect` 或原生 select，不宣称其 OS 弹窗外观可被统一。库内 DataTable/APIKey/BusinessLog/StructuredLog 默认选择组合已切换主题控件。React `layout` 新增 `HeaderBrand`；runtime `header-controls` 新增 `createHeaderLocaleSelect`。详细布局与生命周期见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。
+
+
+`SimpleSelect`/`bindSelectControl` 同步 form.reset 的默认动作后事实，取消 reset 不更新，销毁后不响应；update 也重连改变后的 form owner。hidden option/optgroup 不出现在列表，disabled optgroup 不可选，组名保留。HTML select.size 只留在隐藏表单桥，不承诺原生多行常驻列表的布局；需要 OS 控件或原生 size 呈现时用 NativeSelect。React select ref 指向表单桥，不是可见 button；原生 binding.trigger 是明确的可见焦点入口。

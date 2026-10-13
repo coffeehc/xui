@@ -72,17 +72,13 @@ test('unconfirmed writes and reauthentication-required states never offer sessio
     noRetry(html);assert.match(loginFeedback(html),/The session state is unconfirmed\. Sign in again to verify it\./);
   }
 });
-test('login requests expose local cancel; session and application logout are not page cancellation actions',()=>{
-  for(const busy of ['login']){
-    const html=renderLogin({status:'unknown',busy}),feedback=loginFeedback(html);
-    assert.equal((html.match(/>Cancel request<\/button>/g)||[]).length,1);
-    assert.match(feedback,/<div\b[^>]*role="status"[^>]*>[^<]+<\/div>\s*<button\b[^>]*>Cancel request<\/button>/);
-    assert.doesNotMatch(html.replace(feedback,''),/>Cancel request<\/button>/);noRetry(html);
-    assert.doesNotMatch(html,/xui-reserved-action|data-inactive=/);
+test('login, session and application logout do not expose page cancellation actions',()=>{
+  for(const busy of ['login','session','refresh','logout']){
+    const html=renderLogin({status:'unknown',busy});assert.doesNotMatch(html,/>Cancel request<\/button>/);noRetry(html);
   }
-  for(const busy of ['session','refresh','logout'])assert.doesNotMatch(renderLogin({status:'unknown',busy}),/>Cancel request<\/button>/);
   noRetry(renderLogin({status:'unknown',busy:'session',error:authError('network','auth.session')}));
 });
+
 test('shared error layout is locally scrollable, token-scaled, and needs no remote fonts/icons',async()=>{
   const css=await read('packages/theme/src/feedback.css'),auth=await read('packages/theme/src/auth.css');
   for(const selector of ['.xui-feedback-slot','.xui-data-table-feedback']){

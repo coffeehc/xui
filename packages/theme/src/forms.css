@@ -27,7 +27,7 @@
     transition: background-color var(--motion-duration) var(--motion-easing), border-color var(--motion-duration) var(--motion-easing);
   }
   .xui-choice[type="radio"] { border-radius: var(--radius-full); }
-  .xui-choice:checked, .xui-choice[type="checkbox"]:not([role="switch"]):indeterminate { background: var(--action-primary); border-color: var(--action-primary); }
+  .xui-choice:where(:checked, [type="checkbox"]:not([role="switch"]):indeterminate) { background: var(--action-primary); border-color: var(--action-primary); }
   .xui-choice[type="checkbox"]:not([role="switch"])::after {
     content: ""; width: var(--choice-check-width); height: var(--choice-check-height);
     border: solid currentColor; border-width: 0 var(--line-width-emphasis) var(--line-width-emphasis) 0;
@@ -92,6 +92,7 @@
 
 @layer xui-components {
   .xui-select-host {display:contents;}
+  .xui-select-control>select[hidden] {display:none;}
   .xui-select-control {display:inline-flex;position:relative;min-inline-size:0;max-inline-size:100%;}
   .xui-select-control>.xui-select {display:inline-flex;align-items:center;justify-content:space-between;gap:var(--space-control-gap);text-align:start;appearance:none;}
   .xui-select-control>.xui-select>span {min-inline-size:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}

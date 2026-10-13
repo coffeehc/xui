@@ -24,6 +24,7 @@ for(const mode of ['light','dark','system'])test(`native controls ${mode}: theme
   await expect(page.getByLabel(`${type} invalid`,{exact:true})).toHaveCSS('border-top-color',error);
  }
  for(const name of ['Checkbox invalid','Mixed invalid','Radio first invalid','Switch invalid'])await expect(page.getByLabel(name,{exact:true})).toHaveCSS('border-top-color',error);
+ const disabledMixed=page.getByLabel('Mixed disabled',{exact:true});await expect(disabledMixed).toBeDisabled();await expect(disabledMixed).toHaveCSS('background-color',muted);
  const mixed=page.getByLabel('Mixed default',{exact:true});expect(await mixed.evaluate(node=>node.indeterminate)).toBe(true);
  expect(await mixed.evaluate(node=>{const s=getComputedStyle(node,'::after');return {height:s.height,border:s.borderWidth,transform:s.transform};})).toEqual({height:'2px',border:'0px',transform:'none'});
  await expect(mixed).toHaveCSS('background-color',primary);

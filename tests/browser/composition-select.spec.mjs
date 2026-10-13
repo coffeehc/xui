@@ -7,7 +7,7 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
     await page.goto(`/data-table-${kind}/?size=20&internal`);
     await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');
     const trigger=page.getByRole('combobox',{name:'每页条数',exact:true});
-    await expect(trigger).toHaveJSProperty('tagName','BUTTON');
+    await expect(trigger).toHaveJSProperty('tagName','BUTTON');await expect(page.locator('.xui-data-table-page-size select')).toBeHidden();expect(await trigger.locator('span').evaluate(node=>node.scrollWidth<=node.clientWidth+1)).toBe(true);
     await trigger.focus();await page.keyboard.press('ArrowDown');
     const id=await trigger.getAttribute('aria-controls'),popup=page.locator(`[id=${JSON.stringify(id)}]`);
     await expect(popup).toBeVisible();
