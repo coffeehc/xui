@@ -1,4 +1,4 @@
 interface:
-  display_name: "接入 xui"
-  short_description: "按公共规范接入 xui、设计项目组合组件和页面，或生成项目主题"
-  default_prompt: "使用 $adopt-xui，按当前请求完成 xui 接入、项目组件与页面设计或主题生成，沿用项目 docs/DESIGN.md 的约定并保留业务及授权范围。"
+  display_name: "接入 xui / baseservice"
+  short_description: "仅接入 xui 或联合接入 baseservice，设计项目组件、页面与主题"
+  default_prompt: "使用 $adopt-xui，按当前请求执行“仅接入xui”“接入xui+baseservice”、项目设计或主题生成；遵循项目 docs/DESIGN.md，完成所选范围的实施与实际验收。"

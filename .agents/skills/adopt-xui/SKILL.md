@@ -1,6 +1,6 @@
 ---
 name: adopt-xui
-description: 为 React/原生前端接入、迁移或评审 xui，设计采用 xui 的项目私有组合组件与页面，或根据项目 docs/DESIGN.md 生成 xui theme.css。仅生成主题时保留业务、布局、API 和认证范围。
+description: 按“仅接入xui”集成前端，按“接入xui+baseservice”联合接入宿主前后端；也用于 xui 接入评审、项目组件与页面设计，或根据项目 docs/DESIGN.md 生成 theme.css。
 ---
 
 # 接入 xui、项目设计与主题生成
@@ -8,9 +8,19 @@ description: 为 React/原生前端接入、迁移或评审 xui，设计采用 x
 ## 先确定范围与参考根目录
 
 - 先解析本 SKILL.md 的物理路径，再从其所在目录向上三级定位 xui 根；全局发现入口可以是符号链接，不能从链接所在的 skills 目录推算仓库。下文相对链接均以这个物理 skill 目录为基准，不依赖固定宿主路径。
+- 用户说“仅接入xui”或“接入xui+baseservice”（允许空格和大小写差异）时，选择下方对应接入模式；明确的页面、模块或阶段范围优先，分析/评审请求保持只读，不因短指令扩大到其他项目。未指定范围的这两个实施短指令默认完成当前项目所需的完整接入，持续完成改造、清理和实际验收，不停在方案或主题生成。
 - 用户说“根据 DESIGN.md 生成 xui 可识别的 theme.css”或仅要求生成、更新、接入项目主题时，进入[项目主题流程](references/theming.md)，默认设计来源是采用项目的 `docs/DESIGN.md`。完成主题和必要入口接入、验证后结束；不执行下文完整迁移，不借此改业务、页面布局、HTTP、认证或后端。
 - 用户要求设计或评审项目私有组合组件、页面信息呈现时，执行下方“项目组件与页面设计”；只处理当前任务，仅设计不触发完整迁移或实现。
 - 用户明确要求采用、迁移、改造或评审 xui 接入时，先按项目设计流程明确职责和信息主次，再执行下文与任务相关的接入步骤；只评审时保持只读，只处理已授权的页面和能力。需要生成主题时再读[项目主题流程](references/theming.md)。
+
+## 两种接入模式
+
+| 用户短指令 | 实施范围与完成条件 |
+| --- | --- |
+| 仅接入xui | 当前项目前端的主题、基础控件、组合组件与业务页面表现；保留后端、认证协议、业务 API、数据模型，以及已有 HTTP/auth/resource owner。通过公开布局、slots、callbacks 或 typed adapter 连接现有能力；仅在真实合同已匹配时采用默认 client，不为 UI 接入迁移 baseservice 或后端。认证不匹配完整登录 client 时采用 AuthPage 等布局接既有流程，不只因项目名称切换协议。完成实际消费页面验收 |
+| 接入xui+baseservice | 完成相同前端改造，并在当前宿主项目接入实际需要的 baseservice 服务、依赖版本、facade、路由与安全回调，执行下方联合服务接线。现有领域 API 与标准身份协议保持各自职责，不为凑齐库能力新增无需求模块。完成实际前后端联调；后端未接通不能报联合接入完成 |
+
+两种模式共用下文设计、公开组件、正式产物与验收流程；按“项目 DESIGN.md → theme.css → 基础控件 → 组合组件 → 页面”推进。主题遵循[项目主题流程](references/theming.md)，私有组合和页面使用下方设计方法。保留流式输出、编辑器、Markdown/代码展示、上传下载与桌面桥接等实际业务能力；统一通用部分，不用普通表单替换领域专用交互。裸浏览器控件的替换边界见下文“先保留业务能力”。
 
 ## 项目组件与页面设计
 
@@ -25,9 +35,17 @@ description: 为 React/原生前端接入、迁移或评审 xui，设计采用 x
 2. 先读 [采用手册](../../../docs/ADOPTION.md)、[xui 默认完整规范](../../../docs/DESIGN.md)、[公开入口与默认行为](../../../docs/PUBLIC_API.md) 和 [实施映射](../../../docs/ADOPTION.md#组件层次与扩展原则)。另读采用项目自己的 `docs/DESIGN.md`，区分产品视觉要求与 xui 默认合同。以实际消费版本的正式声明和源码核对 API，不能把计划或其他版本写成可调用能力。
 3. 读 [原子→组合→页面的单一架构源](../../../docs/ADOPTION.md#组件层次与扩展原则)，为页面选择实际公开层次与扩展点；按需要读 [导航](../../../docs/COMPONENTS.md#导航与菜单)、[HTTP/query](../../../docs/PUBLIC_API.md#http-与查询)、[登录/认证](../../../docs/PUBLIC_API.md#认证会话)、[API Key](../../../docs/PUBLIC_API.md#api-key-管理) 或 [业务日志](../../../docs/PUBLIC_API.md#业务日志)；确有错误观察需求再读 [独立错误 facade](../../../docs/PUBLIC_API.md#程序错误观察)；读 [宿主边界](../../../docs/ADOPTION.md#宿主边界) 与 [实际验证和限制](../../../docs/VALIDATION.md)。不要复制完整规范、默认品牌值或另造组件合同。
 
+## 联合服务接线（仅“接入xui+baseservice”）
+
+1. 从宿主 go.mod、replace、已有服务装配和明确的参考 checkout 确定 baseservice 来源，读取其适用规则、真实 declarations/源码、facade 示例及所选能力的合同文档；固定与 xui wire 匹配的明确版本，不从仓库名或旧示例猜接口。仅参考的库保持只读，依赖升级和装配修改在当前宿主完成。Go 装配遵循宿主规则；可用时配合 go-plugin-project-builder 处理 plugin 生命周期和服务职责。
+2. 盘点现有身份、授权、Key、业务日志与初始化 owner，按实际业务选择能力。复用 Boot/plugin 生命周期与已经启动的服务，按真实接口装配，不额外创建服务单例、数据库连接或通用 HTTP 框架。保留领域模型和标准 OAuth/OIDC/SAML，先明确既有用户、会话及数据的升级影响，不 reset/清表或删除业务数据。
+3. 对照[默认适配器服务前置](../../../docs/PUBLIC_API.md#默认适配器的服务前置)逐项接线：第一方认证采用 authenticationservice/webfacade 与 Bearer v2 的 login/refresh/session/logout；平台 Key 采用 apikeyservice/webfacade 与严格 DTO v2；业务日志采用 bizlogservice/webfacade 与公开 loader。它们各自可选，不把 provider key、程序错误或第三方响应改名冒充。管理员初始化由宿主提供权威状态和 submit 回调，不编造通用初始化 API。
+4. 宿主实际注册路由，提供可信身份/scope、权限与资源策略、Cookie/CSRF 和授权脱敏投影；核对 ID 编码、分页基数、total/cursor、DTO 与错误语义，不能仅改 baseURL 或通过字段猜测对齐。遵循下文直接登录与普通 Key CRUD，不接恢复预请求、持久门禁、Lookup/Resolve 或自动写入重放；后端保留请求 context、事务确认、最终权限和 expected_version 并发更新校验。客户端断开不作为事务已回滚的证据。
+5. 在当前项目运行后端相关测试及真实 HTTP/页面联调，覆盖已接入能力的正常、拒绝、超时核验、重复提交与迟到清理路径。按适用入口验证 Web/Desktop/embed，不拿库级 fixture 或合成页面代替产品联调。确有服务、环境或合同缺口时报告具体位置、已完成范围和未验项，不能静默降为仅前端接入并宣布完成。
+
 ## 通用组件与宿主边界
 
-xui 提供通用组件、主题、交互与可选页面组合。宿主拥有业务 API、领域数据、业务页面和产品流程。先按需求选择公共能力；仅选用默认 HTTP client/页面 adapter 时满足 [服务前置](../../../docs/PUBLIC_API.md#默认适配器的服务前置) 的明确 wire 合同，宿主可通过 typed ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 或 BusinessLogLoader 接入领域接口。采用 xui 不要求全部普通业务 API 统一到 commons/webfacade；业务 API 或后端迁移是宿主独立任务。这份 skill 不授权改产品后端、baseservice、commons、生产数据或部署。
+xui 提供通用组件、主题、交互与可选页面组合。宿主拥有业务 API、领域数据、业务页面和产品流程。先按需求选择公共能力；仅选用默认 HTTP client/页面 adapter 时满足 [服务前置](../../../docs/PUBLIC_API.md#默认适配器的服务前置) 的明确 wire 合同，宿主可通过 typed ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 或 BusinessLogLoader 接入领域接口。采用 xui 不要求全部普通业务 API 统一到 commons/webfacade。仅接入 xui 不修改后端；联合模式允许当前宿主必要的服务接线与协议适配，不自动扩大为全部领域 API 重写。共享 xui/baseservice/commons 源码、生产数据及部署不由这两个短指令授权修改。
 
 行业标准优先：OAuth2/OIDC/SAML保持原协议，第三方按对方API/错误格式；adapter在宿主内部边界明确转换，不强迫第三方AjaxResponse。此正常协议边界不按旧升级兼容桥梁删除。平台API Key是自有平台向Agent/集成签发的凭据，不是provider key；自身业务日志不是第三方响应或程序故障记录。唯一通用边界见[DESIGN](../../../docs/DESIGN.md#规范强度与职责)。
 
@@ -43,7 +61,7 @@ xui 提供通用组件、主题、交互与可选页面组合。宿主拥有业�
 2. 首屏初始化先于 CSS/内容；复用一个文档根主题 owner，支持 light/dark/system 和失败回退。已有 JSON 持久化用受控 bridge 保留其他字段。少量语义覆盖在规定 layer，默认值只来自 DESIGN；清理旧 matchMedia/storage/context、原始色与 selected/hover/focus 竞争规则。
 3. 核[冷启动/开发模式](../../../docs/ADOPTION.md#开发联调与冷启动)：navigation从首次可操作菜单就连接，canNavigate=false放行原生导航，不作ready阻止。Vite不可扫描的lazy deep imports须预声明实际optimizeDeps.include并保持peer dedupe，用冷/暖cache的optimizer日志、HMR full-reload和Document请求找因果，不等待几分钟/禁HMR/吞错；用户本地/部署产物未核不冒充确认。菜单共用数据，在根接一次 location/activeId 和 navigation adapter；保留原生修改键、中键、target/download。不要逐项重复选中/路由、叠加第二个 drawer 或用 route key 重挂整个 shell。应用头部优先采用headerSlots的brand/breadcrumb/status/actions或AppHeader，原生同角色传Node；按组件手册的导航迁移说明删掉消费方通用排列/紧凑栏宽度CSS，不替换业务动作。菜单开关由顶栏唯一入口统一负责桌面collapsed与窄屏sidebarOpen，删除产品重复按钮和媒体监听，保留受控回调。侧栏尾部内容使用sidebarFooter及公开SidebarFooterContent/原生同名内容结构，headerSlots仍是顶栏；按[布局slot矩阵](../../../docs/COMPONENTS.md#布局与顶栏)选择context/auxiliary/account与sidebarHeader/pageHeader/pageToolbar/pageFooter，空槽不占位，复用PageHeader.actions和正文，不复制内部布局。默认顶栏主题复用单theme owner；locale仅显式enabled时接现有i18n状态/语言列表/回调，业务不用另拼主题或默认语言入口；删除消费方底部定位/滚动/紧凑宽度补丁，保留业务权限和回调。菜单图标采用Menu.Icon/ContextMenu.Icon或公开xui-menu-icon类，默认菜单与label文字尺度由公共CSS负责，不再全局缩小Portal或所有SVG。
 4. 一个 HTTP transport/auth/error owner，加宿主领域 endpoint adapter 与一个所属 resource/controller。明确响应模式；选择默认 ajax 模式时使用准确 Go envelope，业务成功只由 success=true 判定，code 保留必填安全整数元数据，只有明确的端点合同才 opt-in 严格 successCode；固定安全反馈、区分 401/403/business，宿主拥有预算、凭据与登录动作。禁止默认猜 data/msg/items、自创 query AST、隐式日期/页码、重复编码或自动重放写操作。
-5. webfacade query 明确 endpoint 页基数/上限/字段 codec/sort；业务日志是随时调取业务记录的查询用途，不建设正式审计体系；baseservice的bizlogservice/webfacade提供配套只读HTTP边界，不引入独立auditservice；宿主接入前置见公开 API 的默认适配器章节，本skill不授权产品后端迁移。业务日志使用 [公开 loader/DTO](../../../docs/PUBLIC_API.md#业务日志)：actor/事件时间/对象/action/result/关联标识与 event_type/schema_version，业务 payload 只允许已授权脱敏 JSON；未知类型/版本安全回退，不把 severity/错误组当业务日志、不强制通用 before/after。优先默认createBusinessLogHttpLoader的原生offset/ListData；领域cursor扩展的snapshot可选且仅真实值，保留已知链基准。不伪造cursor/snapshot。默认HTTP adapter与baseservice facade共享fixture验证，仍不能声明产品已注册生产route、不可篡改或真实鉴权集成通过。独立错误观察仅按公开 API 的程序错误合同采用。
+5. webfacade query 明确 endpoint 页基数/上限/字段 codec/sort；业务日志是随时调取业务记录的查询用途，不建设正式审计体系；baseservice的bizlogservice/webfacade提供配套只读HTTP边界，不引入独立auditservice；宿主接入前置见公开 API 的默认适配器章节，后端实施范围按所选接入模式。业务日志使用 [公开 loader/DTO](../../../docs/PUBLIC_API.md#业务日志)：actor/事件时间/对象/action/result/关联标识与 event_type/schema_version，业务 payload 只允许已授权脱敏 JSON；未知类型/版本安全回退，不把 severity/错误组当业务日志、不强制通用 before/after。优先默认createBusinessLogHttpLoader的原生offset/ListData；领域cursor扩展的snapshot可选且仅真实值，保留已知链基准。不伪造cursor/snapshot。默认HTTP adapter与baseservice facade共享fixture验证，仍不能声明产品已注册生产route、不可篡改或真实鉴权集成通过。独立错误观察仅按公开 API 的程序错误合同采用。
 6. 优先 createApiKeyHttpAdapter 严格 DTO v2，完整合同见 [API Key 管理](../../../docs/PUBLIC_API.md#api-key-管理)。直接普通 CRUD，提交禁用显示正在创建／保存；超时读取普通列表一次，允许用户手动再试，不自动重发写请求。无需 writeGuard、操作回执或 Lookup/Resolve 接线。name/权限/enabled 更新保留 expected_version CAS；required 权限、独立 confirmed、撤销和仅 revoked 管理记录删除的授权与确认保留。custom adapter 按领域合同提供可选 update，不强迫第三方采用 base 协议。完整值只在瞬时结果视图，关闭/卸载清除，不进 URL/storage/cache。身份切换销毁旧 controller，后端重新鉴权并执行事务、范围及并发校验。lastUsedAtPending 仅按明确 bool 显示。业务日志只列摘要，详情按单事件授权读取，403/404/保留期分开，文本防注入，对象链接由宿主映射。
 7. 标准列表、表单、详情使用公开布局、字段、DataRegion 和反馈；首屏关键事实与主操作可读，风险和错误及时可见。Sheet/AlertDialog/ContextMenu与条纹/展开/sticky表格按[公开组合](../../../docs/COMPONENTS.md#弹层与工具栏)，下载按HTTP白名单header与requestDownload/saveDownload；不复制内部皮肤。保留 disabled/busy、防重复、键盘/focus、触屏、motion/reduced-motion、取消/回焦点、窄屏/放大/长内容。卸载释放所属订阅/owner，取消本地等待并拒绝迟到结果。
 
