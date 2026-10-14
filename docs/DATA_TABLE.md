@@ -15,16 +15,15 @@
 
 ## 列宽与内容边界
 
-`DataTableColumn<T>.width` 与 `NativeDataTableColumn<T>.width` 同为可选 `DataTableColumnWidth`。该类型从 `@coffeehc/xui-runtime/data-table`、`@coffeehc/xui-runtime/data-table-dom`、`@coffeehc/xui-react/data-table` 以及 runtime、React 根入口导出。列宽是宿主按列内容或用户配置传入的尺寸，不重定义品牌 token，也不让库新增业务列、读取用户偏好或保存列配置。
+`DataTableColumn<T>.width` 与 `NativeDataTableColumn<T>.width` 同为可选 `DataTableColumnWidth`，表达列宽下限。通常省略，由表格自动分配；仅在标识、操作或用户配置等确有尺寸要求时设置。该类型从 `@coffeehc/xui-runtime/data-table`、`@coffeehc/xui-runtime/data-table-dom`、`@coffeehc/xui-react/data-table` 以及 runtime、React 根入口导出。列尺寸不重定义品牌 token，也不让库新增业务列、读取用户偏好或保存列配置。
 
 ```tsx
-import type {DataTableColumn, DataTableColumnWidth} from '@coffeehc/xui-react/data-table';
+import type {DataTableColumn} from '@coffeehc/xui-react/data-table';
 
 type Row = {id: string; name: string};
-const nameWidth: DataTableColumnWidth = 'clamp(12rem, 50%, 32rem)';
 const columns: readonly DataTableColumn<Row>[] = [
   {id: 'id', header: '标识', width: 160, cell: row => row.id},
-  {id: 'name', header: '名称', width: nameWidth, cell: row => row.name},
+  {id: 'name', header: '名称', cell: row => row.name},
 ];
 ```
 
@@ -32,7 +31,9 @@ const columns: readonly DataTableColumn<Row>[] = [
 - 字符串支持有单位的 CSS length（如 `'12rem'`、`'160px'`）、百分比（如 `'25%'`）、`calc(...)`、`clamp(...)`、`min(...)`、`max(...)` 和 `var(--...)`。裸数字字符串（如 `'160'`）、`auto`、对象、数组和 boolean 不是本接口的宽度值；自动列省略 `width`。
 - TypeScript 模板字符串限制值的形状，不是完整 CSS 或数学验证。number 类型也不能静态证明有限、非负。在正常浏览器中，运行时再用 `CSS.supports('width', value)` 拒绝无效 CSS；SSR/无 CSS parser 时仅检查结构，不模拟 CSS parser、不解析变量，也不据此声明 SSR hydration 已验证。宿主须提供能解析为宽度的自定义属性；`calc(...)` 的合法表达式若计算为负数，宽度由浏览器归零，不会在静态类型阶段被证明或拒绝。
 
-未声明任何 `width` 时，保留原有自动表格布局。部分列声明时，明确尺寸的列使用配置宽度，未声明列吸收剩余可用空间；全部声明时，表格宽度按列宽总和布局，不保证填满表体。总宽超过可用宽度时仍由原有表体区域横向滚动。表头和全部数据单元格使用同一张 table 的列轨道，不分别计算或复制表头宽度。
+表格默认铺满表体可用宽度。未声明任何 `width` 时，保留原有自动表格布局；部分列声明时，未声明列优先吸收剩余空间；全部声明时，浏览器在这些列之间分配余宽，实际宽度可以大于配置值。配置下限总和超过可用宽度时不压缩这些列，仍由表体区域横向滚动。表头和全部数据单元格使用同一张 table 的列轨道，不分别计算或复制表头宽度。
+
+此前全部指定列宽时按总和收缩、允许右侧留白；现在这些值作为下限且整表默认铺满。依赖旧精确宽度的消费者须核对新的实际列宽，不能再把 `width` 当作最大值或承诺像素不变；无需增加占位列或产品私有 CSS。
 
 百分比及混合表达式（如 `'calc(50% - 1rem)'`）统一以表体可用宽度为基准，不以自身表格已经扩出的总宽为基准。组件内部用非交互、`aria-hidden` 的零高测量块交给浏览器解析，并由单个 `ResizeObserver` 将结果同步为 `colgroup` 的像素宽度；宿主无需查询内部 DOM、计算百分比或维护自己的观察器。此内部结构不是公共定位或样式入口。
 

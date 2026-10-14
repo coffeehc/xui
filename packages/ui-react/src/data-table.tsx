@@ -11,7 +11,7 @@ export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataT
 export interface DataTableCellContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
 export interface DataTableColumn<T> {
   id:string; header:React.ReactNode; cell:(row:T,context:DataTableCellContext)=>React.ReactNode;
-  /** Column track width; numeric values are pixels. Percentages use the table body width. */
+  /** Optional minimum track width; numeric values are pixels. Percentages use the body width. Omit unless needed. */
   width?:DataTableColumnWidth;
   ariaSort?:React.AriaAttributes['aria-sort']; sticky?:'start'|'end';
 }

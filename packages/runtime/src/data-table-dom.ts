@@ -7,7 +7,7 @@ export interface NativeDataTableCellContext {rowIndex:number;rowKey:string|numbe
 export interface NativeDataTableCellSlot<T> {element:Node;update?:(row:T,context:NativeDataTableCellContext)=>void;destroy?:()=>void}
 export interface NativeDataTableColumn<T> {
   id:string; header:DataTableContent; cell:(row:T,context:NativeDataTableCellContext)=>DataTableContent|NativeDataTableCellSlot<T>;
-  /** Column track width; numeric values are pixels. Percentages use the table body width. */
+  /** Optional minimum track width; numeric values are pixels. Percentages use the body width. Omit unless needed. */
   width?:DataTableColumnWidth;
   ariaSort?:'none'|'ascending'|'descending'|'other'; sticky?:'start'|'end';
 }

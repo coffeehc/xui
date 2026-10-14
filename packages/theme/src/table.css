@@ -36,8 +36,9 @@
   .xui-data-table-footer {grid-row:3;}
   /* One colgroup owns all tracks. Only opted-in tables stop content from resizing columns. */
   .xui-data-table-body>.xui-table[data-column-sizing] {table-layout:fixed;}
-  /* With every track sized, let CSS expand from zero to the sum of the col widths. */
-  .xui-data-table-body>.xui-table[data-column-sizing='sized'] {inline-size:0;min-inline-size:0;}
+  /* Configured tracks are minima. Share spare width when all columns are sized;
+     when their sum exceeds the scrollport, retain every track and scroll. */
+  .xui-data-table-body>.xui-table[data-column-sizing='sized'] {inline-size:100%;min-inline-size:0;}
   .xui-data-table-widths {position:absolute;inset-inline:0;inset-block-start:0;block-size:0;overflow:hidden;visibility:hidden;pointer-events:none;}
   .xui-data-table-widths>* {block-size:0;min-inline-size:0;}
   .xui-data-table-body[data-column-sizing] {position:relative;}

@@ -22,15 +22,43 @@ async function measure(page){return body(page).evaluate(node=>{
   return {chrome:{toolbar:tools&&box(tools),feedback:box(feedback),footer:box(footer),toolbarToTable:tools?table.getBoundingClientRect().top-tools.getBoundingClientRect().bottom:null,footerInViewport:footer.getBoundingClientRect().bottom<=innerHeight},body:{...box(node),clientWidth:node.clientWidth,clientLeft:node.clientLeft,clientTop:node.clientTop,scrollWidth:node.scrollWidth,scrollHeight:node.scrollHeight,clientHeight:node.clientHeight},table:box(table),layout:getComputedStyle(table).tableLayout,headers:headers.map(box),labels:headers.map(th=>th.textContent),rows:[...table.querySelectorAll('tbody tr')].map(tr=>[...tr.children].map(box)),tracks:[...table.querySelectorAll('col')].map(col=>col.style.width),font,probes:{height:node.querySelector('.xui-data-table-widths').getBoundingClientRect().height,visibility:getComputedStyle(node.querySelector('.xui-data-table-widths')).visibility},direction:getComputedStyle(node).direction};
 });}
 function expected(m){return {'编号':112,'名称':Math.max(12*m.font,Math.min(m.body.clientWidth*.35,28*m.font)),'类型':m.body.clientWidth*.10+m.font,'来源':7*m.font,'操作':120,'范围':160};}
-async function assertWidths(page,{all=false,fluid='范围'}={}){
-  // A viewport/column update can schedule a ResizeObserver delivery after React commits.
-  await expect.poll(async()=>{const m=await measure(page),widths=expected(m);return Math.max(...m.headers.map((h,i)=>m.labels[i]===fluid&&!all?0:Math.abs(h.width-widths[m.labels[i]])));},{message:'actual column rectangles match fixed/percentage clamp/calc requested widths'}).toBeLessThan(1.5);
-  const m=await measure(page);expect(m.layout).toBe('fixed');expect(m.probes).toEqual({height:0,visibility:'hidden'});
-  for(const row of m.rows.filter(row=>row.length===m.headers.length))for(let i=0;i<row.length;i++){
-    expect(Math.abs(row[i].width-m.headers[i].width),'every row shares its header track').toBeLessThan(1.5);
-    expect(Math.abs(row[i].x-m.headers[i].x),'every row aligns at the same horizontal scroll position').toBeLessThan(1.5);
+function widthError(m,{all,fluid}){
+  const widths=expected(m),minimumTotal=m.labels.reduce((sum,label)=>sum+widths[label],0),errors=[];
+  for(let i=0;i<m.headers.length;i++)if(all||m.labels[i]!==fluid){
+    const minimum=widths[m.labels[i]];
+    errors.push(Math.abs(parseFloat(m.tracks[i])-minimum));
+    errors.push(all&&minimumTotal<m.body.clientWidth?Math.max(0,minimum-m.headers[i].width):Math.abs(m.headers[i].width-minimum));
   }
-  await test.info().attach('column-width-rectangles.json',{body:JSON.stringify({chrome:m.chrome,body:m.body,table:m.table,labels:m.labels,headers:m.headers,firstRow:m.rows[0],expected:expected(m),direction:m.direction},null,2),contentType:'application/json'});
+  if(all)errors.push(Math.abs(m.table.width-Math.max(m.body.clientWidth,minimumTotal)));
+  return Math.max(...errors);
+}
+function assertRowAlignment(m){
+  let width=0,position=0;
+  for(const row of m.rows.filter(row=>row.length===m.headers.length))for(let i=0;i<row.length;i++){
+    width=Math.max(width,Math.abs(row[i].width-m.headers[i].width));
+    position=Math.max(position,Math.abs(row[i].x-m.headers[i].x));
+  }
+  expect(width,'every row shares its header track').toBeLessThan(1.5);
+  expect(position,'every row aligns at the same horizontal scroll position').toBeLessThan(1.5);
+}
+async function assertWidths(page,{all=false,fluid='范围'}={}){
+  // Font/viewport changes can animate the shell width. A probe update alone does
+  // not prove the resulting table geometry has caught up in the same frame.
+  let m;
+  try{
+    await expect.poll(async()=>{m=await measure(page);return widthError(m,{all,fluid});},{message:'resolved column minima and actual tracks agree with the available body'}).toBeLessThan(1.5);
+  }finally{
+    if(m)await test.info().attach('column-width-rectangles.json',{body:JSON.stringify({chrome:m.chrome,body:m.body,table:m.table,labels:m.labels,headers:m.headers,firstRow:m.rows[0],tracks:m.tracks,expected:expected(m),direction:m.direction},null,2),contentType:'application/json'});
+  }
+  expect(m.layout).toBe('fixed');expect(m.probes).toEqual({height:0,visibility:'hidden'});
+  const widths=expected(m),minimumTotal=m.labels.reduce((sum,label)=>sum+widths[label],0);
+  for(let i=0;i<m.headers.length;i++)if(all||m.labels[i]!==fluid){
+    const minimum=widths[m.labels[i]];
+    expect(m.headers[i].width,'a configured column is never compressed below its minimum').toBeGreaterThanOrEqual(minimum-1.5);
+    if(!all||minimumTotal>=m.body.clientWidth)expect(Math.abs(m.headers[i].width-minimum),'only spare width stretches configured tracks').toBeLessThan(1.5);
+  }
+  if(all)expect(Math.abs(m.table.width-Math.max(m.body.clientWidth,minimumTotal)),'all-sized table fills the body or preserves the larger sum of minima').toBeLessThan(1.5);
+  assertRowAlignment(m);
   return m;
 }
 for(const kind of ['react','vanilla']){
@@ -51,7 +79,7 @@ for(const kind of ['react','vanilla']){
     await view(page,'sized');const full=await assertWidths(page,{all:true});
     const sum=full.headers.reduce((total,column)=>total+column.width,0);expect(Math.abs(full.table.width-sum)).toBeLessThan(1.5);
     await view(page,'sized',['scope','source']);await expect(table(page).getByRole('columnheader')).toHaveText(['编号','名称','类型','操作']);
-    const hidden=await assertWidths(page,{all:true});expect(hidden.table.width,'all-sized columns do not stretch to consume spare viewport width').toBeLessThan(hidden.body.clientWidth-20);
+    const hidden=await assertWidths(page,{all:true});expect(Math.abs(hidden.table.width-hidden.body.clientWidth),'all-sized columns share spare viewport width after columns are hidden').toBeLessThan(1.5);
     expect(await page.evaluate(()=>window.widthAction===document.querySelector('[data-row-id="1"]')&&window.widthBody===document.querySelector('#records-table .xui-data-table-body'))).toBe(true);
     await view(page,'mixed');await assertWidths(page);await expect(table(page).locator('col')).toHaveCount(6);
     await view(page,'auto');await expect(table(page)).not.toHaveAttribute('data-column-sizing');expect((await measure(page)).layout).toBe('auto');expect((await measure(page)).tracks.every(width=>width==='')).toBe(true);
@@ -74,15 +102,15 @@ for(const kind of ['react','vanilla']){
   });
 }
 
-// Direct URLs reproduce the narrow all-sized table and the existing fluid-column
-// alternative using identical public consumers and synthetic data, without CSS fixes.
+// Both all-sized minima and the ordinary fluid-content configuration fill the
+// same public consumer without host CSS or a synthetic filler column.
 for(const kind of ['react','vanilla']){
-  test(`${kind} full-width frame and exact fixed tracks distinguish all-sized from fluid columns`,async({page},info)=>{
+  test(`${kind} all-sized minima and optional fluid columns both fill the frame`,async({page},info)=>{
     await page.setViewportSize({width:1700,height:1000});
     await page.goto(`/data-table-${kind}/?internal&widths&fluid-content&column-mode=sized&hide-column=source&size=20`);
     await page.waitForFunction(()=>window.dataTableDemo?.owner.getState().status==='ready');await settle(page);
     const fixed=await assertWidths(page,{all:true});
-    expect(fixed.table.width).toBeLessThan(fixed.body.clientWidth-20);
+    expect(Math.abs(fixed.table.width-fixed.body.clientWidth)).toBeLessThan(1.5);
     const frame=await page.locator('#records-table .xui-data-table-frame').boundingBox();
     expect(Math.abs(fixed.body.x-frame.x)).toBeLessThan(2);
     expect(Math.abs(fixed.body.width-frame.width)).toBeLessThan(3);
@@ -90,28 +118,26 @@ for(const kind of ['react','vanilla']){
     await view(page,'mixed',['source']);const fluid=await assertWidths(page,{fluid:'名称'});
     expect(Math.abs(fluid.table.x-fluid.body.x-fluid.body.clientLeft)).toBeLessThan(1.5);
     expect(Math.abs(fluid.table.width-fluid.body.clientWidth),'the omitted content width consumes the available scrollport').toBeLessThan(1.5);
-    for(let i=0;i<fluid.labels.length;i++)if(fluid.labels[i]!=='名称')expect(Math.abs(fluid.headers[i].width-fixed.headers[i].width),'configured widths are unchanged').toBeLessThan(1.5);
+    for(let i=0;i<fluid.labels.length;i++)if(fluid.labels[i]!=='名称')expect(Math.abs(fluid.headers[i].width-expected(fluid)[fluid.labels[i]]),'unconfigured content receives spare width before configured minima').toBeLessThan(1.5);
     await info.attach('fluid-column-public-consumer.png',{body:await page.screenshot(),contentType:'image/png'});
   });
-  for(const width of [320,390,1280])test(`${kind} ${width}px automatic and mixed columns cover the scrollport across public layouts`,async({page},info)=>{
+  for(const width of [320,390,1280])for(const layout of ['natural','workspace'])for(const theme of ['light','dark','system'])test(`${kind} ${width}px ${layout} ${theme} automatic, mixed and all-sized columns cover the scrollport`,async({page},info)=>{
     await page.setViewportSize({width,height:1000});
     await page.addInitScript(()=>localStorage.setItem('ui.theme.mode',new URLSearchParams(location.search).get('theme')??'light'));
-    for(const layout of ['natural','workspace'])for(const theme of ['light','dark','system']){
-      await page.emulateMedia({colorScheme:theme==='dark'?'dark':'light'});
-      await page.goto(`/data-table-${kind}/?internal&layout=${layout}&theme=${theme}&size=100`);
-      await page.waitForFunction(()=>window.dataTableDemo?.owner.getState().status==='ready');await settle(page);
-      for(const mode of ['auto','mixed']){
-        await view(page,mode,['source']);
-        for(const scale of ['100%','200%']){
-          await page.evaluate(scale=>document.documentElement.style.fontSize=scale,scale);await settle(page);
-          const m=await measure(page);
-          expect(m.table.width,'table never stops short of the available scrollport').toBeGreaterThanOrEqual(m.body.clientWidth-1.5);
-          expect(Math.abs(m.table.x-m.body.x-m.body.clientLeft)).toBeLessThan(1.5);
-          if(m.body.scrollWidth<=m.body.clientWidth+1)expect(Math.abs(m.table.right-m.body.x-m.body.clientLeft-m.body.clientWidth)).toBeLessThan(1.5);
-          for(const row of m.rows)for(let i=0;i<row.length;i++)expect(Math.abs(row[i].width-m.headers[i].width)).toBeLessThan(1.5);
-          expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
-          await info.attach(`${layout}-${theme}-${mode}-${scale}-bounds.json`,{body:JSON.stringify({chrome:m.chrome,body:m.body,table:m.table,headers:m.headers}),contentType:'application/json'});
-        }
+    await page.emulateMedia({colorScheme:theme==='dark'?'dark':'light'});
+    await page.goto(`/data-table-${kind}/?internal&layout=${layout}&theme=${theme}&size=100`);
+    await page.waitForFunction(()=>window.dataTableDemo?.owner.getState().status==='ready');await settle(page);
+    for(const mode of ['auto','mixed','sized']){
+      await view(page,mode,['source']);
+      for(const scale of ['100%','200%']){
+        await page.evaluate(scale=>document.documentElement.style.fontSize=scale,scale);await settle(page);
+        const m=mode==='auto'?await measure(page):await assertWidths(page,{all:mode==='sized'});
+        expect(m.table.width,'table never stops short of the available scrollport').toBeGreaterThanOrEqual(m.body.clientWidth-1.5);
+        expect(Math.abs(m.table.x-m.body.x-m.body.clientLeft)).toBeLessThan(1.5);
+        if(m.body.scrollWidth<=m.body.clientWidth+1)expect(Math.abs(m.table.right-m.body.x-m.body.clientLeft-m.body.clientWidth)).toBeLessThan(1.5);
+        if(mode==='auto')assertRowAlignment(m);
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+        await info.attach(`${layout}-${theme}-${mode}-${scale}-bounds.json`,{body:JSON.stringify({chrome:m.chrome,body:m.body,table:m.table,headers:m.headers}),contentType:'application/json'});
       }
     }
   });

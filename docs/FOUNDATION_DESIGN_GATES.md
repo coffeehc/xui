@@ -57,7 +57,7 @@ G1通过标准：逐族静态条款/token映射、单测、正式React/原生浏
 - 通用业务：ConfigurableLoginPage、AdminSetupPage、NewPasswordFields、ApiKeyManager、StructuredLogExplorer、BusinessLogExplorer。
 - useTheme/useResource是hooks，HTTP/auth/query是运行时能力，不计为视觉组件；其安全回归继续运行。登录/Key 的持久 operation store 已按独立业务简化要求删除，现行合同见 AUTH/API_KEY，不归为风格变化。
 
-上述按依赖安排验收顺序，不撤销现有exports，不声称现有所有族已验完。表格横向全定宽与用户期望的冲突仍等待明确决策；纵向footer及document/workspace测试证据继续跟踪，产品实际包版本须另核。
+上述按依赖安排验收顺序，不撤销现有exports，不声称现有所有族已验完。表格已获用户明确决策：默认铺满，width作为下限且通常省略；横向余宽与纵向footer及natural/document/workspace测试证据分别跟踪，产品实际包版本须另核。
 
 ## 首批修复记录（5a同候选通过，未宣称全层完成）
 

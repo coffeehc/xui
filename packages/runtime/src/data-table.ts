@@ -1,6 +1,7 @@
-/** Column track size. Numbers are CSS pixels; percentages resolve against the table
- * body's available width. Omit width to distribute remaining space automatically. */
 type DataTableWidthUnit = 'px'|'rem'|'em'|'ch'|'ex'|'cap'|'ic'|'lh'|'rlh'|'vw'|'vh'|'vi'|'vb'|'vmin'|'vmax'|'svw'|'svh'|'lvw'|'lvh'|'dvw'|'dvh'|'cqw'|'cqh'|'cqi'|'cqb'|'cqmin'|'cqmax'|'cm'|'mm'|'Q'|'in'|'pt'|'pc'|'%';
+/** Optional column minimum. Numbers are CSS pixels; percentages resolve against
+ * the body width. Unconfigured columns receive spare width first; if all columns
+ * are configured, the browser distributes spare width among them. */
 export type DataTableColumnWidth = number | `${number}${DataTableWidthUnit}` | `calc(${string})` | `clamp(${string})` | `min(${string})` | `max(${string})` | `var(--${string})`;
 const columnLength = /^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?(?:px|rem|em|ch|ex|cap|ic|lh|rlh|vw|vh|vi|vb|vmin|vmax|svw|svh|lvw|lvh|dvw|dvh|cqw|cqh|cqi|cqb|cqmin|cqmax|cm|mm|Q|in|pt|pc|%)$/;
 function validateColumnWidth(width: DataTableColumnWidth | undefined) {
