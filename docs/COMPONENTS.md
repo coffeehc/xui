@@ -60,6 +60,7 @@ body 使用 xui 类；portal/原生顶层弹层用 xui-layer。公共 layout/tab
 | `/dom` API | 输入和所有权 |
 | --- | --- |
 | bindPressFeedback(root) | 仅 Enter/Space 按压状态，不合成 click；返回释放函数 |
+| bindMenuKeyboardFocus(popup) | 只投影所属 menu 的真实键盘焦点，不移动焦点或改变选择；pointer/blur 清理标记，释放恢复属性。原生 menu controller 与 React Menu/ContextMenu.Popup 已自动绑定，不能重复绑定 |
 | createDisclosureController(trigger,panel) | aria-controls/expanded、hidden；open/defaultOpen、onOpenChange 和 syncOpen |
 | createTabsController(tablist) | 原生 role=tab 的 data-value/aria-controls；手动默认、自动激活可选、RTL/Home/End、disabled 跳过、受控 value/syncValue |
 | createDialogController(dialog,trigger) | HTMLDialogElement showModal/close、Esc cancel、data-xui-close、可见 finalFocus；显式初始焦点在showModal前快照并临时拥有autofocus，兼容Chromium legacy与新算法；属性在finally完整恢复；浏览器模态加库 Tab 边界循环，迟到 close 事件不改变已重开弹层焦点 |
@@ -185,6 +186,10 @@ required 复选组表示至少选择一个当前已知选项，通过首个可�
 Command复用已安装的Combobox：inline列表、搜索、分组、空态、disabled、选择与键盘；只声明上述稳定组合，不照搬cmdk。原生输入保持DOM identity，aria-controls/activedescendant/selected/multiselectable同事实；ArrowUp/Down/Home/End跳过disabled，Enter执行，Escape清过滤而保留选择。action不作权限/副作用校验，也不自动等待/重放业务。需要远端搜索或更细peer部件时组合已有Combobox/Select，不能用私有默认样式补丁。
 
 Calendar使用一个框架无关model；更新一次发布一致快照，选相邻月份后保留所选日焦点。Arrow左右一天、上下七天、Home/End周端、PageUp/Down按月并夹到有效日，Enter/Space走按钮选择；禁用日期可焦点读取但不能选择，clear清空选择。月份查看不是业务查询，动画不等待操作。没有时间选择器、农历、复杂可用性/节假日或预约引擎。defaultMonth只定义初始视图；月份查看由库保存，runtime model可显式moveMonth，日期value由宿主按受控合同确认。
+
+ToggleGroup 的紧凑高度使用 `--toggle-height`，不继承普通 Button 的高度；文字放大仍可自然增高。InputGroup 的边框属于组外壳，内部单行/多行控件分别消费 `--input-group-control-min-height` / `--input-group-textarea-min-height`，扣除外壳边线后与独立 Input/Textarea 对齐；内嵌动作复用同一内部高度。默认值与覆盖由 [DESIGN](DESIGN.md#组件尺寸与职责) 定义，不在组件硬编码像素。
+
+Calendar 的禁用日期不出现可操作的 hover/pressed 底色；选中端点在 hover 后保留选中底色。forced-colors 下 Calendar 和 ToggleGroup 用额外下划线保留选择事实，焦点仍由独立 outline 表达。
 
 原生工厂只拥有指定root，update(partial)保留选项；受控value由宿主确认，defaultValue只读初始。destroy恢复创建前root/相关控件属性并释放监听/计时器；destroy幂等，已销毁update无效，旧句柄不影响重建owner。同root不能重复创建活跃widget。Callback只能接受公开事实；安全权限/业务结果由宿主确认。原生ScrollArea/InputGroup为HTML合同，没有隐式controller。React同peer单实例，原生不引入React。
 

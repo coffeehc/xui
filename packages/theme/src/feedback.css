@@ -42,7 +42,7 @@
     .xui-progress:indeterminate::-moz-progress-bar {background:transparent;}
   }
   @media (prefers-reduced-motion:reduce) {.xui-progress:indeterminate {animation:none;}}
-  .xui-badge {display:inline-flex;gap:var(--space-text-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);font-weight:var(--font-weight-control);}
+  .xui-badge {display:inline-flex;max-inline-size:100%;gap:var(--space-text-gap);overflow-wrap:anywhere;font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);font-weight:var(--font-weight-control);}
   .xui-badge:is([data-tone="info"],[data-tone="success"],[data-tone="warning"],[data-tone="error"]) {padding-inline:var(--space-text-gap);border-width:var(--line-width-surface);border-style:solid;border-radius:var(--radius-md);}
   .xui-badge[data-tone="info"] {color:var(--status-info-foreground);background:var(--status-info-soft);border-color:var(--status-info-line);}
   .xui-badge[data-tone="success"] {color:var(--status-success-foreground);background:var(--status-success-soft);border-color:var(--status-success-line);}

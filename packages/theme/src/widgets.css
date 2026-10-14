@@ -1,7 +1,7 @@
 @layer xui-components {
  .xui-toggle-group {display:flex;flex-wrap:wrap;gap:var(--space-text-gap);}
  .xui-toggle-group[data-orientation='vertical'] {flex-direction:column;align-items:stretch;}
- .xui-toggle-item {background:var(--layer-raised);color:var(--foreground);border-color:var(--surface-line);}
+ .xui-toggle-item {min-block-size:var(--toggle-height);padding-block:0;background:var(--layer-raised);color:var(--foreground);border-color:var(--surface-line);}
  .xui-toggle-item:is([data-pressed],[aria-pressed='true']):not(:disabled,[data-disabled],[aria-disabled='true']) {background:var(--interaction-selected);color:var(--interaction-selected-foreground);border-color:var(--action-primary);}
  .xui-avatar {position:relative;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;inline-size:var(--control-height);block-size:var(--control-height);overflow:hidden;border-radius:var(--radius-full);background:var(--layer-support);color:var(--foreground);vertical-align:middle;}
  .xui-avatar[data-size='sm'] {inline-size:var(--control-height-sm);block-size:var(--control-height-sm);}
@@ -26,12 +26,16 @@
  .xui-calendar-header {display:flex;align-items:center;justify-content:space-between;gap:var(--space-control-gap);}
  .xui-calendar-grid {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--space-text-gap);}
  .xui-calendar-day {min-inline-size:0;min-block-size:var(--control-height);padding:0;border:var(--line-width-surface) solid transparent;border-radius:var(--radius-sm);background:transparent;color:var(--foreground);font:inherit;cursor:pointer;transition:background-color var(--motion-duration-fast) var(--motion-easing),color var(--motion-duration-fast) var(--motion-easing);}
- .xui-calendar-day:hover {background:var(--interaction-hover);}
- .xui-calendar-day:active {background:var(--interaction-pressed);}
+ .xui-calendar-day:where(:hover):not([aria-disabled='true']) {background:var(--interaction-hover);}
+ .xui-calendar-day:where(:active):not([aria-disabled='true']) {background:var(--interaction-pressed);}
  .xui-calendar-day[aria-selected='true'] {background:var(--interaction-selected);color:var(--interaction-selected-foreground);}
  .xui-calendar-day[data-endpoint='true'] {background:var(--action-primary);color:var(--action-primary-foreground);}
  .xui-calendar-day[aria-disabled='true'] {color:var(--muted-foreground);cursor:not-allowed;}
  .xui-calendar-weekday {text-align:center;color:var(--muted-foreground);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+ @media (forced-colors:active) {
+  .xui-toggle-item[aria-pressed='true'],.xui-calendar-day[aria-selected='true'] {text-decoration:underline;}
+  .xui-calendar-day[data-endpoint='true'] {border-color:currentColor;}
+ }
 }
 @layer xui-components {
  /* The viewport is itself keyboard focusable and touches the clipped Root.

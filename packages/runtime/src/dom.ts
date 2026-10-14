@@ -116,9 +116,45 @@ export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElem
 }
 
 const popupStacks=new WeakMap<Document,HTMLElement[]>();
+const menuKeyboardOwners=new WeakSet<HTMLElement>();
+/** Project keyboard focus for menu engines whose :focus-visible heuristic stays in pointer mode.
+ * Never moves focus or owns selection. One binding per menu; release restores touched attributes.
+ */
+export function bindMenuKeyboardFocus(popup:HTMLElement){
+  if(menuKeyboardOwners.has(popup))throw new Error('A keyboard focus binding already owns this menu');
+  menuKeyboardOwners.add(popup);
+  let keyboard=false,dead=false;
+  const touched=new Map<HTMLElement,string|null>(),doc=popup.ownerDocument;
+  const ownItem=(target:EventTarget|null)=>{
+    if(!target||typeof (target as Element).closest!=='function')return null;
+    const item=(target as Element).closest<HTMLElement>('.xui-menu-item');
+    return item?.closest('[role="menu"]')===popup?item:null;
+  };
+  const clear=()=>{for(const item of touched.keys())item.removeAttribute('data-keyboard-active');};
+  const paint=()=>{
+    if(dead)return;
+    clear();const item=ownItem(doc.activeElement);
+    if(keyboard&&item){if(!touched.has(item))touched.set(item,item.getAttribute('data-keyboard-active'));item.setAttribute('data-keyboard-active','true');}
+  };
+  const key=(event:KeyboardEvent)=>{
+    if(event.defaultPrevented||event.isComposing||event.altKey||event.ctrlKey||event.metaKey||(event.target!==popup&&!ownItem(event.target)))return;
+    if(event.key.length===1||['ArrowDown','ArrowUp','ArrowLeft','ArrowRight','Home','End'].includes(event.key)){keyboard=true;paint();}
+  };
+  const pointer=()=>{keyboard=false;clear();};
+  const focus=(event:FocusEvent)=>{if(ownItem(event.target)?.matches(':focus-visible'))keyboard=true;paint();};
+  const blur=(event:FocusEvent)=>{clear();if(!ownItem(event.relatedTarget))keyboard=false;};
+  popup.addEventListener('keydown',key,true);popup.addEventListener('pointermove',pointer,true);popup.addEventListener('pointerdown',pointer,true);popup.addEventListener('focusin',focus);popup.addEventListener('focusout',blur);
+  return ()=>{
+    if(dead)return;dead=true;menuKeyboardOwners.delete(popup);
+    popup.removeEventListener('keydown',key,true);popup.removeEventListener('pointermove',pointer,true);popup.removeEventListener('pointerdown',pointer,true);popup.removeEventListener('focusin',focus);popup.removeEventListener('focusout',blur);
+    for(const [item,prior] of touched){if(prior===null)item.removeAttribute('data-keyboard-active');else item.setAttribute('data-keyboard-active',prior);}
+  };
+}
+
 export function createPopoverController(trigger:HTMLElement,popup:HTMLElement,options:OpenOptions & {menu?:boolean;tooltip?:boolean;contextMenu?:boolean;submenu?:boolean}={}){
   let open=false,dead=false,touch=false;const doc=popup.ownerDocument,win=doc.defaultView!;const controlled=options.open!==undefined;
   const menu=!!(options.menu||options.contextMenu);
+  const releaseKeyboard=menu?bindMenuKeyboardFocus(popup):()=>{};
   const priorHasPopup=trigger.getAttribute('aria-haspopup');
   const restoreMenuFocus=()=>restore(doc,trigger,options.finalFocus,target=>{const active=doc.activeElement,top=dialogStacks.get(doc)?.at(-1);return !dead&&!open&&(active===doc.body||active===trigger||popup.contains(active))&&(!top||!!target&&top.contains(target));});
   let contextPoint:{x:number;y:number}|null=null;
@@ -173,7 +209,7 @@ export function createPopoverController(trigger:HTMLElement,popup:HTMLElement,op
   doc.addEventListener('pointerdown',outside);doc.addEventListener('keydown',key);popup.addEventListener('click',disabledClick,true);popup.addEventListener('click',itemClick);win.addEventListener('resize',position);doc.addEventListener('scroll',scroll,true);
   const resizeObserver=new win.ResizeObserver(position);resizeObserver.observe(trigger);resizeObserver.observe(popup);win.visualViewport?.addEventListener('resize',position);win.visualViewport?.addEventListener('scroll',position);
   if(!options.tooltip&&!options.contextMenu)trigger.setAttribute('aria-expanded','false');syncOpen(options.open??options.defaultOpen??false);
-  return {getOpen:()=>open,open:()=>{contextPoint=null;request(true,'imperative');if(open&&menu)items()[0]?.focus();},close:()=>request(false,'imperative'),syncOpen,destroy(){if(dead)return;syncOpen(false);dead=true;resizeObserver.disconnect();win.visualViewport?.removeEventListener('resize',position);win.visualViewport?.removeEventListener('scroll',position);if(options.contextMenu&&trigger.getAttribute('aria-haspopup')==='menu'){if(priorHasPopup===null)trigger.removeAttribute('aria-haspopup');else trigger.setAttribute('aria-haspopup',priorHasPopup);}trigger.removeEventListener('click',click);trigger.removeEventListener('contextmenu',context);trigger.removeEventListener('pointerdown',pointer);trigger.removeEventListener('focus',focus);trigger.removeEventListener('blur',blur);trigger.removeEventListener('pointerenter',enter);trigger.removeEventListener('pointerleave',leave);doc.removeEventListener('pointerdown',outside);doc.removeEventListener('keydown',key);popup.removeEventListener('click',disabledClick,true);popup.removeEventListener('click',itemClick);win.removeEventListener('resize',position);doc.removeEventListener('scroll',scroll,true);}};
+  return {getOpen:()=>open,open:()=>{contextPoint=null;request(true,'imperative');if(open&&menu)items()[0]?.focus();},close:()=>request(false,'imperative'),syncOpen,destroy(){if(dead)return;syncOpen(false);dead=true;releaseKeyboard();resizeObserver.disconnect();win.visualViewport?.removeEventListener('resize',position);win.visualViewport?.removeEventListener('scroll',position);if(options.contextMenu&&trigger.getAttribute('aria-haspopup')==='menu'){if(priorHasPopup===null)trigger.removeAttribute('aria-haspopup');else trigger.setAttribute('aria-haspopup',priorHasPopup);}trigger.removeEventListener('click',click);trigger.removeEventListener('contextmenu',context);trigger.removeEventListener('pointerdown',pointer);trigger.removeEventListener('focus',focus);trigger.removeEventListener('blur',blur);trigger.removeEventListener('pointerenter',enter);trigger.removeEventListener('pointerleave',leave);doc.removeEventListener('pointerdown',outside);doc.removeEventListener('keydown',key);popup.removeEventListener('click',disabledClick,true);popup.removeEventListener('click',itemClick);win.removeEventListener('resize',position);doc.removeEventListener('scroll',scroll,true);}};
 }
 
 export function createSheetController(dialog:HTMLDialogElement,trigger:HTMLElement,{side='end',...options}:OpenOptions&{side?:'start'|'end'|'top'|'bottom'}={}){if(!['start','end','top','bottom'].includes(side))throw new TypeError('Invalid sheet side');const prior=dialog.dataset.side,hadClass=dialog.classList.contains('xui-sheet');dialog.classList.add('xui-sheet');dialog.dataset.side=side;const controller=createDialogController(dialog,trigger,options);let dead=false;return {...controller,destroy(){if(dead)return;dead=true;controller.destroy();if(!hadClass)dialog.classList.remove('xui-sheet');if(prior===undefined)delete dialog.dataset.side;else dialog.dataset.side=prior;}};}

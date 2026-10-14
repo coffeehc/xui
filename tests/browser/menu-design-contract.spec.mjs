@@ -13,3 +13,13 @@ for(const kind of ['react','native'])for(const theme of ['light','dark','system'
  await trigger.evaluate(element=>element.style.inlineSize='340px');await trigger.click();const anchorBound=await trigger.boundingBox(),anchorPopup=page.locator('.xui-select-popup:visible'),anchorPopupBox=await anchorPopup.boundingBox();expect(anchorBound.width).toBeGreaterThan(260);expect(anchorPopupBox.width).toBeGreaterThanOrEqual(anchorBound.width-1);await page.keyboard.press('Escape');
  await page.setViewportSize({width:320,height:720});const narrowAnchor=await trigger.boundingBox();await page.evaluate(()=>document.documentElement.style.setProperty('--popover-width','400px'));await trigger.click();const constrained=page.locator('.xui-select-popup:visible'),rect=await constrained.boundingBox(),narrowLimit=await constrained.evaluate(element=>parseFloat(getComputedStyle(element).maxInlineSize));expect(rect.x).toBeGreaterThanOrEqual(0);expect(rect.x+rect.width).toBeLessThanOrEqual(321);expect(rect.width).toBeGreaterThanOrEqual(Math.min(Math.max(narrowAnchor.width,400),narrowLimit)-1);expect(rect.width).toBeLessThanOrEqual(narrowLimit+1);expect(rect.width).toBeLessThan(400);await page.keyboard.press('Escape');
 });
+
+for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])test(`${kind} ${theme} menu projects keyboard focus after pointer opening and clears it on pointer or blur`,async({page})=>{
+ await page.goto(`/capabilities-${kind}/`);await page.emulateMedia({reducedMotion:'reduce'});await variables(page,theme);
+ const trigger=page.getByText('记录操作区域',{exact:true});await trigger.click({button:'right'});
+ const item=page.getByRole('menuitem',{name:'查看记录',exact:true});await page.keyboard.press('Home');
+ await expect(item).toBeFocused();await expect(item).toHaveAttribute('data-keyboard-active','true');await expect(item).toHaveCSS('outline-style','solid');await expect(item).toHaveCSS('outline-color','rgb(52, 86, 120)');
+ await item.hover();await expect(item).not.toHaveAttribute('data-keyboard-active','true');
+ await page.keyboard.press('Home');await expect(item).toBeFocused();await expect(item).toHaveAttribute('data-keyboard-active','true');
+ const retained=await item.elementHandle();await page.keyboard.press('Escape');await expect(trigger).toBeFocused();expect(await retained.getAttribute('data-keyboard-active')).toBeNull();
+});

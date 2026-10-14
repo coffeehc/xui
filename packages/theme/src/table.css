@@ -21,8 +21,8 @@
   .xui-table[data-sticky-header='true'] thead th {position:sticky;inset-block-start:0;z-index:var(--z-sticky);}
   .xui-table[data-sticky-header='true'] thead th[data-sticky] {z-index:var(--z-sticky-intersection);}
   .xui-sort-button {border:0;background:transparent;color:inherit;font:inherit;display:inline-flex;align-items:center;gap:var(--space-text-gap);min-block-size:var(--control-height);padding:0;cursor:pointer;transition:color var(--motion-duration-fast) var(--motion-easing),background-color var(--motion-duration-fast) var(--motion-easing);}
-  .xui-sort-button:hover {color:var(--action-primary);}
-  .xui-sort-button:active {background:var(--interaction-pressed);}
+  .xui-sort-button:hover:not(:disabled,[aria-disabled='true']) {color:var(--action-primary);}
+  .xui-sort-button:active:not(:disabled,[aria-disabled='true']) {background:var(--interaction-pressed);}
   .xui-sort-button:disabled {color:var(--muted-foreground);cursor:not-allowed;}
 }
 @layer xui-components {

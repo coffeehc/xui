@@ -33,8 +33,8 @@ test('Precision default, uploaded source and semantic CSS fingerprint are versio
   const source=await readFile(metadata.source.path,'utf8');
   assert.equal(createHash('sha256').update(source).digest('hex'),metadata.source.sha256);
   assert.equal(createHash('sha256').update(css).digest('hex'),metadata.defaultCssSha256);
-  assert.equal(metadata.contractVersion,'0.8.0');
-  assert.match(doc,/规范版本：0\.8\.0。/);
+  assert.equal(metadata.contractVersion,'0.9.0');
+  assert.match(doc,/规范版本：0\.9\.0。/);
   assert.equal(metadata.defaultMode,'dark');
   assert.equal(Object.keys(dark).length,metadata.defaultTokenCount);
   assert.equal(dark['--palette-canvas'],'#090b0e');

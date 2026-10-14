@@ -14,7 +14,7 @@
   .xui-text {margin:0;font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);}
   .xui-strong {font-weight:var(--font-weight-heading);}
   .xui-detail-heading {margin:var(--space-content-gap) 0 var(--space-control-gap);font:var(--font-weight-heading) var(--font-size-section-title)/var(--line-height-section-title) var(--font-heading);}
-  .xui-code {margin:var(--space-control-gap) 0;font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere;}
+  .xui-code {margin:var(--space-control-gap) 0;font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-mono);font-variant-numeric:tabular-nums;white-space:pre-wrap;overflow-wrap:anywhere;}
 }
 
 @layer xui-components {

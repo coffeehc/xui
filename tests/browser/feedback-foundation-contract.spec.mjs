@@ -43,7 +43,14 @@ async function paintedProgress(page,node,expected,info,name){
 async function paintSummary(page,png,track,cropTop=0){return page.evaluate(async({encoded,track,cropTop})=>{
  const image=new Image();image.src=`data:image/png;base64,${encoded}`;await image.decode();
  const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const context=canvas.getContext('2d');context.drawImage(image,0,0);
- const data=context.getImageData(0,0,image.width,image.height).data;context.clearRect(0,0,1,1);context.fillStyle=track;context.fillRect(0,0,1,1);const background=Array.from(context.getImageData(0,0,1,1).data);
+ const data=context.getImageData(0,0,image.width,image.height).data;
+ // An archived blank capture keeps the system palette of its original engine.
+ // Its crop begins on the uniform track; live captures still use the current
+ // engine's resolved Canvas, so painted perimeter/fill checks stay independent.
+ const origin=cropTop*image.width*4;
+ let background;
+ if(track===null)background=Array.from(data.slice(origin,origin+4));
+ else{context.clearRect(0,0,1,1);context.fillStyle=track;context.fillRect(0,0,1,1);background=Array.from(context.getImageData(0,0,1,1).data);}
  const width=image.width,height=image.height-cropTop,sides={left:0,right:0,top:0,bottom:0};let inkPixels=0,interiorInk=0;
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
   const at=((y+cropTop)*width+x)*4,ink=background.some((channel,index)=>Math.abs(data[at+index]-channel)>20);if(!ink)continue;inkPixels++;
@@ -133,7 +140,7 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
    expect(await node.evaluate(element=>({value:element.getAttribute('value'),max:element.max,position:element.position}))).toEqual({value:value===null?null:String(value),max,position});
   }
   const legacy=await readFile(new URL(`../fixtures/evidence/progress-forced-colors-770a83d-${theme==='light'?'light':'dark'}.png`,import.meta.url));
-  const blank=await paintSummary(page,legacy,systemTrack,60);expect(blank.inkPixels,'The retained failing screenshot must be rejected by the paint oracle').toBe(0);for(const count of Object.values(blank.sides))expect(count).toBe(0);
+  const blank=await paintSummary(page,legacy,null,60);expect(blank.inkPixels,'The retained failing screenshot must be rejected by the paint oracle').toBe(0);for(const count of Object.values(blank.sides))expect(count).toBe(0);
   await info.attach('legacy-blank-track-oracle.json',{body:JSON.stringify(blank,null,2),contentType:'application/json'});
   for(const [id,expected]of [['zero',[[.2,systemTrack],[.8,systemTrack]]],['determinate',[[.2,systemInk],[.6,systemTrack]]],['fractional',[[.2,systemInk],[.6,systemTrack]]],['complete',[[.2,systemInk],[.8,systemInk]]],['indeterminate',[[.2,systemTrack],[.8,systemTrack]]]])await paintedProgress(page,page.getByTestId(`progress-${id}`),expected,info,`progress-${id}-forced-colors`);
   const zeroPaint=await trackEvidence(page,page.getByTestId('progress-zero'),systemTrack,info,'progress-zero-forced-perimeter');

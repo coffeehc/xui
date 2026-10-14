@@ -3,7 +3,7 @@ import {ContextMenu as Base} from '@base-ui/react/context-menu';
 import {Menu} from './menu.js';
 import {branded} from './shared.js';
 /** Context state/virtual anchor belong to the peer; keyboard activation uses its contextmenu path. */
-export const ContextMenu={...Base,Icon:Menu.Icon,Item:Menu.Item,LinkItem:Menu.LinkItem,CheckboxItem:Menu.CheckboxItem,RadioItem:Menu.RadioItem,GroupLabel:Menu.GroupLabel,SubmenuTrigger:Menu.SubmenuTrigger,
+export const ContextMenu={...Base,Popup:Menu.Popup,Icon:Menu.Icon,Item:Menu.Item,LinkItem:Menu.LinkItem,CheckboxItem:Menu.CheckboxItem,RadioItem:Menu.RadioItem,GroupLabel:Menu.GroupLabel,SubmenuTrigger:Menu.SubmenuTrigger,
   Trigger:function Trigger({className,onKeyDown,onContextMenu,...props}:React.ComponentProps<typeof Base.Trigger>){return <Base.Trigger {...props} className={branded('xui-context-trigger',className)} onContextMenu={event=>{onContextMenu?.(event);if(event.defaultPrevented)event.preventBaseUIHandler();}} onKeyDown={event=>{
     onKeyDown?.(event);
     if(event.defaultPrevented||event.baseUIHandlerPrevented||event.repeat||event.nativeEvent.isComposing||event.altKey||event.ctrlKey||event.metaKey)return;
@@ -16,5 +16,5 @@ export const ContextMenu={...Base,Icon:Menu.Icon,Item:Menu.Item,LinkItem:Menu.Li
     const box=trigger.getBoundingClientRect();
     target.dispatchEvent(new win.MouseEvent('contextmenu',{bubbles:true,cancelable:true,composed:true,view:win,button:2,clientX:box.left,clientY:box.bottom,shiftKey:event.shiftKey}));
   }}/>;},
-  Content:function Content({className,positionerProps,...props}:React.ComponentProps<typeof Base.Popup>&{positionerProps?:React.ComponentProps<typeof Base.Positioner>}){return <Base.Portal><Base.Positioner side="right" align="start" {...positionerProps} className={branded('xui-positioner',positionerProps?.className)}><Base.Popup {...props} className={branded('xui-layer xui-floating xui-menu-popup',className)}/></Base.Positioner></Base.Portal>;},
+  Content:function Content({positionerProps,...props}:React.ComponentProps<typeof Base.Popup>&{positionerProps?:React.ComponentProps<typeof Base.Positioner>}){return <Base.Portal><Base.Positioner side="right" align="start" {...positionerProps} className={branded('xui-positioner',positionerProps?.className)}><Menu.Popup {...props}/></Base.Positioner></Base.Portal>;},
 };

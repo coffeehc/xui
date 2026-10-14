@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.8.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.9.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -520,6 +520,9 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     --feedback-slot-block-size: calc(var(--control-height) + var(--space-content-gap) * 2 + (var(--focus-width) + var(--focus-offset)) * 2);
     --data-region-min-block-size: calc(var(--control-height) * 8);
     --textarea-min-block-size: calc(var(--input-height) * 2);
+    --input-group-control-min-height: calc(var(--input-height) - var(--line-width-surface) * 2);
+    --input-group-textarea-min-height: calc(var(--textarea-min-block-size) - var(--line-width-surface) * 2);
+    --toggle-height: calc(var(--spacing) * 7);
     --range-thumb-offset: calc((var(--space-control-gap) - var(--control-icon-size)) / 2 - var(--line-width-surface));
     --choice-check-width: calc(var(--spacing) * 1.5);
     --choice-check-height: calc(var(--spacing) * 2.5);
@@ -1026,7 +1029,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 | --- | --- | --- |
 | Button / 图标按钮 | default36、sm32、xs24、lg40px；padding12/10/8/16、gap6/6/4/8；radius-md。主动作primary，次动作outline或中性secondary，重复行操作ghost，危险动作destructive | default/hover/pressed/focus/disabled/busy/error；只有真实切换才selected。Enter/Space执行，图标有名称；不改变请求、防重、确认。工具栏换行不裁掉动作 |
 | Input / Textarea / NativeSelect / 搜索 | 普通36px、小32px；body-sm；input表面、一层1px边界、radius-md。label/control/help/error间距8/4/4px | default/hover/focus/disabled/invalid/readOnly；busy由业务拥有。placeholder不代替label，错误用aria-invalid和describedby；只读可复制，native option跟随平台 |
-| InputGroup | 只一层边界与focus；内部控件不重复border/ring；addon与清除不覆盖文字 | 外层映射内部真实focus/invalid；浅深检查focus+invalid；输入可收缩 |
+| InputGroup | 只一层边界与focus；内部控件不重复border/ring；addon与清除不覆盖文字 | 单行默认外高与Input一致，内部输入和动作使用input-group-control-min-height扣除外框两条边；多行使用input-group-textarea-min-height。长文或放大文字仍可增高。外层映射内部真实focus/invalid；浅深检查focus+invalid；输入可收缩 |
 | Switch / Checkbox / Toggle / Tabs | 默认Switch28×16.6px；Tabs高32、内padding3、项radius-md；Toggle高28、gap4；其他既有变体记录映射 | checked/selected来自真实状态，Space切换，方向键按控件语义；禁用项不可执行，hover不盖选中底；小屏项目可达 |
 | DropdownMenu / ContextMenu | opaque overlay、1px边界、shadow-overlay、radius-xl、padding4；项至少28、body-xs、gap8；min-width128px | default/hover/selected/focus/disabled；业务busy/error不伪装选项。选中有check，危险项有文字；available-height内滚动 |
 | Command / Combobox | 搜索复用输入、选项复用菜单角色，不另建选择器皮肤 | 活动项与持久选中分开；搜索输入保持焦点，键盘代理焦点只在键盘阶段存在，鼠标/blur清除；no results与error不同，不更改搜索和防抖 |
@@ -1050,12 +1053,12 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 | Input/Textarea/搜索 D/H/F/X/E/readOnly；B由业务拥有；S不适用 | input-height36、radius4、input-background/foreground、1px input-border-color；label→control→help→error，8/4/4px | H保持input-border-color的必要对比；F独立focus-*；E的必要控件边界用status-error-foreground，status-error-line只用于有文字/图标伴随的辅助分隔；关联aria-invalid/describedby，E+F均可见。readOnly可选择复制；X不可编辑；loading不自行改请求。placeholder不代替label |
 | InputGroup D/H/F/X/E；S/B按内部控件 | 同输入，一层边界和焦点，addon/清除与内容gap8 | 外层映射内部真实focus/invalid，内部不重复border/ring；帮助和错误不撑偏相邻控件，不制造第二层皮肤 |
 | Combobox/自定义选择 D/H/S/F/X/B/E | 搜索复用输入、选项复用menu-item-*；弹层popover-width288、padding12 | 持续S与键盘活动项分开，活动项F只在键盘阶段存在。搜索输入保留焦点，方向键/Enter选择；无结果与错误不同，不自动选首项、不改查询防抖；NativeSelect由平台负责面板 |
-| Checkbox/Switch/Toggle D/H/S/F/X/E；B仅业务已有 | Checkbox默认16×16px（control-icon-size）、radius-sm、1px input-border-color；Switch宽28/高16.6px、拇指14.4px，圆形轨道；Toggle高28、gap4 | S用action-primary及成对前景或interaction-selected-*，必须有真实checked；H不盖S，F独立，E相关错误可见，X不可切换。Space/方向键遵循角色；不得仅换颜色模拟checked |
+| Checkbox/Switch/Toggle D/H/S/F/X/E；B仅业务已有 | Checkbox默认16×16px（control-icon-size）、radius-sm、1px input-border-color；Switch宽28/高16.6px、拇指14.4px，圆形轨道；Toggle使用toggle-height默认28px、gap4，放大文字可自然增高 | S用action-primary及成对前景或interaction-selected-*，必须有真实checked；H不盖S，F独立，E相关错误可见，X不可切换。Space/方向键遵循角色；不得仅换颜色模拟checked |
 | Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 高control-height-sm32、内padding3、项radius-md；label body-sm | 默认透明/中性，H用interaction-hover，S用interaction-selected-*，F用focus-*；无四周选中框，不要求左侧竖线。方向键及panel关联完整，禁用项跳过，不能把panel加载当作tab被禁用 |
 | 表格/列表 D/H/S/F/B/E；X属于行控件 | cell padding8、动作gap4，表头body-xs/500、正文body-sm，分隔separator-line；opaque条纹 | H用interaction-hover，S/expanded用interaction-selected背景；sticky与整行不透明底一致。F只归焦点控件/确有键盘行，不给被动行造焦点。B/空/E保留所属状态和恢复入口，排序/分页真实禁用 |
 | Card/Section/连续Item | card-background=raised、border-color=surface-line、radius6、padding14/小10，shadow-flat | 被动仅D/B/E，H/P/S/F/X不适用；交互卡才用H/S/F/X。H轻底不浮起，S浅底无额外框，F独立。内部组无重复框，连续Item仅末端分隔 |
 | 统计/指标 D/B/E；H/S仅已有tooltip或范围控件 | metric-padding12/gap4，label13/muted，主值24/600/tabular、单位13 | 0/未知/无数据/B/E分开，核心统计才进首屏；不以disabled表达缺数据。范围S沿选择器，tooltip H/F使用overlay；指标本体无按钮hover、焦点或选中 |
-| Dialog/Drawer/Sheet D/F/X/B/E；容器H/P/S不适用 | overlay+surface-line+shadow-overlay，radius14.4；宽layout-dialog/confirm/drawer-width按40%/30%/60%与各自min/max合成；Dialog/Confirm边距16，侧向Sheet封顶视口 | header/body/footer归属明确，body滚动footer可达；F限制/恢复按模态语义，X/B/E属于内部控件/反馈。取消不自动保存，危险确认保留，不普通嵌套同类模态 |
+| Dialog/Drawer/Sheet D/F/X/B/E；容器H/P/S不适用 | overlay+surface-line+shadow-overlay，radius-2xl默认8px（贴边Sheet按其边缘合同）；宽layout-dialog/confirm/drawer-width按40%/30%/60%与各自min/max合成；Dialog/Confirm边距16，侧向Sheet封顶视口 | header/body/footer归属明确，body滚动footer可达；F限制/恢复按模态语义，X/B/E属于内部控件/反馈。取消不自动保存，危险确认保留，不普通嵌套同类模态 |
 | Tooltip/Popover/Calendar D/F；H/S/X/B/E按角色 | Tooltip最大320、body-xs；Popover宽288/padding12/gap16；floating-offset4 | 辅助Tooltip不可承载唯一重要错误或必要动作；按需帮助须键盘/触屏可打开关闭。Calendar真实日期S/disabled与方向键/locale保留，定位和回焦点见下文；不要求所有浮层本体有hover |
 | Badge/元数据/状态/Alert/通知 | 元数据body-xs普通文字，不泛胶囊；Badge默认neutral纯文字，显式info/success/warning/error用status-*-foreground/soft/line、横向space-text-gap、line-width-surface及radius-md；状态保留文字/图标 | 被动D/E，H/S/F/X不适用；可交互筛选chip才有H/S/F/X。错误/风险/必要反馈即时在相关位置可见，不收进普通解释；B有可理解文案，不只转圈 |
 | 图表/Progress D/B/E；H/F用于tooltip，S用于范围/确有数据选择 | chart-color-1…6、axis/legend字体12/13、grid=separator、line2/2.5、tooltip=overlay，默认plot224 | 数据系列身份稳定；H/F tooltip显示原值和声明时区，S归范围/真实选择不改变聚合；X不用于未知采样。图例可换行，0/缺样本/B/E不互换，实际PNG另验独立document-* |

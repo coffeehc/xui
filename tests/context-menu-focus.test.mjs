@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createContextMenuController} from '../packages/runtime/dist/dom.js';
+import {bindMenuKeyboardFocus, createContextMenuController} from '../packages/runtime/dist/dom.js';
 import {createNavigationMenu} from '../packages/runtime/dist/navigation.js';
 import {navigationDOM, fire, key, mockComputedStyle} from './fixtures/navigation-dom.mjs';
 
@@ -17,6 +17,30 @@ function contextFixture() {
 }
 
 const context = target => fire(target, 'contextmenu', {button: 2, clientX: 60, clientY: 70});
+
+test('menu keyboard projection preserves ownership, initial popup navigation and cleanup', () => {
+  const f = contextFixture();
+  f.popup.setAttribute('role', 'menu');
+  f.first.className = f.second.className = 'xui-menu-item';
+  f.first.setAttribute('data-keyboard-active', 'host');
+  const release = bindMenuKeyboardFocus(f.popup);
+  assert.throws(() => bindMenuKeyboardFocus(f.popup), /already owns/);
+  f.popup.focus(); key(f.popup, 'Home'); f.first.focus();
+  assert.equal(f.first.getAttribute('data-keyboard-active'), 'true');
+  f.second.focus();
+  assert.equal(f.first.getAttribute('data-keyboard-active'), null);
+  assert.equal(f.second.getAttribute('data-keyboard-active'), 'true');
+  fire(f.second, 'pointermove');
+  assert.equal(f.second.getAttribute('data-keyboard-active'), null);
+  key(f.second, 'Home', {ctrlKey: true});
+  assert.equal(f.second.getAttribute('data-keyboard-active'), null);
+  key(f.second, 'Home'); f.outside.focus();
+  assert.equal(f.second.getAttribute('data-keyboard-active'), null);
+  release(); release();
+  assert.equal(f.first.getAttribute('data-keyboard-active'), 'host');
+  assert.equal(f.second.getAttribute('data-keyboard-active'), null);
+  bindMenuKeyboardFocus(f.popup)();
+});
 
 test('native ContextMenu leaves trigger expansion and controls owned by the host', () => {
   const f = contextFixture();
