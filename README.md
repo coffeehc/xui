@@ -1,36 +1,26 @@
 # xui
 
-统一品牌前端基础：无框架 CSS 与运行时、React 薄封装、公共布局、完整基础交互与加载反馈，以及独立安装后的 React/原生参考页。
+通用前端组件与主题：无框架 CSS/runtime、React 薄封装、公共布局、交互与可选页面组合。宿主负责业务 API、领域数据、业务 UI 和产品流程；选用默认 HTTP client/页面 adapter 时满足相应合同，也可使用公开 typed adapter/loader 接入领域能力。
 
-项目用于统一品牌和前端体系。自有项目的普通业务API遵循原生 `commons/webfacade`、`httpx` 定义；行业标准优先，OAuth2/OIDC/SAML与第三方API保持其协议，在内部边界明确转换。采用项目应在自身授权范围主动标准化自有后端；旧协议 adapter 仅用于明确的临时迁移。合同、必须遵循项和领域扩展边界见[页面 API 总索引](docs/PAGE_APIS.md)。
-
-- [完整通用规范](docs/DESIGN.md)
-- [范围、包接口与实施映射](docs/IMPLEMENTATION.md)
-- [使用与迁移手册](docs/ADOPTION.md)
+- [接入与迁移](docs/ADOPTION.md)
+- [完整通用设计规范](docs/DESIGN.md)
 - [全部公开入口与默认行为](docs/PUBLIC_API.md)
+- [组件分层、实施映射与宿主边界](docs/IMPLEMENTATION.md)
+- [布局插槽](docs/LAYOUT_SLOTS.md)、[导航](docs/NAVIGATION.md)、[公共组合](docs/COMPOSITIONS.md)
+- [交互控件](docs/WIDGETS.md)、[文字与展示](docs/DISPLAY.md)、[表格](docs/DATA_TABLE.md)
+- [HTTP/query](docs/HTTP.md)、[默认页面服务前置](docs/PAGE_APIS.md)、[认证](docs/AUTH.md)、[密码](docs/PASSWORD.md)
+- [API Key](docs/API_KEY.md)、[业务日志](docs/BUSINESS_LOGS.md)、[程序错误观察](docs/LOGS.md)
+- [验证证据与限制](docs/VALIDATION.md)
 - [Codex 接入 skill](.agents/skills/adopt-xui/SKILL.md)
-- [原子→组合→页面的设计哲学](docs/FOUNDATION.md#组件层次与扩展原则)
-- [控件与原生公共组合](docs/WIDGETS.md)
-- [冷启动、导航与外壳滚动](docs/NAVIGATION.md)
-- [可配置登录页与统一认证接口](docs/AUTH.md)
-- [HTTP 与共享 query 接入](docs/HTTP.md)
-- [API Key 通用管理](docs/API_KEY.md)
-- [业务日志查询](docs/BUSINESS_LOGS.md)
-- [独立结构化错误查询与拟议 facade 合同](docs/LOGS.md)
-- [来源与后续迁移计划](docs/MIGRATION.md)
-- [能力覆盖与宿主边界](docs/FOUNDATION.md)
-- [本轮验证证据和限制](docs/FOUNDATION_VALIDATION.md)
-- [早期验证记录](docs/VALIDATION.md)
-- [限定独立复核与修订证据](docs/REVIEW.md)
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm exec playwright install chromium # 已有 Chromium 可省略
 pnpm verify
 pnpm preview
-# 另一个终端：pnpm dev（构建成功/失败状态与自动恢复）
+# 另一个终端：pnpm dev（构建状态与自动恢复）
 ```
 
-主要参考页为 `http://localhost:4173/foundation-vanilla/` 和 `/foundation-react/`，通过公共 Layout/CSS 组合列表、表单与详情，附加工具真正按需加载。`/vanilla/` 和 `/react/` 用于基础控件参考与回归。
-新增控件参考页为 `/widgets-react/` 与 `/widgets-vanilla/`；登录扩展参考页为 `/login-react/?extensions` 与 `/login-vanilla/?extensions`。
+参考页默认由本地 preview 在 4173 端口提供：`/foundation-react/` 与 `/foundation-vanilla/` 展示列表、表单和详情；`/react/`、`/vanilla/`、`/widgets-react/` 与 `/widgets-vanilla/` 展示基础控件。登录扩展为 `/login-react/?extensions` 与 `/login-vanilla/?extensions`。示例仅使用合成数据，不证明产品或真实后端已集成。
+
 包均为 `private: true`，仅本地打包验证，不发布。许可证尚待仓库所有者决定。

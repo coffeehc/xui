@@ -18,7 +18,7 @@
 AuthSessionV2 = `{schema_version:2,user:{id,username,display_name}}`。
 IssuedSessionV2 在上述字段之外恰有 `access_token`、`token_type:"Bearer"`、`expires_at`。该含秘密 DTO 的解析器不公开；login/refresh 返回值只有 user。`parseAuthSession` 只接受无 token 的 session DTO。
 
-用户 id 默认是正十进制 int64 字符串；`createAuthClient({http,idEncoding:"hex"})` 与 `parseAuthSession(value,"hex")` 可明确选择小写无前缀/前导零 hex。两者范围均为正 int64，不得转JS number；未知编码立即拒绝。详见 [共享实体编码](IDENTITY_ENCODING.md)。username 非空、最多128 UTF-16单元；display_name 为null或最多256单元。拒绝额外字段、getter、旧版本、角色/权限/tenant投影。`access_token` 使用 `<prefix>-v1-sha256-access-<secret>`：prefix 为 `[a-z][a-z0-9]{0,31}`，secret 是32字节随机值的43字符规范无padding base64url。客户端仅接受 v1、sha256 和 access 类型的结构；服务端仍按配置前缀、凭据记录及 scope 校验，不能凭标识直接授权。此处 v1 是凭据格式版本，与 HTTP DTO 的 schema_version=2 分开；sha256 是高熵凭据摘要算法，不是密码算法，也不表示 JWT。新基线不接受旧无版本格式。expires_at 为尚未到期的UTC RFC3339；服务器默认access寿命5分钟，可由后端显式配置，不将JWT解码结果当作服务端权限。
+用户 id 默认是正十进制 int64 字符串；`createAuthClient({http,idEncoding:"hex"})` 与 `parseAuthSession(value,"hex")` 可明确选择小写无前缀/前导零 hex。两者范围均为正 int64，不得转JS number；未知编码立即拒绝。详见 [共享实体编码](HTTP.md#显式实体身份编码)。username 非空、最多128 UTF-16单元；display_name 为null或最多256单元。拒绝额外字段、getter、旧版本、角色/权限/tenant投影。`access_token` 使用 `<prefix>-v1-sha256-access-<secret>`：prefix 为 `[a-z][a-z0-9]{0,31}`，secret 是32字节随机值的43字符规范无padding base64url。客户端仅接受 v1、sha256 和 access 类型的结构；服务端仍按配置前缀、凭据记录及 scope 校验，不能凭标识直接授权。此处 v1 是凭据格式版本，与 HTTP DTO 的 schema_version=2 分开；sha256 是高熵凭据摘要算法，不是密码算法，也不表示 JWT。新基线不接受旧无版本格式。expires_at 为尚未到期的UTC RFC3339；服务器默认access寿命5分钟，可由后端显式配置，不将JWT解码结果当作服务端权限。
 
 用户名提交前trim；密码不trim且最多4096字符，只在POST body使用，不进入回调、URL、storage、日志或state。返回的 identity 不是授权决策依据。
 
@@ -80,7 +80,7 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 
 ## 完整页面与扩展
 
-配置产品名称、标题、说明、可选logo、文案、safe returnTo；默认card采用居中、自然高度的单列登录框。显式fullscreen保留相同窄框，只省略外框表面与边框；两者均无左右品牌面板或分割线，尺寸统一来自[DESIGN](DESIGN.md)。主题复用已有owner，登录页不增主题选择器或持久化副本。React和原生共用布局，窄屏/短视口/200%文字自然文档滚动，字段和动作可达。主动作后的最小反馈轨道保持普通短checking/idle/busy/error布局稳定，多行消息按内容自然增长并完整可读；公共尺寸、品牌组合和反馈位置见[定量登录验收](LOGIN_VISUAL_ACCEPTANCE.md)。brandVisual仍是可选inert装饰内容，放在框内顶部品牌组、默认最大80px高，窄屏隐藏；不应嵌入完整登录卡片或重复登录任务标题，公共库不识别图片文字。原checkSession文案键仍可配置，默认文字为“Retry connection”，仅在安全的session读取网络/超时/服务端失败时作为局部次动作出现；凭据401/403/429无此入口。自动session/refresh检查只显示局部状态；共享读取的等待者取消不等于取消底层owner，因此页面不提供该阶段的取消按钮。公共登录页已删除取消按钮及专属文案/事件，扩展等待也不自动生成取消动作。卸载、pagehide 与 auth owner 的 Abort 能力仍会终止所属等待并拒绝迟到结果，保留迟到结果隔离。页面不再承担登出管理；应用内仍可通过同一auth owner显式logout。
+配置产品名称、标题、说明、可选logo、文案、safe returnTo；默认card采用居中、自然高度的单列登录框。显式fullscreen保留相同窄框，只省略外框表面与边框；两者均无左右品牌面板或分割线，尺寸统一来自[DESIGN](DESIGN.md)。主题复用已有owner，登录页不增主题选择器或持久化副本。React和原生共用布局，窄屏/短视口/200%文字自然文档滚动，字段和动作可达。主动作后的反馈与辅助动作为空或隐藏时不占位；实际消息自然增长并完整可读，不保留固定或最小反馈轨道。字段与主动作保持 DOM、尺寸和相对顺序，居中卡片可随消息增高调整位置；公共尺寸与品牌组合见 [DESIGN](DESIGN.md#公共登录页布局与主题)，实际验收见 [VALIDATION](VALIDATION.md#认证页验收)。brandVisual仍是可选inert装饰内容，放在框内顶部品牌组、默认最大80px高，窄屏隐藏；不应嵌入完整登录卡片或重复登录任务标题，公共库不识别图片文字。原checkSession文案键仍可配置，默认文字为“Retry connection”，仅在安全的session读取网络/超时/服务端失败时作为局部次动作出现；凭据401/403/429无此入口。自动session/refresh检查只显示局部状态；共享读取的等待者取消不等于取消底层owner，因此页面不提供该阶段的取消按钮。公共登录页已删除取消按钮及专属文案/事件，扩展等待也不自动生成取消动作。卸载、pagehide 与 auth owner 的 Abort 能力仍会终止所属等待并拒绝迟到结果，保留迟到结果隔离。页面不再承担登出管理；应用内仍可通过同一auth owner显式logout。
 
 导航就绪要求owner为authenticated且busy为空，并且本页等待的认证/读取已成功结算。currentUser恢复access期间的refresh结果保持busy=session，最终session核对完成才发布空闲；宿主先启动读取再挂登录页与页面自行检查使用同一个flight，StrictMode重放不会增加HTTP请求。单独refresh仍按原合同完成。旧session因新access generation而失效时，页面只提供局部读取重试，不因owner保留另一份有效access而提前导航。
 
@@ -94,9 +94,9 @@ owner确认有效authenticated后，无论来自初始session检查还是主动l
 
 ## 验证与采用
 
-[共享wire fixture](../tests/fixtures/contracts/auth.v2.json)与[baseservice 0f5dba4](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/contracts/auth.v2.json)固定字节一致（配套[后端合同](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/bearer-auth-v2.md)），含issued/session/logout和8类错误。unit覆盖严格DTO/凭据隔离/恢复/多401/旧代响应/取消等待者/refresh-logout排序/不确定结果/不重放。正式React与原生消费者只用公开入口和tarball。浏览器测试覆盖原生整页导航恢复、Cookie/Authorization隔离、跨tab锁与安全通知；是否真正执行成功看[凭据格式验证记录](CREDENTIAL_FORMAT_VALIDATION.md)（早期会话机制记录见 [AUTH_V2_VALIDATION](AUTH_V2_VALIDATION.md)）。
+[共享wire fixture](../tests/fixtures/contracts/auth.v2.json)与[baseservice 0f5dba4](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/contracts/auth.v2.json)固定字节一致（配套[后端合同](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/bearer-auth-v2.md)），含issued/session/logout和8类错误。unit覆盖严格DTO/凭据隔离/恢复/多401/旧代响应/取消等待者/refresh-logout排序/不确定结果/不重放。正式React与原生消费者只用公开入口和tarball。浏览器测试覆盖原生整页导航恢复、Cookie/Authorization隔离、跨tab锁与安全通知；实际执行范围见 [VALIDATION.md](VALIDATION.md)，测试存在不等于全部场景通过。
 
-xAgent旧token/me/state协议不会仅改baseURL就兼容；已上线消费者需要单独授权迁移，未发布项目直接采用明确新合同。产品对外hex ID使用已提供的显式 idEncoding，并与后端 facade 同步配置，不自动接受双格式。注册、密码重置、用户生命周期和业务资源策略由实际后端/身份提供方负责。本轮不改业务项目、不部署、不生成真实凭据。
+选用 createAuthClient 时服务须满足明确 Bearer v2 合同，修改 baseURL 不能替代协议适配；已有消费者按自己的版本与升级约束评估。产品对外hex ID使用已提供的显式 idEncoding，并与后端 facade 同步配置，不自动接受双格式。注册、密码重置、用户生命周期和业务资源策略由实际后端/身份提供方负责。真实服务注册、部署和凭据签发由宿主负责。
 
 普通 HTTP 接线使用 [auth-direct-http.mjs](../tests/integration/auth-direct-http.mjs)：显式启动 BaseService 的 loopback `TestDirectHTTPFixture` 后，以 `XUI_AUTH_HTTP_FIXTURE_ORIGIN=http://127.0.0.1:<port>` 运行脚本。它核对直接登录、普通 session/logout、真实响应丢失后的单次 refresh/session 和显式重试；传输层 Cookie jar 与业务账户均为合成替身，不证明真实 PostgreSQL、浏览器 Cookie 或产品部署。
 
@@ -113,4 +113,38 @@ xAgent旧token/me/state协议不会仅改baseURL就兼容；已上线消费者�
 
 原生返回 `getElement()`、`getForm()`、`update(partialOptions)`、`destroy()`。`update({config})`是完整品牌配置替换；传入同一content/action Node时不搬动、不重建，不丢输入值、focus或事件。DocumentFragment按初次插入的实际子节点维护。表单提交回调/noValidate可更新，但已挂载form/section类型不可切换（需有意destroy后新建）；React同样保留固定类型。update在改变DOM前拒绝把布局本身或槽祖先作为内容。destroy只释放布局自己的监听；root仍仅包含该布局时还原原内容，若宿主已换页则保留宿主新内容。宿主领域资源仍由宿主清理。
 
-正式纯布局消费者为 [React](../examples/auth-page-react/app.tsx) / [原生](../examples/auth-page-vanilla/app.js)：三字段管理员设置，仅合成submit回调，不调用真实初始化或认证API。按[同一登录验收清单](LOGIN_VISUAL_ACCEPTANCE.md)验位置、更新identity、三主题/窄屏/200%与主动作可达；不能把示例通过当成xLead或其他产品已迁移。
+正式纯布局消费者为 [React](../examples/auth-page-react/app.tsx) / [原生](../examples/auth-page-vanilla/app.js)：三字段管理员设置，仅合成submit回调，不调用真实初始化或认证API。按[同一登录验收清单](VALIDATION.md#认证页验收)验位置、更新identity、三主题/窄屏/200%与主动作可达；不能把示例通过当成产品已迁移。
+
+
+## 管理员初始化页
+
+`AdminSetupPage`（React `/admin-setup`）与 `createAdminSetupPage`（原生 `/admin-setup-dom`）提供用户名、新密码/确认、提交、忙状态和安全反馈，内部复用 AuthPage/createAuthPage 与 NewPasswordFields，不新增 AuthClient。空反馈不占位，实际消息自然增长，沿用同一主题与自然文档滚动。
+
+### 输入和责任
+
+双端配置为 `config: AuthPageConfig`、必填 `state: AdminSetupState`、`onSubmit: AdminSetupSubmit`，可覆盖 `labels: Partial<AdminSetupLabels>`、`passwordLabels: Partial<NewPasswordLabels>` 和 brandVisual。React brandVisual 接受 ReactNode，原生接受 HTMLElement。用户名只校验非空，不裁剪提交值或杜撰字符/长度政策。新密码固定校验 6–32 个 Unicode 码点，无策略请求或项目配置。
+
+`onSubmit({username,password}, {signal})` 只在一次明确提交且字段有效时调用，返回 `complete | unconfirmed | unavailable | rejected`。`rejected` 必须表示宿主权威确认未应用、可重新提交，不能把网络异常/取消/无 receipt 映射成 rejected。throw/reject/运行时不合法结果一律转为 unconfirmed。回调需在开始时构造自己的请求数据；库清理传入对象的 password，不保证已传出的字符串或宿主副本可被擦除。
+
+宿主保留具体初始化 API、权限/租户/数据库条件、权威初始化状态及跨重载的未知结果处理；公共页不要求 receipt、operation ID 或额外恢复协议。公共页既不重放写入，也不自动轮询、登录、导航、保存或记录密码。跨卸载/重载的未知结果保护是宿主责任；新挂载不能无依据传 idle。完成仅显示“管理员已创建，请登录。”。
+
+### 状态和生命周期
+
+- idle：宿主确认当前允许初始化；用户显式提交后进入 submitting。
+- submitting：阻止重复提交，密码输入立即清空。
+- unconfirmed：仅显示“暂时无法确认创建结果，不能再次提交。”，全部写入锁定；不生成额外核对按钮或技术说明。
+- complete：初始化已确认完成，仍未登录。
+- unavailable：当前不能初始化；界面不猜测原因。
+
+state 可含 `rejected?: boolean`（仅 idle 有效）与 `revision?: number`（安全整数）。React 对 status/rejected/revision 的事实变化应用新权威状态，普通 inline 对象重渲染不取消进行中的提交。宿主在相同状态值上发布新的权威观察（例如 unconfirmed 后又权威确认可以提交）时递增 revision。原生显式 update({state}) 本身就是新权威观察。不要将页面暂态写回权威输入来循环同步。
+
+React 使用一个稳定 form、非受控密码输入和稳定密码字段 ref。`ref: AdminSetupPageHandle` 提供 clear() 清密码，React 卸载/pagehide 中止本地等待，丢弃迟到结果；StrictMode 重放不销毁仍需使用的 owner。原生返回 getElement/getState/update/clear/destroy，update 接受 state/config，保留 form、字段及未受影响焦点；destroy 清密码、释放事件/订阅、恢复原 root 内容。pagehide 使进行中结果变为 unconfirmed，不因返回页面重发。
+
+底层 `createAdminSetupController`（runtime/admin-setup）也公开相同状态/submit 合同，subscribe/getState/setState/suspend/destroy 不包含用户名或密码快照。视图已经拥有该控制器，普通产品不需创建第二个。
+
+
+### 正式示例与接入
+
+[React SSR/hydration 示例](../examples/admin-setup-react/app.tsx) 与 [原生示例](../examples/admin-setup-vanilla/app.js) 只使用合成状态和 submit 回调。迁移已有手写 setup 时，删除被公共页接管的用户名/submit/feedback、密码清理与忙态 UI，保留宿主领域 owner、接口与权威状态映射。
+
+单测入口为 [admin-setup.test.mjs](../tests/admin-setup.test.mjs)，浏览器入口为 [admin-setup.spec.mjs](../tests/browser/admin-setup.spec.mjs)。正式构建/consumer 后可访问 `/admin-setup-react/` 与 `/admin-setup-vanilla/`；`?long` 为合成长错误。检查未知状态关键句全文、完成不自动登录、稳定输入/焦点、卸载清理及浅深/system、窄屏/放大；实际运行证据见 [VALIDATION.md](VALIDATION.md#认证页验收)，不以 SSR 静态通过代替 hydration 或真实产品验证。

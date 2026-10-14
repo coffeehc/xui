@@ -132,6 +132,8 @@ components:
 
 以上是设计与验收方向，不默认授权框架迁移、布局重构或性能工程。信息优先、可读性、可访问性和事实准确始终保留。
 
+表现保持克制：以细边线和表面灰度区分层级，避免装饰 glow、厚投影和亮外框；微图标只在帮助识别时出现，反馈表达真实状态，密码强度按已有本地建议合同可视化。UI 正文使用 sans，数值、hash、时间与代码按职责使用 mono/tabular-nums，优先靠字重与对比分层而非扩充字号。同一任务突出一个明确主动作，轻反馈、清楚 focus ring、键盘与 reduced-motion 共存。可复用表单内容与布局壳分开，按需求在独立页、Dialog、Sheet 或宿主步骤中组合；这不新增向导、认证能力、token 或评分事实。
+
 ### 规范强度与职责
 
 - **必须 / MUST**：新增和本次触及代码的验收要求；不能满足时按本文例外流程处理。
@@ -141,7 +143,7 @@ components:
 分为三层：通用基础定义语义 token、尺度、状态与可访问性；框架适配负责 CSS 映射及公共控件；产品扩展负责领域状态、内容、画布和图表。适配和产品扩展依赖基础，基础不能依赖业务路由、专属状态或框架 API。不同项目可以各自实现，无须共享一个运行时包。
 
 <!-- external-protocol-boundary:start -->
-xui的自定义统一接口合同只约束自有项目的普通业务API。行业标准优先：OAuth2/OIDC/SAML等保留其标准协议；第三方按对方的API、状态码、请求、响应与错误格式对接，由宿主在内部边界做明确adapter转换，不强制第三方返回AjaxResponse，也不要求其改造服务。行业标准/第三方adapter是正常领域边界，不属于等待删除的旧协议兼容层。
+xui的默认HTTP客户端与页面adapter只约束选用它们时对应的明确wire合同，不要求宿主所有普通业务API统一协议；宿主可通过typed ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter或BusinessLogLoader连接领域能力，业务API迁移由宿主独立决定。行业标准优先：OAuth2/OIDC/SAML等保留其标准协议，第三方按对方API、状态码、请求、响应与错误格式对接，由宿主在明确边界转换，不强制第三方返回AjaxResponse。正常领域adapter不属于等待删除的旧协议兼容层。
 <!-- external-protocol-boundary:end -->
 
 业务逻辑拥有权限、请求、执行、校验、保存与错误事实；展示组件只映射真实状态。不得从颜色、类名或 hover 推断业务含义。视觉迁移保留现有功能、信息、品牌标识和页面骨架；布局或业务需求的变更须在其授权范围内评审，不能借样式统一改变数据、聚合、认证或动作时机。
@@ -1222,7 +1224,7 @@ UI是人类观察系统状态和数据、直接操作并介入Agent操作的入�
 
 动作必须对应真实可用能力，主次清晰、原位反馈、防重复且键盘/窄屏可达。暂停、停止本地等待、终止服务端任务与撤销已完成变更不能互相冒充；临界动作明确作用与后果，并给出权威结果及实际安全恢复路径。加载、离线和失败不重排主体；未知写入不通过自动重试装成恢复。认证凭据清除、门禁和权限沿用领域合同。
 
-表单常显label，帮助解释约束而非重复标签；初始未操作字段不预先责备，提交时定位可修字段，整体错误接近主操作并保留可理解的恢复说明。可见状态不只依赖颜色、spinner或瞬时toast；辅助文字不能因层级弱而不可读。根字号与真实浏览器zoom分别验证，四边focus、长文案与中文实际字体必须留证。适用范围、研究取舍与A01–A12逐项标准见[Agent交互研究与验收](AGENT_INTERACTION_RESEARCH.md)；该清单不代表后续公共状态/动作组件或产品业务能力已实现。
+表单常显label，帮助解释约束而非重复标签；初始未操作字段不预先责备，提交时定位可修字段，整体错误接近主操作并保留可理解的恢复说明。可见状态不只依赖颜色、spinner或瞬时toast；辅助文字不能因层级弱而不可读。根字号与真实浏览器zoom分别验证，四边focus、长文案与中文实际字体必须留证。实现与验证须依据上述真实状态和动作，不将参考研究或合成例子当成公共状态/动作组件及产品业务能力已实现的证据。
 
 ### 公共登录页布局与主题
 
@@ -1238,7 +1240,7 @@ UI是人类观察系统状态和数据、直接操作并介入Agent操作的入�
 
 SSO显式配置时作为主动作后的次级组。极端长主动作保留完整可访问名称，login-action-max-block-size（20dvh且至少login-control-height）限制单按钮高度并可内部滚动，保留safe center与四边focus。状态标签原位切换并滚动归零；普通通知不重挂输入或按钮。登录、初始化和纯AuthPage消费同一结构和token，不允许产品私有CSS补丁。
 
-长品牌、配置表单、SSO及放大文字使用自然文档滚动；短视口不限制表单高度，所有字段与动作始终可达。正文、操作、反馈和SSO内部保留focus-width+focus-offset四边空间与滚动安全距离，反馈内的焦点不会被局部滚动裁切，不修改全局焦点token。定量标准、状态矩阵与真实截图验收见[公共登录验收](LOGIN_VISUAL_ACCEPTANCE.md)；未执行实际像素回归与图像查看不能宣称视觉验收完成。
+长品牌、配置表单、SSO及放大文字使用自然文档滚动；短视口不限制表单高度，所有字段与动作始终可达。正文、操作、反馈和SSO内部保留focus-width+focus-offset四边空间与滚动安全距离，反馈内的焦点不会被局部滚动裁切，不修改全局焦点token。定量标准、状态矩阵与真实截图验收见[公共登录验收](VALIDATION.md#认证页验收)；未执行实际像素回归与图像查看不能宣称视觉验收完成。
 
 登录页不另放主题选择器，直接继承已有本地偏好和单一根主题所有者；没有已保存偏好时默认深色。首屏初始化先于可见内容，三模式及系统变化仍按本规范执行；不因登录页布局迁移更换既有存储 key/格式，也不改变认证会话或凭据。
 
@@ -1308,7 +1310,7 @@ DataTable默认横向铺满，通常省略列宽；仅在列内容或用户尺�
 
 顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单 SimpleSelect 保留输入边界。两端默认采用同一主题选择浮层，forced-colors 保留公共控件的边界、选中与键盘焦点语义。
 
-实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](IDENTITY_ENCODING.md)。
+实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](HTTP.md#显式实体身份编码)。
 
 原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止。forced-colors下progress保持原生元素、真实value/max与未知语义，采用浏览器提供的Canvas轨道、CanvasText边界与填充；颜色只由progress-forced-track/border/fill集中定义，design-accessibility层保证它们继续取系统色，不接受品牌覆盖。使用既有line-width-surface与radius-full，保留轨道形状并补可识别边界；确定状态按原生比例填充，无value仅显示由progress-forced-pending-border-style声明的空心虚线轨道，不画合成分数或全满填充，且保留已有状态脉冲及reduced-motion静止。forced-color-adjust继续为auto，不关闭用户强制颜色机制；appearance:none仅保留原生progress内部的真实比例布局与可控CSS动效，不能把computed appearance:auto当作浏览器原生绘制已恢复的证据。Checkbox/range等选择标记继续恢复各自的浏览器绘制。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
 
@@ -1320,7 +1322,7 @@ HeaderBrand logo盒使用control-height-sm，图片/SVG以contain限于盒内，
 
 SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。search、actions 和 advanced 是公开内容入口，不增加查询、分页、权限或请求 owner。宽屏搜索轨道采用 flex 剩余空间与 min-inline-size:0，主操作在行末；Input 的 100% 默认宽度只相对于搜索轨道，不把操作挤到下一行。操作组按 control-height、button-padding-inline、button-gap、control-icon-size 统一按钮尺寸；长标签可自然增高，同一行 stretch，不以固定高度裁切。工具栏按自身容器 40rem 既有断点换行，搜索独占一行，操作仍完整可达，不只依赖窗口宽度。
 
-高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和原生生命周期见 [SEARCH_TOOLBAR](SEARCH_TOOLBAR.md)。
+高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和原生生命周期见 [COMPOSITIONS](COMPOSITIONS.md#searchtoolbar)。
 
 
 ### 受控成组选项

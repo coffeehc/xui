@@ -34,7 +34,7 @@ pagehide、clear、reset 与卸载/destroy 清空所属非受控输入及派生�
 
 两端 PasswordStrengthInput 与 NewPasswordFields 默认在输入暂停 150 ms 后本地估算。输入下方仅有一条 4px 连续 meter，以实际评分 0–4 映射五档 20/40/60/80/100% 长度；弱、中、强分别映射现有 error、warning、success 语义颜色。idle/loading/unavailable 保留空轨道，不画假分；无可见等待文案、规则段、字符计数或改进建议。meter 的 min=0/max=5，ready 时 now=score+1，aria-valuetext 与 sr-only live status 提供实际强弱或未就绪状态。使用 MIT 的 @zxcvbn-ts/core 4.2.0、language-common 4.1.3、language-en 4.1.1，识别常见密码、顺序、重复、键盘及常见个人信息模式，不按字符种类自行打分。固定映射：评分 0–1 为弱，2 为中，3–4 为强。强度仅供参考，任何分数都不参与 readValidatedPassword 的提交许可；强制规则固定为 6–32 个 Unicode 码点。
 
-引擎和 common/en 字典在包构建时编成自包含固定 worker 源码，以动态 import 首次输入时懒加载。库在本地 Blob worker 中执行，ready 后才读取最新输入并通过本地 postMessage 发送；主线程不解析字典或执行评分，评分实例只存在于单次 worker 调用中。宿主无需 worker 打包插件；正常 ESM 动态导入拆包保留懒加载，显式关闭代码拆分的 bundler 会把模块合并进初始脚本。正式独立 tarball 消费者的引擎压缩大小为原生 约 838 KB、React 约 838 KB；孤立示例初始静态 JS 图 gzip 约为 4 KB、72 KB（每次精确值写入 strength-bundle.json），均不含引擎和字典。这是构建产物测量，不是浏览器运行时延迟保证。入口静态依赖图与原有全库体积门禁继续检查。
+引擎和 common/en 字典在包构建时编成自包含固定 worker 源码，以动态 import 首次输入时懒加载。库在本地 Blob worker 中执行，ready 后才读取最新输入并通过本地 postMessage 发送；主线程不解析字典或执行评分，评分实例只存在于单次 worker 调用中。宿主无需 worker 打包插件；正常 ESM 动态导入拆包保留懒加载，显式关闭代码拆分的 bundler 会把模块合并进初始脚本。正式独立 tarball 消费者分别记录引擎与初始静态 JS 图体积，精确结果写入 strength-bundle.json；初始图不得包含引擎和字典。构建产物体积不等于浏览器运行时延迟，入口静态依赖图与既有全库体积门禁继续检查。
 
 首次离线、Worker 不可用、打包产物不可加载或宿主 CSP 禁止 blob worker 时，保留空轨道，可访问状态为“暂不可评估”，不影响提交。库不修改、不要求放宽 worker-src/CSP，不会假称强。字典以常见模式和英文为主，对其他语言、人名、产品上下文及新泄露密码的识别有限；“强”不保证安全。估算为限制同步 CPU 工作只处理最多 256 个 UTF-16 单元，超出显示无法评估，不截断密码，也不改变服务端策略校验。复杂 Unicode 的强制长度仍按上面的码点规则。
 
@@ -42,10 +42,6 @@ pagehide、clear、reset 与卸载/destroy 清空所属非受控输入及派生�
 
 输入不上传、不进入 URL、日志或 storage，不使用远程泄露查询或网络 matcher。读取输入发生在引擎加载完成后，异步等待不保存密码快照；每次输入、clear 和卸载使旧 generation 失效，迟到加载或评分不能覆盖当前提示；卸载通过 AbortSignal 立即终止正在加载或工作的 worker。pagehide/clear/destroy 同步清除输入和显示状态。评分不用于旧账号登录密码限制。字典可缓存，但每次估算使用独立 Factory，避免其内部 scoring 缓存长期引用最近密码；JavaScript 字符串无法承诺物理内存清零。
 
-实现依据：[zxcvbn-ts 指南](https://zxcvbn-ts.github.io/zxcvbn/guide/)、[懒加载](https://zxcvbn-ts.github.io/zxcvbn/guide/lazy-loading/)、[4.x Factory](https://zxcvbn-ts.github.io/zxcvbn/guide/migration/)。新回归覆盖常见/重复/顺序模式、有效弱密码允许提交、懒加载隔离、离线和迟到结果；真实浏览器验收见对应提交 CI，不能以本机启动被阻断代替通过。
-
-实际浏览器优化前记录：CI38408040199 合成输入的主线程长任务 React 124/56ms、原生127/99ms；这不是优化后的性能结果。worker 版本继续保存输入事件数、LongTask 和计时器延迟，须按新提交真实浏览器证据验收。
+实现依据：[zxcvbn-ts 指南](https://zxcvbn-ts.github.io/zxcvbn/guide/)、[懒加载](https://zxcvbn-ts.github.io/zxcvbn/guide/lazy-loading/)、[4.x Factory](https://zxcvbn-ts.github.io/zxcvbn/guide/migration/)。回归覆盖常见/重复/顺序模式、有效弱密码允许提交、懒加载隔离、离线和迟到结果。浏览器应记录实际输入事件、LongTask 与计时器延迟，不能由构建或 worker 结构推断响应性能；实际执行范围见 [VALIDATION.md](VALIDATION.md)。
 
 已移除无用的 count、strength、strengthAdvice 文案入口与 getPasswordStrengthMessage；没有第二份建议/计数布局或 Disclosure owner。清空保留空轨道，丢弃上次评分；短错误文案的 length/tooShort/tooLong/invalidUnicode/confirmationMismatch 入口继续可翻译。
-
-57c4afe 的安全 Chrome CI38413454627 实测：同一合成 12 次输入下，Worker 版本 React 最大计时器延迟 29.4ms、原生 34.5ms，均没有观察到 LongTask；对应优化前为149.7/151.8ms及上述长任务。这是一次 CI 样本，不能保证所有设备、首次加载网络或宿主打包方式都具有相同延迟。该提交完整1064浏览器用例通过，强度低分、离线、CSP禁Worker均不增加提交门禁。

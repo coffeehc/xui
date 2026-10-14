@@ -1,57 +1,66 @@
-> 本文件保留早期基础版记录。本轮通用基础扩展见 [FOUNDATION_VALIDATION.md](FOUNDATION_VALIDATION.md)。
+# 验证证据与限制
 
-# 第一版验证记录
+本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
-首轮基线代码 SHA：`b8c790ee5936e64d2009abf53c5c0d13413fc263`。本报告及 evidence 最初作为后续文档提交补入。之后的限定独立复核发现并修复了打包入口和 Tabs 事件兼容问题；最新结论见 [REVIEW.md](REVIEW.md)。下表的 13+17 计数属于首轮基线，不作为修订后全流程重跑声明。
-日期：2026-10-11 UTC；环境为此独立云环境，Node 24.19.0、pnpm 11.25.0、Chromium 154.0.8037.57（Debian 13）。
-React 19.2.8、Base UI 1.7.0。另以包管理器固定版本 pnpm 11.23.0 成功执行 frozen-lockfile 安装。
-数据全部合成，不含真实业务内容或秘密。
+## 代码验证基线
 
-首轮最终 `pnpm verify` 返回 0。构建指纹、原始测试统计和实际渲染的颜色对比结果记录在 [validation-evidence.json](validation-evidence.json)。
+以下既有代码验证对应 package source generation `f56796bb2c862c8afa285a1713d1c8a476422b6040c8b1bde52bd05eb70051eb`，example generation `4dc78683af33237bdf7a87e8f7e23748ec4da8a960d16c491ad2b0b335600cf7`，日期为 2026-10-14。本次文档治理修改了 DESIGN 正文与当前协议边界指纹，未重跑 build 或完整功能测试；上述 generation 仅标识受测代码/产物，不能作为本次文档改动后的新构建指纹。
 
-| 检查 | 结果与范围 |
+| 门禁 | 已执行结果 | 证据范围 |
+| --- | --- | --- |
+| dev-build | 通过 | 正式包与开发示例构建，包含类型检查 |
+| check:tokens | 通过，372 tokens | 当时 283 文件、2176 声明；规范/生成 CSS、依赖与来源检查 |
+| typecheck | 通过 | 当时根类型检查 |
+| unit | 468/468 通过 | 当时完整单元套件 |
+| 正式 consumer | 通过 | React/原生独立 tarball、公开 ESM/CSS/types、peer 与既有体积门禁 |
+| watch | 1/1 通过，145.4 秒 | 同一代际的真实重建、错误与恢复 |
+| cold-start | 1/1 通过 | 当时合成 Vite 消费者的冷启动 |
+
+本次纯文档/引用治理检查文件与锚点、公开入口、来源元数据及相关静态规则，实际命令结果在交付中说明。未触及组件实现、样式、tokens、导出、行为或包配置。体积预算由 [scripts/consumers.mjs](../scripts/consumers.mjs) 内常量执行，运行快照写入 `.artifacts/performance-baseline.json`；本页不维护另一份预算或把合成消费者的包体门禁等同产品 LCP/INP。
+
+## Chromium 浏览器结果
+
+| 运行 | 实际结果 | 原始证据 |
+| --- | --- | --- |
+| 完整 Chromium 主运行 | 1347/1355 通过，8 失败，约 14.9 分钟 | `.artifacts/browser-final-4dc/` 的报告、截图与 trace |
+| 首轮相关 targeted 复验 | 17/19 通过，两个 native locator 零匹配 | `.artifacts/browser-targeted-final-4dc/` |
+| locator 修订后复验 | React/native token-scaling、widgets 4/4 通过 | `.artifacts/browser-locator-final-4dc/` |
+| 最终 Precision 截图 | 8/8 通过，16 PNG + 16 JSON | `.artifacts/precision-theme-evidence/screenshots/` |
+
+最终截图覆盖 Precision DataTable 与基础 `/react/` 页的 light/dark，以及 AdminSetup 两端桌面和 390px、根字号 200% 的末字段/主动作焦点。主运行还通过 DataTable width 44 项、caption/frame/footer 36 项、feedback 10 项和 workspace composition 4 项；这些只证明列出的合成合同，不代表所有组件状态和产品布局已逐条验收。
+
+八个原始失败标题各有对应 targeted 通过证据，最后测试编排修订后没有再跑完整 1355 项。不得把分次复验合并改写为“1355/1355 完整套件全绿”。另一次误启动的 full suite 约 25 秒后以 SIGINT 中止，不计结果。
+
+## 失败复验与限制
+
+- Bearer 预算用例在主运行中超时；示例预算为 1000ms，库默认 15 秒，隔离重跑 1/1 通过、约 840ms。根因未证实，不能声称代码已修复某个确定超时根因。
+- React dark 的真实 200% 用例已完成所有断言，在 persistent context.close 时超时；隔离用例约 5.2 秒通过，相关真实 200% 矩阵 12/12 通过。关闭超时根因未证实。
+- React/native 两个短窗口 touch fixture 的物理 Chrome 窗口为 500×320，实际输入 surface 高 233px，gesture y=256 超出输入面；独立纯 overflow 对照同样失败。fixture 仅用 Browser.setWindowBounds 将物理窗口调整为 800×900，CSS viewport 仍为 390×320；双端真实 touch 滚动、Save 点击、DOM identity/focus 检查 2/2 通过，未改生产 CSS。
+- token-scaling 与 widgets 各自 React/native 共四个失败源于新增 stacked InputGroup 后旧全局 locator 歧义。首轮修订仍有两个 native 零匹配；随后按具名 search textbox 所属 InputGroup 定位，4/4 通过。保留原交互、样式与几何断言，未通过放宽合同使测试变绿。
+
+## 认证页验收
+
+以下是登录、AuthPage 与 AdminSetupPage 的持续验收目标，不是逐项完成表。尺寸和具体 token 以 [DESIGN 的认证布局](DESIGN.md#公共登录页布局与主题) 为准，接口和生命周期见 [AUTH.md](AUTH.md)，新密码规则见 [PASSWORD.md](PASSWORD.md)。
+
+| 范围 | 需要的可观察证据 |
 | --- | --- |
-| 规范迁入 | 0.4.0 原文经三处已记录文字澄清为 0.4.1；反向还原 SHA256 匹配来源。完整默认 CSS 原样保留 |
-| token / 单源 | 271 个默认根变量，浅深/system/reduced/产品覆盖图完整无循环。YAML 摘要与 CSS 一致，生成 CSS 逐字一致。负例能拒绝缺失引用、循环、原始颜色、原色回流及摘要漂移 |
-| 构建 / types | 三包 CSS、ESM、.d.ts、同步 init 输出成功；源码及消费方 tsc 通过 |
-| 独立消费 | 每次新目录安装三个本地 tarball；实际包字节等于最终构建字节，esbuild 输入无 packages 源码/alias。vanilla 只装 theme/runtime，无 React；React 从公开 exports 消费包与 peer |
-| 单元测试 | 13/13 通过，无跳过：规范/守卫、SSR 安全导入、三模式、未知值、storage 拒绝、matchMedia 失败、自定义 key、旧监听 API、订阅失败与释放 |
-| 浏览器 | 17/17 通过，0 failed、0 skipped、0 flaky；两类示例，mouse/keyboard 和 Chromium touch 模拟 |
-| 三模式与首屏 | 初始化器执行后、CSS/body 前已设置偏好；light/dark/system/unknown 首次进入、刷新持久，system 随 OS 浅深变化，显式选择不被覆盖，模式选择不清空名称 |
-| 覆盖主题 | 默认暖灰青绿及规范蓝色覆盖的 light/dark/system 均生效；使用同一根元素与 layer 覆盖，不另维护默认值 |
-| 控件交互 | 原生 checkbox/switch Space、radio 方向键；按钮 Space 按压并立即执行；disabled+busy；invalid 错误关联、回字段 focus；textarea 清除；readOnly |
-| 导航 | hover-only 无指示，selected+hover 指示保留，无边框；focus 独立，blur 不删选择；选中前后位置相同。网格布局的纵向拉伸已修复 |
-| Tabs | 方向键、Enter 手动激活、禁用项跳过、Home/End、RTL；panel 关联；离开的 panel 立即隐藏，防止两个 panel 同时占布局 |
-| Dialog | 真实 Enter/点击/tap 打开；焦点循环；Esc/取消回触发器；反复开关及减少动效；390px 窄屏碰撞边距、长中文 body 滚动、footer 仍可点击；取消不保存 |
-| 首屏与长内容 | 1280×800、390×844，light/dark：关键标题、名称、主保存操作完整可见，实际点击，无横向溢出；保存第一视口截图。长中文输入/帮助可达 |
-| 放大 / reduced / 强制色 | 200% 根文字放大可阅读/操作、无横向溢出；motion token 0ms、Switch 0s 即时状态；取消/回焦点照常；forced-colors 原生选择保留 checked |
-| 代表性对比 | 浏览器解析实际颜色并采样为 sRGB：正文、次要文字、按钮、selected、状态及 danger 对 ≥4.5；输入边界、错误边界和 focus 对 ≥3。默认输入边界约浅色3.40、深色3.99；完整测量见 evidence，不代表所有组合穷举 |
-| 工作区 / 远端 | git diff 检查通过；正常 Git 仓库内本地提交，未 push。最后只读核实远端仍无 refs |
+| 居中单列与品牌层级 | React/native、light/dark/system、宽屏与 390/320px；card 自然高，fullscreen 保留同一窄列；品牌、任务标题、说明、字段、唯一主动作和局部反馈顺序清楚，无第二品牌面板 |
+| 字段与主动作 | 常显 label、准确关联、统一文字/控件 token；字段和主动作对齐，末字段至主动作之间无空反馈或隐藏按钮占位 |
+| 空与长反馈 | 空/hidden feedback、feedbackActions 不占位；消息位于主动作后自然增高，错误首尾及 unknown 关键后果完整可读，不固定轨道、裁切或把必要摘要藏进详情 |
+| 状态稳定 | checking/idle/busy/error 不重挂字段、按钮与核心布局节点，不清普通输入；字段与主动作尺寸、相对顺序保持，卡片可因真实消息增长重新居中；密码按生命周期及时清理 |
+| 直接登录 | 一次明确 POST，无恢复预请求/持久门禁；busy 禁重复且无取消入口，扩展等待也不自动生成取消；未知结果普通 refresh/session 核验一次，未确认结束 busy 可手动再试，不重发写入 |
+| 导航 | 确认 authenticated 且所属等待结算后一次进入宿主目标；StrictMode、重复通知与同 ID 新对象不重复导航；失败仅局部重试打开目标，不重做认证；卸载/pagehide 拒绝迟到结果 |
+| 短视口与长内容 | 文档自然滚动到每个字段、动作和错误；超长主按钮保留完整名称与内部滚动；不以固定表单高度或缩字号处理 |
+| 焦点与输入 | 实际 Tab/Enter/Space、SSO 与辅助动作顺序、无隐藏 Tab 停靠、四边 focus 像素；根字号 200% 与真实浏览器 Page zoom=200% 分别验证，记录实际中文字体 |
+| 初始化 | 三字段 setup 复用同一布局，动态更新保持 DOM、值、事件和焦点；unknown 锁写、必要后果全文、完成只提示去登录，零自动认证请求 |
+| 正式消费 | 仅使用公开 exports/CSS/types 与同代际产物，检查 owner、取消/迟到、卸载清理；按实现影响执行适用构建、单测、consumer 与浏览器门禁 |
 
-## 证据位置与复现
+可执行入口包括 [login-visual](../tests/browser/login-visual.spec.mjs)、[auth-page](../tests/browser/auth-page.spec.mjs)、[login-navigation](../tests/browser/login-navigation.spec.mjs)、[auth-feedback-readable](../tests/browser/auth-feedback-readable.spec.mjs) 与 [admin-setup](../tests/browser/admin-setup.spec.mjs)。截图和实测 JSON 应通过 testInfo.outputPath 保存并附加，实际查看构图、长文、裁切与焦点；computed style 或用例数量不能代替视觉审查。
 
-```sh
-pnpm install --frozen-lockfile
-pnpm exec playwright install chromium  # 若无系统 Chromium
-pnpm verify
-pnpm preview
-```
+## 验收范围与未完成项
 
-首轮原始日志与截图保留在本次工作区的 `test-results/*/*.png`、`.artifacts/verify.log`。`test-results/browser.json` 是最近一次浏览器执行报告；首轮统计已保存在 `validation-evidence.json`，复核统计单独保存。
-构建与包在 `packages/*/dist`、`dist/{vanilla,react}`、`.artifacts/*.tgz`，独立安装目录由 `.consumers/latest.json` 指向。
-这些可再生成产物不进入 Git，避免保留第二套可编辑默认值或缓存。`validation-evidence.json` 保存此次代码 SHA、构建 SHA256、计数和颜色比值以便对照。
+规范/变量/基础样式、基础组件、交互组件、组合与通用页面按同一候选逐层验收。当前有上述构建、自动测试与截图证据，但 DESIGN 仍有未逐条闭环的合同：不能由生成器通过推断每个 token 的实际绘制正确，也不能由一个族或页面的绿色结果宣布其余全部状态完成。ThemeController 只公开 light/dark/system，没有已发布的 styleId/profile 注册表或风格切换 API。
 
-本地预览 `/vanilla/`、`/react/` 只监听 127.0.0.1:4173。未部署站点。
-CI 配置已写入，但空远端尚未运行 GitHub Actions；本次通过结论来自云环境实际执行。
+本次浏览器实测仅 Chromium；Firefox/WebKit、真实 OS 输入法、读屏器、自动填充/密码管理器、移动键盘及系统文件/日期/颜色窗口仍未实测。真实 BFCache 命中、所有 OS 缩放、实际 Wails/Electron/embed 窗口与 bridge IO 也未由合成生命周期或浏览器 fixture 证明。
 
-## 未跑与剩余边界
-
-- 未跑 Firefox/Safari、真实触屏设备、读屏器、移动 OS 原生 select 面板；触屏结论仅 Chromium 模拟。
-- 已测 200% 文字放大；未跑浏览器原生页面缩放。未穷举各系统字体/强制色或全部组件组合的对比。
-- 未测产品 SSR hydration、真实生产首屏/交互预算、产品网络等待/超时/业务竞态，也没有真实业务 API。本版不宣称性能提升。
-- Dialog 触发器被业务移除的回焦点需采用方提供 finalFocus；首轮只验证触发器保留场景，后续限定复核补验显式 finalFocus 和取消关闭。
-- 首轮未跑垂直 Tabs 与 loopFocus=false；后续限定复核补验 orientation、no-loop 边界和 Base UI 事件契约。详见 REVIEW.md。
-- 没有迁移任何产品仓库，没有全控件库完成结论。LICENSE 仍未选定，包均 private。
-- 向 xui main 推送仍等待父任务获得具体授权；无推送、发布或部署。
-
-首轮失败都已明确处理：ESM 检查脚本误用 CommonJS 解析；导航 grid 拉伸；原生 Dialog 单按钮焦点边界；Base UI 1.7 禁用 Tab 可聚焦策略；测试对动画中间态及手动激活的错误假设。首轮最终全流程重跑通过，没有删除失败检查或降低验收要求。
+合成 fetch/数据和共享 wire fixture 不证明真实后端事务、数据库 COUNT、Cookie/CSRF/权限/tenant/脱敏、真实产品页面、生产性能、发布或部署通过。外部产品的结果不能替代本仓库验收。后续实现变更须核对新的 source/example generation，按受影响合同补证；若需要完整套件结论，应独立执行完整浏览器套件并报告真实结果。

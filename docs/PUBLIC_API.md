@@ -47,7 +47,7 @@
 | `@coffeehc/xui-react/tabs` <!-- public-entry: @coffeehc/xui-react/tabs --> | [源码](../packages/ui-react/src/tabs.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/dialog` <!-- public-entry: @coffeehc/xui-react/dialog --> | [源码](../packages/ui-react/src/dialog.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/feedback` <!-- public-entry: @coffeehc/xui-react/feedback --> | [源码](../packages/ui-react/src/feedback.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
-| `@coffeehc/xui-react/metric-card` <!-- public-entry: @coffeehc/xui-react/metric-card --> | [源码](../packages/ui-react/src/metric-card.tsx) | [指标卡组合](METRIC_CARD.md) | [示例](../examples/metric-card-react/app.tsx) |
+| `@coffeehc/xui-react/metric-card` <!-- public-entry: @coffeehc/xui-react/metric-card --> | [源码](../packages/ui-react/src/metric-card.tsx) | [指标卡组合](DISPLAY.md#metriccard) | [示例](../examples/metric-card-react/app.tsx) |
 | `@coffeehc/xui-react/layout` <!-- public-entry: @coffeehc/xui-react/layout --> | [源码](../packages/ui-react/src/layout.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/table` <!-- public-entry: @coffeehc/xui-react/table --> | [源码](../packages/ui-react/src/table.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/data-table` <!-- public-entry: @coffeehc/xui-react/data-table --> | [源码](../packages/ui-react/src/data-table.tsx) | [完整组合](DATA_TABLE.md) | [示例](../examples/data-table-react/app.tsx) |
@@ -55,9 +55,9 @@
 | `@coffeehc/xui-runtime/data-table-dom` <!-- public-entry: @coffeehc/xui-runtime/data-table-dom --> | [原生](../packages/runtime/src/data-table-dom.ts) | [完整组合](DATA_TABLE.md) | [示例](../examples/data-table-vanilla/app.js) |
 | `@coffeehc/xui-react/select` <!-- public-entry: @coffeehc/xui-react/select --> | [源码](../packages/ui-react/src/select.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/combobox` <!-- public-entry: @coffeehc/xui-react/combobox --> | [源码](../packages/ui-react/src/combobox.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
-| `@coffeehc/xui-react/grouped-combobox` <!-- public-entry: @coffeehc/xui-react/grouped-combobox --> | [源码](../packages/ui-react/src/grouped-combobox.tsx) | [合同](GROUPED_SEARCH.md) | [示例](../examples/grouped-search-react/app.tsx) |
-| `@coffeehc/xui-runtime/grouped-combobox` <!-- public-entry: @coffeehc/xui-runtime/grouped-combobox --> | [源码](../packages/runtime/src/grouped-combobox.ts) | [合同](GROUPED_SEARCH.md) | [示例](../examples/shared/grouped-search-model.ts) |
-| `@coffeehc/xui-runtime/grouped-combobox-dom` <!-- public-entry: @coffeehc/xui-runtime/grouped-combobox-dom --> | [源码](../packages/runtime/src/grouped-combobox-dom.ts) | [合同](GROUPED_SEARCH.md) | [示例](../examples/grouped-search-vanilla/app.js) |
+| `@coffeehc/xui-react/grouped-combobox` <!-- public-entry: @coffeehc/xui-react/grouped-combobox --> | [源码](../packages/ui-react/src/grouped-combobox.tsx) | [合同](WIDGETS.md#groupedcombobox-与-disclosure) | [示例](../examples/grouped-search-react/app.tsx) |
+| `@coffeehc/xui-runtime/grouped-combobox` <!-- public-entry: @coffeehc/xui-runtime/grouped-combobox --> | [源码](../packages/runtime/src/grouped-combobox.ts) | [合同](WIDGETS.md#groupedcombobox-与-disclosure) | [示例](../examples/shared/grouped-search-model.ts) |
+| `@coffeehc/xui-runtime/grouped-combobox-dom` <!-- public-entry: @coffeehc/xui-runtime/grouped-combobox-dom --> | [源码](../packages/runtime/src/grouped-combobox-dom.ts) | [合同](WIDGETS.md#groupedcombobox-与-disclosure) | [示例](../examples/grouped-search-vanilla/app.js) |
 | `@coffeehc/xui-react/menu` <!-- public-entry: @coffeehc/xui-react/menu --> | [源码](../packages/ui-react/src/menu.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/popover` <!-- public-entry: @coffeehc/xui-react/popover --> | [源码](../packages/ui-react/src/popover.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/tooltip` <!-- public-entry: @coffeehc/xui-react/tooltip --> | [源码](../packages/ui-react/src/tooltip.tsx) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-react/app.tsx) |
@@ -70,7 +70,7 @@
 | `@coffeehc/xui-react/business-log` <!-- public-entry: @coffeehc/xui-react/business-log --> | [源码](../packages/ui-react/src/business-log.tsx) | [合同](BUSINESS_LOGS.md) | [示例](../examples/business-log-react/app.tsx) |
 | `@coffeehc/xui-theme/auth.css` <!-- public-entry: @coffeehc/xui-theme/auth.css --> | [源码](../packages/theme/src/auth.css) | [合同](AUTH.md) | [示例](../examples/login-vanilla/app.js) |
 | `@coffeehc/xui-runtime/auth` <!-- public-entry: @coffeehc/xui-runtime/auth --> | [源码](../packages/runtime/src/auth.ts) | [合同](AUTH.md) | [示例](../examples/shared/login-model.ts) |
-| `@coffeehc/xui-runtime/entity-id` <!-- public-entry: @coffeehc/xui-runtime/entity-id --> | [源码](../packages/runtime/src/entity-id.ts) | [编码合同](IDENTITY_ENCODING.md) | [合成合同](../tests/entity-id.test.mjs) |
+| `@coffeehc/xui-runtime/entity-id` <!-- public-entry: @coffeehc/xui-runtime/entity-id --> | [源码](../packages/runtime/src/entity-id.ts) | [编码合同](HTTP.md#显式实体身份编码) | [合成合同](../tests/entity-id.test.mjs) |
 | `@coffeehc/xui-runtime/login-dom` <!-- public-entry: @coffeehc/xui-runtime/login-dom --> | [源码](../packages/runtime/src/login-dom.ts) | [合同](AUTH.md) | [示例](../examples/login-vanilla/app.js) |
 | `@coffeehc/xui-react/login` <!-- public-entry: @coffeehc/xui-react/login --> | [源码](../packages/ui-react/src/login.tsx) | [合同](AUTH.md) | [示例](../examples/login-react/app.tsx) |
 
@@ -92,12 +92,12 @@
 
 | 能力 | 当前默认值与 owner |
 | --- | --- |
-| theme/init/useTheme | system、storage key `ui.theme.mode`、persist 开启；未知值回 system、媒体读取失败生效 light、storage 失败保留内存。传 mode 为受控且不读写 storage；同步 init 复用 window.xuiTheme，useTheme 只订阅 |
+| theme/init/useTheme | dark、storage key `ui.theme.mode`、persist 开启；无保存值/非法值回 dark，只有显式 system 在媒体读取失败时生效 light，storage 失败保留内存。传 mode 为受控且不读写 storage；同步 init 复用 window.xuiTheme，useTheme 只订阅 |
 | 原生 UI ID | 按 ownerDocument 共享分配，跨 bundle/多实例/卸载重建不重用；无 crypto/randomUUID 或 HTTPS 前置条件。已有显式 DOM ID 与 Toast message.id 保留。仅临时 UI 身份，不是认证/安全随机或持久业务 ID，见 [内网 HTTP 接入](ADOPTION.md#原生-ui-id-与内网-http) |
 | Button/IconButton | type=button、variant=primary、size=default；busy 与 disabled 分开，无隐式防重复；IconButton 要求 aria-label。render/ref/事件沿用公开 peer 合并合同 |
 | Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Fieldset 独立关联 legend/help/error |
 | MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留原生链接，菜单键盘/drawer owner 由库提供 |
-| GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](GROUPED_SEARCH.md) |
+| GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](WIDGETS.md#groupedcombobox-与-disclosure) |
 | Pagination/Disclosure | Pagination 默认第 1 页，pageCount 由宿主；受控 page 只请求确认。Disclosure 默认关闭，装饰性 chevron 与公开 DisclosureIndicator 复用相同 tokens。两者不发请求、不自动路由 |
 | React Tabs/原生 tabs | React Root/List props 保留固定 peer 行为，xui 只补跳过 disabled 的方向键。原生默认手动激活、loopFocus=true；初始 value 优先 options，其次已有 selected，最后首个可用项；受控必须 syncValue |
 | Dialog/Popover/Menu/Tooltip | 关闭不保存。原生 open 默认 false；受控 syncOpen、可取消 change。React Content portal/默认定位：Select bottom/start 且 alignItemWithTrigger=false，Combobox/Menu bottom/start，Popover bottom/center，Tooltip top/center；positionerProps 可覆盖。Dialog 为模态，非模态浮层不 trap；Tooltip 只放说明 |
@@ -105,10 +105,10 @@
 | Toast | 原生按 id 去重、默认限额 5（limit 可覆盖且至少 1），未给 timeoutMs 不自动消失；显式 timeout 由 performance.now 计时，hover/focus 暂停。React Provider/manager props 保留 peer 默认，不伪称两套计时行为相同；必要错误就地持续可见 |
 | Table/layout | 真实标准元素、header cell 默认 scope=col；TableContainer 为可聚焦 region，宿主给名字。SortButton type=button；striped/expandedRow/ExpandedRow/ExpandButton与逻辑stickyOffset公开；排序/选择/查询/虚拟化不由库执行。PageHeader 主标题和 actions，AppShell 默认抽屉关闭 |
 | feedback/resource | Alert 默认 info/status，error 为 alert；DataRegion busy=false；显式传 feedback（含 null）时保留局部反馈槽，原生可用公开 xui-feedback-slot；LoadingState 默认 Loading…，ErrorState 默认 Retry。resource 初始 idle、isEmpty 未声明不猜空、无 timeout/cache/请求或自动 retry；换 key 清旧值、同 key 刷新保留，hooks 只订阅 |
-| MetricCard | label/value 必填且原样显示（保留0）；marker默认无、空内容不占位；section/dl/dt/dd为被动展示，未内置按钮/live角色。复用Surface/stat tokens，排列仍由Grid；[合同](METRIC_CARD.md) |
+| MetricCard | label/value 必填且原样显示（保留0）；marker默认无、空内容不占位；section/dl/dt/dd为被动展示，未内置按钮/live角色。复用Surface/stat tokens，排列仍由Grid；[合同](DISPLAY.md#metriccard) |
 | HTTP | 默认 GET、response=ajax、same-origin credentials、Go success=true，code 为业务元数据；普通30秒/blob120秒预算，无自动重试。空/false/null payload 合法。响应模式、headers、认证/错误/重试适配与预算见 HTTP 合同，写操作不自动重放 |
-| webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list + 可选 total/next_cursor；总数缺省未知，游标缺省未声明、null明确末页，见 LIST_PAGINATION |
-| API Key | 首次读取由宿主 refresh；canCreate明确true才创建、撤销/删除需capability或明确宿主许可；过期可按授权撤销，删除仅已撤销管理记录。required权限与独立confirmed保留；默认HTTP facade/routes在API_KEY与PAGE_APIS，单一写入owner，未知结果不重复提交；完整值仅瞬时结果 |
+| webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list + 可选 total/next_cursor；总数缺省未知，游标缺省未声明、null明确末页，见 [列表合同](HTTP.md#列表元数据与受控游标分页) |
+| API Key | 首次读取由宿主 refresh；canCreate明确true才创建、撤销/删除需capability或明确宿主许可；过期可按授权撤销，删除仅已撤销管理记录。required权限与独立confirmed保留；默认HTTP facade/routes在API_KEY与PAGE_APIS，单一写入owner，未知结果普通列表核验一次，结束等待后可手动再试、不自动重写；完整值仅瞬时结果 |
 | 业务日志 | 显式首次 refresh，page size=50（1–200），两宿主共享loader，默认原生HTTP facade见PAGE_APIS，auth/scope由宿主；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
 | 登录页/auth | 同一个 HTTP/auth/theme owner；居中单列窄框、可选 fullscreen 和 brandVisual。Bearer v2 login/refresh/logout/session；access 仅内存，protectedPaths 明确受保护端点；15秒默认预算、no-store、无写入重放。登录直接 POST，提交禁用显示正在登录；超时后普通会话核验一次，未确认则显示错误并允许手动重试。无持久门禁、恢复预请求或恢复弹窗。保留密码清理、安全回跳和宿主导航扩展，详见 [AUTH](AUTH.md) |
 | 独立结构化错误 | 初始 groups、page size=50（1–200），host 显式 refresh；无隐式 endpoint/scope/排序/总记录数。v1/list/cursor、纳秒时间、uint64 字符串、三态、累计/命中/首次代表；详情只按记录 ID 读取，缓存仅当前链已访问摘要，刷新新快照 |
@@ -119,9 +119,9 @@ React 组合控件保留各自公开 props/ref/render/parts；Select/Combobox/Me
 
 低层 navigation helpers（indexNavigation、getNavigationActiveId、resolveNavigationIcon、navigateNavigationItem、createNavigationKeyboard、renderNavigationIcon）与 DTO parsers/codecs 也是公开入口中的导出，已纳入全部名字/types/运行时核对；普通页面优先完整菜单/控制器，只有宿主组合公共结构需要时使用它们。不要让 helper 变成第二套 selected/键盘或 response/query owner。
 
-业务流程、认证、权限、tenant、API 与日志仍由宿主拥有并独立测试；UI 消费同一能力。完整后台 facade、业务路由与产品迁移尚未实施。能力不足按采用手册反馈，不能以未验证的私有 CSS/内部 DOM/响应别名长期补丁补齐。
+业务流程、认证、权限、tenant、API 与日志仍由宿主拥有并独立测试；UI 消费同一能力。仅选用默认 HTTP client/页面 adapter 时满足对应明确 wire 合同；宿主可使用 typed ResponseAdapter/ErrorResponseAdapter/ApiKeyAdapter/BusinessLogLoader 连接领域能力，业务 API 迁移是宿主独立任务。能力不足按采用手册反馈，不能以未验证的私有 CSS/内部 DOM/响应别名长期补丁补齐。
 
-## 本轮公共补齐入口
+## 公共页面与交互入口
 
 | 正式入口 | 源码与用途 |
 | --- | --- |
@@ -133,14 +133,14 @@ React 组合控件保留各自公开 props/ref/render/parts；Select/Combobox/Me
 | `@coffeehc/xui-react/context-menu` <!-- public-entry: @coffeehc/xui-react/context-menu --> | [ContextMenu](../packages/ui-react/src/context-menu.tsx)，复用Menu部件 |
 | `@coffeehc/xui-theme/sheet.css` <!-- public-entry: @coffeehc/xui-theme/sheet.css --> | [Sheet/确认/触发器样式](../packages/theme/src/sheet.css)，同样包含在critical/style |
 
-## 已授权采用反馈扩展入口
+## 控件扩展入口
 
 | 正式入口 | 实现合同与源码 |
 | --- | --- |
 | `@coffeehc/xui-runtime/calendar` <!-- public-entry: @coffeehc/xui-runtime/calendar --> | [源码](../packages/runtime/src/calendar.ts)，[合同](WIDGETS.md) |
 | `@coffeehc/xui-runtime/widgets-dom` <!-- public-entry: @coffeehc/xui-runtime/widgets-dom --> | [源码](../packages/runtime/src/widgets-dom.ts)，[合同](WIDGETS.md) |
 | `@coffeehc/xui-react/toggle-group` <!-- public-entry: @coffeehc/xui-react/toggle-group --> | [源码](../packages/ui-react/src/toggle-group.tsx)，[合同](WIDGETS.md) |
-| `@coffeehc/xui-react/avatar` <!-- public-entry: @coffeehc/xui-react/avatar --> | [源码](../packages/ui-react/src/avatar.tsx)，[合同](WIDGETS.md) |
+| `@coffeehc/xui-react/avatar` <!-- public-entry: @coffeehc/xui-react/avatar --> | [源码](../packages/ui-react/src/avatar.tsx)，[合同](DISPLAY.md#avatar) |
 | `@coffeehc/xui-react/accordion` <!-- public-entry: @coffeehc/xui-react/accordion --> | [源码](../packages/ui-react/src/accordion.tsx)，[合同](WIDGETS.md) |
 | `@coffeehc/xui-react/scroll-area` <!-- public-entry: @coffeehc/xui-react/scroll-area --> | [源码](../packages/ui-react/src/scroll-area.tsx)，[合同](WIDGETS.md) |
 | `@coffeehc/xui-react/calendar` <!-- public-entry: @coffeehc/xui-react/calendar --> | [源码](../packages/ui-react/src/calendar.tsx)，[合同](WIDGETS.md) |
@@ -165,7 +165,7 @@ API Key 使用普通 adapter CRUD 与 `ApiKeyWriteContext {signal}`，不配置 
 - 原生 `MenuLayoutOptions.sidebarFooter?: Node | null` 与 `update` 同型，接收 Node 或 DocumentFragment。未指定该字段的更新保留原 Node；同一 Node/已消费 Fragment 不重复挂载，null/undefined 清空。footer内容 Node 不能同时用于header或其它slot。
 - 原生公开内容结构：`.xui-sidebar-footer-content`，其子 `.xui-sidebar-footer-icon[aria-hidden=true]` 和 `.xui-sidebar-footer-label`，与 React 同构。库生成 `.xui-shell-sidebar-menu` / `.xui-shell-sidebar-footer`；消费者不查询或修补它们来安排位置。
 - `Dialog.Content.keepMounted?: boolean` 默认为false；底部模式的 AppShell 为复用同一侧栏而启用它，关闭时仍隐藏并保持模态隔离，普通Dialog默认不变。
-- [接入及迁移](NAVIGATION.md#侧栏底部接入与迁移)、[专项覆盖矩阵](SIDEBAR_FOOTER_VALIDATION.md)。每个正式类型及ESM导出纳入全部exports/tarball检查。
+- [接入及迁移](NAVIGATION.md#侧栏底部接入与迁移)、[验证范围](VALIDATION.md)。每个正式类型及ESM导出纳入全部exports/tarball检查。
 
 ## 顶栏单一导航开关
 
@@ -188,21 +188,21 @@ AppHeader/AppShell/MenuLayout与原生MenuLayoutOptions同型theme?:ThemeControl
 
 `InputGroupRootProps` 从 React/forms 及根导出，`layout?: 'inline' | 'stacked'` 默认 inline，原生用 data-layout。`InputGroup.Textarea` 与现有 Textarea 为同一函数及原生 textarea props/ref，复用 Field 关联，无 xui-input 附加类。stacked 仅纵向排列控制项与可换行的 span Addon；真实 Input/Textarea 拥有 disabled/readOnly/aria-invalid，独立按钮禁用不改变组状态。完整[多行合同](WIDGETS.md#多行输入与上下工具区域)不新增 Root.disabled/invalid 或 Toolbar part。
 
-AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null）；独立AppHeader直接接受leading。顺序为leading→brand→自动navigation→breadcrumb→context，默认空；同Node/Fragment与普通React协调保持稳定。宿主提供平台/全屏事实、尺寸和drag/no-drag语义，库没有OS默认像素。完整[合同](LAYOUT_SLOTS.md)、[React正式消费者](../examples/workspace-react/app.tsx)、[原生正式消费者](../examples/workspace-vanilla/app.js)及[验证记录](WORKSPACE_VALIDATION.md)。
+AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null）；独立AppHeader直接接受leading。顺序为leading→brand→自动navigation→breadcrumb→context，默认空；同Node/Fragment与普通React协调保持稳定。宿主提供平台/全屏事实、尺寸和drag/no-drag语义，库没有OS默认像素。完整[合同](LAYOUT_SLOTS.md)、[React正式消费者](../examples/workspace-react/app.tsx)、[原生正式消费者](../examples/workspace-vanilla/app.js)及[验证记录](VALIDATION.md)。
 
 ## 富导航行扩展
 
-`@coffeehc/xui-react/menu-layout` / 根的 `NavigationMenuProps`（及 `MenuLayoutProps`）追加 `renderButton(item)`、`renderAction(item)`：单 button 分支 renderer 与独立 sibling 辅助动作。保留已有 `children/resolveIcon/renderLabel/renderLink`，不是 listbox。`@coffeehc/xui-runtime/navigation` / 根追加类型 `NavigationRowState`、`NavigationDOMLifecycle`、`NavigationDOMSlot`、`NavigationMenuDOMOptions`；`createNavigationMenu` 和原生 `MenuLayoutOptions` 接受 renderLabel/renderAction/decorateItem 公共生命周期。默认无扩展时保持原菜单；busy 不自动等于 disabled。API、键盘、内容限制和清理见[富条目合同](NAVIGATION.md#富条目独立行尾动作与上下文菜单)，[双端正式消费者](GROUPED_SEARCH.md#富业务分组导航与简单选择的边界)。
+`@coffeehc/xui-react/menu-layout` / 根的 `NavigationMenuProps`（及 `MenuLayoutProps`）追加 `renderButton(item)`、`renderAction(item)`：单 button 分支 renderer 与独立 sibling 辅助动作。保留已有 `children/resolveIcon/renderLabel/renderLink`，不是 listbox。`@coffeehc/xui-runtime/navigation` / 根追加类型 `NavigationRowState`、`NavigationDOMLifecycle`、`NavigationDOMSlot`、`NavigationMenuDOMOptions`；`createNavigationMenu` 和原生 `MenuLayoutOptions` 接受 renderLabel/renderAction/decorateItem 公共生命周期。默认无扩展时保持原菜单；busy 不自动等于 disabled。API、键盘、内容限制和清理见[富条目合同](NAVIGATION.md#富条目独立行尾动作与上下文菜单)，[双端正式消费者](NAVIGATION.md#富业务分组导航与简单选择的边界)。
 
 原生 `MenuLayoutOptions.sidebar?:Node|null` 可替换完整菜单区域，省略/null恢复默认数据菜单；稳定节点、替换焦点和清理边界见[原生自组sidebar](NAVIGATION.md#原生完整自组-sidebar)。它复用同一个shell，不占sidebarHeader限定高度。React使用现有AppShell.sidebar组合。
 
-公共 DataTable/DataTableToolbar/DataTableFilter 与原生 createDataTable/createDataTableToolbar/createDataTableFilter 复用表格和页内槽，合同见 [DATA_TABLE](DATA_TABLE.md)。顶栏语言入口默认无常驻外框和装饰SVG箭头，controls/account紧凑但命中区不减，见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。
+公共 DataTable/DataTableToolbar/DataTableFilter 与原生 createDataTable/createDataTableToolbar/createDataTableFilter 复用表格和页内槽，合同见 [DATA_TABLE](DATA_TABLE.md)。顶栏语言入口默认使用透明边框，保留装饰性SVG箭头，controls/account紧凑但命中区不减，见 [LAYOUT_SLOTS](LAYOUT_SLOTS.md#顶栏相邻控件)。
 
 `DataTableLayout = 'natural' | 'workspace' | 'document'` 从 runtime/data-table、runtime/data-table-dom、React/data-table 及 runtime/React 根入口导出。`DataTable` / `createDataTable` 的 `layout` 默认改为 natural：少量/零行随内容收缩，实际有界父容器中以 `max-block-size:100%` 限高并只滚动表体；auto 高度父级中仍为自然文档流，不会自动获得视口边界。显式 workspace 保留旧填满与最小高度，document 即使在有界父级也不采用此高度上限。依赖旧默认的消费者必须显式选择 `layout='workspace'`；shell 的 scrollMode 默认和公开内容区最小高度 token 不变，详见[默认布局迁移](DATA_TABLE.md#默认布局迁移)。
 
-内部 toolbar、反馈、表体和唯一 footer 位于同一 frame；外部 pageToolbar 仍可替代内部 toolbar，同组筛选只放一处。既有分页保持受控，本地列表由宿主切片并发布事实，服务端列表使用已确认响应且不得二次切片；计数/每页条数/Pagination 不增设第二个 owner。通用 footer 原本位于 frame 内不代表旧 XAgent 已采用或升级；本次没有 XAgent 修改。
+内部 toolbar、反馈、表体和唯一 footer 位于同一 frame；外部 pageToolbar 仍可替代内部 toolbar，同组筛选只放一处。既有分页保持受控，本地列表由宿主切片并发布事实，服务端列表使用已确认响应且不得二次切片；计数/每页条数/Pagination 不增设第二个 owner。通用 footer 不能证明采用项目已接入同一版本或组合，实际消费须另核。
 
-`DataTableColumn<T>` / `NativeDataTableColumn<T>` 追加 `width?:DataTableColumnWidth`；共享类型从 runtime/data-table、runtime/data-table-dom、React/data-table 及 runtime/React 根入口导出。number 为有限非负 CSS 像素，字符串为 length/百分比或 calc/clamp/min/max/var 表达式；形状类型与 SSR 结构校验不代替浏览器 CSS/数学解析。未配置维持原自动布局，混合列由未配置列吸收余量，全部配置按列总宽布局；百分比和混合表达式以表体可用宽度解析，表头与全部数据单元格共用 colgroup 列轨道。`0` 不隐藏列，默认长文本换行而不裁切操作或焦点；不新增品牌尺寸 token、业务列或多 sticky 列自动偏移。完整值校验、内容与布局边界见 [列宽合同](DATA_TABLE.md#列宽与内容边界)。
+`DataTableColumn<T>` / `NativeDataTableColumn<T>` 追加 `width?:DataTableColumnWidth`；共享类型从 runtime/data-table、runtime/data-table-dom、React/data-table 及 runtime/React 根入口导出。number 为有限非负 CSS 像素，字符串为 length/百分比或 calc/clamp/min/max/var 表达式；形状类型与 SSR 结构校验不代替浏览器 CSS/数学解析。width 通常省略，显式值是列宽下限；表格默认横向铺满，未配置列优先吸收余量，全部配置时也分配余宽；下限总和超出可用宽度时横向滚动，不压缩已配置下限。百分比和混合表达式以表体可用宽度解析，表头与全部数据单元格共用 colgroup 列轨道。`0` 不隐藏列，默认长文本换行而不裁切操作或焦点；不新增品牌尺寸 token、业务列或多 sticky 列自动偏移。完整值校验、内容与布局边界见 [列宽合同](DATA_TABLE.md#列宽与内容边界)。
 
 ## 通用认证入口布局
 
@@ -212,7 +212,7 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 
 `@coffeehc/xui-react/forms` 新增 `SimpleSelect`，接收 select 的表单值/事件 props、option/optgroup children、multiple 和 controlSize。可见控件是主题 combobox/listbox；保留原 select 作为隐藏表单/事件桥，Field 的 label/help/error 指向可见 trigger。选择会发原 input/change 事件，受控 value 仍须由宿主回传。原生 `@coffeehc/xui-runtime/dom` 导出 `bindSelectControl(select)`，返回 element/trigger/update/destroy；绑定已挂载 select 时在原位包装，未挂载则挂载 element，不能将 select 单独移出。每次改变 value/selectedOptions/options/disabled/label 后 update，销毁恢复原 select 的可见性/id/tabIndex 并释放事件/浮层。重复绑定复用存活 owner。单选关闭，多选保持浮层并支持 Escape/Tab；没有新增业务查询 owner。
 
-标准示例与默认采用统一使用上述封装，政策见 [DESIGN](DESIGN.md#公共复用与状态矩阵)。`NativeSelect` 与显式平台 binding 保留独立平台合同，不再作为普通表单推荐。库内 DataTable/APIKey/BusinessLog/StructuredLog 默认选择组合已切换主题控件。React `layout` 新增 `HeaderBrand`；runtime `header-controls` 新增 `createHeaderLocaleSelect`。详细布局与生命周期见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。
+标准示例与默认采用统一使用上述封装，政策见 [DESIGN](DESIGN.md#公共复用与状态矩阵)。`NativeSelect` 与显式平台 binding 保留独立平台合同，不再作为普通表单推荐。库内 DataTable/APIKey/BusinessLog/StructuredLog 默认选择组合已切换主题控件。React `layout` 新增 `HeaderBrand`；runtime `header-controls` 新增 `createHeaderLocaleSelect`。详细布局与生命周期见 [LAYOUT_SLOTS](LAYOUT_SLOTS.md#顶栏相邻控件)。
 
 
 `SimpleSelect`/`bindSelectControl` 同步 form.reset 的默认动作后事实，取消 reset 不更新，销毁后不响应；update 也重连改变后的 form owner。hidden option/optgroup 不出现在列表，disabled optgroup 不可选，组名保留。HTML select.size 只留在隐藏表单桥，不承诺原生多行常驻列表的布局；需要 OS 控件或原生 size 呈现时用 NativeSelect。React select ref 指向表单桥，不是可见 button；原生 binding.trigger 是明确的可见焦点入口。
@@ -227,8 +227,9 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 - `@coffeehc/xui-runtime/search-toolbar-dom` <!-- public-entry: @coffeehc/xui-runtime/search-toolbar-dom --> 及根入口：`createSearchToolbar` / `SearchToolbarOptions` / `SearchToolbarController`，对应 Node/null 槽，稳定 update/getElement/getExpanded/destroy。
 - `@coffeehc/xui-theme/search-toolbar.css` <!-- public-entry: @coffeehc/xui-theme/search-toolbar.css --> 同时包含于 style/critical/components；统一尺寸和响应布局仅消费既有公共 token。
 
-默认高级区折叠，只有非空内容才显示触发器；受控请求等待宿主回传，折叠 hidden/inert 保留节点和值。搜索、筛选与主动作不引入业务 owner。完整默认、内容与更新合同见 [SEARCH_TOOLBAR](SEARCH_TOOLBAR.md)。
-## 文字、复制与媒体 A1/A3
+默认高级区折叠，只有非空内容才显示触发器；受控请求等待宿主回传，折叠 hidden/inert 保留节点和值。搜索、筛选与主动作不引入业务 owner。完整默认、内容与更新合同见 [COMPOSITIONS](COMPOSITIONS.md#searchtoolbar)。
+
+## 文字、复制与媒体
 
 - `@coffeehc/xui-react/display` <!-- public-entry: @coffeehc/xui-react/display -->：Typography.Heading/Text/Link/Code、Copyable、Separator、Tag、Image，及同名 props/共享类型。
 - `@coffeehc/xui-runtime/display` <!-- public-entry: @coffeehc/xui-runtime/display -->：createCopyController、copyableLabels、validateImageOptions 与文字/复制/图片共享类型。
@@ -237,14 +238,15 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 所有入口同时从各自根导出。[完整合同与双端示例](DISPLAY.md)：复制仅明确 value、串行写与旧结果隔离；Tag 删除意图/焦点由宿主；Image 显式 alt/尺寸、稳定占位与显式重试，不包含上传或查看器。
 
 PasswordStrengthInput/createPasswordStrengthInput 基于 InputGroup 的普通 PasswordInput 增加本地懒加载的连续强度条；NewPasswordFields 进一步组合密码与确认，仅在提交时检查固定 6–32 码点并显示就近 Tooltip，评分不作为提交门禁。runtime/password 的 createPasswordStrengthController 与 getPasswordStrengthSummary 公开最小无秘密状态；完整隐私、离线、字典及大小边界见 [PASSWORD](PASSWORD.md#本地密码强度建议)。
+
 ## 完整管理员初始化页
 
 - `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup -->：createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。
 - `@coffeehc/xui-runtime/admin-setup-dom` <!-- public-entry: @coffeehc/xui-runtime/admin-setup-dom -->：createAdminSetupPage、AdminSetupPageOptions、AdminSetupPageController。
 - `@coffeehc/xui-react/admin-setup` <!-- public-entry: @coffeehc/xui-react/admin-setup -->：AdminSetupPage、AdminSetupPageProps、AdminSetupPageHandle 与共享状态类型。
 
-均从各自根入口导出。完整页面复用 AuthPage/NewPasswordFields，宿主只配置品牌、权威状态和提交回调；密码规则固定，不请求策略 API。未知写入仅普通文字且锁定，不自动重发/核对，不等于登录。生命周期/迁移与双端正式示例见 [ADMIN_SETUP](ADMIN_SETUP.md)。
+均从各自根入口导出。完整页面复用 AuthPage/NewPasswordFields，宿主只配置品牌、权威状态和提交回调；密码规则固定，不请求策略 API。未知写入仅普通文字且锁定，不自动重发/核对，不等于登录。生命周期/迁移与双端正式示例见 [AUTH](AUTH.md#管理员初始化页)。
 
 ### 表格行操作布局
 
-`TableActions` 从 React 根入口及 `@coffeehc/xui-react/table` 导出，是只负责换行与 `table-action-gap` 的 div 子部件，接受标准 div props/ref。原生采用同一公开 `.xui-table-actions` 容器。APIKey 双端复用此布局；按钮标签、排序、权限、写入和回执仍由原业务 owner 持有。长标签允许换行，表格单元格保留焦点间隙，不用相邻按钮粘合代替组布局。
+`TableActions` 从 React 根入口及 `@coffeehc/xui-react/table` 导出，是只负责换行与 `table-action-gap` 的 div 子部件，接受标准 div props/ref。原生采用同一公开 `.xui-table-actions` 容器。APIKey 双端复用此布局；按钮标签、排序、权限与写入结果仍由原业务 owner 持有。长标签允许换行，表格单元格保留焦点间隙，不用相邻按钮粘合代替组布局。

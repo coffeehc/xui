@@ -60,13 +60,13 @@ workspace的顶栏和page slots不覆盖正文；主内容的业务布局通常�
 
 macOS hiddenInset的真实控件避让尺寸、全屏/退出全屏、Windows/Linux和无标题栏变化由宿主窗口集成决定：需要时传安全区Node，不需要时传null；库不检测平台、不固定traffic-light像素、不创建窗口按钮。装饰性占位使用aria-hidden且不设tabIndex；真的交互控件提供名称和正常键盘语义。示例`?platform`的OS按钮只是合成顺序验证，不是原生窗口控件。
 
-Wails/Electron等drag/no-drag机制属于宿主桥接。仅对宿主自有非交互区域声明可拖动；interactive leading内容应按宿主框架标为no-drag，不可把可拖动样式继承到整套xui顶栏或覆盖自动菜单/主题/账号按钮。库不会猜测或修改框架专用CSS属性。本次验证浏览器布局与DOM顺序；没有真实Wails/hiddenInset验证声明。
+Wails/Electron等drag/no-drag机制属于宿主桥接。仅对宿主自有非交互区域声明可拖动；interactive leading内容应按宿主框架标为no-drag，不可把可拖动样式继承到整套xui顶栏或覆盖自动菜单/主题/账号按钮。库不会猜测或修改框架专用CSS属性。浏览器布局与 DOM 顺序不能替代真实 Wails/hiddenInset 集成验证。
 
 ## 默认主题与可选i18n
 
 AppHeader、AppShell、MenuLayout与原生createMenuLayout默认生成右侧主题图标按钮。明确偏好按light→dark→system→light循环；图标表达当前mode，不把system显示成其当前effective颜色。完整可访问名称包含当前模式和下一动作，title说明下一动作，Enter/Space使用既有按钮动效及reduced-motion合同。
 
-未传theme时复用预初始化的window.xuiTheme；若文档尚无有效owner，getThemeController(window)只建立一次。默认持久化键ui.theme.mode，无有效值为system；system跟随系统变化，存储不可用仍可内存切换。自有JSON桥接或受控偏好继续传同一个ThemeController，setMode仅请求，直到宿主syncMode才改变事实。布局卸载只解除视图订阅，不销毁共享owner。登录页继续只继承外观，不显示这个顶栏控件。
+未传theme时复用预初始化的window.xuiTheme；若文档尚无有效owner，getThemeController(window)只建立一次。默认持久化键ui.theme.mode，无有效值为dark；显式system跟随系统变化，matchMedia不可用时生效light，存储不可用仍可内存切换。自有JSON桥接或受控偏好继续传同一个ThemeController，setMode仅请求，直到宿主syncMode才改变事实。布局卸载只解除视图订阅，不销毁共享owner。登录页继续只继承外观，不显示这个顶栏控件。
 
 locale只有enabled:true才显示。value/options/onValueChange全部由现有产品i18n owner提供；库不加载词典、不猜支持语言、不设置document.lang、不另写locale存储。原生与React都用标准select语义，当前值受控；回调后不自动把请求当事实。options中的disabled语言不可选择；不在列表的当前值显示空项，不假装已选择首项。label用于控件可访问名，主题文案可用themeLabels覆盖light/dark/system/switchToLight/switchToDark/switchToSystem，沿用库现有labels模式。
 
@@ -90,10 +90,63 @@ locale只有enabled:true才显示。value/options/onValueChange全部由现有�
 
 ## 验证边界
 
-新增header-controls正式消费者由独立tarball构建及types/exports门禁覆盖；对应unit/Playwright验证默认主题、三模式循环/系统变化、受控请求、i18n显式开启、翻译标签、槽身份/焦点、长菜单、窄屏/200%文字及空槽。全量build/watch和最终浏览器结果以对应提交Verify终态为准；本页不把源码断言、收集数量或前次CI成绩当成这次实跑成功。真实读屏器、移动OS、Safari/Firefox和SSR hydration没有本轮通过声明。
+header-controls 正式消费者通过独立 tarball 构建及 types/exports 门禁消费；对应 unit/Playwright 覆盖默认主题、三模式/系统变化、受控请求、显式 i18n、翻译标签、槽 identity/focus、长菜单、窄屏/文字放大与空槽。实际执行范围集中于 [VALIDATION.md](VALIDATION.md)，不从源码或收集数量推断通过；真实读屏器、移动 OS、Safari/Firefox 与 SSR hydration 仍按明确支持范围另验。
 
 旧AppShell.header未搭配headerSlots时作为完整legacy内容区放在primary，不当成brand拆分、裁切或强制子节点块显示；搭配headerSlots时仍位于secondary的既有legacy位置。重复同角色更新保持正常React协调；显式切换headerSlots有无会改变legacy所属区域，不能宣称该跨角色移动保留legacy子树身份。其他控件继续使用同一内部Frame。
 
 ## 标准列表与卡片正文
 
-现有pageHeader组合PageHeader的title/meta/actions，pageToolbar组合DataTableToolbar/DataTableFilter；workspace正文使用DataTable即可得到库维护的表体/底栏高度链。搜索只能放pageToolbar或DataTable.toolbar一处。卡片列表复用相同页槽和ScrollArea/Grid/Surface，不新增PageLayout。pageToolbar默认没有下边框且保留layout-section-gap，不再包产品整行分隔。完整合同及0/20/50/100行正式双端消费者见[DataTable](DATA_TABLE.md)。顶栏紧凑与无框语言控件见[专项说明](HEADER_CONTROLS.md)。
+现有pageHeader组合PageHeader的title/meta/actions，pageToolbar组合DataTableToolbar/DataTableFilter；workspace正文使用DataTable即可得到库维护的表体/底栏高度链。搜索只能放pageToolbar或DataTable.toolbar一处。卡片列表复用相同页槽和ScrollArea/Grid/Surface，不新增PageLayout。pageToolbar默认没有下边框且保留layout-section-gap，不再包产品整行分隔。完整合同及0/20/50/100行正式双端消费者见[DataTable](DATA_TABLE.md)。顶栏紧凑与无框语言控件见下方相邻控件合同。
+
+
+## 顶栏相邻控件
+
+### 相邻工具与账号
+
+secondary 的相邻组统一使用 `space-control-gap`。账号仍是 controls 之后的独立语义槽，没有移动 slot、负 margin 或 CSS order。主题按钮和账号 Button 的尺寸、padding、图标以及命中区不改；主组与次组之间仍使用既有区域间距。
+
+以默认根字号16px、36px主题按钮/16px图标、small ghost Button 的10px横padding与1px边框为例：按钮命中框之间的默认间隔从16px变为8px；主题SVG盒右侧10px + 组间8px + 账号左侧11px，得到约29px的可见盒间距。这是该公开组合的几何推导，不是所有账号内容的固定目标，也不是已跑的浏览器像素证据。头像宽度和账号文字由宿主公开内容决定；控件可换行，不能缩小命中区来得到紧凑外观。
+
+### 统一主题的语言入口与浮层
+
+`HeaderLocaleOptions` 仍由宿主提供 `enabled/value/options/onValueChange/label/disabled`。顶栏现使用可见 button/combobox 与主题 listbox，React 与原生都复用正式 `createHeaderLocaleSelect(document, options)`、`bindSelectControl` 和同一个公共 popover owner，React 在 layout effect 内管理挂载/更新/清理，不为默认 shell 引入另一套选择器 owner。此组合不新增 SSR/hydration 支持承诺。标准示例和默认采用遵循 [DESIGN 公共封装政策](DESIGN.md#公共复用与状态矩阵)。独立 `NativeSelect` 及显式 `bindHeaderLocaleSelect` 仅保留平台选择器合同，其 OS 面板不能通过 CSS 保证跨平台统一。
+
+入口默认透明边框，hover/pressed/disabled/focus 消费同一语义 token；装饰箭头不成为第二个焦点目标，RTL 使用逻辑方向，强制颜色下仍保留箭头与可见边界。浮层使用公共 overlay 颜色、边界、阴影和选中态；按触发器定位，受可见视口安全边距与可用高度限制，长选项滚动。原生 owner 监听 trigger/浮层 resize、滚动及 visualViewport；不会要求产品修正固定坐标。
+
+键盘支持 Enter/Space、上下/Home/End、文字定位、Escape 关闭回焦点、Tab 离开；禁用项不可选择。点击外部关闭。请求尚未由宿主回传时不显示未确认语言；unknown 当前值保持空显示。关闭入口会将其内部焦点回相邻主题按钮。
+
+### 受控事实与生命周期
+
+两个宿主在请求 `onValueChange` 时保持当前已确认值；宿主同步新 `value` 后才显示新事实。相同当前值、禁用控件、禁用选项和非法选项均不发请求。不在 options 中的当前值显示一项禁用空项，避免假装第一项已被选中；后续添加该值对应选项会显示宿主标签，不产生额外请求。
+
+原生低层 `bindHeaderLocaleSelect(select, options)` 返回 `{element, update, destroy}`：
+
+- 挂载 `element`，它包含原 select 与一个装饰 SVG；传入已挂载 select 时会在原位置加包装
+- 重复绑定同一存活 select 复用一个 binding 并同步参数；update 保留 select、包装与可用焦点，未变的选项也不替换
+- `enabled:false` 使低层 select 禁用；MenuLayout 会直接移除整个语言入口
+- destroy 幂等地解除事件并去掉包装/语言专用样式，保留原 select 最后确认的选项、值、名称与禁用事实；旧 handle 的 update/destroy 不影响后续重建
+- 布局关闭当前聚焦的语言入口时先回相邻主题按钮，销毁布局不销毁共享主题或 i18n owner
+
+库生成的包装与SVG不要求产品手写或穿透。只给独立原生 binding 挂载点需要使用新增返回的 element；此前直接把已绑定 select 再搬出包装的调用应改为挂载 element。React 与完整 createMenuLayout 自动完成此事。
+
+### 正式消费者
+
+[React](../examples/header-controls-react/app.tsx) / [原生](../examples/header-controls-vanilla/app.js) 示例的 `?compact&locale` 展示账号、Avatar、状态与语言/主题，`&long` 展示长中文账号；React `&direct` 直接消费 AppHeader。均为合成状态，使用公共 CSS。测试入口为 [受控语言合同](../tests/header-locale.test.mjs)、[紧凑几何](../tests/browser/header-compact.spec.mjs) 和 [品牌与浮层](../tests/browser/header-popup-brand.spec.mjs)；实际执行范围见 [VALIDATION.md](VALIDATION.md)。
+
+### 品牌区域与内容对齐
+
+AppHeader 的内容顺序是 leading/brand → navigation toggle → breadcrumb/context。leading 保留平台安全区位置。MenuLayout/AppShell 桌面身份区域使用与侧栏相同的宽度 token，计入公共间距后使 toggle 左边对齐正文内容起点；collapsed 自动跟随 rail 宽度，窄屏恢复自然品牌布局与同一 drawer 入口。直接 AppHeader 没有侧栏，按内容自然排列。
+
+可选 `HeaderBrand` 以 logo 和 children 提供规范内容；原生使用同名公开结构，业务链接可包在组件外。带 logo 的 compact 品牌名称仅视觉收纳，accessible 名称保留；不带 logo 的任意旧 brand 内容仍按区域截断，库不猜业务 DOM。
+
+```tsx
+<MenuLayout headerSlots={{brand:<HeaderBrand logo={<img src="/logo.svg" alt=""/>}>工作台</HeaderBrand>,breadcrumb:<Breadcrumbs/>}} {...navigation}/>
+```
+
+```html
+<span class="xui-header-brand"><span class="xui-header-brand-logo" aria-hidden="true"><img src="/logo.svg" alt=""></span><span class="xui-header-brand-name">工作台</span></span>
+```
+
+原生将此节点传给 headerSlots.brand，无产品宽度/定位 CSS。浏览器测试检查真实浮层、受控选择、长列表滚动、品牌/侧栏/正文几何和窄屏 drawer；Chromium 结果不能代替真实 macOS 系统、读屏器或移动 Safari。
+
+HeaderBrand 的 logo 容器固定采用 control-height-sm，图片与 SVG 保持 contain，不因素材原始尺寸撑大顶栏。桌面 compact、无 leading 安全区时，logo 中心与 nav-collapsed-width 侧栏中心重合；补偿顶栏内容内距仅作用于品牌，不移动菜单 toggle。存在 leading 时保留该平台区域，品牌在剩余区域居中。名称继续保留可访问文本，窄屏恢复名称。

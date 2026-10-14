@@ -1,6 +1,22 @@
 # 通用基础实施与采用接口
 
-完整通用规则仅在 [DESIGN.md](DESIGN.md)，当前版本 0.8.0（Precision Engineering Console）。架构分层仅在 [原子→组合→页面](FOUNDATION.md#组件层次与扩展原则)；本文件记录真实入口与实现映射，不维护另一套品牌默认值或架构哲学。
+完整通用规则仅在 [DESIGN.md](DESIGN.md)，当前版本 0.8.0（Precision Engineering Console）。本文件维护组件分层、实施映射、构建消费和宿主边界；全部正式入口由 [PUBLIC_API.md](PUBLIC_API.md) 索引。
+
+## 组件层次与扩展原则
+
+xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与采用的架构准则；完整通用视觉/交互规则与默认 token 来源仍仅为 [DESIGN.md](DESIGN.md)，本节说明真实实现如何分层，不复制另一套皮肤规则。
+
+| 层次 | 当前公开实例 | 采用与扩展 |
+| --- | --- | --- |
+| 原子 | Button/IconButton、Input/Textarea、Checkbox/Radio/Switch、Field、Alert、公共 CSS | 直接采用公开 props/ref/render、标准元素和语义 token；图标按钮使用共享 IconButton，不新增竞争按钮/输入基础包 |
+| 组合 | MenuLayout/NavigationMenu、公共 Toolbar/Grid/Table/DataRegion、Dialog/详情布局、HTTP/query/controller | 组合原子提供通用键盘、状态、反馈和布局。Table 不抽查询引擎，query 不抽领域业务；状态与后端 adapter 通过明确公开合同连接 |
+| 页面 | AuthPage/createAuthPage纯认证布局、ConfigurableLoginPage/createLoginPage、ApiKeyManager/createApiKeyManager、BusinessLogExplorer/createBusinessLogExplorer | 填文案/品牌数据、选项、adapter/loader 与 callbacks 即可整页使用；页面内部复用下层相同控件与皮肤，业务不必手写页面 CSS |
+
+普通需求优先完整页面或组合；特殊业务可用公开扩展点或组合基础控件。允许声明的 props/render/parts、受信任 renderer、数据配置和 callbacks；不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner；缺能力先反馈或补公开接口，再补验收。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
+
+业务流程、领域数据、业务页面和产品布局由宿主负责；领域 API、权限/tenant 与校验须可独立测试。xui 提供通用组件、公开组合、请求接入及 typed adapter/loader 边界。仅选用默认 HTTP client 或页面 adapter 时，服务须满足对应明确 wire 合同；宿主可通过 ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 或 BusinessLogLoader 连接自己的领域接口，业务 API 迁移是宿主独立任务。页面所需前置见 [PAGE_APIS.md](PAGE_APIS.md)。
+
+贡献与采用应能说明所属层次、复用下层的方式、公开扩展点和实际构建消费。合成页面通过不代表产品迁移通过。
 
 ## 包与正式入口
 
@@ -8,9 +24,9 @@
 
 | 包 | 正式入口 | 职责 |
 | --- | --- | --- |
-| `@coffeehc/xui-theme` | `style.css`、`tokens.css`、`components.css`、`critical.css`；`base/button/forms/navigation/feedback/dialog/layout/floating/table/auth/sheet.css` | 无框架依赖，预构建 CSS。critical 包含 token 和除 floating 外的组件样式 |
-| `@coffeehc/xui-runtime` | 根、`/theme`、`/loading`、`/dom`、`/navigation`、`/menu-layout`、`/http`、`/download`、`/api-key-http`、`/business-log-http`、`/query`、`/auth`、`/entity-id`、`/login-dom`、`/api-key`、`/api-key-dom`、`/structured-log`、`/structured-log-dom`、`/business-log`、`/business-log-dom`、`/init.js` | 无框架依赖。各模块可独立导入；init 是有副作用的经典同步脚本 |
-| `@coffeehc/xui-react` | 根；`/button/forms/navigation/menu-layout/tabs/dialog/sheet/alert-dialog/context-menu/feedback/layout/table/select/combobox/menu/popover/tooltip/toast/theme/login/api-key/structured-log/business-log` | React、ReactDOM、Base UI、runtime 是 peers；不捆绑宿主实例，不隐式引入 CSS |
+| `@coffeehc/xui-theme` | 预构建 CSS、tokens 与按需样式分片 | 无框架依赖，完整及分片入口见 PUBLIC_API |
+| `@coffeehc/xui-runtime` | 主题、DOM、resource、导航、HTTP/query、认证和页面 controllers/factories | 无框架依赖；模块可独立导入，init.js 是有副作用的同步经典脚本 |
+| `@coffeehc/xui-react` | 公共组件及各能力子入口 | React、ReactDOM、Base UI、runtime 是 peers，不捆绑宿主实例，不隐式导入 CSS |
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
 
@@ -35,7 +51,7 @@ const off = theme.subscribe(state => updateView(state));
 // 卸载视图时 off()，文档所有者终止时 theme.destroy()。
 ```
 
-foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控模式桥接；保留其他 JSON 字段，原始 ui.theme.mode 不被覆盖。storage/matchMedia 异常回退可用内存/light；系统变化有单一监听。React useTheme 只订阅外部 owner，在 StrictMode 中不创建或销毁它。ESM 导入本身不读 DOM。
+foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控模式桥接；保留其他 JSON 字段，原始 ui.theme.mode 不被覆盖。无有效保存值时默认 dark，storage 不可用时保留内存选择；仅显式 system 在 matchMedia 不可用时生效 light。系统变化有单一监听。React useTheme 只订阅外部 owner，在 StrictMode 中不创建或销毁它。ESM 导入本身不读 DOM。
 
 ## React 公共组件
 
@@ -53,8 +69,8 @@ foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控
 | 弹层 | Dialog、Sheet、AlertDialog、ContextMenu、Menu、Popover、Tooltip。Root/Trigger/Content/部件延续 peer 生命周期。Menu disabled 项可在 peer roving 顺序获得焦点但不能执行；原生 menu 跳过 disabled。Tooltip 增加 role 和描述 id，Root.contentId 可指定关联 id；外部 handle 触发器由宿主显式 aria-describedby 关联 |
 | 通知 | Toast Provider/manager/Root/Content/Viewport/Close 等复用 peer。peer 支持 collapsed/expanded，关闭控件在展开状态可访问，宿主不能将必要错误仅放在消失通知中 |
 | 表格 | Table/Container/Caption/Head/Body/Row/HeaderCell/Cell/SortButton，真实 table，striped/expandedRow、TableExpandedRow/ExpandButton、sticky start/end及显式stickyOffset，named overflow region，scope/aria-sort/selected 由宿主事实提供。无排序/选择/查询/虚拟化引擎 |
-| 组合管理页 | ApiKeyManager、BusinessLogExplorer、StructuredLogExplorer 使用 runtime 共享 controller；原生 createApiKeyManager/createBusinessLogExplorer/createStructuredLogExplorer 生成完整结构。领域回调、日志拟议 facade、详情权限由宿主，详见 [API_KEY.md](API_KEY.md)、[BUSINESS_LOGS.md](BUSINESS_LOGS.md)、[LOGS.md](LOGS.md) |
-| 配置登录页 | AuthPage/createAuthPage统一无请求的setup/启动/认证布局，完整ConfigurableLoginPage 与原生 createLoginPage内部复用它，并使用同一 auth/theme owner，默认动态视口居中的自然高度单列框，fullscreen沿用同一列结构并省略Surface皮肤，装饰 brandVisual 窄屏收起；正文/操作滚动区保留四边焦点安全空间；登录页无主题选择器，首屏沿已有 localStorage 偏好、无值默认 dark；公开品牌文案/logo/labels/安全回跳；内部复用基础控件/CSS；[登录定量验收](LOGIN_VISUAL_ACCEPTANCE.md)核对居中单框、20/28标题、376px操作区、单主动作、局部反馈与真实截图。固定 Bearer v2 login/refresh/session/logout、私有内存access、明确protectedPaths、15秒预算、cookie恢复/跨tab协调与密码清理见 [AUTH.md](AUTH.md)；配套baseservice facade，真实产品接入另验 |
+| 组合管理页 | ApiKeyManager、BusinessLogExplorer、StructuredLogExplorer 使用 runtime 共享 controller；原生 createApiKeyManager/createBusinessLogExplorer/createStructuredLogExplorer 生成完整结构。领域回调、日志 facade 接线、详情权限由宿主，详见 [API_KEY.md](API_KEY.md)、[BUSINESS_LOGS.md](BUSINESS_LOGS.md)、[LOGS.md](LOGS.md) |
+| 配置登录页 | AuthPage/createAuthPage统一无请求的setup/启动/认证布局，完整ConfigurableLoginPage 与原生 createLoginPage内部复用它，并使用同一 auth/theme owner，默认动态视口居中的自然高度单列框，fullscreen沿用同一列结构并省略Surface皮肤，装饰 brandVisual 窄屏收起；正文/操作滚动区保留四边焦点安全空间；登录页无主题选择器，首屏沿已有 localStorage 偏好、无值默认 dark；公开品牌文案/logo/labels/安全回跳；内部复用基础控件/CSS；[认证页验收](VALIDATION.md#认证页验收)核对居中单框、文字层级、单主动作、局部反馈与真实截图。固定 Bearer v2 login/refresh/session/logout、私有内存access、明确protectedPaths、15秒预算、cookie恢复/跨tab协调与密码清理见 [AUTH.md](AUTH.md)；配套baseservice facade，真实产品接入另验 |
 | 状态 | Surface/Alert、Badge/Skeleton/Spinner/Progress、Loading/Empty/ErrorState、DataRegion、RenderBoundary、useResource。错误/重试文字由宿主；render exception 重置不重试 Promise |
 
 `Badge`、`BadgeProps` 与 `BadgeTone` 从 `@coffeehc/xui-react/feedback` 及根入口导出。`tone` 为 neutral/info/success/warning/error，默认 neutral；例如 `<Badge tone="success">运行正常</Badge>`。原生使用 `<span class="xui-badge" data-tone="success">运行正常</span>`，没有 Badge constructor。neutral、未设置 data-tone 与普通 Tag 保留无边框、无底色的被动文字；显式状态才应用语义前景/soft/line、横向间距和4px圆角。标签文字或图标由宿主表达状态，不自动增加 live region、tab stop 或脉冲。
@@ -107,15 +123,15 @@ foundation-react/vanilla 提供列表、表单和详情，宿主仅有合成内�
 
 pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本，每次启动新的构建进程；生成 CSS、ESM、types 和 init 后，构建全部预览。packages 和 examples 分别暂存、校验代际并回滚发布失败。watch-status.json 的 building/error/success 及 source/example SHA 是事实；错误时旧预览可能继续服务，不能称为新改动已生效。pnpm preview 另开本地服务，dev 不部署。
 
-正式验收先 npm pack，再在独立目录安装、编译 types 和打包；foundation 不复制 shared/layout.css。dev 的包解析也仅指向正式 exports 的 dist，没有源码入口。生产接入固定已验证的提交/本地 tarball。双仓 watch 可让宿主链接 built dist，但 React/ReactDOM/Base UI 必须由宿主保留单实例；Vite 可使用 resolve.dedupe 与指向本地正式入口的 alias，或独立 tarball 安装。链接后检查实际解析路径、ESM/types/init 的当前 generation，并运行宿主构建/页面检查。这里没有更改任何产品仓库的配置。
+正式验收先 npm pack，再在独立目录安装、编译 types 和打包；foundation 不复制 shared/layout.css。dev 的包解析也仅指向正式 exports 的 dist，没有源码入口。生产接入固定已验证的提交/本地 tarball。双仓 watch 可让宿主链接 built dist，但 React/ReactDOM/Base UI 必须由宿主保留单实例；Vite 可使用 resolve.dedupe 与指向本地正式入口的 alias，或独立 tarball 安装。链接后检查实际解析路径、ESM/types/init 的当前 generation，并运行宿主构建/页面检查。采用项目自行核对真实配置和消费结果。
 
-当前已实现数据驱动菜单/布局、无框架 HTTP、共享 query 和 [配置登录页](AUTH.md)；完整采用见 [ADOPTION.md](ADOPTION.md)，响应与查询合同见 [HTTP.md](HTTP.md)。API Key 通用管理见 [API_KEY.md](API_KEY.md)；可扩展业务日志见 [BUSINESS_LOGS.md](BUSINESS_LOGS.md)，默认原生HTTP loader已实现，真实服务未集成；独立结构化错误查询见 [LOGS.md](LOGS.md)，其 v1 facade 是宿主后端待实现合同；[仓库接入 skill](../.agents/skills/adopt-xui/SKILL.md) 与 [公开入口索引](PUBLIC_API.md) 可直接使用。领域路由、权限策略、身份凭据、产品 endpoint 后端、服务端会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。未覆盖项和限制见覆盖矩阵与本轮验证记录。
+当前已实现数据驱动菜单/布局、无框架 HTTP、共享 query 和 [配置登录页](AUTH.md)；完整采用见 [ADOPTION.md](ADOPTION.md)，响应与查询合同见 [HTTP.md](HTTP.md)。API Key 通用管理见 [API_KEY.md](API_KEY.md)；可扩展业务日志见 [BUSINESS_LOGS.md](BUSINESS_LOGS.md)，默认 HTTP loader 的服务前置见 [PAGE_APIS.md](PAGE_APIS.md)；独立结构化错误查询见 [LOGS.md](LOGS.md)，其 v1 facade 由宿主提供；[仓库接入 skill](../.agents/skills/adopt-xui/SKILL.md) 与 [公开入口索引](PUBLIC_API.md) 可直接使用。领域路由、权限策略、身份凭据、产品 endpoint 后端、服务端会话、交易、表格引擎、图表/编辑器/3D 引擎仍由宿主负责。实际已验与未验范围见 [VALIDATION.md](VALIDATION.md)。
 
 ## 公共顶栏和布局区域
 
 [布局slot矩阵](LAYOUT_SLOTS.md)固定context/auxiliary/account、sidebarHeader/Footer、pageHeader/Toolbar/content/Footer的角色、顺序和响应式合同。默认主题按钮复用runtime/theme owner与既有按钮；可选语言选择复用宿主i18n事实，不引入词典或持久化owner。React/native通过相同类型/表现配置，独立header-controls tarball消费者验证正式入口。CSS部件只用DESIGN语义var；无消费方定位尺寸补丁。
 
-可折叠分组搜索使用正式 [GroupedCombobox / createGroupedCombobox](GROUPED_SEARCH.md)：一个搜索输入与 listbox，外置折叠/分页控件；不要把 Disclosure 或 Accordion 放进 Combobox.List，也不采用同 Root 两个 List。业务查询、取消、选择与各组分页状态保持宿主所有。Disclosure 默认箭头和原生 controller 的同等合同亦见该页。
+可折叠分组搜索使用正式 [GroupedCombobox / createGroupedCombobox](WIDGETS.md#groupedcombobox-与-disclosure)：一个搜索输入与 listbox，外置折叠/分页控件；不要把 Disclosure 或 Accordion 放进 Combobox.List，也不采用同 Root 两个 List。业务查询、取消、选择与各组分页状态保持宿主所有。Disclosure 默认箭头和原生 controller 的同等合同亦见该页。
 
 ### 富导航扩展
 
@@ -125,12 +141,25 @@ NavigationMenu 的 renderButton/renderAction 与原生 NavigationMenuDOMOptions 
 
 DataTable系列使用正式/data-table与/data-table-dom入口，复用既有Table/Toolbar/Field/Pagination/DataRegion和page slots。共享DataTableLayout从runtime/data-table、runtime/data-table-dom、React/data-table与两包根导出。React DataTable/原生createDataTable默认layout='natural'，少量/零行按内容收缩，以max-block-size:100%对真实有界父级限高，只有表体滚动；auto高度父级中仍自然增长，不能凭百分比创造视口。显式workspace保持旧填满与最小高度，document即使在有界父级也不采用该上限。旧默认调用若依赖填满，须显式设置workspace；shell的公开内容区下限token与scrollMode默认不变。
 
-内部toolbar、反馈、表体、footer统一在同一frame，外部pageToolbar仍可替代内部toolbar，同组筛选只放一处。统一计数/条数/Pagination footer和表体滚动属于库，data/columns/actions/rights/query仍由宿主提供；既有受控分页不建立第二个owner。本地分页由宿主切片并发布真实total/page facts，服务端分页使用确认响应且不二次切片；null total明确不启用编号分页。原生keyed row与cell slot.update/destroy保留生命周期，见[完整合同](DATA_TABLE.md)。公共footer原本已在frame内，不证明旧XAgent已升级；本次不修改XAgent消费者。顶栏locale装饰箭头、无框状态与controls/account尺度见[顶栏控件](HEADER_CONTROLS.md)。
+内部toolbar、反馈、表体、footer统一在同一frame，外部pageToolbar仍可替代内部toolbar，同组筛选只放一处。统一计数/条数/Pagination footer和表体滚动属于库，data/columns/actions/rights/query仍由宿主提供；既有受控分页不建立第二个owner。本地分页由宿主切片并发布真实total/page facts，服务端分页使用确认响应且不二次切片；null total明确不启用编号分页。原生keyed row与cell slot.update/destroy保留生命周期，见[完整合同](DATA_TABLE.md)。库提供的 footer 不能证明采用项目已接入同一版本与组合。顶栏locale装饰箭头、无框状态与controls/account尺度见[顶栏控件](LAYOUT_SLOTS.md#顶栏相邻控件)。
 
 ## 局部失败反馈与离线边界
 
 React DataRegion 只在调用方提供 feedback prop（包含 null）时常驻一个反馈槽；原生同角色使用公开 `.xui-feedback-slot`。共用 `--feedback-slot-block-size`，由已有字体/控件/内距/焦点 token 派生；错误完整保留，可在局部滚动并通过键盘访问动作。`.xui-reserved-action[data-inactive='true']` 仅隐藏辅助动作的绘制，调用方同时设置 aria-hidden、tabIndex=-1 与 disabled，不得保留不可见可交互控件。
 
-DataTable 双端始终保留其状态行；登录页保留反馈与辅助动作位置，并用闲置/忙状态文案的实际尺寸约束主动作。API Key 与两类日志在现有页面局部显示请求反馈；原生列表只在实际顺序改变时移动 keyed 行，失败和同记录恢复不重建行控件。API Key 未知写入仍失败关闭，瞬时 secret 释放规则、认证与权限撤销不变。
+DataTable 双端始终保留其状态行；登录页空反馈/隐藏动作不占位，实际消息自然增长，并用闲置/忙状态文案的实际尺寸约束主动作。API Key 与两类日志在页面局部显示请求反馈；原生列表只在实际顺序改变时移动 keyed 行，失败和同记录恢复不重建行控件。API Key 写入结果未知时读取普通列表一次，结束等待后允许用户手动再试，不自动重发写请求；瞬时 secret 释放、认证与权限规则见 [API_KEY.md](API_KEY.md)。
 
-这保证已加载应用在请求失败时的结构稳定，不保证首次从未加载资源且完全离线时可用。核心主题 CSS/字体/图标不依赖远端 CDN，但宿主配置的 logo、图片或延迟模块仍依赖其资源可用性。不增加 Service Worker、凭据持久化或自动重放。实际验证范围见 [失败布局验证](ERROR_LAYOUT_VALIDATION.md)。
+这保证已加载应用在请求失败时的结构稳定，不保证首次从未加载资源且完全离线时可用。核心主题 CSS/字体/图标不依赖远端 CDN，但宿主配置的 logo、图片或延迟模块仍依赖其资源可用性。不增加 Service Worker、凭据持久化或自动重放。实际验证范围见 [失败布局验证](VALIDATION.md#失败复验与限制)。
+
+
+## 宿主边界
+
+业务路由、业务页面与领域图形、权限策略、身份源、缓存/查询、防抖、交易、服务端会话、表格查询/虚拟化引擎、图表数据、富文本/代码编辑器和 3D 引擎归宿主。xui 的 HTTP、认证客户端与通用页面组合只承担各自公开合同，不接管产品业务或要求全量后端标准化。OAuth2/OIDC/SAML 和第三方接口遵守各自协议，在宿主明确边界适配。
+
+正式采用应固定版本/SHA，核对公开布局和组件、主题单 owner、旧 CSS 层级及真实构建产物。SSR hydration 仅按组件明确支持的范围使用；真实移动 OS、读屏器、产品后端和生产性能由采用项目另验，不能由参考消费者推断通过。
+
+## 规范来源
+
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.8.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+
+[生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。

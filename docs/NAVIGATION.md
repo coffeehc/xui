@@ -61,7 +61,7 @@ MenuLayout 还提供 title/header、children（原生 content Node 或原有 roo
 
 原生 owner 的 update(partial) 合并选项，验证新数据后提交；无效数据保留旧菜单，匹配 id 的链接复用。getMenu()/getMain()/getSidebarOpen() 读取布局，菜单 owner 提供 getElement()/getState()/setCollapsed()/setExpanded()；布局选项统一通过 layout.update 更新。同一种 factory 不可在同一 root 重复创建活跃 owner，宿主只给该 root 一个所有者；destroy 后可以重建，更新已销毁 owner 无效。destroy 移除库监听、关闭 drawer，恢复创建前的 root 内容和属性；宿主自己的订阅/事件由宿主释放。原生 header/content 更新通过公开 Node，不复制内部菜单结构。
 
-正式消费者在 examples/menu-react 与 examples/menu-vanilla，共用 examples/shared/menu-data.json，独立 tarball 编译和打包。预览为 `/menu-react/` 与 `/menu-vanilla/`；测试入口仅用于合成验证，不访问产品后端。它们不用示例私有 CSS。HTTP/query 已实现，接入合同见 [HTTP.md](HTTP.md)；API Key 通用管理见 [API_KEY.md](API_KEY.md)，结构化日志只读查询见 [LOGS.md](LOGS.md)，拟议 facade 由宿主后端实现。
+正式消费者在 examples/menu-react 与 examples/menu-vanilla，共用 examples/shared/menu-data.json，独立 tarball 编译和打包。预览为 `/menu-react/` 与 `/menu-vanilla/`；测试入口仅用于合成验证，不访问产品后端。它们不用示例私有 CSS。HTTP/query 已实现，接入合同见 [HTTP.md](HTTP.md)；API Key 通用管理见 [API_KEY.md](API_KEY.md)，结构化日志只读查询见 [LOGS.md](LOGS.md)，facade 由宿主后端明确实现。
 
 
 ## 冷启动与路由ready边界
@@ -70,16 +70,13 @@ navigation adapter必须在第一个可操作菜单呈现时已连接，并保�
 
 冷启动取证区分主frame的Document请求/新document identity、history同文档路由，以及旧shell DOM是否重新挂载；单看“页面重新显示”不能确认reload。菜单更新保留同一shell/main/主题owner，不能因route key重挂整个外壳；非SPA链接、修改键、target/download的原生行为保留。初始化、主题订阅与watch构建本身不自动发reload；参考页的界面重载按钮是明确用户动作，登录默认location.assign也是确认登录/继续的宿主导航边界，不与菜单routing混用。
 
-本轮六组正式tarball消费者在冷缓存、资源延迟和已命中三份资源的暖缓存下，0/30/60/120/180秒共360菜单点击、60次前进/后退，只有每组初始一个Document请求，document/timeOrigin/shell/theme与草稿保持，无pageerror。移除adapter或canNavigate=false的两宿主受控对照均复现document导航，随后已连接adapter的点击保持SPA；这证明合同边界，不证明任何产品使用了错误gating。完整本地记录在.artifacts/cold-start/与cold-start-probe.log。
-
-用户后续更正：问题发生在本地新接入版本，尚未部署，未访问用户本机。此前旧线上页面不能用于归因本地新版本，线上取证已停止。本地具体dev命令、两个watch/HMR日志、路由ready状态和初始资源版本尚未提供；需要用户后续提供安全日志或由采用任务在对应云环境取证，不收集真实凭据、响应body或cookie。云端独立dev对照须另记录实际optimizer/HMR因果，不能用生产消费者未复现就排除dev问题，也不能笼统归因“未就绪”。
-
+回归应覆盖冷/暖缓存、受控资源延迟、前进/后退、菜单点击与移除 adapter/canNavigate=false 的对照；记录 Document 请求、document/timeOrigin/shell/theme identity、草稿和 pageerror。实际执行范围见 [VALIDATION.md](VALIDATION.md)。合成消费者未复现不能排除产品开发模式的问题，真实 dev 命令、optimizer/HMR 日志、路由状态与资源代际须在宿主取证；不收集凭据、响应 body 或 Cookie。
 
 ### Vite开发模式的已复现依赖优化刷新
 
 Vite8.2.2独立安装xui tarballs的合成宿主，以运行时生成的路径懒加载Select/Combobox/ContextMenu。首次依次加载三个deep import时，终端三次记录dependency optimized与optimized dependencies changed. reloading，HMR三次full-reload，主Document从1到4且document identity改变；相同页面再次点击稳定。暖依赖缓存同代码为1个Document/0 reload；冷缓存显式include相同依赖也为1/0。按钮触发而非anchor默认导航，未注入认证/SSR/主题跳转，未关HMR/优化或吞错误。实际记录见.artifacts/vite-cold/results.json与vite-cold-probe.log。
 
-这证明当前库深入口与不可静态发现的懒加载组合能够触发Vite dev重新优化，不能据此声称已确认用户本地的相同原因。[Vite原生说明](https://vite.dev/guide/dep-pre-bundling)与[optimizeDeps选项](https://vite.dev/config/dep-optimization-options)明确这是dev机制。生产tarball打包消费者的360次点击没有该机制；xui watch只构建dist与记录状态，不提供浏览器HMR/reload客户端。产品框架、插件和真实本地命令需要分别核对。
+这证明当前库深入口与不可静态发现的懒加载组合能够触发Vite dev重新优化，不能据此声称已确认用户本地的相同原因。[Vite原生说明](https://vite.dev/guide/dep-pre-bundling)与[optimizeDeps选项](https://vite.dev/config/dep-optimization-options)明确这是dev机制。生产 tarball 打包消费者不运行这套 dev 重新优化机制；xui watch只构建dist与记录状态，不提供浏览器HMR/reload客户端。产品框架、插件和真实本地命令需要分别核对。
 
 接入项目在自己的Vite配置中提前声明实际会由懒页面导入的公开入口；不能把canNavigate=false当ready veto，也不能靠等几分钟或禁止reload掩盖optimizer缺口。例如已验证的这三个页面：
 
@@ -94,7 +91,7 @@ export default defineConfig({
 });
 ```
 
-include清单按宿主实际正式入口扩展，特殊第三方/CJS依赖保持自身协议和interop；不把此清单当所有产品固定依赖或新增runtime API。保留framework插件/已有配置，在隔离冷cache和暖cache分别核optimizer日志、HMR packet与Document请求，并确认peer单实例和正常懒加载。没有在xAgent、用户本机或其他产品改配置；其真实本地日志仍待提供。
+include清单按宿主实际正式入口扩展，特殊第三方/CJS依赖保持自身协议和interop；不把此清单当所有产品固定依赖或新增runtime API。保留framework插件/已有配置，在隔离冷cache和暖cache分别核optimizer日志、HMR packet与Document请求，并确认peer单实例和正常懒加载。产品实际配置与日志须在其独立任务核对。
 
 可重复回归：[tests/cold-start/vite.test.mjs](../tests/cold-start/vite.test.mjs)，构建后执行 `pnpm test:cold-start`；完整 `pnpm verify` 也包含它。脚本重新 pack 并安装独立宿主，固定 Vite 8.2.2、React 19.2.8、Base UI 1.7，使用全新、相同暖、独立 include 三组 cache。结果保存至 `.artifacts/vite-regression-*/results.json`，断言默认 cold 为 3 个 full-reload/4 个 Document，warm 与明确 include 均为 0/1。`@vite-ignore` 是夹具模拟无法静态发现路径的条件，不是给产品的修复建议。记录保留失败，未访问产品、真实服务或本机。
 
@@ -148,7 +145,7 @@ layout.update({headerSlots:{...headerSlots, actions:null}});
 
 紧凑侧栏默认216px展开、60px收起；这些数值是根16px下的 CSS 像素，非设备像素。公开token `--nav-sidebar-width`、`--nav-sidebar-padding`、`--nav-collapsed-width` 与 `--nav-collapsed-item-size` 在 DESIGN 中定义，默认36px项+左右各12px；图标仍16px，选中短竖线/hover/独立focus不改变宽度。独立支路开关收起时移到所属链接下一行，窄屏抽屉恢复完整标签与既有键盘/路由合同。独立使用 NavigationMenu 的外层宽度由宿主布局决定，MenuLayout 才拥有完整侧栏宽度。
 
-迁移顺序：先固定新SHA并重新构建正式包；把原 header 中品牌/路径/状态/动作内容分别送入公开角色；删除消费方仅用于通用 header flex/grid/gap、长中文截断、紧凑栏宽度和图标对齐的 CSS。保留领域内容布局、授权判断、事件、路由和有明确理由的产品token覆盖。不要删除业务规则来套入公共布局，不再叠加第二条rail。新合成验收与覆盖矩阵见[布局与文字验收](LAYOUT_TYPOGRAPHY_VALIDATION.md)。
+迁移顺序：先固定新SHA并重新构建正式包；把原 header 中品牌/路径/状态/动作内容分别送入公开角色；删除消费方仅用于通用 header flex/grid/gap、长中文截断、紧凑栏宽度和图标对齐的 CSS。保留领域内容布局、授权判断、事件、路由和有明确理由的产品token覆盖。不要删除业务规则来套入公共布局，不再叠加第二条rail。实际执行范围与限制见 [VALIDATION.md](VALIDATION.md)。
 
 ## 侧栏底部接入与迁移
 
@@ -196,7 +193,7 @@ action.setAttribute('aria-busy', String(busy));
 
 原生同一Node/Fragment赋回保留节点；替换内容须传新的Node/Fragment，传null/undefined移除。不要重用已被替换的空Fragment来恢复旧子节点；保留内容Node引用或新建Fragment。React按常规key/type协调，改变内容组件key或有意移除footer属于宿主重建。
 
-有footer时，短菜单通过flex可用空间将footer置底，长菜单只在公共menu区域滚动，不覆盖末项；footer自身超出侧栏一半时独立滚动保留全部内容。document模式正文仍文档滚动，侧栏由库测量实际头高后有界sticky；viewport模式包括公开Root blockSize固定窗口。无footer时保留已有侧栏滚动区域。紧凑默认宽度不变，窄屏复用原抽屉；React常量portal目标与原生移动Node都保持同一侧栏树，开关抽屉不重复挂载footer业务状态。SSR/hydration仍未作为本轮支持声明。
+有footer时，短菜单通过flex可用空间将footer置底，长菜单只在公共menu区域滚动，不覆盖末项；footer自身超出侧栏一半时独立滚动保留全部内容。document模式正文仍文档滚动，侧栏由库测量实际头高后有界sticky；viewport模式包括公开Root blockSize固定窗口。无footer时保留已有侧栏滚动区域。紧凑默认宽度不变，窄屏复用原抽屉；React常量portal目标与原生移动Node都保持同一侧栏树，开关抽屉不重复挂载footer业务状态。此布局不新增 SSR/hydration 支持承诺。
 
 迁移：固定包含本节的已验证提交并重新构建正式包（具体SHA见对应提交/交付记录）；将原本位于侧栏尾部的内容送入sidebarFooter，顶栏内容继续headerSlots；删除消费方底部absolute/fixed/margin-top、侧栏height/overflow与compact宽度补丁，保留业务回调/权限/状态。不要以route key重挂MenuLayout或添加第二个drawer。完整无私有CSS例子见[React](../examples/sidebar-footer-react/app.tsx)/[原生](../examples/sidebar-footer-vanilla/app.js)，正式构建、watch和独立tarball类型检查都包含它们；真实产品迁移另按产品授权实施。
 
@@ -273,7 +270,7 @@ const menu = createNavigationMenu(root, {items,
 
 原生 ContextMenu 不接管触发器已有 aria-controls/aria-expanded，因而分支展开事实保持独立；只添加菜单 aria-haspopup 并在销毁时恢复自身仍拥有的属性。普通 Popover/Menu 的 aria-expanded/controls 合同不变。Escape/菜单动作关闭只在焦点仍属于该浮层时回触发器，已经聚焦新标题/新弹层的动作不会被旧菜单抢回。
 
-一个共享 query、两路独立 cursor/未知 total 的完整业务组合见[富导航 React](../examples/rich-navigation-react/app.tsx)、[富导航原生](../examples/rich-navigation-vanilla/app.js)和[宿主模型](../examples/shared/rich-navigation-model.ts)。以 Input + Section/Disclosure + 两个 NavigationMenu + 组外 Load more 组合；查询、权限、取消/迟到丢弃、写动作仍在宿主，库不猜 total 或 cursor。GroupedCombobox 的简单选择合同保持不变，选择指南见[分组搜索](GROUPED_SEARCH.md#富业务分组导航与简单选择的边界)。
+富分组组合与 GroupedCombobox 的选用边界见 [富业务分组导航与简单选择](#富业务分组导航与简单选择的边界)。
 
 ### 原生完整自组 sidebar
 
@@ -284,4 +281,13 @@ const menu = createNavigationMenu(root, {items,
 正式富导航示例用宿主公开的 `collapsed` 与 `sidebarOpen` 状态决定 rail 内容：桌面 compact 仅保留项目图标导航及独立 action，收纳完整搜索框、组标题、组外加载按钮和成员 Disclosure；顶栏“展开导航”仍可经 Tab/Enter 到达，展开后恢复完整控件。移动 drawer 打开时恢复全部控件，不复制第二份查询或导航树，也不按私有 DOM/class 或固定像素判断视口。受控原生 drawer 明确连接 `sidebarOpen` 与 `onSidebarOpenChange`，导航关闭后仍可再次打开。
 
 
-品牌槽现在先于顶栏唯一菜单开关。桌面品牌区域自动跟随展开/紧凑侧栏宽度，toggle 对齐正文内容左边；随后为 breadcrumb/context。leading 仍位于身份区域最前，保留平台安全区。窄屏由公共布局恢复自然宽度并继续使用原 drawer，产品不补按钮/媒体监听。`HeaderBrand` 与原生公开品牌结构和迁移例子见 [HEADER_CONTROLS](HEADER_CONTROLS.md#品牌区域与内容对齐)。
+品牌槽现在先于顶栏唯一菜单开关。桌面品牌区域自动跟随展开/紧凑侧栏宽度，toggle 对齐正文内容左边；随后为 breadcrumb/context。leading 仍位于身份区域最前，保留平台安全区。窄屏由公共布局恢复自然宽度并继续使用原 drawer，产品不补按钮/媒体监听。`HeaderBrand` 与原生公开品牌结构和迁移例子见 [LAYOUT_SLOTS](LAYOUT_SLOTS.md#品牌区域与内容对齐)。
+
+
+## 富业务分组导航与简单选择的边界
+
+GroupedCombobox 继续服务简单 `{id,label,disabled?}` 选择，分页只有已知 page/pageCount；不扩成带按钮、链接、子树和上下文菜单的 option。未知 total/cursor 不能虚构 pageCount。
+
+需要子层级、自定义图标、富标签、配置按钮或 ContextMenu 的业务条目，使用公开 Input + Section/Disclosure + 两个 NavigationMenu + 组外加载按钮。一个 query 驱动两个宿主读取状态，各自拥有 cursor/hasMore/busy/error，无需 total。关闭组取消所属读取，查询变化使旧 generation 失效，宿主必须丢弃取消后迟到结果；写动作不进入导航 adapter。导航仍是普通 nav 的单 roving 停靠，与输入/分组开关/加载按钮的正常 Tab 顺序相接，不是 listbox，也不需要 stopPropagation。
+
+NavigationMenu 提供 children/resolveIcon/renderLabel/renderLink、单 button 的 renderButton、独立 sibling renderAction，以及原生等价 slots/decorator 生命周期。完整 API 与键盘规则见[导航富条目合同](NAVIGATION.md#富条目独立行尾动作与上下文菜单)。正式[React](../examples/rich-navigation-react/app.tsx)/[原生](../examples/rich-navigation-vanilla/app.js)消费者包含项目/成员合成数据、独立 cursor、异步配置防重复、关闭取消及上下文菜单，未接真实产品服务。

@@ -1,6 +1,6 @@
 # 结构化错误分组、观察与详情
 
-这是此前实现的独立错误观察功能，不能作为本轮业务日志交付。业务日志使用 [BusinessLogExplorer 合同](BUSINESS_LOGS.md)，不把 severity、错误分组或首次代表映射成 actor/action/result。既有代码和历史提交保留。
+这是独立程序错误观察功能。业务记录查询使用 [BusinessLogExplorer 合同](BUSINESS_LOGS.md)，不把 severity、错误分组或首次代表映射成 actor/action/result。
 
 这是实现接口；完整通用规则只在 [DESIGN.md](DESIGN.md)。runtime/structured-log 提供无框架类型、DTO 校验、HTTP bridge 和单一查询/详情控制器；React/structured-log 的 StructuredLogExplorer 与 runtime/structured-log-dom 的 createStructuredLogExplorer 生成完整只读页面，复用公共布局、表格、字段、反馈与 Dialog。没有额外日志皮肤或下游 Tailwind 扫描要求。
 
@@ -13,7 +13,7 @@
 - [record.go](https://github.com/coffeehc/commons/blob/b0bc0f9bbb72b708fb9a7d251c033ba946d820f8/logservice/record.go)、[extension.go](https://github.com/coffeehc/commons/blob/b0bc0f9bbb72b708fb9a7d251c033ba946d820f8/logservice/extension.go)：去重观察、首次代表、属性 allowlist/边界与脱敏。
 - [README](https://github.com/coffeehc/commons/blob/b0bc0f9bbb72b708fb9a7d251c033ba946d820f8/logservice/README.md)：失败边界显式记录、默认 Detail/Stack 保留 7 天与宿主认证/授权职责。
 
-这是结构化错误观察查询，不是自动收集全部 stdout 的日志平台。EntryCount 是去重后的已提交观察数，不是未解决故障、业务实体、重试次数或恢复成功数。本次只实现分组、观察列表和精确单记录详情；不提供写入、删除、清空、重放、投递运维、事件关联、stream 或业务恢复按钮。
+这是结构化错误观察查询，不是自动收集全部 stdout 的日志平台。EntryCount 是去重后的已提交观察数，不是未解决故障、业务实体、重试次数或恢复成功数。公开视图只提供分组、观察列表和精确单记录详情；不提供写入、删除、清空、重放、投递运维、事件关联、stream 或业务恢复按钮。
 
 该 Go 包没有 JSON tags，也没有上述页面所需的 HTTP facade。下方 snake_case、schema_version=1 的协议是 **xui 拟议接入合同，必须由宿主后端明确实现**；不能把 Go 默认字段编码、旧产品 offset/limit/newest-first 接口当成此协议。公开类型与默认行为以 [structured-log.ts](../packages/runtime/src/structured-log.ts) 和正式构建声明为准。
 
@@ -77,6 +77,6 @@ cursor 最多 4096 UTF-8 字节，作为不透明值透传，绑定服务端 sco
 
 [React 示例](../examples/log-react/app.tsx) 和 [原生示例](../examples/log-vanilla/app.js)/[HTML](../examples/log-vanilla/index.html) 共用 [typed fake facade model](../examples/shared/log-model.ts) 与 [labels](../examples/shared/log-labels.json)，经 [正式 tarball 消费](../scripts/consumers.mjs) 编译/打包；原生不安装 React，也不使用源码 alias 或示例私有 CSS。pnpm build、pnpm test:consumer、pnpm preview 后访问 /log-react/、/log-vanilla/。
 
-这里注入合成 fetch，使用显式假路径，不实现 loopback 后端，也不连接产品。测试只有展示合同与生命周期证据，不证明 Go/PostgreSQL、真实认证/脱敏、tenant 隔离或产品集成通过；详情复制用模拟 Clipboard。控制器 [逻辑测试](../tests/structured-log.test.mjs)、两类 [浏览器测试](../tests/browser/structured-log.spec.mjs) 与限制见 [验证记录](FOUNDATION_VALIDATION.md)。
+这里注入合成 fetch，使用显式假路径，不实现 loopback 后端，也不连接产品。测试只有展示合同与生命周期证据，不证明 Go/PostgreSQL、真实认证/脱敏、tenant 隔离或产品集成通过；详情复制用模拟 Clipboard。控制器 [逻辑测试](../tests/structured-log.test.mjs)、两类 [浏览器测试](../tests/browser/structured-log.spec.mjs) 与限制见 [验证记录](VALIDATION.md#chromium-浏览器结果)。
 
 生产采用时先补明确 facade/DTO mapper、后端 scope/权限/错误映射、预算与脱敏，再保留产品必要业务行为后清理旧错误观察 owner。宿主稳定创建一个 controller，首次明确 refresh；React 传给 StructuredLogExplorer，原生传给 createStructuredLogExplorer(root,{controller})。视图不拥有外部 controller：卸载/页面离开关闭详情并取消读取；宿主释放自身订阅后 destroy controller/client，原生同时 destroy view。接入迁移见 [ADOPTION.md](ADOPTION.md)，不得用本例通过宣称产品已迁移。

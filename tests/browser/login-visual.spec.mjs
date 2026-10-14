@@ -16,7 +16,7 @@ function stable(before,after,{allowSupportReflow=false}={}){for(const key of sta
 async function evidence(page,info,name,data){
   const image=info.outputPath(name+'.png'),json=info.outputPath(name+'.json');
   await page.screenshot({path:image,animations:'disabled'});
-  await writeFile(json,JSON.stringify({standard:'docs/LOGIN_VISUAL_ACCEPTANCE.md',expected:{title:'20/28px',brand:'13/20px',label:'13/20px',controls:'14/22px',logo:32,maxCardWidth:434,maxContentWidth:384,controlHeight:44,passwordToPrimaryGap:16,stableAcrossFeedback:['DOM identity','horizontal position','width','height','relative vertical gaps; card may recenter']},measured:data},null,2));
+  await writeFile(json,JSON.stringify({standard:'docs/VALIDATION.md#认证页验收',expected:{title:'20/28px',brand:'13/20px',label:'13/20px',controls:'14/22px',logo:32,maxCardWidth:434,maxContentWidth:384,controlHeight:44,passwordToPrimaryGap:16,stableAcrossFeedback:['DOM identity','horizontal position','width','height','relative vertical gaps; card may recenter']},measured:data},null,2));
   await info.attach(name,{path:image,contentType:'image/png'});await info.attach(name+'-geometry',{path:json,contentType:'application/json'});
 }
 for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','system'])for(const width of [1280,1600,390]){

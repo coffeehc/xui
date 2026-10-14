@@ -8,9 +8,9 @@ xui 提供可复用组件、主题、公共交互和已有的通用页面组合�
 
 1. 读取采用项目的规则，检查工作区、分支、上游、固定版本与包 manifests/exports，保护已有改动后按项目 Git 规范同步。
 2. 读取采用项目自己的 `docs/DESIGN.md`，确定产品设计要求；xui 的 [DESIGN.md](DESIGN.md) 是公共默认值与变量合同，两者职责不同。
-3. 按 [原子→组合→页面](FOUNDATION.md#组件层次与扩展原则) 选择复用层次，核对 [IMPLEMENTATION.md](IMPLEMENTATION.md) 的正式入口、组件 props/部件、主题 owner 和原生 lifecycle。
+3. 按 [原子→组合→页面](IMPLEMENTATION.md#组件层次与扩展原则) 选择复用层次，核对 [IMPLEMENTATION.md](IMPLEMENTATION.md) 的正式入口、组件 props/部件、主题 owner 和原生 lifecycle。
 4. 按需要读取 [导航](NAVIGATION.md)、[布局插槽](LAYOUT_SLOTS.md)、[表格](DATA_TABLE.md)、[HTTP/query](HTTP.md)、[登录/认证](AUTH.md)、[API Key](API_KEY.md)、[业务日志](BUSINESS_LOGS.md)；确有程序错误观察需求再读 [独立错误查询](LOGS.md)。公共页面所需 DTO、默认 HTTP adapters 与后端前置见 [PAGE_APIS.md](PAGE_APIS.md)。
-5. 能力与验证边界见 [FOUNDATION.md](FOUNDATION.md)、[FOUNDATION_VALIDATION.md](FOUNDATION_VALIDATION.md)；规范来源迁移见 [MIGRATION.md](MIGRATION.md)。
+5. 能力边界见 [宿主边界](IMPLEMENTATION.md#宿主边界)，实际已验与未验范围见 [VALIDATION.md](VALIDATION.md)；规范来源见 [IMPLEMENTATION.md](IMPLEMENTATION.md#规范来源)。
 
 theme 提供无框架预构建 CSS/tokens；runtime 提供主题、DOM、resource、导航、HTTP/query、认证与共享页面控制器；ui-react 复用共享类型和 React/Base UI peers。宿主保管业务状态、权限、租户范围、导航条件、输入草稿与业务动作。公共组合通过数据、配置和已有 props/parts/slots/render/adapters 接入，不复制内部 DOM 或私有皮肤。
 
@@ -74,14 +74,14 @@ pnpm preview
 | Field/Input/Textarea/Fieldset/Checkbox/Radio/Switch | 保留 name/value/checked、label/controlId、required/readOnly、help/error 与标准事件；复合字段显式关联控制项 |
 | InputGroup | 单一输入边界，公开 Input/Textarea、前后缀 Addon 与 Button；`layout='stacked'` 支持多行输入及上下附件/工具区域，见 [WIDGETS](WIDGETS.md#多行输入与上下工具区域) |
 | SimpleSelect/Select/Combobox；原生 bindSelectControl/createCommandPicker | 简单选择、复合选择或搜索选择；选项、查询和确认状态由宿主拥有 |
-| Calendar/createCalendar；CommandPicker/createCommandPicker；ToggleGroup/Avatar/Accordion/ScrollArea | 按 [WIDGETS](WIDGETS.md) 使用各自公开合同，不用文本输入或 Tabs 代替其他交互 |
-| GroupedCombobox/createGroupedCombobox | 一个搜索输入与 listbox，折叠/分页控件外置；查询、取消、选择和各组分页归宿主，见 [GROUPED_SEARCH](GROUPED_SEARCH.md) |
+| Calendar/createCalendar；CommandPicker/createCommandPicker；ToggleGroup/Accordion/ScrollArea | 按 [WIDGETS](WIDGETS.md) 使用各自公开合同，不用文本输入或 Tabs 代替其他交互 |
+| GroupedCombobox/createGroupedCombobox | 一个搜索输入与 listbox，折叠/分页控件外置；查询、取消、选择和各组分页归宿主，见 [WIDGETS](WIDGETS.md#groupedcombobox-与-disclosure) |
 | NavItem/Breadcrumbs/Pagination/Disclosure/Tabs | 当前项、页码、open/value 与内容由宿主提供；保留链接、键盘、方向与受控确认语义 |
 | Dialog/Sheet/AlertDialog/ContextMenu/Menu/Popover/Tooltip/Toast | 公开部件与生命周期负责浮层、取消和回焦点；Tooltip 仅放说明，必要错误不只放自动消失通知 |
 | Table 与 DataTable/createDataTable | 真实 table、公开列与受控查询事实；布局、列宽和分页见下节 |
 | Surface/Alert/Badge/Skeleton/Spinner/Progress；DataRegion/反馈状态/RenderBoundary | 默认层级、语义与动效；刷新保留旧值，异步失败与 render 异常分别处理 |
-| MetricCard | 名称、值与颜色含义由宿主提供，复用 Surface 及统计 token，多卡按需要组合，见 [METRIC_CARD](METRIC_CARD.md) |
-| Typography/Copyable/Separator/Tag/Image | 复制只传授权值，标签移除与焦点归宿主，图片提供 alt 与尺寸/比例，见 [DISPLAY](DISPLAY.md) |
+| MetricCard | 名称、值与颜色含义由宿主提供，复用 Surface 及统计 token，多卡按需要组合，见 [DISPLAY](DISPLAY.md#metriccard) |
+| Typography/Copyable/Separator/Tag/Image/Avatar | 复制只传授权值，标签移除与焦点归宿主，图片提供 alt 与尺寸/比例，见 [DISPLAY](DISPLAY.md) |
 | AuthPage/ConfigurableLoginPage；createAuthPage/createLoginPage | 无请求认证布局与完整登录页分别接入，见下节及 [AUTH](AUTH.md) |
 | ApiKeyManager/BusinessLogExplorer/StructuredLogExplorer 及原生 factories | 共享 controller 与公开完整视图；服务能力、权限和领域 adapter/loader 归宿主，按需采用 |
 | theme/resource/HTTP/query | 每项状态保持所属 owner，显式 key/loader/预算/Abort 与 endpoint adapter，不默认重试或重放写操作 |
@@ -100,11 +100,11 @@ pnpm preview
 
 工作区正文贴边使用 AppShell/MenuLayout（原生 `createMenuLayout`）的 `scrollMode='workspace'` 与 `contentInset='edge'`；默认仍为 `standard`。内部滚动组合 ScrollArea，按需显式选择 `Viewport.focusMode='inset'`，默认保留 gutter；嵌套滚动边界拥有自己的焦点策略。`Surface.padding='none'` 只省略该表面的内距，保留背景、边线和圆角。旧引擎不支持 `@scope` 时保留安全焦点余量，不以私有选择器或 `focus-width=0` 绕过，详见 [工作区正文贴边](LAYOUT_SLOTS.md#工作区正文贴边)。
 
-shell 的 scrollMode 与表格 layout 相互独立。超高页头需要保证非零正文视口时，按 [页面标题、筛选与滚动](DATA_TABLE.md#页面标题筛选与滚动) 通过公开 `--layout-workspace-content-min-block-size` 设置必要下限，不测量固定页头或定位 footer。顶栏紧凑间隔与语言入口见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。
+shell 的 scrollMode 与表格 layout 相互独立。超高页头需要保证非零正文视口时，按 [页面标题、筛选与滚动](DATA_TABLE.md#页面标题筛选与滚动) 通过公开 `--layout-workspace-content-min-block-size` 设置必要下限，不测量固定页头或定位 footer。顶栏紧凑间隔与语言入口见 [LAYOUT_SLOTS](LAYOUT_SLOTS.md#顶栏相邻控件)。
 
 ## 登录与密码
 
-`AuthPage` / `createAuthPage` 提供无请求的认证、初始化及启动状态布局；`ConfigurableLoginPage` / `createLoginPage` 在其上接完整 auth owner。默认是紧凑、居中、自然高度的单列框，fullscreen 保留同一窄框并省略外框皮肤。反馈按实际内容出现，idle 无反馈占位，长表单与短视口自然文档滚动；主题复用既有 owner。布局、品牌层级与实际验收见 [AUTH](AUTH.md) 和 [LOGIN_VISUAL_ACCEPTANCE](LOGIN_VISUAL_ACCEPTANCE.md)。
+`AuthPage` / `createAuthPage` 提供无请求的认证、初始化及启动状态布局；`ConfigurableLoginPage` / `createLoginPage` 在其上接完整 auth owner。默认是紧凑、居中、自然高度的单列框，fullscreen 保留同一窄框并省略外框皮肤。反馈按实际内容出现，idle 无反馈占位，长表单与短视口自然文档滚动；主题复用既有 owner。布局、品牌层级与实际验收见 [AUTH](AUTH.md) 和 [VALIDATION](VALIDATION.md#认证页验收)。
 
 管理员初始化可按需使用已有 [AdminSetupPage / createAdminSetupPage](PUBLIC_API.md#完整管理员初始化页)，由宿主提供权威状态与 submit 回调，密码复用 `NewPasswordFields`。
 

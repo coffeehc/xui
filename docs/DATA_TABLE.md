@@ -39,7 +39,7 @@ const columns: readonly DataTableColumn<Row>[] = [
 
 长中文、长英文及无空格文本沿用公共表格的 `overflow-wrap:anywhere` 换行，不默认截断或省略内容。宿主 slot 若强制 `nowrap`、放置不可收缩的大控件或更大的最小宽度，仍须按内容选择合适列宽或适配 slot；库不会为满足指定宽度默认裁切按钮、操作内容或焦点轮廓。`sticky:'start'|'end'` 仍是既有单侧零 offset 合同，列宽配置不自动累加多个 sticky 列的偏移；需要多列冻结组合时使用已有 Table 原语的显式 `stickyOffset`。
 
-全指定列与主要内容列省略 width 的正式消费者对比、源码历史和实际矩形验收见 [横向空间回归](DATA_TABLE_WIDTH_VALIDATION.md)。
+全指定列与主要内容列省略 width 的正式消费者对比及实际矩形检查入口见 [浏览器列宽合同](../tests/browser/data-table-widths.spec.mjs)，实际执行范围见 [VALIDATION.md](VALIDATION.md)。
 
 ## 页面标题、筛选与滚动
 
@@ -102,7 +102,7 @@ else root.style.removeProperty(token);
 
 此前省略 `layout` 等同于 `workspace`，现在省略等同于 `natural`。依赖旧默认填满工作区或最小高度的消费者应显式加 React `layout="workspace"` 或原生 `{layout:'workspace'}`，保留其真实父高度与必要的 shell 内容区下限。希望少量行/空态自然收缩的页面可以继续省略；显式 `document` 调用无需改变。不要通过产品私有 CSS 恢复旧默认。
 
-既有公共 DataTable 的计数/每页条数/Pagination footer 本来就在 frame 内，此次将内部 toolbar 也统一到同一 frame；看到通用组件已有内部 footer，不能据此声称旧 XAgent 表格已升级。产品必须另行核对固定依赖 SHA、实际采用入口、页面槽和业务行为。本次仅修改 xui 公共组件、示例与合同，不修改 XAgent，也不替代已上线产品的兼容评估。
+内部 toolbar、反馈、表体与唯一计数/每页条数/Pagination footer 位于同一 frame。采用项目升级时核对固定依赖 SHA、实际入口、页面槽和业务行为，库中已有该组合不能证明产品已采用；已有使用方的兼容约束由宿主评估。
 
 ## 分页事实与未知总数边界
 
@@ -145,7 +145,7 @@ const pagination: DataTableCursorPagination = {
 };
 ```
 
-cursor 模式复用框内同一计数、条数控件和分页区域，只显示上一页/下一页。即使有 total 也不构造页码或页数，不接受 `onPageChange`。`hasPrevious:false`、`nextCursor:null` 或缺对应回调会禁用该动作；busy/disabled 与旧模式同样受控。服务端 `next_cursor` 缺省不等于末页：宿主 cursor adapter 必须要求字段存在，不能用 `?? null` 把未声明变成末页。HTTP 的 wire 使用 snake_case，组件 view facts 使用 camelCase，精确转换见 [列表合同](LIST_PAGINATION.md)。
+cursor 模式复用框内同一计数、条数控件和分页区域，只显示上一页/下一页。即使有 total 也不构造页码或页数，不接受 `onPageChange`。`hasPrevious:false`、`nextCursor:null` 或缺对应回调会禁用该动作；busy/disabled 与旧模式同样受控。服务端 `next_cursor` 缺省不等于末页：宿主 cursor adapter 必须要求字段存在，不能用 `?? null` 把未声明变成末页。HTTP 的 wire 使用 snake_case，组件 view facts 使用 camelCase，精确转换见 [列表合同](HTTP.md#列表元数据与受控游标分页)。
 
 上一页历史、查询/排序变化后重置、请求预算、失败重试、取消和迟到结果仍由唯一宿主 resource/query owner 管理。仅成功确认响应才推进历史和 rows；失败/取消不推进。组件不把 cursor 当作 URL/页码、不解码或生成 token，不自动缓存 total，不用数组长度推断后页。新增组合替代标准游标按钮的宿主外拼，`footer` 仍可放补充业务内容；不要重复两组翻页 owner。
 
@@ -186,7 +186,7 @@ cell: (row) => {
 
 Playwright 用真实浏览器量测组件/body/footer rect、clientHeight/scrollHeight，并实际把表体滚到尾部；验收需区分 natural 的少行/零行收缩、多行有界滚动及 auto 父级自然流，显式 workspace 填满和 document 取消上限，并覆盖缺搜索、动作、分页及固定条数的组合；同时检查页头/搜索 rect 不变、分页仍可见、横向滚动/列对齐、窄屏换行、键盘/取消、三主题与 reduced-motion、0/20/50/100条和长中文、刷新失败恢复、200%与超高页头可达性。代码存在或 overflow 字符串正确不等于验收通过；实际通过/失败/未跑以对应 SHA 的执行证据为准。没有真实产品查询、产品 slot 迁移、部署、Wails、移动 OS、读屏器、Firefox/Safari、SSR hydration 或性能通过声明。
 
-本次变更的差距、处理、未验证风险和执行状态见 [高度与分页组合验证记录](DATA_TABLE_LAYOUT_VALIDATION.md)。
+高度、分页及剩余验收范围见 [VALIDATION.md](VALIDATION.md)。
 
 ACL/权限过滤后的有界扫描可连续返回空 list 与非空 next_cursor；这仍可继续翻页，不保证下一页含记录，也不表示剩余数量。仅显式 null 是 cursor 末页。DataTable 不因空行禁用下一页，React/原生都有独立回归；此补充不改变共享 fixture 的字节或 hash。
 
@@ -198,4 +198,4 @@ ACL/权限过滤后的有界扫描可连续返回空 list 与非空 next_cursor�
 
 零行的 loading/idle/empty/error 仍在保留列头的 tbody 内，有 token 最小高度而无固定内容高度上限。首次加载/长错误可以自然增长；多行仍仅由表体独立滚动，分页留在 frame 内。没有新增自动重试、请求或缓存 owner。双端正式消费者可用 `?internal&no-count&no-pagination` 和 `?internal&disclosure-feedback` 验证可选信息与长详情。
 
-现有行是否保留仍由宿主 rows 决定：普通同资源刷新应保留已确认事实；权限撤销、退出、租户或资源切换应按领域/认证规则清空，无权通过本组件继续展示。组件不缓存数据、不创建网络请求或离线 owner。见 [失败布局验证与边界](ERROR_LAYOUT_VALIDATION.md)。
+现有行是否保留仍由宿主 rows 决定：普通同资源刷新应保留已确认事实；权限撤销、退出、租户或资源切换应按领域/认证规则清空，无权通过本组件继续展示。组件不缓存数据、不创建网络请求或离线 owner。见 [失败布局验证与边界](VALIDATION.md#失败复验与限制)。
