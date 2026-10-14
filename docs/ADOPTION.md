@@ -6,11 +6,10 @@ xui 提供可复用组件、主题、公共交互和已有的通用页面组合�
 
 ## 阅读顺序与职责
 
-1. 读取采用项目的规则，检查工作区、分支、上游、固定版本与包 manifests/exports，保护已有改动后按项目 Git 规范同步。
-2. 读取采用项目自己的 `docs/DESIGN.md`，确定产品设计要求；xui 的 [DESIGN.md](DESIGN.md) 是公共默认值与变量合同，两者职责不同。
-3. 按 [原子→组合→页面](IMPLEMENTATION.md#组件层次与扩展原则) 选择复用层次，核对 [IMPLEMENTATION.md](IMPLEMENTATION.md) 的正式入口、组件 props/部件、主题 owner 和原生 lifecycle。
-4. 按需要读取 [导航](NAVIGATION.md)、[布局插槽](LAYOUT_SLOTS.md)、[表格](DATA_TABLE.md)、[HTTP/query](HTTP.md)、[登录/认证](AUTH.md)、[API Key](API_KEY.md)、[业务日志](BUSINESS_LOGS.md)；确有程序错误观察需求再读 [独立错误查询](LOGS.md)。公共页面所需 DTO、默认 HTTP adapters 与后端前置见 [PAGE_APIS.md](PAGE_APIS.md)。
-5. 能力边界见 [宿主边界](IMPLEMENTATION.md#宿主边界)，实际已验与未验范围见 [VALIDATION.md](VALIDATION.md)；规范来源见 [IMPLEMENTATION.md](IMPLEMENTATION.md#规范来源)。
+1. 核对采用项目规则、工作区、固定版本与正式 exports，保护已有修改后按项目 Git 规范同步。
+2. 按项目自己的 `docs/DESIGN.md` 生成主题；xui [DESIGN](DESIGN.md) 定义公共默认值和变量合同。
+3. 在 [组件手册](COMPONENTS.md) 只读当前任务对应章节；正式入口、运行时与默认服务合同见 [PUBLIC_API](PUBLIC_API.md)。
+4. 构建并验证实际消费页面；当前已验和未验范围见 [VALIDATION](VALIDATION.md)。
 
 theme 提供无框架预构建 CSS/tokens；runtime 提供主题、DOM、resource、导航、HTTP/query、认证与共享页面控制器；ui-react 复用共享类型和 React/Base UI peers。宿主保管业务状态、权限、租户范围、导航条件、输入草稿与业务动作。公共组合通过数据、配置和已有 props/parts/slots/render/adapters 接入，不复制内部 DOM 或私有皮肤。
 
@@ -52,79 +51,11 @@ pnpm preview
 1. 核对项目实际消费的 xui 版本及其公开 tokens。将项目设计中的颜色、字体、尺寸、边线、层级、阴影与动效要求映射到真实变量；无产品差异的部分继承 xui 默认值，不复制整份默认色板或编造 token。当前 checkout 的新变量不能直接当成旧安装版本的能力。
 2. 在项目现有样式目录生成或整理一份 `theme.css`，在简短注释或已有采用记录中保存设计来源、xui 版本及关键映射。覆盖放在 `@layer product-overrides`，作用于与默认变量相同的文档根；按实际 `data-theme` 合同覆盖 light/dark/system 对应分支，避免 system 回到另一套品牌。主色 `--action-primary` 与 `--action-primary-foreground` 成对考虑，并检查 hover、pressed、selected、错误与焦点状态。
 3. 尺寸使用 `rem` 或依赖公开尺度的 `calc`，保留中文、系统及通用字体回退，不缩小根字号补布局。保留必要对比、键盘焦点、forced-colors 和 reduced-motion；公开变量表达不了的要求记录准确缺口，不用私有选择器、复制组件皮肤或 `!important` 补丁。
-4. 在项目既有样式入口导入这份文件。公开基础 CSS 选择一次 `style.css`，或按合同加载 `critical.css` 与可选分片；层序为 design-defaults → product-overrides → design-accessibility，组件位于独立 xui-components 层，详见 [实施说明](IMPLEMENTATION.md)。检查重复导入与未分层旧全局 CSS 的实际优先级，再确认 computed style。
+4. 在项目既有样式入口导入这份文件。公开基础 CSS 选择一次 `style.css`，或按合同加载 `critical.css` 与可选分片；层序为 design-defaults → product-overrides → design-accessibility，组件位于独立 xui-components 层，详见 [样式分层与正式产物](#包与正式入口)。检查重复导入与未分层旧全局 CSS 的实际优先级，再确认 computed style。
 
 复用一个与 xui 合同兼容的文档主题 owner，支持 `light` / `dark` / `system`，区分用户 mode 与实际 effective。公开 init 的首屏脚本先于 CSS 和可见内容，应用复用 `window.xuiTheme`；已有偏好通过受控 bridge 接入时保留 storage key、格式和其他字段。React `useTheme` 只订阅，不另造 context、storage 或 matchMedia owner，不在 JS 保存调色板；卸载释放视图订阅，文档 owner 终止时再销毁。
 
 主题验收使用采用项目的真实构建和代表页面，覆盖浅色、深色、system 变化、窄屏、200% 浏览器缩放、长中文、输入/主操作/浮层、键盘焦点及动效偏好。只生成主题时，发现需要替换的业务控件或布局应记录位置与建议，按本次范围结束。
-
-## 通用控件与宿主组合
-
-普通交互优先复用公开封装：简单选择使用 `SimpleSelect` / `bindSelectControl`，复杂选择使用 `Select` / `Combobox` 或已公开的原生搜索组合；date-only 日期选择使用 `Calendar` / `createCalendar`。Calendar 不是现成 DatePicker，也不提供时间选择器，按实际公开能力组合。不要以裸 select、datalist 或 input type=date 的 OS 弹出面板作为统一外观的默认方案。
-
-公共封装内部仍保留真实 input/button 的表单、事件、键盘和可访问语义。`NativeSelect` 等显式平台 API，以及安全文件选择窗口，属于浏览器/OS 能力边界，按明确需求使用并说明差异。领域组件、业务图形和产品布局由宿主自有组件组合；选择公共 Button、Surface 等应匹配实际语义，不机械套用，也不补私有 xui 皮肤。
-
-下表是组装入口，详细 props/部件以 [PUBLIC_API.md](PUBLIC_API.md)、[IMPLEMENTATION.md](IMPLEMENTATION.md) 与固定版本类型为准：
-
-| 公开能力 | 数据、状态与边界 |
-| --- | --- |
-| MenuLayout/NavigationMenu | 宿主提供菜单、activeId/location 和一次路由适配；公开 renderLink/renderButton/renderLabel/renderAction 与受控回调；不重复拥有选中状态或 drawer |
-| AppShell/Container/Stack/Grid/Toolbar/PageHeader/Section | 公开内容与布局插槽；AppShell 用于自组 sidebar，避免叠加第二个 MenuLayout owner |
-| Button/IconButton | 标准事件、ref/render、disabled/aria-busy 与可访问名称；busy 和防重复由宿主明确控制 |
-| Field/Input/Textarea/Fieldset/Checkbox/Radio/Switch | 保留 name/value/checked、label/controlId、required/readOnly、help/error 与标准事件；复合字段显式关联控制项 |
-| InputGroup | 单一输入边界，公开 Input/Textarea、前后缀 Addon 与 Button；`layout='stacked'` 支持多行输入及上下附件/工具区域，见 [WIDGETS](WIDGETS.md#多行输入与上下工具区域) |
-| SimpleSelect/Select/Combobox；原生 bindSelectControl/createCommandPicker | 简单选择、复合选择或搜索选择；选项、查询和确认状态由宿主拥有 |
-| Calendar/createCalendar；CommandPicker/createCommandPicker；ToggleGroup/Accordion/ScrollArea | 按 [WIDGETS](WIDGETS.md) 使用各自公开合同，不用文本输入或 Tabs 代替其他交互 |
-| GroupedCombobox/createGroupedCombobox | 一个搜索输入与 listbox，折叠/分页控件外置；查询、取消、选择和各组分页归宿主，见 [WIDGETS](WIDGETS.md#groupedcombobox-与-disclosure) |
-| NavItem/Breadcrumbs/Pagination/Disclosure/Tabs | 当前项、页码、open/value 与内容由宿主提供；保留链接、键盘、方向与受控确认语义 |
-| Dialog/Sheet/AlertDialog/ContextMenu/Menu/Popover/Tooltip/Toast | 公开部件与生命周期负责浮层、取消和回焦点；Tooltip 仅放说明，必要错误不只放自动消失通知 |
-| Table 与 DataTable/createDataTable | 真实 table、公开列与受控查询事实；布局、列宽和分页见下节 |
-| Surface/Alert/Badge/Skeleton/Spinner/Progress；DataRegion/反馈状态/RenderBoundary | 默认层级、语义与动效；刷新保留旧值，异步失败与 render 异常分别处理 |
-| MetricCard | 名称、值与颜色含义由宿主提供，复用 Surface 及统计 token，多卡按需要组合，见 [DISPLAY](DISPLAY.md#metriccard) |
-| Typography/Copyable/Separator/Tag/Image/Avatar | 复制只传授权值，标签移除与焦点归宿主，图片提供 alt 与尺寸/比例，见 [DISPLAY](DISPLAY.md) |
-| AuthPage/ConfigurableLoginPage；createAuthPage/createLoginPage | 无请求认证布局与完整登录页分别接入，见下节及 [AUTH](AUTH.md) |
-| ApiKeyManager/BusinessLogExplorer/StructuredLogExplorer 及原生 factories | 共享 controller 与公开完整视图；服务能力、权限和领域 adapter/loader 归宿主，按需采用 |
-| theme/resource/HTTP/query | 每项状态保持所属 owner，显式 key/loader/预算/Abort 与 endpoint adapter，不默认重试或重放写操作 |
-
-多行 InputGroup 的 Addon 是 span，只放合法短语内容和公开按钮，不塞块级 Toolbar；Textarea 不同时加 `xui-input`。组件只处理公共布局与状态投影，真实草稿、附件、权限、IME/发送和业务流程继续归宿主。
-
-原生基础控件使用已公开的 HTML 结构、CSS 类与 controller；完整 factory 只用于其明确支持的组合，不随意复制 React 内部 DOM。数据驱动菜单由 `createMenuLayout` / `createNavigationMenu` 生成，避免第二套内部 selected 皮肤或键盘实现。
-
-## 表格与工作区布局
-
-`DataTable` / `createDataTable` 的列 `width` 通常省略，仅在标识、操作或用户尺寸配置等确有需要时设置。它表示列宽下限，支持的值以 [DATA_TABLE](DATA_TABLE.md#列宽与内容边界) 为准。表格横向默认铺满：未配置列优先吸收余宽，全部配置时也由这些列分配余宽；下限总和超出可用宽度时，表体横向滚动，不压缩已配置下限。无需补占位列或私有表体 CSS。
-
-列宽与纵向 `layout` 分开选择。默认 `natural` 使少量/空行随内容收缩，实际有界父级中才限高并滚动表体；auto 高度父级仍按文档流增长。显式 `workspace` 填满并保留组件下限，`document` 在有界父级也取消高度上限。由旧版本升级且依赖填满表现的调用，明确设置 `layout='workspace'`；不以列 width 控制纵向高度。
-
-标准列表可组合 MenuLayout 的 pageHeader、DataTable 内部 toolbar 与唯一 footer；也可使用外部 pageToolbar，同一组筛选不重复。本地分页由宿主筛选/排序后切片，服务端分页保留真实响应；筛选/排序由同一查询 owner 重置第一页并取消旧请求。cursor 使用真实游标与可选 total，不杜撰页码或总数。低层 Table 仍是表格原语，不自带排序、查询或虚拟化引擎。
-
-工作区正文贴边使用 AppShell/MenuLayout（原生 `createMenuLayout`）的 `scrollMode='workspace'` 与 `contentInset='edge'`；默认仍为 `standard`。内部滚动组合 ScrollArea，按需显式选择 `Viewport.focusMode='inset'`，默认保留 gutter；嵌套滚动边界拥有自己的焦点策略。`Surface.padding='none'` 只省略该表面的内距，保留背景、边线和圆角。旧引擎不支持 `@scope` 时保留安全焦点余量，不以私有选择器或 `focus-width=0` 绕过，详见 [工作区正文贴边](LAYOUT_SLOTS.md#工作区正文贴边)。
-
-shell 的 scrollMode 与表格 layout 相互独立。超高页头需要保证非零正文视口时，按 [页面标题、筛选与滚动](DATA_TABLE.md#页面标题筛选与滚动) 通过公开 `--layout-workspace-content-min-block-size` 设置必要下限，不测量固定页头或定位 footer。顶栏紧凑间隔与语言入口见 [LAYOUT_SLOTS](LAYOUT_SLOTS.md#顶栏相邻控件)。
-
-## 登录与密码
-
-`AuthPage` / `createAuthPage` 提供无请求的认证、初始化及启动状态布局；`ConfigurableLoginPage` / `createLoginPage` 在其上接完整 auth owner。默认是紧凑、居中、自然高度的单列框，fullscreen 保留同一窄框并省略外框皮肤。反馈按实际内容出现，idle 无反馈占位，长表单与短视口自然文档滚动；主题复用既有 owner。布局、品牌层级与实际验收见 [AUTH](AUTH.md) 和 [VALIDATION](VALIDATION.md#认证页验收)。
-
-管理员初始化可按需使用已有 [AdminSetupPage / createAdminSetupPage](PUBLIC_API.md#完整管理员初始化页)，由宿主提供权威状态与 submit 回调，密码复用 `NewPasswordFields`。
-
-登录与管理员初始化共用基础字段和 InputGroup 的视觉、交互状态与焦点规范。接入时分清表单字段、反馈和提交职责，以及居中、响应式与滚动的页面壳职责，按已有公开能力组合；必需字段、各自校验和业务提交仍由原有 owner 负责。共用外观不向登录增加确认密码、新密码规则或强度提交门禁。
-
-完整登录页接一个 HTTP/auth owner，按固定 Bearer v2 login/refresh/logout/session 合同连接真实服务。正常凭据登录直接 POST，不增加持久恢复 gate、写前 preflight、Lookup/Resolve 或恢复 dialog；结果未知时通过一次普通 refresh/session 核验，不自动重发写请求。提交时禁用字段和主按钮，按钮显示“正在登录…”等配置的忙态文案，无主登录取消入口；公共页面也不自动为扩展等待生成取消动作。Cookie、CSRF、身份与资源权限归服务及宿主，登录后的目标路由由宿主处理。
-
-普通密码使用基于 InputGroup 的 `PasswordInput`，复用前后缀和显隐按钮；需要本地强度时使用 `PasswordStrengthInput`，新密码与确认使用 `NewPasswordFields`。React 正式入口分别为 `/text-inputs` 与 `/password`；原生对应 `createPasswordInput`（`/text-inputs-dom`）、`createPasswordStrengthInput` / `createNewPasswordFields`（`/password-dom`），完整路径与用法见 [PASSWORD](PASSWORD.md)。
-
-新设密码固定为有效 Unicode 的 **6–32 个码点**，不修剪、归一化或截断；没有 GET password-policy 或项目 policy 配置。空态不显示规则、计数或建议；`NewPasswordFields` 在提交时通过 `readValidatedPassword()` 校验并显示关联字段 tips。本地强度只显示一条连续彩色条，低分、首次离线或估算不可用均不增加提交门禁；服务端独立执行固定校验。旧账号登录使用普通密码输入，不套新设密码限制。密码不进入 URL、storage、日志或远程评分，清理及生命周期按 [PASSWORD](PASSWORD.md) 执行。
-
-## 公共请求、API Key 与日志
-
-HTTP/query 按 [HTTP](HTTP.md) 核对响应模式、错误、下载、预算与 endpoint codec；不猜 `data/msg/items`、页基数、日期格式或路由。一个请求与状态 owner 连接宿主明确的 adapter/resource，区分 401/403、网络失败与业务错误，不自动重放写请求。Vite 开发接入另核 [冷启动与依赖优化](NAVIGATION.md#vite开发模式的已复现依赖优化刷新)，以实际正式入口配置必要的 include/dedupe，分别验证冷暖 cache 与真实刷新原因。
-
-`createApiKeyHttpAdapter` 与 `createBusinessLogHttpLoader` 已提供默认 HTTP 连接，选用时分别满足 [API_KEY](API_KEY.md)、[BUSINESS_LOGS](BUSINESS_LOGS.md) 和 [PAGE_APIS](PAGE_APIS.md) 的 DTO/分页/鉴权前置。宿主仍负责注册真实路由、身份、tenant、授权、脱敏、事务与数据保留；也可在公开 typed adapter/loader 边界连接明确的领域合同。
-
-API Key 管理针对平台签发凭据，与 provider key 分开。v2 合同采用直接 CRUD、提交 busy、更新 `expected_version` CAS 和独立授权确认；未知结果普通列表读取一次，不重发写请求。撤销与删除管理记录分别确认；完整 secret 仅在当次结果视图显示，关闭/卸载清除，不放 metadata/resource/cache，身份切换销毁旧 controller。
-
-业务日志是可查询的业务记录：公共字段与 `event_type/schema_version` 配合授权 payload，按类型/版本注册 renderer，未知版本安全文本回退。默认 HTTP loader 使用明确的 offset 合同，领域 cursor 依自身 loader 合同；日志写入可靠性归服务。StructuredLogExplorer 是独立程序错误观察，按 [LOGS](LOGS.md) 的明确 facade 接入，不替代业务日志或宣称后端已存在。
 
 ## 原生 UI ID 与内网 HTTP
 
@@ -143,3 +74,82 @@ API Key 管理针对平台签发凭据，与 provider key 分开。v2 合同采�
 交付说明采用范围、实际版本/SHA、主题与入口位置、公开能力映射、验证结果及具体缺口。业务局部需求在宿主组合；公共缺口应有可复用场景和受限位置，不默认扩展 xui API。公共合同升级后重新核对依赖、类型、adapter 和受影响页面回归，只在对应项目授权中实施。
 
 最短页面接入请求：`阅读 xui/.agents/skills/adopt-xui/SKILL.md，按实际公开合同接入当前页面需要的通用组件；保留宿主业务、权限与路由，使用正式产物，运行实际构建并报告通过、未跑和缺口。` 使用实际 checkout 路径替换 xui。
+
+## 组件层次与扩展原则
+
+xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与采用的架构准则；完整通用视觉/交互规则与默认 token 来源仍仅为 [DESIGN.md](DESIGN.md)，本节说明真实实现如何分层，不复制另一套皮肤规则。
+
+| 层次 | 当前公开实例 | 采用与扩展 |
+| --- | --- | --- |
+| 原子 | Button/IconButton、Input/Textarea、Checkbox/Radio/Switch、Field、Alert、公共 CSS | 直接采用公开 props/ref/render、标准元素和语义 token；图标按钮使用共享 IconButton，不新增竞争按钮/输入基础包 |
+| 组合 | MenuLayout/NavigationMenu、公共 Toolbar/Grid/Table/DataRegion、Dialog/详情布局、HTTP/query/controller | 组合原子提供通用键盘、状态、反馈和布局。Table 不抽查询引擎，query 不抽领域业务；状态与后端 adapter 通过明确公开合同连接 |
+| 页面 | AuthPage/createAuthPage纯认证布局、ConfigurableLoginPage/createLoginPage、ApiKeyManager/createApiKeyManager、BusinessLogExplorer/createBusinessLogExplorer | 填文案/品牌数据、选项、adapter/loader 与 callbacks 即可整页使用；页面内部复用下层相同控件与皮肤，业务不必手写页面 CSS |
+
+普通需求优先完整页面或组合；特殊业务可用公开扩展点或组合基础控件。允许声明的 props/render/parts、受信任 renderer、数据配置和 callbacks；不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner；缺能力先反馈或补公开接口，再补验收。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
+
+业务流程、领域数据、业务页面和产品布局由宿主负责；领域 API、权限/tenant 与校验须可独立测试。xui 提供通用组件、公开组合、请求接入及 typed adapter/loader 边界。仅选用默认 HTTP client 或页面 adapter 时，服务须满足对应明确 wire 合同；宿主可通过 ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 或 BusinessLogLoader 连接自己的领域接口，业务 API 迁移是宿主独立任务。页面所需前置见 [默认适配器前置](PUBLIC_API.md#默认适配器的服务前置)。
+
+贡献与采用应能说明所属层次、复用下层的方式、公开扩展点和实际构建消费。合成页面通过不代表产品迁移通过。
+
+## 主题单一所有者
+
+无受控 mode 时 runtime 可以持久化，默认 key 为 ui.theme.mode；persist:false 完全使用内存。传入 mode 则完全受控，不隐式读写 storage。setMode 只请求 onModeChange，宿主确认后调用 syncMode；state.mode 保留用户选择，state.effective 是当前浅深结果。显式浅深不被系统变更覆盖。
+
+首屏阻塞经典脚本置于 CSS 和可见内容之前；应用复用 window.xuiTheme。window.xuiThemeOptions 可在脚本前提供受控 mode/onModeChange 或 storageKey。data-storage-key 优先于 options key。重复 init 复用存活 owner；销毁后重新执行 init 才重建。宿主确认受控值时同时更新 options.mode，使以后重建使用最新事实。
+
+```html
+<script src="./theme-init.js" data-storage-key="ui.theme.mode"></script>
+<link rel="stylesheet" href="./app.css">
+```
+
+```ts
+const theme = window.xuiTheme;
+const off = theme.subscribe(state => updateView(state));
+// 卸载视图时 off()，文档所有者终止时 theme.destroy()。
+```
+
+foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控模式桥接；保留其他 JSON 字段，原始 ui.theme.mode 不被覆盖。无有效保存值时默认 dark，storage 不可用时保留内存选择；仅显式 system 在 matchMedia 不可用时生效 light。系统变化有单一监听。React useTheme 只订阅外部 owner，在 StrictMode 中不创建或销毁它。ESM 导入本身不读 DOM。
+
+## 构建与正式消费
+
+### 包与正式入口
+
+全部包 private、ESM；本地 npm pack 用于验证，不发布。没有 CommonJS、SSR hydration 或子树主题支持声明。
+
+| 包 | 正式入口 | 职责 |
+| --- | --- | --- |
+| `@coffeehc/xui-theme` | 预构建 CSS、tokens 与按需样式分片 | 无框架依赖，完整及分片入口见 PUBLIC_API |
+| `@coffeehc/xui-runtime` | 主题、DOM、resource、导航、HTTP/query、认证和页面 controllers/factories | 无框架依赖；模块可独立导入，init.js 是有副作用的同步经典脚本 |
+| `@coffeehc/xui-react` | 公共组件及各能力子入口 | React、ReactDOM、Base UI、runtime 是 peers，不捆绑宿主实例，不隐式导入 CSS |
+
+优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
+
+`design-default-css` 是唯一受控原始值来源。生成器核对 372 个变量、全部模式依赖、前言、产品覆盖及提取字节；来源和可逆重建见[规范来源](#规范来源)。浮层只接收 peer 的 available-height、anchor-width、toast-swipe-movement-x/y 测量值，它们不是品牌 token 或缺失变量白名单。
+
+tokens.css 按规范声明 design-defaults → product-overrides → design-accessibility；组件声明位于独立的 xui-components 层。按 tokens.css 后组件样式的标准加载顺序，xui-components 首次出现于这三层之后。产品在 product-overrides 覆盖少量语义变量，design-accessibility 再落实 reduced-motion；本说明不另设 token 层或更改现有层契约。旧项目未分层 CSS 的普通声明高于所有分层声明，不能只靠导入顺序推断 xui 能覆盖旧样式。采用时显式决定旧 CSS 所在层或移除精确重复规则，再检查真实 computed style。产品覆盖在同一 document 根上；本版不支持子树独立主题。
+
+### 本地与双仓联调
+
+pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本，每次启动新的构建进程；生成 CSS、ESM、types 和 init 后，构建全部预览。packages 和 examples 分别暂存、校验代际并回滚发布失败。watch-status.json 的 building/error/success 及 source/example SHA 是事实；错误时旧预览可能继续服务，不能称为新改动已生效。pnpm preview 另开本地服务，dev 不部署。
+
+正式验收先 npm pack，再在独立目录安装、编译 types 和打包；foundation 不复制 shared/layout.css。dev 的包解析也仅指向正式 exports 的 dist，没有源码入口。生产接入固定已验证的提交/本地 tarball。双仓 watch 可让宿主链接 built dist，但 React/ReactDOM/Base UI 必须由宿主保留单实例；Vite 可使用 resolve.dedupe 与指向本地正式入口的 alias，或独立 tarball 安装。链接后检查实际解析路径、ESM/types/init 的当前 generation，并运行宿主构建/页面检查。采用项目自行核对真实配置和消费结果。
+
+## 宿主边界
+
+业务路由、业务页面与领域图形、权限策略、身份源、缓存/查询、防抖、交易、服务端会话、表格查询/虚拟化引擎、图表数据、富文本/代码编辑器和 3D 引擎归宿主。xui 的 HTTP、认证客户端与通用页面组合只承担各自公开合同，不接管产品业务或要求全量后端标准化。OAuth2/OIDC/SAML 和第三方接口遵守各自协议，在宿主明确边界适配。
+
+正式采用应固定版本/SHA，核对公开布局和组件、主题单 owner、旧 CSS 层级及真实构建产物。SSR hydration 仅按组件明确支持的范围使用；真实移动 OS、读屏器、产品后端和生产性能由采用项目另验，不能由参考消费者推断通过。
+
+## 规范来源
+
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.8.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+
+[生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
+
+## 开发联调与冷启动
+
+`pnpm dev` 持续构建正式包和预览，`--packages-only` 只构建包；另运行 `pnpm preview` 提供页面。核对 `BUILD_SUCCESS <sourceSha256>` / `BUILD_ERROR` 与 `.artifacts/watch-status.json`，失败时保留旧完整代际。页面仍可打开不证明最新修改已构建，watch 不提供浏览器 HMR 客户端。
+
+Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖重新优化和文档刷新。宿主按实际使用的公开入口设置 `optimizeDeps.include`，保留框架插件及 React/ReactDOM/Base UI 的 `resolve.dedupe`；不要全量扫描、禁 HMR 或等待固定时间掩盖原因。分别记录冷/暖 cache 的 optimizer/HMR 日志、主 Document 请求和 shell identity，区分文档刷新与同文档路由。可重复的合成对照见 [Vite 冷启动测试](../tests/cold-start/vite.test.mjs)，不能代替产品现场归因。
+
+菜单从首次可操作时接同一 router owner。`canNavigate=false` 和缺少 adapter 都表示放行原生导航，不能当作路由 pending 的阻止开关；未就绪由真实 disabled 状态或已接管的 navigate 处理。保留修改键、中键、target/download、回退前进和宿主的滚动恢复，不以 route key 重挂整个 shell。

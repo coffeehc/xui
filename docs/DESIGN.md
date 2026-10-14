@@ -1279,7 +1279,7 @@ Dialog偏好layout-dialog-width-ratio=40%，min/max分别24rem/48rem；Confirm�
 
 ### 公共布局插槽与默认顶栏工具
 
-AppHeader/AppShell/MenuLayout与原生createMenuLayout在右侧默认提供一个主题图标按钮，light→dark→system→light循环；复用文档现有theme owner，不另建存储。语言入口只在locale.enabled显式true时显示，语言value/options/onValueChange与词典均由宿主现有i18n owner提供。顶栏主区域、工具组与独立账号区，以及sidebarHeader/sidebarFooter、pageHeader/pageToolbar/content/pageFooter的顺序和所有权见[公共布局插槽](LAYOUT_SLOTS.md)。这些槽只消费公共var及布局原语，不授予产品动作、不放新业务内容默认值；空槽无视觉占位，更新保留正文与导航实例，导航抽屉仍只拥有一份侧栏。默认登录页继续仅继承外观，不新增这些顶栏工具。
+AppHeader/AppShell/MenuLayout与原生createMenuLayout在右侧默认提供一个主题图标按钮，light→dark→system→light循环；复用文档现有theme owner，不另建存储。语言入口只在locale.enabled显式true时显示，语言value/options/onValueChange与词典均由宿主现有i18n owner提供。顶栏主区域、工具组与独立账号区，以及sidebarHeader/sidebarFooter、pageHeader/pageToolbar/content/pageFooter的顺序和所有权见[公共布局插槽](COMPONENTS.md#布局与顶栏)。这些槽只消费公共var及布局原语，不授予产品动作、不放新业务内容默认值；空槽无视觉占位，更新保留正文与导航实例，导航抽屉仍只拥有一份侧栏。默认登录页继续仅继承外观，不新增这些顶栏工具。
 
 ### 有界工作区与平台前置安全区
 
@@ -1287,7 +1287,7 @@ AppHeader/AppShell/MenuLayout与原生createMenuLayout在右侧默认提供一�
 
 公共 `contentInset` 使用共享 `ShellContentInset = 'standard' | 'edge'`，默认 standard。edge 仅在 workspace 移除 shell main 的页面内距与 content 的焦点 gutter；header、品牌、sidebar、页内槽自己的布局以及控件/卡片内距保持各自合同。document/viewport 保留原间距并记住选择，切回 workspace 生效。`ScrollArea.Viewport.focusMode='inset'` 是独立显式选项，默认 gutter，不由 edge 递归推断。零 gutter 与原宽度/颜色的内部焦点指示在同一 CSS @scope 增强中启用；最近 ScrollArea、弹层及其他公共滚动边界拥有自己的策略，嵌套默认 gutter 不受外层 edge/inset 覆盖。不支持 @scope 的旧引擎保留原有安全绘制空间，不以缺失焦点换取贴边；这里不构成各浏览器或旧 WebView 的实测声明。Surface 可显式 `padding='none'`（原生 data-padding=none），仅省略该表面的 card-padding，保留背景、边线和圆角，不新增裁切。
 
-headerSlots.leading是可选、默认空且不收缩的最前区域，位于自动导航按钮之前；品牌继续独立。库负责顺序与窄屏布局，不内置macOS窗口控件尺寸或平台检测。平台/全屏状态、安全区真实尺寸、drag/no-drag由宿主集成提供，不把业务/OS规则带入默认皮肤。完整合同及两端正式消费者见[布局插槽](LAYOUT_SLOTS.md)。
+headerSlots.leading是可选、默认空且不收缩的最前区域，位于自动导航按钮之前；品牌继续独立。库负责顺序与窄屏布局，不内置macOS窗口控件尺寸或平台检测。平台/全屏状态、安全区真实尺寸、drag/no-drag由宿主集成提供，不把业务/OS规则带入默认皮肤。完整合同及两端正式消费者见[布局插槽](COMPONENTS.md#布局与顶栏)。
 
 
 ### 富导航行与独立辅助动作
@@ -1306,11 +1306,11 @@ DataTable以内部单一布局观察器测实际table/thead/首末行高度和co
 
 DataTable默认横向铺满，通常省略列宽；仅在列内容或用户尺寸配置确有需要时，通过公共width提供数字像素、CSS长度、百分比和calc()/clamp()下限。未配置列优先吸收余宽，全部配置时由浏览器在这些列间分配余宽；下限总和超出表体则在表体内横滚，不压缩已配置下限。这不是重定义品牌色、字体、间距或装饰token的许可。库用非交互、零高测量轨道让浏览器以表体可用宽度解析百分比表达式，再由同一colgroup统一表头与数据列；测量不得制造滚动范围、可访问节点或另一套宿主布局逻辑，更新/销毁必须释放观察。未配置宽度保持原有自动表格算法，完整迁移及长内容边界见DataTable合同。
 
-空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，既有分页保持受控；本地分页由宿主筛选/排序后切片并发布事实，服务端分页保留确认响应且不二次切片。未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。列表wire由commons/webfacade统一：total省略表示未计算，0是真实零；next_cursor缺失表示未声明，非空字符串是opaque续页token，null是cursor明确末页，可与total共存。DataTable保留旧offset类型与默认值，新增显式cursor受控模式复用框内前后控件；即使有total也不算编号页数，宿主唯一owner负责历史与响应确认。完整API与双端公共消费见[DataTable](DATA_TABLE.md)。
+空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，既有分页保持受控；本地分页由宿主筛选/排序后切片并发布事实，服务端分页保留确认响应且不二次切片。未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。列表wire由commons/webfacade统一：total省略表示未计算，0是真实零；next_cursor缺失表示未声明，非空字符串是opaque续页token，null是cursor明确末页，可与total共存。DataTable保留旧offset类型与默认值，新增显式cursor受控模式复用框内前后控件；即使有total也不算编号页数，宿主唯一owner负责历史与响应确认。完整API与双端公共消费见[DataTable](COMPONENTS.md#数据表格)。
 
 顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单 SimpleSelect 保留输入边界。两端默认采用同一主题选择浮层，forced-colors 保留公共控件的边界、选中与键盘焦点语义。
 
-实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](HTTP.md#显式实体身份编码)。
+实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](PUBLIC_API.md#显式实体身份编码)。
 
 原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止。forced-colors下progress保持原生元素、真实value/max与未知语义，采用浏览器提供的Canvas轨道、CanvasText边界与填充；颜色只由progress-forced-track/border/fill集中定义，design-accessibility层保证它们继续取系统色，不接受品牌覆盖。使用既有line-width-surface与radius-full，保留轨道形状并补可识别边界；确定状态按原生比例填充，无value仅显示由progress-forced-pending-border-style声明的空心虚线轨道，不画合成分数或全满填充，且保留已有状态脉冲及reduced-motion静止。forced-color-adjust继续为auto，不关闭用户强制颜色机制；appearance:none仅保留原生progress内部的真实比例布局与可控CSS动效，不能把computed appearance:auto当作浏览器原生绘制已恢复的证据。Checkbox/range等选择标记继续恢复各自的浏览器绘制。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
 
@@ -1322,20 +1322,20 @@ HeaderBrand logo盒使用control-height-sm，图片/SVG以contain限于盒内，
 
 SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。search、actions 和 advanced 是公开内容入口，不增加查询、分页、权限或请求 owner。宽屏搜索轨道采用 flex 剩余空间与 min-inline-size:0，主操作在行末；Input 的 100% 默认宽度只相对于搜索轨道，不把操作挤到下一行。操作组按 control-height、button-padding-inline、button-gap、control-icon-size 统一按钮尺寸；长标签可自然增高，同一行 stretch，不以固定高度裁切。工具栏按自身容器 40rem 既有断点换行，搜索独占一行，操作仍完整可达，不只依赖窗口宽度。
 
-高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和原生生命周期见 [COMPOSITIONS](COMPOSITIONS.md#searchtoolbar)。
+高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和原生生命周期见 [弹层与工具栏](COMPONENTS.md#searchtoolbar)。
 
 
 ### 受控成组选项
 
-CheckboxGroup/RadioGroup 复用 fieldset/legend、choice 与 help/error 的既有间距、控件尺寸、焦点和错误语义 token。全选部分态复用原 indeterminate 横线；只读/禁用仍保留明确原生状态，不以颜色代替。没有新的权限引擎、字体或密度。完整受控值、诊断、校验与双端入口见 [CHOICE_GROUP](CHOICE_GROUP.md)。
+CheckboxGroup/RadioGroup 复用 fieldset/legend、choice 与 help/error 的既有间距、控件尺寸、焦点和错误语义 token。全选部分态复用原 indeterminate 横线；只读/禁用仍保留明确原生状态，不以颜色代替。没有新的权限引擎、字体或密度。完整受控值、诊断、校验与双端入口见 [成组选项](COMPONENTS.md#成组选项)。
 
 ### 多行输入组合
 
-InputGroup.Root 的 layout 默认 inline，stacked 仅把原生控制项与上下 Addon 按 DOM 排成纵列。InputGroup.Textarea 直接复用 Textarea 的类型、Field、ref、label/help/error/required 与原生换行、选择、resize/readOnly 合同，只保留 xui-textarea 类。外层拥有唯一背景、边界与 focus-within；直接 Input/Textarea 无第二层边框/outline。invalid/disabled 只投影直接真实控制项或已有 Field error，单独禁用工具按钮不把可编辑正文变灰。Addon 保持 span，只放合法短语内容、附件文字与按钮；stacked 自然换行并采用既有间距，空槽不占位。不增加 Toolbar part、第二个状态 owner、Enter/IME/提交拦截或附件业务能力。完整公开组合见 [WIDGETS](WIDGETS.md#多行输入与上下工具区域)。
+InputGroup.Root 的 layout 默认 inline，stacked 仅把原生控制项与上下 Addon 按 DOM 排成纵列。InputGroup.Textarea 直接复用 Textarea 的类型、Field、ref、label/help/error/required 与原生换行、选择、resize/readOnly 合同，只保留 xui-textarea 类。外层拥有唯一背景、边界与 focus-within；直接 Input/Textarea 无第二层边框/outline。invalid/disabled 只投影直接真实控制项或已有 Field error，单独禁用工具按钮不把可编辑正文变灰。Addon 保持 span，只放合法短语内容、附件文字与按钮；stacked 自然换行并采用既有间距，空槽不占位。不增加 Toolbar part、第二个状态 owner、Enter/IME/提交拦截或附件业务能力。完整公开组合见 [选择与复合控件](COMPONENTS.md#多行输入与上下工具区域)。
 
 ### 专用输入组合
 
-NumberInput、PasswordInput、SearchInput 复用 InputGroup 的唯一输入边界与既有 input-action、control-height、control-icon-size、焦点和禁用 token。数字草稿/确认值分开，密码仅显隐与清理，搜索仅提交/清除意图；没有新颜色、密度、请求或认证 owner。帮助/错误继续采用 Field/native field 的关联。行为和安全边界见 [TEXT_INPUTS](TEXT_INPUTS.md)。
+NumberInput、PasswordInput、SearchInput 复用 InputGroup 的唯一输入边界与既有 input-action、control-height、control-icon-size、焦点和禁用 token。数字草稿/确认值分开，密码仅显隐与清理，搜索仅提交/清除意图；没有新颜色、密度、请求或认证 owner。帮助/错误继续采用 Field/native field 的关联。行为和安全边界见 [文本输入](COMPONENTS.md#文本输入)。
 
 ### 最小按钮的实际内容几何
 

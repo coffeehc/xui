@@ -2,16 +2,15 @@
 
 通用前端组件与主题：无框架 CSS/runtime、React 薄封装、公共布局、交互与可选页面组合。宿主负责业务 API、领域数据、业务 UI 和产品流程；选用默认 HTTP client/页面 adapter 时满足相应合同，也可使用公开 typed adapter/loader 接入领域能力。
 
-- [接入与迁移](docs/ADOPTION.md)
-- [完整通用设计规范](docs/DESIGN.md)
-- [全部公开入口与默认行为](docs/PUBLIC_API.md)
-- [组件分层、实施映射与宿主边界](docs/IMPLEMENTATION.md)
-- [布局插槽](docs/LAYOUT_SLOTS.md)、[导航](docs/NAVIGATION.md)、[公共组合](docs/COMPOSITIONS.md)
-- [交互控件](docs/WIDGETS.md)、[文字与展示](docs/DISPLAY.md)、[表格](docs/DATA_TABLE.md)
-- [HTTP/query](docs/HTTP.md)、[默认页面服务前置](docs/PAGE_APIS.md)、[认证](docs/AUTH.md)、[密码](docs/PASSWORD.md)
-- [API Key](docs/API_KEY.md)、[业务日志](docs/BUSINESS_LOGS.md)、[程序错误观察](docs/LOGS.md)
-- [验证证据与限制](docs/VALIDATION.md)
-- [Codex 接入 skill](.agents/skills/adopt-xui/SKILL.md)
+| 文档 | 用途 |
+| --- | --- |
+| [ADOPTION](docs/ADOPTION.md) | 安装、主题、组件分层、开发联调与迁移 |
+| [DESIGN](docs/DESIGN.md) | 唯一完整设计规范与默认主题生成源 |
+| [COMPONENTS](docs/COMPONENTS.md) | 组件使用、组合、状态与生命周期，按章节查阅 |
+| [PUBLIC_API](docs/PUBLIC_API.md) | 全部公开入口、HTTP/认证/Key/日志运行时合同 |
+| [VALIDATION](docs/VALIDATION.md) | 实际验证结果、未完成与未测范围 |
+
+Codex 接入流程：[adopt-xui](.agents/skills/adopt-xui/SKILL.md)。
 
 ```sh
 pnpm install --frozen-lockfile

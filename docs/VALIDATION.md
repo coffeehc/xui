@@ -4,7 +4,7 @@
 
 ## 代码验证基线
 
-以下既有代码验证对应 package source generation `f56796bb2c862c8afa285a1713d1c8a476422b6040c8b1bde52bd05eb70051eb`，example generation `4dc78683af33237bdf7a87e8f7e23748ec4da8a960d16c491ad2b0b335600cf7`，日期为 2026-10-14。本次文档治理修改了 DESIGN 正文与当前协议边界指纹，未重跑 build 或完整功能测试；上述 generation 仅标识受测代码/产物，不能作为本次文档改动后的新构建指纹。
+以下既有代码验证对应 package source generation `f56796bb2c862c8afa285a1713d1c8a476422b6040c8b1bde52bd05eb70051eb`，example generation `4dc78683af33237bdf7a87e8f7e23748ec4da8a960d16c491ad2b0b335600cf7`，日期为 2026-10-14。后续文档整理未修改组件实现与受控主题 CSS，未因文档变更重跑 build 或完整功能测试；上述 generation 仅标识下方受测代码/产物，不能作为当前文档修改后的新构建指纹。
 
 | 门禁 | 已执行结果 | 证据范围 |
 | --- | --- | --- |
@@ -40,7 +40,7 @@
 
 ## 认证页验收
 
-以下是登录、AuthPage 与 AdminSetupPage 的持续验收目标，不是逐项完成表。尺寸和具体 token 以 [DESIGN 的认证布局](DESIGN.md#公共登录页布局与主题) 为准，接口和生命周期见 [AUTH.md](AUTH.md)，新密码规则见 [PASSWORD.md](PASSWORD.md)。
+以下是登录、AuthPage 与 AdminSetupPage 的持续验收目标，不是逐项完成表。尺寸和具体 token 以 [DESIGN 的认证布局](DESIGN.md#公共登录页布局与主题) 为准，接口和生命周期见 [登录与会话](PUBLIC_API.md#认证会话)，新密码规则见 [密码输入](COMPONENTS.md#密码输入)。
 
 | 范围 | 需要的可观察证据 |
 | --- | --- |
