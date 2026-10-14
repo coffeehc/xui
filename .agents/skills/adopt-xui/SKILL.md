@@ -1,14 +1,20 @@
 ---
 name: adopt-xui
-description: 接入、迁移或评审采用 xui 的 React/原生前端页面，按固定 checkout 的原子、组合、页面分层及公开产物使用主题、菜单布局、HTTP/query、配置登录、API Key 和业务日志，保留业务 API 能力与权限。用户要求采用 xui、统一前端品牌或清理重复 UI/请求 owner 时使用。
+description: 接入、迁移或评审采用 xui 的 React/原生前端，或根据项目 docs/DESIGN.md 生成、更新 xui 可识别的 theme.css。用于采用 xui、统一前端品牌或清理重复 UI/请求 owner；仅生成主题时保留业务、布局、API 和认证范围。
 ---
 
-# 接入 xui
+# 接入 xui 与生成项目主题
 
-## 固定版本与阅读入口
+## 先确定范围与参考根目录
+
+- 先解析本 SKILL.md 的物理路径，再从其所在目录向上三级定位 xui 根；全局发现入口可以是符号链接，不能从链接所在的 skills 目录推算仓库。下文相对链接均以这个物理 skill 目录为基准，不依赖固定宿主路径。
+- 用户说“根据 DESIGN.md 生成 xui 可识别的 theme.css”或仅要求生成、更新、接入项目主题时，进入[项目主题流程](references/theming.md)，默认设计来源是采用项目的 `docs/DESIGN.md`。完成主题和必要入口接入、验证后结束；不执行下文完整迁移，不借此改业务、页面布局、HTTP、认证或后端。
+- 用户明确要求采用、迁移或评审页面/前端体系时，执行下文完整流程；只处理已授权的页面和能力。项目视觉要求映射为公开主题变量，未覆盖项继承 xui 默认规范；需要生成主题时再读[项目主题流程](references/theming.md)。
+
+## 完整采用：固定版本与阅读入口
 
 1. 在任务指定的 xui checkout 与采用仓库读取 AGENTS.md，检查 git status、当前 SHA、分支、包 manifests/exports 和已有改动。按任务授权正常 fetch，比较版本；保护全部提交和业务修改。不要 reset/clean/强推、用文件树 API 同步、猜 registry 版本或改其他仓库。
-2. 从本文件所在目录向上三级定位 xui 根。先读 [采用手册](../../../docs/ADOPTION.md)、[唯一完整规范](../../../docs/DESIGN.md)、[公开入口与默认行为](../../../docs/PUBLIC_API.md) 和 [实施映射](../../../docs/IMPLEMENTATION.md)。以当前提交的正式声明和源码核对 API，不能把计划或其他版本写成可调用能力。
+2. 先读 [采用手册](../../../docs/ADOPTION.md)、[xui 默认完整规范](../../../docs/DESIGN.md)、[公开入口与默认行为](../../../docs/PUBLIC_API.md) 和 [实施映射](../../../docs/IMPLEMENTATION.md)。另读采用项目自己的 `docs/DESIGN.md`，区分产品视觉要求与 xui 默认合同。以实际消费版本的正式声明和源码核对 API，不能把计划或其他版本写成可调用能力。
 3. 读 [原子→组合→页面的单一架构源](../../../docs/FOUNDATION.md#组件层次与扩展原则)，为页面选择实际公开层次与扩展点；按需要读 [导航](../../../docs/NAVIGATION.md)、[HTTP/query](../../../docs/HTTP.md)、[登录/认证](../../../docs/AUTH.md)、[API Key](../../../docs/API_KEY.md) 或 [业务日志](../../../docs/BUSINESS_LOGS.md)；确有错误观察需求再读 [独立错误 facade](../../../docs/LOGS.md)；读 [能力边界](../../../docs/FOUNDATION.md) 与 [实际验证和限制](../../../docs/FOUNDATION_VALIDATION.md)。不要复制完整规范、默认品牌值或另造组件合同。
 
 ## 统一品牌、前端体系与通用API
@@ -33,7 +39,7 @@ xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/
 6. 优先 createApiKeyHttpAdapter 严格 DTO v2，完整合同见 [API_KEY](../../../docs/API_KEY.md)。直接普通 CRUD，提交禁用显示正在创建／保存；超时读取普通列表一次，允许用户手动再试，不自动重发写请求。无需 writeGuard、操作回执或 Lookup/Resolve 接线。name/权限/enabled 更新保留 expected_version CAS；required 权限、独立 confirmed、撤销和仅 revoked 管理记录删除的授权与确认保留。custom adapter 按领域合同提供可选 update，不强迫第三方采用 base 协议。完整值只在瞬时结果视图，关闭/卸载清除，不进 URL/storage/cache。身份切换销毁旧 controller，后端重新鉴权并执行事务、范围及并发校验。lastUsedAtPending 仅按明确 bool 显示。业务日志只列摘要，详情按单事件授权读取，403/404/保留期分开，文本防注入，对象链接由宿主映射。
 7. 标准列表、表单、详情使用公开布局、字段、DataRegion 和反馈；首屏关键事实与主操作可读，风险和错误及时可见。Sheet/AlertDialog/ContextMenu与条纹/展开/sticky表格按[公开组合](../../../docs/COMPOSITIONS.md)，下载按HTTP白名单header与requestDownload/saveDownload；不复制内部皮肤。保留 disabled/busy、防重复、键盘/focus、触屏、motion/reduced-motion、取消/回焦点、窄屏/放大/长内容。卸载释放所属订阅/owner，取消本地等待并拒绝迟到结果。
 
-8. 登录服务地址/本地LDAP/标准SSO入口用公开beforeFields/afterFields与extensions.beforeSubmit/actions，共享现有owner、不向回调传密码；真实标准协议和产品认证链留宿主；baseservice authenticationservice/webfacade配套自有Bearer v2，宿主注册route/CSRF/资源策略。登录先读[定量验收清单](../../../docs/LOGIN_VISUAL_ACCEPTANCE.md)，从DESIGN规范映射具体预期，再以真实截图/几何/状态结果逐项验收；移除被公共组合替代的重复通用布局与动作owner，业务内容使用公开组合/扩展，不重写私有皮肤。首次管理员设置优先使用公开AdminSetupPage/createAdminSetupPage整页，传宿主权威状态/服务端密码政策/submit回调；其它启动错误使用公开AuthPage/createAuthPage纯布局，不拼私有login DOM或产品定位CSS，不把初始化业务塞进认证client。登录使用 ConfigurableLoginPage/createLoginPage 与同一个 createAuthClient，按 [AUTH](../../../docs/AUTH.md) 配置 baseURL、品牌文案/logo 和安全回跳。固定login/refresh/session/logout四路由与v2 DTO；旧 token/me/state 必须明确适配，不能猜协议。对已上线xAgent，若Bearer v2 facade尚未就绪，先保留既有认证owner，接入主题/原子/其它页面；记录协议与上线升级影响，facade及其真实契约验收就绪后再切完整登录页。未发布项目直接采用新合同，不增设旧认证兼容层；服务未就绪如实报告集成缺口。仅改baseURL不能完成旧协议迁移。登录401在认证上下文处理；protectedPaths显式声明业务端点，由共享owner按access generation处理401并singleflight刷新，但不重放业务写，403不刷新。access只在内存，业务Bearer omit/error，login/refresh/logout无Bearer、same-origin Cookie；新页面currentUser恢复再核session，支持默认整页导航。正常 login 直接 POST，提交禁用并显示正在登录，无取消按钮；结果未知通过既有 refresh/session 核验一次，未确认则显示安全错误并允许手动重新提交，不自动重放写请求。无恢复会话预请求、持久操作门禁或恢复弹窗；跨窗口仅保留临时协调通知。密码/token不进URL/storage/log/state。真实 Cookie、安全属性、CSRF、鉴权与权限保留在后端，不自动扩展 SSO/注册/重置。
+8. 登录服务地址/本地LDAP/标准SSO入口用公开beforeFields/afterFields与extensions.beforeSubmit/actions，共享现有owner、不向回调传密码；真实标准协议和产品认证链留宿主；baseservice authenticationservice/webfacade配套自有Bearer v2，宿主注册route/CSRF/资源策略。登录先读[定量验收清单](../../../docs/LOGIN_VISUAL_ACCEPTANCE.md)，从DESIGN规范映射具体预期，再以真实截图/几何/状态结果逐项验收；移除被公共组合替代的重复通用布局与动作owner，业务内容使用公开组合/扩展，不重写私有皮肤。首次管理员设置优先使用公开AdminSetupPage/createAdminSetupPage整页，传宿主权威状态与 submit 回调，密码使用公共组件固定规则；其它启动错误使用公开AuthPage/createAuthPage纯布局，不拼私有login DOM或产品定位CSS，不把初始化业务塞进认证client。登录使用 ConfigurableLoginPage/createLoginPage 与同一个 createAuthClient，按 [AUTH](../../../docs/AUTH.md) 配置 baseURL、品牌文案/logo 和安全回跳。固定login/refresh/session/logout四路由与v2 DTO；旧 token/me/state 必须明确适配，不能猜协议。对已上线xAgent，若Bearer v2 facade尚未就绪，先保留既有认证owner，接入主题/原子/其它页面；记录协议与上线升级影响，facade及其真实契约验收就绪后再切完整登录页。未发布项目直接采用新合同，不增设旧认证兼容层；服务未就绪如实报告集成缺口。仅改baseURL不能完成旧协议迁移。登录401在认证上下文处理；protectedPaths显式声明业务端点，由共享owner按access generation处理401并singleflight刷新，但不重放业务写，403不刷新。access只在内存，业务Bearer omit/error，login/refresh/logout无Bearer、same-origin Cookie；新页面currentUser恢复再核session，支持默认整页导航。正常 login 直接 POST，提交禁用并显示正在登录，无取消按钮；结果未知通过既有 refresh/session 核验一次，未确认则显示安全错误并允许手动重新提交，不自动重放写请求。无恢复会话预请求、持久操作门禁或恢复弹窗；跨窗口仅保留临时协调通知。密码/token不进URL/storage/log/state。真实 Cookie、安全属性、CSRF、鉴权与权限保留在后端，不自动扩展 SSO/注册/重置。
 
 ## 核对、交付与授权边界
 
@@ -58,6 +64,4 @@ xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/
 
 - 文字、复制与媒体采用 [DISPLAY](../../../docs/DISPLAY.md) 的 Typography/Copyable/Separator/Tag/Image 和原生同等构建器。复用既有 token；Copyable 只写显式授权 value、失败可见、等待写入串行；Tag 删除/后续焦点由宿主稳定 key 管理；Image 必须给 alt 与尺寸/比例，不自动重试或猜代理。正式示例/负类型/资源迟到检查见专项合同，不以 DOM 模型测试冒充浏览器验收。
 
-- 新密码规则、当前计数及本地强度建议统一复用 NewPasswordFields，见 [PASSWORD](../../../docs/PASSWORD.md)。不得复制打分算法、把弱密码提示改成额外提交门禁或把输入发给远程评分服务；字典首次懒加载失败仍按服务端 policy 正常校验。
-
-- Custom Key adapter 的领域操作身份若不符合 Base-v2 五字段（例如 rotate、opaque target、version 0），使用 API_KEY 的闭合 custom schema2 与同一公共持久 guard，不把 rotate 伪装为 create 空目标，不另造产品 IDB 锁；终态 receipt 必须匹配完整原 descriptor。Base-v2 默认严格合同保持。
+- 普通密码使用基于 InputGroup 的 PasswordInput；本地强度单框使用 PasswordStrengthInput，确认组合使用 NewPasswordFields，固定 6–32 个 Unicode 码点且无策略 API，见 [PASSWORD](../../../docs/PASSWORD.md)。不得复制打分算法、把弱密码提示改成额外提交门禁或把输入发给远程评分服务；字典首次懒加载失败仍按固定 6–32 个 Unicode 码点规则正常校验。
