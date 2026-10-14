@@ -11,7 +11,10 @@ function useTextReset(input:React.RefObject<HTMLInputElement|null>,value:string,
  // events, later than layout effects. NumberInput must prepare the confirmed reset
  // default here, before the browser's synchronous reset algorithm and FormData.
  if(prepareDefaultOnReset&&input.current)input.current.defaultValue=current.current.value;
- clearTimeout(timer);timer=setTimeout(()=>{if(input.current&&!event.defaultPrevented){input.current.value=current.current.value;current.current.onReset?.(current.current.value);}},0);};doc?.addEventListener('reset',reset,true);return()=>{clearTimeout(timer);doc?.removeEventListener('reset',reset,true);};},[]);
+ clearTimeout(timer);timer=setTimeout(()=>{if(input.current&&!event.defaultPrevented){input.current.value=current.current.value;current.current.onReset?.(current.current.value);}},0);};
+ // Input after reset supersedes its deferred draft reconciliation.
+ const edit=(event:Event)=>{if(event.target===input.current)clearTimeout(timer);};
+ doc?.addEventListener('reset',reset,true);doc?.addEventListener('input',edit,true);return()=>{clearTimeout(timer);doc?.removeEventListener('reset',reset,true);doc?.removeEventListener('input',edit,true);};},[]);
  return current;
 }
 export type SearchInputProps=Omit<ControlledInput,'onSubmit'> & {onSubmit?:(value:string)=>void;onClear?:()=>void;clearLabel?:string;clearOnEscape?:boolean};
