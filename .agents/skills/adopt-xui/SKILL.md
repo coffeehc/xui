@@ -34,6 +34,7 @@ description: 按“仅接入xui”集成前端，按“接入xui+baseservice”�
 1. 在任务指定的 xui checkout 与采用仓库读取 AGENTS.md，检查 git status、当前 SHA、分支、包 manifests/exports 和已有改动。按任务授权正常 fetch，比较版本；保护全部提交和业务修改。不要 reset/clean/强推、用文件树 API 同步、猜 registry 版本或改其他仓库。
 2. 先读 [采用手册](../../../docs/ADOPTION.md)、[xui 默认完整规范](../../../docs/DESIGN.md)、[公开入口与默认行为](../../../docs/PUBLIC_API.md) 和 [实施映射](../../../docs/ADOPTION.md#组件层次与扩展原则)。另读采用项目自己的 `docs/DESIGN.md`，区分产品视觉要求与 xui 默认合同。以实际消费版本的正式声明和源码核对 API，不能把计划或其他版本写成可调用能力。
 3. 读 [原子→组合→页面的单一架构源](../../../docs/ADOPTION.md#组件层次与扩展原则)，为页面选择实际公开层次与扩展点；按需要读 [导航](../../../docs/COMPONENTS.md#导航与菜单)、[HTTP/query](../../../docs/PUBLIC_API.md#http-与查询)、[登录/认证](../../../docs/PUBLIC_API.md#认证会话)、[API Key](../../../docs/PUBLIC_API.md#api-key-管理) 或 [业务日志](../../../docs/PUBLIC_API.md#业务日志)；确有错误观察需求再读 [独立错误 facade](../../../docs/PUBLIC_API.md#程序错误观察)；读 [宿主边界](../../../docs/ADOPTION.md#宿主边界) 与 [实际验证和限制](../../../docs/VALIDATION.md)。不要复制完整规范、默认品牌值或另造组件合同。
+4. 首次接入、升级与自查均执行[接入合规与公共缺口归属](../../../docs/ADOPTION.md#接入合规与公共缺口归属)：核对真实消费、公共请求链路与无用UI信息；公共组件修改/增强由消费项目列举并交给xui，不在消费项目自行补丁或复制实现。只要求自查时保持只读，按该节输出证据与分类缺口。
 
 ## 联合服务接线（仅“接入xui+baseservice”）
 

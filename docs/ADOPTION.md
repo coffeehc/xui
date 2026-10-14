@@ -85,11 +85,22 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 | 组合 | MenuLayout/NavigationMenu、公共 Toolbar/Grid/Table/DataRegion、Dialog/详情布局、HTTP/query/controller | 组合原子提供通用键盘、状态、反馈和布局。Table 不抽查询引擎，query 不抽领域业务；状态与后端 adapter 通过明确公开合同连接 |
 | 页面 | AuthPage/createAuthPage纯认证布局、ConfigurableLoginPage/createLoginPage、ApiKeyManager/createApiKeyManager、BusinessLogExplorer/createBusinessLogExplorer | 填文案/品牌数据、选项、adapter/loader 与 callbacks 即可整页使用；页面内部复用下层相同控件与皮肤，业务不必手写页面 CSS |
 
-普通需求优先完整页面或组合；特殊业务可用公开扩展点或组合基础控件。允许声明的 props/render/parts、受信任 renderer、数据配置和 callbacks；不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner；缺能力先反馈或补公开接口，再补验收。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
+普通需求优先完整页面或组合；特殊业务可用公开扩展点或组合基础控件。允许声明的 props/render/parts、受信任 renderer、数据配置和 callbacks；不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
 
 业务流程、领域数据、业务页面和产品布局由宿主负责；领域 API、权限/tenant 与校验须可独立测试。xui 提供通用组件、公开组合、请求接入及 typed adapter/loader 边界。仅选用默认 HTTP client 或页面 adapter 时，服务须满足对应明确 wire 合同；宿主可通过 ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 或 BusinessLogLoader 连接自己的领域接口，业务 API 迁移是宿主独立任务。页面所需前置见 [默认适配器前置](PUBLIC_API.md#默认适配器的服务前置)。
 
 贡献与采用应能说明所属层次、复用下层的方式、公开扩展点和实际构建消费。合成页面通过不代表产品迁移通过。
+
+### 接入合规与公共缺口归属
+
+以下要求适用于首次接入、升级和接入自查。先固定实际安装版本/SHA，核对正式 ESM/CSS/types 与该版本合同；源码中的新能力不等于消费项目已安装。检查实际页面调用、最终样式与请求链路，不能凭 import 数量或截图认定完成。
+
+- 已有适用完整页面或组合时直接采用，登录优先 ConfigurableLoginPage/createLoginPage 及同一 createAuthClient。品牌、文案、公开 extensions 与宿主业务可以配置；只使用公共 Input/Button 后手写另一套登录页面，不能算完整登录组合接入。认证服务前置不满足时按接入模式保留既有认证 owner并报告限制，不能猜协议或伪称完整登录通过。
+- 需要修改、增强或修复公共组件时，消费项目不得自行复制实现、fork、打补丁、穿透私有 DOM/CSS、使用 !important 或以 wrapper 建立竞争实现。消费项目列出实际入口/版本、代码位置、最小复现、业务场景、受限行为、当前公开替代入口与验收条件，统一交给 xui；由 xui 在自己的授权范围内补齐公开合同、实现和验收后，消费方再按升级授权采用。正常公开 props/slots/render/typed adapter 与领域组合仍属宿主职责。
+- 逐项追踪已采用的 HTTP/auth/page adapter/loader，核对登录、刷新、退出、session及适用的Key/日志/下载等调用。不得悄悄改固定端点、method、DTO、解析或错误语义，不得绕过公共 client 另建重复请求、凭据、401跳转、超时、重试、loading或通知owner。领域API和标准/第三方协议按[默认适配器前置](PUBLIC_API.md#默认适配器的服务前置)保留明确typed边界，不要求全量后端迁移。
+- UI信息遵守[信息披露](DESIGN.md#首屏信息架构与信息密度)。不添加重复品牌/页面名页脚、无用统计、常驻实现背景、开发备注或接入/验收声明；保留必要标签、真实业务状态、权限、错误、风险与及时操作反馈。不得用测试说明或合成记录冒充正式业务内容。
+
+自查报告区分：已有公共能力误用、宿主接线/冗余内容、真实公共能力缺口及宿主业务职责；逐项附文件位置、公共入口与源码/浏览器Network等实际证据，明确通过、失败和未跑。只要求自查时保持只读；不把自查隐式升级为组件修改、依赖升级、业务API迁移或发布。
 
 ## 设计项目组件与页面
 
@@ -152,7 +163,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.10.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.10.1；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 
