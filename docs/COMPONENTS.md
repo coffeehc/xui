@@ -185,7 +185,7 @@ required 复选组表示至少选择一个当前已知选项，通过首个可�
 
 Command复用已安装的Combobox：inline列表、搜索、分组、空态、disabled、选择与键盘；只声明上述稳定组合，不照搬cmdk。原生输入保持DOM identity，aria-controls/activedescendant/selected/multiselectable同事实；ArrowUp/Down/Home/End跳过disabled，Enter执行，Escape清过滤而保留选择。action不作权限/副作用校验，也不自动等待/重放业务。需要远端搜索或更细peer部件时组合已有Combobox/Select，不能用私有默认样式补丁。
 
-Calendar使用一个框架无关model；更新一次发布一致快照，选相邻月份后保留所选日焦点。Arrow左右一天、上下七天、Home/End周端、PageUp/Down按月并夹到有效日，Enter/Space走按钮选择；禁用日期可焦点读取但不能选择，clear清空选择。月份查看不是业务查询，动画不等待操作。没有时间选择器、农历、复杂可用性/节假日或预约引擎。defaultMonth只定义初始视图；未传month时月份查看由库保存，month=YYYY-MM为受控视图。onMonthChange只通知用户翻月、跨月键盘或相邻月日期选择的请求；外部update({month})/React month变化不通知，不改变value，不触发onValueChange。原生model.setMonth(YYYY-MM)是绝对月份请求，moveMonth(delta)沿用相对移动；同月setMonth为no-op。受控宿主未确认时保持原查看月，焦点仅在现有42格内移动，接受请求后恢复目标日；外部跳月回该月首日，标题与grid保持一致。disabled仍允许浏览月份但禁止选择/清空，disabled日期可读取。年份严格0001..9999，无隐式时区转换。
+Calendar使用一个框架无关model；更新一次发布一致快照，选相邻月份后保留所选日焦点。Arrow左右一天、上下七天、Home/End周端、PageUp/Down按月并夹到有效日，Enter/Space走按钮选择；禁用日期可焦点读取但不能选择，clear清空选择。月份查看不是业务查询，动画不等待操作。Calendar本身不选择时间；组合日期与时间使用下方DateTimePicker。没有农历、复杂可用性/节假日或预约引擎。defaultMonth只定义初始视图；未传month时月份查看由库保存，month=YYYY-MM为受控视图。onMonthChange只通知用户翻月、跨月键盘或相邻月日期选择的请求；外部update({month})/React month变化不通知，不改变value，不触发onValueChange。原生model.setMonth(YYYY-MM)是绝对月份请求，moveMonth(delta)沿用相对移动；同月setMonth为no-op。受控宿主未确认时保持原查看月，焦点仅在现有42格内移动，接受请求后恢复目标日；外部跳月回该月首日，标题与grid保持一致。disabled仍允许浏览月份但禁止选择/清空，disabled日期可读取。年份严格0001..9999，无隐式时区转换。
 
 快速年月定位使用公开Input、SimpleSelect、Button与受控month组合，见[React](../examples/calendar-month-react/app.tsx)/[原生](../examples/calendar-month-vanilla/app.js)。日期与月份可独立受控；single/range不因翻月清空，locale只改变显示。defaultMonth的后续变化不重置视图；不通过修改value或重挂Calendar定位。
 
@@ -919,3 +919,26 @@ Menu.Item 与 ContextMenu.Item 共享带类型的 `tone?: 'default' | 'danger'`�
 原生menu/controller沿用公开 `.xui-menu-item`，动作按钮声明 `data-tone="danger"`；controller维护键盘/关闭/回焦点，无React依赖。使用标准disabled/data-disabled/aria-disabled，不能只改颜色伪装禁用。正式ESM/CSS/types消费例子：[React](../examples/menu-danger-react/app.tsx)、[原生](../examples/menu-danger-vanilla/app.js)。无需私有CSS或!important。React沿Base UI保留禁用项可获焦点供读取，但Enter/Space/点击均不执行；原生controller跳过disabled按钮。ContextMenu打开后的初始键盘停靠沿既有peer/controller，Home/End可直接到边界，不强制端间相同首次ArrowDown位置。
 
 公开行事件正式消费：[React](../examples/row-events-react/app.tsx)、[原生](../examples/row-events-vanilla/app.js)。示例保留selected/expanded、sticky、横滚和受控cursor，名称Button提供键盘等价入口；原生移除行/destroy释放handler，保留现有cell slot生命周期。
+
+## 日期时间选择
+
+DateTimePicker / createDateTimePicker 组合已有 Field、InputGroup、Calendar、Select/bindSelectControl 和 Popover；一个可编辑文本 Input 是唯一具名表单值，弹层小时/分钟选择不额外提交字段。必需 label；支持 id/name/form/help/error/describedBy/placeholder/autoComplete，React ref 指向文本 input；labels 可覆盖操作和错误文案，locale/weekStartsOn/today仅控制日期显示。原生 help/error 为字符串，React 为 ReactNode。
+
+value（传入即受控）与初始-only defaultValue 接受严格公历 `YYYY-MM-DDTHH:mm` 或 null。分钟精度、年份0001..9999，拒绝秒、Z、offset、时间戳及无效日期，不 trim/截断/转时区。onValueChange只请求变化后的有效值或null，外部value更新无通知；拒绝受控请求保留宿主确认值。业务时区、起止先后、可观察窗口范围由宿主决定；不得直接把墙上时间字符串当UTC瞬时值。today省略时仅以当前UTC日期作为日历浏览参考，空值不自动填当前时间。
+
+输入完整有效文本即请求值；不完整或错误文本保留为局部draft且不通知，blur/Enter/invalid时显示关联错误，输入无效草稿时公共feedback-slot先保留错误区域，避免首次错误反馈推走正在点击的表单动作。弹层日期、小时0..23、分钟0..59是独立草稿，确认一次原子请求；取消/Escape不提交。清空返回null，required也允许清空并由原生validity/Field提示必填。disabled禁止编辑、打开和提交；readOnly保留可聚焦读取但禁止编辑/清空/打开。readOnly/disabled遵循HTML表单校验规则（不会参与原生校验）；host error不会被内部格式校验覆盖。
+
+输入Alt+ArrowDown或触发按钮打开，初始焦点在可读标题，再Tab进入日历和时间控件；Calendar键盘规则不变。时间选择使用公共组合的键盘导航：React Select先Enter/Space或箭头打开，再Home/End/箭头定位；原生绑定也支持关闭时Home/End直接打开并定位。内层Escape先关闭内层。确认/取消/Escape回触发器，清空回文本输入；外部指针与宿主新焦点不被抢回。原生controller与React peer各自维护弹层生命周期，不穿透私有DOM。表单reset回当前确认值并清局部draft，不发值回调；紧随reset的新输入优先。原生destroy释放listeners/controllers并恢复未被宿主替换的原始内容。
+
+```tsx
+import {DateTimePicker} from '@coffeehc/xui-react/date-time';
+<DateTimePicker label="开始日期时间" name="start" value={start}
+  onValueChange={setStart} required error={startError} />
+```
+
+```js
+import {createDateTimePicker} from '@coffeehc/xui-runtime/date-time-dom';
+const picker=createDateTimePicker(host,{label:'开始日期时间',value:null,
+  onValueChange:value=>picker.update({value})});
+// 外部受控确认：picker.update({value:'2026-10-15T09:30'})；无额外回调。
+```

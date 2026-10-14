@@ -191,3 +191,7 @@ Dialog 修复后、数值输入修复前的候选 `cfe37756f06a04dc03bbf4721397c
 菜单证据保存于 .artifacts/menu-danger-browser-final.json 与 menu-danger-zoom-final.json，实际查看浅色桌面及深色390px截图。首轮新测试错误地要求Base UI跳过禁用项和ContextMenu首次ArrowDown直达第二项，已按peer真实合同改为准确Home/Arrow导航和零执行断言；53/53为修正后的复验。正式消费者初始CSS包含critical与floating，原16384 gzip字节已满，完整危险状态增加56字节至16440；该项上限显式调整为16512，Button/JS等其余预算不变，所有预算仍强制验证。
 
 DataTable证据保存于 .artifacts/row-events-browser-final.json 与 row-events-zoom-final.json，实际查看深色390px和表头键盘焦点截图。122项包含新增行事件与既有cursor/layout/focus/widths回归；未传rowEvents保持原行为，CellContext原字段兼容，新增回调不接管请求或分页事实。
+
+日期时间选择新增 DateTimePicker/createDateTimePicker/createDateTimeModel 与严格无时区分钟值；模型及关联Calendar回归28/28，浏览器21/21（完整20/21后仅补两端键盘2/2，保留原始报告并逐case合并），Calendar-month/widgets回归19/19、composition-select12/12，真实Chrome200%缩放6/6。正式构建/types/独立tarball消费者及预算通过，原生无React，公开入口100个。双端浅/深/system、1280/390px、长中文、200%文字、弹层滚动、受控接受/拒绝、清空、必填/宿主错误关联、readOnly/disabled、分钟选择、键盘、取消/Escape回焦点、表单reset及新编辑优先、原生update/destroy均有浏览器证据。React使用同peer公开Select及回调仲裁内层Escape；原生使用bindSelectControl/controller，无内部DOM依赖。UTC仅作为可省略today的日期浏览参考，value/callback不转换业务时区。
+
+DateTime证据：.artifacts/date-time-browser-aggregated-final.json（及其原始full/keyboard报告）、date-time-calendar-regression-browser-final.json、date-time-composition-select-browser-final.json、date-time-zoom-final.json。实际查看两端深色390px/200%文字截图。首轮发现的内层Escape、错误反馈推走reset点击及示例长JSON溢出均已修复；桌面长内容也允许有界滚动。测试不直接使用React跟踪过的value setter伪装输入，按原生setter与真实事件复现reset后新编辑；Base UI先打开再Home/End定位与原生直接Home/End的差异如实记录。其他浏览器、读屏器及Argus/xQuant/xAgent实际产品未跑，本轮未修改消费项目。

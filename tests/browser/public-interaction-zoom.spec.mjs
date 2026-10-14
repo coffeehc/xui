@@ -2,7 +2,7 @@ import {test,expect,chromium} from '@playwright/test';
 import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 import {captureZoomViewport} from './zoom-capture.mjs';
 
-for(const name of ['calendar-month','menu-danger','row-events'])for(const kind of ['react','vanilla'])for(const mode of ['light','dark','system']){
+for(const name of ['calendar-month','menu-danger','row-events','date-time'])for(const kind of ['react','vanilla'])for(const mode of ['light','dark','system']){
  test(name+' '+kind+' '+mode+' genuine Chrome zoom 200%',async({},info)=>{
   test.setTimeout(60000);
   const context=await chromium.launchPersistentContext('',{...chromiumLaunchOptions,headless:true,chromiumSandbox:true,viewport:null,args:['--window-size=1280,900']});
@@ -24,6 +24,13 @@ for(const name of ['calendar-month','menu-danger','row-events'])for(const kind o
     const danger=page.getByRole('menuitem',{name:'删除记录',exact:true});await expect(danger).toBeFocused();await expect(danger).toHaveCSS('outline-style','solid');
     await info.attach('danger-focus.png',{body:await captureZoomViewport(page),contentType:'image/png'});
     await page.keyboard.press('Enter');await expect(page.getByLabel('执行次数')).toHaveText('1');await expect(trigger).toBeFocused();
+   }
+   if(name==='date-time') {
+    const trigger=page.getByRole('button',{name:'选择日期时间 开始日期时间'});await trigger.click();
+    const dialog=page.getByRole('dialog');await expect(dialog.getByRole('heading')).toBeFocused();
+    await dialog.getByRole('gridcell',{name:'2020-02-29',exact:true}).focus();await page.keyboard.press('ArrowRight');
+    await expect(dialog.getByRole('gridcell',{name:'2020-03-01',exact:true})).toBeFocused();
+    await dialog.getByRole('button',{name:'取消',exact:true}).click();await expect(trigger).toBeFocused();
    }
    if(name==='row-events') {
     const nameButton=page.getByRole('button',{name:'打开 row-1',exact:true});await nameButton.focus();await page.keyboard.press('Enter');await expect(page.getByLabel('事件结果')).toContainText('cell 1');await expect(nameButton).toBeFocused();

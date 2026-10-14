@@ -20,7 +20,7 @@
 
 ## 全部正式入口
 
-下表完整覆盖当前 97 个 manifest exports；组件用法按 [组件手册](COMPONENTS.md) 查阅，签名以固定版本的正式 types 为准。
+下表完整覆盖当前 100 个 manifest exports；组件用法按 [组件手册](COMPONENTS.md) 查阅，签名以固定版本的正式 types 为准。
 
 ### @coffeehc/xui-theme
 
@@ -83,6 +83,8 @@
 | `@coffeehc/xui-runtime/api-key-http` <!-- public-entry: @coffeehc/xui-runtime/api-key-http --> | [默认原生adapter](../packages/runtime/src/api-key-http.ts)，[页面API合同](PUBLIC_API.md#默认适配器的服务前置) | — | — |
 | `@coffeehc/xui-runtime/business-log-http` <!-- public-entry: @coffeehc/xui-runtime/business-log-http --> | [默认原生loader](../packages/runtime/src/business-log-http.ts)，webfacade offset/ListData | — | — |
 | `@coffeehc/xui-runtime/calendar` <!-- public-entry: @coffeehc/xui-runtime/calendar --> | [源码](../packages/runtime/src/calendar.ts)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
+| `@coffeehc/xui-runtime/date-time` <!-- public-entry: @coffeehc/xui-runtime/date-time --> | [模型与值合同](../packages/runtime/src/date-time.ts) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-vanilla/app.js) |
+| `@coffeehc/xui-runtime/date-time-dom` <!-- public-entry: @coffeehc/xui-runtime/date-time-dom --> | [原生组合](../packages/runtime/src/date-time-dom.ts) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-vanilla/app.js) |
 | `@coffeehc/xui-runtime/widgets-dom` <!-- public-entry: @coffeehc/xui-runtime/widgets-dom --> | [源码](../packages/runtime/src/widgets-dom.ts)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-runtime/search-toolbar-dom` <!-- public-entry: @coffeehc/xui-runtime/search-toolbar-dom --> | 及根入口：`createSearchToolbar` / `SearchToolbarOptions` / `SearchToolbarController`，对应 Node/null 槽，稳定 update/getElement/getExpanded/destroy。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/display` <!-- public-entry: @coffeehc/xui-runtime/display --> | createCopyController、copyableLabels、validateImageOptions 与文字/复制/图片共享类型。 | [组件合同](COMPONENTS.md) | — |
@@ -129,6 +131,7 @@
 | `@coffeehc/xui-react/accordion` <!-- public-entry: @coffeehc/xui-react/accordion --> | [源码](../packages/ui-react/src/accordion.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-react/scroll-area` <!-- public-entry: @coffeehc/xui-react/scroll-area --> | [源码](../packages/ui-react/src/scroll-area.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-react/calendar` <!-- public-entry: @coffeehc/xui-react/calendar --> | [源码](../packages/ui-react/src/calendar.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
+| `@coffeehc/xui-react/date-time` <!-- public-entry: @coffeehc/xui-react/date-time --> | [React 组合](../packages/ui-react/src/date-time.tsx) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-react/app.tsx) |
 | `@coffeehc/xui-react/command` <!-- public-entry: @coffeehc/xui-react/command --> | [源码](../packages/ui-react/src/command.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-react/search-toolbar` <!-- public-entry: @coffeehc/xui-react/search-toolbar --> | 及根入口：`SearchToolbar` / `SearchToolbarProps`，search/actions/advanced 三内容槽；defaultExpanded=false，支持 expanded/onExpandedChange，advancedLabel 与 div props/ref。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/display` <!-- public-entry: @coffeehc/xui-react/display --> | Typography.Heading/Text/Link/Code、Copyable、Separator、Tag、Image，及同名 props/共享类型。 | [组件合同](COMPONENTS.md) | — |
@@ -628,3 +631,7 @@ MenuItemTone/MenuItemProps 从 React `/menu`、`/context-menu` 和根入口公�
 ## DataTable 行事件
 
 DataTableRowContext、DataTableRowEvents 从 runtime/data-table、runtime/data-table-dom 及根入口导出；React/data-table 及根入口导出React事件适配类型。DataTableProps<T> 和 NativeDataTableOptions<T> 可传 rowEvents；DataTableCellContext/NativeDataTableCellContext沿用原字段并复用行上下文。共享 isDataTableRowEvent 只负责DOM事件来源边界，不检查业务权限。详细行为及公开自定义动作标记见[数据表格](COMPONENTS.md#数据表格)。
+
+## 日期时间选择
+
+React `/date-time` 与根入口导出 DateTimePicker/DateTimePickerProps；runtime `/date-time` 与根入口导出 DateTimeOptions/DateTimeValue/DateTimeParts/DateTimeError/DateTimePickerLabels、parseDateTimeValue、createDateTimeModel；`/date-time-dom` 与根入口导出 NativeDateTimePickerOptions/createDateTimePicker。沿用正式 style.css（critical.css+floating.css），不增加组件私有 CSS。完整行为见[组件手册](COMPONENTS.md#日期时间选择)，双端[React](../examples/date-time-react/app.tsx)/[原生](../examples/date-time-vanilla/app.js)可从独立 tarball 消费。

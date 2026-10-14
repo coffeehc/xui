@@ -170,6 +170,14 @@
     "./internal/dialog-layout": {
       "types": "./dist/dialog-layout.d.ts",
       "import": "./dist/dialog-layout.js"
+    },
+    "./date-time": {
+      "types": "./dist/date-time.d.ts",
+      "import": "./dist/date-time.js"
+    },
+    "./date-time-dom": {
+      "types": "./dist/date-time-dom.d.ts",
+      "import": "./dist/date-time-dom.js"
     }
   },
   "types": "./dist/index.d.ts",

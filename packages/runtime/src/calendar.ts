@@ -18,6 +18,7 @@ export function parseCalendarDate(value:string):Date {
 const encode=(date:Date)=>{const year=date.getUTCFullYear();if(year<1||year>9999)throw new RangeError('Calendar date out of range');return `${String(year).padStart(4,'0')}-${String(date.getUTCMonth()+1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;};
 export function shiftCalendarDate(value:string,days:number):string {if(!Number.isSafeInteger(days))throw new TypeError('Day delta must be an integer');const date=parseCalendarDate(value);date.setUTCDate(date.getUTCDate()+days);return encode(date);}
 function validValue(value:CalendarValue,range:boolean):CalendarValue {if(!range){if(value!==null)parseCalendarDate(value as string);return value;}if(!value||typeof value!=='object'||!('start'in value)||!('end'in value))throw new TypeError('Range requires start and end');if(value.start!==null)parseCalendarDate(value.start);if(value.end!==null)parseCalendarDate(value.end);if(value.end&&(!value.start||value.end<value.start))throw new TypeError('Range end precedes start');return Object.freeze({start:value.start,end:value.end});}
+const sameValue=(left:CalendarValue,right:CalendarValue)=>left===right||!!left&&!!right&&typeof left==='object'&&typeof right==='object'&&left.start===right.start&&left.end===right.end;
 export function createCalendarModel(initial:CalendarOptions={}) {
  let options={...initial},dead=false,intent=0,monthIntent=0;const range=options.mode==='range';let selected=validValue(options.value!==undefined?options.value:options.defaultValue??(range?{start:null,end:null}:null),range);
  const today=options.today??new Date().toISOString().slice(0,10);parseCalendarDate(today);let focus=typeof selected==='string'?selected:selected&&typeof selected==='object'?selected.start??today:today;
@@ -61,7 +62,9 @@ export function createCalendarModel(initial:CalendarOptions={}) {
    if(dead)return;if(next.mode!==undefined&&next.mode!==(options.mode??'single'))throw new TypeError('Calendar mode is stable');
    const nextValue=next.value!==undefined?validValue(next.value,range):selected;
    if(next.month!==undefined)validateMonth(next.month);
-   if(next.value!==undefined)intent++;
+   // A full controlled view confirmation can include the unchanged date value.
+   // Only a newer selection fact supersedes a pending selection notification.
+   if(next.value!==undefined&&!sameValue(nextValue,selected))intent++;
    options={...options,...next};selected=nextValue;
    if(next.month!==undefined&&next.month!==month){
     month=next.month;focus=pendingFocus?.startsWith(month)?pendingFocus:month+'-01';pendingFocus=undefined;monthIntent++;

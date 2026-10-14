@@ -36,6 +36,7 @@ pnpm preview
 | 列表/表单/详情 | [foundation-react](../examples/foundation-react/app.tsx) | [foundation-vanilla](../examples/foundation-vanilla/app.js) |
 | 工作区 | [workspace-react](../examples/workspace-react/app.tsx) | [workspace-vanilla](../examples/workspace-vanilla/app.js) |
 | 完整表格 | [data-table-react](../examples/data-table-react/app.tsx) | [data-table-vanilla](../examples/data-table-vanilla/app.js) |
+| 日期时间 | [date-time-react](../examples/date-time-react/app.tsx) | [date-time-vanilla](../examples/date-time-vanilla/app.js) |
 | 登录 | [login-react](../examples/login-react/app.tsx) | [login-vanilla](../examples/login-vanilla/app.js) |
 | API Key | [api-key-react](../examples/api-key-react/app.tsx) | [api-key-vanilla](../examples/api-key-vanilla/app.js) |
 | 业务日志 | [business-log-react](../examples/business-log-react/app.tsx) | [business-log-vanilla](../examples/business-log-vanilla/app.js) |

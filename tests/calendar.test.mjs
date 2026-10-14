@@ -66,3 +66,8 @@ test('adjacent-month selection emits separate value and month events with native
  model.choose('2026-11-01');assert.deepEqual(months,['2026-11']);assert.deepEqual(values,['2026-11-01']);
  assert.equal(model.getState().focus,'2026-11-01');model.choose('2026-11-02');assert.deepEqual(values,['2026-11-01']);
 });
+for(const mode of ['single','range'])test(mode+' full view confirmation with unchanged value preserves adjacent-month selection notification',()=>{
+ const value=mode==='single'?'2026-10-01':{start:'2026-10-01',end:null},values=[];
+ const model=createCalendarModel({mode,value,month:'2026-10',today:'2026-10-15',onMonthChange:month=>model.update({month,value}),onValueChange:next=>values.push(next)});
+ model.choose('2026-11-01');assert.equal(values.length,1);assert.deepEqual(values[0],mode==='single'?'2026-11-01':{start:'2026-10-01',end:'2026-11-01'});
+});
