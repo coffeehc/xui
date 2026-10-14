@@ -16,3 +16,53 @@ test('calendar subscription reentrancy cannot deliver an older selection callbac
 test('login extension preserves promise rejection and throw even without a reason',async()=>{for(const callback of [()=>Promise.reject(),()=>{throw undefined;}]){let rejected=false;await runLoginPageExtension(callback,{username:'demo',signal:new AbortController().signal}).catch(()=>rejected=true);assert.equal(rejected,true);}});
 
 test('calendar accepts an explicit update of its default single mode while rejecting an actual mode change',()=>{const model=createCalendarModel({today:'2026-10-12'});assert.doesNotThrow(()=>model.update({mode:'single'}));assert.throws(()=>model.update({mode:'range'}),TypeError);});
+
+test('absolute month navigation is independent of selection and defaults are initial-only',()=>{
+ const months=[],values=[],model=createCalendarModel({defaultMonth:'2026-10',value:'2020-01-01',today:'2026-10-12',onMonthChange:month=>months.push(month),onValueChange:value=>values.push(value)});
+ model.setMonth('2020-01');model.setMonth('2020-01');
+ assert.equal(model.getState().month,'2020-01');assert.equal(model.getState().value,'2020-01-01');
+ assert.deepEqual(months,['2020-01']);assert.deepEqual(values,[]);
+ model.update({defaultMonth:'2030-02'});assert.equal(model.getState().month,'2020-01');
+ model.moveMonth(-1);assert.equal(model.getState().month,'2019-12');
+ model.update({locale:'en-US'});assert.match(model.getLabels().month,/December/);
+ assert.deepEqual(months,['2020-01','2019-12']);
+});
+test('controlled month requests wait for acceptance, external confirmation never loops',()=>{
+ const months=[],model=createCalendarModel({month:'2026-10',today:'2026-10-31',onMonthChange:month=>months.push(month)});
+ model.key('2026-10-31','PageDown');
+ assert.equal(model.getState().month,'2026-10');assert.equal(model.getState().focus,'2026-10-31');
+ assert.equal(model.getDays().filter(day=>day?.date===model.getState().focus).length,1);
+ assert.deepEqual(months,['2026-11']);
+ model.update({month:'2026-11'});assert.equal(model.getState().focus,'2026-11-30');
+ model.update({month:'2020-02'});assert.equal(model.getState().focus,'2020-02-01');assert.deepEqual(months,['2026-11']);
+});
+test('controlled month acceptance preserves leap-day keyboard focus without changing range endpoints',()=>{
+ const value={start:'2020-01-01',end:'2020-01-03'},events=[];
+ const model=createCalendarModel({mode:'range',month:'2020-01',value,onMonthChange:month=>{events.push(month);model.update({month});}});
+ model.key('2020-01-31','PageDown');assert.equal(model.getState().focus,'2020-02-29');
+ assert.deepEqual(model.getState().value,value);assert.deepEqual(events,['2020-02']);
+ model.update({disabled:true});model.setMonth('2021-02');assert.equal(model.getState().month,'2021-02');
+ model.choose('2021-02-15');model.clear();assert.deepEqual(model.getState().value,value);
+});
+test('invalid viewed months are rejected atomically and date boundaries preserve the current view',()=>{
+ const model=createCalendarModel({month:'0001-01',today:'0001-01-01'});
+ for(const month of ['0000-01','2020-13','2020-1','10000-01']){
+  assert.throws(()=>model.setMonth(month));assert.throws(()=>model.update({month}));
+  assert.equal(model.getState().month,'0001-01');assert.doesNotThrow(()=>model.getDays());
+ }
+ model.moveMonth(-1);assert.equal(model.getState().month,'0001-01');
+ model.update({month:'9999-12'});model.moveMonth(1);assert.equal(model.getState().month,'9999-12');
+ model.destroy();model.setMonth('2020-01');assert.equal(model.getState().month,'9999-12');
+});
+test('month subscriber reentrancy suppresses an older notification and controls can be released',()=>{
+ const events=[],model=createCalendarModel({defaultMonth:'2026-10',today:'2026-10-12',onMonthChange:month=>events.push(month)});
+ model.subscribe(()=>{if(model.getState().month==='2020-01')model.setMonth('2021-02');});
+ model.setMonth('2020-01');assert.deepEqual(events,['2021-02']);
+ model.update({month:'2026-10'});model.update({month:undefined});model.moveMonth(1);assert.equal(model.getState().month,'2026-11');
+});
+test('adjacent-month selection emits separate value and month events with native synchronous month confirmation',()=>{
+ const months=[],values=[];
+ const model=createCalendarModel({month:'2026-10',today:'2026-10-12',onMonthChange:month=>{months.push(month);model.update({month});},onValueChange:value=>values.push(value),isDateDisabled:date=>date==='2026-11-02'});
+ model.choose('2026-11-01');assert.deepEqual(months,['2026-11']);assert.deepEqual(values,['2026-11-01']);
+ assert.equal(model.getState().focus,'2026-11-01');model.choose('2026-11-02');assert.deepEqual(values,['2026-11-01']);
+});

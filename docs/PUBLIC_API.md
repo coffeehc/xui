@@ -616,3 +616,7 @@ baseservice 的 authenticationservice/webfacade、apikeyservice/webfacade 与 bi
 createResource({loader,isEmpty?,timeoutMs?}) 提供 idle/loading/refreshing/ready/empty/error/retrying、key/value/hasValue/error/busy/request。没有默认 timeout、请求/缓存或自动重试。load(key) 替换旧任务；同 key 刷新保留旧值，不同 key 清除旧对象；retry 是显式操作；cancel/destroy 即使生产者忽略 Abort，也结束本地等待并拒绝旧结果。回调重入以 generation 再检查，订阅异常不把数据成功改成错误。
 
 useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/销毁。loadStylesheet 创建的失败/取消 link 会清理，成功 link 由宿主拥有。
+
+## 日历月份控制
+
+`@coffeehc/xui-runtime/calendar` 的 `CalendarOptions` 及 `@coffeehc/xui-react/calendar` 的 `CalendarProps` 公开 `month?:string`、`onMonthChange?:(month:string)=>void`。根入口同样导出。原生 `createCalendar` 接受同一选项并返回 `model.setMonth(month)`；受控确认使用 `update({month})`。年月遵循严格 YYYY-MM、0001..9999；日期值与查看月份分开。默认值、回调和焦点合同见[Calendar](COMPONENTS.md#选择与复合控件)，双端正式消费者见[React](../examples/calendar-month-react/app.tsx)/[原生](../examples/calendar-month-vanilla/app.js)。

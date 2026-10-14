@@ -1394,3 +1394,7 @@ xs上下内距由button-padding-block-xs按实际body-sm行高及按钮line-widt
 常规有界窗口保持 Body 为唯一活动滚动区域且 Footer 可见。内部布局 owner 以弹层可用高度、非 Body 内容实际需求及 `dialog-body-min-block-size` 判断：该派生变量由一个普通控件高度和上下焦点绘制空间组成，不是固定内容高度。标题或操作区过长、窗口极短导致剩余空间不足时，整个弹层成为唯一滚动区域，Body 自然增长并停止自身滚动，关闭/标题/说明/操作均可滚动到达，此时不承诺 Footer 同时同屏。默认无测量/SSR/ResizeObserver 不可用时采用整体可达模式；测量就绪且预算足够才切换正常 Body 模式。不重挂内容、不修改字段/焦点事实。长标题/长说明可显式放入 Body，Header 保留关闭操作区，但既有 Header 长内容组合仍受极限可达合同保护。
 
 <!-- foundation-lifecycle:end -->
+
+### Calendar 查看月份与日期选择
+
+Calendar共享model独立管理查看月份与已选日期。公开month/onMonthChange和原生setMonth复用原有ISO公历、UTC字段及键盘合同；月份定位不触发日期选择。受控确认与拒绝保持一个可见roving停靠，外部跳月不抢走公共年月控件焦点；浏览与选择的事件合同见[组件手册](COMPONENTS.md#选择与复合控件)。快速定位由公共Input/SimpleSelect/Button组合，不引入OS日期弹层或消费者私有DOM。

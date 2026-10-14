@@ -357,6 +357,19 @@ for (const kind of ['vanilla','react']) {
   await writeFile(`${richNavigation}/types.ts`,"import {createNavigationMenu,type NavigationMenuDOMOptions,type NavigationDOMSlot} from '@coffeehc/xui-runtime/navigation';\nimport {createRichNavigationExample} from '../shared/rich-navigation-model';\nimport {createMenuLayout,type MenuLayoutOptions} from '@coffeehc/xui-runtime/menu-layout';\nconst owner=createRichNavigationExample();const shellOptions:MenuLayoutOptions={items:[],sidebar:document.createElement('div')};const layout=createMenuLayout(document.createElement('div'),shellOptions);layout.update({sidebar:null});layout.destroy();const options:NavigationMenuDOMOptions={items:owner.getState().groups.projects.items,renderLabel:item=>({element:document.createTextNode(item.label)}),renderAction:()=>({element:document.createElement('button')} satisfies NavigationDOMSlot<HTMLButtonElement>),decorateItem:()=>({destroy(){}})};createNavigationMenu(document.createElement('div'),options).destroy();owner.destroy();\n");
   if(kind==='react')await copyFile('tests/fixtures/navigation-slots-types.tsx',`${cwd}/navigation-slots-types.tsx`);
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',...(kind==='react'?['rich-navigation/app.tsx','navigation-slots-types.tsx']:['rich-navigation/types.ts'])],{cwd,stdio:'inherit'});
+  for (const name of ['calendar-month']) {
+    const directory=resolve(cwd,name),output=resolve('dist/'+name+'-'+kind);
+    await cp('examples/'+name+'-'+kind,directory,{recursive:true});
+    const result=await build({entryPoints:[directory+'/app.'+(kind==='react'?'tsx':'js')],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+    assert(Object.keys(result.metafile.inputs).every(file=>resolve(file).startsWith(cwd+'/')),'Interaction consumer escaped standalone install');
+    assert(!Object.keys(result.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Interaction consumer requires private CSS');
+    if(kind==='vanilla')assert(!Object.keys(result.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native interaction imported React');
+    await copyFile(directory+'/index.html',output+'/index.html');await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),output+'/theme-init.js');await writeFile(output+'/metafile.json',JSON.stringify(result.metafile,null,2));
+    if(kind==='react') {
+      await copyFile('tests/fixtures/'+name+'-types.tsx',cwd+'/'+name+'-types.tsx');
+      execFileSync('node',[root+'/node_modules/typescript/bin/tsc','--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',name+'/app.tsx',name+'-types.tsx'],{cwd,stdio:'inherit'});
+    }
+  }
   const widgets=resolve(cwd,'widgets'),widgetsOutput=resolve(`dist/widgets-${kind}`);await cp(`examples/widgets-${kind}`,widgets,{recursive:true});
   const widgetsBuild=await build({entryPoints:[`${widgets}/app.${kind==='react'?'tsx':'js'}`],outdir:widgetsOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
   assert(Object.keys(widgetsBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Widget consumer escaped standalone install');assert(!Object.keys(widgetsBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Widgets depend on private CSS');

@@ -173,3 +173,15 @@ Dialog 修复后、数值输入修复前的候选 `cfe37756f06a04dc03bbf4721397c
 跨引擎结果仅覆盖对应章节明确列出的专项，不代表三引擎运行了相同的全部用例。真实 OS 输入法、读屏器、自动填充/密码管理器、移动键盘及系统文件/日期/颜色窗口仍未实测。真实 BFCache 命中、所有 OS 缩放、实际 Wails/Electron/embed 窗口与 bridge IO 也未由合成生命周期或浏览器 fixture 证明。
 
 合成 fetch/数据和共享 wire fixture 不证明真实后端事务、数据库 COUNT、Cookie/CSRF/权限/tenant/脱敏、真实产品页面、生产性能、发布或部署通过。外部产品的结果不能替代本仓库验收。后续实现变更须核对新的 source/example generation，按受影响合同补证；若需要完整套件结论，应独立执行完整浏览器套件并报告真实结果。
+
+## 2026-10-15 公共交互扩展验收
+
+本轮从已验收的 7f7da180e4b29f872b0c79c6f989fb6edbe3d9f2 核对，实施前 main 为 17f202d，相关包实现无差异。仅修改 xui。所有新增消费者均通过独立 tarball 安装正式 ESM/CSS/types，原生不引入 React；不使用源码 alias 或私有 CSS。下列结果是库级正式消费者验收，不代表 xAgent 已升级或完成产品联调。
+
+| 能力 | 最终通过证据 | 范围 |
+| --- | --- | --- |
+| Calendar 受控月份 | model 16/16、calendar-month 与既有 widgets Calendar 浏览器 19/19；Chrome 真正 200% 缩放 6/6 | single/range、绝对定位、受控接受/拒绝、跨年/闰年、disabled、locale、焦点、浅/深/system、1280/390px、200% 根字号；真实缩放使用 Chrome 设置并校验 DPR×2、视口减半、根字号不变、CSS zoom=1/pinch=1 |
+
+构建、typecheck、check:tokens、check-docs 与 test:consumer 均通过。原生示例第一轮因 select 绑定转移 id 后误读 trigger、system 断言误认 data-theme 的失败已修正，最终复验通过；失败不计作通过。浏览器 JSON 保存于 .artifacts/calendar-month-browser-final.json 和 .artifacts/calendar-month-zoom-final.json。月份 API 未传时兼容原非受控行为，日期语义保持 ISO 公历与 UTC 字段。
+
+本轮浏览器为真实 Chromium；其他浏览器、读屏器及宿主产品现场未由这些结果推断通过。

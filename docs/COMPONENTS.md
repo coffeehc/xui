@@ -185,7 +185,9 @@ required 复选组表示至少选择一个当前已知选项，通过首个可�
 
 Command复用已安装的Combobox：inline列表、搜索、分组、空态、disabled、选择与键盘；只声明上述稳定组合，不照搬cmdk。原生输入保持DOM identity，aria-controls/activedescendant/selected/multiselectable同事实；ArrowUp/Down/Home/End跳过disabled，Enter执行，Escape清过滤而保留选择。action不作权限/副作用校验，也不自动等待/重放业务。需要远端搜索或更细peer部件时组合已有Combobox/Select，不能用私有默认样式补丁。
 
-Calendar使用一个框架无关model；更新一次发布一致快照，选相邻月份后保留所选日焦点。Arrow左右一天、上下七天、Home/End周端、PageUp/Down按月并夹到有效日，Enter/Space走按钮选择；禁用日期可焦点读取但不能选择，clear清空选择。月份查看不是业务查询，动画不等待操作。没有时间选择器、农历、复杂可用性/节假日或预约引擎。defaultMonth只定义初始视图；月份查看由库保存，runtime model可显式moveMonth，日期value由宿主按受控合同确认。
+Calendar使用一个框架无关model；更新一次发布一致快照，选相邻月份后保留所选日焦点。Arrow左右一天、上下七天、Home/End周端、PageUp/Down按月并夹到有效日，Enter/Space走按钮选择；禁用日期可焦点读取但不能选择，clear清空选择。月份查看不是业务查询，动画不等待操作。没有时间选择器、农历、复杂可用性/节假日或预约引擎。defaultMonth只定义初始视图；未传month时月份查看由库保存，month=YYYY-MM为受控视图。onMonthChange只通知用户翻月、跨月键盘或相邻月日期选择的请求；外部update({month})/React month变化不通知，不改变value，不触发onValueChange。原生model.setMonth(YYYY-MM)是绝对月份请求，moveMonth(delta)沿用相对移动；同月setMonth为no-op。受控宿主未确认时保持原查看月，焦点仅在现有42格内移动，接受请求后恢复目标日；外部跳月回该月首日，标题与grid保持一致。disabled仍允许浏览月份但禁止选择/清空，disabled日期可读取。年份严格0001..9999，无隐式时区转换。
+
+快速年月定位使用公开Input、SimpleSelect、Button与受控month组合，见[React](../examples/calendar-month-react/app.tsx)/[原生](../examples/calendar-month-vanilla/app.js)。日期与月份可独立受控；single/range不因翻月清空，locale只改变显示。defaultMonth的后续变化不重置视图；不通过修改value或重挂Calendar定位。
 
 ToggleGroup 的紧凑高度使用 `--toggle-height`，不继承普通 Button 的高度；文字放大仍可自然增高。InputGroup 的边框属于组外壳，内部单行/多行控件分别消费 `--input-group-control-min-height` / `--input-group-textarea-min-height`，扣除外壳边线后与独立 Input/Textarea 对齐；内嵌动作复用同一内部高度。默认值与覆盖由 [DESIGN](DESIGN.md#组件尺寸与职责) 定义，不在组件硬编码像素。
 
