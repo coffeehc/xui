@@ -2,9 +2,46 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## 组合组件与公共页面逐项收口（2026-10-14）
+
+承接下方基础层验收，本轮核对仓库已经公开的组合、通用页面与双端参考消费者。颜色、字体、密度、发丝线、焦点和状态继续消费同一 DESIGN 主题；产品私有组合及实际后端不属于本轮范围。
+
+| 组件族 / 页面 | 本轮核对的设计与交互合同 | 浏览器证据入口 |
+| --- | --- | --- |
+| AppHeader / HeaderBrand / 主题与语言工具 | 品牌与任务层级、紧凑工具间距、同一控件尺寸、窄屏换行、主题浮层和焦点 | `header-compact`、`header-controls`、`header-popup-brand` |
+| AppShell / MenuLayout / NavigationMenu / SidebarFooter | 选中与焦点独立、折叠菜单、窄屏抽屉、富导航、页脚和滚动归属 | `menu-layout`、`nav-contract`、`rich-navigation`、`sidebar-footer` |
+| Workspace / PageHeader / 页面插槽 | document/workspace 显式边界、自然页头和工具栏、正文占余高、空插槽不占位 | `workspace-layout`、`workspace-composition-contract`、`layout-typography` |
+| SearchToolbar / GroupedCombobox | 主查询先行、附加筛选收起、长值与窄屏、IME/草稿与真实键盘选择 | `search-toolbar`、`grouped-search` |
+| MetricCard | 单层 Surface、被动名称/值语义、mono/tabular 数字、宽标记换行而不挤成竖排、宿主更新 | `metric-card`、`composition-closeout` |
+| DataTable / 内置筛选与分页 | 默认铺满、显式列宽作下限、表内横滚、单框三轨、页脚自然高、长/空/少量数据、受控 offset/cursor、刷新保留焦点 | `data-table`、`data-table-widths`、`data-table-layout`、`data-table-caption-shape`、`data-table-feedback`、`data-table-cursor`、`data-table-focus` |
+| AuthPage / LoginPage / AdminSetupPage | 单列紧凑表单、密码强度条、提交时错误、空反馈无占位、busy 禁重复、无登录取消、明确导航和密码清理 | `auth-page`、`auth-visual-system`、`auth-feedback-readable`、`login`、`login-layout`、`login-visual`、`login-extensions`、`login-navigation`、`auth-bearer`、`admin-setup` |
+| ApiKeyManager | 名称与真实状态前置、刷新/创建归页头、轻量行操作、表内完整元数据、一次性 secret、局部错误、显式复制/写入核验 | `api-key`、`api-key-v2`、`composition-closeout`、`dialog-readability` |
+| BusinessLogExplorer | 摘要/结果前置、双端同一筛选 Disclosure、操作人/动作/时间不逐字折行、快照分页、按需详情 | `business-log`、`composition-closeout` |
+| StructuredLogExplorer | 摘要/等级前置、累计与命中数区分、精确时间/计数、分组与观察切换、详情权限和保留期事实 | `structured-log`、`composition-closeout` |
+| 表单 / 列表 / 详情参考页与局部反馈 | 公共组件构成任务顺序、准确可访问名称、错误完整可读、显式重试与迟到隔离、无闲置反馈空白 | `foundation`、`error-layout`、`http`、`capabilities`、`dom-id` |
+| 上述组合中的 Dialog / Sheet | 窄屏/长文/根字号 200%、关闭后回到所属动作、浏览器原生回焦点与宿主新焦点分离 | `responsive-overlays`、`focus-boundaries`、`peer-contract`、`composition-closeout` |
+
+本轮修正三类记录页的重复可见表题、空反馈占位、行操作权重和窄屏逐字折行；记录主列显式消费派生变量，其他元数据在表内横滚，详情标识符和时间使用技术文字角色。MetricCard 宽标记优先换行。原生详情先关闭再隐藏内容；共享 Dialog 识别 Safari 原生恢复到打开前容器的行为，继续尊重新的宿主焦点、恢复策略和叠层边界，并将 macOS Option+Tab 纳入同一模态焦点循环。没有增加查询、认证或写入 owner。规范为 0.10.0、376 tokens，新增变量只从既有字段尺度派生。
+
+最终 package source generation 为 `25b3c7ca1b2828005d4e94cd893e486d67aa4d42bf68e85c5ee5a056a71da727`，example generation 为 `250f6b2d697271a4a4facde722992b368f93308f6b2b9351cfbc01ccc1a17897`。三包产物与正式 tarball consumer 使用同代际；环境沿用下方基础验收的 macOS、Node、三引擎及字体版本。
+
+| 已执行门禁 | 结果与代际 | 原始证据 |
+| --- | --- | --- |
+| 最终构建 / tokens / types / 正式 consumer | 通过；376 tokens、231 文件、2191 声明；公开 ESM/CSS/types、双端 lazy worker 与布局门禁通过；critical CSS gzip 为 16384 bytes，未提高原 16384-byte 预算 | `.artifacts/composition-build-closeout-pass.log`、`.artifacts/composition-release-gates.log`、`.artifacts/performance-baseline.json` |
+| 最终完整单测 | 473/473 通过，含原生回焦点、保留新宿主焦点、禁用恢复策略与 Option+Tab 双向边界四个新增回归 | `.artifacts/composition-release-gates.log` |
+| Chromium 组合与页面主运行 | 首轮候选 `51f7c5b89a30f91968db56bcfaca77ec3f35c12459b406cca6d5f2af065b4056`，39 文件 879/881 通过；两项失败为改列序后旧最近使用列索引 | `.artifacts/composition-chromium-main.json`、同名日志 |
+| Chromium 表格与记录页复验 | 后续候选 `585be26c3a81e2b5dbcab5a6245d43068e6afe05b933f5a9807b06a37bda3097`，9 文件 172/172 通过；包括两项改用具名表头定位后的原断言，以及三轨/分页回归 | `.artifacts/composition-chromium-affected-final.json`、同名日志 |
+| 最终 Chromium 记录页与指标卡 | API Key v1/v2、两类日志与 MetricCard，5 文件 62/62 通过 | `.artifacts/composition-release-business-chromium.json`、同名日志 |
+| 最终 Chromium 共享交互与 Dialog | 33/33 通过；foundation 浮层键盘交互、peer finalFocus、响应式 Dialog/Confirm/Sheet、长警告与原生 Dialog 焦点/滚动边界 | `.artifacts/composition-release-dialog-chromium.json`、同名日志与用例清单 |
+| 最终 Firefox / WebKit 功能回归 | 各 68/68 通过，无跳过或 flaky；API Key v1/v2、两类日志、MetricCard、长警告，覆盖真实键盘、提交/取消、读取失败与迟到清理 | `.artifacts/composition-release-functional-cross.json`、同名日志 |
+| 最终关键设计专项 | Chromium 8/8、Firefox 8/8、WebKit 8/8；React/原生、light/dark/system、1280/390px、根字号 200% 关闭回焦点、元数据单行与 MetricCard 宽标记 | `.artifacts/composition-release-closeout-chromium.json`、`.artifacts/composition-release-closeout-cross.json`、对应截图目录 |
+| 最终 watch / cold-start | 各 1/1 通过；watch 约 148 秒，隔离副本检查真实重建/失败恢复与 Vite 冷启动 | `.artifacts/composition-release-watch.log`、`.artifacts/composition-release-cold-start.log` |
+
+已查看最终三类记录页的深浅主题和窄屏截图，以及填充完成的 DataTable、紧凑认证页、长标记 MetricCard 和日志详情构图。首轮 WebKit 原生回焦点、Option+Tab 越界及 CSS 超预算候选的失败日志保留，均不计作通过。跨引擎遍历采用平台真实按键，WebKit 用 Option+Tab；仍断言准确控件顺序、循环与回焦点，不直接设置后续焦点或接受窗口外焦点。上表分次运行不能相加为完整套件全绿；未受影响的族使用主运行证据，最终受影响范围单独复验。
+
 ## 基础层逐项收口（2026-10-14）
 
-本轮只处理基础主题、控件与交互原语；DataTable、业务导航、认证、API Key 和其他页面组合不在本轮改造范围。它们所在示例仅作为公共基础 CSS 的真实消费载体，不能据此宣布上层组合或产品页面完成。下面以组件族列出逐项核对范围；不适用的交互状态不添加到被动组件上。
+基础层这一轮只处理基础主题、控件与交互原语；DataTable、业务导航、认证、API Key 和其他页面组合不在当时改造范围。它们所在示例仅作为公共基础 CSS 的真实消费载体，不能据此宣布上层组合或产品页面完成。下面以组件族列出逐项核对范围；不适用的交互状态不添加到被动组件上。
 
 | 基础组件 | 逐项核对的合同与证据入口 |
 | --- | --- |
@@ -91,7 +128,7 @@
 
 ## 认证页验收
 
-以下是登录、AuthPage 与 AdminSetupPage 的持续验收目标，不是逐项完成表。尺寸和具体 token 以 [DESIGN 的认证布局](DESIGN.md#公共登录页布局与主题) 为准，接口和生命周期见 [登录与会话](PUBLIC_API.md#认证会话)，新密码规则见 [密码输入](COMPONENTS.md#密码输入)。
+以下是登录、AuthPage 与 AdminSetupPage 的持续验收合同；本轮执行结果见首节的组合组件验收。尺寸和具体 token 以 [DESIGN 的认证布局](DESIGN.md#公共登录页布局与主题) 为准，接口和生命周期见 [登录与会话](PUBLIC_API.md#认证会话)，新密码规则见 [密码输入](COMPONENTS.md#密码输入)。
 
 | 范围 | 需要的可观察证据 |
 | --- | --- |
@@ -110,8 +147,8 @@
 
 ## 验收范围与未完成项
 
-基础层的逐项范围与当前执行结果见本页首节；组合与通用页面继续按同一候选逐层验收，本轮没有逐条验收其全部合同。不能由生成器通过推断每个 token 的实际绘制正确，也不能由基础层或某个合成页面的绿色结果宣布其余产品页面完成。ThemeController 只公开 light/dark/system，没有已发布的 styleId/profile 注册表或风格切换 API。
+基础层、组合与通用页面的逐项范围及分次执行结果见本页对应章节；验收结论只覆盖表中列出的设计和交互合同。不能由生成器通过推断每个 token 的实际绘制正确，也不能由公共组件或合成页面的绿色结果宣布其余产品页面完成。ThemeController 只公开 light/dark/system，没有已发布的 styleId/profile 注册表或风格切换 API。
 
-本轮跨引擎结果仅覆盖首节明确列出的专项，不代表三引擎运行了相同的全部用例。真实 OS 输入法、读屏器、自动填充/密码管理器、移动键盘及系统文件/日期/颜色窗口仍未实测。真实 BFCache 命中、所有 OS 缩放、实际 Wails/Electron/embed 窗口与 bridge IO 也未由合成生命周期或浏览器 fixture 证明。
+跨引擎结果仅覆盖对应章节明确列出的专项，不代表三引擎运行了相同的全部用例。真实 OS 输入法、读屏器、自动填充/密码管理器、移动键盘及系统文件/日期/颜色窗口仍未实测。真实 BFCache 命中、所有 OS 缩放、实际 Wails/Electron/embed 窗口与 bridge IO 也未由合成生命周期或浏览器 fixture 证明。
 
 合成 fetch/数据和共享 wire fixture 不证明真实后端事务、数据库 COUNT、Cookie/CSRF/权限/tenant/脱敏、真实产品页面、生产性能、发布或部署通过。外部产品的结果不能替代本仓库验收。后续实现变更须核对新的 source/example generation，按受影响合同补证；若需要完整套件结论，应独立执行完整浏览器套件并报告真实结果。

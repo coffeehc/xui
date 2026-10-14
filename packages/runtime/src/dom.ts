@@ -59,7 +59,7 @@ export function createTabsController(root:HTMLElement,options:{value?:string;def
 const dialogStacks=new WeakMap<Document,HTMLDialogElement[]>();
 export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElement,options:OpenOptions={}){
   const releaseLayout=observeDialogLayout(dialog);
-  let dead=false,opened=false,shouldRestore=true,focusVersion=0,closeDetails:DialogCloseDetails={reason:'native'};const controlled=options.open!==undefined;trigger.setAttribute('aria-haspopup','dialog');if(dialog.id)trigger.setAttribute('aria-controls',dialog.id);
+  let dead=false,opened=false,shouldRestore=true,focusVersion=0,nativeReturnFocus:Element|null=null,closeDetails:DialogCloseDetails={reason:'native'};const controlled=options.open!==undefined;trigger.setAttribute('aria-haspopup','dialog');if(dialog.id)trigger.setAttribute('aria-controls',dialog.id);
   const stack=dialogStacks.get(dialog.ownerDocument)??[];dialogStacks.set(dialog.ownerDocument,stack);const remove=()=>{const index=stack.indexOf(dialog);if(index>=0)stack.splice(index,1);};
   const syncOpen=(next:boolean,details:DialogCloseDetails={reason:'imperative'})=>{
     if(dead)return;
@@ -83,6 +83,9 @@ export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElem
       nativeTarget?.setAttribute('autofocus','');
       remove();stack.push(dialog);opened=true;shouldRestore=true;closeDetails={reason:'native'};
       try{
+        // Safari does not focus a clicked button. Native close may therefore
+        // restore another pre-dialog element before our close event runs.
+        nativeReturnFocus=dialog.ownerDocument.activeElement;
         try{dialog.showModal();}catch(error){if(version===focusVersion){opened=false;remove();}throw error;}
         // A focus handler may close/reopen, destroy, or hand focus to another
         // owner. Do not override it, even if the new focus stays in this dialog.
@@ -107,9 +110,11 @@ export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElem
   const click=(event:Event)=>request(true,'trigger',event);
   const cancel=(event:Event)=>{event.preventDefault();if(event.target===dialog&&stack.at(-1)===dialog)request(false,'escape',event);};
   const closeClick=(event:MouseEvent)=>{const button=(event.target as HTMLElement).closest<HTMLElement>('[data-xui-close]');if(button&&button.closest('dialog')===dialog&&!disabled(button))request(false,'close',event);};
-  const key=(event:KeyboardEvent)=>{if(!dialog.open||stack.at(-1)!==dialog||event.defaultPrevented||event.key!=='Tab'||event.altKey||event.ctrlKey||event.metaKey)return;const targets=focusable(dialog),active=dialog.ownerDocument.activeElement;
+  // Option+Tab is WebKit's full-control traversal on macOS; its boundaries
+  // belong to the same modal focus cycle as ordinary Tab.
+  const key=(event:KeyboardEvent)=>{if(!dialog.open||stack.at(-1)!==dialog||event.defaultPrevented||event.key!=='Tab'||event.ctrlKey||event.metaKey)return;const targets=focusable(dialog),active=dialog.ownerDocument.activeElement;
     if(!targets.length){event.preventDefault();dialog.focus();return;}if(event.shiftKey&&active===targets[0]||!event.shiftKey&&active===targets.at(-1)||!dialog.contains(active)){event.preventDefault();(event.shiftKey?targets.at(-1):targets[0])?.focus();}};
-  const closed=()=>{if(dead||dialog.open||!opened)return;opened=false;remove();trigger.setAttribute('aria-expanded','false');const policy=typeof options.restoreFocus==='function'?options.restoreFocus(closeDetails):options.restoreFocus;if(policy===false||!shouldRestore)return;const doc=dialog.ownerDocument;restore(doc,trigger,options.finalFocus,target=>{const active=doc.activeElement,top=stack.at(-1);return !dead&&!dialog.open&&(active===doc.body||active===trigger||dialog.contains(active))&&(!top||!!target&&top.contains(target));});};
+  const closed=()=>{if(dead||dialog.open||!opened)return;opened=false;remove();trigger.setAttribute('aria-expanded','false');const policy=typeof options.restoreFocus==='function'?options.restoreFocus(closeDetails):options.restoreFocus;if(policy===false||!shouldRestore)return;const doc=dialog.ownerDocument;restore(doc,trigger,options.finalFocus,target=>{const active=doc.activeElement,top=stack.at(-1);return !dead&&!dialog.open&&(active===doc.body||active===trigger||active===nativeReturnFocus||dialog.contains(active))&&(!top||!!target&&top.contains(target));});};
   trigger.addEventListener('click',click);dialog.addEventListener('cancel',cancel);dialog.addEventListener('click',closeClick);dialog.addEventListener('keydown',key);dialog.addEventListener('close',closed);
   try{syncOpen(options.open??options.defaultOpen??false);}catch(error){releaseLayout();trigger.removeEventListener('click',click);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',closeClick);dialog.removeEventListener('keydown',key);dialog.removeEventListener('close',closed);throw error;}
   return {getOpen:()=>dialog.open,open:()=>request(true),close:(reason='imperative')=>request(false,reason),syncOpen,destroy(){if(dead)return;syncOpen(false,{reason:'destroy'});remove();dead=true;releaseLayout();trigger.removeEventListener('click',click);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',closeClick);dialog.removeEventListener('keydown',key);dialog.removeEventListener('close',closed);}};

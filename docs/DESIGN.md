@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.9.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.10.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -563,6 +563,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     --data-table-filter-min: 9rem;
     --data-table-min-block-size: calc(var(--control-height) * 4);
     --table-min-inline-size: calc(var(--control-height) * 12);
+    --table-primary-min-inline-size: var(--layout-field-min);
     --z-sticky-intersection: calc(var(--z-sticky) + 1);
     --avatar-size-lg: calc(var(--control-height) * 1.5);
     --calendar-max-inline-size: calc(var(--control-height) * 9);
@@ -1350,6 +1351,8 @@ headerSlots.leading是可选、默认空且不收缩的最前区域，位于自�
 DataTable以内部单一布局观察器测实际table/thead/首末行高度和computed scroll-padding/滚动条，取完整内容高与可读边缘行高度的较小值作为Grid表体轨道下限，再加组件自身toolbar/footer（含反馈）的实际高度与frame边界作为组件根的实测最小高度；workspace与原token取较大者，document不加根下限，不用CSS min-content查询替代实际chrome。只观察内容输入，不观察写入尺寸的root/frame；不按行数分类、不硬编码表头高、不新增宿主布局参数。超高chrome由完整frame自然撑起并由祖先滚动，footer始终属于外框。读写按帧合并、无变化不写、隐藏后恢复重测、销毁释放；不承诺任意超高中间行完整同屏，允许既有stickyHeader关闭或document布局。此高度owner不修改独立列宽observer与colgroup。
 
 DataTable默认横向铺满，通常省略列宽；仅在列内容或用户尺寸配置确有需要时，通过公共width提供数字像素、CSS长度、百分比和calc()/clamp()下限。未配置列优先吸收余宽，全部配置时由浏览器在这些列间分配余宽；下限总和超出表体则在表体内横滚，不压缩已配置下限。这不是重定义品牌色、字体、间距或装饰token的许可。库用非交互、零高测量轨道让浏览器以表体可用宽度解析百分比表达式，再由同一colgroup统一表头与数据列；测量不得制造滚动范围、可访问节点或另一套宿主布局逻辑，更新/销毁必须释放观察。未配置宽度保持原有自动表格算法，完整迁移及长内容边界见DataTable合同。
+
+通用记录页按任务把名称/摘要与真实状态前置，不重复页面标题作可见表题；表格仍有准确可访问名称。显式 xui-record-table 中的主列使用 table-primary-min-inline-size（默认复用字段最小宽度），短状态、行操作、时间和计数保留完整词组，次要列在表内横滚；不将此规则施加到普通 Table 或用户自定义长正文列。空反馈与隐藏辅助动作不预留占位，实际错误及风险仍完整可读。
 
 空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，既有分页保持受控；本地分页由宿主筛选/排序后切片并发布事实，服务端分页保留确认响应且不二次切片。未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。列表wire由commons/webfacade统一：total省略表示未计算，0是真实零；next_cursor缺失表示未声明，非空字符串是opaque续页token，null是cursor明确末页，可与total共存。DataTable保留旧offset类型与默认值，新增显式cursor受控模式复用框内前后控件；即使有total也不算编号页数，宿主唯一owner负责历史与响应确认。完整API与双端公共消费见[DataTable](COMPONENTS.md#数据表格)。
 

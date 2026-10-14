@@ -43,7 +43,7 @@ test('MetricCard uses existing statistical and Surface tokens with content-drive
   assert.equal(root.padding,'var(--metric-padding)');assert.equal(content.gap,'var(--metric-gap)');
   assert.match(label.font,/var\(--font-size-body-xs\)/);assert.equal(label.color,'var(--muted-foreground)');
   assert.match(value.font,/var\(--font-weight-heading\) var\(--font-size-metric\)\s*\/\s*var\(--line-height-metric\) var\(--font-mono\)/);assert.equal(value['font-variant-numeric'],'tabular-nums');assert.equal(value['overflow-wrap'],'anywhere');assert.equal(label['overflow-wrap'],'anywhere');
-  assert.equal(label['min-inline-size'],'min-content');assert.equal(label['max-inline-size'],'100%');
+  assert.equal(label['min-inline-size'],'0');assert.equal(label.flex,'1 1 auto');assert.equal(label['max-inline-size'],'100%');
   assert.equal((await declarations('.xui-metric-card-marker:empty')).display,'none');
   const surface=await declarations('.xui-surface');assert.equal(surface.background,'var(--card-background)');assert.equal(surface['border-radius'],'var(--card-radius)');
   for(const style of [root,content,label,value])for(const key of ['height','block-size','width','inline-size'])assert.equal(style[key],undefined,`No fixed ${key}`);

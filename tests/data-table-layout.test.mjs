@@ -101,7 +101,7 @@ test('component minimum follows measured chrome changes and preserves layout-spe
 test('CSS and measured geometry retain the same three-track frame ownership',()=>{
   const css=readFileSync(new URL('../packages/theme/src/table.css',import.meta.url),'utf8');
   assert.match(css,/grid-template-rows:auto minmax\(var\(--control-height\),1fr\) auto/);
-  assert.match(css,/\.xui-data-table-tools \{grid-row:1;\}/);
+  assert.match(css,/\.xui-data-table-tools \{[^}]*grid-row:1;[^}]*\}/);
   assert.match(css,/\.xui-data-table-body \{grid-row:2;\}/);
   assert.match(css,/\.xui-data-table-footer \{grid-row:3;\}/);
   const f=fixture();let owner;try{owner=observeDataTableLayout(f.frame,f.body,f.table);f.tick();assert.equal(f.frame.style.gridTemplateRows,'auto minmax(152px, 1fr) auto');}finally{owner?.destroy();f.restore();}

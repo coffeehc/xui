@@ -51,10 +51,10 @@ for(const kind of ['react','vanilla']){
     }
   });
 
-  test(`${kind} MetricCard preserves host updates, marker keyboard action and RTL`,async({page})=>{
+  test(`${kind} MetricCard preserves host updates, marker keyboard action and RTL`,async({page,browserName})=>{
     await setup(page,kind);await page.setViewportSize({width:320,height:900});
     const action=page.getByRole('button',{name:'查看说明',exact:true}),update=page.getByRole('button',{name:'更新示例',exact:true});
-    await update.focus();await page.keyboard.press('Tab');await expect(action).toBeFocused();await page.keyboard.press('Enter');await expect(page.getByTestId('marker-result')).toHaveText('说明已查看 1 次');
+    await update.focus();await page.keyboard.press(browserName==='webkit'?'Alt+Tab':'Tab');await expect(action).toBeFocused();await page.keyboard.press('Enter');await expect(page.getByTestId('marker-result')).toHaveText('说明已查看 1 次');
     await page.keyboard.press('Space');await expect(page.getByTestId('marker-result')).toHaveText('说明已查看 2 次');
     expect(await action.evaluate(node=>getComputedStyle(node).outlineStyle)).not.toBe('none');
     await page.evaluate(()=>{window.metricAction=document.querySelector('[data-testid="action-card"] button');});

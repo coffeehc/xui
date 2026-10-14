@@ -82,7 +82,7 @@ open/value 受控时仅发请求，宿主调用 syncOpen/syncValue 更新事实�
 
 React DataRegion 只在调用方提供 feedback prop（包含 null）时常驻一个反馈槽；原生同角色使用公开 `.xui-feedback-slot`。共用 `--feedback-slot-block-size`，由已有字体/控件/内距/焦点 token 派生；错误完整保留，可在局部滚动并通过键盘访问动作。`.xui-reserved-action[data-inactive='true']` 仅隐藏辅助动作的绘制，调用方同时设置 aria-hidden、tabIndex=-1 与 disabled，不得保留不可见可交互控件。
 
-DataTable 双端始终保留其状态行；登录页空反馈/隐藏动作不占位，实际消息自然增长，并用闲置/忙状态文案的实际尺寸约束主动作。API Key 与两类日志在页面局部显示请求反馈；原生列表只在实际顺序改变时移动 keyed 行，失败和同记录恢复不重建行控件。API Key 写入结果未知时读取普通列表一次，结束等待后允许用户手动再试，不自动重发写请求；瞬时 secret 释放、认证与权限规则见 [API Key 管理](PUBLIC_API.md#api-key-管理)。
+DataTable 双端始终保留其状态行；登录页空反馈/隐藏动作不占位，实际消息自然增长，并用闲置/忙状态文案的实际尺寸约束主动作。API Key 与两类日志的空反馈和闲置取消动作不占位；真实反馈仍在所属区域完整显示。API Key 的刷新与创建同属页头动作组，状态紧邻名称；业务日志把摘要与结果前置，筛选使用同一个 Disclosure 外观。列表与详情的关闭先保留所属焦点事实，再隐藏内容，避免浏览器自动失焦被误认作宿主主动转移。原生列表只在实际顺序改变时移动 keyed 行，失败和同记录恢复不重建行控件。API Key 写入结果未知时读取普通列表一次，结束等待后允许用户手动再试，不自动重发写请求；瞬时 secret 释放、认证与权限规则见 [API Key 管理](PUBLIC_API.md#api-key-管理)。
 
 这保证已加载应用在请求失败时的结构稳定，不保证首次从未加载资源且完全离线时可用。核心主题 CSS/字体/图标不依赖远端 CDN，但宿主配置的 logo、图片或延迟模块仍依赖其资源可用性。不增加 Service Worker、凭据持久化或自动重放。实际验证范围见 [失败布局验证](VALIDATION.md#失败复验与限制)。
 
@@ -360,7 +360,7 @@ React 正式入口为 `@coffeehc/xui-react/metric-card`，根入口同时导出 
 
 #### 主题、长内容与采用
 
-名称用 body-xs/muted，值用 metric/heading/tabular-nums/mono，内距和名称到值的间距用 `metric-padding`/`metric-gap`；边框、背景和圆角仍由 Surface 的 card token 提供。没有新增默认设计值或固定宽高。长名称、连续长数字和字符串自然换行；标记按空间换行到逻辑行尾，卡片高度随内容增长。Grid 的列数、自定义宽度与整体布局留给调用方。
+名称用 body-xs/muted，值用 metric/heading/tabular-nums/mono，内距和名称到值的间距用 `metric-padding`/`metric-gap`；边框、背景和圆角仍由 Surface 的 card token 提供。没有新增默认设计值或固定宽高。长名称、连续长数字和字符串自然换行；名称按自然内容参与分行，宽标记空间不足时换到逻辑行尾，不把短名称挤成竖排。卡片高度随内容增长。Grid 的列数、自定义宽度与整体布局留给调用方。
 
 组件、公开 CSS、正式导出和空值/标记的单元测试见 [metric-card.test.mjs](../tests/metric-card.test.mjs)；独立消费者的浅/深/system、320px/宽屏、276px 近满宽标记边界、长内容、200% 根文字、动态更新和交互标记检查见 [metric-card.spec.mjs](../tests/browser/metric-card.spec.mjs)。实际已跑范围与未测边界见 [VALIDATION.md](VALIDATION.md)。
 
@@ -726,6 +726,8 @@ update 为字段合并：省略保留现值，显式 null/undefined 清空对应
 `Dialog.Content.keepMounted` 默认 false。AppShell 为复用同一侧栏会显式启用它；关闭时仍隐藏并保持模态隔离，普通 Dialog 默认不变。
 
 ## 数据表格
+
+通用记录页复用 Table 原语与公共 `xui-record-table` 排版：`xui-table-primary` 显式标识任务主列，使用 `--table-primary-min-inline-size`；`xui-table-label` 保留完整元数据词组，`xui-code xui-table-value` 组合采用 mono/tabular 与单行时间/计数。次要列在表内横滚，不压成逐字竖排。行操作复用 ghost/xs Button，真正危险确认仍在 Dialog 中；不新增请求、排序或权限 owner。表格通过准确的可访问名称识别，不重复可见页标题。这些角色只在有阅读需要的列显式采用，不为普通 Table 强制列宽。一次性 Key 的读取区域消费既有 mono/tabular 文字角色，保留 Textarea 的尺寸、焦点与选择复制语义。
 
 正式入口：React `@coffeehc/xui-react/data-table`；原生 `@coffeehc/xui-runtime/data-table-dom`；共享事实与类型 `@coffeehc/xui-runtime/data-table`。三者也从各自根入口导出。默认皮肤属于公共 `@coffeehc/xui-theme/table.css`，完整 `style.css` 已包含它。原有 Table/TableContainer、Toolbar/Field、Pagination、DataRegion/反馈原语保持原语合同，不会自动升级所有旧表格。
 

@@ -11,13 +11,14 @@ for(const kind of ['react','vanilla']){
   await openKeys(page,kind);await page.evaluate(()=>window.capabilityDemo.setMode('update','network'));await page.getByRole('button',{name:'Edit 示例过期令牌',exact:true}).click();const dialog=page.getByRole('dialog');await page.getByRole('textbox',{name:'名称',exact:true}).fill('Unconfirmed edit');await page.getByRole('button',{name:'Save changes',exact:true}).click();await expect(dialog.getByRole('alert')).toContainText('The update result is unconfirmed. Check the list before saving again.');await expect(page.getByRole('button',{name:'Save changes',exact:true})).toBeEnabled();let requests=await page.evaluate(()=>window.capabilityDemo.getRequests());expect(requests.filter(item=>item.method==='PUT')).toHaveLength(1);expect(requests.filter(item=>item.method==='GET'&&item.path==='/api/v1/api-keys')).toHaveLength(2);
   await page.evaluate(()=>window.capabilityDemo.setMode('update','ok'));await page.getByRole('button',{name:'Save changes',exact:true}).click();await expect(dialog).toHaveCount(0);requests=await page.evaluate(()=>window.capabilityDemo.getRequests());const updates=requests.filter(item=>item.method==='PUT');expect(updates).toHaveLength(2);expect(updates[0].body.expected_version).toBe('1');expect(updates[1].body.expected_version).toBe('1');expect(JSON.stringify(updates)).not.toContain('operation_id');expect(JSON.stringify(updates)).not.toContain('fingerprint');expect(await page.evaluate(()=>window.capabilityDemo.keyController.readSecret())).toBeNull();
  });;
- test(`${kind} v2 narrow enlarged edit keyboard and cancellation retain metadata`,async({page})=>{
+ test(`${kind} v2 narrow enlarged edit keyboard and cancellation retain metadata`,async({page,browserName})=>{
   await page.setViewportSize({width:390,height:720});await page.emulateMedia({reducedMotion:'reduce'});await openKeys(page,kind);await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});await page.getByRole('button',{name:'Edit 示例过期令牌',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
   const name=dialog.getByRole('textbox',{name:'名称',exact:true}),write=dialog.getByRole('checkbox',{name:'写入资料',exact:true}),enabled=dialog.getByRole('checkbox',{name:'Enabled',exact:true}),cancel=dialog.getByRole('button',{name:'取消',exact:true}),save=dialog.getByRole('button',{name:'Save changes',exact:true});
   await expect(name).toBeFocused();
-  // BaseUI's focus guards enqueue the wrap target in requestAnimationFrame.
-  // Await the exact next control, never manually focus or accept background focus.
-  for(const target of [write,enabled,cancel,save,name,write,enabled,cancel]){await page.keyboard.press('Tab');await expect(target).toBeFocused();expect(await dialog.evaluate(element=>element.contains(document.activeElement))).toBe(true);}
+  // WebKit's macOS full-control traversal is Option+Tab. BaseUI's focus
+  // guards enqueue the wrap target; still await each exact control.
+  const forward=browserName==='webkit'?'Alt+Tab':'Tab';
+  for(const target of [write,enabled,cancel,save,name,write,enabled,cancel]){await page.keyboard.press(forward);await expect(target).toBeFocused();expect(await dialog.evaluate(element=>element.contains(document.activeElement))).toBe(true);}
   await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);expect(await page.evaluate(()=>window.capabilityDemo.getRequests().filter(item=>item.method==='PUT'))).toHaveLength(0);await expect(page.getByRole('button',{name:'Edit 示例过期令牌',exact:true})).toBeFocused();
  });
 }

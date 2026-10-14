@@ -106,3 +106,33 @@ test('confirmed controlled state can open through another action while the prima
   const f=fixture();f.trigger.disabled=true;const owner=createDialogController(f.dialog,f.trigger,{open:false});
   owner.open();assert.equal(f.dialog.open,false);owner.syncOpen(true);assert.equal(f.dialog.open,true);owner.syncOpen(false);assert.equal(f.dialog.open,false);owner.destroy();
 });
+
+test('native close returning to the pre-dialog container still honors explicit final focus',()=>{
+  const f=fixture(),prior=f.doc.createElement('prior-container');f.doc.activeElement=prior;
+  f.dialog.close=()=>{f.dialog.open=false;f.doc.activeElement=prior;f.dialog.dispatchEvent(new Event('close'));};
+  const owner=createDialogController(f.dialog,f.trigger,{finalFocus:f.trigger});owner.syncOpen(true);owner.syncOpen(false);
+  assert.equal(f.doc.activeElement,f.trigger);owner.destroy();
+});
+
+test('a newer host focus before the asynchronous close event is preserved',()=>{
+  const f=fixture(),prior=f.doc.createElement('prior-container'),newer=f.doc.createElement('new-host-target');f.doc.activeElement=prior;
+  f.dialog.close=()=>{f.dialog.open=false;f.doc.activeElement=prior;};
+  const owner=createDialogController(f.dialog,f.trigger,{finalFocus:f.trigger});owner.syncOpen(true);owner.syncOpen(false);
+  newer.focus();f.dialog.dispatchEvent(new Event('close'));assert.equal(f.doc.activeElement,newer);owner.destroy();
+});
+
+test('native pre-dialog focus recognition does not override a disabled restore policy',()=>{
+  const f=fixture(),prior=f.doc.createElement('prior-container');f.doc.activeElement=prior;
+  f.dialog.close=()=>{f.dialog.open=false;f.doc.activeElement=prior;f.dialog.dispatchEvent(new Event('close'));};
+  const owner=createDialogController(f.dialog,f.trigger,{restoreFocus:false,finalFocus:f.trigger});owner.syncOpen(true);owner.syncOpen(false);
+  assert.equal(f.doc.activeElement,prior);owner.destroy();
+});
+
+test('native modal keeps platform Option+Tab inside both focus boundaries',()=>{
+  const f=fixture(),owner=createDialogController(f.dialog,f.trigger);owner.syncOpen(true);
+  const tab=extra=>{const event=new Event('keydown',{cancelable:true});Object.assign(event,{key:'Tab',altKey:true,ctrlKey:false,metaKey:false,shiftKey:false,...extra});f.dialog.dispatchEvent(event);return event;};
+  f.close.focus();assert.equal(tab().defaultPrevented,true);assert.equal(f.doc.activeElement,f.overview);
+  assert.equal(tab({shiftKey:true}).defaultPrevented,true);assert.equal(f.doc.activeElement,f.close);
+  for(const modifier of ['ctrlKey','metaKey']){assert.equal(tab({[modifier]:true}).defaultPrevented,false);assert.equal(f.doc.activeElement,f.close);}
+  owner.destroy();
+});

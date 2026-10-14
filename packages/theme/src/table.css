@@ -31,9 +31,8 @@
   .xui-data-table[data-layout='document'] {flex:none;min-block-size:0;}
   .xui-data-table[data-layout='workspace'] {block-size:100%;min-block-size:var(--data-table-min-block-size);}
   .xui-data-table-tools,.xui-data-table-feedback {flex:none;min-inline-size:0;}
-  .xui-data-table-tools {padding:var(--space-content-gap);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
+  .xui-data-table-tools {grid-row:1;padding:var(--space-content-gap);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
   .xui-data-table-frame {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(var(--control-height),1fr) auto;flex:1 1 auto;min-block-size:0;min-inline-size:0;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
-  .xui-data-table-tools {grid-row:1;}
   .xui-data-table-body {grid-row:2;}
   .xui-data-table-footer {grid-row:3;}
   /* One colgroup owns all tracks. Only opted-in tables stop content from resizing columns. */
@@ -55,7 +54,7 @@
      Full host messages remain readable; narrow/long feedback may grow the footer. */
   .xui-data-table-summary {display:flex;align-items:center;flex-wrap:wrap;flex:1 1 var(--layout-field-long-min);min-inline-size:min(100%,var(--layout-field-long-min));max-inline-size:100%;min-block-size:var(--control-height);gap:var(--space-control-gap);}
   .xui-data-table-count {min-inline-size:0;}
-  .xui-data-table-feedback {min-inline-size:0;max-inline-size:100%;}
+  .xui-data-table-feedback {max-inline-size:100%;}
   .xui-data-table-feedback:empty {display:none;}
   .xui-data-table-feedback .xui-state {flex-direction:row;flex-wrap:wrap;align-items:center;min-block-size:var(--control-height);padding:0;}
   .xui-data-table-feedback .xui-state>* {min-inline-size:0;max-inline-size:100%;}
@@ -64,10 +63,18 @@
   .xui-data-table-page-size>.xui-select {inline-size:auto;max-inline-size:100%;}
   .xui-data-table-page-size .xui-select-control {flex:none;}
   .xui-data-table-page-size .xui-select-control>.xui-select {inline-size:auto;max-inline-size:100%;}
-  .xui-data-table-footer>.xui-pagination {flex-wrap:wrap;}
   .xui-data-table-footer .xui-button {white-space:normal;overflow-wrap:anywhere;}
   .xui-data-table-toolbar {align-items:flex-end;}
   .xui-data-table-toolbar>.xui-data-table-filter {flex:0 1 var(--data-table-filter-min);min-inline-size:min(100%,var(--data-table-filter-min));max-inline-size:100%;}
   .xui-data-table-toolbar>.xui-data-table-filter[data-grow='true'] {flex:1 1 var(--layout-field-long-min);}
   .xui-data-table-toolbar>* {max-inline-size:100%;}
+}
+
+@layer xui-components {
+  /* Opted-in record views keep their task column readable; secondary facts
+     remain in the table's own horizontal scrollport. */
+  .xui-record-table .xui-table-primary {min-inline-size:var(--table-primary-min-inline-size);}
+  .xui-record-table .xui-table-value {white-space:nowrap;}
+  .xui-record-table .xui-table-label,.xui-record-table .xui-button {white-space:nowrap;}
+  .xui-record-table .xui-table-actions {flex-wrap:nowrap;}
 }

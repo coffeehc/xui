@@ -1,15 +1,15 @@
 {
-  "contractVersion": "0.9.0",
+  "contractVersion": "0.10.0",
   "defaultTheme": "Precision Engineering Console",
   "defaultMode": "dark",
-  "defaultTokenCount": 375,
+  "defaultTokenCount": 376,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "cfbfca169c20ce997827af27c1184f7d437af6fc35a7cb3db502b462eade3136",
+  "defaultCssSha256": "8cace201075d380861a25be34a1f32046b8ae9726e13f0a7f5c4aeb02a40b08d",
   "protocolBoundarySha256": "cd9c5481d193e039d380aaeebe76031e69d4f65d2beca33f146ee031ab5a67d8",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -85,6 +85,7 @@
     "Retain semantic button hover/pressed derivation from action-primary for existing product brand overrides; do not introduce fixed palette state tokens.",
     "Expose explicit passive Badge status tones through existing status foreground/soft/line roles; neutral metadata and Tag stay plain.",
     "Refine the shared single-column AuthPage from the supplied Stitch reference: 13/20 muted brand and labels, existing page-title 20/28 and body-sm 14/22 controls, 16px heading-to-fields gap, 2px semantic primary top border, and no empty feedback reservation. Remove the superseded login title and feedback-height tokens; preserve user font scaling and natural document scrolling. Derive login-group-input-height centrally so the group border is included in the 44px minimum.",
-    "Foundation closeout adds toggle-height and two derived InputGroup interior minima; compact toggles and one-border input groups now match the documented outer geometry without changing the shared control scale."
+    "Foundation closeout adds toggle-height and two derived InputGroup interior minima; compact toggles and one-border input groups now match the documented outer geometry without changing the shared control scale.",
+    "Record-page composition adds table-primary-min-inline-size, derived from the existing field scale, to preserve readable task columns without imposing widths on ordinary tables."
   ]
 }
