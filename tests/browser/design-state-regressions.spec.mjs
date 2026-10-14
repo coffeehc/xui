@@ -10,7 +10,7 @@ const sizes=[{name:'wide',width:1280,height:800},{name:'narrow',width:390,height
 
 async function appearance(page,mode){
  await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});
- await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);
+ await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);
 }
 async function tabTo(page,control){
  for(let count=0;count<64;count++){

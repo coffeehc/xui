@@ -44,7 +44,7 @@ async function settledScroll(locator){
 }
 async function setup(page,kind,{query='',theme='light',viewport=viewports[0],motion='reduce'}={}){
   await page.setViewportSize(viewport);await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:motion});
-  await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);
+  await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
   await page.goto(`/workspace-${kind}/${query}`);await page.waitForFunction(()=>!!window.workspaceDemo);await settle(page);
   await expect(page.locator('.xui-shell')).toHaveAttribute('data-scroll-mode','workspace');
   await expect(page.locator('html')).toHaveAttribute('data-theme',theme);

@@ -48,7 +48,7 @@ async function ready(page){
 async function setup(page,kind,flags=[],viewport=desktop){
   await page.setViewportSize(viewport);
   await page.emulateMedia({colorScheme:'light',reducedMotion:'reduce'});
-  await page.addInitScript(()=>localStorage.setItem('ui.theme.mode','light'));
+  await page.addInitScript(()=>sessionStorage.setItem('ui.theme.mode','light'));
   await page.goto(`/data-table-${kind}/?${flags.join('&')}`);
   await ready(page);
 }

@@ -2,7 +2,7 @@ import {test as base,expect} from '@playwright/test';
 const test=base.extend({page:async({page},use,info)=>{const errors=[];page.on('pageerror',error=>errors.push(error.message));await use(page);await info.attach('browser-errors.json',{body:JSON.stringify(errors),contentType:'application/json'});expect(errors).toEqual([]);}});
 const setup=async(page,kind,{width=1280,mode='light',query=''}={})=>{
   await page.setViewportSize({width,height:width===390?844:800});await page.emulateMedia({colorScheme:mode==='system'?'dark':mode,reducedMotion:'reduce'});
-  await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`/header-controls-${kind}/?compact&locale${query}`);await page.waitForFunction(()=>!!window.headerDemo);await expect(page.locator('.xui-theme-mode-toggle')).toBeEnabled();
+  await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`/header-controls-${kind}/?compact&locale${query}`);await page.waitForFunction(()=>!!window.headerDemo);await expect(page.locator('.xui-theme-mode-toggle')).toBeEnabled();
 };
 const measurements=page=>page.evaluate(()=>{
   const select=document.querySelector('.xui-header-locale'),theme=document.querySelector('.xui-theme-mode-toggle'),icon=theme.querySelector('svg'),account=document.querySelector('[data-testid="header-account"]'),avatar=document.querySelector('[data-testid="header-account-avatar"]'),arrow=document.querySelector('.xui-header-locale-icon'),style=getComputedStyle(select);

@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 const kinds=['input','textarea'],states=['default','readonly','disabled'];
 const entries=kinds.flatMap(kind=>states.flatMap(state=>[false,true].map(invalid=>({kind,state,invalid,id:`${kind}-${state}-${invalid?'invalid':'valid'}`,value:kind==='input'?'Sample 中文 123':'Line 1 中文\nLine 2 123'}))));
 async function setup(page,kind,theme){
- await page.setViewportSize({width:390,height:844});await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);
+ await page.setViewportSize({width:390,height:844});await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  await page.goto(`/${kind}/input-foundation-contract.html`);await expect(page.getByRole('heading',{name:'Input foundation contract'})).toBeVisible();await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);
 }
 async function token(page,name,property='color'){return page.evaluate(({name,property})=>{const probe=document.createElement('span');probe.style.setProperty(property,`var(--${name})`);document.body.append(probe);const value=getComputedStyle(probe).getPropertyValue(property);probe.remove();return value;},{name,property});}

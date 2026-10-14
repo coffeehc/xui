@@ -20,7 +20,7 @@ const within=(inner,outer)=>{expect(inner.x).toBeGreaterThanOrEqual(outer.x-1);e
 async function settle(page){await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});}
 async function setup(page,kind,query='',mode='light',viewport={width:1280,height:800}){
   await page.setViewportSize(viewport);await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});
-  await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`/sidebar-footer-${kind}/${query}`);
+  await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`/sidebar-footer-${kind}/${query}`);
   await page.waitForFunction(()=>!!window.sidebarFooterDemo);await settle(page);
   await expect(page.locator('html')).toHaveAttribute('data-theme-effective',mode==='system'?'dark':mode);
 }

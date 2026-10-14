@@ -3,7 +3,7 @@ import {test,expect} from '@playwright/test';
 const kinds=['react','vanilla'],themes=['light','dark','system'];
 async function setup(page,kind,theme){
  await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});
- await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);
+ await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  await page.goto(`/${kind}/choice-state-contract.html`);
  await expect(page.getByRole('heading',{name:'Choice state contract'})).toBeVisible();
  await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);

@@ -29,7 +29,7 @@ async function requestCount(page){return page.evaluate(()=>window.dataTableDemo.
 async function state(page){return page.evaluate(()=>window.dataTableDemo.owner.getState());}
 async function setup(page,kind,{query='',theme='light',viewport=viewports[0],motion='reduce',wait=true}={}){
   await page.setViewportSize(viewport);await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:motion});
-  await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),theme);
+  await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),theme);
   const params=new URLSearchParams(query);params.set('layout','workspace');
   await page.goto(`/data-table-${kind}/?${params}`);await page.waitForFunction(()=>!!window.dataTableDemo);if(wait)await ready(page);else await settle(page);
   await expect(page.locator('.xui-shell')).toHaveAttribute('data-scroll-mode','workspace');

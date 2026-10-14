@@ -3,7 +3,7 @@ const variants=['primary','secondary','outline','ghost','destructive','link'];
 const settle=page=>page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
 async function setup(page,kind,theme,width){
  await page.setViewportSize({width,height:844});await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});
- await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);
+ await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  await page.goto(`/${kind}/button-state-contract.html`);await expect(page.getByRole('heading',{name:'Button state contracts',exact:true})).toBeVisible();await settle(page);
  await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);
 }

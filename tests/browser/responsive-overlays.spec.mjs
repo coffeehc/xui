@@ -26,7 +26,7 @@ const expectedBlockSheet=height=>Math.min(736,height*.8);
 async function settle(page){await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});}
 async function configure(page,viewport){
   await page.setViewportSize(viewport);await page.emulateMedia({reducedMotion:'reduce',colorScheme:'light'});
-  await page.addInitScript(()=>localStorage.setItem('ui.theme.mode','light'));
+  await page.addInitScript(()=>sessionStorage.setItem('ui.theme.mode','light'));
 }
 async function box(locator){
   return locator.evaluate(node=>{

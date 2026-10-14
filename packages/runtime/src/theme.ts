@@ -11,14 +11,14 @@ export interface ThemeController {
   destroy(): void;
 }
 export interface ThemeOptions {
-  /** Same key for the pre-paint initializer and the application controller. */
+  /** Same sessionStorage key for the pre-paint initializer and the application controller. */
   storageKey?: string;
   /** Inject a window for isolated tests/iframes. Does not touch DOM at import time. */
   window?: Window;
   /** Presence makes mode controlled. Storage is neither read nor written. */
   mode?: ThemeMode;
   onModeChange?: (mode: ThemeMode) => void;
-  /** Uncontrolled memory-only mode, e.g. for a host-owned persistence bridge. */
+  /** Defaults to sessionStorage persistence. false uses memory only, e.g. a host bridge. */
   persist?: boolean;
 }
 export const DEFAULT_STORAGE_KEY = 'ui.theme.mode';
@@ -35,7 +35,7 @@ export function createThemeController(options: ThemeOptions = {}): ThemeControll
   let media: MediaQueryList | undefined;
   try { media = win?.matchMedia?.('(prefers-color-scheme: dark)'); } catch { /* Safe light fallback. */ }
   let mode: ThemeMode = valid(options.mode) ? options.mode : defaultMode;
-  if (!controlled && options.persist !== false) try { const stored = win?.localStorage.getItem(key); if (valid(stored)) mode = stored; } catch { /* Memory choice stays usable. */ }
+  if (!controlled && options.persist !== false) try { const stored = win?.sessionStorage.getItem(key); if (valid(stored)) mode = stored; } catch { /* Memory choice stays usable. */ }
   let state: Readonly<ThemeState>;
   let destroyed = false;
   const listeners = new Set<(state: Readonly<ThemeState>) => void>();
@@ -66,7 +66,7 @@ export function createThemeController(options: ThemeOptions = {}): ThemeControll
       if (controlled) { options.onModeChange?.(next); return; }
       mode = next;
       apply();
-      if (options.persist !== false) try { win?.localStorage.setItem(key,mode); } catch { /* No logging or retry. */ }
+      if (options.persist !== false) try { win?.sessionStorage.setItem(key,mode); } catch { /* No logging or retry. */ }
     },
     syncMode(value) { if (!destroyed) { mode = valid(value) ? value : defaultMode; apply(); } },
     isDestroyed: () => destroyed,

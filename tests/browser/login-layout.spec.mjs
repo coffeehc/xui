@@ -11,7 +11,7 @@ for(const kind of ['react','vanilla']){
   for(const stored of ['light','dark','system',null,'invalid']){
     test(`${kind} login inherits ${stored??'missing'} preference before app and never adds a theme selector`,async({page})=>{
       await ready(page,kind);
-      await page.evaluate(stored=>{if(stored===null)localStorage.removeItem('ui.theme.mode');else localStorage.setItem('ui.theme.mode',stored);},stored);
+      await page.evaluate(stored=>{if(stored===null)sessionStorage.removeItem('ui.theme.mode');else sessionStorage.setItem('ui.theme.mode',stored);},stored);
       await page.emulateMedia({colorScheme:'dark'});
       let resume;const gate=new Promise(resolve=>{resume=resolve;});
       await page.route(`**/login-${kind}/app.js`,async route=>{await gate;await route.continue();});
@@ -23,19 +23,19 @@ for(const kind of ['react','vanilla']){
       await expect(page.locator('.xui-login-card')).toHaveCount(0);
       await page.evaluate(()=>{window.loginBootstrapOwner=window.xuiTheme;window.loginFrames=[];const record=()=>{if(document.querySelector('.xui-login-card'))window.loginFrames.push({...document.documentElement.dataset});if(!window.stopLoginFrames)requestAnimationFrame(record);};requestAnimationFrame(record);});
       resume();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await settle(page);
-      const firstPaint=await page.evaluate(()=>{window.stopLoginFrames=true;return {sameOwner:window.loginBootstrapOwner===window.xuiTheme,frames:window.loginFrames,stored:localStorage.getItem('ui.theme.mode')};});
+      const firstPaint=await page.evaluate(()=>{window.stopLoginFrames=true;return {sameOwner:window.loginBootstrapOwner===window.xuiTheme,frames:window.loginFrames,stored:sessionStorage.getItem('ui.theme.mode')};});
       expect(firstPaint.sameOwner).toBe(true);expect(firstPaint.frames.length).toBeGreaterThan(0);expect(firstPaint.frames.every(frame=>frame.theme===expectedMode&&frame.themeEffective===expectedEffective)).toBe(true);expect(firstPaint.stored).toBe(stored);
       await expect(page.locator('.xui-login-theme')).toHaveCount(0);await expect(page.getByRole('combobox',{name:'外观',exact:true})).toHaveCount(0);
       await page.getByRole('textbox',{name:'用户名',exact:true}).fill('保留输入');
       for(const colorScheme of ['light','dark','light']){await page.emulateMedia({colorScheme});await expect(page.locator('html')).toHaveAttribute('data-theme-effective',expectedMode==='system'?colorScheme:expectedMode);await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toHaveValue('保留输入');}
-      expect(await page.evaluate(()=>localStorage.getItem('ui.theme.mode'))).toBe(stored);
+      expect(await page.evaluate(()=>sessionStorage.getItem('ui.theme.mode'))).toBe(stored);
       await page.reload();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.locator('html')).toHaveAttribute('data-theme',expectedMode);
     });
   }
   for(const appearance of ['light','dark','system'])for(const width of [1280,1600,390]){
     test(`${kind} public login stays centered in one column: ${appearance}, ${width}px`,async({page},info)=>{
       await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});
-      await page.addInitScript(appearance=>localStorage.setItem('ui.theme.mode',appearance),appearance);
+      await page.addInitScript(appearance=>sessionStorage.setItem('ui.theme.mode',appearance),appearance);
       await ready(page,kind);await settle(page);
       const brand=await box(page.locator('.xui-login-brand')),form=await box(page.locator('.xui-login-form')),content=await box(page.locator('.xui-login-content')),card=await box(page.locator('.xui-login-card'));
       expect(card.x).toBeGreaterThanOrEqual(0);expect(card.right).toBeLessThanOrEqual(width);expect(Math.abs((card.x+card.width/2)-width/2)).toBeLessThanOrEqual(1);
@@ -92,7 +92,7 @@ for(const kind of ['react','vanilla']){
   for(const appearance of ['light','dark','system'])for(const mode of ['desktop','narrow','large-text','short-height']){
     test(`${kind} four painted focus sides: ${appearance}, ${mode}`,async({page},info)=>{
       await page.setViewportSize(mode==='desktop'?{width:1280,height:800}:mode==='short-height'?{width:390,height:320}:{width:390,height:800});
-      await page.emulateMedia({colorScheme:appearance==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(appearance=>localStorage.setItem('ui.theme.mode',appearance),appearance);
+      await page.emulateMedia({colorScheme:appearance==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(appearance=>sessionStorage.setItem('ui.theme.mode',appearance),appearance);
       await page.goto(`/login-${kind}/?extensions&focus`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
       if(mode==='large-text')await page.evaluate(()=>document.documentElement.style.fontSize='200%');
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -118,7 +118,7 @@ for(const kind of ['react','vanilla'])test(`${kind} long credential feedback is 
 });
 
 for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','system'])for(const mode of ['desktop','narrow','large-text','short-height'])test(`${kind} session retry paints four focus sides and extension unmount blocks late results: ${appearance}, ${mode}`,async({page},info)=>{
-  await page.setViewportSize(mode==='desktop'?{width:1280,height:800}:mode==='short-height'?{width:390,height:320}:{width:390,height:800});await page.emulateMedia({colorScheme:appearance==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),appearance);
+  await page.setViewportSize(mode==='desktop'?{width:1280,height:800}:mode==='short-height'?{width:390,height:320}:{width:390,height:800});await page.emulateMedia({colorScheme:appearance==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),appearance);
   await page.goto(`/login-${kind}/?extensions&visualAcceptance`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();if(mode==='large-text')await page.evaluate(()=>document.documentElement.style.fontSize='200%');await page.evaluate(()=>window.loginDemo.setExtensionMode('hold'));await page.getByRole('button',{name:'企业 OIDC 登录'}).click();
   await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeDisabled();await page.evaluate(()=>{window.loginDemo.destroy();window.loginDemo.releaseExtension();});await settle(page);await expect(page.locator('.xui-login-page')).toHaveCount(0);expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
   await page.goto(`/login-${kind}/?sessionReadError&handoff=hold&visualAcceptance`);await expect(page.getByRole('button',{name:'重试连接'})).toBeVisible();await expect.poll(()=>page.evaluate(()=>{const state=window.loginDemo.auth.getState();return state.error?.metadata.endpointId==='auth.session'&&state.error.kind==='network';})).toBe(true);if(mode==='large-text')await page.evaluate(()=>document.documentElement.style.fontSize='200%');await paintedFocus(page,page.getByRole('button',{name:'重试连接'}),info,`${kind}-${appearance}-${mode}-retry`);

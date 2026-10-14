@@ -33,7 +33,7 @@ for(const kind of ['react','vanilla']){
   await page.getByRole('button',{name:'空数据',exact:true}).click();await expect(page.getByRole('columnheader',{name:'名称',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Next page',exact:true})).toBeEnabled();
  });
  for(const mode of ['light','dark','system'])for(const width of [1280,390])test(kind+' '+mode+' '+width+' long rows at 200% text keep keyboard, sticky and horizontal scroll',async({page},info)=>{
-  await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);await page.goto('/row-events-'+kind+'/');
+  await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);await page.goto('/row-events-'+kind+'/');
   await page.evaluate(()=>document.documentElement.style.fontSize='200%');
   const name=page.getByRole('button',{name:'打开 row-1',exact:true});await name.focus();await page.keyboard.press('Enter');await expect(page.getByLabel('事件结果')).toContainText('cell 1');await expect(name).toBeFocused();
   const body=page.locator('.xui-data-table-body'),sticky=page.locator('tbody tr').first().locator('td').first(),before=await sticky.boundingBox();

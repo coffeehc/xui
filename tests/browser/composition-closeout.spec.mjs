@@ -7,7 +7,7 @@ const cases=[
 ];
 for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])test(`${kind} ${theme}: public list pages keep task, records and compact actions ahead of secondary content`,async({page},info)=>{
  await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});
- await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);
+ await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  for(const sample of cases){
   await page.setViewportSize({width:1280,height:800});await page.goto(`/${sample.path}-${kind}/`);
   await page.waitForFunction(name=>window[name]?.controller.getState()&&!window[name].controller.getState().busy&&!window[name].controller.getState().listBusy,sample.global);

@@ -4,7 +4,7 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
   test(`${kind} ${theme} ${width}: table page-size uses a themed keyboard popup`,async({page},info)=>{
     await page.setViewportSize({width,height:844});
     await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});
-    await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),theme);
+    await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),theme);
     await page.goto(`/data-table-${kind}/?size=20&internal`);
     await expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');
     const trigger=page.getByRole('combobox',{name:'每页条数',exact:true});

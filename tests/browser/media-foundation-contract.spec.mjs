@@ -3,7 +3,7 @@ import {test,expect} from '@playwright/test';
 // Content colors below belong to a synthetic image, not a competing UI palette.
 const svg='<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="100" height="200" fill="#d02030"/><rect x="100" width="200" height="200" fill="#208040"/><rect x="300" width="100" height="200" fill="#3040d0"/></svg>';
 async function setup(page,kind,theme){
- await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);
+ await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  await page.route('**/media-avatar-missing.svg',route=>route.fulfill({contentType:'image/svg+xml',body:'not an image'}));
  await page.route('**/media-loading.svg',()=>{});await page.route('**/media-colors.svg',route=>route.fulfill({contentType:'image/svg+xml',body:svg}));
  await page.goto(`/${kind}/media-foundation-contract.html`,{waitUntil:'domcontentloaded'});await expect(page.getByRole('heading',{name:'Media foundation contract',exact:true})).toBeVisible();await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);await page.evaluate(()=>document.fonts.ready);

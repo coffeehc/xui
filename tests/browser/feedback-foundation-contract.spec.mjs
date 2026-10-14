@@ -6,7 +6,7 @@ import {readFile} from 'node:fs/promises';
 const tones=['info','success','warning','error'];
 async function setup(page,kind,theme,reducedMotion='reduce'){
  await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion});
- await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);
+ await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  await page.goto(`/${kind}/feedback-foundation-contract.html`);
  await expect(page.getByRole('heading',{name:'Feedback foundation contract',exact:true})).toBeVisible();
  await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);

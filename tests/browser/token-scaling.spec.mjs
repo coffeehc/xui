@@ -43,7 +43,7 @@ async function settle(page){
 async function setup(page,kind,mode='light',query=''){
   await page.setViewportSize({width:1280,height:800});
   await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});
-  await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);
+  await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);
   await page.goto(`/layout-typography-${kind}/${query}`);
   await page.waitForFunction(()=>!!window.layoutTypography);
   // Initialization script order is not guaranteed if setup is reused. Select

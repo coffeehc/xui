@@ -115,7 +115,7 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 
 ## 主题单一所有者
 
-无受控 mode 时 runtime 可以持久化，默认 key 为 ui.theme.mode；persist:false 完全使用内存。传入 mode 则完全受控，不隐式读写 storage。setMode 只请求 onModeChange，宿主确认后调用 syncMode；state.mode 保留用户选择，state.effective 是当前浅深结果。显式浅深不被系统变更覆盖。
+无受控 mode 时 runtime 默认持久化到 sessionStorage，默认 key 为 ui.theme.mode；persist:false 完全使用内存。传入 mode 则完全受控，不隐式读写 storage。setMode 只请求 onModeChange，宿主确认后调用 syncMode；state.mode 保留用户选择，state.effective 是当前浅深结果。显式浅深不被系统变更覆盖。同一标签页刷新保留选择，生命周期由浏览器页会话管理，不主动跨标签同步；不读取、迁移或改写旧localStorage值。
 
 首屏阻塞经典脚本置于 CSS 和可见内容之前；应用复用 window.xuiTheme。window.xuiThemeOptions 可在脚本前提供受控 mode/onModeChange 或 storageKey。data-storage-key 优先于 options key。重复 init 复用存活 owner；销毁后重新执行 init 才重建。宿主确认受控值时同时更新 options.mode，使以后重建使用最新事实。
 
@@ -130,7 +130,7 @@ const off = theme.subscribe(state => updateView(state));
 // 卸载视图时 off()，文档所有者终止时 theme.destroy()。
 ```
 
-foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控模式桥接；保留其他 JSON 字段，原始 ui.theme.mode 不被覆盖。无有效保存值时默认 dark，storage 不可用时保留内存选择；仅显式 system 在 matchMedia 不可用时生效 light。系统变化有单一监听。React useTheme 只订阅外部 owner，在 StrictMode 中不创建或销毁它。ESM 导入本身不读 DOM。
+foundation 两个参考页在首屏前从sessionStorage读取一个宿主 JSON key，再以受控模式桥接；保留其他 JSON 字段，原始 ui.theme.mode 不被覆盖。默认runtime无有效保存值时为dark；foundation受控示例显式选择system。storage不可用时保留内存选择；仅显式 system 在 matchMedia 不可用时生效 light。系统变化有单一监听。React useTheme 只订阅外部 owner，在 StrictMode 中不创建或销毁它。ESM 导入本身不读 DOM。
 
 ## 构建与正式消费
 

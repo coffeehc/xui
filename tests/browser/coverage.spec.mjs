@@ -5,7 +5,7 @@ for (const kind of ['vanilla','react']) {
   test(`${kind}: persisted initial modes and unknown preference`,async({browser})=>{
     for (const mode of ['light','dark','system','unknown']) {
       const context=await browser.newContext({colorScheme:'dark'});const page=await context.newPage();
-      await page.addInitScript(value=>{if(!sessionStorage.getItem('seeded')){localStorage.setItem('ui.theme.mode',value);sessionStorage.setItem('seeded','true');}},mode);
+      await page.addInitScript(value=>{if(!sessionStorage.getItem('seeded')){sessionStorage.setItem('ui.theme.mode',value);sessionStorage.setItem('seeded','true');}},mode);
       await page.goto(`http://127.0.0.1:4173/${kind}/`);
       await expectSelectValue(page,'外观',mode === 'unknown' ? 'dark' : mode,mode === 'light'?'浅色':mode === 'system'?'跟随系统':'深色');
       await expect(page.locator('html')).toHaveAttribute('data-theme-effective',mode === 'light' ? 'light' : 'dark');

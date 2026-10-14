@@ -4,7 +4,7 @@ import {test,expect} from '@playwright/test';
 // Screenshots are evidence to review, not CSS-string or baseline substitutes.
 async function setup(page,mode){
  await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});
- await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);
+ await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);
  await page.goto('/react/native-controls-audit.html');
  await expect(page.getByRole('heading',{name:'Native control audit'})).toBeVisible();
  await page.evaluate(mode=>window.nativeAudit.setMode(mode),mode);

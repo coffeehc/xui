@@ -58,7 +58,7 @@ window.mountFoundationCloseout=(native)=>{
 });
 async function setup(page,kind,theme){
  await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});
- await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);
+ await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  await page.goto('/react/foundation-contract.html');await page.addScriptTag({content:source});await page.evaluate(native=>window.mountFoundationCloseout(native),kind==='native');
  await expect(page.getByRole('heading',{name:'基础组件验收'})).toBeVisible();await page.evaluate(()=>document.fonts.ready);
 }

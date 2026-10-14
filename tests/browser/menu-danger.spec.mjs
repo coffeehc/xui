@@ -22,7 +22,7 @@ for(const kind of ['react','vanilla'])for(const family of ['menu','context']){
   await page.keyboard.press('Escape');await expect(popup).not.toBeVisible();await expect(trigger).toBeFocused();
  });
  for(const mode of ['light','dark','system'])for(const width of [1280,390])test(kind+' '+family+' '+mode+' '+width+' long menu at 200% text scrolls and restores focus',async({page},info)=>{
-  await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);
+  await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);
   await page.goto('/menu-danger-'+kind+'/?long');await page.evaluate(()=>document.documentElement.style.fontSize='200%');const trigger=await open(page),popup=page.getByRole('menu');
   await page.keyboard.press('ArrowDown');const danger=popup.locator('[data-tone="danger"]').first();await expect(danger).toBeFocused();
   const bounds=await danger.boundingBox();expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(width+1);
@@ -32,7 +32,7 @@ for(const kind of ['react','vanilla'])for(const family of ['menu','context']){
  });
 }
 for(const kind of ['react','vanilla'])test(kind+' system theme changes an open danger menu without losing keyboard focus or execution state',async({page})=>{
- await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.addInitScript(()=>localStorage.setItem('ui.theme.mode','system'));await page.goto('/menu-danger-'+kind+'/');
+ await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.addInitScript(()=>sessionStorage.setItem('ui.theme.mode','system'));await page.goto('/menu-danger-'+kind+'/');
  const trigger=page.getByRole('button',{name:'打开菜单'});await trigger.focus();await trigger.press('ArrowDown');await page.keyboard.press('Home');await page.keyboard.press('ArrowDown');
  const danger=page.getByRole('menuitem',{name:'删除记录',exact:true});await expect(danger).toBeFocused();
  const dark=await danger.evaluate(el=>getComputedStyle(el).color);

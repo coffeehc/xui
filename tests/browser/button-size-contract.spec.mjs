@@ -14,7 +14,7 @@ async function measure(control){return control.evaluate(node=>{
 });}
 async function attach(page,info,name,values){await info.attach(`${name}.json`,{body:JSON.stringify(values,null,2),contentType:'application/json'});await info.attach(`${name}.png`,{body:await page.screenshot({fullPage:true}),contentType:'image/png'});}
 for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])for(const width of [1280,390])test(`${kind} ${theme} ${width}: default Button size geometry and natural enlarged-text growth`,async({page},info)=>{
- await page.setViewportSize({width,height:844});await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);await page.goto(`/${kind}/button-state-contract.html`);
+ await page.setViewportSize({width,height:844});await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);await page.goto(`/${kind}/button-state-contract.html`);
  await expect(page.getByRole('heading',{name:'Button sizes',exact:true})).toBeVisible();await settle(page);
  await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);
  const normal=[];
@@ -40,7 +40,7 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
 });
 
 for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])test(`${kind} ${theme}: xs variants retain content geometry and independent padding override`,async({page},info)=>{
- await page.setViewportSize({width:390,height:844});await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);await page.goto(`/${kind}/button-state-contract.html`);await expect(page.getByRole('heading',{name:'Extra small states',exact:true})).toBeVisible();
+ await page.setViewportSize({width:390,height:844});await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);await page.goto(`/${kind}/button-state-contract.html`);await expect(page.getByRole('heading',{name:'Extra small states',exact:true})).toBeVisible();
  for(const variant of ['primary','secondary','outline','ghost','destructive','link']){for(const state of ['enabled','busy','disabled','disabled-busy']){const control=page.getByTestId(`xs-${variant}-${state}`);expect((await control.boundingBox()).height).toBe(24);await expect(control).toHaveCSS('box-sizing','border-box');await expect(control).toHaveCSS('font-size','14px');await expect(control).toHaveCSS('line-height','22px');}const long=page.getByTestId(`xs-${variant}-long`);expect((await long.boundingBox()).height).toBeGreaterThan(24);expect(await long.evaluate(e=>e.scrollHeight-e.clientHeight)).toBeLessThanOrEqual(1);}
  await page.addStyleTag({content:'@layer product-overrides {:root {--button-padding-block-xs:var(--space-text-gap)}}'});expect((await page.getByTestId('xs-primary-enabled').boundingBox()).height).toBe(32);expect((await page.getByTestId('size-default-text').boundingBox()).height).toBe(36);
  await info.attach('xs-padding-override',{body:await page.screenshot({fullPage:true}),contentType:'image/png'});

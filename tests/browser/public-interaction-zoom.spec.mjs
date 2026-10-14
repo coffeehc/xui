@@ -7,7 +7,7 @@ for(const name of ['calendar-month','menu-danger','row-events','date-time'])for(
   test.setTimeout(60000);
   const context=await chromium.launchPersistentContext('',{...chromiumLaunchOptions,headless:true,chromiumSandbox:true,viewport:null,args:['--window-size=1280,900']});
   try{
-   const page=await context.newPage();await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);
+   const page=await context.newPage();await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);
    await page.goto('http://127.0.0.1:4173/'+name+'-'+kind+'/');
    const before=await page.evaluate(()=>({width:innerWidth,dpr:devicePixelRatio,font:getComputedStyle(document.documentElement).fontSize}));
    const settings=await context.newPage();await settings.goto('chrome://settings/appearance');

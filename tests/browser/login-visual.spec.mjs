@@ -21,7 +21,7 @@ async function evidence(page,info,name,data){
 }
 for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','system'])for(const width of [1280,1600,390]){
   test(`${kind} login acceptance ${appearance} ${width}: centered hierarchy, idle, error and busy`,async({page},info)=>{
-    await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),appearance);
+    await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),appearance);
     await page.goto(`/login-${kind}/?visualAcceptance&productName=${encodeURIComponent('统一协作与数据管理工作台')}&title=${encodeURIComponent('登录团队协作工作台')}`);
     const submit=page.getByRole('button',{name:'登录',exact:true}),username=page.getByRole('textbox',{name:'用户名',exact:true}),password=page.getByLabel('密码');
     await expect(submit).toBeEnabled();await settle(page);

@@ -123,7 +123,7 @@ for(const kind of ['react','vanilla']){
   });
   for(const width of [320,390,1280])for(const layout of ['natural','workspace'])for(const theme of ['light','dark','system'])test(`${kind} ${width}px ${layout} ${theme} automatic, mixed and all-sized columns cover the scrollport`,async({page},info)=>{
     await page.setViewportSize({width,height:1000});
-    await page.addInitScript(()=>localStorage.setItem('ui.theme.mode',new URLSearchParams(location.search).get('theme')??'light'));
+    await page.addInitScript(()=>sessionStorage.setItem('ui.theme.mode',new URLSearchParams(location.search).get('theme')??'light'));
     await page.emulateMedia({colorScheme:theme==='dark'?'dark':'light'});
     await page.goto(`/data-table-${kind}/?internal&layout=${layout}&theme=${theme}&size=100`);
     await page.waitForFunction(()=>window.dataTableDemo?.owner.getState().status==='ready');await settle(page);

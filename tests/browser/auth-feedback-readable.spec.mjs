@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {readableFeedback} from './auth-feedback-helpers.mjs';
 for(const kind of ['react','vanilla']){
  for(const mode of ['light','dark','system'])test(`${kind} ${mode} complete auth summary and keyboard disclosure at enlarged narrow text`,async({page},info)=>{
-  await page.setViewportSize({width:390,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`/auth-page-${kind}/?feedbackDetails`);await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+  await page.setViewportSize({width:390,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`/auth-page-${kind}/?feedbackDetails`);await page.evaluate(()=>document.documentElement.style.fontSize='200%');
   const summary=page.locator('.xui-login-feedback>.xui-alert'),trigger=page.getByRole('button',{name:'查看详细信息'}),username=page.getByRole('textbox',{name:'管理员用户名',exact:true});await username.fill('retained-admin');await username.evaluate(node=>{window.retainedInput=node;});
   await expect(summary).toHaveText('上次操作结果尚未确认，不能再次提交。');await readableFeedback(page,summary,info,`${kind}-${mode}-summary`);await expect(trigger).toHaveAttribute('aria-expanded','false');await expect(page.getByRole('button',{name:'创建管理员',exact:true})).toBeDisabled();
   await trigger.focus();await page.keyboard.press('Enter');await expect(trigger).toHaveAttribute('aria-expanded','true');const details=page.locator('.xui-login-feedback .xui-disclosure-body>p');await readableFeedback(page,details,info,`${kind}-${mode}-details`);

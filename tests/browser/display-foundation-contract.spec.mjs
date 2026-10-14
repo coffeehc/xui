@@ -23,7 +23,7 @@ async function check(page){
 }
 for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])test(`${kind} ${theme}: Typography and Surface consume independent public role tokens`,async({page},info)=>{
  await page.setViewportSize({width:390,height:844});await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});
- await page.addInitScript(theme=>localStorage.setItem('ui.theme.mode',theme),theme);
+ await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  await page.route('**/display-image-*.svg',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><title>Synthetic fixture</title></svg>'}));
  await page.goto(`/display-${kind}/`);await expect(page.locator('html')).toHaveAttribute('data-theme-effective',theme==='system'?'dark':theme);
  await check(page);await expect(page.locator('main > .xui-text')).toHaveCSS('font-weight','400');await expect(page.locator('main > .xui-heading')).toHaveCSS('font-weight','600');

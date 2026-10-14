@@ -813,7 +813,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
   } catch { /* The system preference can be unavailable. */ }
   let mode = "dark";
   try {
-    const stored = window.localStorage.getItem(storageKey);
+    const stored = window.sessionStorage.getItem(storageKey);
     if (valid.has(stored)) mode = stored;
   } catch { /* Storage can be unavailable; use the default. */ }
   const effective = () => mode === "system"
@@ -839,7 +839,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     setMode(value) {
       mode = valid.has(value) ? value : "dark";
       apply();
-      try { window.localStorage.setItem(storageKey, mode); } catch {}
+      try { window.sessionStorage.setItem(storageKey, mode); } catch {}
     },
   };
 })();

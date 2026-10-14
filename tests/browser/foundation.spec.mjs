@@ -13,10 +13,10 @@ for(const kind of ['vanilla','react']){
  });
  test(`${kind}: controlled host theme persists one JSON key and follows system`,async({page})=>{
   await page.emulateMedia({colorScheme:'dark'});
-  await page.addInitScript(()=>{localStorage.setItem('ui.theme.mode','light');localStorage.setItem('xui.example.host-settings',JSON.stringify({appearance:{mode:'system'},retained:'host-value'}));});
+  await page.addInitScript(()=>{localStorage.setItem('ui.theme.mode','light');sessionStorage.setItem('xui.example.host-settings',JSON.stringify({appearance:{mode:'system'},retained:'host-value'}));});
   await page.goto(url);await expectSelectValue(page,'外观','system','跟随系统');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
   await chooseSelect(page,'外观','light','浅色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
-  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('xui.example.host-settings')))).toMatchObject({appearance:{mode:'light'},retained:'host-value'});
+  expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('xui.example.host-settings')))).toMatchObject({appearance:{mode:'light'},retained:'host-value'});
   expect(await page.evaluate(()=>localStorage.getItem('ui.theme.mode'))).toBe('light');
   await chooseSelect(page,'外观','system','跟随系统');await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
   await page.emulateMedia({colorScheme:'dark'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');

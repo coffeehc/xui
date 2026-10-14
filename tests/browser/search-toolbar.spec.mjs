@@ -12,7 +12,7 @@ test.use({launchOptions:{...browserOptions,chromiumSandbox:true,args:[]}});
 const settle=page=>page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
 async function setup(page,kind,mode='light'){
   await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});
-  await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);
+  await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);
   await page.goto(`/search-toolbar-${kind}/`);await expect(page.getByLabel('Search records',{exact:true})).toBeVisible();await settle(page);
   await expect(page.locator('html')).toHaveAttribute('data-theme-effective',mode==='system'?'dark':mode);
 }
@@ -69,7 +69,7 @@ for(const kind of ['react','vanilla']){
     const context=await chromium.launchPersistentContext('',{...browserOptions,headless:true,chromiumSandbox:true,viewport:null,args:['--window-size=1280,900']});
     try{
       const page=await context.newPage();
-      await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`http://127.0.0.1:4173/search-toolbar-${kind}/`);await settle(page);
+      await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`http://127.0.0.1:4173/search-toolbar-${kind}/`);await settle(page);
       const before=await page.evaluate(()=>({dpr:devicePixelRatio,width:innerWidth,font:getComputedStyle(document.documentElement).fontSize}));
       const settings=await context.newPage();await settings.goto('chrome://settings/appearance');
       const zoomControl=settings.locator('select#zoomLevel');await expect(zoomControl).toBeVisible();await zoomControl.selectOption('2');await expect(zoomControl).toHaveValue('2');

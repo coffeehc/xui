@@ -110,7 +110,7 @@ for (const kind of ['vanilla','react']) {
   });
   test(`${kind}: modes, first paint, persistence, system changes, override and retained draft`,async({page})=>{
     await page.emulateMedia({colorScheme:'dark'});
-    await page.addInitScript(()=>localStorage.setItem('ui.theme.mode','light'));
+    await page.addInitScript(()=>sessionStorage.setItem('ui.theme.mode','light'));
     // Observe immediately after the blocking initializer, before stylesheet/body.
     await page.route(`**/${kind}/`,async route=>{
       const response=await route.fetch();const html=await response.text();
@@ -128,12 +128,12 @@ for (const kind of ['vanilla','react']) {
     await page.emulateMedia({colorScheme:'dark'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
     await chooseSelect(page,theme,'light','浅色');await page.emulateMedia({colorScheme:'dark'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
     await expect(page.getByLabel('名称')).toHaveValue('很长的中文工作空间名称'.repeat(15));
-    expect(await page.evaluate(()=>localStorage.getItem('ui.theme.mode'))).toBe('light');
+    expect(await page.evaluate(()=>sessionStorage.getItem('ui.theme.mode'))).toBe('light');
     await page.reload();await expectSelectValue(page,theme,'light','浅色');
   });
   test(`${kind}: blocked storage defaults dark and explicit system keeps its safe fallback`,async({page})=>{
     await page.emulateMedia({colorScheme:'dark'});
-    await page.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw Error('Denied');}});const original=window.matchMedia.bind(window);window.matchMedia=query=>{if(query === '(prefers-color-scheme: dark)') throw Error('Unavailable');return original(query);};});
+    await page.addInitScript(()=>{Object.defineProperty(window,'sessionStorage',{get(){throw Error('Denied');}});const original=window.matchMedia.bind(window);window.matchMedia=query=>{if(query === '(prefers-color-scheme: dark)') throw Error('Unavailable');return original(query);};});
     await page.goto(`/${kind}/`);await expectSelectValue(page,'外观','dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
     await chooseSelect(page,'外观','system','跟随系统');await expectSelectValue(page,'外观','system','跟随系统');await expect(page.locator('html')).toHaveAttribute('data-theme','light');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
     await chooseSelect(page,'外观','dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');

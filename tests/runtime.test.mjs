@@ -6,7 +6,7 @@ function browser({stored, dark=false, storageFail=false, mediaFail=false, legacy
   const listeners = new Set(); let storedMode = stored;
   const media = {matches:dark, addEventListener(_,fn) {if(listenerFail) throw Error('blocked');listeners.add(fn);},removeEventListener(_,fn) {listeners.delete(fn);},addListener(fn) {listeners.add(fn);},removeListener(fn) {listeners.delete(fn);}};
   if (legacy) {delete media.addEventListener;delete media.removeEventListener;}
-  const window = {document:{documentElement:{dataset:{}}},matchMedia() {if(mediaFail) throw Error('blocked');return media;},localStorage:{getItem() {if(storageFail) throw Error('blocked');return storedMode;},setItem(key,value) {if(storageFail) throw Error('blocked');storedMode=value;}}};
+  const window = {document:{documentElement:{dataset:{}}},matchMedia() {if(mediaFail) throw Error('blocked');return media;},sessionStorage:{getItem() {if(storageFail) throw Error('blocked');return storedMode;},setItem(key,value) {if(storageFail) throw Error('blocked');storedMode=value;}}};
   return {window,listeners,get stored() {return storedMode;},setDark(dark) {media.matches=dark;listeners.forEach(fn=>fn());}};
 }
 test('import and controller are safe without browser globals',() => {
@@ -29,7 +29,7 @@ test('matchMedia failure forces safe light when explicitly following system',() 
   const mock=browser({mediaFail:true});const theme=createThemeController({window:mock.window});assert.deepEqual(theme.getState(),{mode:'dark',effective:'dark'});theme.setMode('system');assert.equal(theme.getState().mode,'system');assert.equal(mock.window.document.documentElement.dataset.theme,'light');assert.equal(theme.getState().effective,'light');theme.setMode('dark');assert.equal(theme.getState().effective,'dark');theme.setMode('system');assert.equal(theme.getState().effective,'light');
 });
 test('custom storage key, legacy media listener and unsubscribe',() => {
-  const mock=browser({legacy:true});const keys=[];mock.window.localStorage={getItem:key=>{keys.push(key);return 'system';},setItem:key=>keys.push(key)};
+  const mock=browser({legacy:true});const keys=[];mock.window.sessionStorage={getItem:key=>{keys.push(key);return 'system';},setItem:key=>keys.push(key)};
   const theme=createThemeController({window:mock.window,storageKey:'product.preference'});mock.setDark(true);assert.equal(theme.getState().effective,'dark');theme.setMode('light');assert.deepEqual(keys,['product.preference','product.preference']);theme.destroy();assert.equal(mock.listeners.size,0);
 });
 test('listener registration failure retains initial dark theme and usable explicit modes',() => {

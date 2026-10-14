@@ -26,7 +26,7 @@ for(const kind of ['react','vanilla']){
  });
  for(const mode of ['light','dark','system'])for(const width of [1280,390])test(kind+' '+mode+' '+width+' and 200% text keep public month controls reachable',async({page},info)=>{
   await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:mode==='light'?'light':'dark'});
-  await page.addInitScript(mode=>localStorage.setItem('ui.theme.mode',mode),mode);await page.goto('/calendar-month-'+kind+'/');
+  await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);await page.goto('/calendar-month-'+kind+'/');
   await expect(page.locator('html')).toHaveAttribute('data-theme',mode);await expect(page.locator('html')).toHaveAttribute('data-theme-effective',mode==='light'?'light':'dark');
   await page.evaluate(()=>document.documentElement.style.fontSize='200%');
   const jump=page.getByRole('button',{name:'定位年月'});await jump.click();await expect(jump).toBeFocused();await expect(page.getByLabel('月份结果')).toHaveText('2020-01');
