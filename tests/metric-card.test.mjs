@@ -14,7 +14,7 @@ async function declarations(selector){const values={};postcss.parse(await readFi
 test('MetricCard is a public Surface composition with name/value semantics and unformatted zero',()=>{
   assert.equal(RootMetricCard,MetricCard);
   const markup=render({label:'记录数',value:0});
-  assert.match(markup,/^<section class="xui-surface xui-metric-card">/);
+  assert.match(markup,/^<section class="xui-surface xui-metric-card" data-padding="default">/);
   assert.match(markup,/<dl class="xui-metric-card-content"><dt class="xui-metric-card-header"><span class="xui-metric-card-label">记录数<\/span><\/dt><dd class="xui-metric-card-value">0<\/dd><\/dl>/);
   assert.ok(!/role=|tabindex=|aria-live=|xui-metric-card-marker/.test(markup));
   assert.match(render({label:'调用方名称',value:'1,234.50 自定单位'}),/>1,234.50 自定单位<\/dd>/);

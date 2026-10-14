@@ -21,12 +21,26 @@
   /* Scroll boundaries own focus paint space. Keep this identical for modal
      bodies and general scroll containers; scroll-padding alone cannot paint
      an outline outside a clipped scrollport. No change to focus tokens. */
-  :is(.xui-dialog-body,.xui-scroll-viewport) {
+  :is(.xui-dialog-body,.xui-scroll-viewport),
+  :where(.xui-shell[data-scroll-mode='workspace']>.xui-shell-main)>.xui-shell-content {
     padding:calc(var(--focus-width) + var(--focus-offset));
     scroll-padding:calc(var(--focus-width) + var(--focus-offset));
   }
-  :is(.xui-dialog-body,.xui-scroll-viewport) :is(button,a,input,textarea,select,[tabindex],.xui-input-group) {
+  :is(.xui-dialog-body,.xui-scroll-viewport) :is(button,a,input,textarea,select,[tabindex],.xui-input-group),
+  :where(.xui-shell[data-scroll-mode='workspace']>.xui-shell-main)>.xui-shell-content :is(button,a,input,textarea,select,[tabindex],.xui-input-group) {
     scroll-margin:calc(var(--focus-width) + var(--focus-offset));
+  }
+  /* Geometry and inset paint are one progressive enhancement. Older engines
+     retain the safe gutter above. A nested public scroll boundary owns its own
+     policy, including the default gutter; an edge shell never opts it in. */
+  @scope (.xui-shell[data-scroll-mode='workspace'][data-content-inset='edge']>.xui-shell-main,.xui-scroll-viewport[data-focus-mode='inset']) to (:scope :is(.xui-scroll-viewport,.xui-shell,.xui-dialog,.xui-native-dialog,.xui-dialog-body,.xui-floating,.xui-feedback-slot,.xui-table-container,.xui-data-table-placeholder)) {
+    :scope,:scope>.xui-shell-content {padding:0;scroll-padding:0;}
+    :scope :is(button,a,input,textarea,select,[tabindex],.xui-input-group) {scroll-margin:0;}
+    :scope:focus-visible,
+    :scope :is(button,a,input,textarea,select,[tabindex]):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
+    /* Keep an invalid control's boundary visible beside its inset indicator. */
+    :scope :is(.xui-input,.xui-textarea,.xui-select)[aria-invalid='true']:focus-visible,
+    :scope .xui-input-group:focus-within {outline-offset:calc(calc(-1 * var(--focus-width)) - var(--line-width-surface));}
   }
 }
 

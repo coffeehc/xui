@@ -46,6 +46,14 @@ workspace的顶栏和page slots不覆盖正文；主内容的业务布局通常�
 
 公开Root style可以提供宿主已有的明确blockSize来嵌入非全窗口；否则以100dvh为界。若宿主使用百分比高度，它必须先提供可解析的祖先高度。改变scrollMode、页内槽或leading不会重建main/content，保留正文输入、焦点与宿主状态。短内容占满可用工作区但不产生多余文档滚动；自然高度页面继续选择document。完整两栏长/短历史示例：[React](../examples/workspace-react/app.tsx)（`?direct`直接AppShell）、[原生](../examples/workspace-vanilla/app.js)。示例仅在自有业务元素上提供布局，不读取或改写库内部元素。
 
+## 工作区正文贴边
+
+`contentInset?: ShellContentInset` 由 React AppShell/MenuLayout 与原生 MenuLayoutOptions 共用，类型从 runtime/menu-layout、React/layout 及两端根导出。默认 `standard` 保留页面内距；显式 `edge` 只在 `scrollMode='workspace'` 移除 main 的页面内距与 content 的焦点 gutter。外层 header/brand/sidebar、page slots 自己的 margin/padding、内部控件和卡片不被清零。document/viewport 保留原间距和 edge 选值，返回 workspace 后生效。
+
+几何贴边与焦点内部绘制是同一 CSS @scope 增强：不改 focus-width/color，ordinary focus-visible 与 InputGroup 外壳 focus-within 向内绘制，组内输入仍不重复 outline。旧引擎不支持 @scope 时保留原有安全 gutter。嵌套 ScrollArea 默认仍为 gutter；需要它也贴边时显式选 `focusMode='inset'`（原生 viewport 的 `data-focus-mode='inset'`），最近公共滚动边界决定策略。边界统一处理 scroll-padding/scroll-margin，首末控制项仍可通过 Tab 和 scrollIntoView 到达。不要改私有 DOM/CSS 或把 focus-width 设为零。
+
+完整消费者的 `?edge`、`?inset`、`?focus`、`?surface`、`?long-menu` 可组合，React `?direct` 同时覆盖 AppShell。`workspaceDemo.setContentInset` / `setFocusMode` 仅更新公开状态，正文草稿、节点、各滚动区和导航状态保留；`?surface` 用公开 Surface，`setSurfacePadding('default'|'none')` 可切换其自身内距。Surface none 只省略该表面 padding，不裁切内容，也不改变内部卡片默认内距。
+
 ## 窗口平台前置槽
 
 `headerSlots.leading`（独立AppHeader为`leading`）位于primary最前，先于库生成的导航按钮；brand仍是品牌位置。leading默认无内容、无尺寸、无额外Tab目标。库保持leading不收缩并限制其最大宽度为所在行；其他内容按既有窄屏规则换行，DOM与键盘顺序一致，不使用CSS order或正tabindex。宿主提供的内容必须适配可用宽度，不能把无界固定宽内容当作安全区。

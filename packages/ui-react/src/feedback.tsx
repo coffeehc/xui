@@ -2,7 +2,9 @@ import * as React from 'react';
 import { cx, branded } from './shared.js';
 import {Button} from './button.js';
 import {type ResourceState,type ResourceController} from '@coffeehc/xui-runtime/loading';
-export function Surface({className,...props}: React.ComponentProps<'section'>) { return <section {...props} className={cx('xui-surface',className)} />; }
+/** Surface skin with default card spacing, or explicit none for host-composed content. */
+export type SurfaceProps=React.ComponentProps<'section'>&{padding?:'default'|'none'};
+export function Surface({className,padding='default',...props}:SurfaceProps) { return <section {...props} className={cx('xui-surface',className)} data-padding={padding} />; }
 export type AlertProps = React.ComponentProps<'div'> & {tone?: 'info'|'success'|'warning'|'error'};
 export function Alert({tone='info',className,...props}: AlertProps) { return <div role={tone === 'error' ? 'alert' : 'status'} {...props} className={cx('xui-alert',className)} data-tone={tone} />; }
 

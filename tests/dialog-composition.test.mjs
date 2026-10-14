@@ -5,7 +5,7 @@ import postcss from 'postcss';
 const source=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 test('scroll paint gutter is one shared owner and uses the unchanged focus reach',()=>{
  const css=postcss.parse(source('packages/theme/src/base.css'));
- const rule=css.nodes.flatMap(node=>node.nodes??[]).find(node=>node.selector===':is(.xui-dialog-body,.xui-scroll-viewport)');assert.ok(rule);
+ const rule=css.nodes.flatMap(node=>node.nodes??[]).find(node=>node.selector?.startsWith(':is(.xui-dialog-body,.xui-scroll-viewport)'));assert.ok(rule);
  for(const property of ['padding','scroll-padding'])assert.equal(rule.nodes.find(node=>node.prop===property).value,'calc(var(--focus-width) + var(--focus-offset))');
  for(const name of ['dialog','widgets'])assert.doesNotMatch(source(`packages/theme/src/${name}.css`),/padding:\s*(?:2px|4px)/);
  assert.ok(source('packages/theme/src/dialog.css').includes('margin:calc(calc(-1 * var(--focus-width)) - var(--focus-offset))'));

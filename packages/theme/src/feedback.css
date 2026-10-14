@@ -1,6 +1,7 @@
 @layer xui-components {
 
   .xui-surface { background: var(--card-background); border: var(--line-width-surface) solid var(--card-border-color); border-radius: var(--card-radius); padding: var(--card-padding); box-shadow: var(--shadow-flat); min-width: 0; }
+  .xui-surface[data-padding='none'] {padding:0;}
   .xui-alert { padding: var(--space-content-gap); border: var(--line-width-surface) solid var(--status-info-line); border-radius: var(--radius-lg); color: var(--status-info-foreground); background: var(--status-info-soft); overflow-wrap: anywhere; animation: xui-feedback var(--motion-duration) var(--motion-easing); }
   .xui-alert[data-tone="error"] { color: var(--status-error-foreground); background: var(--status-error-soft); border-color: var(--status-error-line); }
   .xui-alert[data-tone="warning"] { color: var(--status-warning-foreground); background: var(--status-warning-soft); border-color: var(--status-warning-line); }

@@ -1283,6 +1283,8 @@ AppHeader/AppShell/MenuLayout与原生createMenuLayout在右侧默认提供一�
 
 公共scrollMode保留document默认自然滚动与viewport独立main滚动，新增workspace显式工作区模式：shell默认100dvh，header自然换行，main按自然pageHeader/pageToolbar/pageFooter占用分配剩余确定高度给content；库默认维护min-block-size:0与弹性收缩链，layout-workspace-content-min-block-size是显式可覆盖的内容下限（默认0px、受100dvh约束），业务区域通过公开内容组合选择内部滚动owner。不得要求消费者减固定header高度、修私有selector或绝对定位发送区。大于可用高度且不可拆分的内容保留滚动可达兜底，不把文字或操作裁掉。公开root尺寸可由已知宿主窗口大小覆盖，不更改既有默认尺度。
 
+公共 `contentInset` 使用共享 `ShellContentInset = 'standard' | 'edge'`，默认 standard。edge 仅在 workspace 移除 shell main 的页面内距与 content 的焦点 gutter；header、品牌、sidebar、页内槽自己的布局以及控件/卡片内距保持各自合同。document/viewport 保留原间距并记住选择，切回 workspace 生效。`ScrollArea.Viewport.focusMode='inset'` 是独立显式选项，默认 gutter，不由 edge 递归推断。零 gutter 与原宽度/颜色的内部焦点指示在同一 CSS @scope 增强中启用；最近 ScrollArea、弹层及其他公共滚动边界拥有自己的策略，嵌套默认 gutter 不受外层 edge/inset 覆盖。不支持 @scope 的旧引擎保留原有安全绘制空间，不以缺失焦点换取贴边；这里不构成各浏览器或旧 WebView 的实测声明。Surface 可显式 `padding='none'`（原生 data-padding=none），仅省略该表面的 card-padding，保留背景、边线和圆角，不新增裁切。
+
 headerSlots.leading是可选、默认空且不收缩的最前区域，位于自动导航按钮之前；品牌继续独立。库负责顺序与窄屏布局，不内置macOS窗口控件尺寸或平台检测。平台/全屏状态、安全区真实尺寸、drag/no-drag由宿主集成提供，不把业务/OS规则带入默认皮肤。完整合同及两端正式消费者见[布局插槽](LAYOUT_SLOTS.md)。
 
 

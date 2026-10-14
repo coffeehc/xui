@@ -182,6 +182,11 @@ AppHeader/AppShell/MenuLayout与原生MenuLayoutOptions同型theme?:ThemeControl
 
 `ShellScrollMode`从runtime/menu-layout及根导出，并由React/layout及根重新导出；AppShellProps/MenuLayoutProps/MenuLayoutOptions.scrollMode接受document（默认）/viewport（旧main滚动）/workspace（content填满剩余高度）。workspace以库内flex/min-block-size链分配真实header和page slots以外的空间，不强制业务滚动区域、窗口集成或路由恢复策略。
 
+`ShellContentInset = 'standard' | 'edge'` 从 runtime/menu-layout、React/layout 及两端根导出；AppShellProps/MenuLayoutProps/MenuLayoutOptions 的 `contentInset` 默认 standard，edge 仅在 workspace 移除 shell 正文间距。其他滚动模式保留原间距并记住选值，原生 update 保留正文与导航，destroy 恢复 root 原 data-content-inset。几何贴边与 inset focus 同时采用 CSS @scope 增强，旧引擎保留安全 gutter。详见[正文贴边](LAYOUT_SLOTS.md#工作区正文贴边)。
+
+`ScrollAreaViewportProps` / `ScrollAreaFocusMode = 'gutter' | 'inset'` 从 React/scroll-area 及根导出；Viewport 的 `focusMode` 默认 gutter，原生公开 `.xui-scroll-viewport[data-focus-mode='inset']` 等价。选择只作用最近滚动边界，不由 edge shell 自动递归改变。`SurfaceProps` 从 React/feedback 及根导出，`padding?: 'default' | 'none'` 默认 default，原生 `.xui-surface[data-padding='none']` 只去除该表面的内距，保留背景/边线/圆角。
+
+
 AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null）；独立AppHeader直接接受leading。顺序为leading→brand→自动navigation→breadcrumb→context，默认空；同Node/Fragment与普通React协调保持稳定。宿主提供平台/全屏事实、尺寸和drag/no-drag语义，库没有OS默认像素。完整[合同](LAYOUT_SLOTS.md)、[React正式消费者](../examples/workspace-react/app.tsx)、[原生正式消费者](../examples/workspace-vanilla/app.js)及[验证记录](WORKSPACE_VALIDATION.md)。
 
 ## 富导航行扩展

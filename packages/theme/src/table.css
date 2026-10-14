@@ -2,6 +2,8 @@
   .xui-table-actions {display:flex;align-items:center;flex-wrap:wrap;gap:var(--table-action-gap);min-inline-size:0;}
   .xui-table-actions>* {min-inline-size:0;max-inline-size:100%;}
   .xui-table-container {overflow:auto;min-inline-size:0;max-inline-size:100%;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
+  /* The region is a tab stop and can touch another clipped scroll boundary. */
+  .xui-table-container:focus-visible {outline-offset:calc(calc(-1 * var(--focus-width)) - var(--focus-offset));}
   .xui-table {font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);border-collapse:collapse;inline-size:100%;min-inline-size:var(--table-min-inline-size);text-align:start;}
   .xui-table-caption {text-align:start;padding:var(--table-cell-padding);font-weight:var(--font-weight-control);}
   .xui-table th,.xui-table td {padding:var(--table-cell-padding) var(--table-cell-padding-inline);border-block-end:var(--line-width-surface) solid var(--separator-line);text-align:start;overflow-wrap:anywhere;}

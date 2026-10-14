@@ -31,7 +31,7 @@ pnpm preview
 
 富条目双端示例 /rich-navigation-react/、/rich-navigation-vanilla/ 使用公开搜索 + 两组导航 + sibling 配置动作；共享查询与独立未知 total 游标由宿主拥有，详见 [导航扩展](NAVIGATION.md#富条目独立行尾动作与上下文菜单)。
 
-新增 /workspace-react/、/workspace-vanilla/ 验证公开有界工作区（?direct直接AppShell、?short、?plain、?platform、?wrapped），不需要内部样式补丁。
+新增 /workspace-react/、/workspace-vanilla/ 验证公开有界工作区（?direct直接AppShell、?short、?plain、?platform、?wrapped；?edge贴边、?inset内部焦点、?focus嵌套边界、?surface表面、?long-menu长导航），不需要内部样式补丁。
 
 访问 /capabilities-react/、/capabilities-vanilla/ 侧栏/确认/右键菜单/表格/下载与默认页面HTTP，/menu-react/、/menu-vanilla/ 最小菜单，/http-react/、/http-vanilla/ 标准查询页，/login-react/、/login-vanilla/ 配置登录页，/api-key-react/、/api-key-vanilla/ 管理组件，/business-log-react/、/business-log-vanilla/ 业务日志，/log-react/、/log-vanilla/ 独立结构化错误查询，/foundation-react/、/foundation-vanilla/ 列表/表单/详情与动态加载。浏览器检查使用已有 Chromium，或 pnpm exec playwright install chromium。没有部署/发布操作。
 
@@ -84,7 +84,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 | Dialog/Sheet/AlertDialog/ContextMenu/Menu/Popover/Tooltip/Toast | open/value、内容/执行回调、finalFocus，Toast manager | 公开部件/Content/positionerProps；模态/外点/Esc/回焦点；Tooltip 只放说明 |
 | Table/TableContainer/TableCaption/TableHead/TableBody/TableRow/TableHeaderCell/TableCell/SortButton | 行/列/单元内容、scope/aria-sort/selected | 独立导出、原生 table 与命名滚动区域；排序/分页/选择由宿主，不是 rows/columns 引擎 |
 | DataTable/DataTableToolbar/DataTableFilter；原生 createDataTable | rows/columns/rowKey、明确status、pageIndexOffset/pageIndex/pageSize/total、外部查询回调 | 默认natural按内容收缩、实际有界父级中限高并只滚动表体；显式workspace填满/document无约束；保留空表头和唯一底栏、受控busy/失败恢复；unknown total不生成页码 |
-| Surface/Alert/Badge/Skeleton/Spinner/Progress | children/tone/标准元素状态 | 默认层级/role/status/motion，必要事实持续可见 |
+| Surface/Alert/Badge/Skeleton/Spinner/Progress | children/tone/标准元素状态；Surface padding=default/none | 默认层级/role/status/motion，必要事实持续可见 |
 | [MetricCard](METRIC_CARD.md) | label/value/可选 marker、section props/ref | 复用 Surface 的单层皮肤与既有统计 token；名称/值/颜色含义由宿主提供，多卡仍用 Grid，不造业务网格 |
 | DataRegion/LoadingState/EmptyState/ErrorState/RenderBoundary | busy/value、反馈、retry/cancel 与 render fallback | 刷新保留旧值，错误即时可见；render 异常与异步失败分开 |
 | ApiKeyManager/createApiKeyManager | 一个共享 controller、metadata/声明权限和有效期、领域 adapter | 脱敏列表、创建/一次性结果、明确复制/撤销确认、关闭竞态；labels/React headerActions |
@@ -141,6 +141,9 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 已上线xAgent的bearer/token/me/state与固定Bearer v2登录合同不同，须单独升级评估；临时桥梁保留旧鉴权/业务、明确目标与移除条件。未发布项目直接向统一commons/webfacade标准化，由该项目自身授权实施。这里不授权修改后端、baseservice/commons、删除业务数据或部署。
 
 Vite开发接入还须核[冷启动与依赖优化](NAVIGATION.md#vite开发模式的已复现依赖优化刷新)：初始扫描看不到的lazy deep imports可在首次访问触发重新优化/full-reload；提前include实际正式入口并保留peer dedupe，分别验冷/暖cache。不把参考生产消费者无刷新当dev验收，也不靠等待、禁HMR或吞错解决。
+
+工作区正文需要贴边时使用 AppShell/MenuLayout（原生 createMenuLayout）的 `scrollMode='workspace'` 与 `contentInset='edge'`；普通列表/表单保留 standard。内部滚动区域组合 ScrollArea，按需显式选 Viewport.focusMode='inset'，默认仍保 gutter。Surface.padding='none' 仅控制该表面自身，不需要清理所有 Card 或控件 padding。@scope 不可用的旧引擎保留安全焦点余量；不能靠私有 DOM CSS、全局 overflow:visible 或 focus-width=0 绕过。详见[正式合同](LAYOUT_SLOTS.md#工作区正文贴边)。
+
 
 采用反馈新增公共能力见[WIDGETS](WIDGETS.md)：Command/date-only Calendar/ToggleGroup/Avatar/Accordion/ScrollArea/InputGroup，以及link/controlSize/readonly。完整登录slots在AUTH，原生origin在HTTP，viewport在NAVIGATION，sticky合成/子菜单在COMPOSITIONS。先用正式默认合同，业务需要通过声明props/data/callback扩展；不能改私有HTML或复制默认CSS。
 

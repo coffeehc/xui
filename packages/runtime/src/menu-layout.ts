@@ -7,10 +7,14 @@ import {createNavigationMenu,indexNavigation,renderNavigationIcon,type Navigatio
 
 /** document: natural page; viewport: main scrolls; workspace: content fills the remaining viewport. */
 export type ShellScrollMode='document'|'viewport'|'workspace';
+/** standard keeps page spacing; edge removes shell content spacing only in workspace mode. */
+export type ShellContentInset='standard'|'edge';
 export interface MenuLayoutHeaderSlots {
   leading?:Node|null;brand?:Node|null;breadcrumb?:Node|null;status?:Node|null;actions?:Node|null;auxiliary?:Node|null;context?:Node|null;account?:Node|null;
 }
 export interface MenuLayoutOptions extends NavigationMenuDOMOptions {
+  /** Workspace content spacing; defaults to standard and is retained in other scroll modes. */
+  contentInset?:ShellContentInset;
   /** Replaces the default menu region with a host-composed sidebar; null restores it. */
   sidebar?:Node|null;
   theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:ShellScrollMode;title?:string;header?:Node;headerSlots?:MenuLayoutHeaderSlots;sidebarHeader?:Node|null;sidebarFooter?:Node|null;pageHeader?:Node|null;pageToolbar?:Node|null;pageFooter?:Node|null;content?:Node;skipLabel?:string;closeLabel?:string;
@@ -21,7 +25,7 @@ const owners=new WeakMap<HTMLElement,unknown>();
 export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   if(owners.has(root))throw new Error('This root already owns a menu layout');
   indexNavigation(initial.items);
-  let options={...initial},dead=false,internalOpen=initial.defaultSidebarOpen??false;const doc=root.ownerDocument,original=Array.from(root.childNodes),oldClass=root.getAttribute('class'),oldCollapsed=root.getAttribute('data-collapsed'),oldScroll=root.getAttribute('data-scroll-mode');
+  let options={...initial},dead=false,internalOpen=initial.defaultSidebarOpen??false;const doc=root.ownerDocument,original=Array.from(root.childNodes),oldClass=root.getAttribute('class'),oldCollapsed=root.getAttribute('data-collapsed'),oldScroll=root.getAttribute('data-scroll-mode'),oldInset=root.getAttribute('data-content-inset');
   const media=doc.defaultView!.matchMedia('(max-width: 47.999rem)');
   // Validate and render the menu before changing the host's content.
   const sidebar=doc.createElement('aside'),menuRoot=doc.createElement('div');sidebar.className='xui-shell-sidebar';sidebar.dataset.xuiSidebar='';sidebar.id=generateDomId(doc,'xui-sidebar');sidebar.append(menuRoot);
@@ -72,7 +76,7 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   };syncCustomSidebar();
   const toggleDesktop=(event:Event)=>{if(!media.matches&&!dead){event.stopImmediatePropagation();menu.setCollapsed(!menu.getState().collapsed);}};toggle.addEventListener('click',toggleDesktop,true);
   root.classList.add('xui','xui-shell','xui-menu-layout');root.replaceChildren(skip,header,sidebar,main,dialog);if(!options.content)content.append(...original);syncContent();
-  const syncLabels=()=>{syncFooter();syncCustomSidebar();root.dataset.scrollMode=options.scrollMode??'document';root.dataset.collapsed=String(menu.getState().collapsed);if(options.scrollMode==='viewport'||options.scrollMode==='workspace'||sidebarHasSections)navigationRegion().querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});syncToggle();title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';syncHeader();};syncLabels();
+  const syncLabels=(scrollSelection=true)=>{syncFooter();syncCustomSidebar();root.dataset.scrollMode=options.scrollMode??'document';root.dataset.contentInset=options.contentInset??'standard';root.dataset.collapsed=String(menu.getState().collapsed);if(scrollSelection&&(options.scrollMode==='viewport'||options.scrollMode==='workspace'||sidebarHasSections))navigationRegion().querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});syncToggle();title.textContent=options.label??'Navigation';close.textContent=options.closeLabel??'Close navigation';syncHeader();};syncLabels();
   const measureSidebar=()=>{sidebar.style.blockSize=sidebarHasSections&&!media.matches&&(options.scrollMode??'document')==='document'?`max(var(--nav-sidebar-min-height), calc(100dvh - ${header.getBoundingClientRect().height}px))`:'';body.classList.toggle('xui-shell-sidebar-body',!!sidebarHasSections);};
   const headerObserver=new ResizeObserver(measureSidebar);headerObserver.observe(header);measureSidebar();
   const syncSidebar=(details?:DialogCloseDetails)=>{shell?.syncOpen(media.matches&&(options.sidebarOpen??internalOpen),details);syncToggle();if((options.scrollMode==='viewport'||options.scrollMode==='workspace'||sidebarHasSections)&&(!media.matches||shell?.getOpen())){
@@ -87,7 +91,7 @@ export function createMenuLayout(root:HTMLElement,initial:MenuLayoutOptions){
   media.addEventListener('change',viewport);dialog.addEventListener('close',syncToggle);syncSidebar();
   const releasePress=bindPressFeedback(root);
   const owner={getMenu:()=>menu,getMain:()=>main,getSidebarOpen:()=>shell!.getOpen(),
-    update(next:Partial<MenuLayoutOptions>){if(dead)return;const candidate={...options,...next};indexNavigation(candidate.items);options=candidate;menu.update(menuOptions());syncContent();syncLabels();measureSidebar();if('sidebarOpen' in next)syncSidebar();},
-    destroy(){if(dead)return;dead=true;releaseTheme();localeBinding?.destroy();headerObserver.disconnect();releasePress();toggle.removeEventListener('click',toggleDesktop,true);dialog.removeEventListener('close',syncToggle);media.removeEventListener('change',viewport);shell!.destroy();menu.destroy();root.replaceChildren(...original);if(oldClass===null)root.removeAttribute('class');else root.setAttribute('class',oldClass);if(oldCollapsed===null)root.removeAttribute('data-collapsed');else root.setAttribute('data-collapsed',oldCollapsed);if(oldScroll===null)root.removeAttribute('data-scroll-mode');else root.setAttribute('data-scroll-mode',oldScroll);owners.delete(root);},
+    update(next:Partial<MenuLayoutOptions>){if(dead)return;const candidate={...options,...next};indexNavigation(candidate.items);options=candidate;const updateNavigation=Object.keys(next).some(key=>key!=='contentInset'&&key!=='scrollMode');if(updateNavigation)menu.update(menuOptions());syncContent();syncLabels(updateNavigation);measureSidebar();if('sidebarOpen' in next)syncSidebar();},
+    destroy(){if(dead)return;dead=true;releaseTheme();localeBinding?.destroy();headerObserver.disconnect();releasePress();toggle.removeEventListener('click',toggleDesktop,true);dialog.removeEventListener('close',syncToggle);media.removeEventListener('change',viewport);shell!.destroy();menu.destroy();root.replaceChildren(...original);if(oldClass===null)root.removeAttribute('class');else root.setAttribute('class',oldClass);if(oldCollapsed===null)root.removeAttribute('data-collapsed');else root.setAttribute('data-collapsed',oldCollapsed);if(oldScroll===null)root.removeAttribute('data-scroll-mode');else root.setAttribute('data-scroll-mode',oldScroll);if(oldInset===null)root.removeAttribute('data-content-inset');else root.setAttribute('data-content-inset',oldInset);owners.delete(root);},
   };owners.set(root,owner);return owner;
 }

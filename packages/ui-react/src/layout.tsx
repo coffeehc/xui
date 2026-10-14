@@ -8,8 +8,8 @@ import type {ThemeController} from '@coffeehc/xui-runtime/theme';
 import {createHeaderLocaleSelect,isHeaderLocaleEnabled,type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
 import type {ThemeModeLabels} from '@coffeehc/xui-runtime/theme-control';
 export type {HeaderLocaleOptions,HeaderLocaleOption} from '@coffeehc/xui-runtime/header-controls';
-import type {ShellScrollMode} from '@coffeehc/xui-runtime/menu-layout';
-export type {ShellScrollMode} from '@coffeehc/xui-runtime/menu-layout';
+import type {ShellScrollMode,ShellContentInset} from '@coffeehc/xui-runtime/menu-layout';
+export type {ShellScrollMode,ShellContentInset} from '@coffeehc/xui-runtime/menu-layout';
 import {ShellNavigationContext} from './shell-context.js';
 
 export function Container({className,...props}:React.ComponentProps<'div'>){return <div {...props} className={cx('xui-container',className)}/>;}
@@ -79,13 +79,15 @@ export function SidebarFooterContent({icon,children,className,...props}:SidebarF
   </span>;
 }
 export interface AppShellProps extends Omit<React.ComponentProps<'div'>,'children'> {
+  /** Workspace content spacing; defaults to standard and is retained in other scroll modes. */
+  contentInset?:ShellContentInset;
   theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:ShellScrollMode;sidebar:React.ReactNode;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;header?:React.ReactNode;headerSlots?:AppHeaderSlots;children:React.ReactNode;
   collapsed?:boolean;defaultCollapsed?:boolean;onCollapsedChange?:(collapsed:boolean)=>void;compactLabel?:string;expandLabel?:string;
   restoreSidebarFocus?:boolean;navigationLabel?:string;skipLabel?:string;closeLabel?:string;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
 }
 /** One sidebar tree; routing, navigation selection and data remain with the host. */
-export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scrollMode='document',sidebar,sidebarHeader,sidebarFooter,pageHeader,pageToolbar,pageFooter,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,compactLabel='Compact navigation',expandLabel='Expand navigation',header,headerSlots,children,navigationLabel='Navigation',skipLabel='Skip to content',closeLabel='Close navigation',sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,className,...props}:AppShellProps){
+export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scrollMode='document',contentInset='standard',sidebar,sidebarHeader,sidebarFooter,pageHeader,pageToolbar,pageFooter,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,compactLabel='Compact navigation',expandLabel='Expand navigation',header,headerSlots,children,navigationLabel='Navigation',skipLabel='Skip to content',closeLabel='Close navigation',sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,className,...props}:AppShellProps){
   const [internal,setInternal]=React.useState(defaultSidebarOpen),[narrow,setNarrow]=React.useState(false);
   const [internalCollapsed,setInternalCollapsed]=React.useState(defaultCollapsed);const collapsed=controlledCollapsed??internalCollapsed,sidebarId=React.useId(),drawerId=React.useId();
   const requestCollapsed=(next:boolean)=>{if(controlledCollapsed===undefined)setInternalCollapsed(next);onCollapsedChange?.(next);};
@@ -102,7 +104,7 @@ export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scro
   const navigationToggle=<Dialog.Trigger ref={trigger} render={<Button className="xui-shell-toggle" variant="ghost" data-icon="true" data-xui-menu-toggle=""/>} aria-label={narrow?navigationLabel:collapsed?expandLabel:compactLabel} aria-expanded={narrow?open:!collapsed} aria-haspopup={narrow?'dialog':undefined} aria-controls={narrow?drawerId:sidebarId} data-collapsed={!narrow&&collapsed} onClick={event=>{if(!narrow){event.preventBaseUIHandler();requestCollapsed(!collapsed);}}}><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--nav-icon-stroke-width)"><path d="M3 4h14v12H3zM7 4v12"/><path className="xui-shell-toggle-arrow" d="m13 8-2 2 2 2"/></svg></Dialog.Trigger>;
   React.useEffect(()=>{const media=window.matchMedia('(max-width: 47.999rem)');let wasNarrow=media.matches;setNarrow(wasNarrow);const update=()=>{setNarrow(media.matches);if(wasNarrow&&!media.matches)request(false);wasNarrow=media.matches;};media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[request]);
   const navigationSidebar=<ShellNavigationContext.Provider value={{collapsed,onCollapsedChange:requestCollapsed,fallbackFocus:()=>drawer.current?.hasAttribute('data-open')?drawer.current.querySelector<HTMLElement>('.xui-dialog-footer button')??drawer.current:trigger.current}}>{sidebar}</ShellNavigationContext.Provider>;
-  return <Dialog.Root open={narrow&&open} onOpenChange={next=>request(next)}><div {...props} data-collapsed={collapsed} data-scroll-mode={scrollMode} className={cx('xui-shell',className)}>
+  return <Dialog.Root open={narrow&&open} onOpenChange={next=>request(next)}><div {...props} data-collapsed={collapsed} data-scroll-mode={scrollMode} data-content-inset={contentInset} className={cx('xui-shell',className)}>
     <a className="xui-skip-link" href={`#${id}`}>{skipLabel}</a>
     <header ref={headerElement} className="xui-shell-header"><AppHeaderFrame {...headerSlots} legacyPrimary={headerSlots?undefined:header} navigation={navigationToggle} theme={theme} themeLabels={themeLabels} locale={locale}>{headerSlots?header:undefined}</AppHeaderFrame></header>
     {<div ref={desktopSlot} className="xui-shell-sidebar-host"/>}

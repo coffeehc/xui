@@ -241,8 +241,23 @@ for (const kind of ['vanilla','react']) {
   assert(!Object.keys(workspaceBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Workspace consumer requires private CSS');
   if(kind==='vanilla')assert(!Object.keys(workspaceBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native workspace imported React');
   await copyFile(`${workspace}/index.html`,`${workspaceOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${workspaceOutput}/theme-init.js`);await writeFile(`${workspaceOutput}/metafile.json`,JSON.stringify(workspaceBuild.metafile,null,2));
-  await writeFile(`${workspace}/types.ts`,"import {createMenuLayout,type ShellScrollMode,type MenuLayoutHeaderSlots} from '@coffeehc/xui-runtime/menu-layout';\nconst scrollMode:ShellScrollMode='workspace';const headerSlots:MenuLayoutHeaderSlots={leading:document.createDocumentFragment()};const owner=createMenuLayout(document.createElement('div'),{items:[],scrollMode,headerSlots});owner.update({scrollMode:'document',headerSlots:{leading:null}});owner.destroy();\n");
+  await writeFile(`${workspace}/types.ts`,"import {createMenuLayout,type ShellScrollMode,type ShellContentInset,type MenuLayoutHeaderSlots} from '@coffeehc/xui-runtime/menu-layout';\nconst contentInset:ShellContentInset='edge';const scrollMode:ShellScrollMode='workspace';const headerSlots:MenuLayoutHeaderSlots={leading:document.createDocumentFragment()};const owner=createMenuLayout(document.createElement('div'),{items:[],scrollMode,contentInset,headerSlots});owner.update({contentInset:'standard',scrollMode:'document',headerSlots:{leading:null}});owner.destroy();\n");
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',kind==='react'?'workspace/app.tsx':'workspace/types.ts'],{cwd,stdio:'inherit'});
+  if(kind==='react'){
+    await writeFile(`${workspace}/composition-types.tsx`,[
+      "import * as React from 'react';",
+      "import {AppShell,type ShellContentInset} from '@coffeehc/xui-react/layout';",
+      "import {MenuLayout} from '@coffeehc/xui-react/menu-layout';",
+      "import {ScrollArea,type ScrollAreaViewportProps} from '@coffeehc/xui-react/scroll-area';",
+      "import {Surface,type SurfaceProps} from '@coffeehc/xui-react/feedback';",
+      "import type {ShellContentInset as RootInset,ScrollAreaFocusMode,SurfaceProps as RootSurfaceProps} from '@coffeehc/xui-react';",
+      "const contentInset:ShellContentInset='edge';const rootInset:RootInset=contentInset;const focusMode:ScrollAreaFocusMode='inset';",
+      "const viewport:ScrollAreaViewportProps={focusMode};const surface:SurfaceProps={padding:'none'};const rootSurface:RootSurfaceProps=surface;",
+      "const content=<Surface {...rootSurface}><ScrollArea.Root><ScrollArea.Viewport {...viewport}><p>Workspace content</p></ScrollArea.Viewport></ScrollArea.Root></Surface>;",
+      "const shells=[<AppShell sidebar='Navigation' scrollMode='workspace' contentInset={rootInset}>{content}</AppShell>,<MenuLayout items={[]} scrollMode='workspace' contentInset={contentInset}>{content}</MenuLayout>];void shells;",
+    ].join('\n'));
+    execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','workspace/composition-types.tsx'],{cwd,stdio:'inherit'});
+  }
   const sidebarFooter=resolve(cwd,'sidebar-footer'),sidebarFooterOutput=resolve(`dist/sidebar-footer-${kind}`);
   await cp(`examples/sidebar-footer-${kind}`,sidebarFooter,{recursive:true});await copyFile('examples/shared/sidebar-footer-model.ts',`${cwd}/shared/sidebar-footer-model.ts`);
   const sidebarFooterBuild=await build({entryPoints:[`${sidebarFooter}/app.${kind==='react'?'tsx':'js'}`],outdir:sidebarFooterOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
