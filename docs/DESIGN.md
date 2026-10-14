@@ -1398,3 +1398,7 @@ xs上下内距由button-padding-block-xs按实际body-sm行高及按钮line-widt
 ### Calendar 查看月份与日期选择
 
 Calendar共享model独立管理查看月份与已选日期。公开month/onMonthChange和原生setMonth复用原有ISO公历、UTC字段及键盘合同；月份定位不触发日期选择。受控确认与拒绝保持一个可见roving停靠，外部跳月不抢走公共年月控件焦点；浏览与选择的事件合同见[组件手册](COMPONENTS.md#选择与复合控件)。快速定位由公共Input/SimpleSelect/Button组合，不引入OS日期弹层或消费者私有DOM。
+
+### 菜单危险语义
+
+普通Menu/ContextMenu动作Item可选tone=danger。默认危险文字与图标使用status-error-foreground，hover及键盘高亮使用status-error-soft/foreground，pressed使用action-danger/action-danger-foreground；disabled和独立focus继续沿菜单公共变量。无新颜色或产品皮肤，确认及权限归宿主。原生公开data-tone与React同合同，见[菜单危险操作语义](COMPONENTS.md#菜单危险操作语义)。

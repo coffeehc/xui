@@ -620,3 +620,7 @@ useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/�
 ## 日历月份控制
 
 `@coffeehc/xui-runtime/calendar` 的 `CalendarOptions` 及 `@coffeehc/xui-react/calendar` 的 `CalendarProps` 公开 `month?:string`、`onMonthChange?:(month:string)=>void`。根入口同样导出。原生 `createCalendar` 接受同一选项并返回 `model.setMonth(month)`；受控确认使用 `update({month})`。年月遵循严格 YYYY-MM、0001..9999；日期值与查看月份分开。默认值、回调和焦点合同见[Calendar](COMPONENTS.md#选择与复合控件)，双端正式消费者见[React](../examples/calendar-month-react/app.tsx)/[原生](../examples/calendar-month-vanilla/app.js)。
+
+## 菜单危险语义
+
+MenuItemTone/MenuItemProps 从 React `/menu`、`/context-menu` 和根入口公开。`Menu.Item` 与 `ContextMenu.Item` 接受 `tone="danger"`；默认 `default` 保持旧外观。公共 floating.css（亦包含在 style.css）承接同名data-tone投影，原生HTML与controller使用同一状态合同；详见[组件手册](COMPONENTS.md#菜单危险操作语义)。

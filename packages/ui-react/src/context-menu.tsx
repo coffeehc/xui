@@ -2,6 +2,7 @@ import * as React from 'react';
 import {ContextMenu as Base} from '@base-ui/react/context-menu';
 import {Menu} from './menu.js';
 import {branded} from './shared.js';
+export type {MenuItemTone,MenuItemProps} from './menu.js';
 /** Context state/virtual anchor belong to the peer; keyboard activation uses its contextmenu path. */
 export const ContextMenu={...Base,Popup:Menu.Popup,Icon:Menu.Icon,Item:Menu.Item,LinkItem:Menu.LinkItem,CheckboxItem:Menu.CheckboxItem,RadioItem:Menu.RadioItem,GroupLabel:Menu.GroupLabel,SubmenuTrigger:Menu.SubmenuTrigger,
   Trigger:function Trigger({className,onKeyDown,onContextMenu,...props}:React.ComponentProps<typeof Base.Trigger>){return <Base.Trigger {...props} className={branded('xui-context-trigger',className)} onContextMenu={event=>{onContextMenu?.(event);if(event.defaultPrevented)event.preventBaseUIHandler();}} onKeyDown={event=>{

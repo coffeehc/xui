@@ -18,7 +18,9 @@ for (const pkg of ['theme','runtime','ui-react']) {
 }
 const config = JSON.parse(await readFile('package.json','utf8'));
 const publicAPI=await collectPublicAPI();await writeFile(`${archives}/public-api.json`,JSON.stringify({entries:publicAPI},null,2)+'\n');
-const performance={budgets:{buttonMinified:65536,buttonGzip:16384,criticalCssGzip:16384,reactInitialJsGzip:131072,vanillaInitialJsGzip:16384},button:[],consumers:[]};
+// The initial fixture includes critical + floating CSS. Danger states add 56
+// gzip bytes to the previously full 16 KiB baseline; retain a bounded 128-byte allowance.
+const performance={budgets:{buttonMinified:65536,buttonGzip:16384,criticalCssGzip:16512,reactInitialJsGzip:131072,vanillaInitialJsGzip:16384},button:[],consumers:[]};
 await mkdir('.consumers',{recursive:true});
 // A fresh directory prevents npm reusing an earlier tarball with the same version.
 const runDirectory = await mkdtemp(resolve('.consumers/run-'));
@@ -357,7 +359,7 @@ for (const kind of ['vanilla','react']) {
   await writeFile(`${richNavigation}/types.ts`,"import {createNavigationMenu,type NavigationMenuDOMOptions,type NavigationDOMSlot} from '@coffeehc/xui-runtime/navigation';\nimport {createRichNavigationExample} from '../shared/rich-navigation-model';\nimport {createMenuLayout,type MenuLayoutOptions} from '@coffeehc/xui-runtime/menu-layout';\nconst owner=createRichNavigationExample();const shellOptions:MenuLayoutOptions={items:[],sidebar:document.createElement('div')};const layout=createMenuLayout(document.createElement('div'),shellOptions);layout.update({sidebar:null});layout.destroy();const options:NavigationMenuDOMOptions={items:owner.getState().groups.projects.items,renderLabel:item=>({element:document.createTextNode(item.label)}),renderAction:()=>({element:document.createElement('button')} satisfies NavigationDOMSlot<HTMLButtonElement>),decorateItem:()=>({destroy(){}})};createNavigationMenu(document.createElement('div'),options).destroy();owner.destroy();\n");
   if(kind==='react')await copyFile('tests/fixtures/navigation-slots-types.tsx',`${cwd}/navigation-slots-types.tsx`);
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',...(kind==='react'?['rich-navigation/app.tsx','navigation-slots-types.tsx']:['rich-navigation/types.ts'])],{cwd,stdio:'inherit'});
-  for (const name of ['calendar-month']) {
+  for (const name of ['calendar-month','menu-danger']) {
     const directory=resolve(cwd,name),output=resolve('dist/'+name+'-'+kind);
     await cp('examples/'+name+'-'+kind,directory,{recursive:true});
     const result=await build({entryPoints:[directory+'/app.'+(kind==='react'?'tsx':'js')],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});

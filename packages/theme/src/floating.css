@@ -15,6 +15,10 @@
   .xui-combobox-item[data-highlighted][data-keyboard-active]:not(:disabled,[data-disabled],[aria-disabled='true']) {outline:var(--focus-width) solid var(--menu-item-focus-color);outline-offset:var(--focus-offset);}
   .xui-menu-item[data-disabled],.xui-menu-item:disabled,.xui-menu-item[aria-disabled='true'] {color:var(--menu-item-disabled-foreground);cursor:not-allowed;}
   .xui-menu-item:active:not(:disabled,[data-disabled],[aria-disabled='true']) {background:var(--interaction-pressed);}
+  /* Both React Item and the public native menu structure project this tone. */
+  .xui-menu-item[data-tone='danger']:not(:disabled,[data-disabled],[aria-disabled='true']) {color:var(--status-error-foreground);}
+  .xui-menu-item[data-tone='danger']:where(:hover,[data-highlighted]):not(:disabled,[data-disabled],[aria-disabled='true']) {background:var(--status-error-soft);color:var(--status-error-foreground);}
+  .xui-menu-item[data-tone='danger']:active:not(:disabled,[data-disabled],[aria-disabled='true']) {background:var(--action-danger);color:var(--action-danger-foreground);}
   .xui-select-popup,.xui-combobox-popup {inline-size:max(var(--anchor-width),var(--popover-width));padding:var(--popover-padding);border-radius:var(--menu-radius);}
   .xui-positioner :is(.xui-select-popup,.xui-combobox-popup) {max-inline-size:min(var(--available-width),calc(100vw - var(--layout-viewport-inset)*2));}
   .xui-popover-popup {inline-size:var(--popover-width);padding:var(--popover-padding);}

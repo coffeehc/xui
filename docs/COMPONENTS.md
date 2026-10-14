@@ -907,3 +907,9 @@ React 使用一个稳定 form、非受控密码输入和稳定密码字段 ref�
 [React SSR/hydration 示例](../examples/admin-setup-react/app.tsx) 与 [原生示例](../examples/admin-setup-vanilla/app.js) 只使用合成状态和 submit 回调。迁移已有手写 setup 时，删除被公共页接管的用户名/submit/feedback、密码清理与忙态 UI，保留宿主领域 owner、接口与权威状态映射。
 
 单测入口为 [admin-setup.test.mjs](../tests/admin-setup.test.mjs)，浏览器入口为 [admin-setup.spec.mjs](../tests/browser/admin-setup.spec.mjs)。正式构建/consumer 后可访问 `/admin-setup-react/` 与 `/admin-setup-vanilla/`；`?long` 为合成长错误。检查未知状态关键句全文、完成不自动登录、稳定输入/焦点、卸载清理及浅深/system、窄屏/放大；实际运行证据见 [VALIDATION.md](VALIDATION.md#认证页验收)，不以 SSR 静态通过代替 hydration 或真实产品验证。
+
+### 菜单危险操作语义
+
+Menu.Item 与 ContextMenu.Item 共享带类型的 `tone?: 'default' | 'danger'`，默认外观不变。危险默认文字/图标取 status-error-foreground，hover/键盘高亮取 status-error-soft/foreground，pressed使用action-danger/action-danger-foreground成对填充；disabled使用原menu-item-disabled-foreground并禁执行，独立键盘focus轮廓保持。权限、确认、回调和结果由宿主负责，不因tone自动执行或弹确认。图标使用公开Icon且沿currentColor。LinkItem/CheckboxItem/RadioItem保持既有合同，此tone只为普通动作Item。
+
+原生menu/controller沿用公开 `.xui-menu-item`，动作按钮声明 `data-tone="danger"`；controller维护键盘/关闭/回焦点，无React依赖。使用标准disabled/data-disabled/aria-disabled，不能只改颜色伪装禁用。正式ESM/CSS/types消费例子：[React](../examples/menu-danger-react/app.tsx)、[原生](../examples/menu-danger-vanilla/app.js)。无需私有CSS或!important。React沿Base UI保留禁用项可获焦点供读取，但Enter/Space/点击均不执行；原生controller跳过disabled按钮。ContextMenu打开后的初始键盘停靠沿既有peer/controller，Home/End可直接到边界，不强制端间相同首次ArrowDown位置。
