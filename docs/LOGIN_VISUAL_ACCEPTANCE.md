@@ -2,6 +2,16 @@
 
 本页是 [DESIGN](DESIGN.md#公共登录页布局与主题) 的实施与验收记录，不建立第二套主题规范。适用 `AuthPage` / `createAuthPage` 与内部复用它们的 `ConfigurableLoginPage` / `createLoginPage` 正式产物；不代表任何产品页面已升级。
 
+## 2026-10-14 当前候选验收记录
+
+本轮 package source generation 为 `f56796bb2c862c8afa285a1713d1c8a476422b6040c8b1bde52bd05eb70051eb`，example generation 为 `4dc78683af33237bdf7a87e8f7e23748ec4da8a960d16c491ad2b0b335600cf7`。默认根字号16px下，认证壳使用434px居中单框、376px字段/动作；品牌13/20、标题20/28、label13/20、输入与主动作14/22且主动作至少44px。空状态不留support占位；密码区不显示规则段、字符计数、建议或等待文案，只显示一条强度meter，等待状态文案为屏幕阅读器内容。强度为非门禁提示，实际密码规则固定为6–32 Unicode码点并要求有效Unicode。
+
+最终截图用例8/8通过，PNG与逐图JSON稳定副本位于 [`.artifacts/precision-theme-evidence/screenshots/`](../.artifacts/precision-theme-evidence/screenshots/)。包含React/原生 AdminSetup light/dark 桌面图，以及390px、root字号200%下确认密码与主动作的四边焦点图。确认密码focus bounds外缘为66/324/627/721px，submit为66/324/687/799px，视口390×800；字段、动作仍可达。
+
+认证相关浏览器证据按运行分别记录：full browser首轮1347/1355，8个失败中包含一个bearer时间预算超时、一个真实200%视觉用例在所有页面断言结束后关闭persistent context超时；二者在同一候选隔离重跑时 bearer 1/1 与真实Page zoom矩阵12/12通过。初次超时的确定根因未证实，不据此宣称源码已修复。其余两端touch fixture与四个旧InputGroup locator失败已分别由fixture窗口边界调整、按textbox所属组定位后通过；细节见[基础门禁本候选矩阵](FOUNDATION_DESIGN_GATES.md#2026-10-14-当前候选验证矩阵有限合同不代表-g0g4-全量闭环)。浏览器只验证了Chromium；真实后端、OS输入法、读屏器、密码管理器及Firefox/WebKit未测。
+
+本页下方的验收ID表继续定义目标；表内原“未测/待验证”文字是2026-10-13历史计划快照，不代表上面的当前候选结果。当前证据只关闭本段所列范围，不合并成一次1355项全绿，也不代表L01–L14全部合同已经闭环。
+
 ## 实施前确定的目标与样本
 
 - 核心任务：识别当前产品，输入账户和密码，完成一次明确的登录。
@@ -9,11 +19,11 @@
 - 参考公开页面与规范（2026-10-13）：[Carbon Forms](https://www.carbondesignsystem.com/building-blocks/core/patterns/forms) 的标题层级、单主动作和局部错误；[GitHub 登录](https://github.com/login) 与 [Vercel 登录](https://vercel.com/login) 的任务导向结构。只参考层级与交互，不复制品牌素材、认证机制或第三方尺寸。
 - 正式浏览器样本：React / 原生 × light / dark / system × 1280×800 / 390×800；另验 1600×900、390×320、根字号 200%、字体 token 放大、长错误、可选品牌图、扩展字段和 SSO。真实浏览器 zoom 与根字号放大分别报告。
 
-## 固定验收标准
+## 固定验收标准与历史状态快照
 
 默认值以下以 16px 根字号为准，允许 1px 排版误差；字体偏好改变时按 token 比例验收。
 
-| ID | 预期 | 验收方法 / 证据 | 实测与状态 |
+| ID | 预期 | 验收方法 / 证据 | 2026-10-13历史状态（当前结果见上文） |
 | --- | --- | --- | --- |
 | L01 | 默认 card 居中单列窄框，最大434px、自然高度；1280/1600/390均无左右品牌面板或分割线。显式 fullscreen 同列仅省略外框皮肤 | 双端、两模式真实截图 + card/brand/form rect | 未测 |
 | L02 | 紧凑身份行在框内顶部，先于任务标题，说明紧跟标题；logo 32px、品牌名13/20px、500字重与muted角色。可选装饰图 inert、最大80px高、窄屏隐藏 | 默认无图与可选图 desktop 截图 + DOM 顺序、rect、computed type | 未测 |

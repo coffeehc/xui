@@ -1,5 +1,13 @@
 # DataTable 横向空间回归证据
 
+## 2026-10-14 当前候选（有限合同）
+
+本地最终候选 package source generation 为 `f56796bb2c862c8afa285a1713d1c8a476422b6040c8b1bde52bd05eb70051eb`，example generation 为 `4dc78683af33237bdf7a87e8f7e23748ec4da8a960d16c491ad2b0b335600cf7`。原始完整浏览器运行中，DataTable width 44项、caption/frame/footer 36项和 feedback 10项通过；这些结果来自 `.artifacts/browser-final-4dc/`，完整套件仍有其它失败，不代表整套 browser 全绿。
+
+最终证据测试 `tests/browser/precision-theme-evidence.spec.mjs` 8/8通过；表格 light/dark 截图与JSON位于 [稳定证据目录](../.artifacts/precision-theme-evidence/screenshots/)，对应当前表格地址 `/data-table-react/?widths&column-mode=sized&hide-column=source&size=12&internal&layout=workspace`。本次截图确认的表格展示属于主题/页面证据，不替代上述几何矩阵。浏览器结果仅来自 Chromium。
+
+两端多行 workspace 组合另有4项通过，InputGroup相关 locator 修正后4/4通过；各自范围与完整运行失败归因见[基础层门禁矩阵](FOUNDATION_DESIGN_GATES.md#2026-10-14-当前候选验证矩阵有限合同不代表-g0g4-全量闭环)。未重跑完整 browser 套件；也未据此宣称所有列、footer、浏览器或实际消费者均完成验收。
+
 ## 旧合同与本轮明确变更
 
 `448c6d85`（2026-10-12）引入列宽 API、测量 observer、单一 colgroup，以及全指定列宽的 `inline-size:0;min-inline-size:0`。旧合同要求配置轨道保持解析尺寸，全部指定时 table 按列宽总和收缩。因此外框、toolbar、footer、scrollport 全宽而 table 留白可以直接由公共组件产生，原宽度测试也明确要求该留白。
@@ -30,10 +38,10 @@ React 与原生仅使用正式 tarball exports，全部数据合成。以下路�
 
 请先核对当前 xui 固定版本和实际 DataTable columns。通常省略 width；仅对确有需要的列设置下限。不要传 width:'auto'，它不是公开类型。新合同下全指定列也会铺满，原先依赖像素精确且不得增长的消费者须核对实际列宽；不要加产品 table/footer 定位覆盖。使用公共 toolbar、受控 pagination 和现有 Layout，分别检查少量/空行自然高度、多行表体滚动、分页可达、窄屏、200%与sticky。若仍不铺满，记录依赖SHA、正式入口、columns及table/scrollport矩形后回到公共组件定位。此提示不授权自动修改任何产品。
 
-## 执行状态
+## 执行状态（2026-10-13旧C/D候选记录）
 
 2026-10-14本地CUA对重建后的正式消费者进行只读几何核对：React 12行5列在1280px视口时body/table同宽1014px，frame三轨为88/407/53px；1700px视口时body/table同宽1434px，实际列均不小于112/448/159.398/160/120px下限，footer仍为53px（36px控件、上下各8px及1px分隔）。同宽原生计数底栏也为53px，没有额外Grid余高。首次空白与四轨反馈间隙来自旧dist：旧示例不支持12条pageSizeOptions，资源更新后恢复，不能将其当作当前源码缺陷。
 
 首轮表格自动化243项中237通过，6项失败均在扩展宽度矩阵：5项单例包含36组与大量逐格expect，耗尽30秒预算；另一项在200%字号切换引起shell宽度动画时，probe已更新但实际列轨道尚未稳定，偏差2.2625px。现按layout/theme拆为36个独立case，仍逐格测量、以最大误差断言，单例30秒与1.5px阈值不变；同一次poll同时验证解析值与实际几何，并保留失败矩形。此次只修测试，公共实现不变。
 
-Precision默认主题C与固定密码B提交后的独立D候选，正式消费者 build 为 `a7df67e34ca9`；`data-table-widths.spec.mjs` 与 `data-table-caption-shape.spec.mjs` 在隔离 Chromium 中80/80通过。矩阵覆盖React/原生、自然/文档/workspace、窄宽视口、明暗模式、100%/200%文字、全部下限/混合/自动列，以及12行分页/footer固有高度；结果来自本地独立候选，不代表实际产品已升级或完整浏览器套件全部通过。
+Precision默认主题C与固定密码B提交后的独立D候选，正式消费者 build 为 `a7df67e34ca9`；`data-table-widths.spec.mjs` 与 `data-table-caption-shape.spec.mjs` 在隔离 Chromium 中80/80通过。矩阵覆盖React/原生、自然/文档/workspace、窄宽视口、明暗模式、100%/200%文字、全部下限/混合/自动列，以及12行分页/footer固有高度；结果来自本地独立候选，不代表实际产品已升级或完整浏览器套件全部通过。此段及其前面的旧C/D实测均为历史证据，不替代本页顶部2026-10-14当前generation结果。

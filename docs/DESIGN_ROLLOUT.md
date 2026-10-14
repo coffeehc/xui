@@ -2,6 +2,20 @@
 
 用户已选定 Precision Engineering Console，默认主题已按 [DESIGN.md](DESIGN.md) 实施，当前继续逐层验收。本记录约束后续落地，不代表所有组件已闭环；完整唯一通用规范仍为 DESIGN。
 
+## 2026-10-14 当前通用组件门禁状态
+
+本轮只验 xui 通用主题、公共组件/交互和可复用页面组合。当前 package source generation 为 `f56796bb2c862c8afa285a1713d1c8a476422b6040c8b1bde52bd05eb70051eb`，example generation 为 `4dc78683af33237bdf7a87e8f7e23748ec4da8a960d16c491ad2b0b335600cf7`。
+
+| 层级 | 当前证据 | 当前结论 |
+| --- | --- | --- |
+| G0 变量、主题与基础样式 | tokens、typecheck、468单测、consumer、watch、cold-start通过；Chromium主题与公开页面截图8/8通过。 | 本轮列出的门禁通过；未逐条验 DESIGN 所有变量、组件状态、平台绘制。 |
+| G1 基础组件 | 原始full报告中的 Button、Input、Textarea、选择控件、展示与基础反馈专项用例结果保留于 `.artifacts/browser-final-4dc/browser.json`。 | 仅有限合同通过；真实读屏器、forced-colors 全族、跨浏览器未验。 |
+| G2 公共交互 | 原始full中8个失败标题均有对应定向复验通过；焦点、菜单、选择、认证样例结果分开归档。 | 没有在最后测试编排修订后重跑完整浏览器套件，不能外推到所有交互状态。 |
+| G3 合成组件 | DataTable width44、caption/frame/footer36、feedback10；workspace组合4项；InputGroup相关最终locator4/4通过。 | 已验这些组合，不代表所有布局或真实业务数据组合。 |
+| G4 可复用页面组合 | 登录 bearer 精确用例隔离重跑1/1，真实浏览器200%矩阵12/12通过，管理员窄屏焦点图已保存。 | 初次full中 bearer预算超时及200%测试结束后 context.close 超时的根因未证实；隔离通过不是源码修复证明。 |
+
+原始 `pnpm test:browser` 为1347/1355通过、8失败。触摸fixture扩大真实 Chromium 窗口后，在CSS viewport仍390×320的条件下两端触摸轨迹通过；两个InputGroup旧定位器改为按textbox所属组后4/4通过。原始报告/trace、定向复验与截图见 [FOUNDATION_DESIGN_GATES 当前矩阵](FOUNDATION_DESIGN_GATES.md#2026-10-14-当前候选验证矩阵有限合同不代表-g0g4-全量闭环)。本机只验证Chromium；Firefox/WebKit未安装。这里的G0–G4是有限门禁状态，不代表每项DESIGN合同都已闭环。
+
 ## 不可绕过的规范链路
 
 DESIGN 的设计值和语义依赖 → token 生成与 CSS 变量 → 同一套公共组件 → React / 原生消费者。
@@ -18,7 +32,7 @@ DESIGN 的设计值和语义依赖 → token 生成与 CSS 变量 → 同一套�
 1. **规范、变量与基础样式**：先将已选Precision作为DESIGN默认主题，再以单一源核对语义token、依赖图、明暗映射、字体资源、基础排版/边框/焦点/状态规则，检查生成与消费一致；不创建风格切换、密度API或重复源。
 2. **基础组件**：按当前正式exports清单逐项检查Button、Input、Label、选择控件及基础surface等。默认、hover、active、selected、focus、disabled、busy和invalid的适用合同分别验收；先修共用根因，再验证React/原生、三明暗模式、宽窄屏与缩放。此层未闭环，不追加上层实现。
 3. **合成组件**：在已通过的基础组件之上验证Field/InputGroup、布局、工具栏、DataTable等组合；核真实版本、滚动边界、错误全文、分页固有高度。用户已明确表格默认铺满、width作为必要时才设置的下限；横向余宽分配与纵向footer固有高度分别取证。
-4. **通用业务组件**：最后验证登录、管理员初始化、公共Key与日志等如何组合基础能力。业务权限、未知状态和并发校验仍由所属 owner 维护，不用表现调整改写事实。独立获批的登录/Key 简化使用普通状态核验和手动重试，不保留持久恢复门禁。
+4. **通用页面组合**：最后验证登录、管理员初始化、公共Key与日志等如何组合基础能力。业务权限、未知状态和并发校验仍由所属 owner 维护，不用表现调整改写事实。独立获批的登录/Key 简化使用普通状态核验和手动重试，不保留持久恢复门禁。
 5. **公共样板与完整状态验收**：逐层完成后，以登录、列表和任务详情样板验收已选Precision风格的实际组合效果。第一版登录仍居中单框；聊天仅参考。根字号放大与真正浏览器缩放分别取证，覆盖必要错误、键盘、焦点和全部适用状态。
 6. **项目统一接入**：采用已核验SHA、同generation的正式包与来源清单，逐项目验实际页面。产品只接公共API和业务状态，不复制公共CSS、评分、恢复锁或认证owner。
 

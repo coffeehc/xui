@@ -1,8 +1,27 @@
 # 基础层 DESIGN 验收清单与依赖门禁
 
-按用户最新顺序：规范/变量/基础样式 → 基础组件 → 合成组件 → 通用业务组件。此清单基于正式 `ui-react/src/index.tsx` 重导出和打包后的根值出口核对；不是新增 API 提案，也不以组件总数代表完成。完整值与交互规则只引用 DESIGN。
+按用户最新顺序：规范/变量/基础样式 → 基础组件 → 合成组件 → 通用页面组合。此清单基于正式 `ui-react/src/index.tsx` 重导出和打包后的根值出口核对；不是新增 API 提案，也不以组件总数代表完成。完整值与交互规则只引用 DESIGN。
 
-已验证基线：5a5896c；生产 generation af0c2c0dbba049fe241967569ce4b42ce8e41a4aaa39282665c6bf5f06cda14f。安全 CI 38448768298 已完整成功：510单测、81 Auth、600 focused、1224完整浏览器，watch/冷启动通过。表中“已有测试”仍只表示覆盖入口；当前未逐条证明的 DESIGN 合同不可因整套旧测试通过而标绿。
+## 2026-10-14 当前候选验证矩阵（有限合同，不代表 G0–G4 全量闭环）
+
+当前 package source generation 为 `f56796bb2c862c8afa285a1713d1c8a476422b6040c8b1bde52bd05eb70051eb`，example generation 为 `4dc78683af33237bdf7a87e8f7e23748ec4da8a960d16c491ad2b0b335600cf7`。本机使用 Chromium。下面把已执行的门禁和仍未证明的范围分开；后面的 G0–G4 表格保留验收合同与历史逐族备注，不能覆盖本矩阵或当作完整当前通过表。
+
+| 阶段 | 当前候选已验证 | 当前仍未闭环 |
+| --- | --- | --- |
+| G0 规范、tokens 与基础样式 | `dev-build`、`pnpm check:tokens`（283文件/2176声明/372 tokens）、`pnpm typecheck`、468单测、consumer、watch、cold-start通过；8项最终截图测试通过，覆盖 Precision DataTable 与 `/react/` 的 light/dark，以及 AdminSetup 两端桌面和390px/root字号200%末字段/主动作焦点。 | 本轮只证实列出的生成、页面和状态；不能据此宣称 DESIGN 中每个变量、所有组件状态、所有平台绘制均已逐条验收。 |
+| G1 基础 DOM 与展示组件 | 当前原始浏览器运行中的 Button、Input、Textarea、选择控件、展示与基础反馈专项用例结果保存在 `.artifacts/browser-final-4dc/browser.json`。 | 完整浏览器主运行不是全绿；没有逐条关闭每个展示族的所有语义、forced-colors、真实读屏器与平台原生边界。 |
+| G2 交互基础组件 | 当前 full-run 中的焦点、菜单、选择、弹层等合同结果保存在原始报告；本批所有八个原失败标题都已有相应 targeted 通过证据。 | 没有在最终 harness 修订后重跑整个浏览器套件；不能将有限 targeted 通过外推到每个交互组件/状态组合。 |
+| G3 合成组件 | DataTable width44、caption/frame/footer36及feedback10项在当前 full-run 通过；workspace composition4项通过；InputGroup 两端 locator 修订用例4/4通过。 | 仅覆盖这些列出的合成合同与示例，不代表所有组合或真实业务数据、产品布局均已验证。 |
+| G4 可复用页面组合 | Auth bearer 精确用例隔离重跑1/1通过；真实浏览器200%视觉矩阵12/12通过；管理员窄屏焦点截图保留。 | 初次 full-run 中 bearer 超时和 persistent-context 关闭超时没有得到确定根因；隔离重跑通过不证明该间歇现象已被源码修复。 |
+
+验证总量：原始 `pnpm test:browser` 为1347/1355通过、8失败。失败项是 bearer 请求预算超时、一个真实200%用例在断言完成后的 context.close 超时、React/native 两个短窗口触摸滚动 fixture，以及 `token-scaling.spec.mjs` 和 `widgets.spec.mjs` 各自React/native共4项新增InputGroup引起的旧全局 locator 歧义。归档的主报告与trace见 `.artifacts/browser-final-4dc/`。后续隔离重跑中：bearer1/1、真实200%12/12、触摸滚动2/2（仅将真实 Chrome 窗口扩至800×900，CSS viewport仍390×320）；首轮相关targeted为17/19，两个vanilla selector零匹配，按textbox所属组修正后locator复跑4/4通过。各次结果分别保存于 `.artifacts/browser-targeted-final-4dc/` 和 `.artifacts/browser-locator-final-4dc/`；这些 targeted 运行不合并改写为“1355/1355 full-run通过”。收尾时另一次误启动的完整浏览器命令在发现后约25秒以SIGINT中止，不计结果；以上稳定归档报告与截图未被覆盖。
+
+`pnpm test:watch` 1/1（145.4秒）和 `pnpm test:cold-start` 1/1、consumer与单测均针对上述 final source/example generation。浏览器实测仅 Chromium；Firefox/WebKit未安装或验证。完整后台/屏幕阅读器/真实产品接入和其它OS缩放仍未测。
+
+
+上述每项只是对应的有限合同证据。后续完整验收应先核对新的 source/example generation，并独立运行完整浏览器套件；本节不会把测试数量或某一层的绿色套件外推成整套 DESIGN 已完成。
+
+历史已验证基线：5a5896c；生产 generation af0c2c0dbba049fe241967569ce4b42ce8e41a4aaa39282665c6bf5f06cda14f。安全 CI 38448768298 已完整成功：510单测、81 Auth、600 focused、1224完整浏览器，watch/冷启动通过。表中“已有测试”仍只表示覆盖入口；当前未逐条证明的 DESIGN 合同不可因整套旧测试通过而标绿。
 
 ## G0：设计变量与基础样式
 
