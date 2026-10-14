@@ -22,7 +22,7 @@ Calendar使用一个框架无关model；更新一次发布一致快照，选相�
 
 Button variant=link提供文字链接外观，默认type=button。button继续Enter/Space执行；真正导航需render原生a、nativeButton=false和role=link（或直接原生a.xui-button[data-variant=link]）。链接保留Enter、Space不模拟点击、修改键/中键/target/download；外观不改变导航所有权。aria-busy仍不自动disabled，焦点独立可见。
 
-NativeSelect/Checkbox/Radio/Switch的controlSize=sm/default/lg是视觉尺寸，默认default；NativeSelect原生size:number仍保留，不增全局密度模式。原生用data-control-size对应。选择readOnly由公共层阻止click与Space（radio也阻止改变选择的箭头），保留Tab/指针焦点与aria-readonly；不等于disabled。React受控checked和非受控defaultChecked均支持，readonly不触发onChange。原生checkbox/radio调用bindReadonlyChoice(input)，使用input.readOnly事实、sync更新ARIA，destroy释放；不使用HTML readonly属性单独冒充功能。disabled走原生disabled，表单提交语义不改。
+SimpleSelect/Checkbox/Radio/Switch的controlSize=sm/default/lg是视觉尺寸，默认default；SimpleSelect的size:number只作为隐藏表单桥事实。显式NativeSelect平台API保留原生size:number，默认采用政策见[DESIGN](DESIGN.md#公共复用与状态矩阵)，不增全局密度模式。原生用data-control-size对应。选择readOnly由公共层阻止click与Space（radio也阻止改变选择的箭头），保留Tab/指针焦点与aria-readonly；不等于disabled。React受控checked和非受控defaultChecked均支持，readonly不触发onChange。原生checkbox/radio调用bindReadonlyChoice(input)，使用input.readOnly事实、sync更新ARIA，destroy释放；不使用HTML readonly属性单独冒充功能。disabled走原生disabled，表单提交语义不改。
 
 ## 受测范围
 

@@ -6,7 +6,12 @@ export function Surface({className,...props}: React.ComponentProps<'section'>) {
 export type AlertProps = React.ComponentProps<'div'> & {tone?: 'info'|'success'|'warning'|'error'};
 export function Alert({tone='info',className,...props}: AlertProps) { return <div role={tone === 'error' ? 'alert' : 'status'} {...props} className={cx('xui-alert',className)} data-tone={tone} />; }
 
-export function Badge({className,...props}:React.ComponentProps<'span'>){return <span {...props} className={cx('xui-badge',className)}/>;}
+/** Passive metadata or an explicit semantic status; neutral keeps plain text styling. */
+export type BadgeTone = 'neutral'|'info'|'success'|'warning'|'error';
+/** Standard span attributes plus a status tone; no live region or focus behavior is added. */
+export type BadgeProps = React.ComponentProps<'span'> & {tone?:BadgeTone};
+/** Render passive status text; the host supplies its label and any status icon. */
+export function Badge({tone='neutral',className,...props}:BadgeProps){return <span {...props} className={cx('xui-badge',className)} data-tone={tone}/>;}
 export function Skeleton({className,...props}:React.ComponentProps<'div'>){return <div aria-hidden="true" {...props} className={cx('xui-skeleton',className)}/>;}
 export function Spinner({className,...props}:React.ComponentProps<'span'>){return <span aria-hidden="true" {...props} className={cx('xui-spinner',className)}/>;}
 export function Progress({className,...props}:React.ComponentProps<'progress'>){return <progress {...props} className={cx('xui-progress',className)}/>;}

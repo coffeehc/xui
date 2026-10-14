@@ -1,10 +1,11 @@
 @layer xui-components {
   .xui-login-page {min-block-size:100dvh;display:grid;place-items:center;padding:var(--layout-viewport-inset);}
-  .xui-login-card {inline-size:min(100%,var(--login-card-inline-size));display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-section-gap);justify-items:center;min-inline-size:0;padding:var(--login-card-padding);padding-block-end:var(--login-card-padding-end);}
+  .xui-login-card {inline-size:min(100%,var(--login-card-inline-size));display:grid;grid-template-columns:minmax(0,1fr);gap:0;justify-items:center;min-inline-size:0;padding:var(--login-card-padding);padding-block-end:var(--login-card-padding-end);}
+  .xui-login-card.xui-surface {border-block-start-width:var(--line-width-emphasis);border-block-start-color:var(--action-primary);}
   .xui-login-brand {inline-size:100%;min-inline-size:0;overflow-wrap:anywhere;}
   .xui-login-brand-content {display:grid;gap:var(--space-control-gap);inline-size:min(100%,var(--login-form-inline-size));min-inline-size:0;margin-inline:auto;padding:calc(var(--focus-width) + var(--focus-offset));}
   .xui-login-identity {display:flex;align-items:center;gap:var(--space-control-gap);min-inline-size:0;}
-  .xui-login-brand strong {min-inline-size:0;font:var(--font-weight-heading) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-heading);overflow-wrap:anywhere;}
+  .xui-login-brand strong {min-inline-size:0;color:var(--muted-foreground);font:var(--font-weight-control) var(--font-size-body-xs)/var(--line-height-body-xs) var(--font-heading);overflow-wrap:anywhere;}
   .xui-login-logo {inline-size:var(--login-logo-size);block-size:var(--login-logo-size);object-fit:contain;flex-shrink:0;}
   .xui-login-description {margin:0;color:var(--muted-foreground);font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);}
   .xui-login-visual {display:grid;place-items:center;min-inline-size:0;max-block-size:var(--login-visual-max-block-size);overflow:hidden;}
@@ -17,14 +18,15 @@
   .xui-login-form :is(input,select,textarea,button,a,[tabindex]) {scroll-margin:calc(var(--focus-width) + var(--focus-offset));}
   .xui-login-body {min-block-size:0;display:grid;grid-auto-rows:max-content;align-content:start;gap:var(--login-heading-fields-gap);overflow-wrap:anywhere;}
   .xui-login-heading {display:grid;gap:var(--login-heading-gap);}
-  .xui-login-body h1 {margin:0;font:var(--font-weight-heading) var(--login-title-font-size)/var(--login-title-line-height) var(--font-heading);}
+  .xui-login-body h1 {margin:0;font:var(--font-weight-heading) var(--font-size-page-title)/var(--line-height-page-title) var(--font-heading);}
   .xui-login-body p {margin:0;}
-  .xui-login-body .xui-label {font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);}
+  .xui-login-body .xui-label {font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
   .xui-login-body .xui-input {min-block-size:var(--login-control-height);font-size:var(--login-control-font-size);line-height:var(--login-control-line-height);}
+  .xui-login-body .xui-input-group>.xui-input {min-block-size:var(--login-group-input-height);scroll-margin:calc(var(--focus-width) + var(--focus-offset) + var(--line-width-surface));}
   .xui-login-actions {display:grid;gap:var(--space-control-gap);flex-shrink:0;min-inline-size:0;}
   /* Keep one extreme configured label within a usable control. The surrounding
      brand, fields and action group still use natural document scrolling. */
-  .xui-login-actions>.xui-button {min-block-size:var(--login-control-height);font-size:var(--login-control-font-size);line-height:var(--login-control-line-height);padding-inline:var(--space-section-gap);gap:var(--space-control-gap);inline-size:100%;min-inline-size:0;max-block-size:var(--login-action-max-block-size);overflow:auto;align-items:safe center;}
+  .xui-login-actions>.xui-button {min-block-size:var(--login-control-height);font-size:var(--login-control-font-size);line-height:var(--login-control-line-height);padding-inline:var(--space-section-gap);gap:var(--space-control-gap);inline-size:100%;min-inline-size:0;max-block-size:var(--login-action-max-block-size);overflow:auto;align-items:safe center;scroll-margin:calc(var(--focus-width) + var(--focus-offset) + var(--line-width-surface));}
   /* Only the primary label reserves its real text states. A bounded row keeps
      a short active label in view even when a long reserved label scrolls. */
   .xui-login-actions>.xui-login-submit:not([hidden]) {display:grid;grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr);}
@@ -34,10 +36,9 @@
   .xui-login-submit::after {content:attr(data-busy-label);visibility:hidden;}
   .xui-login-announcement {position:absolute;inline-size:var(--a11y-hidden-size);block-size:var(--a11y-hidden-size);padding:0;margin:var(--a11y-hidden-offset);overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
   .xui-login-support {inline-size:min(100%,var(--login-form-inline-size));min-inline-size:0;}
-  /* Reserve only the short status minimum. Essential feedback uses natural
-     document flow: no local clipping, hidden recovery actions or scroll trap.
-     Hosts can compose the public Disclosure in the feedback slot for details. */
-  .xui-login-feedback {display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-control-gap);min-block-size:var(--login-feedback-block-size);min-inline-size:0;}
+  /* Empty feedback has no track. Essential messages and actions grow in the
+     document flow; hosts may compose Disclosure for additional details. */
+  .xui-login-feedback {display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-control-gap);min-inline-size:0;}
   .xui-login-feedback>.xui-alert {flex-grow:1;flex-shrink:0;flex-basis:100%;min-inline-size:0;padding:var(--space-text-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
   .xui-login-feedback>.xui-button {min-inline-size:0;max-inline-size:100%;}
   .xui-login-feedback>.xui-disclosure {flex-basis:100%;min-inline-size:0;}

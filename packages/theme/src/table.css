@@ -4,17 +4,18 @@
   .xui-table-container {overflow:auto;min-inline-size:0;max-inline-size:100%;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
   .xui-table {font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);border-collapse:collapse;inline-size:100%;min-inline-size:var(--table-min-inline-size);text-align:start;}
   .xui-table-caption {text-align:start;padding:var(--table-cell-padding);font-weight:var(--font-weight-control);}
-  .xui-table th,.xui-table td {padding:var(--table-cell-padding);border-block-end:var(--line-width-surface) solid var(--separator-line);text-align:start;overflow-wrap:anywhere;}
-  .xui-table th {background:var(--layer-support);font:var(--font-weight-control) var(--font-size-body-xs)/var(--line-height-body-xs) var(--font-sans);}
-  .xui-table-row {background-color:var(--layer-raised);transition:background-color var(--motion-duration) var(--motion-easing);}
-  :where(.xui-table[data-striped='true'] tbody)>.xui-table-row:where(:nth-child(odd of .xui-table-row:not(.xui-table-expanded-row))) {background-color:var(--layer-support);}
-  .xui-table-row[data-expanded='true'],.xui-table-expanded-row {background-color:var(--layer-support);}
+  .xui-table th,.xui-table td {padding:var(--table-cell-padding) var(--table-cell-padding-inline);border-block-end:var(--line-width-surface) solid var(--separator-line);text-align:start;overflow-wrap:anywhere;}
+  /* Sort controls keep their full height and focus paint inside the scrollport. */
+  .xui-table th {padding-block:calc(var(--focus-width) + var(--focus-offset));block-size:var(--table-header-min-height);background:var(--table-header-background);color:var(--table-header-foreground);font:var(--font-weight-control) var(--font-size-body-xs)/var(--line-height-body-xs) var(--font-sans);}
+  .xui-table-row {block-size:var(--table-row-min-height);background-color:var(--table-row-background);transition:background-color var(--motion-duration) var(--motion-easing);}
+  :where(.xui-table[data-striped='true'] tbody)>.xui-table-row:where(:nth-child(odd of .xui-table-row:not(.xui-table-expanded-row))) {background-color:var(--table-row-stripe-background);}
+  .xui-table-row[data-expanded='true'],.xui-table-expanded-row {background-color:var(--table-row-expanded-background);}
   .xui-table-row:hover {background-image:linear-gradient(var(--interaction-hover),var(--interaction-hover));}
   .xui-table-row[data-selected='true'] {background-image:linear-gradient(var(--interaction-selected),var(--interaction-selected));color:var(--interaction-selected-foreground);}
   .xui-table :is(th,td)[data-sticky] {position:sticky;z-index:var(--z-sticky);background:inherit;}
   .xui-table :is(th,td)[data-sticky='start'] {inset-inline-start:0;border-inline-end:var(--line-width-surface) solid var(--surface-line);}
   .xui-table :is(th,td)[data-sticky='end'] {inset-inline-end:0;border-inline-start:var(--line-width-surface) solid var(--surface-line);}
-  .xui-table th[data-sticky] {background-color:var(--layer-support);}
+  .xui-table th[data-sticky] {background-color:var(--table-header-background);}
   .xui-table[data-sticky-header='true'] thead th {position:sticky;inset-block-start:0;z-index:var(--z-sticky);}
   .xui-table[data-sticky-header='true'] thead th[data-sticky] {z-index:var(--z-sticky-intersection);}
   .xui-sort-button {border:0;background:transparent;color:inherit;font:inherit;display:inline-flex;align-items:center;gap:var(--space-text-gap);min-block-size:var(--control-height);padding:0;cursor:pointer;transition:color var(--motion-duration-fast) var(--motion-easing),background-color var(--motion-duration-fast) var(--motion-easing);}

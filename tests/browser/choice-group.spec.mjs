@@ -1,8 +1,8 @@
 import {inputVisualTests} from './input-visual-helpers.mjs';
 import {test,expect} from '@playwright/test';
-import {existsSync} from 'node:fs';
+import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 // Security floor: no --no-sandbox fallback on restricted workers.
-test.use({launchOptions:{...(process.env.CI?{channel:'chrome'}:existsSync('/usr/bin/chromium')?{executablePath:'/usr/bin/chromium'}:{}),chromiumSandbox:true,args:[]}});
+test.use({launchOptions:{...chromiumLaunchOptions,chromiumSandbox:true,args:[]}});
 for(const kind of ['react','vanilla']){
  test(`${kind}: controlled selection, all universe, native radios, reset and focus`,async({page})=>{
   await page.goto(`/choice-group-${kind}/`);const check=page.getByRole('group',{name:'Permissions'}),radio=page.getByRole('group',{name:'Mode'}),read=check.getByLabel('Read',{exact:true}),write=check.getByLabel('Write',{exact:true});

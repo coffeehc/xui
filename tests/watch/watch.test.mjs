@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {mkdtemp,cp,symlink,readFile,writeFile,rm,mkdir,rename} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {spawn} from 'node:child_process';
+import {checkContract} from '../../scripts/tokens.mjs';
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 // Every checkpoint rebuilds all public examples; added choice/input fixtures increase the
 // total work. Keep each build's 30-second deadline and every recovery assertion unchanged.
@@ -26,7 +28,11 @@ test('real watch rebuilds CSS, tokens, TSX, declarations and init; errors preser
   for(const kind of ['react','vanilla']){assert.match(await readFile(resolve(fixture,`dist/choice-group-${kind}/app.js`),'utf8'),/xui-choice-group/);assert.match(await readFile(resolve(fixture,`dist/text-inputs-${kind}/app.js`),'utf8'),/aria-valuenow/);assert.match(await readFile(resolve(fixture,`dist/text-inputs-${kind}/app.css`),'utf8'),/xui-input-group/);}
   for(const kind of ['react','vanilla']){assert.match(await readFile(resolve(fixture,`dist/admin-setup-${kind}/app.js`),'utf8'),/xui-login-submit/);assert.match(await readFile(resolve(fixture,`dist/admin-setup-${kind}/app.css`),'utf8'),/xui-login-card/);}
   const edit=async(path,transform)=>{const full=resolve(fixture,path);await writeFile(full,transform(await readFile(full,'utf8')));const prior=current.sourceSha256;current=await status(state=>state.state==='success'&&state.sourceSha256!==prior);for(const name of ['theme','runtime','ui-react'])assert.equal(JSON.parse(await readFile(resolve(fixture,`packages/${name}/dist/build.json`))).sourceSha256,current.sourceSha256);};
-  await edit('docs/DESIGN.md',text=>text.replace('<!-- design-default-css:start -->','<!-- design-default-css:start -->').replace(':root {',':root {\n  /* watch-token-proof */'));
+  const designPath=resolve(fixture,'docs/DESIGN.md'),metadataPath=resolve(fixture,'docs/design-source.json'),design=(await readFile(designPath,'utf8')).replace(':root {',':root {\n  /* watch-token-proof */'),metadata=JSON.parse(await readFile(metadataPath,'utf8'));
+  metadata.defaultCssSha256=createHash('sha256').update(checkContract(design).css).digest('hex');
+  await Promise.all([writeFile(designPath,design),writeFile(metadataPath,JSON.stringify(metadata,null,2)+'\n')]);
+  const priorDesign=current.sourceSha256;current=await status(state=>state.state==='success'&&state.sourceSha256!==priorDesign);
+  for(const name of ['theme','runtime','ui-react'])assert.equal(JSON.parse(await readFile(resolve(fixture,`packages/${name}/dist/build.json`))).sourceSha256,current.sourceSha256);
   assert.match(await readFile(resolve(fixture,'packages/theme/dist/tokens.css'),'utf8'),/watch-token-proof/);
   await edit('packages/theme/src/button.css',text=>text+'\n/* watch-css-proof */\n');
   assert.match(await readFile(resolve(fixture,'packages/theme/dist/button.css'),'utf8'),/watch-css-proof/);

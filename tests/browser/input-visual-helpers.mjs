@@ -1,7 +1,7 @@
 import {captureZoomViewport} from './zoom-capture.mjs';
 import {test,expect,chromium} from '@playwright/test';
-import {existsSync} from 'node:fs';
-const browserOptions=process.env.CI?{channel:'chrome'}:existsSync('/usr/bin/chromium')?{executablePath:'/usr/bin/chromium'}:{};
+import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
+const browserOptions=chromiumLaunchOptions;
 const settle=page=>page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
 async function geometry(page){return page.evaluate(()=>({viewport:innerWidth,scroll:document.documentElement.scrollWidth,controls:[...document.querySelectorAll('input,button,fieldset')].filter(node=>node.getClientRects().length).map(node=>{const r=node.getBoundingClientRect();return {tag:node.tagName,x:r.x,right:r.right,width:r.width,height:r.height};})}));}
 export function inputVisualTests(family,kind){for(const mode of ['light','dark','system']){

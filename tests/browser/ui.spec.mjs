@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
+import { chooseSelect, expectSelectValue } from './select-interaction.mjs';
 
 async function navigationState(item) {
   return item.evaluate(el=>{
@@ -88,6 +89,25 @@ for (const entry of ['navigation','style']) for (const mode of ['light','dark'])
 }
 
 for (const kind of ['vanilla','react']) {
+  test(`${kind}: an unset theme starts dark on a light OS and persisted light/system choices remain respected`,async({page})=>{
+    await page.emulateMedia({colorScheme:'light'});
+    await page.goto(`/${kind}/`);
+    const theme=page.getByRole('combobox',{name:'外观',exact:true});
+    await expectSelectValue(page,theme,'dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
+    await chooseSelect(page,theme,'light','浅色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');await page.reload();await expectSelectValue(page,'外观','light','浅色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
+    await chooseSelect(page,'外观','system','跟随系统');await expect(page.locator('html')).toHaveAttribute('data-theme','system');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');await page.emulateMedia({colorScheme:'dark'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');await page.reload();await expectSelectValue(page,'外观','system','跟随系统');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
+    await chooseSelect(page,'外观','dark','深色');await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');await page.reload();await expectSelectValue(page,'外观','dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
+  });
+  if(kind==='vanilla')test('vanilla example synthetic persisted pagehide preserves both public select owners',async({page})=>{
+    await page.goto('/vanilla/');
+    const theme=page.getByRole('combobox',{name:'外观',exact:true}),brand=page.getByRole('combobox',{name:'主题配方',exact:true});
+    await expect(theme).toBeVisible();await expect(brand).toBeVisible();await expect(page.getByRole('combobox')).toHaveCount(2);
+    await page.evaluate(()=>{window.persistedSelectTriggers=[...document.querySelectorAll('button[role="combobox"]')];window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));});
+    expect(await page.evaluate(()=>window.persistedSelectTriggers.length===2&&window.persistedSelectTriggers.every((node,index)=>node.isConnected&&node===document.querySelectorAll('button[role="combobox"]')[index]))).toBe(true);
+    await page.evaluate(()=>window.xuiTheme.setMode('light'));await expectSelectValue(page,theme,'light','浅色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
+    await chooseSelect(page,'主题配方','example','蓝色覆盖');await expect(brand).toHaveText('蓝色覆盖');await expect(page.locator('html')).toHaveAttribute('data-product','example');
+    await chooseSelect(page,'外观','dark','深色');await expectSelectValue(page,theme,'dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
+  });
   test(`${kind}: modes, first paint, persistence, system changes, override and retained draft`,async({page})=>{
     await page.emulateMedia({colorScheme:'dark'});
     await page.addInitScript(()=>localStorage.setItem('ui.theme.mode','light'));
@@ -100,24 +120,25 @@ for (const kind of ['vanilla','react']) {
     expect(await page.evaluate(()=>window.prePaintTheme)).toMatchObject({theme:'light',themeEffective:'light',bodyExists:false});
     await page.unroute(`**/${kind}/`);
     await page.getByLabel('名称').fill('很长的中文工作空间名称'.repeat(15));
-    const theme=page.getByLabel('外观');await theme.selectOption('dark');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
+    const theme=page.getByRole('combobox',{name:'外观',exact:true});await chooseSelect(page,theme,'dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
     const initial=await page.locator('html').evaluate(el=>getComputedStyle(el).getPropertyValue('--action-primary').trim());
-    await page.getByLabel('主题配方').selectOption('example');
+    await chooseSelect(page,'主题配方','example','蓝色覆盖');
     expect(await page.locator('html').evaluate(el=>getComputedStyle(el).getPropertyValue('--action-primary').trim())).not.toBe(initial);
-    await theme.selectOption('system');await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
+    await chooseSelect(page,theme,'system','跟随系统');await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
     await page.emulateMedia({colorScheme:'dark'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
-    await theme.selectOption('light');await page.emulateMedia({colorScheme:'dark'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
+    await chooseSelect(page,theme,'light','浅色');await page.emulateMedia({colorScheme:'dark'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
     await expect(page.getByLabel('名称')).toHaveValue('很长的中文工作空间名称'.repeat(15));
     expect(await page.evaluate(()=>localStorage.getItem('ui.theme.mode'))).toBe('light');
-    await page.reload();await expect(theme).toHaveValue('light');
+    await page.reload();await expectSelectValue(page,theme,'light','浅色');
   });
-  test(`${kind}: storage and matchMedia failures use a visible safe fallback`,async({page})=>{
+  test(`${kind}: blocked storage defaults dark and explicit system keeps its safe fallback`,async({page})=>{
     await page.emulateMedia({colorScheme:'dark'});
     await page.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw Error('Denied');}});const original=window.matchMedia.bind(window);window.matchMedia=query=>{if(query === '(prefers-color-scheme: dark)') throw Error('Unavailable');return original(query);};});
-    await page.goto(`/${kind}/`);await expect(page.getByLabel('外观')).toHaveValue('system');await expect(page.locator('html')).toHaveAttribute('data-theme','light');
-    await page.getByLabel('外观').selectOption('dark');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
+    await page.goto(`/${kind}/`);await expectSelectValue(page,'外观','dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
+    await chooseSelect(page,'外观','system','跟随系统');await expectSelectValue(page,'外观','system','跟随系统');await expect(page.locator('html')).toHaveAttribute('data-theme','light');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
+    await chooseSelect(page,'外观','dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
     await page.getByRole('button',{name:'保存偏好',exact:true}).click();await expect(page.getByText('偏好已保存在示例内存中。')).toBeVisible();
-    await page.reload();await expect(page.getByLabel('外观')).toHaveValue('system');
+    await page.reload();await expectSelectValue(page,'外观','dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
   });
   test(`${kind}: native input, keyboard/touch states, invalid focus, disabled and dialog lifecycle`,async({page})=>{
     await page.goto(`/${kind}/`);
@@ -145,7 +166,7 @@ for (const kind of ['vanilla','react']) {
     await page.goto(`/${kind}/`);const item=page.getByRole('link',{name:'偏好',exact:true});const other=page.getByRole('link',{name:'详情',exact:true});
     await page.emulateMedia({reducedMotion:'reduce'});
     for(const mode of ['light','dark']) {
-      await page.getByLabel('外观').selectOption(mode);await page.mouse.move(1200,700);
+      await chooseSelect(page,'外观',mode,mode==='light'?'浅色':'深色');await page.mouse.move(1200,700);
       const beforeHover=await navigationState(item);await item.hover();
       expect(await navigationState(item)).toEqual(beforeHover);
     }
@@ -153,14 +174,14 @@ for (const kind of ['vanilla','react']) {
     const selected=await navigationState(item);
     expect(selected.indicator.opacity).toBe('1');expect(selected.border).toBe('0px');
     await other.hover();expect(await other.evaluate(el=>getComputedStyle(el,'::before').opacity)).toBe('0');
-    await item.focus();await expect(item).toBeFocused();expect(await item.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');
+    await page.keyboard.press('Tab');await item.focus();await expect(item).toBeFocused();expect(await item.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');
     await other.focus();expect(await item.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('solid');
     expect(await item.boundingBox()).toEqual(before);
     await other.click();await expect(other).toHaveAttribute('aria-current','page');await other.hover();await expect.poll(()=>other.evaluate(el=>getComputedStyle(el,'::before').opacity)).toBe('1');
   });
   test(`${kind}: wide/narrow, long Chinese, reduced motion and zoom access`,async({page},testInfo)=>{
     for (const viewport of [{width:1280,height:800},{width:390,height:844}]) for (const mode of ['light','dark']) {
-      await page.setViewportSize(viewport);await page.goto(`/${kind}/`);await page.getByLabel('外观').selectOption(mode);
+      await page.setViewportSize(viewport);await page.goto(`/${kind}/`);await chooseSelect(page,'外观',mode,mode==='light'?'浅色':'深色');
       const save=page.getByRole('button',{name:'保存偏好',exact:true});const title=page.getByRole('heading',{name:'工作偏好'});
       await expect(title).toBeInViewport();await expect(save).toBeInViewport();await expect(page.getByLabel('名称')).toBeInViewport();
       const box=await save.boundingBox();expect(box.y+box.height).toBeLessThanOrEqual(viewport.height);

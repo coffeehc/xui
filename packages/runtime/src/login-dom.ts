@@ -34,20 +34,34 @@ export function createAuthPage(root:HTMLElement,initial:AuthPageOptions){
     if(value){if(value.nodeType===11){children=fragments.get(value)??Array.from(value.childNodes);fragments.set(value,children);}else children=[value];}
     slot.anchor.before(...children);slot.value=value;slot.nodes=children;
   };
+  const hasVisibleFeedback=(entry:Node):boolean=>{
+    if(entry.nodeType===3)return !!entry.textContent?.trim();
+    if(entry.nodeType!==1)return false;
+    const element=entry as Element,tag=element.tagName.toUpperCase();if(element.hasAttribute('hidden')||tag==='TEMPLATE')return false;
+    if(/^(BUTTON|INPUT|SELECT|TEXTAREA|IMG|SVG|CANVAS|VIDEO|AUDIO|IFRAME|HR|PROGRESS|METER)$/.test(tag))return true;
+    return Array.from(element.childNodes).some(hasVisibleFeedback);
+  };
+  const synchronizeFeedback=()=>{support.hidden=!Array.from(feedback.childNodes).some(hasVisibleFeedback);};
   const render=()=>{
     page.dataset.layout=config.layout;card.classList.toggle('xui-surface',config.layout==='card');if(product.textContent!==config.productName)product.textContent=config.productName;if(title.textContent!==config.title)title.textContent=config.title;
     logo.hidden=!config.logo;if(config.logo){if(logo.getAttribute('src')!==config.logo.src)logo.src=config.logo.src;if(logo.alt!==config.logo.alt)logo.alt=config.logo.alt;}else{logo.removeAttribute('src');logo.alt='';}
     description.hidden=config.description===undefined;const text=config.description??'';if(description.textContent!==text)description.textContent=text;
     for(const name of slotNames)replaceSlot(name,options[name]);
     actions.hidden=slots.actions.nodes.length===0;alternatives.hidden=slots.alternatives.nodes.length===0;visual.hidden=slots.brandVisual.nodes.length===0;
+    synchronizeFeedback();
     if(form)form.noValidate=options.form?.noValidate??false;
   };
   // A pure layout form must never fall through to a browser GET containing fields.
   const submit=(event:SubmitEvent)=>{event.preventDefault();if(!dead)options.form?.onSubmit?.(event);};
   validateSlots(options);render();form?.addEventListener('submit',submit);root.replaceChildren(page);owners.add(root);const press=bindPressFeedback(page);
+  // Controllers retain their slot nodes and toggle hidden/text in place. Watch
+  // only feedback content so its empty track follows those updates without
+  // rebuilding the form or observing our own support visibility mutation.
+  const feedbackObserver=doc.defaultView?.MutationObserver?new doc.defaultView.MutationObserver(synchronizeFeedback):undefined;
+  feedbackObserver?.observe(feedback,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden']});
   return {getElement:()=>page,getForm:()=>form,update(next:Partial<AuthPageOptions>){
     if(dead)return;const candidate={...options,...next};validateForm(candidate.form);if((candidate.form!==undefined)!==(form!==null))throw new TypeError('Authentication page form mode cannot change');validateSlots(candidate);const nextConfig=resolve(candidate.config);options=candidate;config=nextConfig;render();
-  },destroy(){if(dead)return;dead=true;form?.removeEventListener('submit',submit);press();if(root.childNodes.length===1&&root.firstChild===page)root.replaceChildren(...original);else if(page.parentNode===root)page.remove();owners.delete(root);}};
+  },destroy(){if(dead)return;dead=true;feedbackObserver?.disconnect();form?.removeEventListener('submit',submit);press();if(root.childNodes.length===1&&root.firstChild===page)root.replaceChildren(...original);else if(page.parentNode===root)page.remove();owners.delete(root);}};
 }
 /** Complete public page, configured with data; shares the host's auth and theme owners. */
 export function createLoginPage(root:HTMLElement,{auth,config:input,onAuthenticated,extensions,beforeFields,afterFields,brandVisual}:LoginPageOptions){

@@ -46,18 +46,18 @@ test('login defaults to a card and keeps any optional visual decorative',()=>{
   assert.doesNotMatch(brand,/xui-login-description/);
   assert.match(render(undefined,{layout:'fullscreen'}),/data-layout="fullscreen"/);
   assert.doesNotMatch(render(),/xui-login-visual/);
-  assert.equal((render().match(/xui-login-feedback/g)||[]).length,1);
-  assert.equal((render({status:'unknown',user:null,busy:'session',error:null}).match(/xui-login-feedback/g)||[]).length,1);
+  assert.doesNotMatch(render(),/xui-login-support|xui-login-feedback/);
+  assert.match(render({status:'unknown',user:null,busy:'session',error:null}),/class="xui-login-support"[\s\S]*Checking your sign-in/);
 });
-test('login centers one credential core with its primary action before separate SSO options and feedback support',()=>{
+test('login centers one credential core with its primary action before separate SSO options and omits empty support',()=>{
   const markup=render(undefined,{}, {extensions:{actions:[{id:'oidc',label:'Enterprise OIDC',run(){}},{id:'saml',label:'Enterprise SAML',run(){}}]}});
-  const core=section(markup,'xui-login-content'),body=section(core,'xui-login-body'),actions=section(core,'xui-login-actions','footer'),options=section(core,'xui-login-options'),support=section(markup,'xui-login-support');
+  const core=section(markup,'xui-login-content'),body=section(core,'xui-login-body'),actions=section(core,'xui-login-actions','footer'),options=section(core,'xui-login-options');
   assert.ok(core.indexOf(body)<core.indexOf(actions));assert.ok(core.indexOf(actions)<core.indexOf(options));
   const primary=actions.match(/<button\b[^>]*>/)?.[0]??'';assert.match(primary,/class="[^"]*xui-login-submit[^"]*"/);assert.match(primary,/data-size="lg"/);
   assert.doesNotMatch(actions,/Enterprise OIDC|Enterprise SAML|xui-reserved-action/);
   assert.match(options,/>Enterprise OIDC<\/button>/);assert.match(options,/>Enterprise SAML<\/button>/);
-  assert.doesNotMatch(core,/xui-login-feedback|xui-login-support/);assert.match(support,/class="xui-login-feedback"/);
-  assert.ok(markup.indexOf(core)<markup.indexOf(support));assert.doesNotMatch(render(),/xui-login-options/);
+  assert.doesNotMatch(core,/xui-login-feedback|xui-login-support/);assert.doesNotMatch(markup,/xui-login-support|xui-login-feedback/);
+  assert.doesNotMatch(render(),/xui-login-options/);
 });
 
 test('public login removes cancelled-action UI and obsolete page labels',async()=>{
@@ -77,7 +77,7 @@ test('submission status has one live owner outside the busy button without dupli
   const actions=section(busy,'xui-login-actions','footer'),button=actions.match(/<button\b[\s\S]*?<\/button>/)[0];
   assert.match(button,/aria-busy="true"/);assert.doesNotMatch(button,/aria-live|role="status"/);
   assert.match(actions,/<\/button><span class="xui-login-announcement" role="status" aria-live="polite" aria-atomic="true">Signing in…<\/span>/);
-  assert.doesNotMatch(section(busy,'xui-login-feedback'),/xui-alert|Signing in/);
+  assert.doesNotMatch(busy,/class="xui-login-support"|class="xui-login-feedback"|xui-alert/);
   const checking=render({status:'unknown',user:null,busy:'session',error:null});
   assert.match(section(checking,'xui-login-feedback'),/Checking your sign-in…/);
   assert.doesNotMatch(section(checking,'xui-login-actions','footer'),/role="status"/);

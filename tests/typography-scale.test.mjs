@@ -31,18 +31,15 @@ test('seven roles keep a rem floor and readable ratios under independent bounded
     }
   }
 });
-test('pre-existing defaults remain equivalent except the authorized typography and responsive overlay changes',()=>{
-  const original=metadata.responsiveWidthChanges.reduce((text,change)=>text.replace(change.after,change.before),extract(document,'design-default-css'))
-    .replace(/\/\* typography-registration:start \*\/\n[\s\S]*?\/\* typography-registration:end \*\/\n/,'')
-    .replace(/    \/\* typography-scale:start \*\/\n[\s\S]*?    \/\* typography-scale:end \*\/\n/,metadata.typographyOriginalCss)
-    .replace(/    \/\* centralized-component-tokens:start \*\/\n[\s\S]*?    \/\* centralized-component-tokens:end \*\/\n/,'');
-  const rules=[];postcss.parse(original).walkRules(rule=>rules.push(rule));
+test('Precision migration preserves the published type scales and control/focus geometry',async()=>{
+  const previous=await readFile(metadata.previousContract.snapshotPath,'utf8');
+  const rules=[];postcss.parse(extract(previous,'design-default-css')).walkRules(rule=>rules.push(rule));
   const prior=declarations(rules.find(rule=>rule.selector===':root'));
-  assert.equal(Object.keys(prior).length,275);
-  for(const [name,value] of Object.entries(prior)){
-    if(/^--(?:font-size-|line-height-|chart-(?:axis|legend)-font-size|layout-(?:dialog|confirm|drawer)-width$)/.test(name))continue;
-    assert.equal(expand(light[name],light),expand(value,prior),name);
+  for(const role of Object.keys(roles))for(const prefix of ['font-size-','line-height-']){
+    const name='--'+prefix+role;assert.equal(light[name],prior[name],name);
   }
+  for(const name of ['--base-spacing','--base-font-sans','--base-font-mono','--control-height','--control-height-sm','--control-height-lg','--focus-width','--focus-offset','--login-card-inline-size','--login-control-height','--layout-dialog-width','--layout-drawer-width'])
+    assert.equal(expand(light[name],light),expand(prior[name],prior),name);
 });
 test('font scaling cannot alter geometry roots or replace host reading defaults',async()=>{
   for(const name of ['--base-spacing','--spacing','--base-radius','--control-height','--control-icon-size','--line-width-surface','--focus-width']){

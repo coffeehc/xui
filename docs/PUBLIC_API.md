@@ -95,7 +95,7 @@
 | theme/init/useTheme | system、storage key `ui.theme.mode`、persist 开启；未知值回 system、媒体读取失败生效 light、storage 失败保留内存。传 mode 为受控且不读写 storage；同步 init 复用 window.xuiTheme，useTheme 只订阅 |
 | 原生 UI ID | 按 ownerDocument 共享分配，跨 bundle/多实例/卸载重建不重用；无 crypto/randomUUID 或 HTTPS 前置条件。已有显式 DOM ID 与 Toast message.id 保留。仅临时 UI 身份，不是认证/安全随机或持久业务 ID，见 [内网 HTTP 接入](ADOPTION.md#原生-ui-id-与内网-http) |
 | Button/IconButton | type=button、variant=primary、size=default；busy 与 disabled 分开，无隐式防重复；IconButton 要求 aria-label。render/ref/事件沿用公开 peer 合并合同 |
-| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/NativeSelect 与 checkbox/radio/switch 值/事件由宿主；Fieldset 独立关联 legend/help/error |
+| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Fieldset 独立关联 legend/help/error |
 | MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留原生链接，菜单键盘/drawer owner 由库提供 |
 | GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](GROUPED_SEARCH.md) |
 | Pagination/Disclosure | Pagination 默认第 1 页，pageCount 由宿主；受控 page 只请求确认。Disclosure 默认关闭，装饰性 chevron 与公开 DisclosureIndicator 复用相同 tokens。两者不发请求、不自动路由 |
@@ -110,7 +110,7 @@
 | webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list + 可选 total/next_cursor；总数缺省未知，游标缺省未声明、null明确末页，见 LIST_PAGINATION |
 | API Key | 首次读取由宿主 refresh；canCreate明确true才创建、撤销/删除需capability或明确宿主许可；过期可按授权撤销，删除仅已撤销管理记录。required权限与独立confirmed保留；默认HTTP facade/routes在API_KEY与PAGE_APIS，单一写入owner，未知结果不重复提交；完整值仅瞬时结果 |
 | 业务日志 | 显式首次 refresh，page size=50（1–200），两宿主共享loader，默认原生HTTP facade见PAGE_APIS，auth/scope由宿主；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
-| 登录页/auth | 一个已有 HTTP/auth/theme owner；默认 card 居中单列窄框，显式 fullscreen 沿用单列并省略外框皮肤；紧凑可选 brandVisual、固定局部反馈、自然文档滚动与四边焦点空间。固定 Bearer v2 login/refresh/logout/session、严格schema_version=2、access仅内存/不公开，protectedPaths声明业务端点并强制omit/error，timeout=15000ms、no retry、no-store、上下文401、无写入重放。登录直接 POST，提交禁用显示正在登录；超时后普通会话核验一次，未确认则显示错误并允许手动重试。无持久门禁、恢复预请求或恢复弹窗。页面挂载先恢复再核会话，配置文本/logo，returnTo安全fallback `/`，没有callback则同源根路径导航；密码瞬时DOM，退出未知不假称成功，详见 AUTH |
+| 登录页/auth | 同一个 HTTP/auth/theme owner；居中单列窄框、可选 fullscreen 和 brandVisual。Bearer v2 login/refresh/logout/session；access 仅内存，protectedPaths 明确受保护端点；15秒默认预算、no-store、无写入重放。登录直接 POST，提交禁用显示正在登录；超时后普通会话核验一次，未确认则显示错误并允许手动重试。无持久门禁、恢复预请求或恢复弹窗。保留密码清理、安全回跳和宿主导航扩展，详见 [AUTH](AUTH.md) |
 | 独立结构化错误 | 初始 groups、page size=50（1–200），host 显式 refresh；无隐式 endpoint/scope/排序/总记录数。v1/list/cursor、纳秒时间、uint64 字符串、三态、累计/命中/首次代表；详情只按记录 ID 读取，缓存仅当前链已访问摘要，刷新新快照 |
 
 ## 内容与扩展的真实边界
@@ -206,7 +206,7 @@ AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null�
 
 `@coffeehc/xui-react/forms` 新增 `SimpleSelect`，接收 select 的表单值/事件 props、option/optgroup children、multiple 和 controlSize。可见控件是主题 combobox/listbox；保留原 select 作为隐藏表单/事件桥，Field 的 label/help/error 指向可见 trigger。选择会发原 input/change 事件，受控 value 仍须由宿主回传。原生 `@coffeehc/xui-runtime/dom` 导出 `bindSelectControl(select)`，返回 element/trigger/update/destroy；绑定已挂载 select 时在原位包装，未挂载则挂载 element，不能将 select 单独移出。每次改变 value/selectedOptions/options/disabled/label 后 update，销毁恢复原 select 的可见性/id/tabIndex 并释放事件/浮层。重复绑定复用存活 owner。单选关闭，多选保持浮层并支持 Escape/Tab；没有新增业务查询 owner。
 
-明确需要操作系统选择器时继续用 `NativeSelect` 或原生 select，不宣称其 OS 弹窗外观可被统一。库内 DataTable/APIKey/BusinessLog/StructuredLog 默认选择组合已切换主题控件。React `layout` 新增 `HeaderBrand`；runtime `header-controls` 新增 `createHeaderLocaleSelect`。详细布局与生命周期见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。
+标准示例与默认采用统一使用上述封装，政策见 [DESIGN](DESIGN.md#公共复用与状态矩阵)。`NativeSelect` 与显式平台 binding 保留独立平台合同，不再作为普通表单推荐。库内 DataTable/APIKey/BusinessLog/StructuredLog 默认选择组合已切换主题控件。React `layout` 新增 `HeaderBrand`；runtime `header-controls` 新增 `createHeaderLocaleSelect`。详细布局与生命周期见 [HEADER_CONTROLS](HEADER_CONTROLS.md)。
 
 
 `SimpleSelect`/`bindSelectControl` 同步 form.reset 的默认动作后事实，取消 reset 不更新，销毁后不响应；update 也重连改变后的 form owner。hidden option/optgroup 不出现在列表，disabled optgroup 不可选，组名保留。HTML select.size 只留在隐藏表单桥，不承诺原生多行常驻列表的布局；需要 OS 控件或原生 size 呈现时用 NativeSelect。React select ref 指向表单桥，不是可见 button；原生 binding.trigger 是明确的可见焦点入口。

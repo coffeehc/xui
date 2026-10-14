@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {chooseSelect} from './select-interaction.mjs';
 const api='**/api/xui-example/records?*';
 const reply=(payload,extra={})=>({success:true,message:'',payload,request_id:'fake-body-id',code:1,...extra});
 const record=name=>({id:'fake-record',name,created:'2026-10-11 12:00:00'});
@@ -11,7 +12,7 @@ for(const kind of ['react','vanilla']){
     await page.getByRole('textbox',{name:'名称',exact:true}).fill('资料整理');await page.getByRole('button',{name:'应用筛选'}).click();await expect(page.locator('[data-total]')).toHaveText('共 1 条');expect(urls.at(-1).searchParams.get('page_index')).toBe('0');expect(urls.at(-1).searchParams.get('name')).toBe('资料整理');
     await page.getByRole('textbox',{name:'名称',exact:true}).fill('中文 & + %');await page.getByRole('button',{name:'应用筛选'}).click();await expect(page.getByText('没有匹配记录')).toBeVisible();expect(urls.at(-1).searchParams.get('name')).toBe('中文 & + %');
     await page.getByRole('textbox',{name:'名称',exact:true}).fill('');await page.getByRole('button',{name:'应用筛选'}).click();await expect(page.locator('[data-total]')).toHaveText('共 3 条');expect(urls.at(-1).searchParams.has('name')).toBe(false);
-    await page.getByRole('combobox',{name:'排序'}).selectOption('desc');await expect.poll(()=>urls.at(-1).searchParams.get('sort_name')).toBe('desc');await expect(page.getByRole('region',{name:'记录结果'})).toHaveAttribute('aria-busy','false');expect(await page.evaluate(()=>window.httpMain===document.querySelector('main'))).toBe(true);
+    await chooseSelect(page,page.getByRole('combobox',{name:'排序'}),'desc','名称降序');await expect.poll(()=>urls.at(-1).searchParams.get('sort_name')).toBe('desc');await expect(page.getByRole('region',{name:'记录结果'})).toHaveAttribute('aria-busy','false');expect(await page.evaluate(()=>window.httpMain===document.querySelector('main'))).toBe(true);
   });
   test(`${kind} refresh failure retains data, explicit retry recovers, cancellation and timeout do not publish late results`,async({page})=>{
     let mode='success';const held=[];await page.route(api,async route=>{if(mode==='failure')return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify(reply(null,{success:false,message:'FAKE_PRIVATE_MESSAGE',code:-1}))});if(mode==='hang'){await new Promise(resolve=>held.push(async()=>{await route.fulfill({contentType:'application/json',body:JSON.stringify(reply({list:[record('晚到记录')],total:1}))}).catch(()=>{});resolve();}));return;}return route.continue();});

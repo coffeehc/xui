@@ -1,6 +1,6 @@
 # 通用基础实施与采用接口
 
-完整通用规则仅在 [DESIGN.md](DESIGN.md)，当前版本 0.7.0。架构分层仅在 [原子→组合→页面](FOUNDATION.md#组件层次与扩展原则)；本文件记录真实入口与实现映射，不维护另一套品牌默认值或架构哲学。
+完整通用规则仅在 [DESIGN.md](DESIGN.md)，当前版本 0.8.0（Precision Engineering Console）。架构分层仅在 [原子→组合→页面](FOUNDATION.md#组件层次与扩展原则)；本文件记录真实入口与实现映射，不维护另一套品牌默认值或架构哲学。
 
 ## 包与正式入口
 
@@ -14,7 +14,7 @@
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
 
-`design-default-css` 是唯一受控原始值来源。生成器检查 343 个变量、全部模式依赖图、前言摘要、产品覆盖和提取字节一致性。0.6.0新增四个头部/侧栏token；0.7.0增加68个公共文字根与集中设计参数，七组rem字号/行高由font-scale/line-height-scale派生，文字默认与0.6.0一致；用户追加的Dialog/Confirm/Sheet响应式宽度默认单列记录。来源元数据记录原文字CSS与每项规范变更，继续逆向核验原始文件SHA256。浮层 CSS 只允许 peer 提供的四个测量变量：available-height、anchor-width、toast-swipe-movement-x/y；它们不是品牌默认值或泛化缺失变量白名单。
+`design-default-css` 是唯一受控原始值来源。生成器检查 372 个变量、全部模式依赖图、前言摘要、产品覆盖和提取字节一致性。0.6.0新增四个头部/侧栏token；0.7.0增加68个公共文字根与集中设计参数，七组rem字号/行高由font-scale/line-height-scale派生，文字默认与0.6.0一致；用户追加的Dialog/Confirm/Sheet响应式宽度默认单列记录。0.8.0 的按钮 hover/pressed 沿既有 action-primary 语义配方派生，产品仅覆盖主色与成对文字即可继承各状态。来源元数据记录原文字CSS与每项规范变更，继续逆向核验原始文件SHA256。浮层 CSS 只允许 peer 提供的四个测量变量：available-height、anchor-width、toast-swipe-movement-x/y；它们不是品牌默认值或泛化缺失变量白名单。
 
 tokens.css 按规范声明 design-defaults → product-overrides → design-accessibility；组件声明位于独立的 xui-components 层。按 tokens.css 后组件样式的标准加载顺序，xui-components 首次出现于这三层之后。产品在 product-overrides 覆盖少量语义变量，design-accessibility 再落实 reduced-motion；本说明不另设 token 层或更改现有层契约。旧项目未分层 CSS 的普通声明高于所有分层声明，不能只靠导入顺序推断 xui 能覆盖旧样式。采用时显式决定旧 CSS 所在层或移除精确重复规则，再检查真实 computed style。产品覆盖在同一 document 根上；本版不支持子树独立主题。
 
@@ -45,7 +45,7 @@ foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控
 | --- | --- |
 | 布局 | AppShell、Container、Stack、Grid、PageHeader、Toolbar、Section。AppShell 有 skip link、桌面 sidebar、窄屏模态 drawer；一个 sidebar 树，resize 回到可见焦点。宿主拥有路由、选中、sidebarOpen/onSidebarOpenChange |
 | 操作 | Button/IconButton 复用 Base UI Button，支持 ref、render、nativeButton、className 函数、事件取消；默认 type=button。aria-busy 与 disabled 独立，不自动防重。render 为链接且希望链接语义时明确 role=link；nativeButton=false 保持 peer 默认按钮语义 |
-| 字段 | Field 每个一个 Input/Textarea/NativeSelect 或 choice。controlId 是显式 owner；未给 controlId 时识别直接或结构包装内已知控件的 id。自定义复合控件用 controlId 显式关联。help/error/required/invalid/describedby 自动关联；readOnly/ref 保留 |
+| 字段 | Field 每个一个 Input/Textarea/SimpleSelect 或 choice。controlId 是显式 owner；未给 controlId 时识别直接或结构包装内已知控件的 id。自定义复合控件用 controlId 显式关联。help/error/required/invalid/describedby 自动关联；readOnly/ref 保留 |
 | 分组 | Fieldset 清除单字段上下文，独立 legend/help/error；Checkbox/Radio/Switch 各有自己的 label、name、checked/defaultChecked 和 onChange，不共用输入 id |
 | 导航 | Nav/NavItem、Breadcrumbs、Pagination、Disclosure。Pagination/Disclosure 受控与非受控，宿主负责导航/数据；NavItem disabled 去 href 并阻止激活 |
 | Tabs | Root/List/Tab/Panel 复用 peer；方向键/Home/End 仅适配跳过 disabled，保留手动/自动激活、loop、RTL/orientation、ref/render/className 函数和 Tab/List capture/bubble。preventBaseUIHandler 取消控件行为，preventDefault 仅取消浏览器默认 |
@@ -54,8 +54,10 @@ foundation 两个参考页在首屏前读取一个宿主 JSON key，再以受控
 | 通知 | Toast Provider/manager/Root/Content/Viewport/Close 等复用 peer。peer 支持 collapsed/expanded，关闭控件在展开状态可访问，宿主不能将必要错误仅放在消失通知中 |
 | 表格 | Table/Container/Caption/Head/Body/Row/HeaderCell/Cell/SortButton，真实 table，striped/expandedRow、TableExpandedRow/ExpandButton、sticky start/end及显式stickyOffset，named overflow region，scope/aria-sort/selected 由宿主事实提供。无排序/选择/查询/虚拟化引擎 |
 | 组合管理页 | ApiKeyManager、BusinessLogExplorer、StructuredLogExplorer 使用 runtime 共享 controller；原生 createApiKeyManager/createBusinessLogExplorer/createStructuredLogExplorer 生成完整结构。领域回调、日志拟议 facade、详情权限由宿主，详见 [API_KEY.md](API_KEY.md)、[BUSINESS_LOGS.md](BUSINESS_LOGS.md)、[LOGS.md](LOGS.md) |
-| 配置登录页 | AuthPage/createAuthPage统一无请求的setup/启动/认证布局，完整ConfigurableLoginPage 与原生 createLoginPage内部复用它，并使用同一 auth/theme owner，默认整个动态视口左品牌/右表单（显式 card 保留旧卡片），窄屏上下布局，装饰 brandVisual 窄屏收起；正文/操作滚动区保留四边焦点安全空间；登录页无主题选择器，首屏沿已有 localStorage 偏好、无值默认 system；公开品牌文案/logo/labels/安全回跳；内部复用基础控件/CSS；[登录定量验收](LOGIN_VISUAL_ACCEPTANCE.md)核对身份/插画组合、32/40标题、400px表单、单主动作、局部反馈与真实截图。固定 Bearer v2 login/refresh/session/logout、私有内存access、明确protectedPaths、15秒预算、cookie恢复/跨tab协调与密码清理见 [AUTH.md](AUTH.md)；配套baseservice facade，真实产品接入另验 |
+| 配置登录页 | AuthPage/createAuthPage统一无请求的setup/启动/认证布局，完整ConfigurableLoginPage 与原生 createLoginPage内部复用它，并使用同一 auth/theme owner，默认动态视口居中的自然高度单列框，fullscreen沿用同一列结构并省略Surface皮肤，装饰 brandVisual 窄屏收起；正文/操作滚动区保留四边焦点安全空间；登录页无主题选择器，首屏沿已有 localStorage 偏好、无值默认 dark；公开品牌文案/logo/labels/安全回跳；内部复用基础控件/CSS；[登录定量验收](LOGIN_VISUAL_ACCEPTANCE.md)核对居中单框、20/28标题、376px操作区、单主动作、局部反馈与真实截图。固定 Bearer v2 login/refresh/session/logout、私有内存access、明确protectedPaths、15秒预算、cookie恢复/跨tab协调与密码清理见 [AUTH.md](AUTH.md)；配套baseservice facade，真实产品接入另验 |
 | 状态 | Surface/Alert、Badge/Skeleton/Spinner/Progress、Loading/Empty/ErrorState、DataRegion、RenderBoundary、useResource。错误/重试文字由宿主；render exception 重置不重试 Promise |
+
+`Badge`、`BadgeProps` 与 `BadgeTone` 从 `@coffeehc/xui-react/feedback` 及根入口导出。`tone` 为 neutral/info/success/warning/error，默认 neutral；例如 `<Badge tone="success">运行正常</Badge>`。原生使用 `<span class="xui-badge" data-tone="success">运行正常</span>`，没有 Badge constructor。neutral、未设置 data-tone 与普通 Tag 保留无边框、无底色的被动文字；显式状态才应用语义前景/soft/line、横向间距和4px圆角。标签文字或图标由宿主表达状态，不自动增加 live region、tab stop 或脉冲。
 
 Dialog 关闭不会自动保存；移除触发器时指定 finalFocus。浮层非模态时不 trap 焦点，模态与取消/回焦点按 peer。Tooltip.Content 内只有说明，交互内容用 Popover。动画使用统一 motion token；reduced-motion 下状态立即变化。
 
@@ -89,7 +91,7 @@ open/value 受控时仅发请求，宿主调用 syncOpen/syncValue 更新事实�
 
 原生 Toast 的 hover 与内部 focus 都会暂停宿主指定的 timeout；两者都离开才恢复剩余时长，内部焦点迁移不恢复。计时使用所属 window 的 performance.now()，不受系统墙钟调整影响。当前不因 document.hidden 单独暂停，后台定时器调度由浏览器决定；必要事实和错误不能只放在自动消失通知中。
 
-目标是支持 HTML dialog、Popover、matchMedia、AbortController、ESM dynamic import 的现代浏览器。原生 select/datalist 使用 OS 面板，datalist 允许自由输入且不是完整受控 Combobox；没有声明跨移动 OS 弹出实现一致。
+目标是支持 HTML dialog、Popover、matchMedia、AbortController、ESM dynamic import 的现代浏览器。标准示例与默认采用遵循[公共封装政策](DESIGN.md#公共复用与状态矩阵)：SimpleSelect / bindSelectControl 使用主题选择浮层，搜索选择复用 Combobox / CommandPicker。NativeSelect 与显式平台 binding 仅保留独立平台合同；其 OS 面板不声明跨平台统一。隐藏 select 仍是封装内部的表单与事件桥。
 
 菜单/布局的共享数据、导航适配、状态、键盘、生命周期与两类正式消费示例见 [NAVIGATION.md](NAVIGATION.md)。
 

@@ -1,6 +1,6 @@
 # 顶栏相邻控件与语言入口
 
-本轮补齐只影响公共顶栏。完整槽顺序、主题与 i18n 所有权见 [LAYOUT_SLOTS](LAYOUT_SLOTS.md)，默认值来自 [DESIGN](DESIGN.md)。正式消费入口为 React `AppHeader` / `AppShell` / `MenuLayout` 与原生 `createMenuLayout`；普通表单 `NativeSelect` / `.xui-select` 保留输入边界。
+本轮补齐只影响公共顶栏。完整槽顺序、主题与 i18n 所有权见 [LAYOUT_SLOTS](LAYOUT_SLOTS.md)，默认值来自 [DESIGN](DESIGN.md)。正式消费入口为 React `AppHeader` / `AppShell` / `MenuLayout` 与原生 `createMenuLayout`；普通表单 `SimpleSelect` / `bindSelectControl` 保留输入边界。
 
 ## 相邻工具与账号
 
@@ -10,7 +10,7 @@ secondary 的相邻组统一使用 `space-control-gap`。账号仍是 controls �
 
 ## 统一主题的语言入口与浮层
 
-`HeaderLocaleOptions` 仍由宿主提供 `enabled/value/options/onValueChange/label/disabled`。顶栏现使用可见 button/combobox 与主题 listbox，React 与原生都复用正式 `createHeaderLocaleSelect(document, options)`、`bindSelectControl` 和同一个公共 popover owner，React 在 layout effect 内管理挂载/更新/清理，不为默认 shell 引入另一套选择器 owner。此组合不新增 SSR/hydration 支持承诺。OS 原生菜单不再作为顶栏默认。独立 `NativeSelect` 及显式 `bindHeaderLocaleSelect` 仍保留原生选择器合同，其 OS 面板不能通过 CSS 保证跨平台统一。
+`HeaderLocaleOptions` 仍由宿主提供 `enabled/value/options/onValueChange/label/disabled`。顶栏现使用可见 button/combobox 与主题 listbox，React 与原生都复用正式 `createHeaderLocaleSelect(document, options)`、`bindSelectControl` 和同一个公共 popover owner，React 在 layout effect 内管理挂载/更新/清理，不为默认 shell 引入另一套选择器 owner。此组合不新增 SSR/hydration 支持承诺。标准示例和默认采用遵循 [DESIGN 公共封装政策](DESIGN.md#公共复用与状态矩阵)。独立 `NativeSelect` 及显式 `bindHeaderLocaleSelect` 仅保留平台选择器合同与独立审计，其 OS 面板不能通过 CSS 保证跨平台统一。
 
 入口默认透明边框，hover/pressed/disabled/focus 消费同一语义 token；装饰箭头不成为第二个焦点目标，RTL 使用逻辑方向，强制颜色下仍保留箭头与可见边界。浮层使用公共 overlay 颜色、边界、阴影和选中态；按触发器定位，受可见视口安全边距与可用高度限制，长选项滚动。原生 owner 监听 trigger/浮层 resize、滚动及 visualViewport；不会要求产品修正固定坐标。
 
@@ -32,9 +32,9 @@ secondary 的相邻组统一使用 `space-control-gap`。账号仍是 controls �
 
 ## 正式消费者与验收
 
-既有 [React消费者](../examples/header-controls-react/app.tsx) / [原生消费者](../examples/header-controls-vanilla/app.js) 增加 `?compact&locale`（small ghost 账号、公共 Avatar、升级状态、语言/主题）、`&long`（长中文账号），React另有 `&direct` 直接消费 AppHeader。两端同时提供普通表单select用于边界隔离，`headerDemo` 只作为合成演示的宿主状态控制。无示例私有 CSS、真实账号或产品API。
+既有 [React消费者](../examples/header-controls-react/app.tsx) / [原生消费者](../examples/header-controls-vanilla/app.js) 增加 `?compact&locale`（small ghost 账号、公共 Avatar、升级状态、语言/主题）、`&long`（长中文账号），React另有 `&direct` 直接消费 AppHeader。两端同时提供普通表单 SimpleSelect / bindSelectControl 用于边界隔离，`headerDemo` 只作为合成演示的宿主状态控制。无示例私有 CSS、真实账号或产品API。
 
-[专项单测](../tests/header-locale.test.mjs) 覆盖受控请求、回调重入、unknown/disabled/更新、重复初始化、销毁与旧句柄、React同构结构和CSS范围。[浏览器合同](../tests/browser/header-compact.spec.mjs) 在正式tarball消费者中覆盖三模式×桌面/390px、真实按钮/图标/头像与箭头rect、hover/pressed/focus/disabled、RTL、长账号、200%字号、普通select边界、unknown与取消、关闭/重建与销毁。
+[专项单测](../tests/header-locale.test.mjs) 覆盖受控请求、回调重入、unknown/disabled/更新、重复初始化、销毁与旧句柄、React同构结构和CSS范围。[浏览器合同](../tests/browser/header-compact.spec.mjs) 在正式tarball消费者中覆盖三模式×桌面/390px、真实按钮/图标/头像与箭头rect、hover/pressed/focus/disabled、RTL、长账号、200%字号、普通主题选择控件边界、unknown与取消、关闭/重建与销毁。
 
 本轮本地 Chromium 已确认受运行环境 socket 权限限制，未绕过或再次尝试。此处仅声明已加入可执行验收，不把测试收集、源码断言或几何推导说成新浏览器通过。最终构建/types/单测/tarball结果由集成任务记录；浏览器由同提交 CI 真实执行后确认。未修改产品、发布包或部署。
 

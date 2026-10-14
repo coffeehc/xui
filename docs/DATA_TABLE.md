@@ -62,9 +62,9 @@ const columns: readonly DataTableColumn<Row>[] = [
         <Input value={query.search} onChange={event => requestSearch(event.target.value)}/>
       </DataTableFilter>
       <DataTableFilter label="类型">
-        <NativeSelect value={query.type} onChange={event => requestType(event.target.value)}>
+        <SimpleSelect value={query.type} onChange={event => requestType(event.target.value)}>
           {typeOptions}
-        </NativeSelect>
+        </SimpleSelect>
       </DataTableFilter>
     </DataTableToolbar>}/>
 </MenuLayout>
@@ -76,7 +76,7 @@ const columns: readonly DataTableColumn<Row>[] = [
 
 这个下限保证边缘记录操作的可达空间，不保证任意高度的全部中间行都可完整同屏。自定义超高单元格仍由表体滚动访问；需要逐行长文档阅读时可选 `document`，或按已有 `stickyHeader={false}` / `{stickyHeader:false}` 关闭吸顶列头。父视口本身不足时使用祖先滚动，不裁切内容。
 
-外部 `pageToolbar` 仍受支持，与内部 `toolbar` 二选一放同一组筛选；不要复制搜索或增加查询 owner。`DataTableToolbar` 复用 Toolbar，`DataTableFilter` 复用 Field 的标签/id/错误关联；普通筛选默认使用 `--data-table-filter-min`，`grow` 搜索使用既有长字段尺度，在足够宽时自然同排，窄屏换行。不要直接依赖 NativeSelect 的全宽规则排列整个筛选区域。原生使用 `createDataTableToolbar(document, nodes)` 和 `createDataTableFilter(document, {label,control,grow})`，业务 control Node 与事件始终属于宿主。未提供搜索、动作或 toolbar 时，不为缺失能力保留空控件。
+外部 `pageToolbar` 仍受支持，与内部 `toolbar` 二选一放同一组筛选；不要复制搜索或增加查询 owner。`DataTableToolbar` 复用 Toolbar，`DataTableFilter` 复用 Field 的标签/id/错误关联；普通筛选默认使用 `--data-table-filter-min`，`grow` 搜索使用既有长字段尺度，在足够宽时自然同排，窄屏换行。不要直接依赖 SimpleSelect 的全宽规则排列整个筛选区域。原生使用 `createDataTableToolbar(document, nodes)` 和 `createDataTableFilter(document, {label,control,grow})`，业务 control Node 与事件始终属于宿主。简单选择先创建字段容器，再对其 select 调用 bindSelectControl；保存 select 引用，值/选项变化后 update，移除时 destroy。封装会将字段 id 转移给可见 trigger，后续不能通过该 id 读取表单桥的 value。未提供搜索、动作或 toolbar 时，不为缺失能力保留空控件。
 
 pageToolbar 容器原本就没有常驻下边框，和下方正文之间已有 `--layout-section-gap`。不要额外包整行 border-b；迁移时清理产品重复分隔及 footer/表体定位 CSS。表头、行和底栏必要边界保留。
 

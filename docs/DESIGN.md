@@ -1,41 +1,41 @@
 ---
-name: Product Family UI Contract
-description: Portable semantic variables, default theme, component states and content-first information architecture.
+name: Precision Engineering Console
+description: High-signal graphite and cyan engineering console with paired light/dark semantic themes.
 colors:
-  primary: "#326c62"
+  primary: "#0e7490"
   on-primary: "#ffffff"
-  primary-dark: "#88bab0"
-  on-primary-dark: "#14231f"
-  foreground: "#2d3431"
-  foreground-dark: "#edf0e9"
-  muted-foreground: "#666862"
-  muted-foreground-dark: "#aab5ac"
-  background: "#faf9f6"
-  background-dark: "#171c1a"
-  canvas: "#f4f2ed"
-  canvas-dark: "#171c1a"
-  shell: "#faf9f6"
-  shell-dark: "#202824"
-  surface: "#f7f5f1"
-  surface-dark: "#242d28"
-  support: "#eceae4"
-  support-dark: "#28352f"
-  raised: "#fffefb"
-  raised-dark: "#2b352f"
-  overlay: "#fffefb"
-  overlay-dark: "#303b34"
-  muted: "#eeece6"
-  muted-dark: "#2b332e"
-  separator: "#deded5"
-  separator-dark: "#364139"
-  surface-line: "#d6d9d1"
-  surface-line-dark: "#3b4840"
-  surface-line-strong: "#a7b4aa"
-  surface-line-strong-dark: "#637468"
-  input-line: "#a3afa5"
-  input-line-dark: "#687c70"
-  selected: "color-mix(in oklab, #326c62 9%, #fffefb)"
-  selected-dark: "color-mix(in oklab, #88bab0 13%, #242d28)"
+  primary-dark: "#06b6d4"
+  on-primary-dark: "#090b0e"
+  foreground: "#0f172a"
+  foreground-dark: "#f1f5f9"
+  muted-foreground: "#475569"
+  muted-foreground-dark: "#94a3b8"
+  background: "#f1f5f9"
+  background-dark: "#090b0e"
+  canvas: "#f1f5f9"
+  canvas-dark: "#090b0e"
+  shell: "#e8eef5"
+  shell-dark: "#11151c"
+  surface: "#f8fafc"
+  surface-dark: "#11151c"
+  support: "#e2e8f0"
+  support-dark: "#0d1016"
+  raised: "#ffffff"
+  raised-dark: "#11151c"
+  overlay: "#ffffff"
+  overlay-dark: "#1a2230"
+  muted: "#e2e8f0"
+  muted-dark: "#161e28"
+  separator: "#cbd5e1"
+  separator-dark: "#1e2633"
+  surface-line: "#cbd5e1"
+  surface-line-dark: "#1e2633"
+  surface-line-strong: "#64748b"
+  surface-line-strong-dark: "#52657e"
+  input-line: "#64748b"
+  input-line-dark: "#5b708b"
+  selected: "color-mix(in oklab, #0e7490 9%, #ffffff)"
+  selected-dark: "color-mix(in oklab, #06b6d4 13%, #11151c)"
 typography:
   caption:
     fontFamily: Inter Variable
@@ -73,11 +73,11 @@ typography:
     fontWeight: 600
     lineHeight: 1.75rem
 rounded:
-  sm: 0.3rem
-  md: 0.4rem
-  lg: 0.5rem
-  xl: 0.7rem
-  2xl: 0.9rem
+  sm: 0.125rem
+  md: 0.25rem
+  lg: 0.375rem
+  xl: 0.5rem
+  2xl: 0.5rem
 spacing:
   unit: 0.25rem
   text-gap: 0.25rem
@@ -88,12 +88,12 @@ components:
   button-primary:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.on-primary}"
-    rounded: "{rounded.lg}"
+    rounded: "{rounded.md}"
     height: 2.25rem
   button-primary-dark:
     backgroundColor: "{colors.primary-dark}"
     textColor: "{colors.on-primary-dark}"
-    rounded: "{rounded.lg}"
+    rounded: "{rounded.md}"
     height: 2.25rem
   navigation-selected:
     backgroundColor: "{colors.selected}"
@@ -117,11 +117,11 @@ components:
 
 这是产品界面的完整通用设计契约，供开发者和编码 Agent 直接执行。可将本文件单独提取为任意项目根目录的 DESIGN.md；执行本规范不依赖原仓库路径、实施附录、某个前端框架或业务路由。本文件是唯一权威品牌规范。项目自己的组件映射、文件职责、路由和审计证据另写实施文档，引用本文件，不另立一份完整规范。
 
-当前示例主题为暖灰与青绿：中性表面组织内容，低饱和主色引导操作，标题、留白、一层边界和行分隔表达层级。轻量不等于删除所有区域边界。前言中的颜色是可以替换的主题取值；字体、间距、布局、组件状态及可访问性契约独立于这些颜色。更换主题应集中修改变量和对应前言，核验所有语义角色及浅深对比，不逐页换色。
+当前默认品牌为 Precision Engineering Console：以深石墨背景、冷灰分层表面、青蓝主操作、翠绿成功、琥珀人工介入和红色错误提高信噪比。深色为首次使用基准；浅色是同一色相与语义的冷灰白配对，已有用户的显式偏好继续生效。Inter 负责界面文字，JetBrains Mono 负责代码、技术标识与表格数字；细边界和4px基础控件圆角表达工程精度。颜色、字体、间距、布局、状态及可访问性均由本文件统一定义，更换主题集中调整变量和前言，不逐页换色。
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.7.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.8.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -156,15 +156,15 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
 
 ### 变量分层、默认值和覆盖协议
 
-下面给出完整可用的默认 CSS 变量声明。前言是便于工具读取的关键值摘要，CSS 是完整默认值与依赖关系；两者必须一致。无特殊需求的系统原样采用默认值，不需要建立一套新主题。将本文件原样提取到项目后，产品调整另存集中覆盖 CSS，不修改一份全文分叉标准；家族源统一维护版本，各采用项目记录版本、覆盖项和验证结果。可以统一导入默认 CSS，也可以从同一版本原样提取，不能手改多份默认值。
+下面给出完整可用的默认 CSS 变量声明。前言是便于工具读取的关键值摘要（无后缀为浅色配对，-dark为深色基准），CSS 是完整默认值与依赖关系；两者必须一致。:root 为深色默认，显式 light 及系统浅色媒体覆盖为浅色配对，显式 system 深色继承根配方。无特殊需求的系统原样采用默认值，不需要建立一套新主题。将本文件原样提取到项目后，产品调整另存集中覆盖 CSS，不修改一份全文分叉标准；家族源统一维护版本，各采用项目记录版本、覆盖项和验证结果。可以统一导入默认 CSS，也可以从同一版本原样提取，不能手改多份默认值。
 
 | 层级 | 名称与用途 | 默认值/依赖及覆盖边界 |
 | --- | --- | --- |
-| 基础 | palette-* 主题调色板、base-font-*、base-weight-*、base-spacing、base-radius、base-line-* | 暖灰青绿调色板；Inter/Mono回退；400/500/600；4px、8px、1/2px。只供主题编排，不让业务组件直读 |
+| 基础 | palette-* 主题调色板、base-font-*、base-weight-*、base-spacing、base-radius、base-line-* | Precision石墨/青蓝及冷灰白配对；Inter/Mono回退；400/500/600；4px间距/基础圆角、1/2px边线。只供主题编排，不让业务组件直读 |
 | 主题配方 | selected-weight/base、状态soft/line权重 | 浅深配方见CSS，合成不透明表面。它们是默认主题内部参数，不是页面API |
 | 语义颜色 | action-*、foreground、layer-*、interaction-*、status-*、input、separator/surface-line | 由基础调色板和配方派生，名称不随色相变化；产品优先覆盖这一层 |
 | 文字 | font-sans/mono/heading/document、font-weight-body/control/heading、font-size-*、line-height-* | 字体栈别名；400/500/600；七个角色的默认字号/行高。图表轴和图例引用文字角色 |
-| 共享尺度 | spacing、space-*、control-height[-xs/-sm/-lg]、control-icon-size[-xs]、radius-*、line-width-*、focus-* | gap4/8/12/16及图文6；高36/24/32/40；图标16/12；圆角4.8/6.4/8/11.2/14.4；线1/1/2；焦点2+2px |
+| 共享尺度 | spacing、space-*、control-height[-xs/-sm/-lg]、control-icon-size[-xs]、radius-*、line-width-*、focus-* | gap4/8/12/16及图文6；高36/24/32/40；图标16/12；圆角2/4/6/8/8；线1/1/2；焦点2+2px |
 | 层级 | shadow-flat/subtle/surface/raised/overlay、z-shell/sticky/overlay/menu/notice | 普通none、浮层成对阴影；z为10/20/50/70/80。只在公共portal/层级适配中消费 |
 | 布局 | layout-content-inset[-narrow]/max、section/toolbar/field-gap、field[-long]-min、header-height、dialog/confirm/drawer-width、viewport-inset | 横20/16px，max none，gap16/8/16，字段240/288，顶栏48，弹层宽度按40%/30%/60%及各自rem上下限，视口边16；是可覆盖默认约束，不强制所有产品同一页面骨架 |
 | 动效 | motion-duration[-fast/-enter/-exit]、motion-easing[-exit]、motion-distance-small、motion-press/enter-scale | 150/100/180/120ms，进入/状态与退出曲线，4px、0.98；减少动效为0ms/0px/1，保留即时反馈 |
@@ -174,7 +174,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
 
 依赖方向是基础→语义→必要组件：例如 base-spacing→spacing→control-height→button-height，palette-primary→action-primary→interaction-focus，action-primary+layer-raised→interaction-selected→menu-item-selected-background。组件只消费语义或组件变量。不得从button反向定义action-primary，不能互相引用形成循环，不能让通用变量依赖领域状态。
 
-根元素data-theme为light或dark时强制对应主题；缺省或system时由CSS跟随系统。产品已有class/原生主题API可在实施层映射这一契约，不要求更换存储格式。主题分支只切换调色板、配方和浮层阴影；产品覆盖置于product-overrides层，因此不被更具体的默认dark选择器覆盖。design-accessibility层在产品覆盖后落实减少动效。普通未分层CSS优先于分层CSS，应避免旧全局声明意外接管规范值。
+根元素data-theme为light或dark时强制对应主题；缺省为dark，只有显式system由CSS跟随系统。产品已有class/原生主题API可在实施层映射这一契约，不要求更换存储格式。主题分支只切换调色板、配方和浮层阴影；产品覆盖置于product-overrides层，因此不被更具体的默认dark选择器覆盖。design-accessibility层在产品覆盖后落实减少动效。普通未分层CSS优先于分层CSS，应避免旧全局声明意外接管规范值。
 
 默认声明和产品覆盖都作用于同一根元素。CSS变量继承的是已求值结果：需要子树主题时，必须在该作用域重新声明相关派生角色，不只覆盖子节点基础值就假定祖先别名全部重算。层叠与求值遵守[CSS变量规范](https://www.w3.org/TR/css-variables-1/#using-variables)和[CSS层叠规范](https://www.w3.org/TR/css-cascade-5/#layer-order)。
 
@@ -191,52 +191,55 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
 @layer design-defaults, product-overrides, design-accessibility;
 @layer design-defaults {
   :root {
-    color-scheme: light;
+    color-scheme: dark;
     /* Base: theme swatches and shared scales. Components do not consume these directly. */
-    --palette-primary: #326c62;
-    --palette-on-primary: #ffffff;
-    --palette-secondary: #607367;
-    --palette-on-secondary: #2d3431;
-    --palette-foreground: #2d3431;
-    --palette-muted-foreground: #666862;
-    --palette-background: #faf9f6;
-    --palette-canvas: #f4f2ed;
-    --palette-shell: #faf9f6;
-    --palette-surface: #f7f5f1;
-    --palette-support: #eceae4;
-    --palette-raised: #fffefb;
-    --palette-overlay: #fffefb;
-    --palette-muted: #eeece6;
-    --palette-separator: #deded5;
-    --palette-surface-line: #d6d9d1;
-    --palette-surface-line-strong: #a7b4aa;
-    --palette-input-line: #a3afa5;
-    --palette-info: oklch(0.59 0.12 232);
-    --palette-info-foreground: oklch(0.4 0.08 232);
-    --palette-warning: oklch(0.62 0.14 74);
-    --palette-warning-foreground: oklch(0.42 0.08 74);
-    --palette-success: oklch(0.54 0.15 151);
-    --palette-success-foreground: oklch(0.4 0.13 151);
-    --palette-error: oklch(0.577 0.245 27.325);
-    --palette-error-foreground: oklch(0.4 0.18 27);
+    --palette-primary: #06b6d4;
+    --palette-on-primary: #090b0e;
+    --palette-secondary: #10b981;
+    --palette-on-secondary: #090b0e;
+    --palette-foreground: #f1f5f9;
+    --palette-muted-foreground: #94a3b8;
+    --palette-background: #090b0e;
+    --palette-canvas: #090b0e;
+    --palette-shell: #11151c;
+    --palette-surface: #11151c;
+    --palette-support: #0d1016;
+    --palette-raised: #11151c;
+    --palette-overlay: #1a2230;
+    --palette-muted: #161e28;
+    --palette-separator: #1e2633;
+    --palette-surface-line: #1e2633;
+    --palette-surface-line-strong: #52657e;
+    --palette-input-line: #5b708b;
+    --palette-info: #06b6d4;
+    --palette-info-foreground: #22d3ee;
+    --palette-warning: #f59e0b;
+    --palette-warning-foreground: #fbbf24;
+    --palette-success: #10b981;
+    --palette-success-foreground: #34d399;
+    --palette-error: #ef4444;
+    --palette-error-foreground: #f87171;
     --palette-error-surface: var(--palette-error);
-    --palette-state-base: #ffffff;
-    --palette-shadow-ink: #2d3431;
+    --palette-state-base: #11151c;
+    --palette-shadow-ink: #000000;
+    --palette-input-surface: #0c0f14;
+    --palette-on-danger: #090b0e;
+    --palette-table-stripe: #131922;
     --base-font-sans: "Inter Variable", Inter, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "WenQuanYi Micro Hei", system-ui, sans-serif;
     --base-font-mono: "JetBrains Mono Variable", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Noto Sans Mono CJK SC", "Source Han Mono SC", "Sarasa Mono SC", "PingFang SC", "Microsoft YaHei", "Courier New", monospace;
     --base-weight-regular: 400;
     --base-weight-medium: 500;
     --base-weight-semibold: 600;
     --base-spacing: 0.25rem;
-    --base-radius: 0.5rem;
+    --base-radius: 0.25rem;
     --base-line-thin: 1px;
     --base-line-emphasis: 2px;
-    --palette-series-1: #2f6bff;
-    --palette-series-2: #ff8a00;
-    --palette-series-3: #1e2939;
-    --palette-series-4: #4ac9ec;
-    --palette-series-5: #a696e9;
-    --palette-series-6: #00a14c;
+    --palette-series-1: #06b6d4;
+    --palette-series-2: #f59e0b;
+    --palette-series-3: #94a3b8;
+    --palette-series-4: #38bdf8;
+    --palette-series-5: #a78bfa;
+    --palette-series-6: #10b981;
     --palette-document-canvas: #ffffff;
     --palette-document-node-fill: #0d3152;
     --palette-document-node-stroke: #315b80;
@@ -250,16 +253,16 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --palette-document-series-5: #a696e9;
     --palette-document-series-6: #00a14c;
     /* Semantic: meaning stays stable when the theme changes. */
-    --selected-weight: 9%;
-    --selected-base: var(--layer-raised);
-    --info-soft-weight: 12%;
-    --info-line-weight: 36%;
-    --warning-soft-weight: 13%;
-    --warning-line-weight: 38%;
-    --success-soft-weight: 12%;
-    --success-line-weight: 36%;
-    --error-soft-weight: 11%;
-    --error-line-weight: 36%;
+    --selected-weight: 13%;
+    --selected-base: var(--layer-surface);
+    --info-soft-weight: 10%;
+    --info-line-weight: 30%;
+    --warning-soft-weight: 10%;
+    --warning-line-weight: 30%;
+    --success-soft-weight: 10%;
+    --success-line-weight: 30%;
+    --error-soft-weight: 10%;
+    --error-line-weight: 30%;
     --action-primary: var(--palette-primary);
     --action-primary-foreground: var(--palette-on-primary);
     --action-secondary: var(--palette-secondary);
@@ -278,7 +281,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --layer-support: var(--palette-support);
     --layer-raised: var(--palette-raised);
     --layer-overlay: var(--palette-overlay);
-    --input-surface: var(--layer-raised);
+    --input-surface: var(--palette-input-surface);
     --interaction-focus: var(--action-primary);
     --interaction-selected: color-mix(in oklab, var(--action-primary) var(--selected-weight), var(--selected-base));
     --interaction-selected-foreground: var(--action-primary);
@@ -303,8 +306,8 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --status-error-foreground: var(--palette-error-foreground);
     --status-error-soft: color-mix(in oklab, var(--palette-error-surface) var(--error-soft-weight), var(--palette-state-base));
     --status-error-line: color-mix(in oklab, var(--status-error) var(--error-line-weight), var(--status-error-soft));
-    --action-danger: var(--status-error-foreground);
-    --action-danger-foreground: var(--palette-on-primary);
+    --action-danger: var(--status-error);
+    --action-danger-foreground: var(--palette-on-danger);
     --font-sans: var(--base-font-sans);
     --font-mono: var(--base-font-mono);
     --font-heading: var(--font-sans);
@@ -340,11 +343,11 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --control-height-lg: calc(var(--spacing) * 10);
     --control-icon-size: calc(var(--spacing) * 4);
     --control-icon-size-xs: calc(var(--spacing) * 3);
-    --radius-sm: calc(var(--base-radius) * .6);
-    --radius-md: calc(var(--base-radius) * .8);
-    --radius-lg: calc(var(--base-radius) * 1);
-    --radius-xl: calc(var(--base-radius) * 1.4);
-    --radius-2xl: calc(var(--base-radius) * 1.8);
+    --radius-sm: calc(var(--base-radius) * .5);
+    --radius-md: var(--base-radius);
+    --radius-lg: calc(var(--base-radius) * 1.5);
+    --radius-xl: calc(var(--base-radius) * 2);
+    --radius-2xl: calc(var(--base-radius) * 2);
     --line-width-separator: var(--base-line-thin);
     --line-width-surface: var(--base-line-thin);
     --line-width-emphasis: var(--base-line-emphasis);
@@ -352,7 +355,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --shadow-subtle: var(--shadow-flat);
     --shadow-surface: var(--shadow-flat);
     --shadow-raised: var(--shadow-flat);
-    --shadow-overlay: 0 8px 20px -6px color-mix(in oklab, var(--palette-shadow-ink) 14%, transparent), 0 28px 64px -20px color-mix(in oklab, var(--palette-shadow-ink) 22%, transparent);
+    --shadow-overlay: 0 8px 24px -4px color-mix(in oklab, var(--palette-shadow-ink) 60%, transparent), 0 0 0 1px var(--surface-line-strong);
     --motion-duration: 150ms;
     --motion-duration-fast: 100ms;
     --motion-duration-enter: 180ms;
@@ -416,14 +419,14 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --button-height: var(--control-height);
     --button-padding-inline: var(--space-content-gap);
     --button-gap: var(--space-icon-gap);
-    --button-radius: var(--radius-lg);
+    --button-radius: var(--radius-md);
     --button-background: var(--action-primary);
     --button-foreground: var(--action-primary-foreground);
     --input-height: var(--control-height);
-    --input-radius: var(--radius-lg);
+    --input-radius: var(--radius-md);
     --input-background: var(--input-surface);
     --input-foreground: var(--foreground);
-    --input-border-color: color-mix(in oklab, var(--muted-foreground) 75%, var(--input-background));
+    --input-border-color: var(--input);
     --card-background: var(--layer-raised);
     --card-border-color: var(--surface-line);
     --card-radius: var(--radius-lg);
@@ -499,7 +502,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --motion-disclosure-rotation: 180deg;
     --motion-spin-rotation: 1turn;
     --button-padding-inline-sm: calc(var(--spacing) * 2.5);
-    --button-danger-hover-background: color-mix(in oklab, var(--action-danger) 92%, var(--layer-raised));
+    --button-danger-hover-background: color-mix(in oklab, var(--action-danger) 92%, var(--foreground));
     --button-danger-pressed-background: color-mix(in oklab, var(--action-danger) 88%, var(--foreground));
     --backdrop-background: color-mix(in oklab, var(--foreground) 24%, transparent);
     --feedback-slot-block-size: calc(var(--control-height) + var(--space-content-gap) * 2 + (var(--focus-width) + var(--focus-offset)) * 2);
@@ -530,15 +533,13 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --login-form-inline-size: 24rem;
     --login-card-padding-end: var(--space-content-gap);
     --login-heading-gap: var(--space-control-gap);
-    --login-heading-fields-gap: calc(var(--space-section-gap) * 1.5);
+    --login-heading-fields-gap: var(--space-section-gap);
     --login-control-height: calc(var(--control-height-lg) + var(--space-text-gap));
-    --login-control-font-size: var(--font-size-section-title);
-    --login-control-line-height: var(--line-height-section-title);
+    --login-group-input-height: calc(var(--login-control-height) - var(--line-width-surface) * 2);
+    --login-control-font-size: var(--font-size-body-sm);
+    --login-control-line-height: var(--line-height-body-sm);
     --login-card-inline-size: calc(var(--login-form-inline-size) + var(--login-card-padding) * 2 + var(--line-width-surface) * 2);
-    --login-title-font-size: max(.75rem, calc(1.75rem * clamp(.5, var(--font-scale), 2)));
-    --login-title-line-height: max(calc(var(--login-title-font-size) * 9 / 7), calc(2.25rem * clamp(.5, var(--line-height-scale), 2)));
     --login-visual-max-block-size: calc(var(--control-height-lg) * 2);
-    --login-feedback-block-size: calc(max(var(--control-height-sm), calc(var(--line-height-body-sm) + var(--space-text-gap) * 2 + var(--line-width-surface) * 2)) + (var(--focus-width) + var(--focus-offset)) * 2);
     --login-action-max-block-size: max(var(--login-control-height), 20dvh);
     --login-logo-size: var(--control-height-sm);
     --sheet-max-block-size: 80dvh;
@@ -565,94 +566,118 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     --layout-drawer-min-width: 24rem;
     --layout-drawer-max-width: 64rem;
     --layout-sheet-block-size: 46rem;
+    --table-header-background: var(--layer-support);
+    --table-header-foreground: var(--muted-foreground);
+    --table-row-background: var(--layer-raised);
+    --table-row-stripe-background: var(--palette-table-stripe);
+    --table-row-expanded-background: var(--interaction-hover);
+    --table-header-min-height: var(--control-height);
+    --table-row-min-height: var(--control-height-lg);
+    --table-cell-padding-inline: var(--space-content-gap);
     /* centralized-component-tokens:end */
   }
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-    --palette-primary: #88bab0;
-    --palette-on-primary: #14231f;
-    --palette-secondary: #95a99c;
-    --palette-on-secondary: #14231f;
-    --palette-foreground: #edf0e9;
-    --palette-muted-foreground: #aab5ac;
-    --palette-background: #171c1a;
-    --palette-canvas: #171c1a;
-    --palette-shell: #202824;
-    --palette-surface: #242d28;
-    --palette-support: #28352f;
-    --palette-raised: #2b352f;
-    --palette-overlay: #303b34;
-    --palette-muted: #2b332e;
-    --palette-separator: #364139;
-    --palette-surface-line: #3b4840;
-    --palette-surface-line-strong: #637468;
-    --palette-input-line: #687c70;
-    --palette-info: oklch(0.75 0.12 230);
-    --palette-info-foreground: oklch(0.82 0.1 230);
-    --palette-warning: oklch(0.78 0.14 80);
-    --palette-warning-foreground: oklch(0.84 0.13 80);
-    --palette-success: oklch(0.72 0.14 151);
-    --palette-success-foreground: oklch(0.8 0.14 151);
-    --palette-error: oklch(0.637 0.237 25.331);
-    --palette-error-foreground: oklch(0.76 0.18 28);
-    --palette-error-surface: oklch(0.396 0.141 25.723);
-    --palette-state-base: #000000;
-    --palette-shadow-ink: #000000;
-    --selected-weight: 13%;
-    --selected-base: var(--layer-surface);
-    --info-soft-weight: 20%;
-    --info-line-weight: 50%;
-    --warning-soft-weight: 20%;
-    --warning-line-weight: 52%;
-    --success-soft-weight: 18%;
-    --success-line-weight: 52%;
-    --error-soft-weight: 24%;
-    --error-line-weight: 48%;
-    --shadow-overlay: 0 8px 20px -6px color-mix(in oklab, var(--palette-shadow-ink) 48%, transparent), 0 30px 72px -22px color-mix(in oklab, var(--palette-shadow-ink) 68%, transparent);
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --palette-primary: #0e7490;
+    --palette-on-primary: #ffffff;
+    --palette-secondary: #047857;
+    --palette-on-secondary: #ffffff;
+    --palette-foreground: #0f172a;
+    --palette-muted-foreground: #475569;
+    --palette-background: #f1f5f9;
+    --palette-canvas: #f1f5f9;
+    --palette-shell: #e8eef5;
+    --palette-surface: #f8fafc;
+    --palette-support: #e2e8f0;
+    --palette-raised: #ffffff;
+    --palette-overlay: #ffffff;
+    --palette-muted: #e2e8f0;
+    --palette-separator: #cbd5e1;
+    --palette-surface-line: #cbd5e1;
+    --palette-surface-line-strong: #64748b;
+    --palette-input-line: #64748b;
+    --palette-info: #0891b2;
+    --palette-info-foreground: #155e75;
+    --palette-warning: #d97706;
+    --palette-warning-foreground: #92400e;
+    --palette-success: #059669;
+    --palette-success-foreground: #065f46;
+    --palette-error: #dc2626;
+    --palette-error-foreground: #b91c1c;
+    --palette-state-base: #ffffff;
+    --palette-shadow-ink: #0f172a;
+    --palette-series-1: #0891b2;
+    --palette-series-2: #d97706;
+    --palette-series-3: #475569;
+    --palette-series-4: #0284c7;
+    --palette-series-5: #7c3aed;
+    --palette-series-6: #059669;
+    --selected-weight: 9%;
+    --selected-base: var(--layer-raised);
+    --info-soft-weight: 12%;
+    --info-line-weight: 36%;
+    --warning-soft-weight: 13%;
+    --warning-line-weight: 38%;
+    --success-soft-weight: 12%;
+    --success-line-weight: 36%;
+    --error-soft-weight: 11%;
+    --error-line-weight: 36%;
+    --shadow-overlay: 0 8px 24px -4px color-mix(in oklab, var(--palette-shadow-ink) 18%, transparent), 0 0 0 1px var(--surface-line);
+    --palette-input-surface: #ffffff;
+    --palette-on-danger: #ffffff;
+    --palette-table-stripe: #f8fafc;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]):not([data-theme="dark"]) {
-      color-scheme: dark;
-      --palette-primary: #88bab0;
-      --palette-on-primary: #14231f;
-      --palette-secondary: #95a99c;
-      --palette-on-secondary: #14231f;
-      --palette-foreground: #edf0e9;
-      --palette-muted-foreground: #aab5ac;
-      --palette-background: #171c1a;
-      --palette-canvas: #171c1a;
-      --palette-shell: #202824;
-      --palette-surface: #242d28;
-      --palette-support: #28352f;
-      --palette-raised: #2b352f;
-      --palette-overlay: #303b34;
-      --palette-muted: #2b332e;
-      --palette-separator: #364139;
-      --palette-surface-line: #3b4840;
-      --palette-surface-line-strong: #637468;
-      --palette-input-line: #687c70;
-      --palette-info: oklch(0.75 0.12 230);
-      --palette-info-foreground: oklch(0.82 0.1 230);
-      --palette-warning: oklch(0.78 0.14 80);
-      --palette-warning-foreground: oklch(0.84 0.13 80);
-      --palette-success: oklch(0.72 0.14 151);
-      --palette-success-foreground: oklch(0.8 0.14 151);
-      --palette-error: oklch(0.637 0.237 25.331);
-      --palette-error-foreground: oklch(0.76 0.18 28);
-      --palette-error-surface: oklch(0.396 0.141 25.723);
-      --palette-state-base: #000000;
-      --palette-shadow-ink: #000000;
-      --selected-weight: 13%;
-      --selected-base: var(--layer-surface);
-      --info-soft-weight: 20%;
-      --info-line-weight: 50%;
-      --warning-soft-weight: 20%;
-      --warning-line-weight: 52%;
-      --success-soft-weight: 18%;
-      --success-line-weight: 52%;
-      --error-soft-weight: 24%;
-      --error-line-weight: 48%;
-      --shadow-overlay: 0 8px 20px -6px color-mix(in oklab, var(--palette-shadow-ink) 48%, transparent), 0 30px 72px -22px color-mix(in oklab, var(--palette-shadow-ink) 68%, transparent);
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="system"] {
+      color-scheme: light;
+      --palette-primary: #0e7490;
+      --palette-on-primary: #ffffff;
+      --palette-secondary: #047857;
+      --palette-on-secondary: #ffffff;
+      --palette-foreground: #0f172a;
+      --palette-muted-foreground: #475569;
+      --palette-background: #f1f5f9;
+      --palette-canvas: #f1f5f9;
+      --palette-shell: #e8eef5;
+      --palette-surface: #f8fafc;
+      --palette-support: #e2e8f0;
+      --palette-raised: #ffffff;
+      --palette-overlay: #ffffff;
+      --palette-muted: #e2e8f0;
+      --palette-separator: #cbd5e1;
+      --palette-surface-line: #cbd5e1;
+      --palette-surface-line-strong: #64748b;
+      --palette-input-line: #64748b;
+      --palette-info: #0891b2;
+      --palette-info-foreground: #155e75;
+      --palette-warning: #d97706;
+      --palette-warning-foreground: #92400e;
+      --palette-success: #059669;
+      --palette-success-foreground: #065f46;
+      --palette-error: #dc2626;
+      --palette-error-foreground: #b91c1c;
+      --palette-state-base: #ffffff;
+      --palette-shadow-ink: #0f172a;
+      --palette-series-1: #0891b2;
+      --palette-series-2: #d97706;
+      --palette-series-3: #475569;
+      --palette-series-4: #0284c7;
+      --palette-series-5: #7c3aed;
+      --palette-series-6: #059669;
+      --selected-weight: 9%;
+      --selected-base: var(--layer-raised);
+      --info-soft-weight: 12%;
+      --info-line-weight: 36%;
+      --warning-soft-weight: 13%;
+      --warning-line-weight: 38%;
+      --success-soft-weight: 12%;
+      --success-line-weight: 36%;
+      --error-soft-weight: 11%;
+      --error-line-weight: 36%;
+      --shadow-overlay: 0 8px 24px -4px color-mix(in oklab, var(--palette-shadow-ink) 18%, transparent), 0 0 0 1px var(--surface-line);
+      --palette-input-surface: #ffffff;
+      --palette-on-danger: #ffffff;
+      --palette-table-stripe: #f8fafc;
     }
   }
 }
@@ -690,26 +715,26 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
 ~~~css
 @layer product-overrides {
   :root[data-product="example"] {
-    --action-primary: #1d4ed8;
-    --action-primary-foreground: #ffffff;
+    --action-primary: #93c5fd;
+    --action-primary-foreground: #0f172a;
     --button-height: 2.5rem;
     --layout-content-max: 72rem;
   }
-  :root[data-product="example"][data-theme="dark"] {
-    --action-primary: #93c5fd;
-    --action-primary-foreground: #0f172a;
+  :root[data-product="example"][data-theme="light"] {
+    --action-primary: #1d4ed8;
+    --action-primary-foreground: #ffffff;
   }
-  @media (prefers-color-scheme: dark) {
-    :root[data-product="example"]:not([data-theme="light"]):not([data-theme="dark"]) {
-      --action-primary: #93c5fd;
-      --action-primary-foreground: #0f172a;
+  @media (prefers-color-scheme: light) {
+    :root[data-product="example"][data-theme="system"] {
+      --action-primary: #1d4ed8;
+      --action-primary-foreground: #ffffff;
     }
   }
 }
 ~~~
 <!-- design-product-css:end -->
 
-若只要不同主色，省略button-height与layout-content-max；若需要更换字体，覆盖font-sans并保留中文/系统回退，font-heading/document自动继承。单个组件独立需求只覆盖相应组件变量，不改全局spacing来间接影响整个系统。覆盖须记录名称、理由、浅深值和受影响控件；不能用产品覆盖删除键盘焦点、错误反馈或必要对比。
+若只要不同主色，省略button-height与layout-content-max；成对覆盖action-primary及action-primary-foreground，hover/pressed默认继承公共语义配方，仅需要独立状态配方时显式覆盖button-hover/pressed-background；若需要更换字体，覆盖font-sans并保留中文/系统回退，font-heading/document自动继承。单个组件独立需求只覆盖相应组件变量，不改全局spacing来间接影响整个系统。覆盖须记录名称、理由、浅深值和受影响控件；不能用产品覆盖删除键盘焦点、错误反馈或必要对比。
 
 尺寸统一采用rem或依赖spacing的calc；边线用px，权重为无单位，颜色/阴影为CSS值，层级为整数。断点是布局适配条件，CSS var不能直接当作media/container查询阈值；不为此定义不可使用的breakpoint变量。400/500/600、所有组件状态名称及业务数据事实不是任意主题参数。变量化的目的是可控继承和复用，不是替代信息架构和交互设计。
 
@@ -729,15 +754,33 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
 | input-surface、shadow 角色 | 输入表面与各层级阴影的集中定义 |
 | chart、领域扩展、document | 数据序列、领域表现和独立导出，不能反向成为基础依赖 |
 
-当前主题主要操作浅色为 #326c62/白字，深色为 #88bab0/#14231f 字；canvas 为浅色 #f4f2ed、深色 #171c1a。其余成对取值见前言。普通区域使用中性表面，不把所有卡染成主色。
+当前主题主要操作浅色为 #0e7490/白字，深色为 #06b6d4/#090b0e 字；canvas 为浅色 #f1f5f9、深色 #090b0e。主操作 hover/pressed 从 action-primary 和中性表面/前景派生；结构面/卡片 #11151c、active/hover #161e28、overlay #1a2230。状态信号保留翠绿 #10b981、琥珀 #f59e0b、红 #ef4444；浅色配对使用同色相的深色前景。普通区域使用中性表面，不把所有卡染成主色。
 
-默认input-border-color以muted-foreground占75%与input-background合成，必要输入边界不直接沿用轻结构线input；浅深默认均须达到3:1。hover不得变回低对比结构线。产品覆盖可换配方，但按实际输入内外相邻表面核验，不以其他文字可读代替边界检查。
+默认 input-border-color 使用独立 input 角色，浅色 #64748b、深色 #5b708b；输入表面浅色 #ffffff、深色 #0c0f14，必要边界达到3:1。轻结构线 #1e2633 只用于区域分隔，不作为输入可识别边界。hover 不降低必要对比，产品覆盖按实际输入内外相邻表面核验。
+
+
+### Precision 输入与适配边界
+
+本次默认主题来自用户提供的 Precision Engineering Console。输入 YAML 的 surface #0f141a / primary #4cd7f6 与正文的 Elevation/组件值近似但不相同；此版本采用更具体的正文层级和交互状态，前言与 CSS 已同步，上传原文保存在设计来源快照中。浅色配对为本库推导：slate-white 表面、深青蓝操作及更深的同色相状态文字，不声称由原文件直接给出。
+
+| 设计项 | 公共映射与生效位置 | 模式与必要适配 |
+| --- | --- | --- |
+| Canvas / structural / active / overlay | layer-canvas / layer-shell,surface,raised / interaction-hover / layer-overlay；页面、导航、Card、菜单和Dialog | dark正文四级层次；light冷灰白配对 |
+| Primary Cyan | action-primary/foreground、button-hover/pressed-background；按钮、链接、选择、焦点 | dark #06b6d4/#090b0e；light #0e7490/white；hover/pressed 继承品牌语义派生 |
+| Emerald / Amber / Crimson | status-success/warning/error 的 signal、foreground、soft、line；Badge、Alert和真实状态 | 信号保留正文色；错误正文改 #f87171、表头/placeholder 改 #94a3b8 以满足可读性 |
+| Input / audit grid | input-surface/input-border-color；table-header/row/stripe/expanded-* | dark输入 #0c0f14、表头 #0d1016、条纹 #131922；必要输入边界提高至 #5b708b |
+| Inter / JetBrains Mono | font-sans/font-mono；普通文字/代码与技术标识 | 保留七个已公开的rem文字角色、中文回退和缩放下限，不采用输入的11px普通文字 |
+| 4px基础、6–8px容器 | button/input-radius、card-radius、menu-radius、radius-2xl | 三模式一致；保持36px普通输入与自然长文可达 |
+
+正文给出的固定 hover #22d3ee 调整为既有公共语义配方：hover 混合 action-primary 92% 与 layer-raised，pressed 混合 action-primary 88% 与 foreground。这样已采用系统只覆盖 action-primary 与 action-primary-foreground 时，按钮各状态仍继承产品品牌并保留可读性，不在悬停时回到默认青色。产品如需独立状态配方，仍可显式覆盖 button-hover/pressed-background；上传原文保持原始字节。
+
+多pane布局只在产品工作台需要时组合；公共登录仍为居中单框。光晕或脉冲只能映射真实运行/等待状态，不为品牌添加虚构遥测、日志或循环活动。reduced-motion、forced-colors、键盘焦点及显式 light/dark/system 选择继续保留。
 
 ### 三模式、持久化与首屏
 
-系统必须支持浅色light、深色dark、跟随系统system三选一，并持久化用户选择。默认选择system；用户选择模式和实际生效主题是不同状态：system在当前系统下生效light或dark，不能将解析结果写回偏好后丢失system。跟随系统读取prefers-color-scheme并实时响应；显式light/dark不被系统变化覆盖。
+系统必须支持浅色light、深色dark、跟随系统system三选一，并持久化用户选择。首次未设置偏好时默认选择dark；用户选择模式和实际生效主题是不同状态：system在当前系统下生效light或dark，不能将解析结果写回偏好后丢失system。跟随系统读取prefers-color-scheme并实时响应；显式light/dark不被系统变化覆盖。
 
-选择须只接受这三个枚举。未知/过期值按system处理；存储不可用时继续使用当前内存选择，刷新后回到默认system，不阻断页面。系统偏好不可读取时生效light。各采用系统可有自己的存储key和迁移格式，不能因通用规范强制重命名已有数据。主题选择不重载页面、不清空业务缓存/草稿，不改变选中项、输入、任务或请求状态。
+选择须只接受这三个枚举。未知/过期值按dark处理；存储不可用时继续使用当前内存选择，刷新后回到默认dark，不阻断页面。显式system且系统偏好不可读取时生效light。各采用系统可有自己的存储key和迁移格式，不能因通用规范强制重命名已有数据。主题选择不重载页面、不清空业务缓存/草稿，不改变选中项、输入、任务或请求状态。
 
 下列小脚本示范与默认CSS一致的浏览器初始化和切换；放在可见内容首次绘制前执行，UI选择器调用setMode，读取getMode与getEffectiveMode。CSS负责全组件、浮层、图表及状态的实际值，脚本只管理枚举，不维护JS调色板。存储值仅在本地读取，不进入URL或日志。
 
@@ -752,7 +795,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     if (typeof window.matchMedia === "function")
       media = window.matchMedia("(prefers-color-scheme: dark)");
   } catch { /* The system preference can be unavailable. */ }
-  let mode = "system";
+  let mode = "dark";
   try {
     const stored = window.localStorage.getItem(storageKey);
     if (valid.has(stored)) mode = stored;
@@ -778,7 +821,7 @@ xui的自定义统一接口合同只约束自有项目的普通业务API。行�
     getMode: () => mode,
     getEffectiveMode: effective,
     setMode(value) {
-      mode = valid.has(value) ? value : "system";
+      mode = valid.has(value) ? value : "dark";
       apply();
       try { window.localStorage.setItem(storageKey, mode); } catch {}
     },
@@ -854,7 +897,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | 图标与文字 | 常规 6px 或 8px，按组件尺寸统一 |
 | 顶栏 | 48px |
 | 普通控件 | 36px |
-| 表格 cell padding | 8px |
+| 表格 cell padding | block 8px、inline 12px；header至少36px、row至少40px |
 
 按钮标准高度 xs24、sm32、default36、lg40px；对应横 padding8/10/12/16px、gap4/6/6/8px。普通图标16px，最小行操作12px；复用同一套图标尺寸和线宽，保留现有库，不混用装饰画布。默认 Checkbox为16×16px、radius-sm；Switch为28×16.6px、拇指14.4px；Tabs 高32px、内部 padding3px；紧凑切换项高28px、gap4px。适配项目可保留语义明确的既有变体，不能每页发明尺寸。
 
@@ -898,13 +941,13 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 
 表格由表头、行线和不透明条纹组织；条纹与默认底先完成不透明合成，sticky 同步该行 default/偶数/hover/selected/expanded 背景。透明条纹或透明固定列不得让横滚底层文字穿透。普通 hover 不浮起、缩放或平移。
 
-菜单、Popover、Dialog、Drawer 使用不透明 overlay、明确边界和一套浮层阴影。当前默认浅色阴影为 0 8px 20px -6px（ink14%）与 0 28px 64px -20px（ink22%）；深色为 0 8px 20px -6px（black48%）与 0 30px 72px -22px（black68%）。实际阴影色仍来自集中变量。普通 flat/subtle/surface/raised 无投影；不把浮层配方复制到每张卡。
+菜单、Popover、Dialog、Drawer 使用不透明 overlay、明确边界和一套浮层阴影：0 8px 24px -4px（浅色ink18%、深色black60%），辅以1px边界。深色四级层次为 canvas #090b0e → structural #11151c → active #161e28 → overlay #1a2230。实际阴影色仍来自集中变量。普通 flat/subtle/surface/raised 无投影；不把浮层配方复制到每张卡。
 
 Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index 掩盖遮挡，不以高阴影代替真实区域边界。无法交互的背景保持模态语义。
 
 ## Shapes
 
-圆角 sm4.8、md6.4、lg8、xl11.2、2xl14.4px，对应0.3/0.4/0.5/0.7/0.9rem。普通 Card、输入和按钮用lg；菜单外层xl、项md；Dialog/Sheet用2xl。密度和容器尺寸不使圆角任意增长。
+圆角 sm2、md4、lg6、xl8、2xl8px，对应0.125/0.25/0.375/0.5/0.5rem。普通输入和按钮用md；Card用lg；菜单外层xl、项md；Dialog/Sheet用2xl。密度和容器尺寸不使圆角任意增长。
 
 头像、Switch、状态点、Logo保持语义形状。普通元数据不一律做带框胶囊，有限可交互筛选 chip 可以使用小圆角。画布几何和原生平台形状是有记录的领域适配，不能被复制到普通控件。
 
@@ -913,6 +956,8 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 ### 公共复用与状态矩阵
 
 优先复用已有公共组件及声明变体。页面负责布局组合，控件负责尺寸/颜色/状态；不再写同名按钮或输入皮肤。公共展示组件不请求 API、不判断业务权限。
+
+标准界面默认采用 xui 公共控件封装。简单选择使用 SimpleSelect / bindSelectControl，搜索选择使用 Combobox / CommandPicker；不把裸 select、datalist 或操作系统选择面板作为标准示例和默认采用入口。原生 JavaScript 消费与 React 遵循同一规则，封装内部保留语义 DOM 和隐藏 select 表单桥。NativeSelect 及显式平台 binding 仅用于明确需要平台控件的场景与独立合同审计，其系统面板仍由浏览器/OS负责；不为统一外观替换文件、日期、颜色等尚无实际消费需求的系统能力。
 
 | 状态 | 必须呈现的语义 |
 | --- | --- |
@@ -935,8 +980,8 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 
 | 组件 | 表面、尺寸与用途 | 状态、行为和验收 |
 | --- | --- | --- |
-| Button / 图标按钮 | default36、sm32、xs24、lg40px；padding12/10/8/16、gap6/6/4/8；radius-lg。主动作primary，次动作outline或中性secondary，重复行操作ghost，危险动作destructive | default/hover/pressed/focus/disabled/busy/error；只有真实切换才selected。Enter/Space执行，图标有名称；不改变请求、防重、确认。工具栏换行不裁掉动作 |
-| Input / Textarea / NativeSelect / 搜索 | 普通36px、小32px；body-sm；raised表面、一层1px边界、radius-lg。label/control/help/error间距8/4/4px | default/hover/focus/disabled/invalid/readOnly；busy由业务拥有。placeholder不代替label，错误用aria-invalid和describedby；只读可复制，native option跟随平台 |
+| Button / 图标按钮 | default36、sm32、xs24、lg40px；padding12/10/8/16、gap6/6/4/8；radius-md。主动作primary，次动作outline或中性secondary，重复行操作ghost，危险动作destructive | default/hover/pressed/focus/disabled/busy/error；只有真实切换才selected。Enter/Space执行，图标有名称；不改变请求、防重、确认。工具栏换行不裁掉动作 |
+| Input / Textarea / NativeSelect / 搜索 | 普通36px、小32px；body-sm；input表面、一层1px边界、radius-md。label/control/help/error间距8/4/4px | default/hover/focus/disabled/invalid/readOnly；busy由业务拥有。placeholder不代替label，错误用aria-invalid和describedby；只读可复制，native option跟随平台 |
 | InputGroup | 只一层边界与focus；内部控件不重复border/ring；addon与清除不覆盖文字 | 外层映射内部真实focus/invalid；浅深检查focus+invalid；输入可收缩 |
 | Switch / Checkbox / Toggle / Tabs | 默认Switch28×16.6px；Tabs高32、内padding3、项radius-md；Toggle高28、gap4；其他既有变体记录映射 | checked/selected来自真实状态，Space切换，方向键按控件语义；禁用项不可执行，hover不盖选中底；小屏项目可达 |
 | DropdownMenu / ContextMenu | opaque overlay、1px边界、shadow-overlay、radius-xl、padding4；项至少28、body-xs、gap8；min-width128px | default/hover/selected/focus/disabled；业务busy/error不伪装选项。选中有check，危险项有文字；available-height内滚动 |
@@ -955,20 +1000,20 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 
 | 组件/适用状态 | 默认尺寸和外观 | 状态到变量的映射及交互 |
 | --- | --- | --- |
-| 垂直导航菜单 D/H/S/F/X；B/E仅所属业务存在时 | 高nav-item-height=36px、gap8、radius6.4；默认透明。内容始终保留12px内距 | D用menu-item-background/foreground；H用menu-item-hover-background/foreground，无位移且无左指示；S用menu-item-selected-background/foreground并显示nav-selected-indicator-*，无四周外框；S+H保持S。F用focus-width/offset和interaction-focus，失焦消失；X文字muted且不可操作，不以hover伪造可用 |
+| 垂直导航菜单 D/H/S/F/X；B/E仅所属业务存在时 | 高nav-item-height=36px、gap8、radius4；默认透明。内容始终保留12px内距 | D用menu-item-background/foreground；H用menu-item-hover-background/foreground，无位移且无左指示；S用menu-item-selected-background/foreground并显示nav-selected-indicator-*，无四周外框；S+H保持S。F用focus-width/offset和interaction-focus，失焦消失；X文字muted且不可操作，不以hover伪造可用 |
 | Dropdown/ContextMenu项 D/H/S/F/X；非选择项S不适用 | overlay+1px边界+shadow-overlay；menu-min-width128、item-min-height28、padding4、项内横8/gap8、radius-md、body-xs | D透明，H轻底不位移；radio/checkbox持久S用menu-item-selected-*和勾选语义，不画导航左竖线。F独立焦点，禁用不执行。方向键/Home/End/子菜单/Esc规则如下；业务B/E/空结果不是普通可执行选项 |
-| Button/图标按钮 D/H/P/F/X/B/E；真实切换才S | 高button-height36、padding12、gap6、radius8；背景button-background、文字button-foreground；图标16（xs12） | H用button-hover-background，P用button-pressed-background且松开恢复，适用按压反馈沿下方动效矩阵。F用focus-*；X用button-disabled-*并禁用执行。B保留已有忙碌文案，防重由业务拥有。outline=raised+surface-line；secondary=muted；ghost默认透明、H=interaction-hover；危险用status-error-soft/foreground及原确认 |
-| Input/Textarea/搜索 D/H/F/X/E/readOnly；B由业务拥有；S不适用 | input-height36、radius8、input-background/foreground、1px input-border-color；label→control→help→error，8/4/4px | H保持input-border-color的必要对比；F独立focus-*；E的必要控件边界用status-error-foreground，status-error-line只用于有文字/图标伴随的辅助分隔；关联aria-invalid/describedby，E+F均可见。readOnly可选择复制；X不可编辑；loading不自行改请求。placeholder不代替label |
+| Button/图标按钮 D/H/P/F/X/B/E；真实切换才S | 高button-height36、padding12、gap6、radius4；背景button-background、文字button-foreground；图标16（xs12） | H用button-hover-background，P用button-pressed-background且松开恢复，适用按压反馈沿下方动效矩阵。F用focus-*；X用button-disabled-*并禁用执行。B保留已有忙碌文案，防重由业务拥有。outline=raised+surface-line；secondary=muted；ghost默认透明、H=interaction-hover；危险用status-error-soft/foreground及原确认 |
+| Input/Textarea/搜索 D/H/F/X/E/readOnly；B由业务拥有；S不适用 | input-height36、radius4、input-background/foreground、1px input-border-color；label→control→help→error，8/4/4px | H保持input-border-color的必要对比；F独立focus-*；E的必要控件边界用status-error-foreground，status-error-line只用于有文字/图标伴随的辅助分隔；关联aria-invalid/describedby，E+F均可见。readOnly可选择复制；X不可编辑；loading不自行改请求。placeholder不代替label |
 | InputGroup D/H/F/X/E；S/B按内部控件 | 同输入，一层边界和焦点，addon/清除与内容gap8 | 外层映射内部真实focus/invalid，内部不重复border/ring；帮助和错误不撑偏相邻控件，不制造第二层皮肤 |
 | Combobox/自定义选择 D/H/S/F/X/B/E | 搜索复用输入、选项复用menu-item-*；弹层popover-width288、padding12 | 持续S与键盘活动项分开，活动项F只在键盘阶段存在。搜索输入保留焦点，方向键/Enter选择；无结果与错误不同，不自动选首项、不改查询防抖；NativeSelect由平台负责面板 |
 | Checkbox/Switch/Toggle D/H/S/F/X/E；B仅业务已有 | Checkbox默认16×16px（control-icon-size）、radius-sm、1px input-border-color；Switch宽28/高16.6px、拇指14.4px，圆形轨道；Toggle高28、gap4 | S用action-primary及成对前景或interaction-selected-*，必须有真实checked；H不盖S，F独立，E相关错误可见，X不可切换。Space/方向键遵循角色；不得仅换颜色模拟checked |
 | Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 高control-height-sm32、内padding3、项radius-md；label body-sm | 默认透明/中性，H用interaction-hover，S用interaction-selected-*，F用focus-*；无四周选中框，不要求左侧竖线。方向键及panel关联完整，禁用项跳过，不能把panel加载当作tab被禁用 |
 | 表格/列表 D/H/S/F/B/E；X属于行控件 | cell padding8、动作gap4，表头body-xs/500、正文body-sm，分隔separator-line；opaque条纹 | H用interaction-hover，S/expanded用interaction-selected背景；sticky与整行不透明底一致。F只归焦点控件/确有键盘行，不给被动行造焦点。B/空/E保留所属状态和恢复入口，排序/分页真实禁用 |
-| Card/Section/连续Item | card-background=raised、border-color=surface-line、radius8、padding14/小10，shadow-flat | 被动仅D/B/E，H/P/S/F/X不适用；交互卡才用H/S/F/X。H轻底不浮起，S浅底无额外框，F独立。内部组无重复框，连续Item仅末端分隔 |
+| Card/Section/连续Item | card-background=raised、border-color=surface-line、radius6、padding14/小10，shadow-flat | 被动仅D/B/E，H/P/S/F/X不适用；交互卡才用H/S/F/X。H轻底不浮起，S浅底无额外框，F独立。内部组无重复框，连续Item仅末端分隔 |
 | 统计/指标 D/B/E；H/S仅已有tooltip或范围控件 | metric-padding12/gap4，label13/muted，主值24/600/tabular、单位13 | 0/未知/无数据/B/E分开，核心统计才进首屏；不以disabled表达缺数据。范围S沿选择器，tooltip H/F使用overlay；指标本体无按钮hover、焦点或选中 |
 | Dialog/Drawer/Sheet D/F/X/B/E；容器H/P/S不适用 | overlay+surface-line+shadow-overlay，radius14.4；宽layout-dialog/confirm/drawer-width按40%/30%/60%与各自min/max合成；Dialog/Confirm边距16，侧向Sheet封顶视口 | header/body/footer归属明确，body滚动footer可达；F限制/恢复按模态语义，X/B/E属于内部控件/反馈。取消不自动保存，危险确认保留，不普通嵌套同类模态 |
 | Tooltip/Popover/Calendar D/F；H/S/X/B/E按角色 | Tooltip最大320、body-xs；Popover宽288/padding12/gap16；floating-offset4 | 辅助Tooltip不可承载唯一重要错误或必要动作；按需帮助须键盘/触屏可打开关闭。Calendar真实日期S/disabled与方向键/locale保留，定位和回焦点见下文；不要求所有浮层本体有hover |
-| Badge/元数据/状态/Alert/通知 | 元数据body-xs普通文字，不泛胶囊；状态用status-*-foreground/soft/line及文字/图标 | 被动D/E，H/S/F/X不适用；可交互筛选chip才有H/S/F/X。错误/风险/必要反馈即时在相关位置可见，不收进普通解释；B有可理解文案，不只转圈 |
+| Badge/元数据/状态/Alert/通知 | 元数据body-xs普通文字，不泛胶囊；Badge默认neutral纯文字，显式info/success/warning/error用status-*-foreground/soft/line、横向space-text-gap、line-width-surface及radius-md；状态保留文字/图标 | 被动D/E，H/S/F/X不适用；可交互筛选chip才有H/S/F/X。错误/风险/必要反馈即时在相关位置可见，不收进普通解释；B有可理解文案，不只转圈 |
 | 图表/Progress D/B/E；H/F用于tooltip，S用于范围/确有数据选择 | chart-color-1…6、axis/legend字体12/13、grid=separator、line2/2.5、tooltip=overlay，默认plot224 | 数据系列身份稳定；H/F tooltip显示原值和声明时区，S归范围/真实选择不改变聚合；X不用于未知采样。图例可换行，0/缺样本/B/E不互换，实际PNG另验独立document-* |
 
 未列出的专属编辑器、树、画布或组件变体，必须在采用层补具体尺寸、语义变量、适用状态与交互证据；不把本表称为所有组件及全部业务竞态已穷举。本表定义外观契约，不声明任何采用项目已完成迁移。
@@ -1181,13 +1226,13 @@ UI是人类观察系统状态和数据、直接操作并介入Agent操作的入�
 
 ### 公共登录页布局与主题
 
-公共登录/初始化页复用一个AuthPage布局owner，默认layout=card：动态视口居中、自然高度的单列框，既有Surface边框、radius-lg和raised表面，无投影。框默认434px：384px内容轨道（含四边focus余量）+两侧24px内边距+边框；≤40rem时两侧16px，外侧保留layout-viewport-inset。底部padding使用space-content-gap（12px），不为视觉撑高卡片。fullscreen同布局只省略Surface皮肤。禁止左右品牌面板、背景大图、渐变或分割线。显式brandVisual仍为inert可选装饰，最大80px、窄屏隐藏。
+公共登录/初始化页复用一个AuthPage布局owner，默认layout=card：动态视口居中、自然高度的单列框，既有Surface边框、radius-lg和raised表面，无投影；顶部边线复用line-width-emphasis与action-primary，默认2px青色细边。框默认434px：384px内容轨道（含四边focus余量）+两侧24px内边距+边框；≤40rem时两侧16px，外侧保留layout-viewport-inset。底部padding使用space-content-gap（12px），不为视觉撑高卡片。fullscreen同布局只省略Surface皮肤。禁止左右品牌面板、背景大图、渐变或装饰分割线。显式brandVisual仍为inert可选装饰，最大80px、窄屏隐藏。
 
-层级顺序为紧凑品牌身份→任务标题→可选任务说明→常显标签/字段→唯一主动作→局部反馈。品牌名采用body-sm 14/22px、600，logo32px；任务标题使用login-title-font-size/line-height，默认28/36px，随font-scale/line-height-scale与根字号缩放，600。description属于标题说明而非品牌口号，使用body-sm 14/22px，标题到说明8px；整个标题组到首字段24px。宿主标题建议使用“登录”或“创建管理员”等任务名，不重复品牌全称；显式配置仍原样保留，不猜测删词。字段label采用body-sm 14/22px、500，输入和主动作采用已有section-title的16/26px文字尺度作为清晰的控件文字（并不改变元素语义）。login-control-height默认44px由control-height-lg+space-text-gap派生；字号增大时控件自然增高。label到input8px、字段间16px、最后字段到主动作16px；字段和主动作同宽（默认376px可操作区）。帮助与错误仍body-xs 13/20px，沿用通用颜色与间距，不增加仅登录使用的调色板、字体栈或焦点规则。
+层级顺序为紧凑品牌身份→任务标题→可选任务说明→常显标签/字段→唯一主动作→局部反馈。品牌名采用body-xs 13/20px、500与muted-foreground，logo32px；品牌到标题8px。任务标题复用page-title 20/28px、600，随font-scale/line-height-scale与根字号缩放。description属于标题说明而非品牌口号，使用body-sm 14/22px，标题到说明8px；整个标题组到首字段16px。宿主标题建议使用“登录”或“创建管理员”等任务名，不重复品牌全称；显式配置仍原样保留，不猜测删词。字段label采用body-xs 13/20px、500，输入和主动作采用body-sm 14/22px。login-control-height默认44px由control-height-lg+space-text-gap派生，InputGroup包含外边框也为44px；字号增大时控件自然增高。label到input8px、字段间16px、最后字段到主动作16px；字段和主动作同宽（默认376px可操作区）。帮助与错误仍body-xs 13/20px，沿用通用颜色与间距，不增加仅登录使用的调色板、字体栈或焦点规则。
 
-反馈仍在主按钮之后，login-feedback-block-size保留现有名称但表示最小轨道高度（默认32px内容+四边focus余量共40px），不是最大高度。form到support不额外叠加间隔；默认短状态动作后余量仍57px。普通checking/idle/提交busy/单行凭据错误保持几何稳定；多行错误、未知后果与实际恢复动作按内容自然增高，字段和主动作尺寸、相对顺序与DOM不变。不得为零位移设置大块空白、固定反馈高度、裁切或要求用户在单行消息窗口内滚动。整体居中卡片可随必要内容增长而调整位置，长页使用文档自然滚动；验收须区分这种必要增长与控件重建/尺寸跳变。
+反馈仍在主按钮之后。feedback与feedbackActions均为空或隐藏时不占位；React识别空Fragment与条件空值，原生保留槽节点并跟随内容和hidden变化收起support。没有固定或最小反馈轨道高度，form到support不额外叠加间隔。checking、错误、未知后果与实际恢复动作按内容自然增高；字段和主动作的尺寸、相对顺序与DOM保持，整体居中卡片可因此调整位置。不得为零位移设置大块空白、固定反馈高度、裁切或要求用户在单行消息窗口内滚动。长页使用文档自然滚动；验收须区分必要内容增长与控件重建/尺寸跳变。
 
-必要结果摘要必须完整显示，unknown中的“不能再次提交”等后果不可隐藏在详情中。宿主有独立冗长说明时，可在现有feedback slot中组合公共Disclosure/原生createDisclosureController；默认摘要仍在外部，展开有明确名称、支持Enter/Space、全文随文档滚动，收起与回焦点保留输入。公共布局不能猜截断宿主文案、另造摘要或改变业务语义；仅给了一个长消息时显示全文。不新增详情API或业务动作。反馈动作在同一反馈区域自然换行，不与长消息争夺窄小横向空间。
+必要结果摘要必须完整显示，未知结果及实际可用的后续操作不可隐藏在详情中。登录和 Key 管理按各自公开合同通过普通会话或列表单次核验，不增加持久写入门禁或自动重发写请求。宿主有独立冗长说明时，可在现有feedback slot中组合公共Disclosure/原生createDisclosureController；默认摘要仍在外部，展开有明确名称、支持Enter/Space、全文随文档滚动，收起与回焦点保留输入。公共布局不能猜截断宿主文案、另造摘要或改变业务语义；仅给了一个长消息时显示全文。不新增详情API或业务动作。反馈动作在同一反馈区域自然换行，不与长消息争夺窄小横向空间。
 
 提交忙态仅在主按钮原位显示一次状态文案并以单一live/status语义发布，配合aria-busy和既有禁重入。与按钮不同的session核对、未知、错误与恢复信息仍在反馈区域；不能为去重隐藏重要事实。React/native必填字段按已有Field惯例显示aria-hidden星号，真实required与准确可访问名称保持。普通密码登录不显示新密码规则或强度；管理员初始化采用NewPasswordFields。没有虚构的注册、找回密码、SSO或验证码入口。安全可重试读取使用公共ghost动作；未知写入不自动refresh/logout/重放。
 
@@ -1195,7 +1240,7 @@ SSO显式配置时作为主动作后的次级组。极端长主动作保留完�
 
 长品牌、配置表单、SSO及放大文字使用自然文档滚动；短视口不限制表单高度，所有字段与动作始终可达。正文、操作、反馈和SSO内部保留focus-width+focus-offset四边空间与滚动安全距离，反馈内的焦点不会被局部滚动裁切，不修改全局焦点token。定量标准、状态矩阵与真实截图验收见[公共登录验收](LOGIN_VISUAL_ACCEPTANCE.md)；未执行实际像素回归与图像查看不能宣称视觉验收完成。
 
-登录页不另放主题选择器，直接继承已有本地偏好和单一根主题所有者；没有已保存偏好时默认跟随系统。首屏初始化先于可见内容，三模式及系统变化仍按本规范执行；不因登录页布局迁移更换既有存储 key/格式，也不改变认证会话或凭据。
+登录页不另放主题选择器，直接继承已有本地偏好和单一根主题所有者；没有已保存偏好时默认深色。首屏初始化先于可见内容，三模式及系统变化仍按本规范执行；不因登录页布局迁移更换既有存储 key/格式，也不改变认证会话或凭据。
 
 ### 通用加载、主题所有权与构建消费
 
@@ -1259,7 +1304,7 @@ DataTable以内部单一布局观察器测实际table/thead/首末行高度和co
 
 空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，既有分页保持受控；本地分页由宿主筛选/排序后切片并发布事实，服务端分页保留确认响应且不二次切片。未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。列表wire由commons/webfacade统一：total省略表示未计算，0是真实零；next_cursor缺失表示未声明，非空字符串是opaque续页token，null是cursor明确末页，可与total共存。DataTable保留旧offset类型与默认值，新增显式cursor受控模式复用框内前后控件；即使有total也不算编号页数，宿主唯一owner负责历史与响应确认。完整API与双端公共消费见[DataTable](DATA_TABLE.md)。
 
-顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单select边界不变。forced-colors回退原生箭头，平台选项面板仍归浏览器/OS。
+顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单 SimpleSelect 保留输入边界。两端默认采用同一主题选择浮层，forced-colors 保留公共控件的边界、选中与键盘焦点语义。
 
 实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](IDENTITY_ENCODING.md)。
 

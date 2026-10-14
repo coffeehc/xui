@@ -42,6 +42,11 @@
   }
   @media (prefers-reduced-motion:reduce) {.xui-progress:indeterminate {animation:none;}}
   .xui-badge {display:inline-flex;gap:var(--space-text-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);font-weight:var(--font-weight-control);}
+  .xui-badge:is([data-tone="info"],[data-tone="success"],[data-tone="warning"],[data-tone="error"]) {padding-inline:var(--space-text-gap);border-width:var(--line-width-surface);border-style:solid;border-radius:var(--radius-md);}
+  .xui-badge[data-tone="info"] {color:var(--status-info-foreground);background:var(--status-info-soft);border-color:var(--status-info-line);}
+  .xui-badge[data-tone="success"] {color:var(--status-success-foreground);background:var(--status-success-soft);border-color:var(--status-success-line);}
+  .xui-badge[data-tone="warning"] {color:var(--status-warning-foreground);background:var(--status-warning-soft);border-color:var(--status-warning-line);}
+  .xui-badge[data-tone="error"] {color:var(--status-error-foreground);background:var(--status-error-soft);border-color:var(--status-error-line);}
   @keyframes xui-pulse {from{opacity:var(--motion-feedback-opacity-start);}to{opacity:1;}}
   @keyframes xui-spin {to{transform:rotate(var(--motion-spin-rotation));}}
   @media(prefers-reduced-motion:reduce) {.xui-skeleton,.xui-spinner {animation:none;}}

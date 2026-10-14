@@ -1,5 +1,5 @@
 import {createMenuLayout} from '@coffeehc/xui-runtime/menu-layout';
-import {createDisclosureController} from '@coffeehc/xui-runtime/dom';
+import {createDisclosureController,bindSelectControl} from '@coffeehc/xui-runtime/dom';
 import {createDataTable,createDataTableToolbar,createDataTableFilter} from '@coffeehc/xui-runtime/data-table-dom';
 import {createDataTableExample,tableLabels} from '../shared/data-table-model';
 import '@coffeehc/xui-runtime/init.js';
@@ -26,13 +26,13 @@ const refresh=button('刷新',()=>owner.refresh()),fail=button('模拟失败',()
 const pageHeader=element('header',undefined,'xui-page-header');pageHeader.dataset.testid='record-header';
 const heading=element('div'),meta=element('p','125 条合成记录；不连接业务服务。'),headerActions=element('div',undefined,'xui-toolbar');
 meta.append(result);heading.append(element('h1',title),meta);headerActions.append(refresh,fail,restoreButton,cancel);pageHeader.append(heading);if(!noActions)pageHeader.append(headerActions);
-const controls={};
+const controls={},selectBindings=[];
 const search=element('input',undefined,'xui-input');search.type='search';search.oninput=()=>owner.filter('search',search.value);controls.search=search;
 const filterFields=[createDataTableFilter(doc,{label:'搜索记录',control:search,grow:true})];
 for(const {name,label,values} of [{name:'kind',label:'类型',values:['记忆','会话']},{name:'scope',label:'范围',values:['个人','共享']},{name:'source',label:'来源',values:['手动','导入']}]){
   const select=element('select',undefined,'xui-select');select.dataset.controlSize='default';
   for(const [value,text] of [['',`全部${label}`],...values.map(value=>[value,value])]){const option=element('option',text);option.value=value;select.append(option);}
-  select.onchange=()=>owner.filter(name,select.value);controls[name]=select;filterFields.push(createDataTableFilter(doc,{label,control:select}));
+  select.onchange=()=>owner.filter(name,select.value);controls[name]=select;const field=createDataTableFilter(doc,{label,control:select});selectBindings.push(bindSelectControl(select));filterFields.push(field);
 }
 const clear=button('清空筛选',()=>owner.clear(),'outline');
 const toolbar=createDataTableToolbar(doc,[...filterFields,clear]);toolbar.setAttribute('aria-label','记录筛选');toolbar.dataset.testid='record-filters';
@@ -83,6 +83,7 @@ function renderCards(state){
 function render(){
   const state=owner.getState();
   for(const [field,control] of Object.entries(controls)){const value=String(state.filters[field]??'');if(control.value!==value)control.value=value;}
+  selectBindings.forEach(binding=>binding.update());
   refresh.disabled=fail.disabled=restoreButton.disabled=state.busy;cancel.disabled=!state.busy;
   if(cards)renderCards(state);else table.update(tableOptions());
 }
@@ -92,7 +93,7 @@ if(query.has('flex-host')&&!cards)flexHost.append(tableRoot);
 const shell=createMenuLayout(root,{items:[{id:'records',label:'合成记录',href:'#records',icon:'list'}],activeId:'records',label:'示例导航',scrollMode:query.has('unbounded')?'document':'workspace',headerSlots:{brand:element('strong','公共列表组合')},pageHeader,pageToolbar:internal||noSearch?undefined:toolbar,content:cards?cardRoot:query.has('flex-host')?flexHost:tableRoot});
 const unsubscribe=owner.subscribe(render);render();
 let dead=false;
-function destroy(){if(dead)return;dead=true;unsubscribe();owner.destroy();disclosure.destroy();table?.destroy();shell.destroy();if(oldMinimum)root.style.setProperty(contentMinimum,oldMinimum,oldPriority);else root.style.removeProperty(contentMinimum);for(const control of Object.values(controls)){control.oninput=null;control.onchange=null;}for(const control of [refresh,fail,restoreButton,cancel,clear])control.onclick=null;for(const card of retainedCards.values())card.action.onclick=null;retainedCards.clear();}
+function destroy(){if(dead)return;dead=true;unsubscribe();owner.destroy();selectBindings.forEach(binding=>binding.destroy());disclosure.destroy();table?.destroy();shell.destroy();if(oldMinimum)root.style.setProperty(contentMinimum,oldMinimum,oldPriority);else root.style.removeProperty(contentMinimum);for(const control of Object.values(controls)){control.oninput=null;control.onchange=null;}for(const control of [refresh,fail,restoreButton,cancel,clear])control.onclick=null;for(const card of retainedCards.values())card.action.onclick=null;retainedCards.clear();}
 window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions],setColumnView:(mode,hidden=[])=>{columnView={mode,hidden};render();}};
 if(!query.has('manual'))owner.load();
 window.addEventListener('pagehide',destroy,{once:true});

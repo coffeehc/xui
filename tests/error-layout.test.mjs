@@ -38,11 +38,11 @@ test('DataRegion feedback prop opts into a persistent local slot, including idle
   }
   assert.doesNotMatch(renderToStaticMarkup(React.createElement(DataRegion,null,'Content')),/xui-feedback-slot/);
 });
-test('idle login keeps an empty feedback track without hidden auxiliary controls',()=>{
+test('idle login omits empty feedback support without hidden auxiliary controls',()=>{
   const html=renderLogin();
-  assert.equal(loginFeedback(html),'<div class="xui-login-feedback"></div>');
+  assert.doesNotMatch(html,/xui-login-support|xui-login-feedback/);
   assert.doesNotMatch(html,/xui-reserved-action|data-inactive=|>Cancel request<\/button>/);noRetry(html);
-  assert.equal((html.match(/<button\b/g)||[]).length,1);
+  assert.equal((html.match(/class="[^"]*xui-login-submit[^"]*"/g)||[]).length,1);
   assert.match(html,/data-idle-label=/);assert.match(html,/data-busy-label=/);
 });
 test('credential rejections never offer session retry, including an unknown prior identity',()=>{
@@ -80,8 +80,8 @@ test('feedback is token-scaled and auth text is never constrained to a clipped l
     const rules=declarations(css,selector);assert.match(rules,/(?:^|;)\s*block-size:var\(--feedback-slot-block-size\)/);assert.match(rules,/overflow:auto/);
   }
   assert.doesNotMatch(css,/\.xui-login-feedback\b/);
-  const feedback=declarations(auth,'.xui-login-feedback');
-  assert.match(feedback,/min-block-size:var\(--login-feedback-block-size\)/);assert.doesNotMatch(feedback,/(?:^|;)block-size:|overflow:(?:hidden|auto|clip)/);assert.doesNotMatch(declarations(auth,'.xui-login-feedback>.xui-alert'),/max-block-size:|overflow:(?:auto|hidden|clip)/);
+  assert.doesNotMatch(auth,/login-feedback-block-size|min-block-size:\s*var\(--login-feedback-block-size\)/);
+  assert.doesNotMatch(auth,/\.xui-login-feedback[^}]*\b(?:block-size|max-block-size):|\.xui-login-feedback[^}]*overflow:\s*(?:hidden|auto|clip)/);assert.doesNotMatch(declarations(auth,'.xui-login-feedback>.xui-alert'),/max-block-size:|overflow:(?:auto|hidden|clip)/);
   for(const part of ['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets'])assert.doesNotMatch(await read(`packages/theme/src/${part}.css`),/@font-face|@import\s+['"]https?:|url\(\s*['"]?https?:/i);
 });
 test('native list views only move keyed rows when their actual order changes',async()=>{

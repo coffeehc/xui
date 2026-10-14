@@ -23,7 +23,7 @@ for(const kind of ['react','vanilla']){
     if(width===1280){expect(measure.account.left-measure.theme.right).toBeCloseTo(8,1);expect(measure.avatar.left-measure.icon.right).toBeCloseTo(29,1);}
     else expect(measure.account.left>=measure.theme.right-1||measure.account.top>=measure.theme.bottom-1).toBe(true);
     expect(await locale.evaluate(node=>getComputedStyle(node).borderTopColor)).toBe('rgba(0, 0, 0, 0)');expect(await locale.evaluate(node=>getComputedStyle(node).appearance)).toBe('none');
-    const ordinary=page.getByRole('combobox',{name:'普通表单选择',exact:true});expect(await ordinary.evaluate(node=>getComputedStyle(node).borderTopColor)).not.toBe('rgba(0, 0, 0, 0)');expect(await ordinary.evaluate(node=>getComputedStyle(node).appearance)).not.toBe('none');
+    const ordinary=page.getByRole('combobox',{name:'普通表单选择',exact:true});expect(await ordinary.evaluate(node=>node.tagName)).toBe('BUTTON');expect(await ordinary.evaluate(node=>getComputedStyle(node).borderTopColor)).not.toBe('rgba(0, 0, 0, 0)');expect(await ordinary.evaluate(node=>getComputedStyle(node).appearance)).toBe('none');await expect(ordinary).toHaveText('普通选项');await ordinary.click();await page.getByRole('option',{name:'第二项',exact:true}).click();await expect(ordinary).toHaveText('第二项');
     // Establish keyboard modality before inspecting an independent focus ring.
     await page.keyboard.press('Tab');for(const control of [locale,theme,account])await hasUnclippedFocus(control);
     const before=await account.boundingBox();await account.hover();expect(await account.boundingBox()).toEqual(before);await account.click();await expect(page.getByTestId('count')).toHaveText('1');

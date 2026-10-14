@@ -1,0 +1,193 @@
+---
+name: Precision Engineering Console
+colors:
+  surface: '#0f141a'
+  surface-dim: '#0f141a'
+  surface-bright: '#353941'
+  surface-container-lowest: '#0a0e15'
+  surface-container-low: '#181c23'
+  surface-container: '#1c2027'
+  surface-container-high: '#262a32'
+  surface-container-highest: '#31353d'
+  on-surface: '#dfe2ec'
+  on-surface-variant: '#bcc9cd'
+  inverse-surface: '#dfe2ec'
+  inverse-on-surface: '#2d3038'
+  outline: '#869397'
+  outline-variant: '#3d494c'
+  surface-tint: '#4cd7f6'
+  primary: '#4cd7f6'
+  on-primary: '#003640'
+  primary-container: '#06b6d4'
+  on-primary-container: '#00424f'
+  inverse-primary: '#00687a'
+  secondary: '#4edea3'
+  on-secondary: '#003824'
+  secondary-container: '#00a572'
+  on-secondary-container: '#00311f'
+  tertiary: '#ffb95f'
+  on-tertiary: '#472a00'
+  tertiary-container: '#e79400'
+  on-tertiary-container: '#563400'
+  error: '#ffb4ab'
+  on-error: '#690005'
+  error-container: '#93000a'
+  on-error-container: '#ffdad6'
+  primary-fixed: '#acedff'
+  primary-fixed-dim: '#4cd7f6'
+  on-primary-fixed: '#001f26'
+  on-primary-fixed-variant: '#004e5c'
+  secondary-fixed: '#6ffbbe'
+  secondary-fixed-dim: '#4edea3'
+  on-secondary-fixed: '#002113'
+  on-secondary-fixed-variant: '#005236'
+  tertiary-fixed: '#ffddb8'
+  tertiary-fixed-dim: '#ffb95f'
+  on-tertiary-fixed: '#2a1700'
+  on-tertiary-fixed-variant: '#653e00'
+  background: '#0f141a'
+  on-background: '#dfe2ec'
+  surface-variant: '#31353d'
+typography:
+  headline-lg:
+    fontFamily: Inter
+    fontSize: 1.5rem
+    fontWeight: '600'
+    lineHeight: 2rem
+  headline-md:
+    fontFamily: Inter
+    fontSize: 1.125rem
+    fontWeight: '600'
+    lineHeight: 1.5rem
+  headline-sm:
+    fontFamily: Inter
+    fontSize: 0.875rem
+    fontWeight: '600'
+    lineHeight: 1.25rem
+  body-lg:
+    fontFamily: Inter
+    fontSize: 0.875rem
+    fontWeight: '400'
+    lineHeight: 1.375rem
+  body-md:
+    fontFamily: Inter
+    fontSize: 0.8125rem
+    fontWeight: '400'
+    lineHeight: 1.25rem
+  body-sm:
+    fontFamily: Inter
+    fontSize: 0.75rem
+    fontWeight: '400'
+    lineHeight: 1.125rem
+  label-lg:
+    fontFamily: JetBrains Mono
+    fontSize: 0.8125rem
+    fontWeight: '500'
+    lineHeight: 1.125rem
+  label-md:
+    fontFamily: JetBrains Mono
+    fontSize: 0.75rem
+    fontWeight: '500'
+    lineHeight: 1rem
+  label-sm:
+    fontFamily: JetBrains Mono
+    fontSize: 0.6875rem
+    fontWeight: '400'
+    lineHeight: 0.875rem
+rounded:
+  sm: 0.125rem
+  DEFAULT: 0.25rem
+  md: 0.375rem
+  lg: 0.5rem
+  xl: 0.75rem
+  full: 9999px
+spacing:
+  gutter: 0.75rem
+  margin: 1rem
+  space-xs: 0.25rem
+  space-sm: 0.5rem
+  space-md: 0.75rem
+  space-lg: 1rem
+  space-xl: 1.5rem
+---
+
+## Brand & Style
+
+This design system is engineered for mission-critical autonomous agents, workflow triggers, and human-in-the-loop governance platforms. It embodies a high-density, low-latency, and deterministic dark-mode engineering aesthetic. The primary users are distributed systems engineers, agent architects, and technical operators managing high-throughput, nondeterministic LLM workflows that require total observability, deterministic fail-safes, and explicit auditability.
+
+The emotional tone balances surgical precision, calm authority, and rapid situational awareness. The aesthetic combines:
+- **Terminal & Control Room Minimalism:** Deep slate-black structural backdrops with matte slate containers eliminate optical fatigue during prolonged surveillance and log auditing.
+- **Instrument-Grade Contrast:** Key signals—such as dynamic execution streams, gated human interventions, and critical runtime errors—are delivered via high-contrast optical pigments against dark muted planes.
+- **Deterministic Clarity:** Low structural border weight (crisp 1px borders), condensed metrics, and monospace tabular readouts replace soft decorative fluff with structural exactitude.
+
+## Colors
+
+The palette is anchored in an ultra-deep charcoal black void `#090B0E`, supporting elevated surfaces `#11151C` (base cards/sidebars) and `#161E28` (elevated panels/modals/active rows), framed with crisp 1px borders at `#1E2633`.
+
+Functional signal channels are strictly mapped:
+- **Primary / Telemetry (`#06B6D4` Cyan):** Denotes active system routing, real-time token throughput streams, interactive tool calls, and primary navigation active states.
+- **Secondary / Execution (`#10B981` Emerald):** Represents healthy execution pipelines, automated agent loops running smoothly, and verified status proofs.
+- **Tertiary / Intervention (`#F59E0B` Amber):** Reserved specifically for Human-in-the-Loop (HITL) checkpoints, pending administrative approval gates, sensitive tool-call overrides, and rate-limit warnings.
+- **Error / Halts (`#EF4444` Crimson):** Marks unhandled exceptions, agent loop terminations, policy-violating prompts, and hard-stop manual kills.
+- **Text & Grayscale hierarchy:** Primary labels and tabular data use `#F1F5F9`, muted metadata and secondary keys use `#94A3B8`, and structural borders/dividers hold at `#1E2633`.
+
+## Typography
+
+The typography leverages dual typefaces configured for ultra-dense data consumption:
+- **Inter:** Serves all interface scaffolding, navigation items, system dialogues, form labels, and operational copy. It renders with high legibility at condensed sizes (`12px` to `14px`) under low-glow dark mode settings.
+- **JetBrains Mono:** Dedicated to keys, UUIDs, cron timers, latency metrics, token consumption, execution memory, and payload viewers. Tabular figures (`tnum`) ensure clean vertical column alignment across runtime data tables.
+
+All uppercase labels utilize `label-sm` or `label-md` with `letter-spacing: 0.04em` to maximize glanceability across complex operational dashboards.
+
+## Layout & Spacing
+
+This design system uses a compact, high-density layout model built for maximum screen real estate and data visibility. It relies on a multi-pane split layout:
+- **Global Rail / Left Navigation:** Fixed-width collapsed navigation (`220px` desktop / `56px` micro-rail) anchoring agent trees, workspaces, trigger managers, and audit policies.
+- **Center Canvas / Execution Log Matrix:** Fluid workspace utilizing a 12-column sub-grid with tight `0.75rem` gutters and structured 1px separator lines.
+- **Inspection Inspector / Context Drawer:** Optional dockable right sidebar (`320px` to `400px`) for token accounting, raw JSON payload inspections, and execution artifacts.
+
+Breakpoints are calibrated for technical desktop setups:
+- **Compact Viewport (<1024px):** Inspection panel collapses into an overlay drawer; left navigation collapses to icon-only rail.
+- **Standard Desktop (1024px - 1440px):** Default dual-pane layout with fluid table scaling.
+- **Wide Command Center (>1440px):** Three-pane layout pinned open simultaneously (Navigation, Main Execution Stream, Inspector).
+
+## Elevation & Depth
+
+Visual hierarchy is communicated through tonal stratification and precise 1px linear boundaries rather than heavy blurry drop-shadows.
+
+- **Level 0 (Canvas Void):** `#090B0E`. The deepest ground level, hosting main scroll canvases and structural backplanes.
+- **Level 1 (Structural Surfaces):** `#11151C`. Applied to sidebars, data grid container frames, sticky header bars, and unfocused cards. Outlined by `1px solid #1E2633`.
+- **Level 2 (Active Containers & Hover Planes):** `#161E28`. Applied to active row selections, expanded drawer panels, code blocks, and hover-state triggers.
+- **Level 3 (Overlays & Dialogs):** `#1A2230`. Used for manual intervention decision modals, tool authorization prompts, and contextual dropdowns. Supported by a surgical shadow: `0 8px 24px -4px rgba(0, 0, 0, 0.6), 0 0 0 1px #263346`.
+- **Optical Glow Accents:** Real-time active states (such as an agent actively streaming tokens or awaiting approval) emit a restrained subtle outline glow: `0 0 8px rgba(6, 182, 212, 0.25)` or `0 0 8px rgba(245, 158, 11, 0.25)`.
+
+## Shapes
+
+The design system employs a disciplined, soft-cornered geometry (Level `1`). Micro-radii reinforce an instrumented, technical feel:
+- **Base Components (Buttons, Inputs, Table Cells, Chips):** `0.25rem` (`4px`). Retains crispness and compact efficiency without severe harshness.
+- **Cards, Modals, and Main Panels:** `0.375rem` to `0.5rem` (`6px` to `8px`), maintaining architectural consistency across high-density nested blocks.
+- **Status Indicators & Pulse Badges:** Perfectly circular `9999px` micro-dots embedded inside structured 4px-radius badges.
+
+## Components
+
+### Buttons & Interactive Controls
+- **Primary Action (Execute / Deploy):** Background `#06B6D4`, text `#090B0E` (bold weight), hover `#22D3EE`. Focus ring: `2px solid #06B6D4` with `2px` offset.
+- **Critical Action (Halt / Revoke):** Background `rgba(239, 68, 68, 0.12)`, border `1px solid #EF4444`, text `#EF4444`. Hover: Background `#EF4444`, text `#FFFFFF`.
+- **Ghost / Tool Buttons:** Background transparent, border `1px solid #1E2633`, text `#94A3B8`. Hover: Background `#161E28`, text `#F1F5F9`.
+
+### Data Grids & Audit Tables
+- **Header:** Background `#0D1016`, height `36px`, typography `label-sm` uppercase, color `#64748B`, border bottom `1px solid #1E2633`.
+- **Rows:** Alternate row striping `#11151C` and `#131922`, height `40px` (ultra-compact), cell padding `0 12px`. Hover state: `#161E28` with subtle border left `2px solid #06B6D4`.
+- **Monospace Cells:** Keys, Cron schedules, and IDs render in `JetBrains Mono` at `12px` in `#94A3B8`.
+
+### Status Badges & Chips
+- **Executing / Active:** Background `rgba(16, 185, 129, 0.1)`, border `1px solid rgba(16, 185, 129, 0.3)`, text `#10B981`. Includes a pulsing `6px` emerald indicator dot.
+- **Human Review Gate:** Background `rgba(245, 158, 11, 0.1)`, border `1px solid rgba(245, 158, 11, 0.3)`, text `#F59E0B`. Includes alert glyph icon.
+- **Halted / Error:** Background `rgba(239, 68, 68, 0.1)`, border `1px solid rgba(239, 68, 68, 0.3)`, text `#EF4444`.
+
+### Human Intervention Gates (HITL Cards)
+- Elevated panel (`#161E28`) with an explicit amber left boundary (`3px solid #F59E0B`). Contains parsed tool arguments, rationale block, and dual deterministic actions (`Reject & Abort` vs `Authorize Execution`).
+
+### Input Fields & Filter Bars
+- Background `#0C0F14`, border `1px solid #1E2633`, font `Inter` 13px, text `#F1F5F9`, placeholder `#475569`. Active focus: border `#06B6D4`.
+- Monospace parameter inputs feature inline prefix indicators (e.g., `key:`, `limit:`) in `#64748B`.

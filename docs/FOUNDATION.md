@@ -8,8 +8,8 @@
 | --- | --- | --- | --- |
 | 侧栏底部 | MenuLayout/AppShell.sidebarFooter、SidebarFooterContent | createMenuLayout.sidebarFooter、公开content/icon/label类 | 独立menu滚动、紧凑完整名称、同一抽屉与Node生命周期；[专项覆盖](SIDEBAR_FOOTER_VALIDATION.md) |
 | 页面骨架 | AppShell、PageHeader、Toolbar、Section、Container、Stack、Grid | 同名 `.xui-*` 结构类、shell 控制器 | 列表/表单/详情组合；独立安装无需示例私有 layout.css；窄屏导航开关、Esc、回焦点 |
-| 基础操作与字段 | Button/IconButton、Field、原生输入/选择/checkbox/radio/switch、Fieldset | 真实 button/link/label/input/fieldset | render/nativeButton/link 支持、ref、disabled 与 aria-busy 独立、单控件 id、错误关联、键盘 |
-| 复合选择 | Select、Combobox，复用 Base UI | 原生 select；可搜索选择采用原生 datalist，限制写清 | controlled/uncontrolled、禁用、空选项、键盘选择与取消；不宣称原生 OS 面板由库控制 |
+| 基础操作与字段 | Button/IconButton、Field、Input/Textarea/SimpleSelect/checkbox/radio/switch、Fieldset | 真实 button/link/label/input/fieldset | render/nativeButton/link 支持、ref、disabled 与 aria-busy 独立、单控件 id、错误关联、键盘 |
+| 复合选择 | Select、Combobox，复用 Base UI | bindSelectControl；可搜索选择采用 createCommandPicker | controlled/uncontrolled、禁用、空选项、键盘选择与取消；默认采用 [DESIGN 公共封装政策](DESIGN.md#公共复用与状态矩阵) |
 | 导航 | Nav、Breadcrumbs、Pagination、Tabs、Disclosure | 原生链接/分页、tabs/disclosure 控制器 | 所属状态、独立 focus、RTL/Home/End、disabled 跳过、事件取消、controlled、无路由所有权 |
 | 弹层与帮助 | Dialog、Menu、Popover、Tooltip、Toast | dialog、popover/menu/tooltip 与通知控制器 | 取消、外点、焦点、命中、长内容、状态反馈；非模态不 trap，关键错误不能只在 tooltip |
 | 结构表格 | Table/Caption/Head/Body/Row/HeaderCell/Cell、SortButton | 原生 table 与排序按钮状态 | 表头语义、横滚、排序由宿主、选择不丢；不内置表格查询/虚拟化引擎 |
@@ -19,7 +19,7 @@
 | 产物与性能 | 子入口 + 真正 dynamic import 的参考面板 | 同等 ESM 动态面板与必要 CSS 按需 | Button-only metafile 无 Dialog/Tabs 实际贡献；字节/gzip 门禁；冷启动/受控延迟关键元素可见、位移与资源记录 |
 | 本地联调 | built exports / 宿主 peer 单实例 | built CSS/runtime | watch 覆盖 DESIGN、CSS、TS/TSX、types、init；错误后恢复；失败不冒充新构建 |
 
-矩阵中的正式接口和参考组合均已实现；验证结果在 FOUNDATION_VALIDATION.md 按能力记录，源码存在不等于验证通过。早期复合选择原生采用select/datalist；追加的CommandPicker提供正式可搜索单/多选，见[WIDGETS](WIDGETS.md)，不把datalist自由输入冒充等价选择。
+矩阵中的正式接口和参考组合均已实现；验证结果在 FOUNDATION_VALIDATION.md 按能力记录，源码存在不等于验证通过。早期复合选择原生采用select/datalist，该历史方案已退出标准示例。当前两端简单选择使用主题封装，可搜索单/多选采用CommandPicker，见[WIDGETS](WIDGETS.md)；NativeSelect平台API及独立审计保留。
 
 ## 组件层次与扩展原则
 

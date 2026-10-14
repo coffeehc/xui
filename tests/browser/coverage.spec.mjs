@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseSelect, expectSelectValue } from './select-interaction.mjs';
 
 for (const kind of ['vanilla','react']) {
   test(`${kind}: persisted initial modes and unknown preference`,async({browser})=>{
@@ -6,10 +7,10 @@ for (const kind of ['vanilla','react']) {
       const context=await browser.newContext({colorScheme:'dark'});const page=await context.newPage();
       await page.addInitScript(value=>{if(!sessionStorage.getItem('seeded')){localStorage.setItem('ui.theme.mode',value);sessionStorage.setItem('seeded','true');}},mode);
       await page.goto(`http://127.0.0.1:4173/${kind}/`);
-      await expect(page.getByLabel('外观')).toHaveValue(mode === 'unknown' ? 'system' : mode);
+      await expectSelectValue(page,'外观',mode === 'unknown' ? 'dark' : mode,mode === 'light'?'浅色':mode === 'system'?'跟随系统':'深色');
       await expect(page.locator('html')).toHaveAttribute('data-theme-effective',mode === 'light' ? 'light' : 'dark');
-      await page.getByLabel('外观').selectOption('dark');await page.reload();await expect(page.getByLabel('外观')).toHaveValue('dark');
-      await page.getByLabel('外观').selectOption('system');await page.reload();await expect(page.getByLabel('外观')).toHaveValue('system');
+      await chooseSelect(page,'外观','dark','深色');await page.reload();await expectSelectValue(page,'外观','dark','深色');
+      await chooseSelect(page,'外观','system','跟随系统');await page.reload();await expectSelectValue(page,'外观','system','跟随系统');
       await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
       await context.close();
     }
@@ -36,7 +37,7 @@ for (const kind of ['vanilla','react']) {
   test(`${kind}: semantic color contrast and product override in all modes`,async({page},testInfo)=>{
     await page.goto(`/${kind}/`);const results=[];
     try { for (const product of ['default','example']) for (const mode of ['light','dark','system']) {
-      await page.getByLabel('主题配方').selectOption(product);await page.getByLabel('外观').selectOption(mode);await page.emulateMedia({colorScheme:mode === 'system' ? 'dark' : mode});
+      await chooseSelect(page,'主题配方',product,product==='default'?'Precision 默认':'蓝色覆盖');await chooseSelect(page,'外观',mode,mode==='light'?'浅色':mode==='system'?'跟随系统':'深色');await page.emulateMedia({colorScheme:mode === 'system' ? 'dark' : mode});
       await expect(page.locator('html')).toHaveAttribute('data-theme-effective',mode === 'system' ? 'dark' : mode);
       // Flush styles after the media event and follow replacement transitions to completion.
       await page.locator('.xui-button').first().evaluate(async el=>{

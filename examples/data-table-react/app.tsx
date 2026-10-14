@@ -4,7 +4,7 @@ import {MenuLayout,NavigationMenu} from '@coffeehc/xui-react/menu-layout';
 import {AppShell,Grid,PageHeader} from '@coffeehc/xui-react/layout';
 import {Disclosure} from '@coffeehc/xui-react/navigation';
 import {Button} from '@coffeehc/xui-react/button';
-import {Input,NativeSelect} from '@coffeehc/xui-react/forms';
+import {Input,SimpleSelect} from '@coffeehc/xui-react/forms';
 import {Surface,LoadingState,EmptyState,ErrorState} from '@coffeehc/xui-react/feedback';
 import {ScrollArea} from '@coffeehc/xui-react/scroll-area';
 import {DataTable,DataTableToolbar,DataTableFilter,type DataTableColumn} from '@coffeehc/xui-react/data-table';
@@ -53,7 +53,7 @@ function App(){
   const visibleColumns=React.useMemo(()=>columns.filter(column=>!columnView.hidden.includes(column.id)&&(!noActions||column.id!=='actions')).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'||query.has('fluid-content')?160:undefined):column.id==='name'&&columnView.mode==='mixed'&&query.has('fluid-content')?undefined:widths[column.id as keyof typeof widths]})),[columns,columnView]);
   const toolbar=noSearch?undefined:<DataTableToolbar aria-label="记录筛选" data-testid="record-filters">
     <DataTableFilter label="搜索记录" grow><Input type="search" value={String(state.filters.search??'')} onChange={event=>owner.filter('search',event.currentTarget.value)}/></DataTableFilter>
-    {filters.map(filter=><DataTableFilter label={filter.label} key={filter.name}><NativeSelect value={String(state.filters[filter.name]??'')} onChange={event=>owner.filter(filter.name,event.currentTarget.value)}><option value="">全部{filter.label}</option>{filter.values.map(value=><option key={value} value={value}>{value}</option>)}</NativeSelect></DataTableFilter>)}
+    {filters.map(filter=><DataTableFilter label={filter.label} key={filter.name}><SimpleSelect value={String(state.filters[filter.name]??'')} onChange={event=>owner.filter(filter.name,event.currentTarget.value)}><option value="">全部{filter.label}</option>{filter.values.map(value=><option key={value} value={value}>{value}</option>)}</SimpleSelect></DataTableFilter>)}
     <Button variant="outline" onClick={owner.clear}>清空筛选</Button>
   </DataTableToolbar>;
   const pageHeader=<PageHeader data-testid="record-header" title={title}

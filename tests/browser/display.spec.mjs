@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
+import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 // Preserve Chromium's sandbox even when the legacy workspace config overrides it.
-test.use({launchOptions:{...(process.env.CI?{channel:'chrome'}:{executablePath:'/usr/bin/chromium'}),chromiumSandbox:true,args:[]}});
+test.use({launchOptions:{...chromiumLaunchOptions,chromiumSandbox:true,args:[]}});
 const svg='<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10"><title>synthetic image</title><rect width="20" height="10" fill="currentColor"/></svg>';
 for(const kind of ['react','vanilla']){
  test(`${kind}: native text/link semantics, explicit copy success/error and removal focus`,async({page})=>{

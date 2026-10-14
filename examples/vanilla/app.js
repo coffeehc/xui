@@ -1,13 +1,16 @@
 import '@coffeehc/xui-theme/style.css';
 import { createThemeController } from '@coffeehc/xui-runtime';
+import { bindSelectControl } from '@coffeehc/xui-runtime/dom';
 import './layout.css';
 import './product.css';
 const theme = window.xuiTheme ?? createThemeController();
-const modeSelect = document.querySelector('#theme');
+const modeSelect = document.querySelector('#theme'), brandSelect = document.querySelector('#brand');
 modeSelect.value = theme.getState().mode;
+const modeBinding = bindSelectControl(modeSelect), brandBinding = bindSelectControl(brandSelect);
 modeSelect.addEventListener('change',() => theme.setMode(modeSelect.value));
-theme.subscribe(state => { modeSelect.value = state.mode; });
-document.querySelector('#brand').addEventListener('change',event => { document.documentElement.dataset.product = event.target.value; });
+const offTheme = theme.subscribe(state => { modeSelect.value = state.mode; modeBinding.update(); });
+brandSelect.addEventListener('change',() => { document.documentElement.dataset.product = brandSelect.value; });
+window.addEventListener('pagehide',event => { if (!event.persisted) { offTheme(); modeBinding.destroy(); brandBinding.destroy(); } });
 document.querySelector('form').addEventListener('submit',event => {
   event.preventDefault();
   const name = document.querySelector('#name');

@@ -1,13 +1,13 @@
 import {captureZoomViewport} from './zoom-capture.mjs';
 import {test as base,expect,chromium} from '@playwright/test';
-import {existsSync} from 'node:fs';
+import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 
 const test=base.extend({page:async({page},use,info)=>{
   const errors=[];page.on('pageerror',error=>errors.push(error.message));await use(page);
   await info.attach('browser-errors.json',{body:JSON.stringify(errors),contentType:'application/json'});expect(errors).toEqual([]);
 }});
 // Never disable the Chromium sandbox to work around a restricted executor.
-const browserOptions=process.env.CI?{channel:'chrome'}:existsSync('/usr/bin/chromium')?{executablePath:'/usr/bin/chromium'}:{};
+const browserOptions=chromiumLaunchOptions;
 test.use({launchOptions:{...browserOptions,chromiumSandbox:true,args:[]}});
 const settle=page=>page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
 async function setup(page,kind,mode='light'){

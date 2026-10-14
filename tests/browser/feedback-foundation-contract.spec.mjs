@@ -65,13 +65,13 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
   const defaultAlert=page.getByTestId('alert-default');await expect(defaultAlert).toHaveAttribute('role','status');await alertColors(page,defaultAlert,'info');
   for(const tone of tones){
    const node=page.getByTestId(`alert-${tone}`);await expect(node).toHaveAttribute('role',tone==='error'?'alert':'status');await expect(node).toHaveText(`${tone}: 可理解的状态文字。`);
-   await alertColors(page,node,tone);await expect(node).toHaveCSS('padding','12px');await expect(node).toHaveCSS('border-top-width','1px');await expect(node).toHaveCSS('border-radius','8px');
+   await alertColors(page,node,tone);await expect(node).toHaveCSS('padding','12px');await expect(node).toHaveCSS('border-top-width','1px');await expect(node).toHaveCSS('border-radius','6px');
    expect(await node.evaluate(element=>element.tabIndex)).toBe(-1);await node.hover();await alertColors(page,node,tone);
   }
   await info.attach('alert-default-tones.png',{body:await page.locator('#alerts').screenshot(),contentType:'image/png'});
   const overrides=tones.map((tone,index)=>`--status-${tone}-foreground:rgb(${20+index*10} ${40+index*10} ${60+index*10});--status-${tone}-soft:rgb(${220-index*10} ${230-index*10} ${240-index*10});--status-${tone}-line:rgb(${80+index*10} ${100+index*10} ${120+index*10});`).join('');
   await page.addStyleTag({content:`@layer product-overrides {:root {${overrides} --space-content-gap:var(--space-section-gap);--line-width-surface:var(--line-width-emphasis);--radius-lg:var(--radius-xl);}}`});
-  for(const tone of tones){const node=page.getByTestId(`alert-${tone}`);await alertColors(page,node,tone);await expect(node).toHaveCSS('padding','16px');await expect(node).toHaveCSS('border-top-width','2px');await expect(node).toHaveCSS('border-radius','11.2px');}
+  for(const tone of tones){const node=page.getByTestId(`alert-${tone}`);await alertColors(page,node,tone);await expect(node).toHaveCSS('padding','16px');await expect(node).toHaveCSS('border-top-width','2px');await expect(node).toHaveCSS('border-radius','8px');}
   await alertColors(page,defaultAlert,'info');
   if(theme==='system'){await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');for(const tone of tones)await alertColors(page,page.getByTestId(`alert-${tone}`),tone);}
   const long=page.getByTestId('alert-long');await expect(long).toContainText('END-OF-MESSAGE');
@@ -92,7 +92,7 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
   await expect(spinner).toHaveCSS('animation-name','xui-spin');await expect(spinner).toHaveCSS('animation-duration','1.2s');await expect(skeleton).toHaveCSS('animation-name','xui-pulse');await expect(skeleton).toHaveCSS('animation-duration','1.5s');
   for(const node of [spinner,skeleton,unknown])await expect(node).toHaveCSS('animation-iteration-count','infinite');
   await expect(spinner).toHaveCSS('width','16px');await expect(spinner).toHaveCSS('height','16px');await expect(spinner).toHaveCSS('border-top-width','2px');await expect(spinner).toHaveCSS('border-top-color',await color(page,'--surface-line-strong'));await expect(spinner).toHaveCSS('border-inline-end-color',await color(page,'--action-primary'));
-  await expect(skeleton).toHaveCSS('min-height','36px');await expect(skeleton).toHaveCSS('border-radius','6.4px');await expect(skeleton).toHaveCSS('background-color',await color(page,'--muted'));
+  await expect(skeleton).toHaveCSS('min-height','36px');await expect(skeleton).toHaveCSS('border-radius','4px');await expect(skeleton).toHaveCSS('background-color',await color(page,'--muted'));
   await page.addStyleTag({content:'@layer product-overrides {:root {--motion-duration-pulse:2.4s;--motion-duration-spin:1.8s;--control-icon-size:var(--illustration-icon-size);--control-height:var(--control-height-lg);--muted:var(--layer-support);--surface-line-strong:var(--status-warning-foreground);--action-primary:var(--status-success-foreground);}}'});
   await expect(spinner).toHaveCSS('animation-duration','1.8s');await expect(skeleton).toHaveCSS('animation-duration','2.4s');await expect(spinner).toHaveCSS('width','24px');await expect(spinner).toHaveCSS('height','24px');await expect(skeleton).toHaveCSS('min-height','40px');await expect(skeleton).toHaveCSS('background-color',await color(page,'--muted'));await expect(spinner).toHaveCSS('border-top-color',await color(page,'--surface-line-strong'));await expect(spinner).toHaveCSS('border-inline-end-color',await color(page,'--action-primary'));
   await page.emulateMedia({reducedMotion:'reduce'});

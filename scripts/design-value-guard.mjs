@@ -95,7 +95,12 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
     try {
       checkDesignDeclaration(prop, value, context);
       if (tokens) for (const match of String(value).matchAll(/var\(\s*(--[\w-]+)/g)) {
-        const peer = context.file === 'packages/theme/src/floating.css' && ({ '--available-height': 'max-block-size', '--anchor-width': 'min-inline-size', '--toast-swipe-movement-x': 'transform', '--toast-swipe-movement-y': 'transform' })[match[1]] === kebab(prop);
+        const property = kebab(prop), expression = String(value).replace(/\s+/g, '');
+        // Base UI Positioner supplies both measurements; the native popover
+        // controller supplies anchor width and applies its own collision cap.
+        const selectionAnchor = match[1] === '--anchor-width' && property === 'inline-size' && context.selector === '.xui-select-popup,.xui-combobox-popup' && expression === 'max(var(--anchor-width),var(--popover-width))';
+        const selectionAvailable = match[1] === '--available-width' && property === 'max-inline-size' && context.selector === '.xui-positioner :is(.xui-select-popup,.xui-combobox-popup)' && expression === 'min(var(--available-width),calc(100vw-var(--layout-viewport-inset)*2))';
+        const peer = context.file === 'packages/theme/src/floating.css' && (selectionAnchor || selectionAvailable || ({ '--available-height': 'max-block-size', '--toast-swipe-movement-x': 'transform', '--toast-swipe-movement-y': 'transform' })[match[1]] === property);
         assert(tokens.has(match[1]) || peer, `${where(context)} Undefined semantic token ${match[1]}`);
         if (peer) exceptions.add(`${context.file}: peer measurement ${match[1]}`);
       }

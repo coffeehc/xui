@@ -95,6 +95,9 @@ export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElem
         for(const {node,value} of autofocus){if(value===null)node.removeAttribute('autofocus');else node.setAttribute('autofocus',value);}
         proxy?.remove();
       }
+      // The hidden dialog has no layout budget. Resolve the existing scroll
+      // owner before the first visible frame, after temporary focus nodes leave.
+      releaseLayout.refresh();
     }else if(!next&&dialog.open){
       ++focusVersion;closeDetails=details;const active=dialog.ownerDocument.activeElement;shouldRestore=dialog.contains(active)||active===dialog.ownerDocument.body;remove();dialog.close();
     }

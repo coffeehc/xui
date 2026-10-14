@@ -15,7 +15,13 @@ function mapping(selector,expected){const matches=[];css.walkRules(selector,node
 test('media foundations preserve root/subentry identity and Badge native passive semantics',()=>{
  for(const [name,value]of Object.entries({Avatar,Image,Tag,Badge}))assert.equal(root[name],value,name);
  for(const part of ['Root','Image','Fallback'])assert.equal(typeof Avatar[part],'function');
- const badge=Badge({children:'<literal>',className:'host',id:'metadata','aria-describedby':'full'});assert.equal(badge.type,'span');assert.equal(badge.props.className,'xui-badge host');assert.equal(badge.props.children,'<literal>');assert.equal(badge.props['aria-describedby'],'full');for(const name of ['role','tabIndex','aria-live','disabled'])assert.equal(badge.props[name],undefined);
+ const badge=Badge({children:'<literal>',className:'host',id:'metadata','aria-describedby':'full'});assert.equal(badge.type,'span');assert.equal(badge.props.className,'xui-badge host');assert.equal(badge.props['data-tone'],'neutral');assert.equal(badge.props.children,'<literal>');assert.equal(badge.props['aria-describedby'],'full');for(const name of ['role','tabIndex','aria-live','disabled'])assert.equal(badge.props[name],undefined);
+});
+test('Badge has a closed five-tone public vocabulary while neutral stays passive',()=>{
+ for(const tone of ['neutral','info','success','warning','error']){const badge=Badge({tone,children:`${tone} message`});assert.equal(badge.type,'span');assert.equal(badge.props['data-tone'],tone);assert.equal(badge.props.children,`${tone} message`);for(const name of ['role','tabIndex','aria-live','disabled'])assert.equal(badge.props[name],undefined);}
+ mapping('.xui-badge:is([data-tone="info"],[data-tone="success"],[data-tone="warning"],[data-tone="error"])',{'padding-inline':'var(--space-text-gap)','border-width':'var(--line-width-surface)','border-style':'solid','border-radius':'var(--radius-md)'});
+ for(const tone of ['info','success','warning','error'])mapping(`.xui-badge[data-tone="${tone}"]`,{color:`var(--status-${tone}-foreground)`,background:`var(--status-${tone}-soft)`,'border-color':`var(--status-${tone}-line)`});
+ const base=mapping('.xui-badge',{'font-size':'var(--font-size-body-xs)','line-height':'var(--line-height-body-xs)',gap:'var(--space-text-gap)'});assert.equal(base.background,undefined);assert.equal(base.border,undefined);
 });
 test('Avatar consumes existing size, shape, surface and content fitting roles',()=>{
  mapping('.xui-avatar',{'inline-size':'var(--control-height)','block-size':'var(--control-height)','border-radius':'var(--radius-full)',background:'var(--layer-support)',color:'var(--foreground)',overflow:'hidden'});

@@ -13,15 +13,23 @@ export interface AuthPageProps {
   form?:{noValidate?:boolean;onSubmit?:React.FormEventHandler<HTMLFormElement>};
 }
 /** Shared, request-free presentation for sign-in, setup and startup states. */
+function hasAuthPageContent(value:React.ReactNode):boolean {
+  return React.Children.toArray(value).some(child=>{
+    if(typeof child==='string')return child.trim().length>0;
+    if(!React.isValidElement<{hidden?:boolean;children?:React.ReactNode}>(child))return true;
+    if(child.props.hidden)return false;
+    return child.type===React.Fragment?hasAuthPageContent(child.props.children):true;
+  });
+}
 export function AuthPage({config:input,brandVisual,children,actions,alternatives,feedback,feedbackActions,form}:AuthPageProps){
   if(form!==undefined&&(form===null||typeof form!=='object'))throw new TypeError('Invalid authentication page form.');
   const config=React.useMemo(()=>{if(typeof input.title!=='string')throw new TypeError('AuthPage title is required.');return resolveLoginPageConfig(input);},[input]),titleId=React.useId(),formMode=React.useRef(form!==undefined);
   if(formMode.current!==(form!==undefined))throw new TypeError('AuthPage form mode cannot change after mounting.');
   const content=<><div className="xui-login-content">
     <div className="xui-login-body"><div className="xui-login-heading"><h1 id={titleId}>{config.title}</h1>{config.description&&<p className="xui-login-description">{config.description}</p>}</div>{children}</div>
-    {actions!=null&&<footer className="xui-login-actions">{actions}</footer>}
-    {alternatives!=null&&<div className="xui-login-options">{alternatives}</div>}
-  </div><div className="xui-login-support"><div className="xui-login-feedback">{feedback}{feedbackActions}</div></div></>;
+    {hasAuthPageContent(actions)&&<footer className="xui-login-actions">{actions}</footer>}
+    {hasAuthPageContent(alternatives)&&<div className="xui-login-options">{alternatives}</div>}
+  </div>{(hasAuthPageContent(feedback)||hasAuthPageContent(feedbackActions))&&<div className="xui-login-support"><div className="xui-login-feedback">{feedback}{feedbackActions}</div></div>}</>;
   return <main className="xui xui-login-page" data-layout={config.layout}><section className={`xui-login-card${config.layout==='card'?' xui-surface':''}`} aria-labelledby={titleId}>
     <header className="xui-login-brand"><div className="xui-login-brand-content">
       <div className="xui-login-identity">{config.logo&&<img className="xui-login-logo" src={config.logo.src} alt={config.logo.alt} referrerPolicy="no-referrer"/>}<strong>{config.productName}</strong></div>

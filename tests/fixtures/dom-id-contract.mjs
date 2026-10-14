@@ -67,7 +67,7 @@ export async function mount(root){
   const toastRoot=host('toast'),toast=createToastController(toastRoot,{limit:5});owners.push(toast);
   const toastIds=[toast.add({title:'First'}),toast.add({title:'Second'})];
   // This fixture tests DOM ID allocation with deliberately absent crypto, not durable auth.
-  const login=createLoginExample(doc.location.href,{recovery:false});models.push(login);
+  const login=createLoginExample(doc.location.href);models.push(login);
   owners.push(createLoginPage(host('login'),{auth:login.auth,theme,config:{...login.config,logo:undefined},onAuthenticated:login.onAuthenticated}));
   const keys=createApiKeyExample();models.push(keys);
   owners.push(createApiKeyManager(host('api-key'),{controller:keys.controller}));
@@ -77,7 +77,11 @@ export async function mount(root){
   owners.push(createBusinessLogExplorer(host('business-log'),{controller:business.controller}));
   await Promise.all([keys.controller.refresh(),structured.controller.refresh(),business.controller.refresh()]);
   // Exercise all generated relationships, including form fields mounted only on opening.
+  command.getInput().focus();
   command.getInput().dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+  // Opening the modal correctly clears the command's focused active descendant.
+  // Capture each relationship while its own public interaction is active.
+  const withActiveCommand={...inspect(commandRoot),focused:doc.activeElement===command.getInput()};
   disclosure.trigger.click();
   const disclosureWorks=!disclosure.panel.hidden&&disclosure.trigger.getAttribute('aria-expanded')==='true';
   disclosure.trigger.click();
@@ -91,7 +95,7 @@ export async function mount(root){
   toast.add({id:'host-notification',title:'Replaced notification'});
   const toastCountAfterReplace=toastRoot.children.length;
   return {
-    withForm,toastIds,explicitId,toastCountBefore,toastCountAfterClose,toastCountAfterReplace,disclosureWorks,formOpen,
+    withForm,withActiveCommand,toastIds,explicitId,toastCountBefore,toastCountAfterClose,toastCountAfterReplace,disclosureWorks,formOpen,
     getLoginDestinations:login.getDestinations,
     snapshot:()=>inspect(root),
     layoutTarget:()=>{const trigger=layoutRoot.querySelector('[data-xui-sidebar-toggle]'),id=trigger.getAttribute('aria-controls');return {id,tag:doc.getElementById(id)?.tagName,belongs:layoutRoot.contains(doc.getElementById(id))};},

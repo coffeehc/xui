@@ -75,6 +75,29 @@ test('source token references must resolve; peer variables have a narrow owner a
   await fixture({ 'examples/app.tsx': 'const A=()=> <div style={{color:"var(--missing)"}}/>;' }, async root => assert.rejects(auditDesignSources({ root, availableTokens: ['--foreground'] }), /Undefined semantic token/));
 });
 
+test('selection popover measurements are exempted only for the exact public CSS consumers', async () => {
+  const contract = '<!-- design-default-css:start -->\n~~~css\n:root {--popover-width: 16rem; --layout-viewport-inset: 1rem;}\n~~~\n<!-- design-default-css:end -->';
+  const anchor = '.xui-select-popup,.xui-combobox-popup{inline-size:max(var(--anchor-width),var(--popover-width))}';
+  const available = '.xui-positioner :is(.xui-select-popup,.xui-combobox-popup){max-inline-size:min(var(--available-width),calc(100vw - var(--layout-viewport-inset)*2))}';
+  await fixture({ 'docs/DESIGN.md': contract, 'packages/theme/src/floating.css': `${anchor}\n${available}` }, async root => {
+    await assert.doesNotReject(auditDesignSources({ root }));
+  });
+
+  for (const [file, source] of [
+    ['packages/theme/src/sample.css', anchor],
+    ['packages/theme/src/floating.css', anchor.replace('.xui-select-popup,.xui-combobox-popup', '.xui-select-popup')],
+    ['packages/theme/src/floating.css', anchor.replace('inline-size:', 'width:')],
+    ['packages/theme/src/floating.css', anchor.replace('var(--popover-width)', 'var(--menu-min-width)')],
+    ['packages/theme/src/floating.css', available.replace(':is(.xui-select-popup,.xui-combobox-popup)', '.xui-select-popup')],
+    ['packages/theme/src/floating.css', available.replace('max-inline-size:', 'inline-size:')],
+    ['packages/theme/src/floating.css', available.replace('calc(100vw - var(--layout-viewport-inset)*2)', '100vw')],
+  ]) {
+    await fixture({ 'docs/DESIGN.md': contract, [file]: source }, async root => {
+      await assert.rejects(auditDesignSources({ root }), /Undefined semantic token/);
+    });
+  }
+});
+
 test('only the canonical contract can exempt definition blocks; public entry docs are audited', async () => {
   const disguised = '<!-- design-default-css:start -->\n~~~css\n.x{padding:13px}\n~~~\n<!-- design-default-css:end -->';
   for (const name of ['docs/GUIDE.md', 'README.md', 'AGENTS.md', '.agents/skills/adopt-xui/SKILL.md']) await fixture({ [name]: disguised }, async root => assert.rejects(auditDesignSources({ root }), /Literal 13px/));

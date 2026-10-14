@@ -1,11 +1,18 @@
 import * as React from 'react';
 import {createRoot} from 'react-dom/client';
-import {Badge,Surface} from '@coffeehc/xui-react';
+import {Badge,Surface,type BadgeTone as RootBadgeTone,type BadgeProps as RootBadgeProps} from '@coffeehc/xui-react';
+import type {BadgeTone as FeedbackBadgeTone,BadgeProps as FeedbackBadgeProps} from '@coffeehc/xui-react/feedback';
 import {Avatar} from '@coffeehc/xui-react/avatar';
 import {Image,Tag,Typography} from '@coffeehc/xui-react/display';
 import '@coffeehc/xui-theme/style.css';
 
 const sizes=['sm','default','lg'] as const;
+const badgeTones=['neutral','info','success','warning','error'] as const satisfies readonly FeedbackBadgeTone[];
+const rootBadgeContract:RootBadgeProps={tone:'success'};
+const feedbackBadgeContract:FeedbackBadgeProps={tone:'warning'};
+const rootBadgeTone:RootBadgeTone='info';
+// @ts-expect-error BadgeTone is a closed public semantic vocabulary.
+const invalidBadgeTone:FeedbackBadgeTone='violet';
 const longName='完整头像名称与原样fallback<&>'.repeat(8)+' END-AVATAR';
 const longMessage='长替代内容须可阅读LongUnbrokenLabel'.repeat(10)+' END-IMAGE';
 const longTag='长标签LongUnbrokenIdentifier'.repeat(12)+' END-TAG';
@@ -30,6 +37,7 @@ function App(){const [avatar,setAvatar]=React.useState('/media-avatar-missing.sv
   <Tag label={longTag} removeLabel="Request removal" onRemove={()=>window.mediaRemoveIntents++} data-testid="tag-long"/>
   <Tag label="Disabled removal" disabled removeLabel="Disabled removal" onRemove={()=>window.mediaRemoveIntents++} data-testid="tag-disabled"/>
   <Badge data-testid="badge" aria-describedby="metadata-full"><span>Metadata</span><span>value</span></Badge>
+  {badgeTones.map(tone=><Badge key={tone} tone={tone} data-testid={`badge-tone-${tone}`}>{tone}: 状态文字。</Badge>)}
   <Typography.Text as="p" id="metadata-full">{longMetadata}</Typography.Text>
   <button className="xui-button" type="button" id="after-tags">After tags</button>
  </Surface>

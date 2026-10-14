@@ -234,7 +234,7 @@ for(const kind of kinds){
           expect(actual.input.borderTopWidth).toBe(baseline.input.borderTopWidth);expect(actual.input.radius).toBe(baseline.input.radius);
         }},
         {name:'radius',values:{'--base-radius':'12px'},check:actual=>{
-          expect(actual.input.radius).toBe('12px');expect(actual.button.radius).toBe('12px');expect(actual.nav.radius).toBe('9.6px');expect(actual.checkbox.radius).toBe('7.2px');
+          expect(actual.input.radius).toBe('12px');expect(actual.button.radius).toBe('12px');expect(actual.nav.radius).toBe('12px');expect(actual.checkbox.radius).toBe('6px');
           expect(actual.switch.radius).toBe(baseline.switch.radius);expect(actual.input.paddingTop).toBe(baseline.input.paddingTop);expect(actual.input.borderTopWidth).toBe(baseline.input.borderTopWidth);
         }},
         {name:'border-and-emphasis',values:{'--base-line-thin':'3px','--base-line-emphasis':'4px'},check:actual=>{

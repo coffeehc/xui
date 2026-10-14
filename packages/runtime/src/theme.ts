@@ -22,6 +22,8 @@ export interface ThemeOptions {
   persist?: boolean;
 }
 export const DEFAULT_STORAGE_KEY = 'ui.theme.mode';
+// Precision uses dark by default; an explicit saved or controlled preference wins.
+const defaultMode: ThemeMode = 'dark';
 function valid(value: unknown): value is ThemeMode { return value === 'light' || value === 'dark' || value === 'system'; }
 
 /** Construct once per document. CSS owns colors; this controller owns only preference. */
@@ -32,7 +34,7 @@ export function createThemeController(options: ThemeOptions = {}): ThemeControll
   const controlled = options.mode !== undefined;
   let media: MediaQueryList | undefined;
   try { media = win?.matchMedia?.('(prefers-color-scheme: dark)'); } catch { /* Safe light fallback. */ }
-  let mode: ThemeMode = valid(options.mode) ? options.mode : 'system';
+  let mode: ThemeMode = valid(options.mode) ? options.mode : defaultMode;
   if (!controlled && options.persist !== false) try { const stored = win?.localStorage.getItem(key); if (valid(stored)) mode = stored; } catch { /* Memory choice stays usable. */ }
   let state: Readonly<ThemeState>;
   let destroyed = false;
@@ -60,13 +62,13 @@ export function createThemeController(options: ThemeOptions = {}): ThemeControll
     getState: () => state,
     setMode(value) {
       if (destroyed) return;
-      const next = valid(value) ? value : 'system';
+      const next = valid(value) ? value : defaultMode;
       if (controlled) { options.onModeChange?.(next); return; }
       mode = next;
       apply();
       if (options.persist !== false) try { win?.localStorage.setItem(key,mode); } catch { /* No logging or retry. */ }
     },
-    syncMode(value) { if (!destroyed) { mode = valid(value) ? value : 'system'; apply(); } },
+    syncMode(value) { if (!destroyed) { mode = valid(value) ? value : defaultMode; apply(); } },
     isDestroyed: () => destroyed,
     subscribe(listener) { if (destroyed) return () => {}; listeners.add(listener); return () => { listeners.delete(listener); }; },
     destroy() { if(destroyed)return;destroyed = true; listeners.clear(); try { unsubscribeMedia(); } catch { /* No retained subscriptions. */ } },

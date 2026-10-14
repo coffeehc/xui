@@ -53,7 +53,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 独立结构化错误完整消费为 [React](../examples/log-react/app.tsx)/[原生](../examples/log-vanilla/app.js)，共用 [typed fake facade](../examples/shared/log-model.ts)。按真实 cursor/query 语义展示累计/命中数与首次代表，只有单记录授权读取返回详情；拟议协议和宿主实现责任见 [LOGS.md](LOGS.md)。
 
-公开完整表格与page slots见 /data-table-react/、/data-table-vanilla/；默认 natural，`?layout=workspace` / `?layout=document` 对比显式布局，`?unbounded` 检查 auto 高度父级，`?local` 演示宿主本地分页，`?no-search`、`?no-actions`、`?no-pagination`、`?fixed-page-size` 检查可选能力。使用默认正式样式，无产品表体或footer补丁。顶栏紧凑间隔与无框语言入口见 [HEADER_CONTROLS](HEADER_CONTROLS.md)，普通NativeSelect边界保持。
+公开完整表格与page slots见 /data-table-react/、/data-table-vanilla/；默认 natural，`?layout=workspace` / `?layout=document` 对比显式布局，`?unbounded` 检查 auto 高度父级，`?local` 演示宿主本地分页，`?no-search`、`?no-actions`、`?no-pagination`、`?fixed-page-size` 检查可选能力。使用默认正式样式，无产品表体或footer补丁。顶栏紧凑间隔与无框语言入口见 [HEADER_CONTROLS](HEADER_CONTROLS.md)，普通表单使用 SimpleSelect / bindSelectControl；默认采用政策见 [DESIGN](DESIGN.md#公共复用与状态矩阵)。
 
 ## 原生 UI ID 与内网 HTTP
 
@@ -78,8 +78,8 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 | MenuLayout/NavigationMenu | NavigationItem[]、activeId/location、一次 navigation/matchLocation、header/children | 默认菜单、选中/展开/紧凑/键盘/drawer；renderLink/renderButton/renderLabel、独立renderAction 与受控回调 |
 | AppShell/Container/Stack/Grid/Toolbar/PageHeader/Section | sidebar/header/children、title/description/actions/meta | skip link/响应布局；低层 AppShell 用于自组 sidebar，不叠加第二个 MenuLayout owner |
 | Button/IconButton | 标准 props、disabled/aria-busy、onClick、图标按钮名字 | type=button、键盘/focus/motion；公开 render/ref，busy 与防重复分别控制 |
-| Field/Input/Textarea/NativeSelect/Fieldset/Checkbox/Radio/Switch | label/controlId/name/value/checked、help/error/required/readOnly | 单 id/描述与分组关联；复合输入显式 controlId，保留标准事件 |
-| Select/Combobox | peer generic items/value、受控回调、公开 Root/Trigger/Input/List/Item/Content | peer 选择/搜索/键盘/取消，xui 皮肤；原生 select/datalist 的 OS 差异明确 |
+| Field/Input/Textarea/SimpleSelect/Fieldset/Checkbox/Radio/Switch | label/controlId/name/value/checked、help/error/required/readOnly | 单 id/描述与分组关联；复合输入显式 controlId，保留标准事件 |
+| Select/Combobox | peer generic items/value、受控回调、公开 Root/Trigger/Input/List/Item/Content | peer 选择/搜索/键盘/取消，xui 皮肤；原生简单选择绑定 bindSelectControl，搜索选择使用 CommandPicker |
 | NavItem/Breadcrumbs/Pagination/Disclosure/Tabs | 当前项/页码/open/value 与内容 | page 选中、受控确认、disabled/RTL/方向键；Tabs 为实际 Root/List/Tab/Panel 部件 |
 | Dialog/Sheet/AlertDialog/ContextMenu/Menu/Popover/Tooltip/Toast | open/value、内容/执行回调、finalFocus，Toast manager | 公开部件/Content/positionerProps；模态/外点/Esc/回焦点；Tooltip 只放说明 |
 | Table/TableContainer/TableCaption/TableHead/TableBody/TableRow/TableHeaderCell/TableCell/SortButton | 行/列/单元内容、scope/aria-sort/selected | 独立导出、原生 table 与命名滚动区域；排序/分页/选择由宿主，不是 rows/columns 引擎 |

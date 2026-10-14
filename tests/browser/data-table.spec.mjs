@@ -101,7 +101,7 @@ for(const kind of kinds){
     test(`${kind} DataTable ${theme} ${viewport.width}px ${motion}: 20/50/100 real scrolling and stable page slots`,async({page},info)=>{
       await setup(page,kind,{theme,viewport,motion});
       for(const count of [20,50,100]){if(count!==20)await selectSize(page,count);await assertWorkspace(page,{count});await scrollToEnd(page);}
-      if(viewport.width===1280){const bounds=await page.getByTestId('record-filters').locator('input,select').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().y));expect(Math.max(...bounds)-Math.min(...bounds),'desktop search and all three filters share one row').toBeLessThanOrEqual(1.5);}
+      if(viewport.width===1280){const controls=page.getByTestId('record-filters').locator('input[type="search"], [role="combobox"]:visible');await expect(controls).toHaveCount(4);const bounds=await controls.evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().y));expect(Math.max(...bounds)-Math.min(...bounds),'desktop search and all three visible filters share one row').toBeLessThanOrEqual(1.5);}
       else {
         const scroll=body(page);expect(await scroll.evaluate(node=>node.scrollWidth-node.clientWidth),'narrow table has a real horizontal range').toBeGreaterThan(0);
         for(const fraction of [0,.5,1]){await scroll.evaluate((node,fraction)=>{node.scrollLeft=(node.scrollWidth-node.clientWidth)*fraction;},fraction);await settle(page);await assertColumns(page);}

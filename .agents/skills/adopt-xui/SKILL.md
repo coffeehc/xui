@@ -21,7 +21,7 @@ xui用于统一品牌和前端体系。先读[页面API总索引](../../../docs/
 
 - 盘点页面的领域 API、权限/租户范围、导航条件、输入保留、认证/日志、查询/缓存、上传下载与失败恢复。记录旧行为到新公开能力的映射，先保留必要功能再删重复实现。按[发布状态原则](../../../docs/ADOPTION.md#发布状态与升级原则)处理：未发布项目不保留仅为旧接口/配置/模型服务的兼容分支；已上线xAgent单独评估升级影响，不自动改消费者、数据或部署。正常扩展和安全校验保留。
 - 保持 agent-ready：业务 API 完整且可独立测试，UI 消费同一能力，提供观察、配置与介入入口。把核心流程、权限和校验放在宿主领域层；xui 负责表现、通用交互和请求接入，不能成为业务 API 唯一入口。不由这份 skill 自动扩展后端改造或 Agent SDK 范围。
-- 依据 [公开入口索引](../../../docs/PUBLIC_API.md) 选择公开 props/parts/slots/adapters 和标准页面组合。优先完整登录页、MenuLayout、API Key/业务日志视图，通过数据和配置采用；特殊业务组合原子和公开组合，不改内部渲染、不复制内部 DOM/伪元素或私有皮肤。其余基础控件采用 React 部件或已声明的原生 HTML/controller。附件新增组合按[WIDGETS](../../../docs/WIDGETS.md)选择Command/action或单/多选、date-only Calendar、ToggleGroup、ScrollArea、Avatar、InputGroup与Accordion；不要把datalist/文本输入/Tabs伪称同等交互。能力不足说明缺口并反馈 xui，不默默新建竞争 owner。
+- 依据 [公开入口索引](../../../docs/PUBLIC_API.md) 选择公开 props/parts/slots/adapters 和标准页面组合。优先完整登录页、MenuLayout、API Key/业务日志视图，通过数据和配置采用；特殊业务组合原子和公开组合，不改内部渲染、不复制内部 DOM/伪元素或私有皮肤。交互控件统一采用 xui 公开封装：简单选择默认 SimpleSelect / bindSelectControl，复杂选择用 Select/Combobox 或已公开的原生搜索组合，date-only 日期选择用 Calendar / createCalendar；普通输入与动作使用 Input、Button 或相应原生公共结构。Calendar 不等于现成 DatePicker，也不提供时间选择器，按已公开组合接入。公共组件保留真实 input/button 的表单、事件、键盘与可访问语义，不能改成伪 div 控件；也不能依赖裸 select、datalist 或 input type=date 的 OS 弹出面板实现跨平台统一。NativeSelect 等显式平台 API 和安全文件选择窗口是能力边界，不作为普通项目控件的默认推荐；用户明确需要时保留并说明差异。其余组合按[WIDGETS](../../../docs/WIDGETS.md)选择 Command/action、ToggleGroup、ScrollArea、Avatar、InputGroup 与 Accordion；不要把文本输入/Tabs 伪称同等交互。能力不足说明缺口并反馈 xui，不默默新建竞争 owner。
 
 ## 连接单一所有者与正式产物
 

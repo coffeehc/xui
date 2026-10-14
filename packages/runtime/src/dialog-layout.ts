@@ -1,7 +1,7 @@
-/** @internal Shared layout machinery; not a consumer composition API. */
+/** @internal Shared layout observation and cleanup; refresh after native visibility changes. */
 export function observeDialogLayout(popup:HTMLElement){
  const win=popup.ownerDocument.defaultView;
- if(!win||!win.ResizeObserver||!win.MutationObserver||!win.requestAnimationFrame)return ()=>{};
+ if(!win||!win.ResizeObserver||!win.MutationObserver||!win.requestAnimationFrame)return Object.assign(()=>{},{refresh:()=>{}});
  let dead=false,frame=0;
  const children=new Set<Element>();
  const schedule=()=>{if(!dead&&!frame)frame=win.requestAnimationFrame(measure);};
@@ -53,5 +53,6 @@ export function observeDialogLayout(popup:HTMLElement){
  win.addEventListener('resize',schedule);win.visualViewport?.addEventListener('resize',schedule);
  popup.ownerDocument.fonts?.addEventListener('loadingdone',schedule);
  measure();
- return()=>{if(dead)return;dead=true;if(frame)win.cancelAnimationFrame(frame);observer.disconnect();mutations.disconnect();win.removeEventListener('resize',schedule);win.visualViewport?.removeEventListener('resize',schedule);popup.ownerDocument.fonts?.removeEventListener('loadingdone',schedule);delete popup.dataset.dialogScroll;};
+ const release=()=>{if(dead)return;dead=true;if(frame)win.cancelAnimationFrame(frame);observer.disconnect();mutations.disconnect();win.removeEventListener('resize',schedule);win.visualViewport?.removeEventListener('resize',schedule);popup.ownerDocument.fonts?.removeEventListener('loadingdone',schedule);delete popup.dataset.dialogScroll;};
+ return Object.assign(release,{refresh(){if(dead)return;if(frame)win.cancelAnimationFrame(frame);measure();}});
 }

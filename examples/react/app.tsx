@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
-import { Button, IconButton, Field, Input, Textarea, NativeSelect, Checkbox, Radio, Switch, Nav, NavItem, Tabs, Alert, Surface, Dialog } from '@coffeehc/xui-react';
+import { Button, IconButton, Field, Input, Textarea, SimpleSelect, Checkbox, Radio, Switch, Nav, NavItem, Tabs, Alert, Surface, Dialog } from '@coffeehc/xui-react';
 import { createThemeController, type ThemeMode } from '@coffeehc/xui-runtime';
 import '@coffeehc/xui-theme/style.css';
 import './layout.css';
@@ -18,8 +18,8 @@ function App() {
     <NavItem href="#details" selected={selected === 'details'} onClick={() => setSelected('details')}>详情</NavItem>
   </Nav><main className="demo-main" id="preferences"><h1>工作偏好</h1><p className="demo-status" role="status">{saved ? '已保存' : '草稿尚未保存'}</p>
     <form className="demo-form" noValidate onSubmit={submit}><Field label="名称" required error={error} controlId="workspace-name"><Input value={name} onChange={event => {setName(event.target.value);setSaved(false);}} /></Field>
-    <div className="demo-fields"><Field label="外观"><NativeSelect value={mode} onChange={event => theme.setMode(event.target.value as ThemeMode)}><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></NativeSelect></Field>
-    <Field label="主题配方"><NativeSelect defaultValue="default" onChange={event => {document.documentElement.dataset.product = event.target.value;}}><option value="default">暖灰青绿</option><option value="example">蓝色覆盖</option></NativeSelect></Field></div>
+    <div className="demo-fields"><Field label="外观"><SimpleSelect value={mode} onChange={event => theme.setMode(event.target.value as ThemeMode)}><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></SimpleSelect></Field>
+    <Field label="主题配方"><SimpleSelect defaultValue="default" onChange={event => {document.documentElement.dataset.product = event.target.value;}}><option value="default">Precision 默认</option><option value="example">蓝色覆盖</option></SimpleSelect></Field></div>
     <div className="demo-row"><Checkbox label="允许提醒" defaultChecked /><Switch label="自动整理" /></div>
     <fieldset className="demo-choice-group"><legend>提醒方式</legend><Radio label="站内" name="channel" value="inbox" defaultChecked /><Radio label="邮件" name="channel" value="email" /></fieldset>
     <div className="demo-row"><Button type="submit">保存偏好</Button><Dialog.Root><Dialog.Trigger render={<Button variant="outline" />}>使用说明</Dialog.Trigger>

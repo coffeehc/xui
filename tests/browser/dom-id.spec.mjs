@@ -32,7 +32,10 @@ function assertMount(result){
   expect(result.withForm.ids.length).toBeGreaterThan(40);
   expect(new Set(result.withForm.ids).size).toBe(result.withForm.ids.length);
   expect(result.withForm.cases).toEqual(['navigation','layout','command','disclosure','popup','tooltip','toast','login','api-key','structured-log','business-log']);
-  for(const attribute of ['aria-controls','aria-labelledby','aria-describedby','aria-activedescendant','for','form','skip-link'])expect(result.withForm.counts[attribute],attribute).toBeGreaterThan(0);
+  for(const attribute of ['aria-controls','aria-labelledby','aria-describedby','for','form','skip-link'])expect(result.withForm.counts[attribute],attribute).toBeGreaterThan(0);
+  expect(result.withActiveCommand.focused).toBe(true);
+  expect(result.withActiveCommand.failures).toEqual([]);
+  expect(result.withActiveCommand.counts['aria-activedescendant']).toBe(1);
   expect(result.toastIds[0]).not.toBe(result.toastIds[1]);
   expect(result.toastIds.every(id=>typeof id==='string'&&id.length>0)).toBe(true);
   expect(result.explicitId).toBe('host-notification');
@@ -49,7 +52,7 @@ async function exerciseRepeatedMounts(page){
       window.domIdSeen??=[];
       window.domIdHosts??=Array.from({length:2},()=>{const root=document.createElement('div');document.body.append(root);return root;});
       window.domIdOwners=await Promise.all(window.domIdHosts.map(root=>XuiDomIdA.mount(root)));
-      const results=window.domIdOwners.map(owner=>({withForm:owner.withForm,toastIds:owner.toastIds,explicitId:owner.explicitId,toastCountBefore:owner.toastCountBefore,toastCountAfterClose:owner.toastCountAfterClose,toastCountAfterReplace:owner.toastCountAfterReplace,disclosureWorks:owner.disclosureWorks,formOpen:owner.formOpen}));
+      const results=window.domIdOwners.map(owner=>({withForm:owner.withForm,withActiveCommand:owner.withActiveCommand,toastIds:owner.toastIds,explicitId:owner.explicitId,toastCountBefore:owner.toastCountBefore,toastCountAfterClose:owner.toastCountAfterClose,toastCountAfterReplace:owner.toastCountAfterReplace,disclosureWorks:owner.disclosureWorks,formOpen:owner.formOpen}));
       const fresh=results.flatMap(value=>[...value.withForm.ids,...value.toastIds]);
       const repeated=fresh.filter(id=>window.domIdSeen.includes(id));window.domIdSeen.push(...fresh);
       return {results,repeated,all:XuiDomIdA.inspect(document.body),iteration};
@@ -97,23 +100,35 @@ test('independently bundled runtimes reserve unique IDs before insertion and avo
     const detached=[first,second].every(owner=>!owner.root.isConnected);
     const controls=[first,second].map(owner=>owner.controller.getInput().getAttribute('aria-controls'));
     document.body.append(first.root,second.root);
-    for(const owner of [first,second])owner.controller.getInput().dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+    const activeSnapshots=[first,second].map(owner=>{
+      const input=owner.controller.getInput();input.focus();input.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+      return {focused:document.activeElement===input,activeId:input.getAttribute('aria-activedescendant'),snapshot:XuiDomIdA.inspect(owner.root)};
+    });
     const snapshot=XuiDomIdA.inspect(document.body);
     for(const owner of [first,second])owner.controller.destroy();
-    return {detached,controls,snapshot};
+    return {detached,controls,snapshot,activeSnapshots};
   });
   expect(result.detached).toBe(true);
   expect(new Set(result.controls).size).toBe(2);
   expect(result.controls).not.toContain('xui-command-1');
   expect(result.controls).not.toContain('xui-command-2');
   expect(result.snapshot.failures).toEqual([]);
-  expect(result.snapshot.counts['aria-activedescendant']).toBe(2);
+  expect(new Set(result.activeSnapshots.map(value=>value.activeId)).size).toBe(2);
+  for(const active of result.activeSnapshots){
+    expect(active.focused).toBe(true);
+    expect(active.snapshot.failures).toEqual([]);
+    expect(active.snapshot.counts['aria-activedescendant']).toBe(1);
+    expect(active.snapshot.ids).toContain(active.activeId);
+  }
   expect(errors).toEqual([]);
 });
 
 test('built runtime works on an actual non-secure HTTP origin without a randomUUID polyfill',async({},testInfo)=>{
   const inherited=testInfo.project.use.launchOptions??{};
-  const browser=await chromium.launch({...inherited,args:[...(inherited.args??[]),'--host-resolver-rules=MAP xui-dom-id.test 127.0.0.1','--no-proxy-server']});
+  // Full Chromium honors the mapped direct origin on macOS; headless shell may
+  // still send it through the system proxy. Keep explicit project choices.
+  const fullChromium=!inherited.channel&&!inherited.executablePath?{executablePath:chromium.executablePath()}:{};
+  const browser=await chromium.launch({...inherited,...fullChromium,args:[...(inherited.args??[]),'--host-resolver-rules=MAP xui-dom-id.test 127.0.0.1','--no-proxy-server']});
   try{
     const page=await browser.newPage({viewport:{width:1280,height:800}});
     const errors=await openFixture(page,undefined,'http://xui-dom-id.test:4173/menu-vanilla/destination.html');
