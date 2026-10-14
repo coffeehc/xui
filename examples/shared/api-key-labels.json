@@ -41,12 +41,5 @@
   "revoking": "正在撤销…",
   "revokeError": "撤销结果尚未确认。请核对操作结果后再决定下一步。",
   "revokePending": "关闭会取消本地等待，后端仍可能完成撤销。",
-  "lastUsedAtPending": "待保存",
-  "writePending": "正在执行 Key 管理操作。",
-  "writeUncertain": "上次操作结果尚未确认。核对结果前，创建、撤销和删除均已暂停。",
-  "checkWrite": "核对操作结果",
-  "checkingWrite": "正在核对…",
-  "recoveryError": "无法核对操作结果，写入保护仍然保留。",
-  "recoveryPending": "操作仍未完成，写入保护仍然保留。",
-  "recoveryUnavailable": "已刷新列表，但服务尚未提供操作结果核对，写入保护仍然保留。"
+  "lastUsedAtPending": "待保存"
 }

@@ -1,5 +1,7 @@
 # Bearer v2 鉴权接入与验证记录
 
+> 本页为既有 v2 里程碑的历史验证记录；当前登录异常路径已改为普通会话单次核验和手动重试，持久恢复门禁已移除。现行合同以 [AUTH](AUTH.md) 为准。
+
 日期：2026-10-12。范围：xui 公共 auth/HTTP owner、两个登录页及正式消费者；起点 `91fd32148a09b0ac33936a5ebf04a209b35173d0`。不改业务项目、不部署、不访问用户本地电脑、不生成真实凭据。正式合同见 [AUTH](AUTH.md)。后端固定来源为[baseservice a10b291](https://github.com/coffeehc/baseservice/commit/a10b291b4d562b9e282399c0e3fa89dbb02bf7c8)，共享fixture SHA256为`8255004f9e8256c05626050e1522b6e00efd9bc11bcb0aa23baddd05ee93cb08`。
 
 ## 发现、证据、处理与下一步

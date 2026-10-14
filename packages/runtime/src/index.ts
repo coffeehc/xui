@@ -27,7 +27,6 @@ export * from './data-table.js';
 export * from './data-table-dom.js';
 export * from './password.js';
 export * from './password-dom.js';
-export * from './operation-store.js';
 export * from './search-toolbar-dom.js';
 export * from './display.js';
 export * from './display-dom.js';

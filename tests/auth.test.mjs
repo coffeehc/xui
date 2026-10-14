@@ -32,7 +32,7 @@ test('versioned access credentials accept configured prefix shapes and reject ot
  ]){
   const client=owner(async()=>json(wire(issued('A',{access_token}))));
   await assert.rejects(client.auth.login({username:'demo',password:'FAKE_PASSWORD'}),error=>error.kind==='parse');
-  assert.equal(client.auth.getState().user,null);assert.equal(client.auth.getState().reauthenticationRequired,true);cleanup(client);
+  assert.equal(client.auth.getState().user,null);assert.equal(client.auth.getState().busy,null);cleanup(client);
  }
 });
 
@@ -43,7 +43,7 @@ test('strict session v2 has only safe identity; issued secrets and aliases are r
 });
 test('strict issued DTO rejects invalid purpose format, canonical encoding, expiry and token extras without exposing values',async()=>{
  for(const extra of [{schema_version:1},{token_type:'bearer'},{access_token:'bs_'+'A'.repeat(43)},{access_token:token().slice(0,-1)+'B'},{access_token:token()+'='},{expires_at:'2099-02-30T00:00:00Z'},{expires_at:'2000-01-01T00:00:00Z'},{expires_at:'2099-01-01T00:00:00+00:00'},{refresh_token:'FAKE_PRIVATE'}]){
-  const client=owner(async()=>json(wire(issued('A',extra))));await assert.rejects(client.auth.login({username:'demo',password:'FAKE_PASSWORD'}),error=>error.kind==='parse');assert.equal(client.auth.getState().reauthenticationRequired,true);assert(!JSON.stringify(client.auth.getState()).includes('bs-v1-sha256-access-'));cleanup(client);
+  const client=owner(async()=>json(wire(issued('A',extra))));await assert.rejects(client.auth.login({username:'demo',password:'FAKE_PASSWORD'}),error=>error.kind==='parse');assert.equal(client.auth.getState().busy,null);assert(!JSON.stringify(client.auth.getState()).includes('bs-v1-sha256-access-'));cleanup(client);
  }
 });
 test('one owner supplies exact auth endpoint credential modes, fixed headers, Bearer isolation and safe public snapshots',async()=>{
@@ -72,21 +72,23 @@ test('late old-generation 401 cannot expire a newer login and 403 never refreshe
 });
 test('one refresh/session waiter abort detaches while other callers get the single successful result',async()=>{
  const held=deferred();let refreshes=0,sessions=0;const client=owner(async url=>{if(route(url)==='refresh'){refreshes++;await held.promise;return json(wire(issued()));}sessions++;return json(wire(session));});
- const controller=new AbortController(),first=client.auth.currentUser({signal:controller.signal}),second=client.auth.currentUser();await flush();controller.abort();await assert.rejects(first,error=>error.kind==='cancel');held.resolve();assert.deepEqual(await second,user);assert.equal(refreshes,1);assert.equal(sessions,1);assert.equal(client.auth.getState().reauthenticationRequired,false);cleanup(client);
+ const controller=new AbortController(),first=client.auth.currentUser({signal:controller.signal}),second=client.auth.currentUser();await flush();controller.abort();await assert.rejects(first,error=>error.kind==='cancel');held.resolve();assert.deepEqual(await second,user);assert.equal(refreshes,1);assert.equal(sessions,1);assert.equal(client.auth.getState().busy,null);cleanup(client);
 });
 test('logout waits for an in-flight refresh cookie mutation and drops its late local identity',async()=>{
  const held=deferred(),order=[];const client=owner(async url=>{const op=route(url);order.push(op);if(op==='refresh'){await held.promise;return json(wire(issued()));}return json(wire(null));});
  const refresh=client.auth.refresh(),failure=assert.rejects(refresh,error=>error.kind==='cancel');await flush();const logout=client.auth.logout();await flush();assert.deepEqual(order,['refresh']);held.resolve();await logout;await failure;assert.deepEqual(order,['refresh','logout']);assert.equal(client.auth.getState().status,'anonymous');assert(!JSON.stringify(client.auth.getState()).includes('bs-v1-sha256-access-'));cleanup(client);
 });
-test('refresh conflicts and unknown/committed/lost results block automatic retry without logout or cookie cleanup',async()=>{
- for(const failure of [()=>reject(409,40901),()=>reject(503,50301),()=>reject(503,50302),()=>{throw new Error('FAKE_PRIVATE');}]){
-  let requests=0;const client=owner(async()=>{requests++;return failure();});await assert.rejects(client.auth.currentUser(),HttpError);assert.equal(client.auth.getState().status,'unknown');assert.equal(client.auth.getState().reauthenticationRequired,true);
-  await assert.rejects(client.auth.currentUser(),HttpError);await assert.rejects(client.auth.refresh(),HttpError);await assert.rejects(client.http.request('/api/business/item'),HttpError);assert.equal(requests,1);assert(!JSON.stringify(client.auth.getState()).includes('FAKE_PRIVATE'));cleanup(client);
+test('failed refresh never loops or cleans cookies; a later explicit call can retry',async()=>{
+ for(const failure of [()=>reject(409,40901),()=>reject(503,50300),()=>{throw new Error('FAKE_PRIVATE');}]){
+  let requests=0,fail=true;const client=owner(async url=>{requests++;return fail?failure():normal(url);});
+  await assert.rejects(client.auth.currentUser(),HttpError);await flush();assert.equal(requests,1);assert.equal(client.auth.getState().status,'unknown');assert.equal(client.auth.getState().busy,null);
+  assert(!JSON.stringify(client.auth.getState()).includes('FAKE_PRIVATE'));fail=false;
+  assert.deepEqual(await client.auth.currentUser(),user);assert.equal(requests,3);cleanup(client);
  }
 });
 test('invalid login preserves confirmed prior session; uncertain logout never says anonymous',async()=>{
  let mode='ok';const client=owner(async url=>mode==='ok'?normal(url):reject(mode==='denied'?401:503,mode==='denied'?40101:50301));await client.auth.login({username:'demo',password:'FAKE'});const before=client.auth.getState().user;
- mode='denied';await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.status===401);assert.equal(client.auth.getState().user,before);mode='unknown';await assert.rejects(client.auth.logout(),HttpError);assert.equal(client.auth.getState().status,'unknown');assert.equal(client.auth.getState().reauthenticationRequired,true);cleanup(client);
+ mode='denied';await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.status===401);assert.equal(client.auth.getState().user,before);mode='unknown';await assert.rejects(client.auth.logout(),HttpError);assert.equal(client.auth.getState().status,'unknown');assert.equal(client.auth.getState().busy,null);cleanup(client);
 });
 test('protected targets reject external origins, ambiguous paths, manual credentials and redirect/cookie/retry overrides before sending',async()=>{
  let calls=0;const client=owner(async url=>{calls++;return normal(url);});await client.auth.login({username:'demo',password:'FAKE'});const baseline=calls;
@@ -104,9 +106,66 @@ test('untrusted final response origin is rejected and never accepted as a signed
 test('destroy clears secrets, cancels late results and keeps managed routes fail-closed',async()=>{
  const held=deferred();let calls=0;const client=owner(async()=>{calls++;return held.promise;});const request=client.auth.refresh(),failure=assert.rejects(request,error=>error.kind==='cancel');await flush();client.auth.destroy();await failure;held.resolve(json(wire(issued())));await flush();assert.equal(client.auth.getState().user,null);await assert.rejects(client.http.request('/api/business/a'),error=>error.kind==='cancel');assert.equal(calls,1);client.http.destroy();
 });
-test('owner cancellation and timeout leave an unconfirmed state; late token never enters state',async()=>{
- const held=deferred(),client=owner(async()=>held.promise,{}, {timeoutMs:20});const pending=client.auth.login({username:'demo',password:'FAKE'});await assert.rejects(pending,error=>error.kind==='timeout');assert.equal(client.auth.getState().reauthenticationRequired,true);held.resolve(json(wire(issued())));await flush();assert.equal(client.auth.getState().user,null);cleanup(client);
- const second=owner(async()=>new Promise(()=>{}));const refreshing=second.auth.refresh(),failure=assert.rejects(refreshing,error=>error.kind==='cancel');await flush();second.auth.cancel();await failure;assert.equal(second.auth.getState().reauthenticationRequired,true);cleanup(second);
+test('timed-out login checks an already-applied cookie once and ignores the late login response',async()=>{
+ const held=deferred(),requests=[],signals=[],newUser={...user,id:'43',display_name:'confirmed session'};
+ const client=owner(async(url,init)=>{const op=route(url);requests.push(op);signals.push(init.signal);if(op==='login')return held.promise;return json(wire(op==='refresh'?issued('E',{user:newUser}):{schema_version:2,user:newUser}));},{},{timeoutMs:20});
+ assert.deepEqual(await client.auth.login({username:'demo',password:'FAKE'}),newUser);
+ assert.deepEqual(requests,['login','refresh','session']);assert.equal(signals[0].aborted,true);assert.equal(client.auth.getState().busy,null);
+ held.resolve(json(wire(issued())));await flush();assert.deepEqual(client.auth.getState().user,newUser);cleanup(client);
+});
+test('a lost login reply without confirmed session ends busy and permits a direct manual login retry',async()=>{
+ const held=deferred(),requests=[];let first=true;
+ const client=owner(async(url,init)=>{const op=route(url);requests.push(op);if(op==='login'&&first){first=false;return held.promise;}return op==='refresh'?reject(401):normal(url);},{},{timeoutMs:20});
+ await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.kind==='timeout');
+ assert.deepEqual(requests,['login','refresh']);assert.equal(client.auth.getState().busy,null);assert.equal(client.auth.getState().status,'anonymous');assert.equal(client.auth.getState().error.kind,'timeout');
+ assert.deepEqual(await client.auth.login({username:'demo',password:'FAKE'}),user);assert.deepEqual(requests,['login','refresh','login']);
+ held.resolve(json(wire(issued('E',{user:{...user,id:'99'}}))));await flush();assert.deepEqual(client.auth.getState().user,user);cleanup(client);
+});
+test('unknown login plus failed session recheck never replays a write or keeps a submission gate',async()=>{
+ const requests=[];let fail=true;const client=owner(async url=>{const op=route(url);requests.push(op);if(!fail)return normal(url);throw new Error('FAKE_PRIVATE');});
+ await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.kind==='network');await flush();
+ assert.deepEqual(requests,['login','refresh']);assert.equal(client.auth.getState().busy,null);assert.equal(client.auth.getState().status,'unknown');
+ fail=false;assert.deepEqual(await client.auth.login({username:'demo',password:'FAKE'}),user);assert.deepEqual(requests,['login','refresh','login']);cleanup(client);
+});
+test('a previous account session does not confirm an uncertain login for a different account',async()=>{
+ const requests=[],snapshots=[],other={...user,id:'43',username:'other'},client=owner(async url=>{const op=route(url);requests.push(op);if(op==='login')throw Error('lost reply');return json(wire(op==='session'?{schema_version:2,user:other}:issued('E',{user:other})));});
+ client.auth.subscribe(()=>snapshots.push(client.auth.getState()));
+ await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.kind==='network');assert.deepEqual(requests,['login','refresh','session']);assert.equal(client.auth.getState().status,'unknown');assert.equal(client.auth.getState().user,null);assert.equal(client.auth.getState().busy,null);
+ assert(!snapshots.some(state=>state.status==='authenticated'||state.user!==null));assert(snapshots.slice(0,-1).every(state=>state.busy==='login'));cleanup(client);
+});
+test('login confirmation keeps candidate access private and prevents concurrent refresh replacing its identity',async()=>{
+ for(const matchingSession of [true,false]){
+  const held=deferred(),requests=[],snapshots=[],other={...user,id:'43',username:'other'};let refreshes=0;
+  const client=owner(async(url,init)=>{const op=route(url);requests.push({op,authorization:init.headers.get('Authorization')});if(op==='login')throw Error('lost reply');if(op==='refresh')return json(wire(issued(++refreshes===1?'A':'E',{user:refreshes===1?user:other})));if(op==='session'){await held.promise;return json(wire({schema_version:2,user:matchingSession?user:other}));}throw Error('Business request must not dispatch');});
+  client.auth.subscribe(()=>snapshots.push(client.auth.getState()));
+  const login=client.auth.login({username:'demo',password:'FAKE'}),result=login.then(value=>({value}),error=>({error}));await flush();
+  assert.deepEqual(requests.map(request=>request.op),['login','refresh','session']);assert.equal(client.auth.getState().busy,'login');assert.equal(client.auth.getState().status,'unknown');
+  await assert.rejects(client.auth.refresh(),error=>error.kind==='cancel');await assert.rejects(client.auth.currentUser(),error=>error.kind==='cancel');
+  await assert.rejects(client.http.request('/api/business/item',{method:'POST',json:{}}),error=>error.kind==='cancel');
+  assert.equal(refreshes,1);assert.equal(requests.length,3);assert.equal(requests[2].authorization,`Bearer ${token()}`);assert(!snapshots.some(state=>state.status==='authenticated'||state.user!==null));
+  held.resolve();const final=await result;
+  if(matchingSession){assert.deepEqual(final.value,user);assert.equal(client.auth.getState().status,'authenticated');assert.deepEqual(client.auth.getState().user,user);assert.equal(snapshots.filter(state=>state.status==='authenticated'&&state.busy===null).length,1);}
+  else {assert.equal(final.error.kind,'network');assert.equal(client.auth.getState().status,'unknown');assert.equal(client.auth.getState().user,null);assert(!snapshots.some(state=>state.status==='authenticated'));}
+  assert.equal(client.auth.getState().busy,null);assert(snapshots.slice(0,-1).every(state=>state.busy==='login'));cleanup(client);
+ }
+});
+test('cancel, caller abort and destroy during login confirmation discard its late private candidate',async()=>{
+ for(const action of ['cancel','abort','destroy']){
+  const held=deferred(),snapshots=[],signals=[],external=new AbortController();
+  const client=owner(async(url,init)=>{const op=route(url);signals.push({op,signal:init.signal});if(op==='login')throw Error('lost reply');if(op==='session'){await held.promise;return json(wire(session));}return json(wire(issued()));});
+  client.auth.subscribe(()=>snapshots.push(client.auth.getState()));
+  const login=client.auth.login({username:'demo',password:'FAKE'},{signal:external.signal}),failure=assert.rejects(login,error=>error.kind==='cancel');await flush();
+  assert.equal(client.auth.getState().busy,'login');assert.deepEqual(signals.map(item=>item.op),['login','refresh','session']);
+  if(action==='abort')external.abort();else client.auth[action]();await failure;
+  assert.equal(signals.at(-1).signal.aborted,true);assert.equal(client.auth.getState().busy,null);assert.equal(client.auth.getState().status,'unknown');
+  held.resolve();await flush();assert.equal(client.auth.getState().user,null);assert(!snapshots.some(state=>state.status==='authenticated'));cleanup(client);
+ }
+});
+test('owner cancellation only ends waiting; a later ordinary session read can confirm an applied cookie',async()=>{
+ const held=deferred(),requests=[];const client=owner(async(url,init)=>{const op=route(url);requests.push(op);if(op==='login')return held.promise;return normal(url);});
+ const pending=client.auth.login({username:'demo',password:'FAKE'}),failure=assert.rejects(pending,error=>error.kind==='cancel');await flush();client.auth.cancel();await failure;
+ assert.deepEqual(requests,['login']);assert.equal(client.auth.getState().status,'unknown');assert.equal(client.auth.getState().busy,null);
+ assert.deepEqual(await client.auth.currentUser(),user);assert.deepEqual(requests,['login','refresh','session']);held.resolve(json(wire(issued('E',{user:{...user,id:'99'}}))));await flush();assert.deepEqual(client.auth.getState().user,user);cleanup(client);
 });
 test('auth subscriptions may expire or destroy during completion without returning stale identity',async()=>{
  for(const action of ['expire','destroy']){const client=owner(normal);client.auth.subscribe(()=>{if(client.auth.getState().status==='authenticated')client.auth[action]();});await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.kind==='cancel');assert.equal(client.auth.getState().user,null);cleanup(client);}
@@ -131,7 +190,7 @@ test('late old-generation 401 cannot notify external onUnauthorized after a new 
 
 test('late session responses cannot clear a newer refreshed access generation',async()=>{
  for(const status of [200,401]){const held=deferred(),newUser={...user,id:'43',username:'new-user'};let sessions=0;const client=owner(async url=>{if(route(url)==='login')return json(wire(issued()));if(route(url)==='refresh')return json(wire(issued('E',{user:newUser})));sessions++;return held.promise;});
- await client.auth.login({username:'demo',password:'FAKE'});const checking=client.auth.currentUser(),failure=assert.rejects(checking,error=>error.kind==='cancel');await flush();await client.auth.refresh();held.resolve(status===200?json(wire(session)):reject(401));await failure;assert.deepEqual(client.auth.getState().user,newUser);assert.equal(sessions,1);assert.equal(client.auth.getState().busy,null);assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().reauthenticationRequired,false);cleanup(client);}
+ await client.auth.login({username:'demo',password:'FAKE'});const checking=client.auth.currentUser(),failure=assert.rejects(checking,error=>error.kind==='cancel');await flush();await client.auth.refresh();held.resolve(status===200?json(wire(session)):reject(401));await failure;assert.deepEqual(client.auth.getState().user,newUser);assert.equal(sessions,1);assert.equal(client.auth.getState().busy,null);assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().busy,null);cleanup(client);}
 });
 
 test('local missing-access rejection never fabricates an HTTP 401 notification',async()=>{
@@ -145,7 +204,7 @@ test('a request bootstrapping its access uses the accepted credential epoch for 
 test('a reentrant refresh cannot turn a successful login return into null or overwrite the newer refresh state',async()=>{
  const client=owner(normal);let started=false,refreshing;
  client.auth.subscribe(()=>{if(!started&&client.auth.getState().status==='authenticated'){started=true;refreshing=client.auth.refresh();}});
- await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.kind==='cancel');assert.deepEqual(await refreshing,user);assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().reauthenticationRequired,false);cleanup(client);
+ await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.kind==='cancel');assert.deepEqual(await refreshing,user);assert.equal(client.auth.getState().status,'authenticated');assert.equal(client.auth.getState().busy,null);cleanup(client);
 });
 
 test('currentUser never publishes idle authenticated before its final session read settles',async()=>{

@@ -1,7 +1,3 @@
-import {createAuthOperationRecovery,type AuthRecoveryState} from './auth-operation-recovery.js';
-export type {AuthRecoveryState} from './auth-operation-recovery.js';
-import {createAuthRecovery,type AuthRecoveryOptions} from './auth-recovery.js';
-export type {AuthRecoveryOptions} from './auth-recovery.js';
 import {passwordPolicyEndpoint} from './password.js';
 import {HttpError,createAjaxResponseAdapter,ajaxErrorResponseAdapter,isHttpError,type HttpClient} from './http.js';
 import {authRequest,bindHttpAuth,inspectHttp,type AccessLease,type AuthOperation} from './http-auth-internal.js';
@@ -10,7 +6,7 @@ import {parseEntityId,type EntityIdEncoding} from './entity-id.js';
 
 /** First-party Bearer/session v2; these are not OAuth token endpoints. */
 export const authEndpoints=Object.freeze({login:'/api/v1/auth/login',refresh:'/api/v1/auth/refresh',logout:'/api/v1/auth/logout',session:'/api/v1/auth/session'});
-export const authErrorCodes=Object.freeze({invalidRequest:40001,required:40101,forbidden:40301,refreshConflict:40901,rateLimited:42901,unavailable:50300,outcomeUnknown:50301,committedFollowupFailed:50302});
+export const authErrorCodes=Object.freeze({invalidRequest:40001,required:40101,forbidden:40301,refreshConflict:40901,rateLimited:42901,unavailable:50300});
 export interface AuthUser {id:string;username:string;display_name:string|null}
 export interface AuthSession {schema_version:2;user:Readonly<AuthUser>}
 export interface LoginCredentials {username:string;password:string}
@@ -18,14 +14,9 @@ export interface AuthRequestOptions {signal?:AbortSignal}
 export interface AuthState {
   status:'unknown'|'anonymous'|'authenticated';user:Readonly<AuthUser>|null;
   busy:'session'|'login'|'refresh'|'logout'|null;error:HttpError|null;
-  /** Cookie mutation is unconfirmed; durable owners require an authoritative terminal result. */
-  recovery?:Readonly<AuthRecoveryState>|null;
-  reauthenticationRequired:boolean;
 }
 export interface AuthClientOptions {
   http:HttpClient;timeoutMs?:number;
-  /** Omitted: legacy memory-only fencing. Configure for reload-safe cookie mutations. */
-  recovery?:AuthRecoveryOptions;
   /** 显式身份编码，默认 decimal；配置后不可自动接受另一种格式。 */
   idEncoding?:EntityIdEncoding;
   /** Explicit same-origin business routes: exact paths, or slash-terminated subtree prefixes. */
@@ -35,12 +26,9 @@ export interface AuthClient {
   getState:()=>Readonly<AuthState>;subscribe:(listener:()=>void)=>()=>void;
   currentUser:(options?:AuthRequestOptions)=>Promise<Readonly<AuthUser>|null>;
   refresh:(options?:AuthRequestOptions)=>Promise<Readonly<AuthUser>|null>;
+  /** Submit once; uncertain replies are checked through the existing refresh/session endpoints. */
   login:(credentials:LoginCredentials,options?:AuthRequestOptions)=>Promise<Readonly<AuthUser>>;
   logout:(options?:AuthRequestOptions)=>Promise<void>;
-  /** Present only when authoritative operation-v1 recovery is configured. GET never resolves an operation. */
-  inspectRecovery?:(options?:AuthRequestOptions)=>Promise<boolean>;
-  /** Explicitly terminate only the operation ID shown to the user. Never called automatically. */
-  resolveRecovery?:(operationId:string,options?:AuthRequestOptions)=>Promise<boolean>;
   cancel:()=>void;expire:()=>void;destroy:()=>void;
 }
 function object(value:unknown,keys:readonly string[]):Record<string,unknown>{
@@ -93,7 +81,7 @@ export function resolveLoginReturnTo(value:string|null|undefined,fallback='/'):s
 }
 
 /** One private access-token owner attached to the existing transport. No persistent token storage. */
-export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncoding='decimal',recovery:recoveryOptions}:AuthClientOptions):AuthClient{
+export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncoding='decimal'}:AuthClientOptions):AuthClient{
   parseEntityId('1',idEncoding);
   if(!http||!inspectHttp(http)||inspectHttp(http)!.binding)throw new TypeError('Provide one unbound shared xui HTTP client');
   if(!Number.isFinite(timeoutMs)||timeoutMs<=0||timeoutMs>2147483647)throw new RangeError('Invalid auth timeout');
@@ -105,27 +93,21 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
   const sessionAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseAuthSession(result.payload,idEncoding)};};
   const issuedAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);return {...result,payload:parseIssued(result.payload,idEncoding)};};
   const logoutAdapter=(value:unknown,context:Parameters<typeof envelope>[1])=>{const result=envelope(value,context);if(result.payload!==null)throw new TypeError('Invalid logout contract');return {...result,payload:null};};
-  if(recoveryOptions?.protocol!==undefined&&recoveryOptions.protocol!=='operation-v1')throw new TypeError('Unsupported auth recovery protocol');
-  const operationRecovery=recoveryOptions?.protocol==='operation-v1'?createAuthOperationRecovery(http,inspectHttp(http)!.origin,recoveryOptions,timeoutMs):undefined;
-  const recovery=operationRecovery??createAuthRecovery(inspectHttp(http)!.origin,recoveryOptions);
-  let recoveryController:AbortController|undefined;
-  let state:Readonly<AuthState>=Object.freeze({status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:recovery?.blocked()??false});
+  let state:Readonly<AuthState>=Object.freeze({status:'unknown',user:null,busy:null,error:null});
   let dead=false,version=0,generation=0,access:{value:string;expiry:number;generation:number}|undefined,bootstrapped=false;
   const listeners=new Set<()=>void>();
-  let active:{operation:'login'|'logout';controller:AbortController;version:number}|undefined;
-  let refreshFlight:Promise<Readonly<AuthUser>|null>|undefined,refreshController:AbortController|undefined;
+  let active:{operation:'login'|'logout';controller:AbortController;version:number;candidate?:ReturnType<typeof parseIssued>&{generation:number}}|undefined;
+  let refreshFlight:Promise<Readonly<AuthUser>|null>|undefined,refreshController:AbortController|undefined,refreshVersion:number|undefined;
   let sessionFlight:Promise<Readonly<AuthUser>|null>|undefined,sessionController:AbortController|undefined,sessionVersion:number|undefined;
-  const errorFor=(kind:'cancel'|'http'='cancel',operation?:AuthOperation)=>new HttpError(kind,{attempts:0,endpointId:operation?`auth.${operation}`:undefined,...(kind==='http'?{status:401,code:'AUTH_REAUTHENTICATION_REQUIRED'}:{})});
+  const errorFor=(operation?:AuthOperation)=>new HttpError('cancel',{attempts:0,endpointId:operation?`auth.${operation}`:undefined});
   const normalize=(error:unknown,operation:AuthOperation)=>isHttpError(error)?new HttpError(error.kind,error.metadata):new HttpError('parse',{attempts:0,endpointId:`auth.${operation}`});
-  const emit=(patch:Partial<AuthState>)=>{state=Object.freeze({...state,...patch,...(operationRecovery?{recovery:operationRecovery.getState()}: {})});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* Views cannot change credential handling. */}};
+  const emit=(patch:Partial<AuthState>)=>{state=Object.freeze({...state,...patch});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* Views cannot change credential handling. */}};
   const clear=()=>{access=undefined;generation++;};
-  // IndexedDB restoration is asynchronous and never sends a cookie request.
-  if(recovery)void recovery.inspect().then(()=>{if(!dead&&version===0&&!active&&!refreshFlight&&!sessionFlight&&recovery.blocked())emit({reauthenticationRequired:true});},()=>{if(!dead&&version===0&&!active&&!refreshFlight&&!sessionFlight)emit({reauthenticationRequired:true});});
   const current=(revision:number)=>!dead&&revision===version;
-  const invalidate=(status:AuthState['status'],required=false,error:HttpError|null=null)=>{required=required||(recovery?.blocked()??false);version++;clear();sessionController?.abort();refreshController?.abort();active?.controller.abort();recoveryController?.abort();active=undefined;emit({status,user:null,busy:null,error,reauthenticationRequired:required});};
+  const invalidate=(status:AuthState['status'],error:HttpError|null=null)=>{version++;clear();sessionController?.abort();refreshController?.abort();active?.controller.abort();active=undefined;emit({status,user:null,busy:null,error});};
   const coordination=createAuthCoordination(inspectHttp(http)!.origin,event=>{
     if(dead||event.kind==='refresh')return; // Rotation preserves live sibling access tokens.
-    invalidate(event.kind==='logout'?'anonymous':'unknown',recovery?.blocked()??false);bootstrapped=event.kind==='logout';
+    invalidate(event.kind==='logout'?'anonymous':'unknown');bootstrapped=event.kind==='logout';
   });
   const wait=<T>(promise:Promise<T>,signal?:AbortSignal):Promise<T>=>{
     if(!signal)return promise;if(signal.aborted)return Promise.reject(errorFor());
@@ -136,56 +118,49 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
     check(revision);const acceptedGeneration=++generation;access={value:issued.value,expiry:issued.expiry,generation:acceptedGeneration};bootstrapped=true;http.resetUnauthorized();
     // Issuing access during currentUser is not completion of its required session read.
     const checking=!!sessionFlight&&sessionVersion===revision&&!sessionController?.signal.aborted;
-    emit({status:'authenticated',user:issued.user,busy:checking?'session':null,error:null,reauthenticationRequired:false});check(revision);if(access?.generation!==acceptedGeneration||state.user!==issued.user)throw errorFor();return issued.user;
+    emit({status:'authenticated',user:issued.user,busy:checking?'session':null,error:null});check(revision);if(access?.generation!==acceptedGeneration||state.user!==issued.user)throw errorFor();return issued.user;
   };
-  const cookieRequest=(operation:'login'|'refresh'|'logout',json:unknown,signal:AbortSignal,operationHeaders?:Record<string,string>)=>authRequest(http,operation,authEndpoints[operation],{method:'POST',json,headers:{Accept:'application/json','Content-Type':'application/json',...operationHeaders},signal,timeoutMs,response:'ajax',errorAdapter:ajaxErrorResponseAdapter,adapter:operation==='logout'?logoutAdapter:issuedAdapter,endpointId:`auth.${operation}`,cache:'no-store',credentials:'same-origin',redirect:'error',unauthorized:'ignore'});
+  const cookieRequest=(operation:'login'|'refresh'|'logout',json:unknown,signal:AbortSignal)=>authRequest(http,operation,authEndpoints[operation],{method:'POST',json,headers:{Accept:'application/json','Content-Type':'application/json'},signal,timeoutMs,response:'ajax',errorAdapter:ajaxErrorResponseAdapter,adapter:operation==='logout'?logoutAdapter:issuedAdapter,endpointId:`auth.${operation}`,cache:'no-store',credentials:'same-origin',redirect:'error',unauthorized:'ignore'});
+  const sessionRequest=(signal:AbortSignal)=>authRequest(http,'session',authEndpoints.session,{method:'GET',headers:{Accept:'application/json'},signal,timeoutMs,response:'ajax',adapter:sessionAdapter,errorAdapter:ajaxErrorResponseAdapter,endpointId:'auth.session',cache:'no-store',credentials:'omit',redirect:'error',unauthorized:'ignore'});
   const coordinatedRequest=<T>(operation:'login'|'refresh'|'logout',json:unknown,controller:AbortController,revision:number,accept:(payload:unknown)=>T)=>{
     let timedOut=false;
     const timer=setTimeout(()=>{timedOut=true;controller.abort();},timeoutMs);
     let stop:()=>void=()=>{};
-    const cancelled=new Promise<never>((_,reject)=>{stop=()=>reject(timedOut?new HttpError('timeout',{attempts:0,endpointId:`auth.${operation}`}):errorFor('cancel',operation));if(controller.signal.aborted)stop();else controller.signal.addEventListener('abort',stop,{once:true});});
+    const cancelled=new Promise<never>((_,reject)=>{stop=()=>reject(timedOut?new HttpError('timeout',{attempts:0,endpointId:`auth.${operation}`}):errorFor(operation));if(controller.signal.aborted)stop();else controller.signal.addEventListener('abort',stop,{once:true});});
     const request=coordination.run(async()=>{
       check(revision,controller.signal);
-      const attempt:{headers?:Record<string,string>;complete:(result?:object)=>Promise<void>;denied:()=>Promise<void>;rejection?:(error:object)=>Promise<void>}|undefined=operationRecovery?await operationRecovery.begin(operation,controller.signal):await recovery?.begin(operation);
-      // Reservation is asynchronous; recheck ownership before dispatch.
-      // No dispatch has occurred, so this attempt can safely restore its prior fence.
-      try{check(revision,controller.signal);}catch(error){await attempt?.denied();throw error;}
-      let result;
-      try{result=await cookieRequest(operation,json,controller.signal,attempt?.headers);}catch(error){
-        check(revision,controller.signal);
-        if(operationRecovery&&attempt?.rejection){await attempt.rejection(error as object);}
-        else if(isHttpError(error)&&error.kind==='http'&&operation==='login'&&error.status!==undefined&&error.status>=400&&error.status<500&&error.status!==409)await attempt?.denied();
-        else if(isHttpError(error)&&error.kind==='http'&&operation==='refresh'&&error.status===401)await attempt?.complete();
-        throw error;
-      }
-      check(revision,controller.signal);await attempt?.complete(result);check(revision,controller.signal);
+      const result=await cookieRequest(operation,json,controller.signal);
+      check(revision,controller.signal);
       const accepted=accept(result.payload);coordination.publish(operation);return accepted;
     });
     return Promise.race([request,cancelled]).finally(()=>{clearTimeout(timer);controller.signal.removeEventListener('abort',stop);});
   };
   const recover=():Promise<Readonly<AuthUser>|null>=>{
-    if(dead||active||recoveryController)return Promise.reject(errorFor());
-    if(state.reauthenticationRequired)return Promise.reject(state.error??errorFor('http','refresh'));
-    if(refreshFlight)return refreshFlight;
-    const revision=version,controller=new AbortController();refreshController=controller;bootstrapped=true;clear();
+    if(dead||active)return Promise.reject(errorFor());
+    if(refreshFlight&&refreshVersion===version&&!refreshController?.signal.aborted)return refreshFlight;
+    const revision=version,controller=new AbortController();refreshController=controller;refreshVersion=revision;bootstrapped=true;clear();
     const flight=Promise.resolve().then(async()=>{
       check(revision,controller.signal);
       return coordinatedRequest('refresh',{},controller,revision,payload=>received(payload as ReturnType<typeof parseIssued>,revision));
     }).catch(value=>{
       const error=normalize(value,'refresh');if(!current(revision))throw errorFor();clear();
-      if(error.kind==='http'&&error.status===401&&!(recovery?.blocked()??false)){http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});return null;}
-      // Never retry an unknown rotation or destroy the recovery family as cleanup.
-      emit({status:'unknown',user:null,busy:null,error:error.code==='AUTH_REAUTHENTICATION_REQUIRED'?null:error,reauthenticationRequired:true});throw error;
-    }).finally(()=>{if(refreshFlight===flight){refreshFlight=undefined;refreshController=undefined;}});
+      if(error.kind==='http'&&error.status===401){http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null});return null;}
+      emit({status:'unknown',user:null,busy:null,error});throw error;
+    }).finally(()=>{if(refreshFlight===flight){refreshFlight=undefined;refreshController=undefined;refreshVersion=undefined;}});
     refreshFlight=flight;emit({status:'unknown',user:null,busy:'refresh',error:null});return flight;
   };
-  const acquire=async(signal:AbortSignal):Promise<AccessLease>=>{
-    if(dead||active||recoveryController||signal.aborted)throw errorFor();
+  const acquire=async(signal:AbortSignal,operation?:AuthOperation):Promise<AccessLease>=>{
+    if(dead||signal.aborted)throw errorFor();
+    if(active){
+      // Only the auth owner's confirmation read may use an unconfirmed login credential.
+      if(operation==='session'&&active.candidate&&!active.controller.signal.aborted&&active.candidate.expiry>Date.now())return active.candidate;
+      throw errorFor();
+    }
     if(!access||access.expiry<=Date.now()+1000){
       if(!access&&bootstrapped&&state.status==='anonymous')throw new HttpError('http',{attempts:0,status:401,code:authErrorCodes.required});
       await wait(recover(),signal);
     }
-    if(dead||active||recoveryController||signal.aborted)throw errorFor();
+    if(dead||active||signal.aborted)throw errorFor();
     if(!access||access.expiry<=Date.now())throw new HttpError('http',{attempts:0,status:401,code:authErrorCodes.required});
     return {value:access.value,generation:access.generation};
   };
@@ -193,7 +168,6 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
     mode(path,method,operation){
       let decoded:string;try{decoded=decodeURIComponent(path);}catch{throw new TypeError('Invalid authentication path');}
       const reserved=decoded.toLowerCase()==='/api/v1/auth'||decoded.toLowerCase().startsWith('/api/v1/auth/');
-      if(operation&&operation.startsWith('recovery-')){const session=operation==='recovery-session-read'||operation==='recovery-session-create',validPath=session?path==='/api/v1/auth/recovery-session':new RegExp('^/api/v1/auth/operations/[a-f0-9]{32}'+(operation==='recovery-resolve'?'/resolve':'')+'$').test(path),validMethod=method===(operation==='recovery-session-create'||operation==='recovery-resolve'?'POST':'GET');if(!operationRecovery||!validPath||!validMethod)throw new TypeError('Invalid recovery endpoint');return 'cookie';}
       if(operation){if(path!==authEndpoints[operation as keyof typeof authEndpoints]||method!==(operation==='session'?'GET':'POST'))throw new TypeError('Invalid authentication endpoint');return operation==='session'?'bearer':'cookie';}
       // 仅公开策略的精确 GET 可在无会话时消费；其他认证端点继续仅由 owner 调用。
       if(path===passwordPolicyEndpoint&&method==='GET')return undefined;
@@ -205,21 +179,20 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
     dispose(){client.destroy();},
   });
   const currentUser=(options:AuthRequestOptions={}):Promise<Readonly<AuthUser>|null>=>{
-    if(dead||active||recoveryController)return Promise.reject(errorFor());
-    if(sessionFlight)return wait(sessionFlight,options.signal);
+    if(dead||active)return Promise.reject(errorFor());
+    if(sessionFlight&&sessionVersion===version&&!sessionController?.signal.aborted)return wait(sessionFlight,options.signal);
     if(options.signal?.aborted)return Promise.reject(errorFor());
-    if(state.reauthenticationRequired)return Promise.reject(state.error??errorFor('http','session'));
     if(!access&&bootstrapped&&state.status==='anonymous')return Promise.resolve(null);
     const revision=version,controller=new AbortController();let observedGeneration:number|undefined;sessionController=controller;sessionVersion=revision;
     const flight=Promise.resolve().then(async()=>{
       try{
         const lease=await acquire(controller.signal);observedGeneration=lease.generation;check(revision,controller.signal);emit({busy:'session',error:null});
-        const result=await authRequest(http,'session',authEndpoints.session,{method:'GET',headers:{Accept:'application/json'},signal:controller.signal,timeoutMs,response:'ajax',adapter:sessionAdapter,errorAdapter:ajaxErrorResponseAdapter,endpointId:'auth.session',cache:'no-store',credentials:'omit',redirect:'error',unauthorized:'ignore'});
+        const result=await sessionRequest(controller.signal);
         check(revision,controller.signal);if(!access||access.generation!==lease.generation)throw errorFor();
-        http.resetUnauthorized();emit({status:'authenticated',user:result.payload.user,busy:null,error:null,reauthenticationRequired:false});check(revision);return state.user;
+        http.resetUnauthorized();emit({status:'authenticated',user:result.payload.user,busy:null,error:null});check(revision);return state.user;
       }catch(value){const error=normalize(value,'session');if(!current(revision)||observedGeneration!==undefined&&observedGeneration!==generation)throw errorFor();
-        if(error.status===401&&!state.reauthenticationRequired){clear();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});return null;}
-        if(!state.reauthenticationRequired){if(error.status!==403)clear();emit({status:'unknown',user:null,busy:null,error});}throw error;
+        if(error.status===401){clear();emit({status:'anonymous',user:null,busy:null,error:null});return null;}
+        if(error.status!==403)clear();emit({status:'unknown',user:null,busy:null,error});throw error;
       }
     }).finally(()=>{if(sessionFlight===flight){sessionFlight=undefined;sessionController=undefined;sessionVersion=undefined;
       // A newer refresh may keep valid access after rejecting an obsolete read.
@@ -227,32 +200,61 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
     }});
     sessionFlight=flight;emit({busy:'session',error:null});return wait(flight,options.signal);
   };
+  const confirmMutation=async(intent:NonNullable<typeof active>)=>{
+    const {version:revision,controller}=intent;
+    const checkIntent=()=>{check(revision,controller.signal);if(active!==intent)throw errorFor();};
+    try{
+      await coordinatedRequest('refresh',{},controller,revision,payload=>{
+        checkIntent();intent.candidate={...payload as ReturnType<typeof parseIssued>,generation:++generation};
+      });
+    }catch(error){checkIntent();if(isHttpError(error)&&error.kind==='http'&&error.status===401)return null;throw error;}
+    checkIntent();const candidate=intent.candidate!;
+    const result=await sessionRequest(controller.signal);checkIntent();
+    if(generation!==candidate.generation||intent.candidate!==candidate||result.payload.user.id!==candidate.user.id)throw errorFor();
+    return {...candidate,user:result.payload.user};
+  };
   const mutate=async(operation:'login'|'logout',json:unknown,options:AuthRequestOptions)=>{
-    if(dead||active||recoveryController||options.signal?.aborted)throw errorFor();
+    if(dead||active||options.signal?.aborted)throw errorFor();
     const prior=state,priorAccess=access,revision=++version,controller=new AbortController();
     sessionController?.abort();clear();active={operation,controller,version:revision};
-    const cancel=()=>controller.abort();options.signal?.addEventListener('abort',cancel,{once:true});
+    const cancel=()=>{if(active?.version===revision)active.controller.abort();};options.signal?.addEventListener('abort',cancel,{once:true});
     emit({status:'unknown',user:null,busy:operation,error:null});
     try{
       return await coordinatedRequest(operation,json,controller,revision,payload=>{
         active=undefined;
         if(operation==='login')return received(payload as ReturnType<typeof parseIssued>,revision);
-        bootstrapped=true;http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false});check(revision);return null;
+        bootstrapped=true;http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null});check(revision);return null;
       });
-    }catch(value){const error=normalize(value,operation);if(!current(revision)||active?.version!==revision)throw errorFor();active=undefined;
+    }catch(value){const error=normalize(value,operation);if(!current(revision)||active?.version!==revision)throw errorFor();
       const denied=operation==='login'&&error.kind==='http'&&error.status!==undefined&&error.status>=400&&error.status<500&&error.status!==409;
-      if(denied){access=priorAccess;emit({...prior,busy:null,error});}
-      else {clear();emit({status:'unknown',user:null,busy:null,error,reauthenticationRequired:true});}
+      if(denied){active=undefined;access=priorAccess;emit({...prior,busy:null,error});throw error;}
+      clear();bootstrapped=false;
+      // Keep the mutation intent until the ordinary read confirms its target identity.
+      // Cancellation ends waiting and cannot undo a committed cookie change.
+      if(error.kind!=='cancel'&&!options.signal?.aborted){
+        const intent=active={operation,controller:new AbortController(),version:revision};
+        emit({status:'unknown',user:null,busy:operation,error:null});
+        try{
+          const confirmed=await confirmMutation(intent);check(revision,options.signal);
+          if(active!==intent)throw errorFor();
+          if(operation==='login'&&confirmed&&confirmed.user.username===(json as LoginCredentials).username){
+            active=undefined;return received(confirmed,revision);
+          }
+          if(operation==='logout'&&!confirmed){
+            active=undefined;bootstrapped=true;http.resetUnauthorized();emit({status:'anonymous',user:null,busy:null,error:null});check(revision);return null;
+          }
+          // An absent or different account does not confirm this login submission.
+          active=undefined;clear();bootstrapped=!confirmed;
+          emit({status:confirmed?'unknown':'anonymous',user:null,busy:null,error});
+        }catch{
+          if(!current(revision)||active!==intent)throw errorFor();
+          active=undefined;clear();
+          if(options.signal?.aborted){const cancelled=errorFor(operation);emit({status:'unknown',user:null,busy:null,error:cancelled});throw cancelled;}
+          emit({status:'unknown',user:null,busy:null,error});
+        }
+      }else {active=undefined;emit({status:'unknown',user:null,busy:null,error});}
       throw error;
     }finally{options.signal?.removeEventListener('abort',cancel);if(operation==='login')(json as LoginCredentials).password='';}
-  };
-  const recoverOperation=async(resolve:boolean,operationId:string|undefined,options:AuthRequestOptions={})=>{
-    if(!operationRecovery||dead||active||recoveryController||options.signal?.aborted)throw errorFor();
-    const revision=++version,controller=new AbortController();recoveryController=controller;sessionController?.abort();refreshController?.abort();clear();
-    const cancel=()=>controller.abort();options.signal?.addEventListener('abort',cancel,{once:true});emit({status:'unknown',user:null,busy:'session',error:null});
-    try{const settled=await operationRecovery.recover(resolve,operationId,controller.signal);check(revision,controller.signal);bootstrapped=settled;emit({status:settled?'anonymous':'unknown',busy:null,error:null,reauthenticationRequired:!settled});return settled;}
-    catch(value){const error=normalize(value,resolve?'recovery-resolve':'recovery-lookup');if(current(revision))emit({status:'unknown',busy:null,error,reauthenticationRequired:true});throw error;}
-    finally{options.signal?.removeEventListener('abort',cancel);if(recoveryController===controller)recoveryController=undefined;}
   };
   const client:AuthClient={
     getState:()=>state,subscribe(listener){if(dead)return()=>{};listeners.add(listener);return()=>{listeners.delete(listener);};},currentUser,
@@ -262,15 +264,14 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
       return (await mutate('login',{username:credentials.username.trim(),password:credentials.password},options))!;
     },
     async logout(options={}){await mutate('logout',{},options);},
-    cancel(){if(dead)return;invalidate('unknown',true,errorFor());},
+    cancel(){if(dead)return;bootstrapped=false;invalidate('unknown',errorFor());},
     expire(){if(dead)return;bootstrapped=true;invalidate('anonymous');},
     destroy(){if(dead)return;dead=true;invalidate('unknown');coordination.close();listeners.clear();},
   };
-  if(operationRecovery){client.inspectRecovery=options=>recoverOperation(false,undefined,options);client.resolveRecovery=(operationId,options)=>recoverOperation(true,operationId,options);}
   return client;
 }
 
-export const loginPageDefaultLabels={username:'Username',password:'Password',submit:'Sign in',checking:'Checking your sign-in…',signingIn:'Signing in…',usernameRequired:'Enter your username.',passwordRequired:'Enter your password.',credentialsError:'The username or password is incorrect.',forbidden:'Sign in is not allowed.',rateLimited:'Too many attempts. Try again later.',timeout:'The request timed out. Please try again.',network:'Could not connect. Check your connection and try again.',error:'Sign in could not be completed.',cancelled:'Waiting cancelled. The server may have completed the request.',checkSession:'Retry connection',opening:'Opening app…',navigationError:'You are signed in, but the app could not be opened. Try again.',retryNavigation:'Try opening app again',checkRecovery:'Check previous operation',terminateRecovery:'Terminate unfinished operation',recoveryTitle:'Terminate the unfinished session operation?',recoveryDescription:'This prevents the original operation from executing if it has not committed. An applied operation is not undone. Sign in again only after the server confirms the result.',confirmRecovery:'Confirm termination and check',cancelRecovery:'Keep blocked',reauthenticate:'The previous session operation is unconfirmed. Another submission is temporarily blocked.'} as const;
+export const loginPageDefaultLabels={username:'Username',password:'Password',submit:'Sign in',checking:'Checking your sign-in…',signingIn:'Signing in…',usernameRequired:'Enter your username.',passwordRequired:'Enter your password.',credentialsError:'The username or password is incorrect.',forbidden:'Sign in is not allowed.',rateLimited:'Too many attempts. Try again later.',timeout:'The request timed out. Please try again.',network:'Could not connect. Check your connection and try again.',error:'Sign in could not be completed.',cancelled:'Waiting cancelled. The server may have completed the request.',checkSession:'Retry connection',opening:'Opening app…',navigationError:'You are signed in, but the app could not be opened. Try again.',retryNavigation:'Try opening app again'} as const;
 export type LoginPageLabels={ [Key in keyof typeof loginPageDefaultLabels]:string };
 /** Both layouts are centered single columns; fullscreen omits the card surface. */
 export type LoginPageLayout='fullscreen'|'card';
@@ -286,7 +287,7 @@ export function resolveLoginPageConfig(input:LoginPageConfig){
   return Object.freeze({layout,productName:string(input.productName,128),title:string(input.title??labels.submit,200),description:input.description===undefined?undefined:string(input.description,600),logo,returnTo:resolveLoginReturnTo(input.returnTo,input.fallbackReturnTo),labels});
 }
 export function getLoginPageError(error:HttpError,labels:Readonly<LoginPageLabels>):string{
-  return [authErrorCodes.refreshConflict,authErrorCodes.outcomeUnknown,authErrorCodes.committedFollowupFailed,'AUTH_REAUTHENTICATION_REQUIRED'].some(code=>code===error.code)?labels.reauthenticate:error.kind==='cancel'?labels.cancelled:error.status===401?labels.credentialsError:error.status===403?labels.forbidden:error.status===429?labels.rateLimited:error.kind==='timeout'?labels.timeout:error.kind==='network'?labels.network:labels.error;
+  return error.kind==='cancel'?labels.cancelled:error.status===401?labels.credentialsError:error.status===403?labels.forbidden:error.status===429?labels.rateLimited:error.kind==='timeout'?labels.timeout:error.kind==='network'?labels.network:labels.error;
 }
 
 /** Host-owned service/source validation and standards-based actions; no password in callbacks. */

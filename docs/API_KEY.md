@@ -16,16 +16,16 @@
 
 ## 默认 HTTP adapter：严格 v2
 
-`createApiKeyHttpAdapter({http,writeGuard,timeoutMs?,pageSize?,maxRecords?,idEncoding?})` 必须提供下面的持久 actor-scoped guard。旧默认 HTTP v1 调用须显式升级，不静默回退旧 endpoint、缺省版本或授权。URL 仍为 `/api/v1/api-keys`，DTO `schema_version` 为 2。所有请求 no-store / redirect:error，无写入自动重放；AjaxResponse 以 success=true 判定业务成功，code 为必填安全整数而非固定成功数字。
+`createApiKeyHttpAdapter({http,timeoutMs?,pageSize?,maxRecords?,idEncoding?})` 复用宿主已有 HTTP/auth owner，直接调用普通业务接口。旧默认 HTTP v1 调用须显式升级，不静默回退旧 endpoint、缺省版本或授权。URL 仍为 `/api/v1/api-keys`，DTO `schema_version` 为 2。所有请求 no-store / redirect:error，无写入自动重放；AjaxResponse 以 success=true 判定业务成功，code 为必填安全整数而非固定成功数字。
 
 | 操作 | 方法/路径 | 请求和 payload |
 | --- | --- | --- |
 | 配置 | GET /api/v1/api-keys/capabilities | schema_version:2、can_create、permissions、expiry_options、default_expiry_id、default_permission_ids、confirmation_label |
 | 列表 | GET /api/v1/api-keys | 基数0 page_index/page_size/return_total=true/sort=id/sort_id=asc；原生 ListData {list,total} |
-| 创建 | POST /api/v1/api-keys | {name,permission_ids,expiry_id,confirmed}；{schema_version:2,metadata,secret,operation_id,fingerprint} |
-| 更新/启停 | PUT /api/v1/api-keys/{id} | {expected_version,name,permission_ids,enabled}；{schema_version:2,id,operation:"update",completed:true,metadata,operation_id,fingerprint} |
-| 撤销 | POST /api/v1/api-keys/{id}/revoke | {}；{schema_version:2,id,operation:"revoke",completed:true,operation_id,fingerprint} |
-| 删除管理记录 | DELETE /api/v1/api-keys/{id}/record | 无 body；{schema_version:2,id,operation:"delete_record",completed:true,operation_id,fingerprint} |
+| 创建 | POST /api/v1/api-keys | {name,permission_ids,expiry_id,confirmed}；{schema_version:2,metadata,secret} |
+| 更新/启停 | PUT /api/v1/api-keys/{id} | {expected_version,name,permission_ids,enabled}；{schema_version:2,id,operation:"update",completed:true,metadata} |
+| 撤销 | POST /api/v1/api-keys/{id}/revoke | {}；{schema_version:2,id,operation:"revoke",completed:true} |
+| 删除管理记录 | DELETE /api/v1/api-keys/{id}/record | 无 body；{schema_version:2,id,operation:"delete_record",completed:true} |
 
 wire metadata 为 id/name/prefix/permission_ids/created_at/expires_at/last_used_at/可选 last_used_at_pending/status/version/enabled/capabilities{update,revoke,delete_record}。nullable 字段必须明确 null，status 为 active/disabled/revoked/expired/unknown/null；version 必须为规范正 int64 十进制字符串（与 ID 编码独立），enabled 为明确 boolean。metadata 不允许 secret/token 等额外字段。内部公开 metadata 使用 camelCase，仅精确映射一次。
 
@@ -33,126 +33,22 @@ wire metadata 为 id/name/prefix/permission_ids/created_at/expires_at/last_used_
 
 `last_used_at_pending:boolean` 只映射为 `lastUsedAtPending`。true 显示“待保存”，false/缺失各自保留；不从本机时间、nullable 时间或状态推断。访问元数据待保存不是写入事务 pending。分页完整收集预算30秒、每页最多200、默认最多5000条（显式可至100000）；拒绝变动 total、重复ID、缺页、超限，不承诺跨页原子快照。
 
-## 持久写入 owner 与恢复
+## 提交、超时与刷新
 
-正式 HTTP v2 必须创建 `createApiKeyWriteGuard({scopeId,isCurrentScope,storage:{load,save}})`，再把该 guard 传给 HTTP adapter；manager 自动复用 adapter 的同一 owner，若另传不同 guard 则拒绝。scopeId 必须来自宿主已经验证的 server/账号/namespace，不能从请求参数、用户名或 origin 单独猜测。必填 isCurrentScope() 与宿主真实 auth owner 的当前三元身份比较；throw 等同 false，不得在生产中硬编码 true。claim、prepare 后、发送、响应、receipt 终态和持久清理前均复核；失效停止旧 controller/等待，隐藏其metadata与一次性值，不删除旧 scope 恢复记录。宿主在身份事件发生时同步 destroy 旧 controller，避免等待下一次读/操作才反映切换。换身份时使用该身份自己的 owner，不展示其他 scope 的 descriptor、不清除旧 scope 未决记录。scopeId 不使用 token/password/secret；服务端仍绑定真实 actor/scope 并重新鉴权。
+controller 用当前页面的 `actionBusy` 防止重复提交；创建/保存按钮禁用并显示“正在创建／保存”，成功后展示真实结果。正常路径没有恢复会话预请求、持久 operation store、写入门禁或专用恢复弹窗。
 
-storage 保留宿主同步持久镜像/旧版本恢复接口：`load(scopeId)` 返回 null/undefined 或快照，`save(scopeId,snapshot|null)` 失败必须 throw。默认 Base-v2 完整快照仅 `{schema_version:1,scope_id,descriptor}`；下述 custom identity 使用独立 schema_version:2，不保存草稿或凭据。初始化同步验证字段白名单、版本、scope、字符串长度/格式；已有未知 descriptor 必须保留并原子导入，绝不把新的 IndexedDB 空库视为旧请求不存在。旧镜像与原子记录冲突时两者都保留并失败关闭，需要明确核对这两个旧操作，不能择一覆盖。
+写请求超时、网络断开或返回结果无法确认时，只通过 `adapter.list({signal})` 重新读取一次普通列表。列表成功就展示当前记录；读取失败保留可见错误和已有数据。结束本次等待后用户可以再次操作，不自动重发创建、更新、撤销或删除请求。列表是当前业务状态，不将同名记录当作原请求的提交证明，也不能取回丢失的一次性完整值。更新重新采用列表中最新 version，再由后端以 expected_version 校验。
 
-公共 owner 默认使用 IndexedDB 短事务作为权威跨窗口门禁。`guard.ready()` 可供宿主等待异步恢复；controller/HTTP adapter 在每次发送前自动等待，不要求产品自行实现锁。新窗口/重新加载自动读取原 scope descriptor 为 uncertain，保留原 operation_id 与五字段。不同 tab 的 prepare 可以同时完成，但原子 `compareExchange(null,descriptor)` 只有一个成功者；只有其事务提交、镜像保存成功且 scope/generation 仍有效后才允许 POST/PUT/DELETE。整个网络期间及 unknown 后记录都占住该 scope。失败者继承原 descriptor，不生成另一个请求重放它。
+`ApiKeyAdapter` 只包含 list/create/revoke 和可选 update/deleteRecord；`ApiKeyWriteContext` 仅传 AbortSignal。没有 prepareWrite、reconcileWrite、resolveWrite 或 writeGuard 配置。HTTP 写入无需 operation ID/fingerprint headers；服务端不再提供 Lookup/Resolve 路由。
 
-成功/确定拒绝、确定未发送的取消，以及完整匹配权威 receipt 终态，通过精确原 descriptor 的条件事务清理。迟到清理绝不删除其他窗口的新记录。未知/超时/关闭/卸载没有自动清理、过期租约或超时接管。跨 tab 正确性来自 IndexedDB 原子事务，不是 localStorage 的 load→save、复读、sent 标记或不同 operation ID 去重；所有参与窗口必须升级为此合同。旧版本仍在运行且绕过原子门禁时不能宣称兼容并发保护。
-
-IndexedDB 在普通内网 HTTP 上也可用，不依赖安全上下文的 Web Locks、randomUUID 或 SubtleCrypto。浏览器禁用/阻止 IndexedDB、事务失败、镜像失败时发送前失败关闭，显示保护存储不可用；不会退到无保护内存写入。自定义存储适配器也必须实现真实跨上下文原子持久 CAS，不能用进程内 Map/队列或 localStorage 伪实现。
-
-### 公共原子恢复存储
-
-`@coffeehc/xui-runtime/operation-store` 导出 `createIndexedDBOperationStore({databaseName?,indexedDB?})`、`DurableOperationStore`、`IndexedDBOperationStoreOptions`。默认数据库 `xui.operation-recovery.v1`；Key scope 为 `xui.api-key.v1:` 加完整可信 scopeId，Auth 使用独立命名空间。正常产品只配置公开业务 scope/storage；特殊宿主可向 Key guard 传 `operationStore`，无需包装或复制 Key/controller。
-
-- `read(scope): Promise<string|null>` 读取原始非秘密记录。
-- `compareExchange(scope,expected,next)` 在一个 readwrite 事务内比较完整字符串，匹配才替换/删除；返回 `{exchanged,current}`，成功 current 为 next，失败为原值。必须等事务成功提交才 resolve。
-- IndexedDB 事务只做 get/put/delete，使用 strict durability，不跨网络等待、不忙循环保活、不依赖时钟。
-- caller 负责只使用白名单 canonical JSON。默认 Key 保留原五字段及 schema/scope；custom Key 仅增加下述闭合 identity 字段；Auth 保留明确 attempt/operation。禁止存密码、token、secret、草稿或响应 body。
-- 公共接口供真实原子持久适配器/确定性测试注入。测试用 Map 只是模型，真实跨页 IndexedDB另有浏览器回归，不能将模型用作生产 fallback。
-
-descriptor 仅含：
-
-```
-{ operation_id, operation, target_id, expected_version, fingerprint }
-```
-
-operation 为 create/update/revoke/delete_record；create 的 target_id 为空，其他为所选 ID 编码；仅 update 的 expected_version 为正 int64 十进制字符串，其他为空。没有 draft、name、prefix、URL、secret、token、password 或响应 body。
-
-每个请求生成 canonical lowercase UUIDv4 `operation_id`，仅依赖 `crypto.getRandomValues`，不要求安全上下文的 randomUUID；安全随机数不可用则发送前拒绝。指纹为 exact UTF8 `method + '\n' + canonicalPath + '\n' + exactBodyBytes` 的 SHA-256；GET 不算，DELETE 空 body。内网 HTTP 不依赖 SubtleCrypto。发送 headers `X-API-Key-Operation-ID` / `X-API-Key-Request-Fingerprint`；服务端独立重算并绑定权限/actor/scope/CAS，不能信任客户端 header。异步 prepare 后检查当前 generation/取消/owner；取消且确定未调用写 adapter 时才按 before-send 证明释放。成功响应 operation_id/fingerprint 必须逐项匹配。
-
-通用 custom adapter 不使用正式 HTTP 时仍可沿用 `createApiKeyWriteGuard()` 内存 owner，或显式接入 prepareWrite/持久 descriptor。同一个原始 adapter 默认共享 owner；重建 adapter 时保留 owner。没有持久配置的 custom adapter 仅保证共用单 owner 的内存门禁，不宣称跨 tab、整页重载保护。持久 custom adapter 若使用 prepareWrite，也必须遵守相同原子 descriptor 合同。
-
-### 只读 Lookup 与显式 Resolve
-
-`recoverUncertainWrite()` 首先新读并验证完整公共列表，然后调用只读 `adapter.reconcileWrite`。默认 v2 为 GET `/api/v1/api-keys/operations/{operation_id}`，query 为其余四个 descriptor 字段。列表相似、没有同名记录、普通409或当前时间都不是核对证据；没有 receipt 时 Lookup 必须 pending。
-
-`openResolveWrite()/confirmResolveWrite()` 是独立明确确认：“终止尚未执行请求并核查结果”。对应 POST 同路径 `/resolve`，body 为 descriptor 其余四字段。它可能写不可逆 not-applied 墓碑，阻止迟到原请求；不是只读，不撤销已应用写入，不由 refresh/Lookup 自动触发。用户先看到终止说明，再确认。服务端与原写共用操作事务锁，重验身份/权限；不能先读后凭猜测写墓碑。
-
-两者仅接受 `{schema_version:2,...完整descriptor,resolution:'pending'|'applied'|'not-applied'}`。五个身份字段逐项严格匹配，只有 applied / not-applied 权威终态才释放当前保护；not-applied 必须保证未来不会迟到应用。pending、失配、错误、取消、较新 list/guard 或 Resolve 结果未知继续锁。不恢复一次性值，不自动重放；用户须表达新的写入意图。
-
-创建、更新、撤销、删除的网络/超时/parse/5xx/普通409均保持 uncertain。明确其他4xx/business拒绝可释放，50301（提交未知）与50302（已提交、后处理失败）即使被200/4xx包装也继续阻止重放。50302 不表示回滚。取消、关闭、pagehide、卸载、destroy 只停止本地等待，不回滚服务端。正式v2持久 descriptor 跨整页重载恢复为 uncertain，迟到结果不恢复弹窗、密钥或改行。
-
-关闭后的门禁提示与核对/终止入口位于标题之后、列表工具栏之前，自然高度完整显示；不塞固定列表反馈槽。窄屏大字检查祖先裁切区和焦点四边，不承诺门禁切换零位移。闭窗恢复焦点到核对入口，但不夺走宿主主动移走的焦点。
+关闭、pagehide、卸载或 destroy 中止所属等待并丢弃迟到结果，不声称撤销已提交写入。宿主切换服务器、账号或租户时销毁旧 controller 和所属资源，按新身份重建；后端始终重新鉴权，保留事务和并发更新校验。
 
 ## 一次性值与验证边界
 
-完整值仅在 controller 瞬时私有结果，readSecret 只允许 result 视图读取；不进入状态、列表缓存、URL、storage、日志或业务 payload。关闭/pagehide/卸载同步清 DOM value/defaultValue/textContent。复制必须明确用户动作，失败允许手动复制；不承诺 JS 内存物理擦除或撤回剪贴板。
+完整值只在 controller 私有内存结果中，readSecret 仅允许 result 视图读取；不进入公开状态、列表缓存、URL、storage、日志或业务 payload。关闭/pagehide/卸载同步清理 DOM value/defaultValue/textContent。复制必须是用户明确动作，失败允许手动复制；不承诺 JS 内存物理擦除或撤回剪贴板。
 
-baseservice [apikeyservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/apikeyservice/webfacade) 对应严格v2。共享 [decimal](../tests/fixtures/api-key-contracts.v2.json) / [hex](../tests/fixtures/api-key-contracts.v2.hex.json) fixtures 逐字节一致，通过真实 adapter 验证 exact body_text、headers、更新和 Lookup/Resolve。测试还使用公开 SHA-256 向量、独立 Node crypto 和 Go UTF8 固定向量。旧 page-contracts.v1 仍归档；旧覆盖通过明确测试专用 helper 升级合成输入，不能称作真实服务v1兼容或新合同联调。
+baseservice 的 apikeyservice/webfacade 配套严格 v2。共享 [decimal](../tests/fixtures/api-key-contracts.v2.json) / [hex](../tests/fixtures/api-key-contracts.v2.hex.json) fixtures 核对 exact body_text、普通 headers、CRUD 和 ID 编码；旧 page-contracts.v1 仅归档，不表示服务兼容。
 
-[shared capability-model](../examples/shared/capability-model.ts) 的 React/原生消费者演示v2、storage和编辑启停；全部合成 FAKE 数据，不能证明真实鉴权、部署或生产集成完成。宿主升级须同时注册 endpoints、持久 receipts/事务锁、鉴权/tenant、授权投影、CSRF、限速与安全存储；不能只更新前端库。
+[shared capability-model](../examples/shared/capability-model.ts) 的 React/原生消费者演示普通 v2 请求和编辑启停；全部是 FAKE 合成数据，不证明真实鉴权、部署或生产接入完成。宿主保留自己的业务权限、namespace、CSRF、限速和服务端存储策略。
 
-迁移保留业务边界：xLead 的 read/write、独立 confirmed、30/90/365/0天、过期撤销和单独管理记录删除仍通过服务声明/custom adapter 表达。xLead 的 last_accessed_at/last_access_pending 只能在其领域 adapter 显式映射，不猜旧别名。本轮不修改产品业务仓库；Argus四scope增减/暂停恢复由新通用编辑模型承载，真实接入仍需产品任务验证。
-
-
-## Custom adapter 的持久领域 identity（schema 2）
-
-Base-v2 的 `ApiKeyOperationDescriptor`、严格 parser、请求/回执 DTO 均不改变；`createApiKeyHttpAdapter` 拒绝 custom identity。只有自定义领域 adapter 的 `prepareWrite` 可以返回 `ApiKeyCustomOperationDescriptor`，由同一个公共 guard 原子保留。不是任意 JSON 扩展槽，也不是新的服务端协议。
-
-固定八字段：
-
-- `schema_version:2`；`operation_id` 为规范小写 UUIDv4；`fingerprint` 为 64 位小写 hex。
-- `operation` 为 UI 意图 `create/update/revoke/delete_record`；`intent_target_id` 为 UI 行 ID，create 必须为空，其他必须非空。它不限制领域 action/target。
-- `action` 为显式领域动作（如 `key-create/key-rotate/key-revoke`），匹配 `[a-z][a-z0-9._:-]{0,63}`。
-- `target_id` 为公开 opaque 领域 ID 或集合路径；它与 UI target 独立。两个 target 最长 256 字符，只接受 ASCII 字母、数字、点、下划线、冒号、斜线、连字符；不接受完整 URL、query、空白或 JSON。领域允许时 target 可以为空，但有集合路径或目标 ID 应如实保留。
-- `expected_version` 是公开 opaque CAS 版本，最长 128 字符，只接受 ASCII 字母、数字、点、下划线、冒号、连字符；`'0'` 合法，无 CAS 时为空。不要混用 credential 与 binding 的版本。
-
-上面 `operation/intent_target_id` 描述 UI；`action/target_id/expected_version` 描述领域。创建多个 Key 的集合不被假装成唯一资源：每次明确新建生成新 operation_id，成功清理后正常允许继续新建。轮换可采用 UI create 一次性展示通道，但必须持久保留真实 `action:'key-rotate'`、旧 Key 的 target 与版本，不能藏在内存 Map 或强行映射成 Base-v2 空 target。
-
-仅保存这些非秘密 identity 与 scope。不得把 name、草稿、prefix、secret、token、密码、业务 body 或响应塞进任何字段；格式验证不可能识别被故意伪装成 ID 的凭据，宿主仍负责数据分类。`parseApiKeyCustomOperationDescriptor` 严格拒绝额外字段、symbol、getter、未知版本、非普通对象与超长值，并返回冻结的规范顺序副本。
-
-### 组合示例与回执责任
-
-```ts
-import {
-  createApiKeyWriteGuard, parseApiKeyCustomOperationDescriptor,
-  type ApiKeyAdapter, type ApiKeyCustomOperationDescriptor,
-} from '@coffeehc/xui-runtime/api-key';
-
-const writeGuard = createApiKeyWriteGuard({
-  scopeId: verifiedServerActorNamespace,
-  isCurrentScope: () => authOwner.matches(verifiedServerActorNamespace),
-  storage: nonSecretSnapshotStorage,
-}); // 使用公共 IndexedDB CAS；不要另造产品 IDB 锁。
-
-const adapter: ApiKeyAdapter = {
-  writeGuard,
-  async prepareWrite(intent, {signal}) {
-    const request = domain.prepareNonSecretIdentity(intent, signal);
-    return parseApiKeyCustomOperationDescriptor({
-      schema_version: 2,
-      operation_id: request.operationId,
-      operation: intent.operation === 'delete' ? 'delete_record' : intent.operation,
-      intent_target_id: intent.operation === 'create' ? '' : intent.key.id,
-      action: request.action,        // 例如 key-rotate，不从恢复时的当前页面猜测
-      target_id: request.targetId,   // 例如旧 Key ID，或新建的集合路径
-      expected_version: request.expectedVersion, // 例如 '0'，无 CAS 为 ''
-      fingerprint: request.fingerprint,
-    });
-  },
-  async reconcileWrite(write, {signal}) {
-    const descriptor = parseApiKeyCustomOperationDescriptor(write.descriptor);
-    const receipt = await domain.lookupOperation(descriptor, signal); // 只读
-    // 服务端合同专属验证：actor/scope、原操作 ID、action、目标、适用版本。
-    // 不能仅凭 HTTP 200、列表变化或任意同 key 对象证明 applied。
-    const resolution = domain.verifyAuthoritativeReceipt(receipt, descriptor);
-    return {descriptor, resolution};
-  },
-  list: domain.list,
-  create: domain.createWithVerifiedAcknowledgement,
-  revoke: domain.revokeWithVerifiedAcknowledgement,
-};
-```
-
-`domain`/`authOwner`/storage 是宿主已有真实合同的占位符，不是库提供的自动判定。创建/撤销/更新回调只允许在验证实际成功回执后 resolve，使用 `context.write.descriptor` 的原 operation_id/action；不要调用 custom adapter mutation 绕过 manager 的 prepare/reserve/send 流程。
-
-Custom `reconcileWrite` 与可选 `resolveWrite` 返回 `{descriptor,resolution}`（`ApiKeyCustomWriteReceipt`），裸 `applied/not-applied` 不再足够。公共层比较全部 identity、当前 actor/scope、generation 与原子记录，只有完整匹配终态才条件清理。收到其他操作、不同 action/target/version、迟到或未知结构继续保留锁。`pending` 同样返回原 descriptor；无记录/404、超时、回执无法完整核验均不得推断 not-applied。只有服务器明确保证原请求永远不能执行的权威终态才可返回 not-applied；没有终止协议时不提供 resolveWrite。
-
-不同服务的摘要算法未必一致：custom fingerprint 可绑定本地准备的候选请求，不代表服务器回显了同 hash。若服务器未公开 fingerprint，adapter 必须按该服务的可信 actor/action/原 operation key 事务回执与结果目标/版本验证，再对原 descriptor 作确认；不得捏造服务器字段或从当前 UI 补齐缺失事实。若后端无法证明完整 identity，结果保持 pending。默认 Base-v2 仍必须严格匹配服务器回显 fingerprint，不能采用此替代组合。
-
-Custom 镜像为 `{schema_version:2,scope_id,descriptor}`，与 Base-v2 共用原 actor/scope 门禁命名空间，因此不能借换 adapter/schema 绕开未知写入。未知未来 schema 失败关闭并保留原文；不要迁移时删除它。跨 reload 恢复不需要原 controller、draft 或内存 identity Map，也不会重取一次性 secret。并发、存储不可用发前拒绝、actor 换人、晚到回执与普通集合连续创建由 `tests/api-key-custom-recovery.test.mjs` 回归；真实浏览器的 IndexedDB 事务由公共 browser 套件验收。
+迁移时删除旧 writeGuard/recovery 配置及 Lookup/Resolve 接线，同步升级 xui 与 BaseService；不删除线上业务数据或执行数据库清表。custom adapter 按真实领域接口实现普通 CRUD，已有 read/write、独立 confirmed、期限和管理记录删除语义继续保留，不强制第三方采用 BaseService 协议。

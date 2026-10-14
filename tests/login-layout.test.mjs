@@ -66,24 +66,10 @@ test('public login removes cancelled-action UI and obsolete page labels',async()
   for(const file of ['packages/ui-react/src/login.tsx','packages/runtime/src/login-dom.ts']){const source=await readFile(file,'utf8');assert.doesNotMatch(source,/labels\.cancel\b|canCancel|restoreFocus|cancel\.onclick/);}
 });
 
-test('restored reauthentication requirement renders an alert without a transient error object',()=>{
-  const markup=render({status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:true});
-  assert.match(markup,/role="alert"/);assert.match(markup,/The previous session operation is unconfirmed/);assert.doesNotMatch(markup,/>Retry connection</);
-  assert.doesNotMatch(markup,/name="username"[^>]*disabled/);
-});
-
-test('recovery controls appear only for a real unknown operation with explicit public capability',()=>{
- const state={status:'unknown',user:null,busy:null,error:null,reauthenticationRequired:true,recovery:{operationId:'a'.repeat(32),operation:'login',canResolve:true,reason:'operation'}};
- const auth={getState:()=>state,subscribe:()=>()=>{},inspectRecovery:async()=>false,resolveRecovery:async()=>false};
- const capable=render(state,{}, {auth});assert.match(capable,/>Check previous operation</);assert.match(capable,/>Terminate unfinished operation</);assert.doesNotMatch(capable,/>Cancel request</);
- for(const candidate of [{...state,reauthenticationRequired:false},{...state,recovery:{...state.recovery,canResolve:false,reason:'bootstrap'}}])assert.doesNotMatch(render(candidate,{}, {auth:{...auth,getState:()=>candidate}}),/>Check previous operation</);
- assert.doesNotMatch(render(state),/>Check previous operation</);
-});
-
-test('native recovery dialog uses the native closed-dialog skin rather than the always-visible portal skin',async()=>{
- const source=await readFile('packages/runtime/src/login-dom.ts','utf8');
- assert.match(source,/node\('dialog','xui-layer xui-native-dialog xui-alert-dialog'\)/);
- assert.doesNotMatch(source,/node\('dialog','[^']*\bxui-dialog\b/);
+test('unknown login state keeps ordinary submit controls without a recovery flow',()=>{
+ const markup=render({status:'unknown',user:null,busy:null,error:null});
+ assert.doesNotMatch(markup,/Check previous operation|Terminate unfinished operation|Resolve write|operation_id/);
+ assert.doesNotMatch(markup,/name="username"[^>]*disabled/);
 });
 
 test('submission status has one live owner outside the busy button without duplicating a visible alert',()=>{

@@ -4,10 +4,10 @@ import {readFile} from 'node:fs/promises';
 import {parseEntityId} from '../packages/runtime/dist/entity-id.js';
 import {createHttpClient} from '../packages/runtime/dist/http.js';
 import {createAuthClient,parseAuthSession} from '../packages/runtime/dist/auth.js';
-import {createApiKeyHttpAdapter,parseApiKeyWireMetadata} from './helpers/api-key-v2.mjs';
+import {createApiKeyHttpAdapter,parseApiKeyWireMetadata} from '../packages/runtime/dist/api-key-http.js';
 
 const read=async name=>JSON.parse(await readFile(new URL(`./fixtures/contracts/${name}`,import.meta.url),'utf8'));
-const fixture=await read('identity-encodings.v1.json'),authFixture=await read('auth.v2.hex.json'),keyFixture=await read('page-contracts.v1.hex.json');
+const fixture=await read('identity-encodings.v1.json'),authFixture=await read('auth.v2.hex.json'),keyFixture=JSON.parse(await readFile(new URL('./fixtures/api-key-contracts.v2.hex.json',import.meta.url),'utf8'));
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
 const signal=new AbortController().signal;
 const http=fetch=>createHttpClient({baseURL:'https://identity-fixture.invalid',fetch});
@@ -45,31 +45,21 @@ test('共享 hex wire 经 login/refresh/session/logout，保留原凭据隔离',
  assert(!JSON.stringify(auth.getState()).includes('bs-v1-sha256-access-'));auth.destroy();client.destroy();
 });
 
-test('hex 认证各端点拒绝非法身份，未知写入关闭后不重放',async()=>{
- for(const operation of ['login','refresh','session'])for(const id of ['0','01','A','8000000000000000','9223372036854775807']){
-  let calls=0;const client=http(async url=>{calls++;const current=new URL(url).pathname.split('/').at(-1),source=authFixture[current==='session'?'session':'issued'];return json({...source,payload:{...source.payload,user:{...source.payload.user,...(current===operation?{id}:{})}}});});
-  const auth=createAuthClient({http:client,idEncoding:'hex'});
-  if(operation==='session')await auth.login(credentials);
-  await assert.rejects(operation==='login'?auth.login(credentials):operation==='refresh'?auth.refresh():auth.currentUser(),error=>error.kind==='parse');
-  assert.equal(auth.getState().user,null);assert(!JSON.stringify(auth.getState()).includes('bs-v1-sha256-access-'));
-  if(operation!=='session'){assert.equal(auth.getState().reauthenticationRequired,true);const before=calls;await assert.rejects(auth.refresh());assert.equal(calls,before);}
-  auth.destroy();client.destroy();
- }
-});
-
-test('归档 hex fixture 显式升级 v2 后保留列表、路径和 body 覆盖',async()=>{
- const pending=Object.values(keyFixture.cases),client=http(async(input,init)=>{
+test('hex v2 fixtures cover ordinary API key list/create/update/revoke/delete routes',async()=>{
+ const names=['api_key_capabilities','api_key_list','api_key_create','api_key_update','api_key_revoke','api_key_delete_record'],pending=names.map(name=>keyFixture.cases[name]),client=http(async(input,init)=>{
   const expected=pending.shift(),url=new URL(input);assert(expected);assert.equal(init.method,expected.request.method);assert.equal(url.pathname,expected.request.path);assert.deepEqual(Object.fromEntries(url.searchParams),expected.request.query??{});assert.deepEqual(init.body===undefined?undefined:JSON.parse(init.body),expected.request.body);return json(expected.response.body,expected.response.status);
  });
- const adapter=createApiKeyHttpAdapter({http:client,idEncoding:'hex'});await adapter.getConfiguration({signal});const rows=await adapter.list({signal});assert.equal(rows[0].id,'20000000000001');const created=await adapter.create(draft,{signal});assert.equal(created.metadata.id,rows[0].id);await adapter.revoke(rows[0],{signal});await adapter.deleteRecord({...rows[0],status:'revoked'},{signal});await assert.rejects(adapter.create(draft,{signal}),error=>error.status===503&&error.code===50301);assert.equal(pending.length,0);client.destroy();
+ const adapter=createApiKeyHttpAdapter({http:client,idEncoding:'hex'});await adapter.getConfiguration({signal});const rows=await adapter.list({signal});assert.equal(rows[0].id,'20000000000001');const created=await adapter.create(draft,{signal});assert.equal(created.metadata.id,rows[0].id);const updated=await adapter.update(rows[0],{name:'研究密钥',permissionIds:['read','write'],enabled:false},{signal});assert.equal(updated.version,'20');await adapter.revoke(rows[0],{signal});await adapter.deleteRecord({...rows[0],status:'revoked'},{signal});assert.equal(pending.length,0);client.destroy();
 });
 
 test('Key 非法目标在发送前拒绝，响应非规范 ID 不成为成功',async()=>{
  for(const {encoding,invalid} of fixture.groups){
   let calls=0;const client=http(async()=>{calls++;return json(keyFixture.cases.api_key_create.response.body);}),adapter=createApiKeyHttpAdapter({http:client,idEncoding:encoding});
-  for(const id of invalid){await assert.rejects(adapter.revoke({...metadata,id},{signal}),TypeError);await assert.rejects(adapter.deleteRecord({...metadata,id,status:'revoked'},{signal}),TypeError);}assert.equal(calls,0);client.destroy();
+  for(const id of invalid){assert.throws(()=>adapter.revoke({...metadata,id},{signal}),TypeError);assert.throws(()=>adapter.deleteRecord({...metadata,id,status:'revoked'},{signal}),TypeError);}assert.equal(calls,0);client.destroy();
   for(const operation of ['list','create','revoke','delete']){
-   const client=http(async()=>json({success:true,message:'',request_id:'',code:1,payload:operation==='list'?{list:[{...metadata,id:'01'}],total:1}:operation==='create'?{schema_version:1,metadata:{...metadata,id:'01'},secret:'FAKE'}:{schema_version:1,id:'01',operation:operation==='delete'?'delete_record':'revoke',completed:true}})),adapter=createApiKeyHttpAdapter({http:client,idEncoding:encoding});
+   const valid=operation==='create'?keyFixture.cases.api_key_create.response.body.payload:operation==='list'?{list:[metadata],total:1}:{schema_version:2,id:'20000000000001',operation:operation==='delete'?'delete_record':'revoke',completed:true};
+   const payload=operation==='list'?{...valid,list:[{...metadata,id:'01'}]}:operation==='create'?{...valid,metadata:{...valid.metadata,id:'01'}}:{...valid,id:'01'};
+   const client=http(async()=>json({success:true,message:'',request_id:'',code:1,payload})),adapter=createApiKeyHttpAdapter({http:client,idEncoding:encoding});
    await assert.rejects(operation==='list'?adapter.list({signal}):operation==='create'?adapter.create(draft,{signal}):operation==='revoke'?adapter.revoke({...metadata,id:'1'},{signal}):adapter.deleteRecord({...metadata,id:'1',status:'revoked'},{signal}),error=>error.kind==='parse');client.destroy();
   }
  }

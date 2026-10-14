@@ -47,7 +47,7 @@ test:consumer 将三个包 npm pack，在每次新目录安装 tarball，再从�
 
 API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../examples/api-key-vanilla/app.js)，共用 [typed 假数据模型](../examples/shared/api-key-model.ts)，完整值只有一次性结果，不放进 metadata/resource/cache。
 
-登录整页消费为 [React](../examples/login-react/app.tsx)/[原生](../examples/login-vanilla/app.js)，共用 [品牌与文案配置](../examples/shared/login-config.json) 和 [合成认证模型](../examples/shared/login-model.ts)。只接一个 theme、HTTP 与 auth owner；正式 HTTP 接入必须声明 recovery.scope（宿主 cookie/session 命名空间），由公共 owner 持久保留非秘密未知写入门禁；省略配置仅有 memory-only 保护。baseURL 由宿主传入，固定 v1 login/logout/session 合同见 [AUTH](AUTH.md)。现有 xAgent token/me/state 协议需要后端明确适配，不能直接把旧 bearer/JWT storage 搬进组件。已上线xAgent缺facade时先保留既有认证并采用其它公开页面，真实后端合同就绪后按升级方案切完整登录页；未发布项目直接使用新合同，不增设旧认证兼容层。改baseURL不能替代协议迁移。真实 Cookie、CSRF 和权限由服务负责；示例不会签发真实会话。
+登录整页消费为 [React](../examples/login-react/app.tsx)/[原生](../examples/login-vanilla/app.js)，共用 [品牌与文案配置](../examples/shared/login-config.json) 和 [合成认证模型](../examples/shared/login-model.ts)。只接一个 theme、HTTP 与 auth owner；正常登录直接 POST，超时后通过普通 refresh/session 核验一次；不配置持久操作门禁或恢复协议。baseURL 由宿主传入，固定 v2 login/refresh/logout/session 合同见 [AUTH](AUTH.md)。现有 xAgent token/me/state 协议需要后端明确适配，不能直接把旧 bearer/JWT storage 搬进组件。已上线xAgent缺facade时先保留既有认证并采用其它公开页面，真实后端合同就绪后按升级方案切完整登录页；未发布项目直接使用新合同，不增设旧认证兼容层。改baseURL不能替代协议迁移。真实 Cookie、CSRF 和权限由服务负责；示例不会签发真实会话。
 
 业务日志完整消费为 [React](../examples/business-log-react/app.tsx)/[原生](../examples/business-log-vanilla/app.js)，共用 [typed fake loader](../examples/shared/business-log-model.ts)。固定公共日志事实 + event_type/schema_version + 允许披露的业务 payload；按类型/版本注册 renderer，未知版本安全 JSON 回退。真实日志可靠性由服务负责，合同见 [BUSINESS_LOGS.md](BUSINESS_LOGS.md)。
 
@@ -134,7 +134,7 @@ API Key 完整消费为 [React](../examples/api-key-react/app.tsx)/[原生](../e
 
 ## 默认接口与业务能力映射
 
-先核[页面API总索引](PAGE_APIS.md)，使用同一个HTTP/auth owner连接createApiKeyHttpAdapter与createBusinessLogHttpLoader。正式Key HTTP为DTO v2，必须提供已验证server/actor/namespace绑定的持久writeGuard及isCurrentScope实时校验，manager自动复用；旧v1宿主同步升级服务端，不静默回退。配置失败不得给默认权限；required/read、可选权限和独立confirmed不合并。update编辑name/权限/enabled，以expected_version CAS；暂停恢复不是撤销，revoked不能恢复。过期撤销和撤销记录删除各自确认。未知写入descriptor跨关闭/卸载/重载保持；Lookup只读，新list与严格匹配权威receipt才解锁，列表相似/普通409不是证据。Resolve是明确独立确认的终止未执行请求动作，可能写墓碑，不能伪装只读或自动触发；结果未知继续锁，不重现secret。custom adapter仍可按原域合同提供可选update，不强迫base协议；持久恢复使用API_KEY的schema-2闭合custom identity，区分UI intent与真实domain action/opaque target/version（包含0），轮换不藏于内存Map。custom终态返回完整同identity receipt，按真实服务端合同验证后才能确认；不捏造服务器fingerprint、不凭404释放锁。没有持久配置不承诺reload保护。lastUsedAtPending只按后端事实显示。服务端仍负责鉴权/tenant、receipt事务锁和业务数据保留，完整合同及迁移步骤见[API_KEY](API_KEY.md)。
+先核[页面API总索引](PAGE_APIS.md)，使用同一个 HTTP/auth owner 连接 createApiKeyHttpAdapter 与 createBusinessLogHttpLoader。Key 使用严格 DTO v2，直接 CRUD，无 writeGuard、操作回执或 Lookup/Resolve。提交时禁用按钮显示正在创建／保存；结果未知时通过普通列表读取一次，展示当前记录并允许手动再试，不自动重发写请求。配置失败不默认授权，required/read、可选权限和独立 confirmed 保留；更新 name/权限/enabled 使用 expected_version CAS，revoked 不可恢复。过期撤销与撤销记录删除分别确认。完整值只在当前结果视图显示，关闭/卸载清除。身份切换销毁旧 controller；后端继续负责鉴权、租户范围、事务和业务数据保留。完整合同见 [API_KEY](API_KEY.md)。
 
 两宿主[React](../examples/capabilities-react/app.tsx)/[原生](../examples/capabilities-vanilla/app.js)消费正式产物，展示[公开组合](COMPOSITIONS.md)、safe filename下载及原生页面facade。合成fetch只验证合同，不证明产品具备API Key/业务日志后端。普通程序故障和供应商凭据不得改名替代这些业务。
 

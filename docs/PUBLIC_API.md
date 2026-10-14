@@ -35,7 +35,6 @@
 | `@coffeehc/xui-runtime/menu-layout` <!-- public-entry: @coffeehc/xui-runtime/menu-layout --> | [源码](../packages/runtime/src/menu-layout.ts) | [合同](NAVIGATION.md) | [示例](../examples/menu-vanilla/app.js) |
 | `@coffeehc/xui-runtime/dom` <!-- public-entry: @coffeehc/xui-runtime/dom --> | [源码](../packages/runtime/src/dom.ts) | [合同](IMPLEMENTATION.md) | [示例](../examples/foundation-vanilla/app.js) |
 | `@coffeehc/xui-runtime/internal/dialog-layout` <!-- public-entry: @coffeehc/xui-runtime/internal/dialog-layout --> | [内部实现](../packages/runtime/src/dialog-layout.ts) | 包间保留接线，非消费者稳定API；使用公开Dialog/Sheet | [内部类型](../packages/runtime/src/dialog-layout.ts) |
-| `@coffeehc/xui-runtime/operation-store` <!-- public-entry: @coffeehc/xui-runtime/operation-store --> | [源码](../packages/runtime/src/operation-store.ts) | [原子恢复合同](API_KEY.md#公共原子恢复存储) | [类型](../packages/runtime/src/operation-store.ts) |
 | `@coffeehc/xui-runtime/api-key` <!-- public-entry: @coffeehc/xui-runtime/api-key --> | [源码](../packages/runtime/src/api-key.ts) | [合同](API_KEY.md) | [示例](../examples/api-key-vanilla/app.js) |
 | `@coffeehc/xui-runtime/api-key-dom` <!-- public-entry: @coffeehc/xui-runtime/api-key-dom --> | [源码](../packages/runtime/src/api-key-dom.ts) | [合同](API_KEY.md) | [示例](../examples/api-key-vanilla/app.js) |
 | `@coffeehc/xui-runtime/structured-log` <!-- public-entry: @coffeehc/xui-runtime/structured-log --> | [源码](../packages/runtime/src/structured-log.ts) | [合同](LOGS.md) | [示例](../examples/log-vanilla/app.js) |
@@ -111,7 +110,7 @@
 | webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list + 可选 total/next_cursor；总数缺省未知，游标缺省未声明、null明确末页，见 LIST_PAGINATION |
 | API Key | 首次读取由宿主 refresh；canCreate明确true才创建、撤销/删除需capability或明确宿主许可；过期可按授权撤销，删除仅已撤销管理记录。required权限与独立confirmed保留；默认HTTP facade/routes在API_KEY与PAGE_APIS，单一写入owner，未知结果不重复提交；完整值仅瞬时结果 |
 | 业务日志 | 显式首次 refresh，page size=50（1–200），两宿主共享loader，默认原生HTTP facade见PAGE_APIS，auth/scope由宿主；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
-| 登录页/auth | 一个已有 HTTP/auth/theme owner；默认 card 居中单列窄框，显式 fullscreen 沿用单列并省略外框皮肤；紧凑可选 brandVisual、固定局部反馈、自然文档滚动与四边焦点空间。固定 Bearer v2 login/refresh/logout/session、严格schema_version=2、access仅内存/不公开，protectedPaths声明业务端点并强制omit/error，timeout=15000ms、no retry、no-store、上下文401、未知结果需权威恢复，不覆盖持久门禁；正式 HTTP 接入显式 recovery.scope，非秘密 pending 写入门禁跨整页重载，存储失败发送前关闭，缺省仅 memory-only。后端具备权威operation协议时显式recovery.protocol=operation-v1，可选inspectRecovery/resolveRecovery及unknown专属核对/确认终止弹窗；普通/custom接入不自动启用。页面挂载先恢复再核会话，配置文本/logo，returnTo安全fallback `/`，没有callback则同源根路径导航；密码瞬时DOM，退出未知不假称成功，详见 AUTH |
+| 登录页/auth | 一个已有 HTTP/auth/theme owner；默认 card 居中单列窄框，显式 fullscreen 沿用单列并省略外框皮肤；紧凑可选 brandVisual、固定局部反馈、自然文档滚动与四边焦点空间。固定 Bearer v2 login/refresh/logout/session、严格schema_version=2、access仅内存/不公开，protectedPaths声明业务端点并强制omit/error，timeout=15000ms、no retry、no-store、上下文401、无写入重放。登录直接 POST，提交禁用显示正在登录；超时后普通会话核验一次，未确认则显示错误并允许手动重试。无持久门禁、恢复预请求或恢复弹窗。页面挂载先恢复再核会话，配置文本/logo，returnTo安全fallback `/`，没有callback则同源根路径导航；密码瞬时DOM，退出未知不假称成功，详见 AUTH |
 | 独立结构化错误 | 初始 groups、page size=50（1–200），host 显式 refresh；无隐式 endpoint/scope/排序/总记录数。v1/list/cursor、纳秒时间、uint64 字符串、三态、累计/命中/首次代表；详情只按记录 ID 读取，缓存仅当前链已访问摘要，刷新新快照 |
 
 ## 内容与扩展的真实边界
@@ -150,7 +149,7 @@ React 组合控件保留各自公开 props/ref/render/parts；Select/Combobox/Me
 
 既有button/forms/table/layout/menu-layout/login/http入口增加明确props与slots，默认兼容：link、controlSize/readOnly/InputGroup、stickyHeader、不透明状态、scrollMode默认document、登录extensions、HTTP显式nativeOrigin。所有新增名字从构建声明自动核对，默认与控制事实见WIDGETS/AUTH/NAVIGATION/HTTP，不仅是新增入口名。
 
-API Key入口追加公开 `createApiKeyWriteGuard`、`ApiKeyPendingWrite`/`ApiKeyWriteGuard`/`ApiKeyWriteResolution`/`ApiKeyWriteContext` 和controller的 `recoverUncertainWrite`，类型与范围见[API_KEY](API_KEY.md#持久写入-owner-与恢复)。保护所有者放在视图之外，guard没有任意清除方法；默认HTTP不新增推测核对路由。`lastUsedAtPending`/wire `last_used_at_pending` 都是可选明确bool。
+API Key 使用普通 adapter CRUD 与 `ApiKeyWriteContext {signal}`，不配置 writeGuard 或专用恢复 API；提交中禁用按钮，结果未知后普通列表核验一次，允许手动操作且不自动重发写请求。`lastUsedAtPending`/wire `last_used_at_pending` 保留可选明确 bool，详见 [API_KEY](API_KEY.md)。
 
 ## 应用头部与菜单文字角色补齐
 

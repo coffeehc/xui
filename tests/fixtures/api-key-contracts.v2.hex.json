@@ -68,6 +68,8 @@
             "list": [
               {
                 "id": "20000000000001",
+                "version": "19",
+                "enabled": true,
                 "name": "Synthetic key",
                 "prefix": "FAKE",
                 "permission_ids": [
@@ -78,12 +80,10 @@
                 "last_used_at": null,
                 "status": "active",
                 "capabilities": {
+                  "update": true,
                   "revoke": true,
-                  "delete_record": false,
-                  "update": true
-                },
-                "version": "19",
-                "enabled": true
+                  "delete_record": false
+                }
               }
             ],
             "total": 1
@@ -105,11 +105,7 @@
           "expiry_id": "30d",
           "confirmed": true
         },
-        "body_text": "{\"name\":\"Synthetic key\",\"permission_ids\":[\"read\"],\"expiry_id\":\"30d\",\"confirmed\":true}",
-        "headers": {
-          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
-          "X-API-Key-Request-Fingerprint": "d3b616ffe42b9f90a7f52c76487164d8c8e40b7a1d312fbfb08fdb2591339863"
-        }
+        "body_text": "{\"name\":\"Synthetic key\",\"permission_ids\":[\"read\"],\"expiry_id\":\"30d\",\"confirmed\":true}"
       },
       "response": {
         "status": 200,
@@ -120,6 +116,8 @@
             "schema_version": 2,
             "metadata": {
               "id": "20000000000001",
+              "version": "19",
+              "enabled": true,
               "name": "Synthetic key",
               "prefix": "FAKE",
               "permission_ids": [
@@ -130,16 +128,12 @@
               "last_used_at": null,
               "status": "active",
               "capabilities": {
+                "update": true,
                 "revoke": true,
-                "delete_record": false,
-                "update": true
-              },
-              "version": "19",
-              "enabled": true
+                "delete_record": false
+              }
             },
-            "secret": "FAKE_CONTRACT_ONE_TIME_VALUE",
-            "operation_id": "12345678-1234-4234-9234-123456789abc",
-            "fingerprint": "d3b616ffe42b9f90a7f52c76487164d8c8e40b7a1d312fbfb08fdb2591339863"
+            "secret": "FAKE_CONTRACT_ONE_TIME_VALUE"
           },
           "request_id": "fixture:request",
           "code": 1
@@ -151,11 +145,7 @@
         "method": "POST",
         "path": "/api/v1/api-keys/20000000000001/revoke",
         "body": {},
-        "body_text": "{}",
-        "headers": {
-          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
-          "X-API-Key-Request-Fingerprint": "7c720c32af3a061b812d4de274b1e332702deada20765bdfedb06a5c28646cca"
-        }
+        "body_text": "{}"
       },
       "response": {
         "status": 200,
@@ -166,9 +156,7 @@
             "schema_version": 2,
             "id": "20000000000001",
             "operation": "revoke",
-            "completed": true,
-            "operation_id": "12345678-1234-4234-9234-123456789abc",
-            "fingerprint": "7c720c32af3a061b812d4de274b1e332702deada20765bdfedb06a5c28646cca"
+            "completed": true
           },
           "request_id": "fixture:request",
           "code": 1
@@ -179,11 +167,7 @@
       "request": {
         "method": "DELETE",
         "path": "/api/v1/api-keys/20000000000001/record",
-        "body_text": "",
-        "headers": {
-          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
-          "X-API-Key-Request-Fingerprint": "e897c14bbf57a2e0b4d9ee972142781f988aadcbda6d6ddfe4abc8d2e1d21c9c"
-        }
+        "body_text": ""
       },
       "response": {
         "status": 200,
@@ -194,9 +178,7 @@
             "schema_version": 2,
             "id": "20000000000001",
             "operation": "delete_record",
-            "completed": true,
-            "operation_id": "12345678-1234-4234-9234-123456789abc",
-            "fingerprint": "e897c14bbf57a2e0b4d9ee972142781f988aadcbda6d6ddfe4abc8d2e1d21c9c"
+            "completed": true
           },
           "request_id": "fixture:request",
           "code": 1
@@ -215,11 +197,7 @@
           "expiry_id": "30d",
           "confirmed": true
         },
-        "body_text": "{\"name\":\"Synthetic key\",\"permission_ids\":[\"read\"],\"expiry_id\":\"30d\",\"confirmed\":true}",
-        "headers": {
-          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
-          "X-API-Key-Request-Fingerprint": "d3b616ffe42b9f90a7f52c76487164d8c8e40b7a1d312fbfb08fdb2591339863"
-        }
+        "body_text": "{\"name\":\"Synthetic key\",\"permission_ids\":[\"read\"],\"expiry_id\":\"30d\",\"confirmed\":true}"
       },
       "response": {
         "status": 503,
@@ -245,11 +223,7 @@
           ],
           "enabled": false
         },
-        "body_text": "{\"expected_version\":\"19\",\"name\":\"研究密钥\",\"permission_ids\":[\"read\",\"write\"],\"enabled\":false}",
-        "headers": {
-          "X-API-Key-Operation-ID": "12345678-1234-4234-9234-123456789abc",
-          "X-API-Key-Request-Fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865"
-        }
+        "body_text": "{\"expected_version\":\"19\",\"name\":\"研究密钥\",\"permission_ids\":[\"read\",\"write\"],\"enabled\":false}"
       },
       "response": {
         "status": 200,
@@ -263,6 +237,8 @@
             "completed": true,
             "metadata": {
               "id": "20000000000001",
+              "version": "20",
+              "enabled": false,
               "name": "研究密钥",
               "prefix": "FAKE",
               "permission_ids": [
@@ -273,76 +249,11 @@
               "last_used_at": null,
               "status": "disabled",
               "capabilities": {
+                "update": true,
                 "revoke": true,
-                "delete_record": false,
-                "update": true
-              },
-              "version": "20",
-              "enabled": false
-            },
-            "operation_id": "12345678-1234-4234-9234-123456789abc",
-            "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865"
-          },
-          "request_id": "fixture:request",
-          "code": 1
-        }
-      }
-    },
-    "api_key_operation_lookup": {
-      "request": {
-        "method": "GET",
-        "path": "/api/v1/api-keys/operations/12345678-1234-4234-9234-123456789abc",
-        "query": {
-          "operation": "update",
-          "target_id": "20000000000001",
-          "expected_version": "19",
-          "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865"
-        }
-      },
-      "response": {
-        "status": 200,
-        "body": {
-          "success": true,
-          "message": "",
-          "payload": {
-            "schema_version": 2,
-            "operation_id": "12345678-1234-4234-9234-123456789abc",
-            "operation": "update",
-            "target_id": "20000000000001",
-            "expected_version": "19",
-            "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865",
-            "resolution": "pending"
-          },
-          "request_id": "fixture:request",
-          "code": 1
-        }
-      }
-    },
-    "api_key_operation_resolve": {
-      "request": {
-        "method": "POST",
-        "path": "/api/v1/api-keys/operations/12345678-1234-4234-9234-123456789abc/resolve",
-        "body": {
-          "operation": "update",
-          "target_id": "20000000000001",
-          "expected_version": "19",
-          "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865"
-        },
-        "body_text": "{\"operation\":\"update\",\"target_id\":\"20000000000001\",\"expected_version\":\"19\",\"fingerprint\":\"920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865\"}"
-      },
-      "response": {
-        "status": 200,
-        "body": {
-          "success": true,
-          "message": "",
-          "payload": {
-            "schema_version": 2,
-            "operation_id": "12345678-1234-4234-9234-123456789abc",
-            "operation": "update",
-            "target_id": "20000000000001",
-            "expected_version": "19",
-            "fingerprint": "920b1c399b492f14f7e2a9def442c44c6be2b7b426bcadb98b0d133d86bb1865",
-            "resolution": "not-applied"
+                "delete_record": false
+              }
+            }
           },
           "request_id": "fixture:request",
           "code": 1

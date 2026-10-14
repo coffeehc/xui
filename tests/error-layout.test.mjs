@@ -10,7 +10,7 @@ import {HttpError} from '../packages/runtime/dist/http.js';
 const read=path=>readFile(path,'utf8');
 const loginLabels={checkSession:'Retry connection'};
 function renderLogin(state={}){
-  const snapshot={status:'anonymous',user:null,busy:null,error:null,reauthenticationRequired:false,...state};
+  const snapshot={status:'anonymous',user:null,busy:null,error:null,...state};
   return renderToStaticMarkup(React.createElement(ConfigurableLoginPage,{auth:{subscribe:()=>()=>{},getState:()=>snapshot},theme:{},config:{productName:'Demo',title:'Login',labels:loginLabels}}));
 }
 function loginFeedback(markup){
@@ -63,14 +63,9 @@ test('only retryable session reads expose a local retry beside, not inside, thei
   noRetry(renderLogin({status:'unknown'}));noRetry(renderLogin({status:'unknown',error:authError('network',undefined)}));
   noRetry(renderLogin({status:'authenticated',user:{id:'42',username:'demo',display_name:null},error:authError('network','auth.session')}));
 });
-test('unconfirmed writes and reauthentication-required states never offer session retry',()=>{
-  for(const endpointId of ['auth.login','auth.refresh','auth.logout'])for(const [kind,status] of [['network'],['timeout'],['http',503]])for(const reauthenticationRequired of [false,true]){
-    noRetry(renderLogin({status:'unknown',reauthenticationRequired,error:authError(kind,endpointId,status)}));
-  }
-  for(const [kind,status] of [['network'],['timeout'],['http',500],['http',503]]){
-    const html=renderLogin({status:'unknown',reauthenticationRequired:true,error:authError(kind,'auth.session',status)});
-    noRetry(html);assert.match(loginFeedback(html),/The previous session operation is unconfirmed\. Another submission is temporarily blocked\./);
-  }
+test('login, refresh and logout errors do not expose session retry controls',()=>{
+  for(const endpointId of ['auth.login','auth.refresh','auth.logout'])for(const [kind,status] of [['network'],['timeout'],['http',503]])noRetry(renderLogin({status:'unknown',error:authError(kind,endpointId,status)}));
+  for(const [kind,status] of [['network'],['timeout'],['http',500],['http',503]])noRetry(renderLogin({status:'unknown',error:authError(kind,'auth.login',status)}));
 });
 test('login, session and application logout do not expose page cancellation actions',()=>{
   for(const busy of ['login','session','refresh','logout']){

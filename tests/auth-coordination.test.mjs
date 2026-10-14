@@ -3,50 +3,38 @@ import assert from 'node:assert/strict';
 import {createHttpClient} from '../packages/runtime/dist/http.js';
 import {createAuthClient} from '../packages/runtime/dist/auth.js';
 import {createAuthCoordination} from '../packages/runtime/dist/auth-coordination.js';
+
 const deferred=()=>{let resolve;const promise=new Promise(done=>resolve=done);return {promise,resolve};};
 const flush=async()=>{for(let i=0;i<30;i++)await Promise.resolve();};
 function browser(t){
- const storage=new Map(),channels=[],messages=[];let tail=Promise.resolve();
- const globals={window:{localStorage:{getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)}},navigator:{locks:{request(_name,task){const next=tail.catch(()=>{}).then(task);tail=next;return next;}}},BroadcastChannel:class {constructor(){channels.push(this);}postMessage(data){messages.push({sender:this,data:structuredClone(data)});}close(){this.closed=true;}}};
+ const channels=[],messages=[];let tail=Promise.resolve();
+ const globals={window:{},navigator:{locks:{request(_name,task){const next=tail.catch(()=>{}).then(task);tail=next;return next;}}},BroadcastChannel:class {constructor(){channels.push(this);}postMessage(data){messages.push({sender:this,data:structuredClone(data)});}close(){this.closed=true;}}};
  for(const [name,value] of Object.entries(globals)){const original=Object.getOwnPropertyDescriptor(globalThis,name);Object.defineProperty(globalThis,name,{configurable:true,value});t.after(()=>{if(original)Object.defineProperty(globalThis,name,original);else delete globalThis[name];});}
- return {storage,messages,deliver(message,recipient){const event=messages[message];channels[recipient].onmessage({data:event.data});}};
+ return {messages,deliver(message,recipient){const event=messages[message];channels[recipient].onmessage({data:event.data});}};
 }
-test('cross-tab mutations serialize through Web Locks and channels/storage contain only safe epoch metadata',async t=>{
+
+test('cross-tab auth mutations serialize through Web Locks and broadcasts contain only safe epochs',async t=>{
  const harness=browser(t),a=createAuthCoordination('https://auth.example',()=>{}),b=createAuthCoordination('https://auth.example',()=>{}),held=deferred(),order=[];
  const first=a.run(async()=>{order.push('a');await held.promise;a.publish('login');}),second=b.run(async()=>{order.push('b');b.publish('refresh');});await flush();assert.deepEqual(order,['a']);held.resolve();await Promise.all([first,second]);assert.deepEqual(order,['a','b']);
- for(const {data} of harness.messages)assert.deepEqual(Object.keys(data).sort(),['epoch','kind']);for(const value of harness.storage.values())assert.deepEqual(Object.keys(JSON.parse(value)).sort(),['epoch','identityEpoch','kind']);a.close();b.close();
-});
-test('late old login/logout messages never invalidate a newer login; a refresh still carries missed identity invalidation',async t=>{
- const harness=browser(t),eventsA=[],eventsB=[],eventsC=[],a=createAuthCoordination('https://auth.example',event=>eventsA.push(event)),b=createAuthCoordination('https://auth.example',event=>eventsB.push(event)),c=createAuthCoordination('https://auth.example',event=>eventsC.push(event));
- await a.run(async()=>a.publish('logout'));await b.run(async()=>b.publish('login'));await b.run(async()=>b.publish('refresh'));
- harness.deliver(0,1);assert.deepEqual(eventsB,[]);harness.deliver(2,0);assert.equal(eventsA[0].kind,'login');harness.deliver(0,0);assert.equal(eventsA.length,1);
- harness.deliver(2,2);assert.equal(eventsC[0].kind,'login');harness.deliver(1,2);assert.equal(eventsC.length,1);a.close();b.close();c.close();
+ for(const {data} of harness.messages){assert.deepEqual(Object.keys(data).sort(),['epoch','kind']);assert(['login','logout','refresh'].includes(data.kind));assert.match(data.epoch,/^\d+$/);assert(!JSON.stringify(data).match(/password|token|fixture/i));}a.close();b.close();
 });
 
-for(const kind of ['login','logout'])test(`${kind} broadcast arriving before the storage replica does not invalidate the same identity twice`,async t=>{
- const harness=browser(t),events=[],a=createAuthCoordination('https://auth.example',()=>{}),b=createAuthCoordination('https://auth.example',event=>events.push(event));
- a.publish(kind);const committed=new Map(harness.storage);
- // BroadcastChannel and another tab's localStorage replica need not become visible together.
- harness.storage.clear();harness.deliver(0,1);
- assert.deepEqual(events.map(event=>event.kind),[kind]);
- for(const [key,value] of committed)harness.storage.set(key,value);
- a.publish('refresh');harness.deliver(1,1);
- assert.deepEqual(events.map(event=>event.kind),[kind,'refresh']);a.close();b.close();
+test('a delayed older identity notification cannot invalidate a newer login',async t=>{
+ const harness=browser(t),events=[],sender=createAuthCoordination('https://auth.example',()=>{}),receiver=createAuthCoordination('https://auth.example',event=>events.push(event));
+ sender.publish('logout');sender.publish('login');harness.deliver(1,1);harness.deliver(0,1);assert.deepEqual(events.map(event=>event.kind),['login']);sender.close();receiver.close();
 });
 
-test('a delayed storage replica cannot cancel sibling refresh after its login notification was already applied',async t=>{
- const harness=browser(t),held=deferred(),user={id:'42',username:'fixture',display_name:null};
- const response=()=>new Response(JSON.stringify({success:true,message:'',payload:{schema_version:2,user,access_token:'bs-v1-sha256-access-'+'A'.repeat(43),token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString()},request_id:'',code:200}),{headers:{'Content-Type':'application/json'}});
- const httpA=createHttpClient({baseURL:'https://auth.example',fetch:async()=>response()}),httpB=createHttpClient({baseURL:'https://auth.example',fetch:async()=>{await held.promise;return response();}});
- const a=createAuthClient({http:httpA}),b=createAuthClient({http:httpB});
- t.after(()=>{held.resolve();a.destroy();b.destroy();httpA.destroy();httpB.destroy();});
- await a.login({username:'fixture',password:'FAKE_PASSWORD'});const committed=new Map(harness.storage);
- harness.storage.clear();harness.deliver(0,1);assert.equal(b.getState().status,'unknown');
- for(const [key,value] of committed)harness.storage.set(key,value);
- const first=a.refresh(),second=b.refresh();const outcome=Promise.all([first,second]);
- // Attach the rejection observer before delivering the adversarial notification.
- const observed=outcome.then(value=>({value}),error=>({error}));
- await first;harness.deliver(1,1);held.resolve();
- const result=await observed;assert.equal(result.error,undefined);assert.deepEqual(result.value,[user,user]);
- assert.equal(a.getState().status,'authenticated');assert.equal(b.getState().status,'authenticated');
+test('refresh notifications do not synthesize identity events that a tab did not receive',async t=>{
+ const harness=browser(t),events=[],sender=createAuthCoordination('https://auth.example',()=>{}),receiver=createAuthCoordination('https://auth.example',event=>events.push(event));
+ sender.publish('logout');sender.publish('login');sender.publish('refresh');harness.deliver(2,1);assert.deepEqual(events.map(event=>event.kind),['refresh']);
+ harness.deliver(1,1);assert.deepEqual(events.map(event=>event.kind),['refresh','login']);sender.close();receiver.close();
+});
+
+test('a login notification invalidates a sibling auth owner without browser storage',async t=>{
+ const harness=browser(t),user={id:'42',username:'fixture',display_name:null},token='bs-v1-sha256-access-'+'A'.repeat(43);
+ const response=()=>new Response(JSON.stringify({success:true,message:'',payload:{schema_version:2,user,access_token:token,token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString()},request_id:'',code:200}),{headers:{'Content-Type':'application/json'}});
+ const httpA=createHttpClient({baseURL:'https://auth.example',fetch:async()=>response()}),httpB=createHttpClient({baseURL:'https://auth.example',fetch:async()=>response()}),a=createAuthClient({http:httpA}),b=createAuthClient({http:httpB});
+ t.after(()=>{a.destroy();b.destroy();httpA.destroy();httpB.destroy();});
+ await a.login({username:'fixture',password:'FAKE_PASSWORD'});assert.equal(a.getState().status,'authenticated');assert.equal(harness.messages.length,1);harness.deliver(0,1);assert.equal(b.getState().status,'unknown');assert.equal(typeof globalThis.window.localStorage,'undefined');
+ a.destroy();b.destroy();
 });

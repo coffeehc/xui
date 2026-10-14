@@ -58,20 +58,20 @@ for(const kind of ['react','vanilla']){
   });
   test(`${kind} explicit safe read recovery stays local and does not become a login peer`,async({page},info)=>{
     await page.goto(`/login-${kind}/?sessionReadError&handoff=hold&visualAcceptance`);const retry=page.getByRole('button',{name:'重试连接',exact:true});await expect(retry).toBeVisible();await expect(page.locator('.xui-login-feedback').getByRole('button',{name:'重试连接',exact:true})).toHaveCount(1);await expect(page.locator('.xui-login-actions button:visible')).toHaveCount(1);
-    await expect.poll(()=>page.evaluate(()=>{const state=window.loginDemo.auth.getState();return state.error?.metadata.endpointId==='auth.session'&&state.error.kind==='network'&&!state.reauthenticationRequired;})).toBe(true);await page.keyboard.press('Tab');await retry.focus();await info.attach(`${kind}-safe-recovery`,{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});
+    await expect.poll(()=>page.evaluate(()=>{const state=window.loginDemo.auth.getState();return state.error?.metadata.endpointId==='auth.session'&&state.error.kind==='network';})).toBe(true);await page.keyboard.press('Tab');await retry.focus();await info.attach(`${kind}-safe-recovery`,{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});
     await page.evaluate(()=>window.loginDemo.setMode('session','ok'));await retry.click();await expect.poll(()=>page.evaluate(()=>window.loginDemo.auth.getState().status==='authenticated'&&window.loginDemo.auth.getState().busy===null&&window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length===2)).toBe(true);expect((await page.evaluate(()=>window.loginDemo.getRequests())).filter(request=>request.path.endsWith('/login')||request.path.endsWith('/logout'))).toEqual([]);await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();
   });
 }
 
-for(const kind of ['react','vanilla'])test(`${kind} automatic unknown checks are bounded without unsafe retry`,async({page})=>{
+for(const kind of ['react','vanilla'])test(`${kind} startup refresh timeout clears busy state and leaves ordinary login available`,async({page})=>{
   await page.goto(`/login-${kind}/?session=hold`);await expect(page.getByRole('status')).toHaveText('正在确认登录状态…');await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);
-  await expect(page.getByRole('alert')).toHaveText('上次会话操作结果未确认，暂时无法再次提交。');await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);
+  await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);
   expect((await page.evaluate(()=>window.loginDemo.getRequests())).filter(request=>request.path.endsWith('/refresh'))).toHaveLength(1);await page.evaluate(()=>window.loginDemo.release('session'));expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
 });
 
 for(const kind of ['react','vanilla'])test(`${kind} a confirmed session read timeout offers safe retry`,async({page})=>{
   await page.goto(`/login-${kind}/?sessionReadTimeout&handoff=hold`);const retry=page.getByRole('button',{name:'重试连接'});await expect(retry).toBeVisible();
-  const before=await page.evaluate(()=>{const state=window.loginDemo.auth.getState();return {reauthenticationRequired:state.reauthenticationRequired,errorKind:state.error?.kind,endpointId:state.error?.metadata.endpointId,requests:window.loginDemo.getRequests()};});expect(before.reauthenticationRequired).toBe(false);expect(before.errorKind).toBe('timeout');expect(before.endpointId).toBe('auth.session');expect(before.requests.filter(request=>request.path.endsWith('/session'))).toHaveLength(1);
+  const before=await page.evaluate(()=>{const state=window.loginDemo.auth.getState();return {errorKind:state.error?.kind,endpointId:state.error?.metadata.endpointId,requests:window.loginDemo.getRequests()};});expect(before.errorKind).toBe('timeout');expect(before.endpointId).toBe('auth.session');expect(before.requests.filter(request=>request.path.endsWith('/session'))).toHaveLength(1);
   await page.evaluate(()=>{window.loginDemo.setMode('session','ok');window.loginDemo.release('session');});await retry.click();await expect.poll(()=>page.evaluate(()=>window.loginDemo.auth.getState().status==='authenticated'&&window.loginDemo.auth.getState().busy===null&&window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length===2)).toBe(true);await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();
   expect((await page.evaluate(()=>window.loginDemo.getRequests())).filter(request=>request.path.endsWith('/session'))).toHaveLength(2);
 });

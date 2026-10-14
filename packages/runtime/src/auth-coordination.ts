@@ -7,28 +7,20 @@ export interface AuthCoordination {
 }
 export function createAuthCoordination(origin:string,receive:(event:AuthEpochEvent)=>void):AuthCoordination {
   let dead=false,tail:Promise<unknown>=Promise.resolve();
-  const name=`xui.auth.v2:${origin}`,browser=typeof window!=='undefined',storageKey=name+':epoch';
-  type EpochRecord={epoch:number;identityEpoch:number;kind:'login'|'logout'};
-  const stored=():EpochRecord=>{
-    try{const value=JSON.parse(browser?window.localStorage.getItem(storageKey)??'null':'null');if(value&&Number.isSafeInteger(value.epoch)&&value.epoch>0&&Number.isSafeInteger(value.identityEpoch)&&value.identityEpoch>=0&&value.identityEpoch<=value.epoch&&['login','logout'].includes(value.kind))return value;}catch{/* Storage failure does not expose credentials. */}
-    return {epoch:0,identityEpoch:0,kind:'login'};
-  };
-  let known=stored(),channel:BroadcastChannel|undefined;
-  try{if(browser&&typeof BroadcastChannel==='function')channel=new BroadcastChannel(name);}catch{/* Server conflict remains fail-closed. */}
+  const name=`xui.auth.v2:${origin}`,browser=typeof window!=='undefined';
+  let epoch=0,identityEpoch=0,channel:BroadcastChannel|undefined;
+  try{if(browser&&typeof BroadcastChannel==='function')channel=new BroadcastChannel(name);}catch{/* Notifications are optional; requests remain server-authoritative. */}
   if(channel)channel.onmessage=({data}:MessageEvent<unknown>)=>{
     if(dead||!data||typeof data!=='object'||Array.isArray(data))return;
     const fields=Object.getOwnPropertyDescriptors(data);
     if(Object.keys(fields).length!==2||!fields.kind||!('value'in fields.kind)||!fields.epoch||!('value'in fields.epoch))return;
-    const {kind,epoch}=data as AuthEpochEvent;
-    if(!['login','refresh','logout'].includes(kind)||typeof epoch!=='string'||!/^\d{1,16}$/.test(epoch))return;
-    const incoming=Number(epoch);if(!Number.isSafeInteger(incoming))return;
-    const latest=stored();
-    // A newer rotation notification must not hide a missed login/logout identity change.
-    if(latest.identityEpoch>known.identityEpoch){known=latest;receive({kind:latest.kind,epoch:String(latest.identityEpoch)});return;}
-    if(incoming<=known.epoch||incoming<latest.epoch)return;
-    // The channel may arrive before this tab observes the corresponding storage write.
-    // Record identity notifications themselves so a later rotation cannot replay them.
-    known=kind==='refresh'?{...known,epoch:incoming}:{epoch:incoming,identityEpoch:incoming,kind};receive({kind,epoch});
+    const incoming=data as AuthEpochEvent;
+    if(!['login','refresh','logout'].includes(incoming.kind)||typeof incoming.epoch!=='string'||!/^\d{1,16}$/.test(incoming.epoch))return;
+    const received=Number(incoming.epoch);if(!Number.isSafeInteger(received))return;
+    epoch=Math.max(epoch,received);
+    // A rotation notification must not hide a delayed identity change.
+    if(incoming.kind!=='refresh'){if(received<identityEpoch)return;identityEpoch=received;}
+    receive(incoming);
   };
   return {
     run<T>(task:()=>Promise<T>):Promise<T>{
@@ -41,11 +33,8 @@ export function createAuthCoordination(origin:string,receive:(event:AuthEpochEve
       tail=next;return next;
     },
     publish(kind){
-      if(dead)return;const latest=stored(),epoch=Math.max(known.epoch,latest.epoch,Date.now())+1;
-      const identity=latest.identityEpoch>known.identityEpoch?latest:known;
-      known={epoch,identityEpoch:kind==='refresh'?identity.identityEpoch:epoch,kind:kind==='refresh'?identity.kind:kind};
-      // This contains no identity, cookie or access token. It fences delayed cross-sender events.
-      try{if(browser)window.localStorage.setItem(storageKey,JSON.stringify(known));}catch{/* Without storage, server conflict remains the final safety boundary. */}
+      if(dead)return;epoch=Math.max(epoch,Date.now())+1;if(kind!=='refresh')identityEpoch=epoch;
+      // Ephemeral metadata only; browser storage never gates authentication.
       try{channel?.postMessage({kind,epoch:String(epoch)});}catch{/* Notification failure cannot change the committed server fact. */}
     },
     close(){dead=true;channel?.close();channel=undefined;},
