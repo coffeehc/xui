@@ -121,6 +121,14 @@ test('a newer host focus before the asynchronous close event is preserved',()=>{
   newer.focus();f.dialog.dispatchEvent(new Event('close'));assert.equal(f.doc.activeElement,newer);owner.destroy();
 });
 
+test('queued native close cannot steal host focus restored to the same pre-dialog element',()=>{
+  const f=fixture(),prior=f.doc.createElement('prior-container');f.doc.activeElement=prior;
+  f.dialog.close=()=>{f.dialog.open=false;f.doc.activeElement=prior;};
+  const owner=createDialogController(f.dialog,f.trigger,{finalFocus:f.trigger});owner.syncOpen(true);owner.syncOpen(false);
+  assert.equal(f.doc.activeElement,f.trigger);
+  prior.focus();f.dialog.dispatchEvent(new Event('close'));assert.equal(f.doc.activeElement,prior);owner.destroy();
+});
+
 test('native pre-dialog focus recognition does not override a disabled restore policy',()=>{
   const f=fixture(),prior=f.doc.createElement('prior-container');f.doc.activeElement=prior;
   f.dialog.close=()=>{f.dialog.open=false;f.doc.activeElement=prior;f.dialog.dispatchEvent(new Event('close'));};

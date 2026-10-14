@@ -63,7 +63,7 @@ body 使用 xui 类；portal/原生顶层弹层用 xui-layer。公共 layout/tab
 | bindMenuKeyboardFocus(popup) | 只投影所属 menu 的真实键盘焦点，不移动焦点或改变选择；pointer/blur 清理标记，释放恢复属性。原生 menu controller 与 React Menu/ContextMenu.Popup 已自动绑定，不能重复绑定 |
 | createDisclosureController(trigger,panel) | aria-controls/expanded、hidden；open/defaultOpen、onOpenChange 和 syncOpen |
 | createTabsController(tablist) | 原生 role=tab 的 data-value/aria-controls；手动默认、自动激活可选、RTL/Home/End、disabled 跳过、受控 value/syncValue |
-| createDialogController(dialog,trigger) | HTMLDialogElement showModal/close、Esc cancel、data-xui-close、可见 finalFocus；显式初始焦点在showModal前快照并临时拥有autofocus，兼容Chromium legacy与新算法；属性在finally完整恢复；浏览器模态加库 Tab 边界循环，迟到 close 事件不改变已重开弹层焦点 |
+| createDialogController(dialog,trigger) | HTMLDialogElement showModal/close、Esc cancel、data-xui-close、可见 finalFocus；显式初始焦点在showModal前快照并临时拥有autofocus，兼容Chromium legacy与新算法；属性在finally完整恢复；浏览器模态加库 Tab/Option+Tab 边界循环。close/syncOpen(false) 的确认关闭动作内完成一次焦点恢复，迟到 close 不覆盖宿主随后设置的焦点或已重开弹层；保留 restoreFocus 策略与叠层边界 |
 | createSheetController(dialog,trigger)/createAlertDialogController(dialog,trigger) | 复用原生Dialog lifecycle，Sheet逻辑side、AlertDialog角色与显式/安全初始焦点；最上层取消/Tab，不以确认关闭当业务成功 |
 | createContextMenuController(trigger,popup) | 复用Popover/menu，rightclick、Shift+F10/ContextMenu、坐标与focus/取消；触屏长按无通用保证 |
 | createPopoverController(trigger,popup) | 浏览器 Popover API、位置测量、外点/Esc、可选 menu/tooltip、受控 open/syncOpen；非模态不 trap |

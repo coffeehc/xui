@@ -59,8 +59,19 @@ export function createTabsController(root:HTMLElement,options:{value?:string;def
 const dialogStacks=new WeakMap<Document,HTMLDialogElement[]>();
 export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElement,options:OpenOptions={}){
   const releaseLayout=observeDialogLayout(dialog);
-  let dead=false,opened=false,shouldRestore=true,focusVersion=0,nativeReturnFocus:Element|null=null,closeDetails:DialogCloseDetails={reason:'native'};const controlled=options.open!==undefined;trigger.setAttribute('aria-haspopup','dialog');if(dialog.id)trigger.setAttribute('aria-controls',dialog.id);
+  let dead=false,opened=false,shouldRestore=true,nativeClosing=false,focusVersion=0,nativeReturnFocus:Element|null=null,closeDetails:DialogCloseDetails={reason:'native'};const controlled=options.open!==undefined;trigger.setAttribute('aria-haspopup','dialog');if(dialog.id)trigger.setAttribute('aria-controls',dialog.id);
   const stack=dialogStacks.get(dialog.ownerDocument)??[];dialogStacks.set(dialog.ownerDocument,stack);const remove=()=>{const index=stack.indexOf(dialog);if(index>=0)stack.splice(index,1);};
+  const finishClose=(nativeReturn=false)=>{
+    if(dead||dialog.open||!opened)return;
+    opened=false;remove();trigger.setAttribute('aria-expanded','false');
+    const policy=typeof options.restoreFocus==='function'?options.restoreFocus(closeDetails):options.restoreFocus;
+    if(policy===false||!shouldRestore)return;
+    const doc=dialog.ownerDocument;
+    restore(doc,trigger,options.finalFocus,target=>{
+      const active=doc.activeElement,top=stack.at(-1);
+      return !dead&&!dialog.open&&(active===doc.body||active===trigger||nativeReturn&&active===nativeReturnFocus||dialog.contains(active))&&(!top||!!target&&top.contains(target));
+    });
+  };
   const syncOpen=(next:boolean,details:DialogCloseDetails={reason:'imperative'})=>{
     if(dead)return;
     if(next&&!dialog.open){
@@ -102,7 +113,12 @@ export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElem
       // owner before the first visible frame, after temporary focus nodes leave.
       releaseLayout.refresh();
     }else if(!next&&dialog.open){
-      ++focusVersion;closeDetails=details;const active=dialog.ownerDocument.activeElement;shouldRestore=dialog.contains(active)||active===dialog.ownerDocument.body;remove();dialog.close();
+      const version=++focusVersion;closeDetails=details;const active=dialog.ownerDocument.activeElement;shouldRestore=dialog.contains(active)||active===dialog.ownerDocument.body;remove();
+      nativeClosing=true;
+      try{dialog.close();}finally{nativeClosing=false;}
+      // Complete restoration within this action. A queued native close event
+      // must not overwrite focus selected by the host after close() returns.
+      if(version===focusVersion)finishClose(true);
     }
     trigger.setAttribute('aria-expanded',String(dialog.open));
   };
@@ -114,7 +130,7 @@ export function createDialogController(dialog:HTMLDialogElement,trigger:HTMLElem
   // belong to the same modal focus cycle as ordinary Tab.
   const key=(event:KeyboardEvent)=>{if(!dialog.open||stack.at(-1)!==dialog||event.defaultPrevented||event.key!=='Tab'||event.ctrlKey||event.metaKey)return;const targets=focusable(dialog),active=dialog.ownerDocument.activeElement;
     if(!targets.length){event.preventDefault();dialog.focus();return;}if(event.shiftKey&&active===targets[0]||!event.shiftKey&&active===targets.at(-1)||!dialog.contains(active)){event.preventDefault();(event.shiftKey?targets.at(-1):targets[0])?.focus();}};
-  const closed=()=>{if(dead||dialog.open||!opened)return;opened=false;remove();trigger.setAttribute('aria-expanded','false');const policy=typeof options.restoreFocus==='function'?options.restoreFocus(closeDetails):options.restoreFocus;if(policy===false||!shouldRestore)return;const doc=dialog.ownerDocument;restore(doc,trigger,options.finalFocus,target=>{const active=doc.activeElement,top=stack.at(-1);return !dead&&!dialog.open&&(active===doc.body||active===trigger||active===nativeReturnFocus||dialog.contains(active))&&(!top||!!target&&top.contains(target));});};
+  const closed=()=>finishClose(nativeClosing);
   trigger.addEventListener('click',click);dialog.addEventListener('cancel',cancel);dialog.addEventListener('click',closeClick);dialog.addEventListener('keydown',key);dialog.addEventListener('close',closed);
   try{syncOpen(options.open??options.defaultOpen??false);}catch(error){releaseLayout();trigger.removeEventListener('click',click);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',closeClick);dialog.removeEventListener('keydown',key);dialog.removeEventListener('close',closed);throw error;}
   return {getOpen:()=>dialog.open,open:()=>request(true),close:(reason='imperative')=>request(false,reason),syncOpen,destroy(){if(dead)return;syncOpen(false,{reason:'destroy'});remove();dead=true;releaseLayout();trigger.removeEventListener('click',click);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',closeClick);dialog.removeEventListener('keydown',key);dialog.removeEventListener('close',closed);}};
