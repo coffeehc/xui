@@ -61,7 +61,7 @@ for(const kind of ['react','vanilla']){
   });
   test(`${kind} native modifiers, target, download and adapter bypass preserve browser navigation`,async({page,context})=>{
     await page.goto(`/menu-${kind}/?page=overview`);const popup=page.waitForEvent('popup');await control(page,'new-tab').click();const tab=await popup;await tab.waitForLoadState();expect(tab.url()).toContain('page=new-tab');await tab.close();expect(await page.evaluate(()=>window.menuDemo.calls())).toEqual([]);
-    for(const click of [{modifiers:['Control']},{button:'middle'}]){const opening=context.waitForEvent('page');await control(page,'overview').click(click);const opened=await opening;await opened.waitForLoadState();expect(opened.url()).toContain('page=overview');await opened.close();expect(await page.evaluate(()=>window.menuDemo.calls())).toEqual([]);}
+    for(const click of [{modifiers:['ControlOrMeta']},{button:'middle'}]){const opening=context.waitForEvent('page');await control(page,'overview').click(click);const opened=await opening;await opened.waitForLoadState();expect(opened.url()).toContain('page=overview');await opened.close();expect(await page.evaluate(()=>window.menuDemo.calls())).toEqual([]);}
     const download=page.waitForEvent('download');await control(page,'download').click();expect((await download).suggestedFilename()).toBe('reference.html');expect(await page.evaluate(()=>window.menuDemo.calls())).toEqual([]);
     await control(page,'browser').click();await expect(page).toHaveURL(new RegExp(`/menu-${kind}/destination.html$`));await expect(page.getByText('Browser destination')).toBeVisible();
   });

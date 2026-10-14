@@ -91,7 +91,7 @@ for(const composition of ['element','callback'])test(`NavItem: ${composition} me
 
 for(const composition of [undefined,'element','callback'])test(`NavItem: ${composition??'native'} preserves modified, middle, target and download browser actions`,async({page})=>{
   const item=await setup(page,{composition,allowNative:true,href:'/react/nav-destination.html'});
-  for(const action of [{modifiers:['Control']},{button:'middle'}]){
+  for(const action of [{modifiers:['ControlOrMeta']},{button:'middle'}]){
     const popupPromise=page.context().waitForEvent('page');await item.click(action);const popup=await popupPromise;
     await popup.waitForLoadState();await expect(popup).toHaveURL(/nav-destination\.html$/);await popup.close();
     await expect(page).toHaveURL(/nav-contract\.html$/);
