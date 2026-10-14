@@ -51,10 +51,16 @@ export function Fieldset({legend,help,error,className,children,'aria-describedby
   </fieldset></FieldContext.Provider>;
 }
 
+/** One native control with optional phrasing-content addons. */
+export interface InputGroupRootProps extends React.ComponentProps<'div'> {
+ /** Defaults to inline; stacked places addons above or below the control in DOM order. */
+ layout?:'inline'|'stacked';
+}
 /** One Field control; addons never receive its id or input semantics. */
 export const InputGroup={
- Root:function InputGroupRoot({className,...props}:React.ComponentProps<'div'>){const field=React.useContext(FieldContext);return <div {...props} className={cx('xui-input-group',className)} data-invalid={field?.invalid||undefined}/>;},
+ Root:function InputGroupRoot({className,layout='inline',...props}:InputGroupRootProps){const field=React.useContext(FieldContext);return <div {...props} className={cx('xui-input-group',className)} data-layout={layout} data-invalid={field?.invalid||undefined}/>;},
  Addon:function InputGroupAddon({className,...props}:React.ComponentProps<'span'>){return <span {...props} className={cx('xui-input-addon',className)}/>;},
  Input,
+ Textarea,
  Button:function InputGroupButton({className,type='button',...props}:React.ComponentProps<'button'>){return <button {...props} type={type} className={cx('xui-input-action',className)}/>;},
 };

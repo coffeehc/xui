@@ -10,13 +10,31 @@
 | Avatar | `/avatar`的Avatar.Root/Image/Fallback，peer loading callback/delay | createAvatar(root,{name,src?,fallback,size?,delay?}) | size=default（sm/lg可选），delay=0；图像加载/错误/文字fallback保持同一尺寸。业务名称/地址/身份由宿主。原生name给role=img名称，内图alt空；React宿主提供适当Root名称/内图alt，避免重复读出 |
 | Accordion | `/accordion`的Accordion.Root/Item/Header/Trigger/Panel | createAccordion(root,options)，公开details[data-value]/summary/内容类 | value/defaultValue为id数组，默认single，可multiple；禁用项原生data-disabled=true。Tab/Enter/Space按按钮/summary语义；peer1.7已弃用Accordion强制箭头roving，不编造键盘默认。展开内容由宿主，不接业务流程 |
 | ScrollArea | `/scroll-area`的ScrollArea.Root/Viewport/Content | `.xui-scroll-area/.xui-scroll-viewport/.xui-scroll-content` | 浏览器原生滚动与滚动条，无第二JS引擎。Root由宿主给blockSize/maxBlockSize等界限；Viewport=min-size:0/overflow:auto，默认tabIndex=0、role=region、focusMode=gutter；显式inset通过CSS @scope同时移除gutter并向内绘制焦点，旧引擎保安全gutter，嵌套边界各自选择，宿主给aria-label。内容同节点更新保留滚动，宿主拥有路由历史恢复和任意虚拟化 |
-| InputGroup | `/forms`的InputGroup.Root/Addon/Input/Button，复用Field/Input | `.xui-input-group`内`.xui-input-addon/.xui-input/.xui-input-action` | 一个Field仍只有一个control，Addon不领id；native label/for/help/error由宿主准确连接。focus-within仅组边界，输入自身无第二outline；invalid由Field或aria-invalid合成。内嵌Button type=button，显式disabled不猜busy |
+| InputGroup | `/forms`的InputGroup.Root/Addon/Input/Textarea/Button，复用Field/Input | `.xui-input-group`内`.xui-input-addon/.xui-input/.xui-textarea/.xui-input-action` | 一个Field仍只有一个control，Addon不领id；native label/for/help/error由宿主准确连接。focus-within仅组边界，输入自身无第二outline；invalid由Field或aria-invalid合成。内嵌Button type=button，显式disabled不猜busy |
 
 Command复用已安装的Combobox：inline列表、搜索、分组、空态、disabled、选择与键盘；只声明上述稳定组合，不照搬cmdk。原生输入保持DOM identity，aria-controls/activedescendant/selected/multiselectable同事实；ArrowUp/Down/Home/End跳过disabled，Enter执行，Escape清过滤而保留选择。action不作权限/副作用校验，也不自动等待/重放业务。需要远端搜索或更细peer部件时组合已有Combobox/Select，不能用私有默认样式补丁。
 
 Calendar使用一个框架无关model；更新一次发布一致快照，选相邻月份后保留所选日焦点。Arrow左右一天、上下七天、Home/End周端、PageUp/Down按月并夹到有效日，Enter/Space走按钮选择；禁用日期可焦点读取但不能选择，clear清空选择。月份查看不是业务查询，动画不等待操作。没有时间选择器、农历、复杂可用性/节假日或预约引擎。defaultMonth只定义初始视图；月份查看由库保存，runtime model可显式moveMonth，日期value由宿主按受控合同确认。
 
 原生工厂只拥有指定root，update(partial)保留选项；受控value由宿主确认，defaultValue只读初始。destroy恢复创建前root/相关控件属性并释放监听/计时器；destroy幂等，已销毁update无效，旧句柄不影响重建owner。同root不能重复创建活跃widget。Callback只能接受公开事实；安全权限/业务结果由宿主确认。原生ScrollArea/InputGroup为HTML合同，没有隐式controller。React同peer单实例，原生不引入React。
+
+## 多行输入与上下工具区域
+
+`InputGroup.Root` 的 `layout='inline'` 为默认旧横排，显式 `stacked` 按 DOM 纵向排列、拉伸控制项。`InputGroup.Textarea` 就是已存在的 Textarea 函数，直接接受 textarea props/ref；id、name、required、label/help/error 继续由 Field 与真实控制项共同绑定。只生成 xui-textarea，不额外套 xui-input。上下 `Addon` 使用 span，放合法短语内容、附件文字和按钮；自然换行，采用既有 padding/gap，空 Addon 不占位，不新增 Toolbar part。
+
+```tsx
+<Field label="草稿" help="可输入多行" required>
+  <InputGroup.Root layout="stacked">
+    <InputGroup.Addon><span>附件.txt</span><InputGroup.Button>移除</InputGroup.Button></InputGroup.Addon>
+    <InputGroup.Textarea name="draft" defaultValue="保留草稿" />
+    <InputGroup.Addon><InputGroup.Button>附加文件</InputGroup.Button><InputGroup.Button disabled>发送</InputGroup.Button></InputGroup.Addon>
+  </InputGroup.Root>
+</Field>
+```
+
+原生使用 `.xui-input-group[data-layout='stacked']`，内部直接 `textarea.xui-textarea` 和上下 `span.xui-input-addon`；label for、help/error id、aria-describedby/aria-invalid/required 由宿主连到 textarea。唯一背景、边线和 focus-within 在组外壳；直接 Input/Textarea 不再画边线/背景/outline，Textarea 自身的 padding、字体、最小高度与原生 resize 保留。焦点中的工具按钮仍有可辨指示；invalid 与 focus 共存。组的 invalid/disabled 只由直接真实 Input/Textarea 与既有 Field error 投影，单独禁用发送按钮不会灰掉可编辑区域；没有第二个 Root.disabled/invalid owner。readOnly 保留原生选择/复制和焦点语义。
+
+库不处理 Enter/IME/提交策略、发送 busy、草稿和附件状态。正式 [React](../examples/widgets-react/app.tsx) / [原生](../examples/widgets-vanilla/app.js) 的“多行字段组合”给出合成示例；`widgetsDemo.setComposerState` 可改变 layout/disabled/readOnly/invalid/sendDisabled/emptyAddons，`getComposerControl` 返回真实 Textarea，`getComposerEvents` 仅计合成 composition start/update/end 事件，不构成 OS IME 验收。没有具体产品域模型或网络调用。
 
 ## Button与选择控件补齐
 

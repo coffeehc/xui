@@ -144,6 +144,7 @@ Vite开发接入还须核[冷启动与依赖优化](NAVIGATION.md#vite开发模�
 
 工作区正文需要贴边时使用 AppShell/MenuLayout（原生 createMenuLayout）的 `scrollMode='workspace'` 与 `contentInset='edge'`；普通列表/表单保留 standard。内部滚动区域组合 ScrollArea，按需显式选 Viewport.focusMode='inset'，默认仍保 gutter。Surface.padding='none' 仅控制该表面自身，不需要清理所有 Card 或控件 padding。@scope 不可用的旧引擎保留安全焦点余量；不能靠私有 DOM CSS、全局 overflow:visible 或 focus-width=0 绕过。详见[正式合同](LAYOUT_SLOTS.md#工作区正文贴边)。
 
+多行输入和上下附件/工具区域复用 `InputGroup.Root layout='stacked'`、`InputGroup.Textarea` 与 span `Addon` 内的公开按钮。不要给 Textarea 同时加 xui-input，也不要把块级 Toolbar 塞进 span。真实草稿、附件、权限和发送行为继续归宿主；合成示例仅演示公共布局、原生事件和状态投影，见[多行组合](WIDGETS.md#多行输入与上下工具区域)。
 
 采用反馈新增公共能力见[WIDGETS](WIDGETS.md)：Command/date-only Calendar/ToggleGroup/Avatar/Accordion/ScrollArea/InputGroup，以及link/controlSize/readonly。完整登录slots在AUTH，原生origin在HTTP，viewport在NAVIGATION，sticky合成/子菜单在COMPOSITIONS。先用正式默认合同，业务需要通过声明props/data/callback扩展；不能改私有HTML或复制默认CSS。
 

@@ -1327,6 +1327,10 @@ SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。sea
 
 CheckboxGroup/RadioGroup 复用 fieldset/legend、choice 与 help/error 的既有间距、控件尺寸、焦点和错误语义 token。全选部分态复用原 indeterminate 横线；只读/禁用仍保留明确原生状态，不以颜色代替。没有新的权限引擎、字体或密度。完整受控值、诊断、校验与双端入口见 [CHOICE_GROUP](CHOICE_GROUP.md)。
 
+### 多行输入组合
+
+InputGroup.Root 的 layout 默认 inline，stacked 仅把原生控制项与上下 Addon 按 DOM 排成纵列。InputGroup.Textarea 直接复用 Textarea 的类型、Field、ref、label/help/error/required 与原生换行、选择、resize/readOnly 合同，只保留 xui-textarea 类。外层拥有唯一背景、边界与 focus-within；直接 Input/Textarea 无第二层边框/outline。invalid/disabled 只投影直接真实控制项或已有 Field error，单独禁用工具按钮不把可编辑正文变灰。Addon 保持 span，只放合法短语内容、附件文字与按钮；stacked 自然换行并采用既有间距，空槽不占位。不增加 Toolbar part、第二个状态 owner、Enter/IME/提交拦截或附件业务能力。完整公开组合见 [WIDGETS](WIDGETS.md#多行输入与上下工具区域)。
+
 ### 专用输入组合
 
 NumberInput、PasswordInput、SearchInput 复用 InputGroup 的唯一输入边界与既有 input-action、control-height、control-icon-size、焦点和禁用 token。数字草稿/确认值分开，密码仅显隐与清理，搜索仅提交/清除意图；没有新颜色、密度、请求或认证 owner。帮助/错误继续采用 Field/native field 的关联。行为和安全边界见 [TEXT_INPUTS](TEXT_INPUTS.md)。

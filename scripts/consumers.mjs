@@ -250,10 +250,12 @@ for (const kind of ['vanilla','react']) {
       "import {MenuLayout} from '@coffeehc/xui-react/menu-layout';",
       "import {ScrollArea,type ScrollAreaViewportProps} from '@coffeehc/xui-react/scroll-area';",
       "import {Surface,type SurfaceProps} from '@coffeehc/xui-react/feedback';",
-      "import type {ShellContentInset as RootInset,ScrollAreaFocusMode,SurfaceProps as RootSurfaceProps} from '@coffeehc/xui-react';",
+      "import {InputGroup,type InputGroupRootProps} from '@coffeehc/xui-react/forms';",
+      "import type {ShellContentInset as RootInset,ScrollAreaFocusMode,SurfaceProps as RootSurfaceProps,InputGroupRootProps as RootGroupProps} from '@coffeehc/xui-react';",
       "const contentInset:ShellContentInset='edge';const rootInset:RootInset=contentInset;const focusMode:ScrollAreaFocusMode='inset';",
-      "const viewport:ScrollAreaViewportProps={focusMode};const surface:SurfaceProps={padding:'none'};const rootSurface:RootSurfaceProps=surface;",
-      "const content=<Surface {...rootSurface}><ScrollArea.Root><ScrollArea.Viewport {...viewport}><p>Workspace content</p></ScrollArea.Viewport></ScrollArea.Root></Surface>;",
+      "const viewport:ScrollAreaViewportProps={focusMode};const surface:SurfaceProps={padding:'none'};const group:InputGroupRootProps={layout:'stacked'};const rootSurface:RootSurfaceProps=surface;const rootGroup:RootGroupProps=group;",
+      "const control=<InputGroup.Root {...rootGroup}><InputGroup.Addon><InputGroup.Button>Attach</InputGroup.Button></InputGroup.Addon><InputGroup.Textarea ref={React.createRef<HTMLTextAreaElement>()} id='draft' name='draft' required readOnly aria-describedby='draft-help' onCompositionEnd={event=>event.currentTarget.value}/></InputGroup.Root>;",
+      "const content=<Surface {...rootSurface}><ScrollArea.Root><ScrollArea.Viewport {...viewport}>{control}</ScrollArea.Viewport></ScrollArea.Root></Surface>;",
       "const shells=[<AppShell sidebar='Navigation' scrollMode='workspace' contentInset={rootInset}>{content}</AppShell>,<MenuLayout items={[]} scrollMode='workspace' contentInset={contentInset}>{content}</MenuLayout>];void shells;",
     ].join('\n'));
     execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','workspace/composition-types.tsx'],{cwd,stdio:'inherit'});

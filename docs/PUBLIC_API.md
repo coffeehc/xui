@@ -186,6 +186,7 @@ AppHeader/AppShell/MenuLayout与原生MenuLayoutOptions同型theme?:ThemeControl
 
 `ScrollAreaViewportProps` / `ScrollAreaFocusMode = 'gutter' | 'inset'` 从 React/scroll-area 及根导出；Viewport 的 `focusMode` 默认 gutter，原生公开 `.xui-scroll-viewport[data-focus-mode='inset']` 等价。选择只作用最近滚动边界，不由 edge shell 自动递归改变。`SurfaceProps` 从 React/feedback 及根导出，`padding?: 'default' | 'none'` 默认 default，原生 `.xui-surface[data-padding='none']` 只去除该表面的内距，保留背景/边线/圆角。
 
+`InputGroupRootProps` 从 React/forms 及根导出，`layout?: 'inline' | 'stacked'` 默认 inline，原生用 data-layout。`InputGroup.Textarea` 与现有 Textarea 为同一函数及原生 textarea props/ref，复用 Field 关联，无 xui-input 附加类。stacked 仅纵向排列控制项与可换行的 span Addon；真实 Input/Textarea 拥有 disabled/readOnly/aria-invalid，独立按钮禁用不改变组状态。完整[多行合同](WIDGETS.md#多行输入与上下工具区域)不新增 Root.disabled/invalid 或 Toolbar part。
 
 AppHeaderSlots/MenuLayoutHeaderSlots追加可选leading（ReactNode / Node|null）；独立AppHeader直接接受leading。顺序为leading→brand→自动navigation→breadcrumb→context，默认空；同Node/Fragment与普通React协调保持稳定。宿主提供平台/全屏事实、尺寸和drag/no-drag语义，库没有OS默认像素。完整[合同](LAYOUT_SLOTS.md)、[React正式消费者](../examples/workspace-react/app.tsx)、[原生正式消费者](../examples/workspace-vanilla/app.js)及[验证记录](WORKSPACE_VALIDATION.md)。
 
