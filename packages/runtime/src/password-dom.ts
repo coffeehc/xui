@@ -1,34 +1,48 @@
-import {parsePasswordPolicy,countPasswordCodePoints,validateNewPassword,getNewPasswordErrorMessage,newPasswordLabels,createPasswordStrengthController,getPasswordStrengthMessage,getPasswordStrengthSummary,type PasswordPolicy,type NewPasswordLabels} from './password.js';
-import {generateDomId} from './dom-id.js';
-import {createDisclosureController} from './dom.js';
+import {countPasswordCodePoints,validateNewPassword,getNewPasswordErrorMessage,newPasswordLabels,createPasswordStrengthController,getPasswordStrengthSummary,type PasswordStrengthState,type NewPasswordLabels} from './password.js';
+import {createPopoverController} from './dom.js';
+import {createPasswordInput,type PasswordInputOptions} from './text-inputs-dom.js';
 
-export interface NewPasswordFieldsOptions {policy:PasswordPolicy|null;disabled?:boolean;labels?:Partial<NewPasswordLabels>;document?:Document}
-/** 原生公共组合与 React 共用策略、计数和错误合同；密码只留在原生输入中。 */
-export function createNewPasswordFields(options:NewPasswordFieldsOptions){
-  const doc=options.document??document,labels={...newPasswordLabels,...options.labels},element=doc.createElement('div');
-  element.className='xui-stack';
-  let policy:PasswordPolicy|null=null,disabled=options.disabled??false,destroyed=false;
-  const fields=[labels.password,labels.confirmation].map(label=>{
-    const root=doc.createElement('div'),name=doc.createElement('label'),input=doc.createElement('input'),help=doc.createElement('p'),error=doc.createElement('p');
-    root.className='xui-field';name.className='xui-label';input.className='xui-input';help.className='xui-help';error.className='xui-error';
-    input.id=generateDomId(doc,'password');name.htmlFor=input.id;name.textContent=label;const required=doc.createElement('span');required.setAttribute('aria-hidden','true');required.textContent=' *';name.append(required);input.type='password';input.autocomplete='new-password';input.required=true;
-    help.id=`${input.id}-help`;error.id=`${input.id}-error`;root.append(name,input,help,error);element.append(root);
-    return {input,help,error};
-  });
-  const count=doc.createElement('span');count.setAttribute('data-xui-password-count','');
-  const strength=doc.createElement('span');strength.setAttribute('data-xui-password-strength','');strength.setAttribute('role','status');strength.setAttribute('aria-live','polite');
-  const area=doc.createElement('div'),summary=doc.createElement('p'),disclosure=doc.createElement('div'),trigger=doc.createElement('button'),panel=doc.createElement('div'),advice=doc.createElement('p');area.className='xui-password-strength';summary.className='xui-help xui-password-strength-summary';const states:import('./password.js').PasswordStrengthState[]=[{status:'idle'},{status:'loading'},{status:'unavailable'},{status:'ready',score:0,level:'weak',hint:'common'},{status:'ready',score:2,level:'medium',hint:'personal'},{status:'ready',score:4,level:'strong',hint:'none'}];for(const state of states){const reserve=doc.createElement('span');reserve.className='xui-password-strength-reserve';reserve.setAttribute('aria-hidden','true');reserve.textContent='密码强度：'+(labels.strengthSummary??getPasswordStrengthSummary)(state);summary.append(reserve);}summary.append(strength);disclosure.className='xui-disclosure';trigger.type='button';trigger.className='xui-disclosure-trigger';trigger.textContent=labels.strengthAdvice??'改进建议';panel.className='xui-disclosure-body';advice.className='xui-help xui-password-strength-summary';for(const state of states){const reserve=doc.createElement('span');reserve.className='xui-password-strength-reserve';reserve.setAttribute('aria-hidden','true');reserve.textContent=(labels.strength??getPasswordStrengthMessage)(state)||'强度仅供参考，建议使用较长、不易猜测的密码。';advice.append(reserve);}const adviceText=doc.createElement('span');adviceText.setAttribute('data-xui-password-advice','');advice.append(adviceText);panel.append(advice);disclosure.append(trigger,panel);area.append(summary,disclosure);element.append(area);const disclosureOwner=createDisclosureController(trigger,panel);
-  const showStrength=(state:import('./password.js').PasswordStrengthState)=>{strength.textContent='密码强度：'+(labels.strengthSummary??getPasswordStrengthSummary)(state);adviceText.textContent=(labels.strength??getPasswordStrengthMessage)(state)||'强度仅供参考，建议使用较长、不易猜测的密码。';};showStrength({status:'idle'});
-  const strengthOwner=createPasswordStrengthController({readPassword:()=>{const value=fields[0].input.value;return countPasswordCodePoints(value)===null?null:value;},onChange:showStrength});
-  const showCount=()=>{count.textContent=(labels.count??newPasswordLabels.count!)(countPasswordCodePoints(fields[0].input.value));};
-  const clearErrors=()=>{for(const field of fields){field.error.textContent='';field.error.hidden=true;field.input.removeAttribute('aria-invalid');field.input.setAttribute('aria-describedby',field.help.id);}};
-  const clear=()=>{for(const field of fields){field.input.value='';field.input.defaultValue='';}strengthOwner.clear();showStrength({status:'idle'});showCount();clearErrors();};
-  const update=()=>{area.hidden=policy===null;for(const field of fields)field.input.disabled=disabled||policy===null;fields[0].help.textContent=policy?labels.length(policy.minimum_characters,policy.maximum_characters):labels.policyUnavailable;if(policy){fields[0].help.append(' ',count);showCount();}fields[1].help.hidden=true;clearErrors();};
-  const setPolicy=(value:PasswordPolicy|null)=>{try{policy=value===null?null:parsePasswordPolicy(value);}catch{policy=null;}update();};
-  const changed=(event:Event)=>{showCount();clearErrors();if(event.target===fields[0].input)strengthOwner.refresh();};for(const field of fields)field.input.addEventListener('input',changed);
-  doc.defaultView?.addEventListener('pagehide',clear);setPolicy(options.policy);
-  return Object.freeze({element,setPolicy,setDisabled(value:boolean){disabled=value;update();},clear,
-    readValidatedPassword():string|null{if(destroyed||disabled)return null;const error=validateNewPassword(policy,fields[0].input.value,fields[1].input.value);showCount();clearErrors();if(error){const field=fields[error==='confirmation_mismatch'?1:0];field.error.textContent=getNewPasswordErrorMessage(error,policy,labels,countPasswordCodePoints(fields[0].input.value))??'';field.error.hidden=false;field.input.setAttribute('aria-invalid','true');field.input.setAttribute('aria-describedby',`${field.help.id} ${field.error.id}`);field.input.focus();return null;}return fields[0].input.value;},
-    destroy(){if(destroyed)return;destroyed=true;strengthOwner.destroy();disclosureOwner.destroy();clear();doc.defaultView?.removeEventListener('pagehide',clear);for(const field of fields)field.input.removeEventListener('input',changed);element.remove();},
-  });
+/** Adds one advisory meter to the ordinary native password input. */
+export type PasswordStrengthInputOptions=PasswordInputOptions & {labels?:Partial<NewPasswordLabels>};
+/** PasswordInput remains the only input/visibility/secret-cleanup owner; the worker receives transient reads. */
+export function createPasswordStrengthInput(host:HTMLElement,initial:PasswordStrengthInputOptions){
+ const doc=host.ownerDocument;let metadata={labels:initial.labels,onClear:initial.onClear},dead=false;
+ const view=createPasswordInput(host,{...initial,onClear:reason=>{owner.clear();metadata.onClear?.(reason);}}),{input,element}=view;
+ const meter=doc.createElement('meter'),status=doc.createElement('span');meter.className='xui-password-strength-meter';meter.setAttribute('data-xui-password-strength','');meter.setAttribute('role','meter');meter.setAttribute('aria-valuemin','0');meter.setAttribute('aria-valuemax','5');meter.min=0;meter.max=5;status.className='xui-password-strength-status';status.setAttribute('data-xui-password-strength-status','');status.setAttribute('role','status');status.setAttribute('aria-live','polite');element.insertBefore(meter,element.children[2]??null);element.append(status);
+ const showStrength=(state:PasswordStrengthState)=>{const labels={...newPasswordLabels,...metadata.labels},summary=(labels.strengthSummary??getPasswordStrengthSummary)(state),level=state.status==='ready'?state.score+1:undefined;meter.dataset.state=state.status;meter.setAttribute('aria-label',labels.strengthLabel??newPasswordLabels.strengthLabel!);meter.setAttribute('aria-valuetext',summary);status.textContent=summary;if(state.status==='ready'){meter.setAttribute('aria-valuenow',String(level));meter.dataset.level=state.level;meter.value=level!;}else{meter.removeAttribute('aria-valuenow');delete meter.dataset.level;meter.value=0;}};
+ const owner=createPasswordStrengthController({readPassword:()=>countPasswordCodePoints(input.value)===null?null:input.value,onChange:showStrength});
+ const changed=()=>owner.refresh();input.addEventListener('input',changed);
+ let resetTimer:ReturnType<typeof setTimeout>|undefined;const reset=(event:Event)=>{if(event.target!==input.form)return;clearTimeout(resetTimer);resetTimer=setTimeout(()=>{if(!dead&&!event.defaultPrevented)changed();},0);};doc.addEventListener('reset',reset,true);owner.refresh();
+ return {element,input,clear:view.clear,
+  update(next:Partial<PasswordStrengthInputOptions>){
+   if(dead)return;
+   view.update({...next,onClear:reason=>{owner.clear();metadata.onClear?.(reason);}});
+   metadata={labels:'labels' in next?next.labels:metadata.labels,onClear:'onClear' in next?next.onClear:metadata.onClear};showStrength(owner.getState());if('value' in next)owner.refresh();
+  },
+  destroy(){if(dead)return;dead=true;clearTimeout(resetTimer);input.removeEventListener('input',changed);doc.removeEventListener('reset',reset,true);owner.destroy();view.destroy();},
+ };
+}
+/** Keeps the existing tooltip position/dismiss lifecycle; only submit and invalid focus can open it. */
+function createPasswordValidationTip(field:{input:HTMLInputElement;element:HTMLElement;update:(next:Partial<PasswordInputOptions>)=>void}){
+ const {input,element}=field,popup=input.ownerDocument.createElement('div');let message:string|undefined,dead=false;
+ element.classList.add('xui-password-validation-field');popup.className='xui-layer xui-floating xui-tooltip-popup xui-native-popup';popup.setAttribute('aria-hidden','true');element.append(popup);
+ const owner=createPopoverController(input,popup,{tooltip:true,open:false,onOpenChange(next,details){if(!next&&details.reason!=='trigger'&&details.reason!=='hover')owner.syncOpen(false);}});
+ const render=()=>{if(dead)return;field.update({error:message});if(input.disabled)owner.syncOpen(false);};
+ const blur=()=>owner.syncOpen(false),focus=()=>{if(message&&!input.disabled)owner.syncOpen(true);},key=(event:KeyboardEvent)=>{if(event.key==='Escape'&&owner.getOpen()){event.preventDefault();owner.syncOpen(false);}};
+ input.addEventListener('blur',blur);input.addEventListener('focus',focus);input.addEventListener('keydown',key);render();
+ return {render,setMessage(next?:string){if(dead)return;message=next;popup.textContent=message??'';render();if(!message)owner.syncOpen(false);},show(){if(!dead&&message&&!input.disabled)owner.syncOpen(true);},destroy(){if(dead)return;dead=true;input.removeEventListener('blur',blur);input.removeEventListener('focus',focus);input.removeEventListener('keydown',key);owner.destroy();popup.remove();element.classList.remove('xui-password-validation-field');}};
+}
+/** Password and confirmation use the same fixed validation as React. Secrets remain in input DOM. */
+export interface NewPasswordFieldsOptions {disabled?:boolean;labels?:Partial<NewPasswordLabels>;document?:Document}
+/** Builds the public strength input plus an ordinary confirmation input; no policy IO or configuration exists. */
+export function createNewPasswordFields(options:NewPasswordFieldsOptions={}){
+ const doc=options.document??document,labels={...newPasswordLabels,...options.labels},element=doc.createElement('div'),passwordHost=doc.createElement('div'),confirmationHost=doc.createElement('div');element.className='xui-stack';element.append(passwordHost,confirmationHost);let disabled=options.disabled??false,destroyed=false;
+ const clearErrors=()=>{passwordTip.setMessage();confirmationTip.setMessage();};
+ const password=createPasswordStrengthInput(passwordHost,{label:labels.password,autoComplete:'new-password',required:true,disabled,labels,onClear:clearErrors}),confirmation=createPasswordInput(confirmationHost,{label:labels.confirmation,autoComplete:'new-password',required:true,disabled,onClear:clearErrors}),passwordTip=createPasswordValidationTip(password),confirmationTip=createPasswordValidationTip(confirmation);
+ password.input.addEventListener('input',clearErrors);confirmation.input.addEventListener('input',clearErrors);
+ const clear=()=>{if(destroyed)return;password.clear();confirmation.clear();clearErrors();};
+ return Object.freeze({element,setDisabled(value:boolean){if(destroyed)return;disabled=value;password.update({disabled});confirmation.update({disabled});passwordTip.render();confirmationTip.render();},clear,
+  readValidatedPassword():string|null{if(destroyed||disabled)return null;const error=validateNewPassword(password.input.value,confirmation.input.value);clearErrors();if(error){const field=error==='confirmation_mismatch'?confirmation:password,tip=error==='confirmation_mismatch'?confirmationTip:passwordTip;field.input.focus();tip.setMessage(getNewPasswordErrorMessage(error,labels,countPasswordCodePoints(password.input.value)));tip.show();return null;}return password.input.value;},
+  destroy(){if(destroyed)return;destroyed=true;password.input.removeEventListener('input',clearErrors);confirmation.input.removeEventListener('input',clearErrors);passwordTip.destroy();confirmationTip.destroy();try{password.destroy();}finally{confirmation.destroy();element.remove();}},
+ });
 }

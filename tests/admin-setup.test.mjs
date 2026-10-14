@@ -22,9 +22,7 @@ test('invalid authority fails closed and no result creates authentication state'
  assert.match(adminSetupLabels.complete,/请登录/);
 });
 test('React server render is a single stable public form with no secret or automatic work',()=>{
- const policy={version:1,minimum_characters:6,maximum_characters:32,counting_unit:'unicode_code_points'};
- for(const status of ['idle','submitting','unconfirmed','complete','unavailable']){const markup=renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'创建管理员'},state:{status},policy,onSubmit(){throw new Error('SSR submitted');}}));assert.equal((markup.match(/<form\b/g)||[]).length,1);assert.equal((markup.match(/type="password"/g)||[]).length,2);assert.equal((markup.match(/<button\b/g)||[]).length,2);assert.equal((markup.match(/type="submit"/g)||[]).length,1);assert.match(markup,/aria-expanded="false"/);assert.doesNotMatch(markup,/核对|readonly|journal|receipt|sample-password/);if(status!=='idle')assert.match(markup,/disabled=""/);}
- const unavailable=renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'Setup'},state:{status:'idle'},policy:null,onSubmit(){}}));assert.equal((unavailable.match(/ disabled=""/g)||[]).length,4);
+ for(const status of ['idle','submitting','unconfirmed','complete','unavailable']){const markup=renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'创建管理员'},state:{status},onSubmit(){throw new Error('SSR submitted');}}));assert.equal((markup.match(/<form\b/g)||[]).length,1);assert.equal((markup.match(/type="password"/g)||[]).length,2);assert.equal((markup.match(/aria-label="Show password"/g)||[]).length,2);assert.equal((markup.match(/class="xui-disclosure-trigger"/g)||[]).length,0);assert.equal((markup.match(/type="submit"/g)||[]).length,1);assert.doesNotMatch(markup,/核对|readonly|journal|receipt|sample-password|password-policy/i);if(status!=='idle')assert.match(markup,/disabled=""/);}
 });
 
 test('authority change during the submitting notification prevents the callback from starting',async()=>{

@@ -90,6 +90,9 @@
  .xui-input-action:hover:not(:disabled) {background:var(--interaction-hover);}
  .xui-input-action:active:not(:disabled) {background:var(--interaction-pressed);}
  .xui-input-action:disabled {color:var(--muted-foreground);cursor:not-allowed;}
+ .xui-password-toggle {display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--muted-foreground);transition:background-color var(--motion-duration-fast) var(--motion-easing),color var(--motion-duration-fast) var(--motion-easing);}
+ .xui-password-toggle:hover:not(:disabled) {color:var(--action-primary);}
+ .xui-password-toggle>svg {inline-size:var(--control-icon-size);block-size:var(--control-icon-size);stroke-width:var(--icon-stroke-width);}
 }
 
 @layer xui-components {
@@ -151,7 +154,16 @@
 }
 
 @layer xui-components {
- .xui-password-strength-summary {display:grid;grid-template-areas:"summary";}
- .xui-password-strength-summary>span {grid-area:summary;min-inline-size:0;}
- .xui-password-strength-reserve {visibility:hidden;}
+ .xui-password-strength-input {display:grid;gap:var(--space-text-gap);min-inline-size:0;}
+ .xui-password-strength-meter {appearance:none;display:block;inline-size:100%;block-size:var(--space-text-gap);border:0;padding:0;overflow:hidden;background:var(--muted);border-radius:var(--radius-full);}
+ .xui-password-strength-meter::-webkit-meter-inner-element {display:block;}
+ .xui-password-strength-meter::-webkit-meter-bar {block-size:100%;border:0;background:var(--muted);box-shadow:none;border-radius:var(--radius-full);}
+ .xui-password-strength-meter::-webkit-meter-optimum-value {background:var(--status-error-foreground);border-radius:var(--radius-full);transition:width var(--motion-duration-fast) var(--motion-easing),background-color var(--motion-duration-fast) var(--motion-easing);}
+ .xui-password-strength-meter::-moz-meter-bar {background:var(--status-error-foreground);border-radius:var(--radius-full);}
+ .xui-password-strength-meter[data-level='medium']::-webkit-meter-optimum-value {background:var(--status-warning-foreground);}
+ .xui-password-strength-meter[data-level='medium']::-moz-meter-bar {background:var(--status-warning-foreground);}
+ .xui-password-strength-meter[data-level='strong']::-webkit-meter-optimum-value {background:var(--status-success-foreground);}
+ .xui-password-strength-meter[data-level='strong']::-moz-meter-bar {background:var(--status-success-foreground);}
+ .xui-password-strength-status,.xui-password-validation-field>.xui-error {position:absolute;inline-size:var(--a11y-hidden-size);block-size:var(--a11y-hidden-size);padding:0;margin:var(--a11y-hidden-offset);overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+ @media (forced-colors:active) {.xui-password-strength-meter {background:var(--progress-forced-track);outline:var(--line-width-surface) solid var(--progress-forced-border);}.xui-password-strength-meter::-webkit-meter-bar {background:var(--progress-forced-track);}.xui-password-strength-meter[data-level]::-webkit-meter-optimum-value {background:var(--progress-forced-fill);}.xui-password-strength-meter[data-level]::-moz-meter-bar {background:var(--progress-forced-fill);}}
 }

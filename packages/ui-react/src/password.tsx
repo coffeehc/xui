@@ -1,22 +1,40 @@
 import * as React from 'react';
-import {parsePasswordPolicy,countPasswordCodePoints,validateNewPassword,getNewPasswordErrorMessage,newPasswordLabels,createPasswordStrengthController,getPasswordStrengthMessage,getPasswordStrengthSummary,type PasswordStrengthState,type PasswordPolicy,type NewPasswordLabels} from '@coffeehc/xui-runtime/password';
-import {Field,Input} from './forms.js';
-import {Disclosure} from './navigation.js';
+import {countPasswordCodePoints,validateNewPassword,getNewPasswordErrorMessage,newPasswordLabels,createPasswordStrengthController,getPasswordStrengthSummary,type PasswordStrengthState,type NewPasswordLabels} from '@coffeehc/xui-runtime/password';
+import {Field} from './forms.js';
+import {Tooltip} from './tooltip.js';
+import {PasswordInput,type PasswordInputProps,type PasswordInputHandle} from './text-inputs.js';
 
+/** Adds one advisory meter to PasswordInput; scores never gate submission. */
+export type PasswordStrengthInputProps=PasswordInputProps & {labels?:Partial<NewPasswordLabels>};
+/** Reuses PasswordInput for the native input, addon lifecycle, visibility and all secret cleanup. */
+export function PasswordStrengthInput(props:PasswordStrengthInputProps){
+ const {labels:overrides,controlRef,ref,onInput,onClear,...inputProps}=props,labels={...newPasswordLabels,...overrides};
+ const input=React.useRef<HTMLInputElement>(null),control=React.useRef<PasswordInputHandle>(null),owner=React.useRef<ReturnType<typeof createPasswordStrengthController>|null>(null),[strength,setStrength]=React.useState<PasswordStrengthState>({status:'idle'});
+ React.useImperativeHandle(ref,()=>input.current!,[]);
+ React.useImperativeHandle(controlRef,()=>({clear(){control.current?.clear();}}),[]);
+ React.useLayoutEffect(()=>{const next=createPasswordStrengthController({readPassword:()=>{const value=input.current?.value??'';return countPasswordCodePoints(value)===null?null:value;},onChange:setStrength});owner.current=next;return()=>{next.destroy();if(owner.current===next)owner.current=null;};},[]);
+ React.useLayoutEffect(()=>{owner.current?.refresh();},[props.value]);
+ const summary=(labels.strengthSummary??getPasswordStrengthSummary)(strength),level=strength.status==='ready'?strength.score+1:undefined;
+ return <div className="xui-password-strength-input"><PasswordInput {...inputProps} ref={input} controlRef={control} onInput={event=>{owner.current?.refresh();onInput?.(event);}} onClear={reason=>{owner.current?.clear();onClear?.(reason);}}/>
+  <meter className="xui-password-strength-meter" data-xui-password-strength="" data-state={strength.status} data-level={strength.status==='ready'?strength.level:undefined} min={0} max={5} value={level??0} role="meter" aria-label={labels.strengthLabel??newPasswordLabels.strengthLabel} aria-valuemin={0} aria-valuemax={5} aria-valuenow={level} aria-valuetext={summary}/>
+  <span className="xui-password-strength-status" data-xui-password-strength-status="" role="status" aria-live="polite">{summary}</span>
+ </div>;
+}
+/** Reads a validated secret only at the host's submit boundary. */
 export interface NewPasswordFieldsHandle {readValidatedPassword():string|null;clear():void}
-export interface NewPasswordFieldsProps {policy:PasswordPolicy|null;disabled?:boolean;labels?:Partial<NewPasswordLabels>;ref?:React.Ref<NewPasswordFieldsHandle>}
-/** 公共密码/确认控件；宿主只在提交业务前读取已验证值，不复制密码策略。 */
-export function NewPasswordFields({policy:input,disabled=false,labels:overrides,ref}:NewPasswordFieldsProps){
-  const policy=React.useMemo(()=>{try{return input===null?null:parsePasswordPolicy(input);}catch{return null;}},[input]),labels={...newPasswordLabels,...overrides};
-  const password=React.useRef<HTMLInputElement>(null),confirmation=React.useRef<HTMLInputElement>(null),[error,setError]=React.useState<ReturnType<typeof validateNewPassword>>(null),[count,setCount]=React.useState<number|null>(0);
-  const [strength,setStrength]=React.useState<PasswordStrengthState>({status:'idle'}),strengthOwner=React.useRef<ReturnType<typeof createPasswordStrengthController>|null>(null);
-  React.useLayoutEffect(()=>{const owner=createPasswordStrengthController({readPassword:()=>{const value=password.current?.value??'';return countPasswordCodePoints(value)===null?null:value;},onChange:setStrength});strengthOwner.current=owner;return()=>{owner.destroy();if(strengthOwner.current===owner)strengthOwner.current=null;};},[]);
-  const passwordRef=React.useCallback((node:HTMLInputElement|null)=>{if(password.current&&password.current!==node){password.current.value='';password.current.defaultValue='';}password.current=node;},[]);
-  const confirmationRef=React.useCallback((node:HTMLInputElement|null)=>{if(confirmation.current&&confirmation.current!==node){confirmation.current.value='';confirmation.current.defaultValue='';}confirmation.current=node;},[]);
-  const clear=()=>{for(const field of [password.current,confirmation.current])if(field){field.value='';field.defaultValue='';}setError(null);setCount(0);strengthOwner.current?.clear();};
-  React.useImperativeHandle(ref,()=>({clear,readValidatedPassword(){const value=password.current?.value??'',result=validateNewPassword(policy,value,confirmation.current?.value??'');setCount(countPasswordCodePoints(value));setError(result);if(result){(result==='confirmation_mismatch'?confirmation:password).current?.focus();return null;}return disabled?null:value;}}),[policy,disabled]);
-  React.useEffect(()=>{const clearValues=()=>{for(const field of [password.current,confirmation.current])if(field){field.value='';field.defaultValue='';}};const hide=()=>{clearValues();setCount(0);setError(null);strengthOwner.current?.clear();};window.addEventListener('pagehide',hide);return()=>{clearValues();window.removeEventListener('pagehide',hide);};},[]);
-  const summaryStates:PasswordStrengthState[]=[{status:'idle'},{status:'loading'},{status:'unavailable'},{status:'ready',score:0,level:'weak',hint:'common'},{status:'ready',score:2,level:'medium',hint:'personal'},{status:'ready',score:4,level:'strong',hint:'none'}];
-  const message=getNewPasswordErrorMessage(error,policy,labels,count),help=policy?labels.length(policy.minimum_characters,policy.maximum_characters):labels.policyUnavailable;
-  return <div className="xui-stack"><Field label={labels.password} required help={<>{help}{policy&&<> <span data-xui-password-count="">{(labels.count??newPasswordLabels.count!)(count)}</span></>}</>} error={error!=='confirmation_mismatch'?message:undefined}><Input ref={passwordRef} type="password" autoComplete="new-password" disabled={disabled||policy===null} onInput={event=>{setCount(countPasswordCodePoints(event.currentTarget.value));setError(null);strengthOwner.current?.refresh();}}/></Field><Field label={labels.confirmation} required error={error==='confirmation_mismatch'?message:undefined}><Input ref={confirmationRef} type="password" autoComplete="new-password" disabled={disabled||policy===null} onInput={()=>setError(null)}/></Field>{policy&&<div className="xui-password-strength"><p className="xui-help xui-password-strength-summary">{summaryStates.map((state,index)=><span key={index} className="xui-password-strength-reserve" aria-hidden="true">密码强度：{(labels.strengthSummary??getPasswordStrengthSummary)(state)}</span>)}<span data-xui-password-strength="" role="status" aria-live="polite">密码强度：{(labels.strengthSummary??getPasswordStrengthSummary)(strength)}</span></p><Disclosure title={labels.strengthAdvice??'改进建议'}><p className="xui-help xui-password-strength-summary">{summaryStates.map((state,index)=><span key={index} className="xui-password-strength-reserve" aria-hidden="true">{(labels.strength??getPasswordStrengthMessage)(state)||'强度仅供参考，建议使用较长、不易猜测的密码。'}</span>)}<span data-xui-password-advice="">{(labels.strength??getPasswordStrengthMessage)(strength)||'强度仅供参考，建议使用较长、不易猜测的密码。'}</span></p></Disclosure></div>}</div>;
+/** Fixed password/confirmation composition; no remote policy or strength threshold is accepted. */
+export interface NewPasswordFieldsProps {disabled?:boolean;labels?:Partial<NewPasswordLabels>;ref?:React.Ref<NewPasswordFieldsHandle>}
+/** Tooltip owns visual positioning; Field retains the single accessible error description. */
+function PasswordValidationTip({input,message,open,onClose}:{input:React.RefObject<HTMLInputElement|null>;message?:string;open:boolean;onClose:()=>void}){
+ return <Tooltip.Root open={open&&!!message} onOpenChange={next=>{if(!next)onClose();}}><Tooltip.Content aria-hidden="true" positionerProps={{anchor:input,side:'bottom',align:'start'}}>{message}</Tooltip.Content></Tooltip.Root>;
+}
+/** Combines the public strength input and ordinary confirmation input without keeping secrets in React state. */
+export function NewPasswordFields({disabled=false,labels:overrides,ref}:NewPasswordFieldsProps){
+ const labels={...newPasswordLabels,...overrides},password=React.useRef<HTMLInputElement>(null),confirmation=React.useRef<HTMLInputElement>(null),passwordControl=React.useRef<PasswordInputHandle>(null),confirmationControl=React.useRef<PasswordInputHandle>(null),[error,setError]=React.useState<ReturnType<typeof validateNewPassword>>(null),[tipOpen,setTipOpen]=React.useState(false);
+ const clearError=()=>{setError(null);setTipOpen(false);},clear=()=>{passwordControl.current?.clear();confirmationControl.current?.clear();clearError();};
+ React.useImperativeHandle(ref,()=>({clear,readValidatedPassword(){if(disabled)return null;const value=password.current?.value??'',result=validateNewPassword(value,confirmation.current?.value??'');setError(result);setTipOpen(!!result);if(result){(result==='confirmation_mismatch'?confirmation:password).current?.focus();return null;}return value;}}),[disabled]);
+ const message=getNewPasswordErrorMessage(error,labels,countPasswordCodePoints(password.current?.value??'')),passwordInvalid=error!==null&&error!=='confirmation_mismatch',confirmationInvalid=error==='confirmation_mismatch';
+ const closeTip=()=>setTipOpen(false),key=(event:React.KeyboardEvent<HTMLInputElement>)=>{if(event.key==='Escape'&&tipOpen){event.preventDefault();closeTip();}};
+ return <div className="xui-stack"><Field className="xui-password-validation-field" label={labels.password} required error={passwordInvalid?message:undefined}><PasswordStrengthInput ref={password} controlRef={passwordControl} autoComplete="new-password" disabled={disabled} labels={labels} onFocus={()=>{if(passwordInvalid)setTipOpen(true);}} onBlur={closeTip} onKeyDown={key} onInput={clearError} onClear={clearError}/><PasswordValidationTip input={password} message={passwordInvalid?message:undefined} open={passwordInvalid&&tipOpen} onClose={closeTip}/></Field>
+  <Field className="xui-password-validation-field" label={labels.confirmation} required error={confirmationInvalid?message:undefined}><PasswordInput ref={confirmation} controlRef={confirmationControl} autoComplete="new-password" disabled={disabled} onFocus={()=>{if(confirmationInvalid)setTipOpen(true);}} onBlur={closeTip} onKeyDown={key} onInput={clearError} onClear={clearError}/><PasswordValidationTip input={confirmation} message={confirmationInvalid?message:undefined} open={confirmationInvalid&&tipOpen} onClose={closeTip}/></Field></div>;
 }

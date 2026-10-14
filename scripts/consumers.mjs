@@ -293,7 +293,7 @@ for (const kind of ['vanilla','react']) {
   assert(Object.keys(adminBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Admin setup escaped its standalone install');
   let adminHtml=await readFile(`${adminSetup}/index.html`,'utf8');
   if(kind==='react'){
-    const ssr=execFileSync('node',['--input-type=module','-e',"import React from 'react';import {renderToString} from 'react-dom/server';import {AdminSetupPage} from '@coffeehc/xui-react/admin-setup';console.log(renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'创建管理员'},state:{status:'idle'},policy:{version:1,minimum_characters:6,maximum_characters:32,counting_unit:'unicode_code_points'},onSubmit:()=>{throw Error('SSR must not submit')}})));"],{cwd,encoding:'utf8'});
+    const ssr=execFileSync('node',['--input-type=module','-e',"import React from 'react';import {renderToString} from 'react-dom/server';import {AdminSetupPage} from '@coffeehc/xui-react/admin-setup';console.log(renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'创建管理员'},state:{status:'idle'},onSubmit:()=>{throw Error('SSR must not submit')}})));"],{cwd,encoding:'utf8'});
     adminHtml=adminHtml.replace('<!--ssr-->',ssr.trim());
     execFileSync('node',[require.resolve('typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','admin-setup/app.tsx'],{cwd,stdio:'inherit'});
   }

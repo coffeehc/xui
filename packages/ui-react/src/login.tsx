@@ -3,6 +3,7 @@ import {resolveLoginPageConfig,getLoginPageError,runLoginPageExtension,type Logi
 import type {ThemeController} from '@coffeehc/xui-runtime/theme';
 import {Button} from './button.js';
 import {Field,Input} from './forms.js';
+import {PasswordInput,type PasswordInputHandle} from './text-inputs.js';
 import {Alert} from './feedback.js';
 export type {AuthPageConfig,LoginPageConfig,LoginPageLayout,LoginPageLabels,AuthClient,AuthUser} from '@coffeehc/xui-runtime/auth';
 export interface AuthPageProps {
@@ -12,7 +13,6 @@ export interface AuthPageProps {
   actions?:React.ReactNode;alternatives?:React.ReactNode;feedback?:React.ReactNode;feedbackActions?:React.ReactNode;
   form?:{noValidate?:boolean;onSubmit?:React.FormEventHandler<HTMLFormElement>};
 }
-/** Shared, request-free presentation for sign-in, setup and startup states. */
 function hasAuthPageContent(value:React.ReactNode):boolean {
   return React.Children.toArray(value).some(child=>{
     if(typeof child==='string')return child.trim().length>0;
@@ -21,6 +21,7 @@ function hasAuthPageContent(value:React.ReactNode):boolean {
     return child.type===React.Fragment?hasAuthPageContent(child.props.children):true;
   });
 }
+/** Shared, request-free presentation for sign-in, setup and startup states. */
 export function AuthPage({config:input,brandVisual,children,actions,alternatives,feedback,feedbackActions,form}:AuthPageProps){
   if(form!==undefined&&(form===null||typeof form!=='object'))throw new TypeError('Invalid authentication page form.');
   const config=React.useMemo(()=>{if(typeof input.title!=='string')throw new TypeError('AuthPage title is required.');return resolveLoginPageConfig(input);},[input]),titleId=React.useId(),formMode=React.useRef(form!==undefined);
@@ -41,12 +42,12 @@ export function AuthPage({config:input,brandVisual,children,actions,alternatives
 export interface ConfigurableLoginPageProps {auth:AuthClient;theme:ThemeController;config:LoginPageConfig;brandVisual?:React.ReactNode;extensions?:LoginPageExtensions;beforeFields?:React.ReactNode;afterFields?:React.ReactNode;onAuthenticated?:(user:Readonly<AuthUser>,returnTo:string)=>void|Promise<void>}
 export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensions,beforeFields,afterFields,brandVisual}:ConfigurableLoginPageProps){
   const config=React.useMemo(()=>resolveLoginPageConfig(input),[input]),{labels}=config,state=React.useSyncExternalStore(auth.subscribe,auth.getState,auth.getState);
-  const username=React.useRef<HTMLInputElement>(null),password=React.useRef<HTMLInputElement|null>(null),submit=React.useRef<HTMLButtonElement>(null),feedback=React.useRef<HTMLDivElement>(null),revision=React.useRef(0),pending=React.useRef<AbortController|undefined>(undefined),alive=React.useRef(true),active=React.useRef(true);
+  const username=React.useRef<HTMLInputElement>(null),password=React.useRef<HTMLInputElement|null>(null),passwordControl=React.useRef<PasswordInputHandle>(null),submit=React.useRef<HTMLButtonElement>(null),feedback=React.useRef<HTMLDivElement>(null),revision=React.useRef(0),pending=React.useRef<AbortController|undefined>(undefined),alive=React.useRef(true),active=React.useRef(true);
   const sessionFailed=React.useRef(false),[viewOperation,setViewOperation]=React.useState<'session'|'login'|'extension'|null>(null);
   const [extensionBusy,setExtensionBusy]=React.useState<string|null>(null),[extensionError,setExtensionError]=React.useState(false),[navigationPhase,setNavigationPhase]=React.useState<'idle'|'opening'|'failed'>('idle');
   const navigation=React.useRef<{owner:AuthClient;user:Readonly<AuthUser>|null;revision:number;phase:'idle'|'opening'|'failed'}>({owner:auth,user:null,revision:0,phase:'idle'}),navigationOptions=React.useRef({onAuthenticated,returnTo:config.returnTo});navigationOptions.current={onAuthenticated,returnTo:config.returnTo};
   const [errors,setErrors]=React.useState<{username?:string;password?:string}>({});
-  const clearPassword=()=>{if(password.current){password.current.value='';password.current.defaultValue='';password.current.textContent='';}};
+  const clearPassword=()=>{if(passwordControl.current)passwordControl.current.clear();else if(password.current){password.current.value='';password.current.defaultValue='';password.current.textContent='';}};
   const passwordRef=React.useCallback((element:HTMLInputElement|null)=>{const previous=password.current;if(previous&&previous!==element){previous.value='';previous.defaultValue='';previous.textContent='';}password.current=element;},[]);
   const openApplication=async(user:Readonly<AuthUser>,retry=false)=>{
     const current=auth.getState();if(navigation.current.owner!==auth||!alive.current||!active.current||current.status!=='authenticated'||current.user?.id!==user.id||current.busy||pending.current||sessionFailed.current)return;
@@ -65,7 +66,7 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
   React.useEffect(()=>{
     alive.current=true;active.current=true;
     if(navigation.current.owner!==auth){sessionFailed.current=false;setViewOperation(null);navigation.current={owner:auth,user:null,revision:navigation.current.revision+1,phase:'idle'};setNavigationPhase('idle');}
-    const checkSession=()=>{const current=auth.getState();if(current.busy==='session'||current.busy==='refresh'||current.status==='unknown'&&!current.busy&&!current.error)void run('session');};
+    const checkSession=()=>{const current=auth.getState();if((current.busy==='session'||current.busy==='refresh'||current.status==='unknown'&&!current.busy&&!current.error))void run('session');};
     const release=()=>{active.current=false;revision.current++;navigation.current.revision++;pending.current?.abort();pending.current=undefined;if(alive.current){setExtensionBusy(null);setViewOperation(null);}clearPassword();};
     const resume=(event:PageTransitionEvent)=>{if(!event.persisted||!alive.current)return;active.current=true;navigation.current.revision++;navigation.current.user=null;navigation.current.phase='idle';setNavigationPhase('idle');const current=auth.getState();if(current.busy==='session'||current.busy==='refresh')checkSession();else{if(current.status==='authenticated'&&current.user&&!current.busy)void openApplication(current.user);}};
     window.addEventListener('pagehide',release);window.addEventListener('pageshow',resume);
@@ -96,7 +97,7 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
     <div className="xui-stack">
       <fieldset className="xui-login-extension" disabled={locked}>{beforeFields}</fieldset>
       <Field label={labels.username} required error={errors.username}><Input ref={username} name="username" autoComplete="username" maxLength={128} disabled={locked} onChange={()=>setErrors(current=>({...current,username:undefined}))}/></Field>
-      <Field label={labels.password} required error={errors.password}><Input ref={passwordRef} name="password" type="password" autoComplete="current-password" maxLength={4096} disabled={locked} onChange={()=>setErrors(current=>({...current,password:undefined}))}/></Field>
+      <Field label={labels.password} required error={errors.password}><PasswordInput ref={passwordRef} controlRef={passwordControl} name="password" autoComplete="current-password" maxLength={4096} disabled={locked} onInput={()=>setErrors(current=>({...current,password:undefined}))}/></Field>
       <fieldset className="xui-login-extension" disabled={locked}>{afterFields}</fieldset>
     </div>
   </AuthPage>;

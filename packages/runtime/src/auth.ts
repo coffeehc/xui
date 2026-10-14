@@ -1,4 +1,3 @@
-import {passwordPolicyEndpoint} from './password.js';
 import {HttpError,createAjaxResponseAdapter,ajaxErrorResponseAdapter,isHttpError,type HttpClient} from './http.js';
 import {authRequest,bindHttpAuth,inspectHttp,type AccessLease,type AuthOperation} from './http-auth-internal.js';
 import {createAuthCoordination} from './auth-coordination.js';
@@ -170,7 +169,6 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
       const reserved=decoded.toLowerCase()==='/api/v1/auth'||decoded.toLowerCase().startsWith('/api/v1/auth/');
       if(operation){if(path!==authEndpoints[operation as keyof typeof authEndpoints]||method!==(operation==='session'?'GET':'POST'))throw new TypeError('Invalid authentication endpoint');return operation==='session'?'bearer':'cookie';}
       // 仅公开策略的精确 GET 可在无会话时消费；其他认证端点继续仅由 owner 调用。
-      if(path===passwordPolicyEndpoint&&method==='GET')return undefined;
       if(reserved)throw new TypeError('Use the auth owner for authentication endpoints');
       if(paths.some(prefix=>path===prefix||prefix.endsWith('/')&&path.startsWith(prefix))){if(/%(?:2f|5c|25)/i.test(path)||/[\\\u0000-\u0020\u007f]/.test(decoded))throw new TypeError('Ambiguous protected path');return 'bearer';}
       return undefined;

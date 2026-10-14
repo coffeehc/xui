@@ -43,6 +43,7 @@ test('idle login omits empty feedback support without hidden auxiliary controls'
   assert.doesNotMatch(html,/xui-login-support|xui-login-feedback/);
   assert.doesNotMatch(html,/xui-reserved-action|data-inactive=|>Cancel request<\/button>/);noRetry(html);
   assert.equal((html.match(/class="[^"]*xui-login-submit[^"]*"/g)||[]).length,1);
+  assert.match(html,/aria-label="Show password"[^>]*class="[^"]*xui-password-toggle[^"]*"/);
   assert.match(html,/data-idle-label=/);assert.match(html,/data-busy-label=/);
 });
 test('credential rejections never offer session retry, including an unknown prior identity',()=>{

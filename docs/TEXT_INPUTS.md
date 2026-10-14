@@ -1,8 +1,8 @@
 # NumberInput、PasswordInput 与 SearchInput
 
-正式 React `@coffeehc/xui-react/text-inputs`、原生 `@coffeehc/xui-runtime/text-inputs-dom` 及 root 导出。共享数字纯函数在 `@coffeehc/xui-runtime/number-input`。复用 Input/InputGroup/Field 和 forms.css；没有 debounce、fetch、认证状态、密码策略或新颜色/尺寸 owner。旧 Input/NewPasswordFields 不变。
+正式 React `@coffeehc/xui-react/text-inputs`、原生 `@coffeehc/xui-runtime/text-inputs-dom` 及 root 导出。共享数字纯函数在 `@coffeehc/xui-runtime/number-input`。复用 Input/InputGroup/Field 和 forms.css；没有 debounce、fetch、认证状态、密码策略或新颜色/尺寸 owner。Input 保留原有合同；NewPasswordFields 复用普通密码与强度输入，见 [PASSWORD](PASSWORD.md)。
 
-React 三控件均受控，value/onValueChange 必填，保留 input ref、name、id、disabled、readOnly、required、placeholder、autocomplete 等原生属性；放在 Field 中复用 label/help/error，显式 id 可通过 Field.controlId 统一。原生 createX(host, options) 必填 label（安全文本），有同等 name/id/help/error/required/disabled/readOnly/placeholder/autoComplete；返回 element/input/update(partial)/destroy()。同一 host 单 owner，更新保持输入 identity，destroy 幂等释放监听并恢复原内容，不覆盖宿主自行替换的内容。宿主发布值是唯一已确认事实。
+React NumberInput/SearchInput 使用受控 value/onValueChange；PasswordInput 支持显式受控或 DOM 非受控模式。各组件保留 input ref、name、id、disabled、readOnly、required、placeholder、autocomplete 等原生属性；放在 Field 中复用 label/help/error，显式 id 可通过 Field.controlId 统一。原生 createX(host, options) 必填 label（安全文本），有同等 name/id/help/error/required/disabled/readOnly/placeholder/autoComplete；返回 element/input/update(partial)/destroy()。同一 host 单 owner，更新保持输入 identity，destroy 幂等释放监听并恢复原内容，不覆盖宿主自行替换的内容。宿主发布值是唯一已确认事实。
 
 ## NumberInput
 
@@ -14,7 +14,7 @@ value 是 number|null，空白提交 null，绝不转为 0。min/max 必须有�
 
 ## PasswordInput
 
-value 是字符串；仅显隐在组件内，真实同一 input 在 password/text 间切换，保留 selection，按钮有 showLabel/hideLabel 与 aria-pressed。autocomplete 由调用点明确 current-password/new-password；没有 storage、日志、复制或请求。React 在 pagehide 同步清空 DOM value/defaultValue/隐藏密码并通知 onValueChange('')、onClear('pagehide')；真实卸载在一个 microtask 清空捕获的旧节点并通知 onClear('unmount')，避免 StrictMode 的检查性重挂造成伪清理。原生 pagehide/destroy 同步清空内部值与 DOM 并通知 onValueChange('')、onClear(reason)。宿主必须接受清空并同步删除其受控秘密；组件不能清理宿主拒绝删除的 state，也不能保证浏览器密码管理器、自动填充或内存取证清除。不要把真实秘密用于示例、SSR 初始 HTML、URL 或诊断。独立于 NewPasswordFields 的策略/确认 owner。
+传 value 时为字符串受控模式，onValueChange 必填；不传 value 时为 DOM 非受控模式，不接受初始秘密 defaultValue。prefix/suffix 通过 InputGroup 前后缀组合；仅显隐在组件内，真实同一 input 在 password/text 间切换，保留 selection，按钮以 eye/eye-off 描边图标显示，保留 showLabel/hideLabel 可访问名称与 aria-pressed；静态 muted、hover primary，仍可 Tab 停靠。InputGroup 子 input 的自然滚动清距覆盖组边框与焦点轮廓，不用独立输入的边界代替整组。autocomplete 由调用点明确 current-password/new-password；没有 storage、日志、复制或请求。React 在 pagehide 同步清空 DOM value/defaultValue/隐藏密码并通知 onValueChange('')、onClear('pagehide')；真实卸载在一个 microtask 清空捕获的旧节点并通知 onClear('unmount')，避免 StrictMode 的检查性重挂造成伪清理。原生 pagehide/destroy 同步清空内部值与 DOM 并通知 onValueChange('')、onClear(reason)。宿主必须接受清空并同步删除其受控秘密；组件不能清理宿主拒绝删除的 state，也不能保证浏览器密码管理器、自动填充或内存取证清除。不要把真实秘密用于示例、SSR 初始 HTML、URL 或诊断。controlRef 提供 clear()（原生为 controller.clear()），ref 仍指向 input。固定新设校验与强度输入见 [PASSWORD](PASSWORD.md)，普通输入不限制既有账号登录密码。
 
 ## SearchInput
 
