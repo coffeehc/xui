@@ -182,9 +182,12 @@ Dialog 修复后、数值输入修复前的候选 `cfe37756f06a04dc03bbf4721397c
 | --- | --- | --- |
 | Calendar 受控月份 | model 16/16、calendar-month 与既有 widgets Calendar 浏览器 19/19；Chrome 真正 200% 缩放 6/6 | single/range、绝对定位、受控接受/拒绝、跨年/闰年、disabled、locale、焦点、浅/深/system、1280/390px、200% 根字号；真实缩放使用 Chrome 设置并校验 DPR×2、视口减半、根字号不变、CSS zoom=1/pinch=1 |
 | Menu / ContextMenu danger | 菜单相关 unit 18/18、正式消费者浏览器 53/53、Chrome 真正200%缩放 6/6 | 普通/hover/pressed/keyboard focus/disabled；浅/深/system及系统实时切换、长中文、1280/390px、200%文字、弹层滚动、禁用Enter/Space不执行、关闭与回焦点 |
+| DataTable rowEvents | 相关 unit 37/37、正式消费者浏览器 122/122、Chrome 真正200%缩放 6/6 | 双击一次、当前记录/稳定键/索引、排序/更新/cursor、cell控件隔离、busy/disabled、回收监听、空表/刷新保行、selected/expanded、长中文、浅/深/system、1280/390px、200%文字、横滚/sticky及键盘等价动作 |
 
 构建、typecheck、check:tokens、check-docs 与 test:consumer 均通过。原生示例第一轮因 select 绑定转移 id 后误读 trigger、system 断言误认 data-theme 的失败已修正，最终复验通过；失败不计作通过。浏览器 JSON 保存于 .artifacts/calendar-month-browser-final.json 和 .artifacts/calendar-month-zoom-final.json。月份 API 未传时兼容原非受控行为，日期语义保持 ISO 公历与 UTC 字段。
 
 本轮浏览器为真实 Chromium；其他浏览器、读屏器及宿主产品现场未由这些结果推断通过。
 
 菜单证据保存于 .artifacts/menu-danger-browser-final.json 与 menu-danger-zoom-final.json，实际查看浅色桌面及深色390px截图。首轮新测试错误地要求Base UI跳过禁用项和ContextMenu首次ArrowDown直达第二项，已按peer真实合同改为准确Home/Arrow导航和零执行断言；53/53为修正后的复验。正式消费者初始CSS包含critical与floating，原16384 gzip字节已满，完整危险状态增加56字节至16440；该项上限显式调整为16512，Button/JS等其余预算不变，所有预算仍强制验证。
+
+DataTable证据保存于 .artifacts/row-events-browser-final.json 与 row-events-zoom-final.json，实际查看深色390px和表头键盘焦点截图。122项包含新增行事件与既有cursor/layout/focus/widths回归；未传rowEvents保持原行为，CellContext原字段兼容，新增回调不接管请求或分页事实。

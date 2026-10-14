@@ -624,3 +624,7 @@ useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/�
 ## 菜单危险语义
 
 MenuItemTone/MenuItemProps 从 React `/menu`、`/context-menu` 和根入口公开。`Menu.Item` 与 `ContextMenu.Item` 接受 `tone="danger"`；默认 `default` 保持旧外观。公共 floating.css（亦包含在 style.css）承接同名data-tone投影，原生HTML与controller使用同一状态合同；详见[组件手册](COMPONENTS.md#菜单危险操作语义)。
+
+## DataTable 行事件
+
+DataTableRowContext、DataTableRowEvents 从 runtime/data-table、runtime/data-table-dom 及根入口导出；React/data-table 及根入口导出React事件适配类型。DataTableProps<T> 和 NativeDataTableOptions<T> 可传 rowEvents；DataTableCellContext/NativeDataTableCellContext沿用原字段并复用行上下文。共享 isDataTableRowEvent 只负责DOM事件来源边界，不检查业务权限。详细行为及公开自定义动作标记见[数据表格](COMPONENTS.md#数据表格)。

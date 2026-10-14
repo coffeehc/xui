@@ -1,9 +1,9 @@
 import {bindSelectControl} from './dom.js';
 import {generateDomId} from './dom-id.js';
-import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,type DataTableViewOptions,type DataTableColumnWidth} from './data-table.js';
-export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from './data-table.js';
+import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,isDataTableRowEvent,type DataTableViewOptions,type DataTableColumnWidth,type DataTableRowContext,type DataTableRowEvents} from './data-table.js';
+export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth,DataTableRowContext,DataTableRowEvents} from './data-table.js';
 export type DataTableContent = Node | string | number | null | undefined;
-export interface NativeDataTableCellContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
+export interface NativeDataTableCellContext extends DataTableRowContext {}
 export interface NativeDataTableCellSlot<T> {element:Node;update?:(row:T,context:NativeDataTableCellContext)=>void;destroy?:()=>void}
 export interface NativeDataTableColumn<T> {
   id:string; header:DataTableContent; cell:(row:T,context:NativeDataTableCellContext)=>DataTableContent|NativeDataTableCellSlot<T>;
@@ -14,6 +14,8 @@ export interface NativeDataTableColumn<T> {
 export interface NativeDataTableOptions<T> extends DataTableViewOptions {
   rows:readonly T[]; columns:readonly NativeDataTableColumn<T>[]; rowKey:(row:T)=>string|number;
   rowState?:(row:T)=>{selected?:boolean;expanded?:boolean}; toolbar?:DataTableContent;
+  /** Guarded DOM row events. Cells retain their own keyboard/actions and lifecycle. */
+  rowEvents?:DataTableRowEvents<T>;
   emptyState?:DataTableContent; errorState?:DataTableContent; feedback?:DataTableContent; footer?:DataTableContent;
   striped?:boolean; stickyHeader?:boolean;
 }
@@ -53,6 +55,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
   const arrange=(parent:HTMLElement,children:HTMLElement[])=>{children.forEach((child,index)=>{if(parent.children[index]!==child)parent.insertBefore(child,parent.children[index]??null);});for(const child of Array.from(parent.children))if(!children.includes(child as HTMLElement))child.remove();};
   type CellEntry={element:HTMLTableCellElement;column:NativeDataTableColumn<T>;value:DataTableContent;slot?:NativeDataTableCellSlot<T>};
   type RowEntry={element:HTMLTableRowElement;row:T;cells:Map<string,CellEntry>;index:number;blocked:boolean};
+  const clearRowEvents=(element:HTMLTableRowElement)=>{element.onclick=element.ondblclick=element.oncontextmenu=element.onkeydown=null;};
   const rows=new Map<string|number,RowEntry>(),headers=new Map<string,HTMLTableCellElement>(),tracks=new Map<string,HTMLTableColElement>(),probes=new Map<string,HTMLDivElement>();
   const layoutOwner=observeDataTableLayout(frame,body,table);
   const win=doc.defaultView!;let widthFrame=0;
@@ -106,6 +109,12 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     options.rows.forEach((row,index)=>{
       const key=keys[index];let entry=rows.get(key);const fresh=!entry;
       if(!entry){entry={element:node('tr','xui-table-row'),row,cells:new Map(),index,blocked:state.blocked};rows.set(key,entry);}
+      const element=entry.element,context={rowIndex:index,rowKey:key,busy:state.busy,disabled:state.blocked};
+      const dispatch=<E extends Event>(event:E,handler:((row:T,context:DataTableRowContext,event:E)=>void)|undefined)=>{if(!dead&&!context.disabled&&isDataTableRowEvent(event,element))handler?.(row,context,event);};
+      element.onclick=options.rowEvents?.onClick?event=>dispatch(event,options.rowEvents?.onClick):null;
+      element.ondblclick=options.rowEvents?.onDoubleClick?event=>dispatch(event,options.rowEvents?.onDoubleClick):null;
+      element.oncontextmenu=options.rowEvents?.onContextMenu?event=>dispatch(event,options.rowEvents?.onContextMenu):null;
+      element.onkeydown=options.rowEvents?.onKeyDown?event=>dispatch(event,options.rowEvents?.onKeyDown):null;
       const selected=options.rowState?.(row);entry.element.dataset.selected=String(!!selected?.selected);entry.element.dataset.expanded=String(!!selected?.expanded);
       const cells=options.columns.map(column=>{
         let cell=entry!.cells.get(column.id);if(!cell){cell={element:node('td'),column,value:null};entry!.cells.set(column.id,cell);}
@@ -127,7 +136,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
         if(column.sticky)cell.element.dataset.sticky=column.sticky;else delete cell.element.dataset.sticky;return cell.element;
       });arrange(entry.element,cells);for(const [id,cell]of entry.cells)if(!options.columns.some(column=>column.id===id)){releaseCell(cell);entry.cells.delete(id);}entry.row=row;entry.index=index;entry.blocked=state.blocked;rowNodes.push(entry.element);
     });
-    for(const [key,entry]of rows)if(!keys.includes(key)){if(entry.element.contains(doc.activeElement))body.focus();for(const cell of entry.cells.values())releaseCell(cell);rows.delete(key);}
+    for(const [key,entry]of rows)if(!keys.includes(key)){if(entry.element.contains(doc.activeElement))body.focus();clearRowEvents(entry.element);for(const cell of entry.cells.values())releaseCell(cell);rows.delete(key);}
     placeholderCell.colSpan=options.columns.length;
     if(!hasRows){
       if(state.busy){placeholderContent.replaceChildren(loading,...skeletons);rowNodes.push(placeholderRow);}
@@ -147,7 +156,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     for(const binding of selectBindings)binding.update();
     layoutOwner.update();
   };
-  const destroy=()=>{if(dead)return;dead=true;for(const binding of selectBindings)binding.destroy();guard.destroy();layoutOwner.destroy();widthObserver?.disconnect();if(widthFrame)win.cancelAnimationFrame(widthFrame);win.removeEventListener('resize',scheduleWidths);for(const entry of rows.values())for(const cell of entry.cells.values())releaseCell(cell);rows.clear();previous.onclick=next.onclick=retry.onclick=size.onchange=null;root.replaceChildren(...original);for(const [name,value]of attributes)if(value===null)root.removeAttribute(name);else root.setAttribute(name,value);owners.delete(root);};
+  const destroy=()=>{if(dead)return;dead=true;for(const binding of selectBindings)binding.destroy();guard.destroy();layoutOwner.destroy();widthObserver?.disconnect();if(widthFrame)win.cancelAnimationFrame(widthFrame);win.removeEventListener('resize',scheduleWidths);for(const entry of rows.values()){clearRowEvents(entry.element);for(const cell of entry.cells.values())releaseCell(cell);}rows.clear();previous.onclick=next.onclick=retry.onclick=size.onchange=null;root.replaceChildren(...original);for(const [name,value]of attributes)if(value===null)root.removeAttribute(name);else root.setAttribute(name,value);owners.delete(root);};
   try{render();}catch(error){destroy();throw error;}
   return {
     update(next:Partial<NativeDataTableOptions<T>>){if(dead)return;const proposed={...options,...next};getDataTableState(proposed,proposed.rows.length);validateDataTableKeys(proposed.rows,proposed.columns,proposed.rowKey);options=proposed;try{render();}catch(error){destroy();throw error;}},

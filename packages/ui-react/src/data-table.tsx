@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,type DataTableViewOptions,type DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
+import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,isDataTableRowEvent,type DataTableViewOptions,type DataTableColumnWidth,type DataTableRowContext,type DataTableRowEvents as SharedRowEvents} from '@coffeehc/xui-runtime/data-table';
 import {Table,TableContainer,TableRow,TableCell,TableHeaderCell} from './table.js';
 import {Toolbar} from './layout.js';
 import {Field,SimpleSelect,type FieldProps} from './forms.js';
@@ -7,8 +7,10 @@ import {DataRegion,LoadingState,EmptyState,ErrorState,Skeleton} from './feedback
 import {Pagination} from './navigation.js';
 import {Button} from './button.js';
 import {cx} from './shared.js';
-export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth} from '@coffeehc/xui-runtime/data-table';
-export interface DataTableCellContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
+export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth,DataTableRowContext} from '@coffeehc/xui-runtime/data-table';
+export interface DataTableCellContext extends DataTableRowContext {}
+/** React row callbacks receive synthetic events with currentTarget equal to the semantic tr. */
+export type DataTableRowEvents<T>=SharedRowEvents<T,React.MouseEvent<HTMLTableRowElement>,React.KeyboardEvent<HTMLTableRowElement>>;
 export interface DataTableColumn<T> {
   id:string; header:React.ReactNode; cell:(row:T,context:DataTableCellContext)=>React.ReactNode;
   /** Optional minimum track width; numeric values are pixels. Percentages use the body width. Omit unless needed. */
@@ -18,6 +20,8 @@ export interface DataTableColumn<T> {
 export interface DataTableProps<T> extends DataTableViewOptions {
   rows:readonly T[]; columns:readonly DataTableColumn<T>[]; rowKey:(row:T)=>string|number;
   rowState?:(row:T)=>{selected?:boolean;expanded?:boolean};
+  /** Optional guarded row shortcuts; provide a normal cell Button/link for keyboard access. */
+  rowEvents?:DataTableRowEvents<T>;
   /** Use this OR the existing pageToolbar slot, never duplicate controls in both. */
   toolbar?:React.ReactNode; emptyState?:React.ReactNode; errorState?:React.ReactNode; feedback?:React.ReactNode;
   /** Optional supplementary footer content; standard cursor controls are supplied by pagination. */
@@ -29,10 +33,13 @@ export function DataTableToolbar({className,...props}:React.ComponentProps<typeo
 export function DataTableFilter({className,grow=false,...props}:FieldProps&{grow?:boolean}) {return <Field {...props} data-grow={grow} className={cx('xui-data-table-filter',className)}/>;}
 const hasContent=(value:React.ReactNode):boolean=>value!==undefined&&value!==null&&typeof value!=='boolean'&&(typeof value!=='string'||value.length>0)&&(Array.isArray(value)?value.some(hasContent):React.isValidElement<{children?:React.ReactNode}>(value)&&value.type===React.Fragment?hasContent(value.props.children):true);
 /** Fully controlled composition; it never owns a request or changes page facts. */
-export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,errorState,feedback,footer,striped=false,stickyHeader=true,className,id,...options}:DataTableProps<T>) {
+export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,emptyState,errorState,feedback,footer,striped=false,stickyHeader=true,className,id,...options}:DataTableProps<T>) {
   const state=getDataTableState(options,rows.length),keys=validateDataTableKeys(rows,columns,rowKey),{labels,pagination}= {labels:state.labels,pagination:options.pagination};
   const guard=React.useRef<ReturnType<typeof createDataTableRequestGuard>|null>(null);if(!guard.current)guard.current=createDataTableRequestGuard();
   const request=(callback:(()=>void)|undefined)=>guard.current!.run(state.blocked,callback);
+  const rowEvent=<E extends React.SyntheticEvent<HTMLTableRowElement>>(row:T,index:number,event:E,handler:((row:T,context:DataTableRowContext,event:E)=>void)|undefined)=>{
+    if(!state.blocked&&isDataTableRowEvent(event.nativeEvent,event.currentTarget))handler?.(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked},event);
+  };
   const columnSizing=columns.some(column=>column.width!==undefined)?columns.every(column=>column.width!==undefined)?'sized':'mixed':undefined;
   const widthProbes=React.useRef<HTMLDivElement>(null),columnGroup=React.useRef<HTMLTableColElement>(null);
   React.useLayoutEffect(()=>{
@@ -70,7 +77,12 @@ export function DataTable<T>({rows,columns,rowKey,rowState,toolbar,emptyState,er
         <Table ref={layoutTable} data-column-sizing={columnSizing} striped={striped} stickyHeader={stickyHeader} aria-label={options.label}>
           <colgroup ref={columnGroup}>{columns.map(column=><col key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</colgroup>
           <thead><TableRow>{columns.map(column=><TableHeaderCell key={column.id} sticky={column.sticky} aria-sort={column.ariaSort}>{column.header}</TableHeaderCell>)}</TableRow></thead>
-          <tbody>{hasRows?rows.map((row,index)=><TableRow key={keys[index]} {...rowState?.(row)}>{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{state.busy?<><LoadingState>{labels.loading}</LoadingState>{Array.from({length:5},(_,index)=><Skeleton key={index}/>)}</>:showError?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
+          <tbody>{hasRows?rows.map((row,index)=><TableRow key={keys[index]} {...rowState?.(row)}
+            onClick={rowEvents?.onClick?event=>rowEvent(row,index,event,rowEvents.onClick):undefined}
+            onDoubleClick={rowEvents?.onDoubleClick?event=>rowEvent(row,index,event,rowEvents.onDoubleClick):undefined}
+            onContextMenu={rowEvents?.onContextMenu?event=>rowEvent(row,index,event,rowEvents.onContextMenu):undefined}
+            onKeyDown={rowEvents?.onKeyDown?event=>rowEvent(row,index,event,rowEvents.onKeyDown):undefined}
+          >{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{state.busy?<><LoadingState>{labels.loading}</LoadingState>{Array.from({length:5},(_,index)=><Skeleton key={index}/>)}</>:showError?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
         </Table>
       </TableContainer>
       <footer className="xui-data-table-footer" hidden={!hasFooter}>

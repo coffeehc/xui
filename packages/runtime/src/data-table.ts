@@ -26,6 +26,34 @@ function validateColumnWidth(width: DataTableColumnWidth | undefined) {
 
 /** View facts only. Query, HTTP, cancellation and response ordering stay with the host. */
 export type DataTableStatus = 'idle' | 'loading' | 'ready' | 'refreshing' | 'error';
+/** Current visible-page facts; rowIndex is zero-based and rowKey is the stable host key. */
+export interface DataTableRowContext {rowIndex:number;rowKey:string|number;busy:boolean;disabled:boolean}
+/** Opt-in row events. Native uses DOM events; React substitutes its synthetic events.
+ * Loading/refreshing/disabled and events from independent cell controls are suppressed.
+ * Click and double-click retain native sequencing (two clicks, one double-click).
+ * No focusability, selection, navigation or business action is created by this contract. */
+export interface DataTableRowEvents<T,MouseEventType=MouseEvent,KeyboardEventType=KeyboardEvent> {
+ onClick?:(row:T,context:DataTableRowContext,event:MouseEventType)=>void;
+ onDoubleClick?:(row:T,context:DataTableRowContext,event:MouseEventType)=>void;
+ onContextMenu?:(row:T,context:DataTableRowContext,event:MouseEventType)=>void;
+ onKeyDown?:(row:T,context:DataTableRowContext,event:KeyboardEventType)=>void;
+}
+const rowControlSelector='a,button,input,select,textarea,label,summary,[contenteditable]:not([contenteditable="false"]),[role="button"],[role="link"],[role="checkbox"],[role="radio"],[role="switch"],[role="combobox"],[role="menuitem"],[role="option"],[role="slider"],[role="spinbutton"],[role="textbox"],[data-xui-row-action]';
+/** Shared row-event boundary: ignore cancellation, nested tables and independent
+ * cell controls (including open-shadow controls). Mark a host custom action
+ * container with public data-xui-row-action; no stopPropagation is needed. */
+export function isDataTableRowEvent(event:Pick<Event,'target'|'defaultPrevented'>&Partial<Pick<Event,'composedPath'>>,row:HTMLTableRowElement):boolean {
+ if(event.defaultPrevented)return false;
+ const node=event.target as Node|null,target=node?.nodeType===1?node as Element:node?.parentElement;
+ if(!target||!row.contains(target)||target.closest('tr')!==row)return false;
+ const control=target.closest(rowControlSelector);
+ if(control&&row.contains(control))return false;
+ for(const node of event.composedPath?.()??[]){
+  if(node===row)break;
+  if(typeof (node as Element).matches==='function'&&(node as Element).matches(rowControlSelector))return false;
+ }
+ return true;
+}
 /** natural caps content to a bounded parent; workspace fills it; document is unbounded. */
 export type DataTableLayout = 'natural' | 'workspace' | 'document';
 export interface DataTablePagination {

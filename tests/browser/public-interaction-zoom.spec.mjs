@@ -2,7 +2,7 @@ import {test,expect,chromium} from '@playwright/test';
 import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 import {captureZoomViewport} from './zoom-capture.mjs';
 
-for(const name of ['calendar-month','menu-danger'])for(const kind of ['react','vanilla'])for(const mode of ['light','dark','system']){
+for(const name of ['calendar-month','menu-danger','row-events'])for(const kind of ['react','vanilla'])for(const mode of ['light','dark','system']){
  test(name+' '+kind+' '+mode+' genuine Chrome zoom 200%',async({},info)=>{
   test.setTimeout(60000);
   const context=await chromium.launchPersistentContext('',{...chromiumLaunchOptions,headless:true,chromiumSandbox:true,viewport:null,args:['--window-size=1280,900']});
@@ -19,11 +19,15 @@ for(const name of ['calendar-month','menu-danger'])for(const kind of ['react','v
     await page.getByRole('button',{name:'定位年月'}).click();await expect(page.getByLabel('月份结果')).toHaveText('2020-01');
     const day=page.locator('.xui-calendar[aria-label="受控日期"]').getByRole('gridcell',{name:'2020-01-01',exact:true});await day.focus();await page.keyboard.press('ArrowRight');
     await expect(page.locator('.xui-calendar[aria-label="受控日期"]').getByRole('gridcell',{name:'2020-01-02',exact:true})).toBeFocused();
-   } else {
+   } else if(name==='menu-danger') {
     const trigger=page.getByRole('button',{name:'打开菜单'});await trigger.focus();await trigger.press('ArrowDown');await page.keyboard.press('ArrowDown');
     const danger=page.getByRole('menuitem',{name:'删除记录',exact:true});await expect(danger).toBeFocused();await expect(danger).toHaveCSS('outline-style','solid');
     await info.attach('danger-focus.png',{body:await captureZoomViewport(page),contentType:'image/png'});
     await page.keyboard.press('Enter');await expect(page.getByLabel('执行次数')).toHaveText('1');await expect(trigger).toBeFocused();
+   }
+   if(name==='row-events') {
+    const nameButton=page.getByRole('button',{name:'打开 row-1',exact:true});await nameButton.focus();await page.keyboard.press('Enter');await expect(page.getByLabel('事件结果')).toContainText('cell 1');await expect(nameButton).toBeFocused();
+    const body=page.locator('.xui-data-table-body');await body.evaluate(el=>el.scrollLeft=el.scrollWidth);expect(await body.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);
    }
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
    await info.attach(name+'-'+kind+'-'+mode+'-zoom200.json',{body:JSON.stringify({before,after}),contentType:'application/json'});

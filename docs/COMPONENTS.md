@@ -740,6 +740,10 @@ update 为字段合并：省略保留现值，显式 null/undefined 清空对应
 - 库提供表格整体、表体滚动、自然流底栏、列头/单元结构、筛选排列、状态反馈、键盘与默认视觉。宿主提供数据、列/行键、业务筛选、权限、排序/选择事实与业务动作。
 - `DataTable<T>` / `createDataTable<T>` 必填 `label`、`rows`、`columns`、`rowKey`。每列有唯一 `id`、`header`、`cell(row, context)`；React cell 返回 ReactNode，原生返回 Node/文本或下述生命周期 slot。列可声明 `width`、`ariaSort` 和 `sticky:'start'|'end'`，复用原有表格样式；排序按钮放 header，真实排序通过宿主回调完成。
 - `rowState(row)` 可提供 `selected/expanded` 事实。这里没有选择、排序、虚拟化或编辑状态引擎；展开明细、复杂合并单元格继续按已有 Table 原语组合，不伪装成已支持的 DataTable 特性。
+- 可选 rowEvents 提供 onClick/onDoubleClick/onContextMenu/onKeyDown，每个回调接收 `(row:T, context:DataTableRowContext, event)`。context 的 rowIndex 是当前可见页零基索引，rowKey 是稳定宿主键；数据更新/排序/分页后按当前记录发布。React 使用 synthetic events，原生使用 DOM MouseEvent/KeyboardEvent。
+- 行事件默认抑制 loading/refreshing/disabled、defaultPrevented、嵌套表格和 cell 内独立 button/link/input/label/select/textarea/summary、编辑区、对应交互 role。自定义动作容器可在宿主自身Node上声明公开 data-xui-row-action；open-shadow控件也过滤。不需要消费者 stopPropagation，也不修改原动作传播/浏览器默认行为。
+- 双击保留真实 DOM 顺序（两次 click、一回 dblclick）；不要同时绑定 click/dblclick 执行同一业务而要求库猜测去重。没有新查询/选择/提交 owner，不给 tr 自动 role=button/tabIndex 或自动 Enter 激活。键盘等价主动作放正常 cell Button/link；被动可聚焦 cell 的 onKeyDown 可显式处理并自行 preventDefault。刷新时独立只读 cell 仍可由宿主决定是否可用；新增行快捷动作在busy时不执行。
+
 - `status` 明确为 `idle/loading/ready/refreshing/error`，默认为 ready。`disabled` 阻止组件自有分页/条数/重试动作；单元业务动作由宿主按真实权限决定，context 提供 busy/disabled 事实。只读查看可在刷新时继续可用，不把整个表体设为 inert。
 - `toolbar`、`emptyState`、`errorState`、`feedback`、`footer` 是公开插槽；内部 toolbar、反馈、表体与 footer 位于同一个 frame，没有默认业务动作或自动写入。`labels` 覆盖加载、错误、空态、分页和 `count({rowCount,total})` 文案。
 - 所有 rowKey 必须唯一、稳定，字符串/数字经文本化也不能重合；列 id 唯一非空。空列、不合法 page facts 在渲染之前拒绝。
@@ -913,3 +917,5 @@ React 使用一个稳定 form、非受控密码输入和稳定密码字段 ref�
 Menu.Item 与 ContextMenu.Item 共享带类型的 `tone?: 'default' | 'danger'`，默认外观不变。危险默认文字/图标取 status-error-foreground，hover/键盘高亮取 status-error-soft/foreground，pressed使用action-danger/action-danger-foreground成对填充；disabled使用原menu-item-disabled-foreground并禁执行，独立键盘focus轮廓保持。权限、确认、回调和结果由宿主负责，不因tone自动执行或弹确认。图标使用公开Icon且沿currentColor。LinkItem/CheckboxItem/RadioItem保持既有合同，此tone只为普通动作Item。
 
 原生menu/controller沿用公开 `.xui-menu-item`，动作按钮声明 `data-tone="danger"`；controller维护键盘/关闭/回焦点，无React依赖。使用标准disabled/data-disabled/aria-disabled，不能只改颜色伪装禁用。正式ESM/CSS/types消费例子：[React](../examples/menu-danger-react/app.tsx)、[原生](../examples/menu-danger-vanilla/app.js)。无需私有CSS或!important。React沿Base UI保留禁用项可获焦点供读取，但Enter/Space/点击均不执行；原生controller跳过disabled按钮。ContextMenu打开后的初始键盘停靠沿既有peer/controller，Home/End可直接到边界，不强制端间相同首次ArrowDown位置。
+
+公开行事件正式消费：[React](../examples/row-events-react/app.tsx)、[原生](../examples/row-events-vanilla/app.js)。示例保留selected/expanded、sticky、横滚和受控cursor，名称Button提供键盘等价入口；原生移除行/destroy释放handler，保留现有cell slot生命周期。

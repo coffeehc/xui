@@ -1402,3 +1402,7 @@ Calendar共享model独立管理查看月份与已选日期。公开month/onMonth
 ### 菜单危险语义
 
 普通Menu/ContextMenu动作Item可选tone=danger。默认危险文字与图标使用status-error-foreground，hover及键盘高亮使用status-error-soft/foreground，pressed使用action-danger/action-danger-foreground；disabled和独立focus继续沿菜单公共变量。无新颜色或产品皮肤，确认及权限归宿主。原生公开data-tone与React同合同，见[菜单危险操作语义](COMPONENTS.md#菜单危险操作语义)。
+
+### DataTable 行交互扩展
+
+公开rowEvents在现有语义tr上分发当前记录与稳定键，不新增伪按钮/自动tabIndex、选择引擎、查询或提交owner。独立cell交互和已取消事件由共享边界隔离，busy/disabled抑制行快捷动作，保留既有单元与读取能力；鼠标快捷方式配正常Button/link键盘等价入口。状态/布局/分页及皮肤不变，完整合同见[数据表格](COMPONENTS.md#数据表格)。
