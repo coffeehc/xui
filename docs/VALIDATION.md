@@ -2,6 +2,27 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## 完整浏览器套件复验（2026-10-15）
+
+最终候选按仓库默认 Chromium 配置完整执行 **77 文件、1389/1389 项通过**，耗时 765.2 秒（12.8 分钟）。2 workers、0 retries，无过滤、跳过、flaky 或运行错误；不是分批或重复专项拼出的整轮结果。package source generation 为 `6c592e6cc54e020c35314d1accce844ccb2b3e531231a315f80834b0e1e62fbe`，example generation 为 `250f6b2d697271a4a4facde722992b368f93308f6b2b9351cfbc01ccc1a17897`；三包产物与正式 tarball consumer 同代际。环境与下方组合验收一致。
+
+本轮修复共享 Dialog 迟到 close 重复恢复焦点的问题：确认关闭动作内只恢复一次，关闭返回后保留宿主新焦点，同时保留 Safari 原生回焦点、restoreFocus、重入与叠层边界。NumberInput 的后续 input 取消旧 reset 协调，双端新增同一任务内重置后立即输入的回归，保留新草稿及有效性，不提交或改写确认值。
+
+Command 用例将原有空项循环断言放在纯键盘阶段，悬停验证后移开鼠标并从无高亮的新查询重新进入，继续核对选择、hover、失焦与键盘焦点，避免焦点滚动产生的 pointerleave 与方向键竞争；没有修改组件行为或减少原断言。文本输入用例移除重复的 Chromium 专属启动配置，沿用项目选择的真实引擎。
+
+| 最终执行 | 已完成结果 | 原始证据 |
+| --- | --- | --- |
+| 构建 / tokens / types / unit / consumer | 通过；376 tokens、475/475 单测；公开 ESM/CSS/types、双端消费与既有体积预算通过 | `.artifacts/browser-full-race-build.log`、`-tokens.log`、`-typecheck.log`、`-unit.log`、`-consumer.log` |
+| 完整 Chromium 套件 | 1389/1389，77 文件；原 Dialog、NumberInput、Command 失败及新增回归均在整轮通过 | `.artifacts/browser-full-final-6c.json`、同名日志、`-list.log`、`-output/` |
+| Chromium Command 重复专项 | 双端各 20 次，共 40/40，无重试 | `.artifacts/browser-full-command-stable-repeat.json`、同名日志 |
+| Chromium 数值 reset 重复专项 | 双端原重置及新增竞争用例各 10 次，共 40/40，无重试 | `.artifacts/browser-full-number-race-repeat.json`、同名日志 |
+| Firefox / WebKit 数值与 Command 专项 | 共 12/12；使用各自真实引擎，无跳过、重试或 flaky | `.artifacts/browser-full-number-command-cross-final.json`、同名日志 |
+| 文档链接 / 差异检查 | `node scripts/check-docs.mjs`、`git diff --check` 通过 | `.artifacts/browser-full-final-6c-docs.log`、`-diff-check.log` |
+
+Dialog 修复后、数值输入修复前的候选 `cfe37756f06a04dc03bbf4721397c87da7095b08c007f6190be0c7be1a0b76e4`，另完成 Firefox/WebKit 焦点与组合 20/20、关闭路径 32/32 专项；覆盖宿主路由焦点、Key 写入中关闭、secret 清理、日志读取中关闭、窄屏键盘与迟到隔离。证据为 `.artifacts/browser-full-fixed-closeout-cross.json`、`.artifacts/browser-full-fixed-close-flows-cross.json` 及同名日志。这些是受影响路径补充验证，不是 Firefox/WebKit 完整套件结论。
+
+前两轮完整执行均保留失败证据：基线 `b4b9f3631654d0c8ac22a26c01d5ab8d452e89f1` 为 1386/1387（810.3 秒），暴露 Dialog 迟到关闭覆盖宿主焦点；Dialog 修复候选为 1385/1387（777.0 秒），原失败已通过，新增发现数值 reset 竞争及 Command 混合输入测试竞争。分别见 `.artifacts/browser-full-b4b9.json`、`.artifacts/browser-full-fixed-final.json` 与同名日志、输出目录；不把它们计作完整通过。
+
 ## 组合组件与公共页面逐项收口（2026-10-14）
 
 承接下方基础层验收，本轮核对仓库已经公开的组合、通用页面与双端参考消费者。颜色、字体、密度、发丝线、焦点和状态继续消费同一 DESIGN 主题；产品私有组合及实际后端不属于本轮范围。
