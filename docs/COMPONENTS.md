@@ -1,6 +1,8 @@
 # 组件手册
 
-按当前任务查阅下列章节。正式入口与类型见 [PUBLIC_API](PUBLIC_API.md)，默认视觉值与状态要求只由 [DESIGN](DESIGN.md) 定义；已执行与未测范围统一见 [VALIDATION](VALIDATION.md)。React 和原生共用公开组件与主题，不使用消费方私有皮肤。
+按当前任务查阅下列章节。正式入口与类型见 [PUBLIC_API](PUBLIC_API.md)，默认视觉值与状态要求只由 [DESIGN](DESIGN.md) 定义；已执行与未测范围统一见 [VALIDATION](VALIDATION.md)。React 和原生共用公开组件与主题，公共控件不依赖消费方重写内部皮肤。
+
+项目自己的业务组合和布局按 [私有组合组件设计方法](DESIGN.md#项目私有组合组件的设计方法) 与 [页面信息呈现方法](DESIGN.md#首屏信息架构与信息密度) 设计，再从本手册选择已有能力；项目布局样式与公共控件内部皮肤分别由各自所有者维护。
 
 按章节查阅：
 

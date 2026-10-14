@@ -1,15 +1,23 @@
 ---
 name: adopt-xui
-description: 接入、迁移或评审采用 xui 的 React/原生前端，或根据项目 docs/DESIGN.md 生成、更新 xui 可识别的 theme.css。用于采用 xui、统一前端品牌或清理重复 UI/请求 owner；仅生成主题时保留业务、布局、API 和认证范围。
+description: 为 React/原生前端接入、迁移或评审 xui，设计采用 xui 的项目私有组合组件与页面，或根据项目 docs/DESIGN.md 生成 xui theme.css。仅生成主题时保留业务、布局、API 和认证范围。
 ---
 
-# 接入 xui 与生成项目主题
+# 接入 xui、项目设计与主题生成
 
 ## 先确定范围与参考根目录
 
 - 先解析本 SKILL.md 的物理路径，再从其所在目录向上三级定位 xui 根；全局发现入口可以是符号链接，不能从链接所在的 skills 目录推算仓库。下文相对链接均以这个物理 skill 目录为基准，不依赖固定宿主路径。
 - 用户说“根据 DESIGN.md 生成 xui 可识别的 theme.css”或仅要求生成、更新、接入项目主题时，进入[项目主题流程](references/theming.md)，默认设计来源是采用项目的 `docs/DESIGN.md`。完成主题和必要入口接入、验证后结束；不执行下文完整迁移，不借此改业务、页面布局、HTTP、认证或后端。
-- 用户明确要求采用、迁移或评审页面/前端体系时，执行下文完整流程；只处理已授权的页面和能力。项目视觉要求映射为公开主题变量，未覆盖项继承 xui 默认规范；需要生成主题时再读[项目主题流程](references/theming.md)。
+- 用户要求设计或评审项目私有组合组件、页面信息呈现时，执行下方“项目组件与页面设计”；只处理当前任务，仅设计不触发完整迁移或实现。
+- 用户明确要求采用、迁移、改造或评审 xui 接入时，先按项目设计流程明确职责和信息主次，再执行下文与任务相关的接入步骤；只评审时保持只读，只处理已授权的页面和能力。需要生成主题时再读[项目主题流程](references/theming.md)。
+
+## 项目组件与页面设计
+
+1. 读取项目已有 `docs/DESIGN.md`、当前页面/领域组件及相关状态 owner，核对实际消费的 xui 版本。按 [设计文件与主题关系](../../../docs/DESIGN.md#项目设计文件与主题的关系) 区分公共基线、项目约定和 CSS 覆盖；记录实际缺失与合理假设，不复制默认规范或为本任务建立另一套文档。
+2. 按 [页面信息呈现方法](../../../docs/DESIGN.md#首屏信息架构与信息密度) 推导任务、事实优先级、动作、区域与披露；按 [私有组合组件方法](../../../docs/DESIGN.md#项目私有组合组件的设计方法) 明确职责、数据/草稿/提交所有者、输入与动作回调、状态及容器。只查 [组件手册](../../../docs/COMPONENTS.md) 和 [公开入口](../../../docs/PUBLIC_API.md) 中相关能力，不把参考命名或规划 API 当作可调用组件。
+3. 方案给出当前任务需要的信息结构、公开组件映射、私有组合边界和关键状态样本。需要落盘的稳定约定更新项目已有设计章节；只要求分析/评审时直接给结论。仅设计时在方案完成后结束，不实施代码、升级依赖或迁移 API/认证/后端。
+4. 有实施授权时复用现有领域能力与 xui 公共控件，允许项目自有语义结构和布局 CSS，遵守主题及公共状态合同；不复制控件内部皮肤或建立竞争 owner。按实际容器与状态验证正文、动作、输入/焦点连续性和异常路径，区分设计方案、源码检查与实际运行证据。公共缺口写清场景和受限位置，业务特例留在项目。
 
 ## 完整采用：固定版本与阅读入口
 
@@ -27,7 +35,7 @@ xui 提供通用组件、主题、交互与可选页面组合。宿主拥有业�
 
 - 盘点页面的领域 API、权限/租户范围、导航条件、输入保留、认证/日志、查询/缓存、上传下载与失败恢复。记录旧行为到新公开能力的映射，先保留必要功能再删重复实现。按 [发布状态原则](../../../docs/ADOPTION.md#发布状态与升级原则) 核对实际版本、使用方、配置、会话与数据影响，保留必要的升级约束与退出条件。正常领域 adapter、公开扩展和安全校验保留。
 - 保持 agent-ready：业务 API 完整且可独立测试，UI 消费同一能力，提供观察、配置与介入入口。把核心流程、权限和校验放在宿主领域层；xui 负责表现、通用交互和请求接入，不能成为业务 API 唯一入口。不由这份 skill 自动扩展后端改造或 Agent SDK 范围。
-- 依据 [公开入口索引](../../../docs/PUBLIC_API.md) 选择公开 props/parts/slots/adapters 和标准页面组合。按需要选择完整登录页、MenuLayout、API Key/业务日志视图，通过数据和配置采用；宿主业务 UI 组合原子和公开组合，不改内部渲染、不复制内部 DOM/伪元素或私有皮肤。交互控件统一采用 xui 公开封装：简单选择默认 SimpleSelect / bindSelectControl，复杂选择用 Select/Combobox 或已公开的原生搜索组合，date-only 日期选择用 Calendar / createCalendar；普通输入与动作使用 Input、Button 或相应原生公共结构。Calendar 不等于现成 DatePicker，也不提供时间选择器，按已公开组合接入。公共组件保留真实 input/button 的表单、事件、键盘与可访问语义，不能改成伪 div 控件；也不能依赖裸 select、datalist 或 input type=date 的 OS 弹出面板实现跨平台统一。NativeSelect 等显式平台 API 和安全文件选择窗口是能力边界，不作为普通项目控件的默认推荐；用户明确需要时保留并说明差异。其余交互组合按 [选择与复合控件](../../../docs/COMPONENTS.md#选择与复合控件) 选择 Command/action、ToggleGroup、ScrollArea、InputGroup 与 Accordion；被动 Avatar 按 [展示与媒体](../../../docs/COMPONENTS.md#avatar) 采用；不要把文本输入/Tabs 伪称同等交互。能力不足说明缺口并反馈 xui，不默默新建竞争 owner。
+- 依据 [公开入口索引](../../../docs/PUBLIC_API.md) 选择公开 props/parts/slots/adapters 和标准页面组合。按需要选择完整登录页、MenuLayout、API Key/业务日志视图，通过数据和配置采用；宿主业务 UI 可组合公开控件并编写自身布局样式，不依赖 xui 私有 DOM/伪元素或重写其内部皮肤。交互控件统一采用 xui 公开封装：简单选择默认 SimpleSelect / bindSelectControl，复杂选择用 Select/Combobox 或已公开的原生搜索组合，date-only 日期选择用 Calendar / createCalendar；普通输入与动作使用 Input、Button 或相应原生公共结构。Calendar 不等于现成 DatePicker，也不提供时间选择器，按已公开组合接入。公共组件保留真实 input/button 的表单、事件、键盘与可访问语义，不能改成伪 div 控件；也不能依赖裸 select、datalist 或 input type=date 的 OS 弹出面板实现跨平台统一。NativeSelect 等显式平台 API 和安全文件选择窗口是能力边界，不作为普通项目控件的默认推荐；用户明确需要时保留并说明差异。其余交互组合按 [选择与复合控件](../../../docs/COMPONENTS.md#选择与复合控件) 选择 Command/action、ToggleGroup、ScrollArea、InputGroup 与 Accordion；被动 Avatar 按 [展示与媒体](../../../docs/COMPONENTS.md#avatar) 采用；不要把文本输入/Tabs 伪称同等交互。能力不足说明缺口并反馈 xui，不默默新建竞争 owner。
 
 ## 连接单一所有者与正式产物
 
