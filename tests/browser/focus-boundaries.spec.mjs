@@ -100,6 +100,8 @@ for(const native of [false,true])test(`${native?'native':'react'} dialog changes
  await expect(dialog).toHaveAttribute('data-dialog-scroll','whole');await expect(body).toHaveCSS('overflow-y','visible');await expect(first).toBeFocused();await expect(first).toHaveValue('Keep this field and focus');expect(await first.evaluate(node=>node===window.dialogFieldIdentity)).toBe(true);
  await page.setViewportSize({width:390,height:320});
  const cdp=await page.context().newCDPSession(page);
+ const {windowId}=await cdp.send('Browser.getWindowForTarget');await cdp.send('Browser.setWindowBounds',{windowId,bounds:{width:800,height:900,windowState:'normal'}});
+ expect(await page.evaluate(()=>({width:innerWidth,height:innerHeight}))).toEqual({width:390,height:320});
  await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
  let gestures;try{gestures=await touchScrollToEnd(page,dialog,cdp);}finally{const events=await dialog.evaluate(node=>{for(const name of ['touchstart','touchmove','touchend','touchcancel'])node.removeEventListener(name,window.dialogTouchRecorder);return window.dialogTouchEvents;});await info.attach('touch-scroll-events.json',{body:JSON.stringify(events,null,2),contentType:'application/json'});}await info.attach('touch-scroll-trajectory.json',{body:JSON.stringify(gestures,null,2),contentType:'application/json'});
  const footer=dialog.locator('.xui-dialog-footer');await expect.poll(async()=>{const r=await footer.boundingBox();return r.y>=0&&r.y+r.height<=320;}).toBe(true);

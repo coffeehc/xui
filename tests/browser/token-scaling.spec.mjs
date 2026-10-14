@@ -273,7 +273,9 @@ for(const kind of kinds){
       for(const [size,label] of [['sm','只读开关'],['default','禁用开关'],['lg','大开关']]){
         const input=page.getByLabel(label,{exact:true});switches[size]={box:await designMetrics(input),thumb:await designMetrics(input,'::before')};
       }
-      return {switches,button:await designMetrics(page.getByRole('button',{name:'固定窗口高度',exact:true})),group:await designMetrics(page.locator('.xui-input-group')),checkmark:await designMetrics(page.getByLabel('只读勾选',{exact:true}),'::after')};
+      const search=page.getByRole('textbox',{name:'搜索',exact:true}),group=page.locator('.xui-input-group').filter({has:search});
+      await expect(group).toHaveCount(1);
+      return {switches,button:await designMetrics(page.getByRole('button',{name:'固定窗口高度',exact:true})),group:await designMetrics(group),checkmark:await designMetrics(page.getByLabel('只读勾选',{exact:true}),'::after')};
     };
     await page.getByRole('textbox',{name:'搜索',exact:true}).focus();await page.mouse.move(1279,799);await settle(page);
     const baseline=await read();await attachMetrics(info,'widgets-default',baseline);
