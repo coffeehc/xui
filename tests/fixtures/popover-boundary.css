@@ -1,0 +1,5 @@
+#root {min-block-size:100dvh;padding:var(--layout-viewport-inset);}
+.usage-toolbar {position:fixed;inset-block-start:calc(var(--layout-viewport-inset) + var(--control-height)*2);inset-inline-end:var(--layout-viewport-inset);}
+.usage-popover {inline-size:calc(var(--popover-width) + var(--space-content-gap)*2);}
+.usage-popover dl>div {margin-block:var(--space-content-gap);}
+.usage-popover dd {margin-inline-start:0;}

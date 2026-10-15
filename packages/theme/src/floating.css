@@ -4,6 +4,9 @@
   .xui-positioner {z-index:var(--z-menu);padding-block:var(--floating-offset);}
   .xui-positioner[data-side='left'],.xui-positioner[data-side='right'] {padding-block:0;padding-inline:var(--floating-offset);}
   .xui-floating {min-inline-size:var(--control-height);max-inline-size:calc(100vw - var(--layout-viewport-inset)*2);max-block-size:min(var(--available-height),calc(100dvh - var(--layout-viewport-inset)*2));overflow:auto;scroll-padding:calc(var(--focus-width) + var(--focus-offset));padding:var(--menu-padding);border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-overlay);color:var(--foreground);box-shadow:var(--shadow-overlay);opacity:1;transition:opacity var(--motion-duration-exit) var(--motion-easing-exit);}
+  /* available size belongs to the outer positioner, including its semantic gap padding. */
+  .xui-positioner:is([data-side='top'],[data-side='bottom']) .xui-floating {max-block-size:min(calc(var(--available-height) - var(--floating-offset) - var(--floating-offset)),calc(100dvh - var(--layout-viewport-inset) - var(--layout-viewport-inset)));}
+  .xui-positioner:is([data-side='left'],[data-side='right']) .xui-floating {max-inline-size:min(calc(var(--available-width) - var(--floating-offset) - var(--floating-offset)),calc(100vw - var(--layout-viewport-inset) - var(--layout-viewport-inset)));}
   :is(.xui-menu-popup,.xui-floating[role='menu']) {min-inline-size:var(--menu-min-width);border-radius:var(--menu-radius);}
   .xui-floating[data-starting-style],.xui-floating[data-ending-style] {opacity:0;}
   .xui-option-list {outline-offset:var(--focus-offset);}

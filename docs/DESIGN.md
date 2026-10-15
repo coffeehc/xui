@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.13.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.13.1。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -1219,11 +1219,12 @@ prefers-reduced-motion=reduce是可访问性例外：默认CSS的design-accessib
 
 1. 原生选择保持浏览器/OS键盘、面板及滚动，不假称全部由CSS控制。自定义选择组合复用公共触发器、输入、列表与浮层。
 2. Dropdown默认bottom/start、offset4px；Popover bottom/center、4px；Tooltip top/center、4px；子菜单right/start、0px。使用锚点定位和碰撞避让，不固定页面坐标；叠层遵守公共角色，不逐页加高。
-3. 菜单在available-height内纵滚，活动项可滚入视区；长值有完整入口。子菜单关闭不改变父表格滚动，抽屉滚动不让底部操作离屏。
-4. Enter/Space打开或执行；方向键移动、Home/End到边界；子菜单左右键进退。Command输入保持搜索焦点，方向键移动活动项、Enter执行；视觉hover不是持久选中。
-5. Escape关闭最上层并恢复触发器；特殊checkbox/radio菜单遵守其已有关闭规则。非模态外点和Tab按所属组件语义关闭或移出，不全局添加focus trap。模态Dialog保持焦点限制；触发器移除时回到所属工作区可用入口。
-6. disabled不能激活；loading、失败、空结果有文案，不悄悄选首项。关闭不自动保存；选择、校验、异步动作由业务拥有，公共浮层不自行请求。
-7. 真实鼠标与键盘验收打开→移动→选择/取消→Esc→回焦点，覆盖portal浅深、底部滚动、窄屏碰撞及反复往返；不用force click跳过遮挡。
+3. 可用碰撞尺寸属于定位外壳；React浮层内容的border box须从相应轴可用空间扣除外壳两侧floating-offset留白，不能令外壳padding叠加在可用高度/宽度之外。原生定位器已按视口inset、锚点与gap计算内容上限，不重复扣除React外壳留白。宿主使用公开Content或原生controller即可，不硬编码collisionPadding或补高度/边距来修公共边界。
+4. 菜单在available-height内纵滚，活动项可滚入视区；长值有完整入口。子菜单关闭不改变父表格滚动，抽屉滚动不让底部操作离屏。
+5. Enter/Space打开或执行；方向键移动、Home/End到边界；子菜单左右键进退。Command输入保持搜索焦点，方向键移动活动项、Enter执行；视觉hover不是持久选中。
+6. Escape关闭最上层并恢复触发器；特殊checkbox/radio菜单遵守其已有关闭规则。非模态外点和Tab按所属组件语义关闭或移出，不全局添加focus trap。模态Dialog保持焦点限制；触发器移除时回到所属工作区可用入口。
+7. disabled不能激活；loading、失败、空结果有文案，不悄悄选首项。关闭不自动保存；选择、校验、异步动作由业务拥有，公共浮层不自行请求。
+8. 真实鼠标与键盘验收打开→移动→选择/取消→Esc→回焦点，覆盖portal浅深、底部滚动、窄屏碰撞及反复往返；不用force click跳过遮挡。
 
 ### 表单、搜索与反馈
 

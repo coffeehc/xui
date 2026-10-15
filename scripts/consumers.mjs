@@ -68,6 +68,15 @@ for (const kind of ['vanilla','react']) {
   assert(Object.values(initializer.metafile.outputs).some(output => Object.entries(output.inputs).some(([path,data]) => path.endsWith('/@coffeehc/xui-runtime/dist/init.js') && data.bytesInOutput > 0)), 'Theme initializer was tree-shaken from the packed consumer');
   await writeFile(`${cwd}/types.ts`,"import { createThemeController, type ThemeMode } from '@coffeehc/xui-runtime';\nconst mode: ThemeMode = 'system'; createThemeController().setMode(mode);\n");
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',kind === 'react' ? 'app.tsx' : 'types.ts'],{cwd,stdio:'inherit'});
+  const popoverFixture=`popover-boundary.${kind==='react'?'tsx':'js'}`;
+  await copyFile(`tests/fixtures/${popoverFixture}`,`${cwd}/${popoverFixture}`);await copyFile('tests/fixtures/popover-boundary.css',`${cwd}/popover-boundary.css`);
+  const popoverOutput=`dist/${kind}/popover-boundary`;await mkdir(popoverOutput,{recursive:true});
+  const popoverBuild=await build({entryPoints:[`${cwd}/${popoverFixture}`],outfile:`${popoverOutput}/app.js`,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(popoverBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Popover bounds escaped the standalone tarball install');
+  if(kind==='vanilla')assert(!Object.keys(popoverBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native popover bounds imported React');
+  else execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',popoverFixture],{cwd,stdio:'inherit'});
+  await writeFile(`${popoverOutput}/index.html`,'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><script src="../theme-init.js"></script><link rel="stylesheet" href="./app.css"></head><body class="xui"><div id="root"></div><script type="module" src="./app.js"></script></body></html>');
+  await writeFile(`${popoverOutput}/metafile.json`,JSON.stringify(popoverBuild.metafile,null,2));
   const buttonStateFixture=`button-state-contract.${kind==='react'?'tsx':'js'}`;
   await copyFile(`tests/fixtures/${buttonStateFixture}`,`${cwd}/${buttonStateFixture}`);
   const buttonStateBuild=await build({entryPoints:[`${cwd}/${buttonStateFixture}`],outfile:`dist/${kind}/button-state-contract.js`,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});

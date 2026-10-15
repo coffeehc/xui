@@ -652,3 +652,5 @@ DataTableRowContext、DataTableRowEvents 从 runtime/data-table、runtime/data-t
 ## 日期时间选择
 
 React `/date-time` 与根入口导出 DateTimePicker/DateTimePickerProps；runtime `/date-time` 与根入口导出 DateTimeOptions/DateTimeValue/DateTimeParts/DateTimeError/DateTimePickerLabels、parseDateTimeValue、createDateTimeModel；`/date-time-dom` 与根入口导出 NativeDateTimePickerOptions/createDateTimePicker。沿用正式 style.css（critical.css+floating.css），不增加组件私有 CSS。完整行为见[组件手册](COMPONENTS.md#日期时间选择)，双端[React](../examples/date-time-react/app.tsx)/[原生](../examples/date-time-vanilla/app.js)可从独立 tarball 消费。
+
+Popover.Content 的 positionerProps 保持peer合同，align=end无需改用其他入口。浮层定位外壳的gap包含于可用碰撞尺寸，正式CSS负责完整边界与内滚；原生controller使用独立视口测量合同，见[组件手册](COMPONENTS.md)。

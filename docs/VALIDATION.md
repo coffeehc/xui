@@ -2,6 +2,30 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## 长内容 Popover 碰撞尺寸（2026-10-15）
+
+固定0fd37c1与本轮修改前ad9dc9d的Popover/原生定位器/浮层CSS相同。独立正式包消费者用公开React Popover.Root/Trigger/Content/Title、`positionerProps={{align:'end'}}`及className宽度扩展复现：390×844、根字号32px、12项合成上下文数据，Popup top256、height591、bottom847，底边超出3px；原生同样内容bottom812，无越界。说明这不是宿主误用入口，也不需要宿主改成其它组件或编写内部CSS补丁。
+
+Base UI 1.7.0把available-height/width赋给外层Positioner，其可用空间包含外壳；xui外壳又在对应轴上有两侧floating-offset留白，而原Popup上限直接使用整个available-height。修复在正式floating.css中为top/bottom内容高度扣除双侧语义gap，left/right对宽度同理；视口上限、offset、默认碰撞/side/align及受控/回调/节点生命周期均保持既有合同。原生controller已单独扣视口inset与锚点gap，不重复扣React外壳留白，不修改原生事件或新增状态owner。修复后上述React top256、height575、bottom831，完整border box留在844px视口内，长内容和末行焦点在内部可达。
+
+DESIGN补丁版本0.13.1，384 tokens及默认变量CSS指纹不变；公开exports/types/API数量仍101。package source generation为`5b91a45f693b7375cd28b263fb974659849ba26ea8de079077b0cb218a3aef66`。独立tarball消费者的ESM/CSS/types/init、React/ReactDOM/Base UI单实例与原生无React检查通过。完整CSS gzip17239 bytes，在既有17536预算内，本轮不提高预算。边界fixture自身只用公共组件/原生controller、公开className宽度及宿主工具栏布局，不添加高度/碰撞补丁。
+
+新专项、回归、跨浏览器及原始失败证据集中于`.artifacts/popover-boundary/`。基线原始报告`baseline-measured.json`为React失败、原生通过；不是产品现场验收，未连接xAgent/API/认证/后端。首次关键用例30/36，余下6项是测试假设：桌面普通字号内容能够自然放下、不应强制产生滚动；桌面大字的外点控件中央被合法弹层覆盖，改为点击可见部分而非force click。跨引擎候选另揭示程序化focus不必产生Firefox键盘焦点环，以及WebKit鼠标点击button不必转移焦点；最终用真实Shift+Tab/Tab与外部文本框验证，不放宽几何、outline、草稿、受控拒绝关闭及节点身份断言。
+
+| 检查 | 最终结果 | 原始证据（`.artifacts/popover-boundary/`） |
+| --- | --- | --- |
+| 构建 / tokens / types / 单测 | 通过；384 tokens；unit首跑511/512，规范版本正则同步后contract文件5/5通过，其余511项有效 | `build.log`、`tokens.log`、`typecheck-final.log`、`unit.log`、`contract-test-rerun.log` |
+| 独立正式消费者 / CSS与peer | 通过；101入口、17239 gzip bytes；同代安装包与React单实例、原生无React | `consumer.log`、`rebuild-fixtures.log`及正式metadata |
+| Chromium新边界与连续性 | **36/36**；24项双端主题/桌面或390px/根字号16或32px矩阵、4向显式碰撞边界、2项正常动效、6项真实Chrome zoom200% | `browser-accepted-final.json`及截图/trace |
+| 相关浮层回归 | **82/82**；80项相关选择/日期时间/菜单等回归及2项foundation的menu/popover/tooltip生命周期 | `regression-final.json`、`foundation-popover.json` |
+| Firefox / WebKit精选 | **8/8唯一用例通过**；每引擎两端390px/200%文字和正常动画各4项，失败后定向复验不重复累计 | `firefox-keyboard-outside-rerun.json`、`webkit-keyboard-outside-rerun.json`、`webkit-tabcycle-rerun.json`及原动画报告 |
+
+最后一次测试fixture又发现React接受关闭的测试状态尚未提交就发Escape的竞争（候选33/36），通过等待fixture的getAccept事实回传消除，未修改产品或组件事件。该只读测试探针更新后，按相同已安装正式包重新打包fixture并再次通过36/36；未重复构建包或改变包代际。WebKit按当前Mac平台采用Option/Alt+Tab和反向组合遍历原生控件，未改变全局系统设置、tabindex或focus样式；Tab与Option-Tab的差异见[Apple键盘合同](https://support.apple.com/en-in/guide/safari/cpsh003/mac)。这项端差异不能误报成组件几何失败。
+
+Escape恢复同一trigger；外点若用户已聚焦另一输入，则保留新焦点，不以“回焦点”为由抢回。这个既有peer/native语义未改为全局focus trap或强制回触发器。React关闭后是否卸载仍按原peer生命周期，节点连续性检查针对保持打开和受控更新。没有修改xAgent固定依赖或旧0fd37c1归档；新修复须由宿主另行授权采用相应固定产物。
+
+未跑全仓完整浏览器套件、真实移动OS/Wails、读屏器或xAgent现场API；不声称这些路径通过，没有registry发布。
+
 ## 导航名称滚动、首行对齐与 324px 默认侧栏（2026-10-15）
 
 规范升至0.13.0，默认主题384 tokens。经用户明确确认，桌面展开侧栏默认由216px提升到324px（`nav-item-height × 9`）；60px compact rail与视口约束的288px窄屏drawer独立保留。此项会改变所有使用默认展开宽度的消费页面，需随固定正式包升级并复核主内容净宽，不能把历史216px或未升级产品截图当成新版事实。

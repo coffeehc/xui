@@ -40,6 +40,8 @@
 
 `Badge`、`BadgeProps` 与 `BadgeTone` 从 `@coffeehc/xui-react/feedback` 及根入口导出。`tone` 为 neutral/info/success/warning/error，默认 neutral；例如 `<Badge tone="success">运行正常</Badge>`。原生使用 `<span class="xui-badge" data-tone="success">运行正常</span>`，没有 Badge constructor。neutral、未设置 data-tone 与普通 Tag 保留无边框、无底色的被动文字；显式状态才应用语义前景/soft/line、横向间距和4px圆角。标签文字或图标由宿主表达状态，不自动增加 live region、tab stop 或脉冲。
 
+Popover.Content的positionerProps仍透传peer的align/side/collisionBoundary等选项，align=end是合法组合。正式浮层CSS将Positioner的两侧语义gap计入可用尺寸，长内容在Popup内部滚动且完整border box留在碰撞边界内；不要求宿主添加高度扣减、内部选择器或固定collisionPadding。原生createPopoverController直接计算视口inset及锚点gap，没有React Positioner的padding层；两端几何上限由各自定位owner维护。Escape回触发器；外点已有新的可聚焦目标时保留其焦点，不为“回焦点”抢回宿主新焦点。
+
 Dialog 关闭不会自动保存；移除触发器时指定 finalFocus。浮层非模态时不 trap 焦点，模态与取消/回焦点按 peer。Tooltip.Content 内只有说明，交互内容用 Popover。动画使用统一 motion token；reduced-motion 下状态立即变化。
 
 NavItem 未提供 selected 时保留标准 aria-current；仅 aria-current="page" 默认匹配选中竖线、浅底与强调文字/图标。step/location/date/time/true/false 均保留各自 ARIA 语义，不自动转成 page 或选中样式。显式 selected 优先：true 输出 page，false 移除 aria-current，包括与传入 aria-current 矛盾时；这是原有 selected 调用的行为。宿主可只传 aria-current="page" 或 selected，不必同时提供，不需要手工设置 ::before。
