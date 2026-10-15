@@ -25,7 +25,7 @@ test('one-turn request guard prevents reentrant duplicate calls without owning t
 const columns=[{id:'name',header:'Record name',cell:row=>row.name}],rows=[{id:'one',name:'First record'}];
 const render=props=>renderToStaticMarkup(React.createElement(DataTable,{label:'Records',rowKey:row=>row.id,columns,rows,pagination,...props}));
 test('React empty, loading and error bodies always retain semantic headers',()=>{
-  for(const status of ['idle','loading','ready','error']){const markup=render({rows:[],status});assert.match(markup,/<thead><tr[^>]*><th scope="col"/);assert.match(markup,/<tbody>/);assert.equal((markup.match(/aria-label="Rows per page"/g)||[]).length,1);if(status==='loading'){assert.match(markup,/xui-skeleton/);assert.doesNotMatch(markup,/No records yet/);}if(status==='error'){assert.match(markup,/role="alert"/);assert.doesNotMatch(markup,/No records yet/);}}
+  for(const status of ['idle','loading','ready','error']){const markup=render({rows:[],status});assert.match(markup,/<thead><tr[^>]*><th scope="col"/);assert.match(markup,/<tbody>/);assert.equal((markup.match(/aria-label="Rows per page"/g)||[]).length,1);if(status==='loading'){assert.equal((markup.match(/role="status"/g)||[]).length,1);assert.match(markup,/xui-data-table-loading/);assert.match(markup,/<tr aria-hidden="true"/);assert.doesNotMatch(markup,/xui-skeleton|No records yet/);}if(status==='error'){assert.match(markup,/role="alert"/);assert.doesNotMatch(markup,/No records yet/);}}
   assert.match(render({rows:[],filtered:true}),/No matching records/);assert.match(render({rows:[]}),/No records yet/);
 });
 test('React refresh and failure preserve rows; numbered controls never guess unknown totals',()=>{

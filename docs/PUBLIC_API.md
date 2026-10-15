@@ -608,7 +608,7 @@ useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/�
 
 ## 表单与刷新编排
 
-`@coffeehc/xui-react/layout` 正式导出 FormGrid（含 Item）/FormGridProps/FormGridItemProps、FormActions/FormActionsProps；`forms` 的 Fieldset 增加可选 layout，`feedback` 的 LoadingStateProps/DataRegionProps 分别公开 inline 加载与 flow 反馈。它们是 React UI props，不存在 runtime DOM UI 排版 factory。默认行为、字段顺序、请求/分页/提交 owner 保持兼容；侧向 Sheet 在40rem及以下全宽，有行 DataTable 的刷新改为紧凑行内表现。签名与 React 用法见[表单与页面编排](COMPONENTS.md#表单与页面编排)，标准见[DESIGN](DESIGN.md#表单编排的公共入口)。
+`@coffeehc/xui-react/layout` 正式导出 FormGrid（含 Item）/FormGridProps/FormGridItemProps、FormActions/FormActionsProps；`forms` 的 Fieldset 增加可选 layout，`feedback` 的 LoadingStateProps/DataRegionProps 分别公开 inline 加载与 flow 反馈。LoadingState block在所属可见内容区居中，inline随动作/计数；DataRegion首次无内容等待将反馈放在区域中心，已有内容刷新保持原节点。它们是 React UI props，不存在 runtime DOM UI 排版 factory。默认行为、字段顺序、请求/分页/提交 owner 保持兼容；侧向 Sheet 在40rem及以下全宽，有行 DataTable 的刷新改为紧凑行内表现。签名与 React 用法见[表单与页面编排](COMPONENTS.md#表单与页面编排)，标准见[DESIGN](DESIGN.md#表单编排的公共入口)。
 
 ## React 公共组件增强索引
 

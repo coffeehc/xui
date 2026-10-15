@@ -174,7 +174,8 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
         const measuredTableMinimum = file === 'packages/ui-react/src/data-table-layout.ts' && prop === 'minBlockSize' && ['`${componentMinimum}px`', '`max(var(--data-table-min-block-size), ${componentMinimum}px)`'].includes(raw);
         // Textarea height derives solely from computed font/box metrics and its declared row cap.
         const measuredTextarea = file === 'packages/ui-react/src/textarea.ts' && prop === 'blockSize' && raw === "`${style.boxSizing==='border-box'?size:size-padding-border}px`";
-        if (measuredTextarea || measuredSidebar || measuredTableTrack || measuredTableMinimum) { exceptions.add(`${file}: measured ${prop}`); return; }
+        const measuredLoadingHeader = file === 'packages/ui-react/src/data-table-layout.ts' && prop === 'marginBlockStart' && raw === '`${headHeight}px`';
+        if (measuredLoadingHeader || measuredTextarea || measuredSidebar || measuredTableTrack || measuredTableMinimum) { exceptions.add(`${file}: measured ${prop}`); return; }
         errors.push(`${where(loc(node))} ${prop}: Unreviewed dynamic style template ${raw}`);
       }
     }

@@ -18,6 +18,7 @@ function fixture() {
   const body = {offsetHeight:240,clientHeight:224};
   const table = {ownerDocument:{defaultView:win},offsetWidth:500,offsetHeight:1000,tHead:head,tBodies:[{rows:[first,last]}]};
   const tools={offsetHeight:100},footer={offsetHeight:50};
+  for(const node of [tools,body,footer])node.classList={contains:()=>false};
   const root={dataset:{layout:'natural'},style:{get minBlockSize(){return rootValue;},set minBlockSize(next){rootValue=next;writes++;}}};
   const frame = {parentElement:root,children:[tools,body,footer],style:{get gridTemplateRows(){return value;},set gridTemplateRows(next){value=next;writes++;}}};
   const prior = Object.getOwnPropertyDescriptor(globalThis,'ResizeObserver');
@@ -76,6 +77,24 @@ test('layout owner does not overwrite a subsequent host style on destroy and ski
   } finally {owner?.destroy();f.restore();}
 });
 
+test('loading aligns below the measured header without counting its allocated body height as chrome',()=>{
+  const f=fixture();let owner;
+  const loading={style:{marginBlockStart:''},offsetHeight:900,classList:{contains:name=>name==='xui-data-table-loading'},children:[{offsetHeight:16},{offsetHeight:140}]};
+  const previous=f.table.ownerDocument.defaultView.getComputedStyle;
+  f.table.ownerDocument.defaultView.getComputedStyle=node=>node===loading?{rowGap:'8px',paddingTop:'12px',paddingBottom:'12px'}:previous(node);
+  f.frame.children.push(loading);f.table.offsetHeight=120;f.table.tBodies[0].rows=[f.first];
+  try{
+    owner=observeDataTableLayout(f.frame,f.body,f.table);f.tick();
+    assert.equal(loading.style.marginBlockStart,'40px');
+    assert.equal(f.frame.style.gridTemplateRows,'auto minmax(244px, 1fr) auto');
+    assert.equal(f.root.style.minBlockSize,'396px');assert.equal(f.observed.has(loading),false);
+    assert.equal(f.observed.has(loading.children[1]),true);
+    loading.offsetHeight=1900;f.resize();f.tick();assert.equal(f.root.style.minBlockSize,'396px');
+    f.head.offsetHeight=80;f.resize();f.tick();assert.equal(loading.style.marginBlockStart,'80px');
+    owner.destroy();assert.equal(loading.style.marginBlockStart,'');
+  }finally{owner?.destroy();f.restore();}
+});
+
 
 test('component minimum follows measured chrome changes and preserves layout-specific minimum ownership',()=>{
   const f=fixture();let owner;
@@ -88,7 +107,7 @@ test('component minimum follows measured chrome changes and preserves layout-spe
     assert.equal(f.root.style.minBlockSize,'714px');
     f.tools.offsetHeight=0;f.footer.offsetHeight=50;f.resize();f.tick();
     assert.equal(f.root.style.minBlockSize,'204px');
-    const replacement={offsetHeight:30};f.frame.children=[f.body,f.footer,replacement];owner.update();f.tick();
+    const replacement={offsetHeight:30,classList:{contains:()=>false}};f.frame.children=[f.body,f.footer,replacement];owner.update();f.tick();
     assert.equal(f.root.style.minBlockSize,'234px');
     assert.equal(f.observed.has(f.tools),false);assert.equal(f.observed.has(replacement),true);
     f.root.dataset.layout='workspace';owner.update();f.tick();
@@ -103,7 +122,9 @@ test('CSS and measured geometry retain the same three-track frame ownership',()=
   const css=readFileSync(new URL('../packages/theme/src/table.css',import.meta.url),'utf8');
   assert.match(css,/grid-template-rows:auto minmax\(var\(--control-height\),1fr\) auto/);
   assert.match(css,/\.xui-data-table-tools \{[^}]*grid-row:1;[^}]*\}/);
-  assert.match(css,/\.xui-data-table-body \{grid-row:2;\}/);
+  const bodyRules=[];postcss.parse(css).walkRules('.xui-data-table-body',rule=>bodyRules.push(rule));
+  assert.ok(bodyRules.some(rule=>rule.nodes.some(node=>node.prop==='grid-row'&&node.value==='2')));
+  assert.ok(bodyRules.some(rule=>rule.nodes.some(node=>node.prop==='grid-column'&&node.value==='1')),'body and loading share one visible track');
   const sharedFooterRules=[];
   postcss.parse(css).walkRules(rule=>{
     if(rule.selector.includes('.xui-data-table-footer')&&rule.selector.includes('.xui-card-group-footer'))sharedFooterRules.push(rule);

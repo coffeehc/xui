@@ -182,7 +182,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | FORM-009 | 表单只有主操作或只有次操作 | 不为缺失操作组保留空占位 | 空组 DOM/geometry | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
 | FORM-010 | 表单布局在窄屏或200%文字下 | 网格退为可读单列，label/help/error 和操作完整换行 | viewport/字体缩放矩形与截图 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
 | TABLE-001 | DataTable 有搜索、筛选或工具动作 | 工具内容放 `DataTable.toolbar`；无工具时无空工具区 | props/Options 与表格首行 geometry | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
-| TABLE-002 | DataTable 首次加载 | 使用 `status=loading` 与表体内 loading/骨架事实，不把未知计数显示为0条成功 | 页面状态、DOM 和首个响应前截图 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| TABLE-002 | DataTable 首次加载 | 使用 `status=loading`；唯一加载提示相对可见表体（不含表头/工具栏/footer）水平垂直居中，横向超宽列不使其偏移，不把未知计数显示为0条成功 | 页面状态、DOM 和首个响应前截图 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
 | TABLE-003 | 已加载查询结果为空 | 使用 `emptyState`，保留列头并区分空数据与筛选无匹配 | rows/filtered事实与 tbody DOM | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
 | TABLE-004 | 首次请求失败 | 使用 `errorState`，不显示成功空态或假记录 | HTTP失败记录与表格 DOM | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
 | TABLE-005 | DataTable 同范围刷新 | 使用 `feedback` 槽表达局部刷新事实，保留旧行/旧计数与稳定行身份 | 请求日志、旧行节点 identity、刷新中截图 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
@@ -347,7 +347,14 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 |---|---|---|---|---|
 | CGROUP-001 | 页面以卡片展示同一记录集合 | 使用CardGroup接收rows/rowKey/renderCard；模板返回公开Card配置，由集合创建实例 | 正式types、实例接线及DOM | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
 | CGROUP-002 | 集合含搜索/筛选/计数/分页 | toolbar或pageToolbar只选一处；计数分页只由集合footer呈现，body为唯一内容滚动区 | slot映射、滚动与footer矩形 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
-| CGROUP-003 | 初始/空/筛选空/刷新/失败 | 各状态真实；同范围刷新/失败保留记录和节点，局部反馈与显式重试，不加载整个页面 | Network、节点身份、录像 | [DESIGN 卡片集合](DESIGN.md#卡片集合布局与状态) |
+| CGROUP-003 | 初始/空/筛选空/刷新/失败 | 首次无数据加载相对body水平垂直居中；各状态真实；同范围刷新/失败保留记录和节点，局部反馈与显式重试，不加载整个页面 | Network、节点身份、录像 | [DESIGN 卡片集合](DESIGN.md#卡片集合布局与状态) |
 | CGROUP-004 | 排序、数据更新或翻页 | 当前记录与context一致，稳定key；仍存在记录的草稿/焦点保留，不承诺跨页缓存 | 事件、记录及mount日志 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
 | CGROUP-005 | 集合busy/disabled或有业务动作 | 集合分页/重试阻止重复意图，业务动作按context及自身权限禁用；卡片不变伪按钮 | Enter/Space、禁用与回调次数 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
 | CGROUP-006 | 窄屏/长中文/界面或浏览器放大 | 按容器净宽退列，卡片自然高度，三段和工具/页尾完整可达，无私有CSS或尺寸补丁 | 主题/宽度/倍率矩阵截图与焦点 | [DESIGN 卡片集合](DESIGN.md#卡片集合布局与状态) |
+
+### 组件内容加载位置
+
+| 检查ID | 适用条件 | 通过标准 | 必需证据 | 公共合同来源 |
+|---|---|---|---|---|
+| LOAD-001 | 详情、卡片或其他局部内容首次等待 | 使用LoadingState block，相对所属可见内容区水平垂直居中，不以页面/窗口为中心；保留外围标题与动作 | 内容区与提示矩形、主题/窄屏/大字截图 | [DESIGN 刷新连续性](DESIGN.md#数据刷新与视图连续性) |
+| LOAD-002 | 已有内容刷新或按钮动作等待 | 内容及节点保留；区域footer/反馈槽使用inline，按钮内Spinner与标签同组，不用居中遮罩替换内容 | 节点/焦点/草稿/滚动、status数量与无Document请求 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) |

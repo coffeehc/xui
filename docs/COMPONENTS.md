@@ -577,7 +577,17 @@ import {Button} from '@coffeehc/xui-react/button';
 
 FormGrid `columns?:1|2` 默认2（可用空间不足仍一列）；Item `span?:'full'`，不指定按正常网格顺序。Fieldset `layout?:'inline'|'stack'` 默认inline。FormActions `secondary?:ReactNode` 与 children 主操作组都可省略；无内容不保留空组。使用原生 form 的 submit/reset、form 关联或 ref，不通过捕获整页 Enter 代替提交。
 
-`@coffeehc/xui-react/feedback` 的 LoadingState/LoadingStateProps 新增 `layout?:'block'|'inline'`（默认block）；DataRegion/DataRegionProps 新增 `feedbackLayout?:'reserved'|'flow'`（默认reserved）。公共主题定义反馈样式；Spinner aria-hidden，加载文本用一个 role=status，错误摘要使用已有 ErrorState/role=alert。DataTable 已统一有行刷新的行内反馈，调用者不要再包第二个计数/分页/反馈或横滚 owner。
+`@coffeehc/xui-react/feedback` 的 LoadingState/LoadingStateProps 新增 `layout?:'block'|'inline'`（默认block）；DataRegion/DataRegionProps 新增 `feedbackLayout?:'reserved'|'flow'`（默认reserved）。block相对所属内容区水平、垂直居中；DataRegion只有一个直接LoadingState时自动分配内容区，无children且busy时将feedback里的首次加载置于区域中心，保留既有最小高度；有明确高度时填充该内容区，无明确高度时使用现有反馈Token的最小高度。加载图标与长文本整体居中，窄屏或大字自然增长。inline留在所属动作/计数旁，不接管正文；原有Skeleton仍可按明确的内容骨架需求单独采用。DataTable与CardGroup首次无记录使用一个居中status，分别以可见表体（表头之外）和body为中心，工具栏/footer不计入；已有记录刷新仅显示footer的inline反馈。公共主题定义反馈样式；Spinner aria-hidden，加载文本用一个 role=status，错误摘要使用已有 ErrorState/role=alert。DataTable 已统一有行刷新的行内反馈，调用者不要再包第二个计数/分页/反馈或横滚 owner。
+
+普通详情内容可直接使用公共区域；已有内容刷新时保持原来的详情组件身份，反馈改为inline。DataRegion不请求、不缓存，实际读取仍由宿主拥有。
+
+```tsx
+<DataRegion aria-label="对象详情" busy={busy} feedback={busy ? (
+  <LoadingState layout={detail ? 'inline' : 'block'}>正在读取详情…</LoadingState>
+) : undefined}>
+  {detail && <ObjectDetails detail={detail} />}
+</DataRegion>
+```
 
 完整接线：[React](../examples/page-composition-react/app.tsx)、[共享合成数据 owner](../examples/shared/page-composition-model.ts)。数据属于示例内存，不连接产品后端；测试桥只供失败/延迟验收，不出现在用户界面。详情与创建按需打开，表单不常驻列表上方。刷新保留草稿，提交冲突禁用由唯一 saving owner 控制，写入完成后显式同步当前查询，不能让更早读取覆盖新写事实。
 
@@ -891,7 +901,7 @@ busy/disabled 阻止重复分页、条数和默认重试，另有同步单事件
 无反馈时，toolbar 之后直接进入列头，不保留常驻状态空行。已有行刷新或失败的反馈，以及自定义 feedback，使用已有 footer 中计数旁的正常流区域；保留真实计数、每页条数及分页 owner。常规短状态在空间足够时复用底栏高度并保持表体边缘；窄屏、200% 或长文案以完整可读、键盘可达为更高优先级，允许 footer 必要增长，由既有布局观察器维持 frame 包含与祖先滚动。无 count（labels.count 返回空字符串）且无 pagination、footer、反馈时，不显示空 footer；必要反馈出现时仍有完整区域。
 
 
-零行的 loading/idle/empty/error 仍在保留列头的 tbody 内，有 token 最小高度而无固定内容高度上限。首次加载/长错误可以自然增长；多行仍仅由表体独立滚动，分页留在 frame 内。没有新增自动重试、请求或缓存 owner。React正式消费者可用 `?internal&no-count&no-pagination` 和 `?internal&disclosure-feedback` 验证可选信息与长详情。
+零行的 idle/empty/error 仍在保留列头的 tbody 内；loading 保留该结构的占位行（aria-hidden），唯一 status 在可见表体轨道中居中，避开真实表头高度与横向超宽列，有 token 最小高度而无固定内容高度上限。首次加载/长错误可以自然增长；多行仍仅由表体独立滚动，分页留在 frame 内。没有新增自动重试、请求或缓存 owner。React正式消费者可用 `?internal&no-count&no-pagination` 和 `?internal&disclosure-feedback` 验证可选信息与长详情。
 
 现有行是否保留仍由宿主 rows 决定：普通同资源刷新应保留已确认事实；权限撤销、退出、租户或资源切换应按领域/认证规则清空，无权通过本组件继续展示。组件不缓存数据、不创建网络请求或离线 owner。见 [失败布局验证与边界](VALIDATION.md#失败复验与限制)。
 ACL/权限过滤后的有界扫描可连续返回空 list 与非空 next_cursor；这仍可继续翻页，不保证下一页含记录，也不表示剩余数量。仅显式 null 是 cursor 末页。DataTable 不因空行禁用下一页，React 有针对性回归；此补充不改变共享 fixture 的字节或 hash。

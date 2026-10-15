@@ -4,6 +4,26 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 组件内容加载居中（2026-10-16）
+
+DESIGN及三个私有包 **1.1.1**，393 Token、85正式入口、248项接入检查。只修改xui。LoadingState默认block的图标与文案整体相对内容区居中；inline继续随动作/计数，不覆盖旧内容。DataRegion直接包含唯一LoadingState或无children的首次busy反馈时，分配自身内容区；API Key、程序错误日志和业务日志组合同步区分首次等待与有确认数据的刷新。DataTable保留表头及aria-hidden占位行，唯一status在可见表体轨道内，避开真实表头高度，不跟随超宽列横滚；CardGroup在body内居中。首次集合加载不再叠加骨架列表，Skeleton公开入口仍保留。没有新增请求、缓存、分页或提交owner。
+
+最终source generation：`ceac801494532257d80c1e1926077e17c5c711647ee8e52ca3dadab67c749f44`。正式ESM/CSS/types/init独立tarball消费者验证85入口、同代产物、命名导出及React/ReactDOM/Base UI单实例。registry安装未能解析固定Base UI 1.7.0，离线缓存随后也不可用；最终新目录复用上一轮已验的同版本peer文件与锁文件，仅重新通过npm安装三个本轮tarball，未放宽peer检查、没有源码alias或私有CSS。`loading-prepare-peer-lock.cjs`及`loading-center-consumer-final.log`保留过程。初始JS gzip **133623/135168 bytes**，critical CSS gzip **17775/17792 bytes**，Button **6619 bytes**；预算未提高。
+
+| 检查 | 结果 | 原始证据（`.artifacts/`） |
+|---|---|---|
+| build / types / Token / 文档 | 通过；12文档、1026链接、85入口、248检查项 | `loading-center-build-final.log`、`loading-center-types-final.log`、`loading-center-tokens-final.log`、`loading-center-docs-final.log` |
+| 完整单测 | **426/426** | `loading-center-unit-all-final.log` |
+| Chromium本轮加载及集合回归 | **71/71**：加载15、DataTable布局25/cursor4/feedback5、CardGroup22 | `loading-center-browser-final.log`、`loading-center-centers-final.json`及`loading-center-images/` |
+| 扩大到API Key及两类日志既有回归 | **26通过、1失败**；合计98项中97通过 | 同一浏览器日志、失败trace；下述基线归因 |
+| Firefox / WebKit关键加载场景 | 各 **5/5**，共10；含普通/首次反馈区域、表格、卡片、窄屏大字、system切换、刷新保节点及三种公共layout | `loading-center-cross.json`、`loading-center-cross.log` |
+
+加载15项实际覆盖light/dark/system、1280/390、100%/200%界面比例、长中文、表格横滚后可见区域几何、natural/workspace/document公共props、单一status、装饰性Spinner、同范围刷新保节点和焦点，以及真实Chrome 200%浏览器缩放。查看了正式消费者的桌面和窄屏大字截图；几何记录直接比较提示内容与所属区域矩形，不只断言flex样式。
+
+扩大回归的失败位于API Key创建中的有效期Select：`demo.never`选项被Dialog footer拦截，30秒超时；单项三次隔离复验均失败。在未修改的前一轮 **1.1.0** 正式安装目录重建同一公开示例，复现相同footer拦截，确认是基线已存在的问题，未通过改键盘/强制点击或绕过公开控件掩盖。详见`loading-center-api-key-recheck.log`、`loading-center-baseline-browser.log`及原始trace，已登记[公共维护清单](PUBLIC_REQUESTS.md)。本轮不把该项写为通过，也未扩大为Select/Dialog修复。
+
+本轮未重跑watch、Vite cold-start或全仓浏览器全集，未验消费项目真实页面、后端、实体触屏、读屏器或独立SSR hydration，也没有新增实时Stitch评审。1.1.1只改变上述加载呈现，不自动升级任何消费项目。
+
 ## CardGroup 与统一集合合同（2026-10-15）
 
 DESIGN 与三个私有包为 **1.1.0**，393 Token、85正式入口、246项接入检查。只修改xui，在1.0 React单栈之上补齐CardGroup集合；不是让业务将Card/Grid/加载提示再拼接一遍。React `/card-group` 接收rows、稳定rowKey和typed renderCard配置，由集合创建Card实例及key，拥有toolbar/body/footer、状态与唯一计数/分页。模板复用Card三段，不新建皮肤；查询、缓存、排序、跨页草稿、权限与业务提交仍归宿主。正文直接复用公开ScrollArea.Viewport；尺寸来自既有语义Token与两个派生组件Token。

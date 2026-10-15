@@ -5,7 +5,7 @@ import {validateDataTableKeys,type DataTableViewOptions,type DataTableColumnWidt
 import {Table,TableContainer,TableRow,TableCell,TableHeaderCell} from './table.js';
 import {Toolbar} from './layout.js';
 import {Field,type FieldProps} from './forms.js';
-import {DataRegion,LoadingState,Skeleton} from './feedback.js';
+import {DataRegion,LoadingState} from './feedback.js';
 import {cx,hasContent} from './shared.js';
 import {useCollectionView,CollectionFooter} from './collection-view.js';
 export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth,DataTableRowContext} from '@coffeehc/xui-runtime/data-table';
@@ -82,9 +82,12 @@ export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,emp
             onDoubleClick={rowEvents?.onDoubleClick?event=>rowEvent(row,index,event,rowEvents.onDoubleClick):undefined}
             onContextMenu={rowEvents?.onContextMenu?event=>rowEvent(row,index,event,rowEvents.onContextMenu):undefined}
             onKeyDown={rowEvents?.onKeyDown?event=>rowEvent(row,index,event,rowEvents.onKeyDown):undefined}
-          >{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{state.busy?<><LoadingState>{labels.loading}</LoadingState>{Array.from({length:5},(_,index)=><Skeleton key={index}/>)}</>:showError?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
+          >{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow aria-hidden={state.busy||undefined}><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{state.busy?null:showError?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
         </Table>
       </TableContainer>
+      {/* Share the visible body track, not the horizontally overflowing table.
+          This layer exists only without records; refresh never covers rows. */}
+      {!hasRows&&state.busy&&<LoadingState className="xui-data-table-loading">{labels.loading}</LoadingState>}
       <CollectionFooter prefix="xui-data-table" view={view} pagination={options.pagination} rowCount={rows.length} error={error} feedback={feedback} footer={footer}/>
     </div>
   </DataRegion>;

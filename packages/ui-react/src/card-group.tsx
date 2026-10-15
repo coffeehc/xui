@@ -2,7 +2,7 @@ import * as React from 'react';
 import {validateCollectionKeys,type CollectionViewOptions,type CollectionRowContext} from '@coffeehc/xui-runtime/collection-view';
 import {Card,type CardProps} from './display.js';
 import {ScrollArea} from './scroll-area.js';
-import {DataRegion,LoadingState,Skeleton} from './feedback.js';
+import {DataRegion,LoadingState} from './feedback.js';
 import {useCollectionView,CollectionFooter} from './collection-view.js';
 import {cx,hasContent} from './shared.js';
 
@@ -38,7 +38,7 @@ export function CardGroup<T>({rows,rowKey,renderCard,toolbar,emptyState,errorSta
         const props=renderCard(row,{rowIndex,rowKey:keys[rowIndex],busy:state.busy,disabled:state.blocked});
         if(!props||typeof props!=='object'||React.isValidElement(props))throw new TypeError('CardGroup renderCard must return public Card props');
         return <li className="xui-card-group-item" key={keys[rowIndex]}><Card {...props} key={keys[rowIndex]}/></li>;
-      })}</ul>:<div className="xui-card-group-placeholder">{state.busy?<><LoadingState>{state.labels.loading}</LoadingState><Skeleton/></>:state.status==='error'?error:state.status==='idle'?<div className="xui-state" role="status">{state.labels.idle}</div>:empty}</div>}
+      })}</ul>:<div className="xui-card-group-placeholder" data-loading={state.busy}>{state.busy?<LoadingState>{state.labels.loading}</LoadingState>:state.status==='error'?error:state.status==='idle'?<div className="xui-state" role="status">{state.labels.idle}</div>:empty}</div>}
     </ScrollArea.Viewport>
     <CollectionFooter prefix="xui-card-group" view={view} pagination={options.pagination} rowCount={rows.length} error={error} feedback={feedback} footer={footer}/>
   </DataRegion>;

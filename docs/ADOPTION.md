@@ -17,7 +17,7 @@ theme 提供预构建 CSS/tokens；runtime 只提供无框架 TypeScript 服务�
 
 runtime 原生 DOM UI exports 已从当前公开入口移除，原生 UI 示例也不再作为接入路径。该 breaking change 不代表 XQuant、XLead 或其他消费项目已完成 React 迁移或通过验收；消费项目须按自己的授权核实固定包版本、调用点和实际页面。HTTP/auth/query/theme/resource 等 TypeScript 服务、模型、解析器与工具继续公开，React 宿主可直接复用。
 
-当前包按 DESIGN 1.1.0 和三个私有包 1.1.0 构建。1.0.0 breaking release 删除 runtime DOM UI exports；消费方升级前须将对应 UI 重接到公开 React 组件。不得把 xui 本次入口变更写成 XQuant、XLead 或其他产品已改造，也不在本仓代替宿主完成迁移。
+当前包按 DESIGN 1.1.1 和三个私有包 1.1.1 构建。1.0.0 breaking release 删除 runtime DOM UI exports；消费方升级前须将对应 UI 重接到公开 React 组件。不得把 xui 本次入口变更写成 XQuant、XLead 或其他产品已改造，也不在本仓代替宿主完成迁移。
 
 HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方client；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 
@@ -32,7 +32,7 @@ pnpm test:consumer
 pnpm preview
 ```
 
-`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目也应固定已核对的 1.1.0 版本或提交，使用正式构建产物。React、ReactDOM、Base UI 与 runtime peer 保持单实例；不使用 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
+`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目也应固定已核对的 1.1.1 版本或提交，使用正式构建产物。React、ReactDOM、Base UI 与 runtime peer 保持单实例；不使用 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
 
 当前可运行参考只展示 React UI；纯 TypeScript runtime 模型和服务可在 React 页面中复用。它们使用合成数据，不证明采用项目的真实后端、业务权限或页面已集成。
 
@@ -199,7 +199,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 1.1.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 1.1.1；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 
