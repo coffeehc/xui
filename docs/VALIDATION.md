@@ -2,6 +2,39 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## Stitch v2 页面编排（2026-10-15）
+
+规范按新增兼容语义升至0.11.0，默认主题的376 tokens与完整默认CSS指纹不变。新增 FormGrid/FormActions、Fieldset stack、LoadingState inline、DataRegion flow；DataTable 有行刷新不重复播放块级进入动效，侧向 Sheet 在40rem及以下全宽。Fieldset inline、LoadingState block、DataRegion reserved 默认仍保留兼容，导航 drawer 继续独立宽度。
+
+独立正式 ESM/CSS/types 双端示例由一个合成资源 owner 提供记录、状态、分页与写入确认；主表仅保留编号、名称、状态、待办事项，配置与说明在按需 Sheet 中。没有实际高级条件时不显示“更多筛选”，清空入口按有效结果/空结果互斥出现。样例不连接业务 API，也不声称消费项目已采用。
+
+首次独立正式消费者测得完整 CSS 为109488原始字节/16680 gzip字节；原有16512-byte门禁超出168字节。为明确新增的公共布局样式，预算仅增加256字节至16768，Button/JS等其他预算不变，最终消费者仍强制执行。
+
+最终正式包的 package source generation 为 `fd301b7ab803078718076d48a56e13777b2af39f1845f0995e48b9cf10d8c440`，public API SHA256 为 `d7ecf90266c528676481a0e1ee1dccbfb51232999d4c20c4f7f99e22372988c8`。三包正式 ESM/CSS/types 与独立 tarball 消费者指纹一致；React、ReactDOM 与 Base UI 单实例，原生消费者不引入 React。
+
+| 最终同代检查 | 已执行结果 | 原始证据 |
+| --- | --- | --- |
+| 构建 / tokens / types / unit | 通过；376 tokens、512/512 单测 | `.artifacts/page-composition-final-generation/build.log`、`tokens-after-select-fix.log`、`typecheck-after-select-fix.log`、`unit-after-select-fix.log` |
+| 独立正式消费者 / 体积 / 单实例 | 通过；完整 CSS gzip 16680 bytes，在16768-byte预算内；公开类型正反例及双端参考页通过 | 同目录 `consumer-after-select-fix.log`、`react-peer-tree-after-select-fix.log`、`react-peer-singleton-after-select-fix.log`、`tarball-sha256-after-select-fix.txt` |
+| Chromium 最终专项 | **99/99**，无跳过、失败、flaky 或重试；新增页面编排40项，受影响选择/日期时间/弹层/筛选等59项 | 同目录 `browser-final.json`、`browser-final-artifacts/` |
+| 文档 / 差异 | 文档635引用、100公开入口通过；最终提交前另核对差异 | 同目录 `docs-after-select-fix.log` 及提交前检查 |
+
+新增40项包含24项主题/宽度/根字号矩阵、6项连续性/提交/净宽边界、2项常规页面、2项嵌套选择Escape/回焦点和6项真实Chrome缩放。Select修复前另有既有表格/筛选/弹层/反馈回归129/129，其代码代际不同，仅作为当时受影响范围的补充证据，不将分次执行相加为全仓套件。早期候选与日志保留在 `.artifacts/page-composition-browser-candidate.json`、`.artifacts/page-composition-validation/browser-regression.json`。
+
+检查包含495/496px容器净宽切换、最多两列/跨满、真实控件顶部对齐、长中文、动作内容宽与焦点四边余量；根字号32px明确核对计算值，真实Chrome zoom200%另核对视口减半、DPR翻倍、根字号不变、CSS zoom=1与pinch=1。刷新检查原壳/行/搜索节点身份、横滚、选择、焦点、草稿、零Document导航与失败保旧/显式重试；创建失败保留草稿，同一saving owner阻止重复提交，较早读取不能覆盖确认写入。
+
+Stitch 对桌面列表、桌面表单、390px长中文和原生200%文字的4张实际截图均给出视觉Pass，并确认移除无事实高级筛选、保留16px组间距及自然内容尺寸。复审记录和截图位于 `.artifacts/page-composition-review/`。它的静态视觉判断不替代键盘、请求/生命周期或完整WCAG AA实测；React图标关闭与原生文字关闭是示例端间呈现，不能描述为库随缩放自动切换。
+
+首轮示例复验修正了 MenuLayout 导航Dialog上下文截取外层Sheet.Trigger的问题：采用公共受控open与显式finalFocus，创建和详情Root同级，Header使用自带关闭入口，避免重复。早期测试的并发consumer未完成404、DOM尚未建立时设置根字号、指针操作后直接要求focus-visible均已按实际生命周期/键盘方式校正；未用缩字号、关StrictMode或隐藏内容掩盖失败。
+
+补充嵌套选择后首轮为39/40：React SimpleSelect 展开时，Escape 到达 document 上的 Base UI Dialog 处理早于共享 popover 的关闭监听，导致选择和 Sheet 同时关闭。这是实际公共组合缺陷。共享 bindSelectControl 已在自己的展开区域处理该次 Escape，阻止继续关闭外层；确认关闭才回选择入口，被取消则保留选项焦点，关闭状态不截取下一次 Escape。传播/取消关闭两项原生单测及双端正式消费者键盘用例验证该边界，修复未要求宿主拦截私有DOM。失败日志/trace保留于 `.artifacts/page-composition-final-generation/`，修复后证据单独归档。
+
+
+
+Select修复后的首轮扩展专项为98/99，唯一失败是既有React DateTime测试在Base UI选项初始焦点就绪前立即按Home，导致方向键从23移动至00。trace及独立重复验证确认该路径不经过本次Escape处理。测试增加“23已聚焦→Home聚焦00→ArrowDown聚焦01”的实际就绪断言，未修改DateTime源码、未加固定等待、未放宽最终01:59/单次回调/回焦点要求。双端各5次共10/10通过后，同代完整99项再次执行全过；失败保留在 `browser-after-select-fix.json`，重复证据为 `.artifacts/date-time-focus-readiness.json`。
+
+本轮没有执行全仓浏览器整套、Firefox/WebKit、读屏器或任何消费项目生产认证/真实API验收；没有新请求/缓存/分页owner、业务协议变更或registry发布。
+
 ## 完整浏览器套件复验（2026-10-15）
 
 最终候选按仓库默认 Chromium 配置完整执行 **77 文件、1389/1389 项通过**，耗时 765.2 秒（12.8 分钟）。2 workers、0 retries，无过滤、跳过、flaky 或运行错误；不是分批或重复专项拼出的整轮结果。package source generation 为 `6c592e6cc54e020c35314d1accce844ccb2b3e531231a315f80834b0e1e62fbe`，example generation 为 `250f6b2d697271a4a4facde722992b368f93308f6b2b9351cfbc01ccc1a17897`；三包产物与正式 tarball consumer 同代际。环境与下方组合验收一致。

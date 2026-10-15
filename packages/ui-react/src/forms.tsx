@@ -42,11 +42,11 @@ export function Checkbox(props: ChoiceProps) { return <Choice {...props} kind="c
 export function Radio(props: ChoiceProps) { return <Choice {...props} kind="radio" />; }
 export function Switch(props: ChoiceProps) { return <Choice {...props} kind="switch" />; }
 
-export type FieldsetProps=React.ComponentProps<'fieldset'> & {legend:React.ReactNode;help?:React.ReactNode;error?:React.ReactNode};
+export type FieldsetProps=React.ComponentProps<'fieldset'> & {legend:React.ReactNode;help?:React.ReactNode;error?:React.ReactNode;/** Stack form groups without changing the default inline choice layout. */layout?:'inline'|'stack'};
 /** Groups several choices; unlike Field, never assigns one id to several inputs. */
-export function Fieldset({legend,help,error,className,children,'aria-describedby':described,...props}:FieldsetProps){
+export function Fieldset({legend,help,error,layout='inline',className,children,'aria-describedby':described,...props}:FieldsetProps){
   const id=React.useId();
-  return <FieldContext.Provider value={null}><fieldset {...props} className={cx('xui-fieldset',className)} aria-describedby={[described,help?`${id}-help`:undefined,error?`${id}-error`:undefined].filter(Boolean).join(' ')||undefined} aria-invalid={props['aria-invalid']??(!!error||undefined)}>
+  return <FieldContext.Provider value={null}><fieldset {...props} data-layout={layout} className={cx('xui-fieldset',className)} aria-describedby={[described,help?`${id}-help`:undefined,error?`${id}-error`:undefined].filter(Boolean).join(' ')||undefined} aria-invalid={props['aria-invalid']??(!!error||undefined)}>
     <legend className="xui-label">{legend}</legend>{children}{help&&<p className="xui-help" id={`${id}-help`}>{help}</p>}{error&&<p className="xui-error" id={`${id}-error`}>{error}</p>}
   </fieldset></FieldContext.Provider>;
 }

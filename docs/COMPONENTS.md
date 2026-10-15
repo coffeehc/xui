@@ -15,6 +15,7 @@
 - [选择与复合控件](#选择与复合控件)
 - [展示与媒体](#展示与媒体)
 - [布局与顶栏](#布局与顶栏)
+- [表单与页面编排](#表单与页面编排)
 - [导航与菜单](#导航与菜单)
 - [弹层与工具栏](#弹层与工具栏)
 - [数据表格](#数据表格)
@@ -500,6 +501,56 @@ AppHeader 的内容顺序是 leading/brand → navigation toggle → breadcrumb/
 原生将此节点传给 headerSlots.brand，无产品宽度/定位 CSS。浏览器测试检查真实浮层、受控选择、长列表滚动、品牌/侧栏/正文几何和窄屏 drawer；Chromium 结果不能代替真实 macOS 系统、读屏器或移动 Safari。
 
 HeaderBrand 的 logo 容器固定采用 control-height-sm，图片与 SVG 保持 contain，不因素材原始尺寸撑大顶栏。桌面 compact、无 leading 安全区时，logo 中心与 nav-collapsed-width 侧栏中心重合；补偿顶栏内容内距仅作用于品牌，不移动菜单 toggle。存在 leading 时保留该平台区域，品牌在剩余区域居中。名称继续保留可访问文本，窄屏恢复名称。
+
+## 表单与页面编排
+
+通过 `@coffeehc/xui-react/layout` 导出 FormGrid/FormGridProps、FormGrid.Item/FormGridItemProps 与 FormActions/FormActionsProps；根入口同时汇总。它们仅组合排版，列数、跨列、动作、窄屏和反馈标准只在 [DESIGN](DESIGN.md#表单编排的公共入口) 定义。
+
+```tsx
+import {FormGrid, FormActions} from '@coffeehc/xui-react/layout';
+import {Fieldset, Field, Input} from '@coffeehc/xui-react/forms';
+import {Button} from '@coffeehc/xui-react/button';
+<form onSubmit={save}>
+  <Fieldset legend="研究范围" layout="stack">
+    <FormGrid>
+      <FormGrid.Item><Field label="候选账户上限" required><Input name="limit" type="number" /></Field></FormGrid.Item>
+      <FormGrid.Item><Field label="回看天数" required><Input name="days" type="number" /></Field></FormGrid.Item>
+      <FormGrid.Item span="full">长说明、整行确认或编辑内容</FormGrid.Item>
+    </FormGrid>
+  </Fieldset>
+  <FormActions secondary={<Button variant="outline" onClick={cancel}>取消</Button>}>
+    <Button type="submit">创建任务</Button>
+  </FormActions>
+</form>
+```
+
+FormGrid `columns?:1|2` 默认2（可用空间不足仍一列）；Item `span?:'full'`，不指定按正常网格顺序。Fieldset `layout?:'inline'|'stack'` 默认inline。FormActions `secondary?:ReactNode` 与 children 主操作组都可省略；无内容不保留空组。使用原生 form 的 submit/reset、form 关联或 ref，不通过捕获整页 Enter 代替提交。
+
+原生纯排版使用同一正式 `layout.css` / `forms.css` / `feedback.css` 或完整 `style.css`：
+
+```html
+<fieldset class="xui-fieldset" data-layout="stack">
+  <legend class="xui-label">研究范围</legend>
+  <div class="xui-form-grid" data-columns="2">
+    <div class="xui-form-item"><!-- 自己的 label/control/help/error --></div>
+    <div class="xui-form-item" data-span="full"><!-- 完整说明 --></div>
+  </div>
+</fieldset>
+<div class="xui-form-actions">
+  <div class="xui-form-actions-secondary"><button type="button" class="xui-button" data-variant="outline">取消</button></div>
+  <div class="xui-form-actions-primary"><button type="submit" class="xui-button">创建任务</button></div>
+</div>
+```
+
+无需为 div/fieldset 建立额外 runtime model。原生 Field 关联由宿主自己生成的 id/for/aria-describedby/aria-invalid 保证，选择用 bindSelectControl，Sheet 用 createSheetController，表格和筛选用 createDataTable/createSearchToolbar 的稳定 slots/update，销毁时释放全部 binding。
+
+`@coffeehc/xui-react/feedback` 的 LoadingState/LoadingStateProps 新增 `layout?:'block'|'inline'`（默认block）；DataRegion/DataRegionProps 新增 `feedbackLayout?:'reserved'|'flow'`（默认reserved）。原生对应 `.xui-state[data-layout="inline"]` 与 `.xui-feedback-slot[data-layout="flow"]`；Spinner aria-hidden，加载文本用一个 role=status，错误摘要使用已有 ErrorState/role=alert。DataTable 已统一有行刷新的行内反馈，调用者不要再包第二个计数/分页/反馈或横滚 owner。
+
+完整接线：[React](../examples/page-composition-react/app.tsx)、[原生](../examples/page-composition-vanilla/app.js)、[共享合成数据 owner](../examples/shared/page-composition-model.ts)。数据属于示例内存，不连接产品后端；测试桥只供失败/延迟验收，不出现在用户界面。详情与创建按需打开，表单不常驻列表上方。刷新保留草稿，提交冲突禁用由唯一 saving owner 控制，写入完成后显式同步当前查询，不能让更早读取覆盖新写事实。
+
+React 示例的页面动作位于 MenuLayout 内，它拥有自己的导航 Dialog 上下文，因此创建入口显式请求受控 Sheet 的 open，而不让 Sheet.Trigger 绑定到更近的导航上下文；按钮声明 aria-haspopup/aria-expanded，Content.finalFocus 返回实际入口。详情与创建使用同级 Sheet.Root，不嵌套打开。原生对应独立 controller 与实际触发节点，所有方式都复用公共弹层焦点和关闭合同。
+
+SimpleSelect/bindSelectControl 的展开浮层在自己的事件区域消费 Escape，先请求关闭自身并回到选择入口，避免同一次按键继续关闭外层 Sheet/Dialog。关闭被宿主取消时保留当前选项焦点；选择浮层已关闭时不截取 Escape，下一次按键交给外层弹层。React 与原生共用该行为，不要求宿主补私有事件监听。
 
 ## 导航与菜单
 

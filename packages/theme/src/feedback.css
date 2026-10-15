@@ -16,6 +16,9 @@
   .xui-feedback-slot .xui-state {flex-direction:row;flex-wrap:wrap;align-items:center;}
   .xui-feedback-slot :is(button,a,[tabindex]) {scroll-margin:calc(var(--focus-width) + var(--focus-offset));}
   .xui-feedback-slot:empty {overflow:hidden;}
+  .xui-feedback-slot[data-layout='flow'] {block-size:auto;min-block-size:0;overflow:visible;scrollbar-gutter:auto;padding:0;}
+  .xui-feedback-slot[data-layout='flow']:empty {display:none;}
+  .xui-state[data-layout='inline'] {flex-direction:row;flex-wrap:wrap;align-items:center;padding:0;animation:none;}
   .xui-reserved-action[data-inactive='true'] {visibility:hidden;pointer-events:none;}
   .xui-data-region {min-inline-size:0;min-block-size:var(--data-region-min-block-size);}
   .xui-data-region[aria-busy='true'] {border-color:var(--surface-line-strong);}

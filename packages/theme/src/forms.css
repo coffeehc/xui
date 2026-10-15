@@ -64,6 +64,7 @@
 }
 @layer xui-components {
   .xui-fieldset {border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);padding:var(--space-content-gap);display:flex;flex-wrap:wrap;gap:var(--space-control-gap);margin:0;min-inline-size:0;}
+  .xui-fieldset[data-layout='stack'] {display:grid;gap:var(--layout-field-gap);}
 }
 
 @layer xui-components {

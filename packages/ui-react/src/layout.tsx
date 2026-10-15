@@ -15,6 +15,17 @@ import {ShellNavigationContext} from './shell-context.js';
 export function Container({className,...props}:React.ComponentProps<'div'>){return <div {...props} className={cx('xui-container',className)}/>;}
 export function Stack({className,...props}:React.ComponentProps<'div'>){return <div {...props} className={cx('xui-stack',className)}/>;}
 export function Grid({className,...props}:React.ComponentProps<'div'>){return <div {...props} className={cx('xui-grid',className)}/>;}
+/** A form's own width determines one or at most two columns; it never changes field order or state. */
+export type FormGridProps=React.ComponentProps<'div'>&{columns?:1|2};
+/** Full-span content stays in DOM reading order and spans only this form grid. */
+export type FormGridItemProps=React.ComponentProps<'div'>&{span?:'full'};
+function FormGridRoot({columns=2,className,...props}:FormGridProps){return <div {...props} data-columns={columns} className={cx('xui-form-grid',className)}/>;}
+function FormGridItem({span,className,...props}:FormGridItemProps){return <div {...props} data-span={span} className={cx('xui-form-item',className)}/>;}
+/** Use Item span="full" for long content and confirmations; Field still owns labels and errors. */
+export const FormGrid=Object.assign(FormGridRoot,{Item:FormGridItem});
+/** Secondary actions precede the primary group in DOM order; both groups wrap without stretching buttons. */
+export type FormActionsProps=React.ComponentProps<'div'>&{secondary?:React.ReactNode};
+export function FormActions({secondary,children,className,...props}:FormActionsProps){return <div {...props} className={cx('xui-form-actions',className)}>{hasContent(secondary)&&<div className="xui-form-actions-secondary">{secondary}</div>}{hasContent(children)&&<div className="xui-form-actions-primary">{children}</div>}</div>;}
 export function Toolbar({className,...props}:React.ComponentProps<'div'>){return <div role="group" {...props} className={cx('xui-toolbar',className)}/>;}
 export type PageHeaderProps=Omit<React.ComponentProps<'header'>,'title'> & {title:React.ReactNode;description?:React.ReactNode;actions?:React.ReactNode;meta?:React.ReactNode};
 export function PageHeader({title,description,actions,meta,className,...props}:PageHeaderProps){return <header {...props} className={cx('xui-page-header',className)}><div><h1>{title}</h1>{description&&<p>{description}</p>}{meta}</div>{actions&&<div className="xui-toolbar">{actions}</div>}</header>;}

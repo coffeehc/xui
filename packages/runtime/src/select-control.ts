@@ -55,6 +55,9 @@ export function bindSelectControl(select:HTMLSelectElement):SelectControlBinding
     if(select.disabled)controller.close();else if(hadFocus)highlight(nodes.find(node=>node.dataset.value===activeValue&&!node.disabled)??enabled()[0]);
   };
   const key=(event:KeyboardEvent)=>{if(dead||trigger.disabled||event.defaultPrevented||event.isComposing||event.ctrlKey||event.metaKey)return;const items=enabled();
+    // Consume the owned popup's Escape before an enclosing React modal's
+    // document listener can close both layers. A cancelled close keeps focus.
+    if(event.key==='Escape'&&controller.getOpen()){event.preventDefault();event.stopPropagation();controller.close();if(!controller.getOpen())trigger.focus();return;}
     if(event.altKey&&event.key==='ArrowUp'){event.preventDefault();controller.close();trigger.focus();return;}
     if(event.key==='Tab'&&controller.getOpen()){controller.close();trigger.focus();return;}
     if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const wasOpen=controller.getOpen();if(!wasOpen)controller.open();const index=items.findIndex(node=>node.dataset.value===activeValue);highlight(event.key==='Home'?items[0]:event.key==='End'?items.at(-1):!wasOpen?(items.find(node=>node.getAttribute('aria-selected')==='true')??(event.key==='ArrowUp'?items.at(-1):items[0])):items[(index+(event.key==='ArrowUp'?-1:1)+items.length)%items.length]);}

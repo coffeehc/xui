@@ -620,6 +620,10 @@ createResource({loader,isEmpty?,timeoutMs?}) 提供 idle/loading/refreshing/read
 
 useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/销毁。loadStylesheet 创建的失败/取消 link 会清理，成功 link 由宿主拥有。
 
+## 表单与刷新编排
+
+`@coffeehc/xui-react/layout` 正式导出 FormGrid（含 Item）/FormGridProps/FormGridItemProps、FormActions/FormActionsProps；`forms` 的 Fieldset 增加可选 layout，`feedback` 的 LoadingStateProps/DataRegionProps 分别公开 inline 加载与 flow 反馈。原生复用正式主题同名结构与现有控制器，不新增纯排版 model。默认行为、字段顺序、请求/分页/提交 owner 保持兼容；侧向 Sheet 在40rem及以下全宽，有行 DataTable 的刷新改为紧凑行内表现。签名与双端用法见[表单与页面编排](COMPONENTS.md#表单与页面编排)，标准见[DESIGN](DESIGN.md#表单编排的公共入口)。
+
 ## 导航分支按钮翻译
 
 React `/menu-layout` 的 `NavigationMenuProps`/`MenuLayoutProps` 继承 runtime `/navigation` 的 `NavigationMenuOptions`：`expandBranchLabel?:(item:NavigationItem)=>string`、`collapseBranchLabel?:(item:NavigationItem)=>string` 分别生成带 href 分支的独立展开/收起按钮可访问名称。原生 `createNavigationMenu`/`createMenuLayout` 使用相同字段；各自根入口同样公开。默认英文带真实条目名保持兼容，语言/条目/受控展开更新规则与两端示例见[导航富条目合同](COMPONENTS.md#富条目独立行尾动作与上下文菜单)。这些字段不接管整体导航的 `expandLabel`/`compactLabel`，也不创建 i18n owner。

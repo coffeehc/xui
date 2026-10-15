@@ -88,7 +88,7 @@ export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,emp
       <footer className="xui-data-table-footer" hidden={!hasFooter}>
         <div className="xui-data-table-summary" hidden={!hasSummary}>
           <span className="xui-data-table-count" aria-live="polite">{countLabel}</span>
-          <div className="xui-data-table-feedback">{hasRows&&(showError?error:state.busy?<LoadingState>{labels.refreshing}</LoadingState>:null)}{feedback}</div>
+          <div className="xui-data-table-feedback">{hasRows&&(showError?error:state.busy?<LoadingState layout="inline">{labels.refreshing}</LoadingState>:null)}{feedback}</div>
         </div>
         {pagination&&<label className="xui-data-table-page-size"><span>{labels.pageSize}</span><SimpleSelect aria-label={labels.pageSize} value={pagination.pageSize} disabled={state.blocked||!pagination.onPageSizeChange} onChange={event=>{const size=Number(event.currentTarget.value);event.currentTarget.value=String(pagination.pageSize);if(size!==pagination.pageSize&&state.sizes.includes(size))request(()=>pagination.onPageSizeChange?.(size));}}>{state.sizes.map(size=><option value={size} key={size}>{size}</option>)}</SimpleSelect></label>}
         {pagination&&pagination.mode!=='cursor'&&state.pageCount!==null&&!state.outOfRange&&<Pagination aria-label={labels.pagination} page={state.page} pageCount={state.pageCount} disabled={state.blocked||!pagination.onPageChange} previousLabel={labels.previous} nextLabel={labels.next} onPageChange={page=>request(()=>pagination.onPageChange?.(page-1+pagination.pageIndexOffset))}/>}

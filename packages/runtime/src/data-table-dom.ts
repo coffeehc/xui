@@ -100,7 +100,7 @@ export function createDataTable<T>(root:HTMLElement,initial:NativeDataTableOptio
     widthObserver?.disconnect();if(sized){widthObserver?.observe(widthProbes);for(const probe of probeNodes)widthObserver?.observe(probe);}
     measureWidths();
     content(tools,options.toolbar);tools.hidden=options.toolbar===undefined||options.toolbar===null||options.toolbar==='';
-    errorTitle.textContent=labels.error;retry.textContent=labels.retry;retry.hidden=!options.onRetry;retry.disabled=state.blocked;emptyTitle.textContent=options.filtered?labels.noMatches:labels.empty;loadingText.textContent=hasRows?labels.refreshing:labels.loading;
+    errorTitle.textContent=labels.error;retry.textContent=labels.retry;retry.hidden=!options.onRetry;retry.disabled=state.blocked;emptyTitle.textContent=options.filtered?labels.noMatches:labels.empty;loadingText.textContent=hasRows?labels.refreshing:labels.loading;loading.dataset.layout=hasRows?'inline':'block';
     const hasStatus=hasRows&&(state.busy||state.status==='error'),hasFeedback=options.feedback!==undefined&&options.feedback!==null&&options.feedback!=='';
     content(statusFeedback,hasStatus?(state.status==='error'?options.errorState??error:loading):null);statusFeedback.hidden=!hasStatus;
     content(customFeedback,options.feedback);customFeedback.hidden=!hasFeedback;feedback.hidden=!hasStatus&&!hasFeedback;

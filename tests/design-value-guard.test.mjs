@@ -20,6 +20,12 @@ test('only explicit structural geometry and semantic references pass', () => {
   ]) assert.doesNotThrow(() => checkDesignDeclaration(prop, value), `${prop}: ${value}`);
 });
 
+test('two equal form tracks permit only grid geometry, never a general design multiplier',()=>{
+  const geometry='repeat(auto-fill,minmax(min(100%,max(var(--layout-field-min),calc((100% - var(--layout-field-gap)) / 2))),1fr))';
+  assert.doesNotThrow(()=>checkDesignDeclaration('grid-template-columns',geometry));
+  for(const [property,value] of [['padding','calc((100% - var(--layout-field-gap)) / 2)'],['grid-template-columns',geometry.replace('/ 2','/ 3')],['grid-template-columns',geometry.replace('var(--layout-field-gap)','16px')]])assert.throws(()=>checkDesignDeclaration(property,value));
+});
+
 async function fixture(files, run) {
   const root = await mkdtemp(join(tmpdir(), 'xui-design-values-'));
   try {

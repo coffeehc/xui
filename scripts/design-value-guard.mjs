@@ -38,6 +38,8 @@ export function checkDesignDeclaration(property, input, context = '') {
   rest = rest.replace(/calc\(\s*(?:-1\s*\*\s*TOKEN|TOKEN\s*\*\s*-1)\s*\)/gi, 'TOKEN');
   if (dimensional.test(prop)) rest = rest.replace(/calc\(\s*100(?:vw|dvh)\s*-\s*(?:TOKEN\s*\*\s*2|2\s*\*\s*TOKEN)\s*\)/gi, 'TOKEN');
   if (/^grid-(?:template-(?:columns|rows)|auto-(?:columns|rows))$/.test(prop)) {
+    // Two equal tracks divide the available container after one semantic gap.
+    rest = rest.replace(/calc\(\s*\(\s*100%\s*-\s*TOKEN\s*\)\s*\/\s*2\s*\)/gi, 'TRACK');
     rest = rest.replace(/repeat\(\s*[1-9]\d*\s*,/gi, 'repeat(').replace(/(?<![\w-])(?:\d*\.)?\d+fr\b/gi, 'TRACK').replace(/(?<![\w.-])100%/g, 'FULL');
   }
   if (/^grid-(?:column|row)(?:-(?:start|end))?$/.test(prop)) rest = rest.replace(/\b(?:span\s+)?[1-9]\d*\b/g, 'TRACK');

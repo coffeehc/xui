@@ -5,6 +5,7 @@
   .xui-sheet[data-side='top'] {inset-block:0 auto;}
   .xui-sheet[data-side='bottom'] {inset-block:auto 0;}
   .xui-sheet .xui-dialog-body {flex:1;}
+  @media(max-width:40rem) {.xui-sheet:not([data-side='top']):not([data-side='bottom']) {width:100vw;}}
   .xui-native-dialog.xui-sheet {transition:opacity var(--motion-duration-exit) var(--motion-easing-exit),translate var(--motion-duration-exit) var(--motion-easing-exit),display var(--motion-duration-exit) allow-discrete,overlay var(--motion-duration-exit) allow-discrete;}
   .xui-sheet[data-starting-style],.xui-sheet[data-ending-style] {scale:1;translate:var(--motion-distance-small) 0;}
   .xui-sheet[data-side='start'][data-starting-style],.xui-sheet[data-side='start'][data-ending-style] {translate:calc(var(--motion-distance-small)*-1) 0;}

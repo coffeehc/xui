@@ -19,6 +19,20 @@ function fixture({multiple = false, value = 'en'} = {}) {
   return {...f, select};
 }
 
+test('an open select consumes Escape before its enclosing layer and a closed select lets it pass',async()=>{
+  const f=fixture(),owner=bindSelectControl(f.select);let outerEscapes=0;
+  f.root.addEventListener('keydown',event=>{if(event.key==='Escape')outerEscapes++;});
+  owner.trigger.click();await Promise.resolve();const option=owner.element.querySelector('[role="option"]');option.focus();
+  const first=fire(option,'keydown',{key:'Escape'});assert.equal(first.defaultPrevented,true);assert.equal(outerEscapes,0);assert.equal(owner.trigger.getAttribute('aria-expanded'),'false');assert.equal(f.doc.activeElement,owner.trigger);
+  const second=fire(owner.trigger,'keydown',{key:'Escape'});assert.equal(second.defaultPrevented,false);assert.equal(outerEscapes,1);owner.destroy();
+});
+
+test('a cancelled select close consumes only its own Escape and retains current popup focus',async()=>{
+  const f=fixture(),owner=bindSelectControl(f.select);owner.trigger.click();await Promise.resolve();const option=owner.element.querySelector('[role="option"]');option.focus();
+  owner.element.addEventListener('xui:change',event=>{if(event.detail.value===false)event.preventDefault();});
+  const escape=fire(option,'keydown',{key:'Escape'});assert.equal(escape.defaultPrevented,true);assert.equal(owner.trigger.getAttribute('aria-expanded'),'true');assert.equal(f.doc.activeElement,option);owner.destroy();
+});
+
 test('select duplicate binding retains a single owner and reflects host updates', () => {
   const f = fixture(), owner = bindSelectControl(f.select);
   f.select.value = 'zh';
