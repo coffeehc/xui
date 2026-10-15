@@ -219,6 +219,18 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'), `${layoutTypographyOutput}/theme-init.js`);
     await writeFile(`${layoutTypographyOutput}/metafile.json`, JSON.stringify(layoutTypographyBuild.metafile, null, 2));
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'layout-typography/app.tsx'], { cwd, stdio: 'inherit' });
+    // Typography acceptance is built only from the independently installed packages.
+    {
+      const fixture=resolve(cwd,'typography-slots'),output=resolve('dist/typography-slots-react');
+      await cp('examples/typography-slots-react',fixture,{recursive:true});
+      const result=await build({entryPoints:[`${fixture}/app.tsx`],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+      assert(Object.keys(result.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Typography slots escaped standalone install');
+      assert(!Object.keys(result.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Typography slots require private CSS');
+      await copyFile(`${fixture}/index.html`,`${output}/index.html`);
+      await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${output}/theme-init.js`);
+      await writeFile(`${output}/metafile.json`,JSON.stringify(result.metafile,null,2));
+      execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','typography-slots/app.tsx'],{cwd,stdio:'inherit'});
+    }
     const searchToolbar = resolve(cwd, 'search-toolbar'), searchToolbarOutput = resolve(`dist/search-toolbar-${kind}`);
     await cp(`examples/search-toolbar-${kind}`, searchToolbar, { recursive: true });
     const searchToolbarBuild = await build({ entryPoints: [`${searchToolbar}/app.${'tsx'}`], outdir: searchToolbarOutput, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '"production"' } });
@@ -562,7 +574,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     initialJs += inlineJs;
     initialJsGzip += inlineJsGzip;
     const css = await readFile(`${output}/app.css`), cssGzip = gzipSync(css).length;
-    assert(cssGzip <= performance.budgets.criticalCssGzip, 'Critical CSS gzip budget');
+    assert(cssGzip <= performance.budgets.criticalCssGzip, `Critical CSS gzip budget: ${cssGzip}/${performance.budgets.criticalCssGzip}`);
     assert(initialJsGzip <= performance.budgets['reactInitialJsGzip'], `Initial JS gzip budget: ${initialJsGzip}/${performance.budgets['reactInitialJsGzip']}`);
     assert(!initial.has(`${output}/heavy-panel.js`), 'Optional panel included in initial graph');
     performance.consumers.push({ kind, initialJs, initialJsGzip, inlineJs, inlineJsGzip, htmlGzip: gzipSync(html).length, criticalCss: css.length, criticalCssGzip: cssGzip, initialFiles: [...initial].map(file => file.replace(output + '/', '')).concat('theme-init.js'), optionalPanel: (await readFile(`${output}/heavy-panel.js`)).length });

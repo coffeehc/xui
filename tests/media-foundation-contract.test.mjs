@@ -24,7 +24,7 @@ test('Badge has a closed five-tone public vocabulary while neutral stays passive
 test('Avatar consumes existing size, shape, surface and content fitting roles',()=>{
  mapping('.xui-avatar',{'inline-size':'var(--control-height)','block-size':'var(--control-height)','border-radius':'var(--radius-full)',background:'var(--layer-support)',color:'var(--foreground)',overflow:'hidden'});
  for(const [size,token]of [['sm','control-height-sm'],['lg','avatar-size-lg']])mapping(`.xui-avatar[data-size='${size}']`,{'inline-size':`var(--${token})`,'block-size':`var(--${token})`});
- mapping('.xui-avatar-image',{'inline-size':'100%','block-size':'100%','object-fit':'cover'});mapping('.xui-avatar-fallback',{'font-weight':'var(--font-weight-control)'});
+ mapping('.xui-avatar-image',{'inline-size':'100%','block-size':'100%','object-fit':'cover'});mapping('.xui-avatar-fallback',{font:'var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans)'});
 });
 test('Image frame and placeholders use content geometry and existing feedback roles',()=>{
  mapping('.xui-image',{'max-inline-size':'100%',position:'relative',overflow:'hidden'});mapping('.xui-image-content',{'object-fit':'contain'});mapping('.xui-image[data-fit="cover"]>.xui-image-content',{'object-fit':'cover'});
@@ -32,7 +32,7 @@ test('Image frame and placeholders use content geometry and existing feedback ro
 });
 test('Tag label wraps and removal target keeps its intrinsic size',()=>{
  const badge=mapping('.xui-badge',{'font-size':'var(--font-size-body-xs)','line-height':'var(--line-height-body-xs)',gap:'var(--space-text-gap)'});assert.equal(badge.background,undefined);assert.equal(badge.border,undefined);mapping('.xui-tag-label',{'overflow-wrap':'anywhere','min-inline-size':'0'});mapping('.xui-tag>.xui-button',{flex:'none'});
- // DESIGN's ordinary-text wording does not independently settle Badge 400/500.
+ // The public label role also applies to Tag; actual inheritance is browser-tested.
 });
 
 

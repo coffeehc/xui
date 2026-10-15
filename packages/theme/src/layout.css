@@ -1,5 +1,6 @@
 @layer xui-components {
   :is(.xui-shell-sidebar-header,.xui-shell-sidebar-footer) {display:flex;flex-direction:column;flex:0 1 auto;min-block-size:0;min-inline-size:0;overflow:auto;overscroll-behavior:contain;gap:var(--space-text-gap);}
+  :is(.xui-app-header-status,.xui-shell-sidebar-header,.xui-shell-sidebar-footer,.xui-page-header-meta) {font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
   .xui-shell {min-block-size:100dvh;display:grid;grid-template-columns:var(--nav-sidebar-width) minmax(0,1fr);grid-template-rows:auto 1fr;grid-template-areas:'header header' 'sidebar main';}
   .xui-shell:is([data-scroll-mode='viewport'],[data-scroll-mode='workspace']) {block-size:100dvh;min-block-size:0;overflow:hidden;grid-template-rows:auto minmax(0,1fr);}
   :where(.xui-shell:is([data-scroll-mode='viewport'],[data-scroll-mode='workspace'])) :is(.xui-shell-sidebar,.xui-shell-main) {min-block-size:0;overflow:auto;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
@@ -38,7 +39,7 @@
   .xui-app-header-breadcrumb .xui-breadcrumbs a {display:block;overflow:hidden;text-overflow:ellipsis;}
   .xui-app-header :is(.xui-app-header-brand,.xui-app-header-breadcrumb) :is(a,button):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
   .xui-app-header-secondary {display:flex;align-items:center;justify-content:flex-end;flex:0 1 auto;flex-wrap:wrap;min-inline-size:0;max-inline-size:100%;margin-inline-start:auto;gap:var(--space-control-gap);}
-  .xui-app-header-status {display:flex;align-items:center;flex-wrap:wrap;min-inline-size:0;max-inline-size:100%;gap:var(--space-control-gap);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);overflow-wrap:anywhere;}
+  .xui-app-header-status {display:flex;align-items:center;flex-wrap:wrap;min-inline-size:0;max-inline-size:100%;gap:var(--space-control-gap);overflow-wrap:anywhere;}
   .xui-app-header-actions,.xui-app-header-legacy {display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;min-inline-size:0;max-inline-size:100%;gap:var(--layout-toolbar-gap);overflow-wrap:anywhere;}
   .xui-app-header-actions>*,.xui-app-header-legacy>*,.xui-app-header-status>* {min-inline-size:0;max-inline-size:100%;}
   .xui-app-header-primary>.xui-app-header-legacy {justify-content:flex-start;}
@@ -55,9 +56,9 @@
   .xui-shell[data-scroll-mode='document'] .xui-shell-sidebar-with-footer {position:sticky;inset-block-start:0;align-self:start;}
   .xui-shell-sidebar-menu .xui-tab-panel {padding-block:0;}
   .xui-shell-sidebar-menu {flex:1 1 0;min-block-size:0;min-inline-size:0;overflow:auto;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
-  .xui-shell-sidebar-footer {max-block-size:var(--nav-sidebar-footer-max);padding-block-start:var(--space-control-gap);margin-block-start:var(--space-control-gap);border-block-start:var(--line-width-surface) solid var(--separator-line);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+  .xui-shell-sidebar-footer {max-block-size:var(--nav-sidebar-footer-max);padding-block-start:var(--space-control-gap);margin-block-start:var(--space-control-gap);border-block-start:var(--line-width-surface) solid var(--separator-line);}
   :is(.xui-shell-sidebar-header,.xui-shell-sidebar-footer)>* {min-inline-size:0;max-inline-size:100%;flex-shrink:0;}
-  .xui-shell-sidebar-footer>.xui-button {justify-content:flex-start;min-inline-size:0;white-space:normal;font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+  .xui-shell-sidebar-footer>.xui-button {justify-content:flex-start;}
   .xui-sidebar-footer-row {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-control-gap);min-inline-size:0;max-inline-size:100%;}
   .xui-sidebar-footer-row>* {min-inline-size:0;max-inline-size:100%;flex-shrink:0;}
   :is(.xui-shell-sidebar-header,.xui-shell-sidebar-footer,.xui-shell-sidebar-menu) :is(button,a,input,textarea,select,[tabindex]):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
@@ -103,10 +104,10 @@
   .xui-toolbar>.xui-field {flex:1;min-inline-size:min(100%,var(--layout-field-min));}
   .xui-page-header,.xui-section-header {display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:var(--space-content-gap);min-inline-size:0;}
   .xui-page-header>* {min-inline-size:0;max-inline-size:100%;}
-  .xui-page-header-meta {font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);color:var(--muted-foreground);overflow-wrap:anywhere;}
+  .xui-page-header-meta {color:var(--muted-foreground);overflow-wrap:anywhere;}
   .xui-page-header-meta:empty {display:none;}
   .xui-page-header h1,.xui-section-header h2 {margin:0;overflow-wrap:anywhere;}
-  .xui-page-header p {margin-block:var(--space-text-gap);color:var(--muted-foreground);overflow-wrap:anywhere;}
+  .xui-page-header-main>p {margin-block:var(--space-text-gap);color:var(--muted-foreground);overflow-wrap:anywhere;}
   .xui-details {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:var(--space-control-gap) var(--space-section-gap);margin:0;}
   .xui-details dt {font-weight:var(--font-weight-control);}
   .xui-details dd {margin:0;overflow-wrap:anywhere;}
@@ -148,8 +149,7 @@
   @media(forced-colors:active) {
     .xui-header-locale {border-color:var(--foreground);}
   }
-  .xui-shell-sidebar-header {max-block-size:var(--nav-sidebar-header-max);overflow:auto;overscroll-behavior:contain;gap:var(--space-text-gap);padding-block-end:var(--space-text-gap);margin-block-end:var(--space-text-gap);border-block-end:var(--line-width-surface) solid var(--separator-line);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
-  .xui-shell-sidebar-header .xui-button {min-inline-size:0;white-space:normal;font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+  .xui-shell-sidebar-header {align-items:flex-start;max-block-size:var(--nav-sidebar-header-max);padding-block-end:var(--space-text-gap);margin-block-end:var(--space-text-gap);border-block-end:var(--line-width-surface) solid var(--separator-line);}
   .xui-shell-sidebar-with-footer:has(>.xui-shell-sidebar-header:not([hidden]))>.xui-shell-sidebar-menu {min-block-size:var(--nav-item-height);}
   .xui-shell-content,.xui-shell-page-header,.xui-shell-page-footer {min-inline-size:0;overflow-wrap:anywhere;}
   .xui-shell-page-header {margin-block-end:var(--layout-section-gap);}

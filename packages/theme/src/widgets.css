@@ -1,4 +1,5 @@
 @layer xui-components {
+  .xui-accordion-panel {font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);}
  .xui-toggle-group {display:flex;flex-wrap:wrap;gap:var(--space-text-gap);}
  .xui-toggle-group[data-orientation='vertical'] {flex-direction:column;align-items:stretch;}
  .xui-toggle-item {min-block-size:var(--toggle-height);padding-block:0;background:var(--layer-raised);color:var(--foreground);border-color:var(--surface-line);}
@@ -7,7 +8,7 @@
  .xui-avatar[data-size='sm'] {inline-size:var(--control-height-sm);block-size:var(--control-height-sm);}
  .xui-avatar[data-size='lg'] {inline-size:var(--avatar-size-lg);block-size:var(--avatar-size-lg);}
  .xui-avatar-image {inline-size:100%;block-size:100%;object-fit:cover;}
- .xui-avatar-fallback {font-weight:var(--font-weight-control);}
+ .xui-avatar-fallback {font:var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);}
  .xui-accordion-item {border-block-end:var(--line-width-surface) solid var(--separator-line);min-inline-size:0;}
  .xui-accordion-header {margin:0;}
  .xui-accordion-trigger {inline-size:100%;justify-content:space-between;white-space:normal;text-align:start;background:transparent;color:var(--foreground);}
@@ -22,10 +23,10 @@
  .xui-command-selected {display:flex;flex-wrap:wrap;gap:var(--space-text-gap);}
  .xui-command-group {margin:0;padding:var(--space-text-gap);color:var(--muted-foreground);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
  .xui-calendar {display:grid;gap:var(--space-control-gap);max-inline-size:var(--calendar-max-inline-size);}
- .xui-calendar-header>strong {font-weight:var(--font-weight-heading);}
+ .xui-calendar-header>strong {font:var(--font-weight-heading) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-heading);}
  .xui-calendar-header {display:flex;align-items:center;justify-content:space-between;gap:var(--space-control-gap);}
  .xui-calendar-grid {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--space-text-gap);}
- .xui-calendar-day {min-inline-size:0;min-block-size:var(--control-height);padding:0;border:var(--line-width-surface) solid transparent;border-radius:var(--radius-sm);background:transparent;color:var(--foreground);font:inherit;cursor:pointer;transition:background-color var(--motion-duration-fast) var(--motion-easing),color var(--motion-duration-fast) var(--motion-easing);}
+ .xui-calendar-day {min-inline-size:0;min-block-size:var(--control-height);padding:0;border:var(--line-width-surface) solid transparent;border-radius:var(--radius-sm);background:transparent;color:var(--foreground);font:var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);cursor:pointer;transition:background-color var(--motion-duration-fast) var(--motion-easing),color var(--motion-duration-fast) var(--motion-easing);}
  .xui-calendar-day:where(:hover):not([aria-disabled='true']) {background:var(--interaction-hover);}
  .xui-calendar-day:where(:active):not([aria-disabled='true']) {background:var(--interaction-pressed);}
  .xui-calendar-day[aria-selected='true'] {background:var(--interaction-selected);color:var(--interaction-selected-foreground);}

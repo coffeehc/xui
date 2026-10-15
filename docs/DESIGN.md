@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：1.1.2。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：1.1.3。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -922,6 +922,57 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 
 单位使用 body-xs，不与主值争强调。标题依靠字号、字重与留白，不加装饰色条或双色标记。日期和数字遵循界面 locale，报告遵循其已声明的时区，不能以机器时区改变事实。
 
+### 公共文字槽验收
+
+**组件字体是 xui 的交付与验收责任。消费项目使用公共组件时，内容字体的大小非必要不得自行设置。** 页面和组件必须先按下表填入公开 slot；库用已有语义 Token 决定字体、字号、行高与字重，不让宿主在部署后逐页补 CSS。尺寸 `size` 只采用组件已有合同，不能自行推断小按钮应该缩字。主题改变颜色，不改变文字角色；界面比例、用户默认字号和浏览器 zoom 按公共缩放合同工作。
+
+继承链优先：`.xui` 和 `.xui-layer` 提供公共 Sans/body/400 基线；页面壳、顶栏、章节等布局容器沿用这条基线；资源卡片与表格等确需从其他文字槽切换的正文边界才确立本区正文角色。description、body、footer 等相同角色的裸文本自然继承，meta/help/error 只改所需字号和行高，label/标题只增加对应字重。链接、OverflowText 和行内反馈继承所属文字槽；例如 Card.footerMeta 中的链接/同步文案仍为 meta。Button、输入、日期和披露等可能从小字号槽切入的独立控件才建立自己的 control 角色，技术值/指标显式切换 Mono。不会用 `.slot *` 或对子控件逐个重设字体来替代继承；四项 computed 验收检查最终结果，不要求每个后代都声明四个属性。
+
+下表是文字归属的唯一映射。`body`=body-sm/正文400/Sans，`control`=body-sm/控件500/Sans，`meta`=body-xs/正文400/Sans，`label`=body-xs/控件500/Sans；`page`、`section` 分别为 page-title、section-title/标题600/Heading；`body-heading`=body-sm/标题600/Sans，`meta-heading`=body-xs/标题600/Heading；`code`=body-sm/正文400/Mono；`metric`=metric/标题600/Mono/tabular。每个尺寸的行高取同名 `line-height-*`，不另设像素值。既有 Heading 与 Sans 使用相同中文 Sans 回退；实际字体可用性与回退必须记录。
+
+| 公共组件 | 文字 slot/part → 角色 | 组合边界 |
+| --- | --- | --- |
+| AppHeader / HeaderBrand | brand/name → body-heading；breadcrumb/context/leading/auxiliary/account 的裸文本 → body；status 裸文本 → meta | 内嵌 Breadcrumbs、Button、Badge、语言控件按自身规则 |
+| AppShell / MenuLayout | sidebarHeader/sidebarFooter 的裸说明 → meta；pageHeader/pageToolbar/children/pageFooter 的文字由放入的公共组件决定 | 不限制直属或嵌套 Button 的宽度/字体；按自身默认与宿主显式公开布局选择，slot 仅拥有边界/滚动/焦点 |
+| PageHeader | title → page；description → body/muted；meta → meta/muted；actions → 所用控件 | 不用 Typography.Text 将 meta 升为正文；普通字符串或无样式 span 自动继承该槽 |
+| Section | title → section；children 裸文本 → body；actions → 所用控件 | 章节标题不替代页面 h1；富内容使用适合其语义的公共子组件 |
+| Toolbar / SearchToolbar | 裸文字继承所属正文或元信息槽；search/actions/advanced → Field/输入/按钮/Disclosure 各自角色 | Toolbar 是布局，不为其所有后代统一字号 |
+| Card | title/OverflowText → section；description → body/muted；children 裸文本 → body；footerMeta → meta/muted | header/footer actions 使用 Button/Menu；badge 使用 Badge；不改后代控件字体 |
+| CardGroup | renderCard → Card 的各槽；footer/count/page-size label/分页说明 → meta | 卡片与反馈、页码控件保留各自角色 |
+| MetricCard | label → label/muted；value → metric；marker → 所用 Badge 或正文 | value 内的完整数值保留 Mono/tabular，不把正文全设 Mono |
+| Field / Fieldset | label/legend → label；help/error → meta/muted或error | 控件、错误关联与字重独立；不从父标题/按钮继承字号 |
+| Input / Textarea / PasswordInput | 可见输入值/placeholder → control；密码显隐动作 → InputGroup.Button | label/help/error 仍归 Field；原生特定 input 展示由浏览器保留语义 |
+| Select / SimpleSelect / Combobox | trigger/input → control；option → Menu.Item 的 label；group label → meta | 原生 select 的平台 line-height 可为 normal，字号/字重/字体与公共角色一致，实际高度需验证 |
+| InputGroup | Addon 裸单位/说明 → meta；Input/Textarea → control；Button → control | 单位不能把其中的动作降为 meta；一个输入边界 |
+| Checkbox / Radio / Switch / ChoiceGroup | 可见 label/组 label → label；help/error → meta | indicator 无文字；受控/只读/禁用不改变文字尺寸 |
+| PasswordStrength | 输入 → control；可见说明 → Field help/error 的 meta；meter 无文字 | 隐藏播报不为视觉另造字号 |
+| Button / IconButton | 文字 → control，所有既有 size 一致；纯图标无文字角色 | 按钮尺寸改变可用空间，不由侧栏或 footer 降字号；可访问名称仍必填 |
+| Toggle / ToggleGroup | trigger → Button 的 control | pressed 只改语义状态与着色 |
+| Tabs | Tab → control；Panel 裸文本 → body | Panel 内组件保留自身角色 |
+| Nav / NavItem / NavigationMenu | 可操作主 label/renderLabel → control；group title → meta-heading/muted；emptyLabel → body/muted | renderLabel 现为主名称，尚无副说明 slot；branch/action 用 Button。缺副说明时提交公共缺口，不自写小字号 |
+| Breadcrumbs / Pagination | 路径 → body；页码/总页数说明 → meta；前后按钮 → control | 路径中的链接保留语义；页码不降按钮字号 |
+| Menu / ContextMenu | Item/LinkItem/CheckboxItem/RadioItem/SubmenuTrigger → label；GroupLabel → meta/muted | danger/disabled/highlight 改状态色，不另设字号；Icon 无文字角色 |
+| Command / GroupedCombobox | 搜索 → control；item → label；group → meta/muted；已选 Tag → label | 复用输入、菜单、Tag 角色，不增加第三套字号 |
+| Disclosure / Accordion | trigger → control；body/panel 裸文本 → body | 默认 h3/legend 等浏览器样式不得改变 trigger 字号 |
+| Calendar | 月标题 → body-heading/Heading；weekday → meta/muted；day → control；翻月/清空 → Button | 查看月与值事件不因字体改变；不自造大号日期数字 |
+| DateTimePicker | Field label/help/error → label/meta；显示值、时间输入、触发/清空 → control；日历 → Calendar | 保持 ISO 分钟墙上时间合同，业务时区归宿主 |
+| Dialog / Sheet / AlertDialog | Title → section；Description/body/footer 裸文本 → body（说明 muted） | 共享同一组文字 part；Footer 的 FormActions/Button 与 body 的 Field 各自维护字体 |
+| Popover / Tooltip | Popover.Title/Description → section/body；popup 裸正文 → body；Tooltip → meta | portal 的 xui-layer 与主树采用同一主题与比例 |
+| Surface / Alert / DataRegion | Surface/Alert 裸内容继承所属文字槽（默认 body）；DataRegion 中正文由其内容组件决定 | 状态 tone 改颜色；布局 DataRegion 不覆盖内容文字 |
+| LoadingState / EmptyState / ErrorState | 文案/说明 → 所属正文或元信息（默认 body）；Empty/Error title → 同字号+600（默认 body-heading）；retry → Button | block 文案继承所属内容正文；inline 文案继承所属动作/元信息槽，不另设字号；加载在所属内容区居中 |
+| Toast | Title → label；Description → meta；其余裸文本 → body；Close/action → Button | 使用通知专用标题/说明层级，不把通知再做成页面标题 |
+| Badge / Tag | label → label；删除动作 → Button | 中性分类与语义状态共用字号；不因 tone 改字重 |
+| Typography | Heading → page或section（语义级别单独指定）；Text → body；Link → 所属文字槽；Code → code；Strong → 所属角色+600 | 链接继承段落或元信息角色，Text 明确正文边界；Code 是技术值，不能当全站字体 |
+| Copyable | value → code；status → meta；copy → Button | 复制状态不抢技术值与动作 |
+| Avatar / Image | Avatar fallback → control；Image 加载/失败文案继承所属文字槽（默认 body） | 图片/图标本身无字体；alt 与可访问名称仍由宿主提供 |
+| Table / DataTable | caption → control；th/sort → label；td/expanded 裸内容 → body；footer/count/page-size label/分页说明 → meta | 行内技术值用 Code、状态用 Badge、动作用 Button；cell 内控件不继承 th/footer 字号 |
+| APIKeyManager / BusinessLogExplorer / StructuredLogExplorer / LoginPanel及登录表单 | 使用上述 PageHeader、Field、DataTable、Dialog、状态与 Button 的文字角色；登录标题 → page、品牌 → label/Heading，描述 → body；登录控件/主动作采用既有 login-control-font-size/line-height，反馈 → meta | 这些已定义的登录专用尺寸由 xui 维护；采用者不另写登录字体或数据表皮肤 |
+| Container / Stack / Grid / FormGrid / FormActions / ScrollArea / Separator / Spinner / Skeleton / Progress / 图标 | 无独立文字角色；仅布局、装饰、进度或媒体，无文字 part 记不适用 | 有可见内容时放入拥有文字角色的公共组件；OverflowText 仅继承其标题或名称槽，不擅自更改角色 |
+
+新增或调整公共可见文字 part，必须同步本表、正式 CSS、示例和逐项字体验收。**xui 发布验收**逐个读取真实组件的 `font-family/font-size/line-height/font-weight`，对照角色与 Token；检查嵌套控件不被父槽覆盖。浅/深/system、长中文、桌面/窄屏、200%文字及真实浏览器缩放分别记录，不以源码出现变量或一张截图代替 computed style。原生表单平台差异要明确报告，不伪称所有浏览器都能锁定内部绘制。
+
+**消费接入验收**逐实例记录该表对应角色，搜索 JSX/CSS 的 `font/font-size/font-family/line-height/font-weight` 及框架文字工具类，确认每个覆盖的用途与作用范围。普通 UI 不允许为“紧实”或修复公共组件而另设文字尺寸；领域阅读（文档、代码、公式、图表、画布）确需例外时，记录任务理由、公共入口或集中语义映射、限定范围和缩放证据。公共角色缺失交给 xui，不能用例外掩盖。比例设置只使用公共方法和既有 sessionStorage owner。
+
 ### 长文本与领域阅读
 
 明确选择换行、截断或局部滚动；flex/grid 子项允许收缩，避免技术标识挤掉动作。重要截断值须有键盘可达的完整入口，不能仅依赖鼠标 Tooltip。代码和标识使用 Mono，不给所有普通文本套等宽字体。Markdown、代码、公式、知识正文和画布保留领域阅读规则，不机械套普通表单尺寸。
@@ -1035,7 +1086,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 | 披露与时间 | Tabs/Disclosure/Accordion 的 trigger/content；Calendar 和 DateTimePicker 的已选值、查看月份及受控事件 | 当前选项与展开状态明确；时间按分钟墙上时间/ISO 日期合同，时区归宿主 | 焦点连续，日期/月份事件独立；不隐式截断精度或转换时区 |
 | 反馈/媒体 | DataRegion.children/feedback；Alert/Toast；Typography/Copyable/Tag/Image | 临近相关操作的状态、错误、一次性反馈；文案/图像来源真实，复制/删除有明确入口 | 状态不重挂 children；图片预留真实比例；被动文本不增 Tab stop；通知只有一个 owner |
 
-组件的详细 part 名称、React/native 差异和替换生命周期以 [COMPONENTS](COMPONENTS.md) 为准，公开入口以 [PUBLIC_API](PUBLIC_API.md) 为准；上表不发明所有控件共有的万能 renderSlot。完整判定按 [逐项清单](ADOPTION_CHECKLIST.md) 每个对象逐条记录，通过、不适用、失败、未跑分别报告。宿主填错 slot、私自着色或重复 owner 属于接入失败；公共类型和合法内容仍无法满足矩阵时属于 xui 缺口。
+组件的详细 part 名称、React 组合与替换生命周期以 [COMPONENTS](COMPONENTS.md) 为准，公开入口以 [PUBLIC_API](PUBLIC_API.md) 为准；上表不发明所有控件共有的万能 renderSlot。完整判定按 [逐项清单](ADOPTION_CHECKLIST.md) 每个对象逐条记录，通过、不适用、失败、未跑分别报告。宿主填错 slot、私自着色或重复 owner 属于接入失败；公共类型和合法内容仍无法满足矩阵时属于 xui 缺口。
 
 状态的统一边界：布局组件不请求、不缓存、不猜权限；交互组件拥有局部 focus/open/checked 等公开状态；resource/auth/业务 controller 拥有请求与确认事实。`busy` 不等于 `disabled`，`readOnly` 不等于 `disabled`，错误不等于空数据。正常 React render 是更新，切换 key、清空 DOM 或条件卸载是重建，不能用后者实现同范围刷新。刷新与范围切换、取消、失败恢复按下方连续性合同执行。
 

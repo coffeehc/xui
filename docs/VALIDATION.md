@@ -4,13 +4,34 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 公共文字槽与样式继承（2026-10-16）
+
+DESIGN及三个私有包 **1.1.3**，393 Token、85正式入口、275项逐项检查。[公共文字槽验收](DESIGN.md#公共文字槽验收)按组件与slot定义字体族、字号、行高和字重；[接入清单](ADOPTION_CHECKLIST.md) TYPE-001～023逐项检查公共控件、标题、正文、辅助文字、反馈、代码及组合内容，并要求库在发布前提供computed-style证据。消费项目非必要不得自行设置内容字体；确需领域例外时记录所属内容、理由、范围与放大验收，不能用例外重设公共控件。
+
+实现充分复用样式继承：document/portal提供正文基线，布局继续继承；Card建立自身语义正文边界，meta/help/error只改必要属性；Link、inline Loading及图像fallback随所属文字槽继承，按钮、标题、代码与指标仅在角色变化处切换。修正InputGroup动作、Disclosure触发器、Calendar日期按钮的控件字重，明确Tabs触发器、Avatar fallback及月份标题等边界。没有新增字号、字体API、原生UI或业务owner。既有默认100%与公开界面缩放不变；上述控件字重及Copyable状态/InputGroup单位文字的角色呈现发生修正。
+
+新增[正式字体示例](../examples/typography-slots-react/app.tsx)和[浏览器验收](../tests/browser/typography-slots.spec.mjs)，覆盖现有页面、卡片、字段、导航、表格、Calendar、Tabs、Accordion、反馈与浮层的真实文字槽。元数据中的Link/inline Loading继承13/20，旁边的Button保持14/22控件角色；Navigation group真实h2保留600标题字重。未用通配后代字体规则覆盖嵌套公共组件。聚合CSS仅合并同层外壳，保留每条规则、声明、媒体条件及次序；新增AST合同检查与逐组件CSS的等价性，未提高体积预算。
+
+最终source generation：`c8ff24bdd9851c8258a4ae0c6a23fc401b338ffc538a4b49c98ceb3c119e7f54`。独立目录重新安装三个本轮tarball，验证85个公开ESM/CSS/types/init、命名导出、严格类型、同代产物和React/ReactDOM/Base UI单实例，无源码alias或私有CSS。由于已确认的registry固定peer解析限制，复用上一轮已验的同版本peer文件与锁文件，只通过npm离线重新安装本轮xui包，过程保存在`typography-slots-prepare-peer-lock.cjs`与`typography-slots-consumer.log`，未放宽peer检查。初始JS gzip **133621/135168 bytes**、critical CSS gzip **17788/17792 bytes**、Button **6619 bytes**。
+
+| 检查 | 最终结果 | 原始证据（`.artifacts/`） |
+|---|---|---|
+| build / 类型 / Token / 完整单测 | 全部通过；单测 **427/427** | `typography-slots-build.log`、`typography-slots-types.log`、`typography-slots-tokens.log`、`typography-slots-unit.log` |
+| 正式消费者 / 文档 | 通过；85正式入口、275检查项，示例只从安装包构建 | `typography-slots-consumer.log`、`typography-slots-docs.log`、performance及metafile |
+| Chromium | **89/89**：字体18、侧栏header33、既有输入字体/布局/侧栏footer回归38 | `typography-slots-browser.json`、`typography-slots-browser.log` |
+| Firefox / WebKit | 各 **4/4**，共8；字体及侧栏Tabs的浅色桌面、深色390px/200%文字 | `typography-slots-cross.json`、`typography-slots-cross.log` |
+
+字体18项覆盖light/dark/system、1280/390px、200%文字、公开200%界面比例及三主题真实Chrome200%浏览器缩放。逐角色读取实际font-family/font-size/line-height/font-weight，核对继承及语义Token覆盖、长中文、system实时变化、键盘、弹层滚动与Escape回焦点，无文档横向溢出或控制台错误。真实浏览器缩放单独验证DPR与视口，未以CSS zoom或界面比例代替。实际查看默认浅色侧栏、深色窄屏200%文字侧栏及Sheet焦点截图，另存控制字重Token改为700的截图用于验证覆盖，后者不冒充默认500截图。初轮fixture中的Menu.Group、Toast键盘入口及Nav标题角色断言均已按真实peer/语义修正，最终整批结果如表；没有把早期失败或重复smoke计入通过数量。
+
+本轮是xui及独立正式消费者的库级验收，未修改或验收xAgent、Argus、XQuant、XLead真实页面/后端和部署。未重跑全仓浏览器全集、watch/cold-start、实体触屏、读屏器或独立SSR hydration，也没有新增实时Stitch评审。既有Select/Dialog缺陷及其他公开请求仍见[公共维护清单](PUBLIC_REQUESTS.md)，本次未将其声明解决。runtime继续只维护TypeScript模型、服务与工具。
+
 ## 侧栏header组合边界（2026-10-16）
 
-侧栏Header/Footer组合布局属于本轮独立修复。sidebarHeader不再向直属或后代Button强制宽度、字体和compact padding；默认动作按内容宽度，宿主可通过公开style/className明确选100%或内容宽。sidebarFooter去除递归按钮字体与强制宽度，现有父容器stretch行为保留。Header分隔上下间距各4px，sidebar-menu内Tabs.Panel不再叠加正文padding；普通Tabs.Panel保持现有12px。所有侧栏区域的交互控件采用内部焦点绘制，并保留invalid边框及独立滚动边界。
+与上述1.1.3同代产物。sidebarHeader不再向直属或后代Button强制宽度、字体和compact padding；默认动作按内容宽度，宿主可通过公开style/className明确选100%或内容宽。sidebarFooter去除递归按钮字体与强制宽度，现有父容器stretch行为保留。Header分隔上下间距各4px，sidebar-menu内Tabs.Panel不再叠加正文padding；普通Tabs.Panel保持现有12px。所有侧栏区域的交互控件采用内部焦点绘制，并保留invalid边框及独立滚动边界。
 
 [侧栏示例](../examples/sidebar-footer-react/app.tsx)提供`header=actions|long|direct|full|content|business|tabs`，用公开Toolbar、Field、Tabs、NavigationMenu验证常见组合；Tabs.Root可跨header和正文，keepMounted面板保留输入草稿与导航状态。没有增加会话专属组件或修改消费项目。[SHELL-020～022](ADOPTION_CHECKLIST.md)分别检查按钮宽度归属、Tabs与分隔间距、焦点和滚动。
 
-[header浏览器测试](../tests/browser/sidebar-header-toolbar.spec.mjs) **33/33**，包含三主题、桌面/窄屏/200%文字、长中文Toolbar、直属按钮的默认/显式宽度、宿主组合、Sidebar Tabs和三主题真实Chrome200%缩放；sidebar-footer布局与基础焦点回归通过。Firefox/WebKit各两项header精选通过。验证动作可达、准确宽度、首个导航位置、普通Tabs padding不变、草稿与焦点保持、滚动及无水平溢出，已实际审阅代表截图。
+[header浏览器测试](../tests/browser/sidebar-header-toolbar.spec.mjs) **33/33**，包含三主题、桌面/窄屏/200%文字、长中文Toolbar、直属按钮的默认/显式宽度、宿主组合、Sidebar Tabs和三主题真实Chrome200%缩放；既有sidebar-footer、layout-typography及input-typography-contract回归共同计入上节89项。Firefox/WebKit各两项header精选已包含在上节各4项中，不重复累计。验证动作可达、准确宽度、首个导航位置、普通Tabs padding不变、草稿与焦点保持、滚动及无水平溢出，已实际审阅代表截图。
 
 兼容性变化是依赖旧header强制满宽的直接按钮需要在公开style/className中明确满宽；默认内容宽度修复Toolbar多动作被拆为多行的问题。普通Tabs、导航折叠、Footer底部归属与受控状态接口保持；未新增props或变更公开导出。浏览器证据与实际未跑范围同上节。
 

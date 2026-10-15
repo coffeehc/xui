@@ -1,4 +1,5 @@
 @layer xui-components {
+  .xui-breadcrumbs,.xui-disclosure-body,.xui-tab-panel {font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);}
   .xui-nav-item:focus-visible {outline-color:var(--menu-item-focus-color);}
 
   .xui-nav { display: grid; gap: var(--space-text-gap); align-content: start; }
@@ -24,7 +25,7 @@
   .xui-nav-item:disabled, .xui-nav-item[aria-disabled="true"] { color: var(--menu-item-disabled-foreground); cursor: not-allowed; }
   .xui-nav-item svg { width: var(--control-icon-size); height: var(--control-icon-size); flex-shrink: 0; }
   .xui-tabs-list { display: flex; flex-wrap: wrap; gap: var(--space-text-gap); padding: var(--tabs-padding); background: var(--layer-support); border-radius: var(--radius-lg); }
-  .xui-tab { background: transparent; color: var(--foreground); min-height: var(--control-height-sm); padding: var(--space-text-gap) var(--space-control-gap); border: 0; border-radius: var(--radius-md); cursor: pointer; font: inherit; font-weight: var(--font-weight-control); transition: background-color var(--motion-duration) var(--motion-easing), color var(--motion-duration) var(--motion-easing); }
+  .xui-tab { background: transparent; color: var(--foreground); min-height: var(--control-height-sm); padding: var(--space-text-gap) var(--space-control-gap); border: 0; border-radius: var(--radius-md); cursor: pointer; font:var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans); transition: background-color var(--motion-duration) var(--motion-easing), color var(--motion-duration) var(--motion-easing); }
   .xui-tab:where(:hover):not(:disabled, [aria-disabled="true"]) { background: var(--interaction-hover); }
   .xui-tab[aria-selected="true"] { background: var(--interaction-selected); color: var(--interaction-selected-foreground); }
   .xui-tab:disabled, .xui-tab[aria-disabled="true"] { color: var(--muted-foreground); cursor: not-allowed; }
@@ -37,9 +38,9 @@
 @layer xui-components {
   .xui-breadcrumbs ol {display:flex;flex-wrap:wrap;gap:var(--space-control-gap);list-style:none;padding:0;margin:0;}
   .xui-breadcrumbs a {color:var(--action-primary);text-underline-offset:var(--space-text-gap);}
-  .xui-pagination {display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-control-gap);}
+  .xui-pagination {font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-control-gap);}
   .xui-disclosure {border-block-end:var(--line-width-surface) solid var(--separator-line);}
-  .xui-disclosure-trigger {display:flex;align-items:center;text-align:start;min-inline-size:0;justify-content:space-between;gap:var(--space-control-gap);inline-size:100%;min-block-size:var(--control-height);padding:var(--space-control-gap);border:0;background:transparent;color:var(--foreground);font:inherit;cursor:pointer;transition:background-color var(--motion-duration-fast) var(--motion-easing);}
+  .xui-disclosure-trigger {display:flex;align-items:center;text-align:start;min-inline-size:0;justify-content:space-between;gap:var(--space-control-gap);inline-size:100%;min-block-size:var(--control-height);padding:var(--space-control-gap);border:0;background:transparent;color:var(--foreground);font:var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);cursor:pointer;transition:background-color var(--motion-duration-fast) var(--motion-easing);}
   .xui-disclosure-trigger:hover:not(:disabled,[aria-disabled="true"]) {background:var(--interaction-hover);}
   .xui-disclosure-trigger:active:not(:disabled,[aria-disabled="true"]) {background:var(--interaction-pressed);}
   .xui-disclosure-trigger:disabled,.xui-disclosure-trigger[aria-disabled="true"] {color:var(--muted-foreground);cursor:not-allowed;}

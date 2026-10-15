@@ -129,6 +129,15 @@ export function checkStyles(styles, values, runtimeVariables = []) {
     }
   });
 }
+/** Parts keep independent exports; aggregate CSS shares one layer without changing rule order. */
+function composeComponentStyles(styles) {
+  const root=postcss.parse(styles),layer=postcss.atRule({name:'layer',params:'xui-components'});
+  for(const node of root.nodes) {
+    assert(node.type==='atrule'&&node.name==='layer'&&node.params==='xui-components','Component parts must own only xui-components');
+    layer.append(node.nodes.map(child=>child.clone()));
+  }
+  return layer.toString()+'\n';
+}
 export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets','search-toolbar'];
 export async function generate(check = false, outputDirectory='packages/theme/dist') {
   const audit = await auditDesignSources();
@@ -144,9 +153,9 @@ export async function generate(check = false, outputDirectory='packages/theme/di
   assert.equal(source,styleParts.map(name=>`@import './${name}.css';`).join('\n')+'\n','Component source must contain the declared local parts only');
   const parts={};
   for(const name of styleParts){parts[name]=await readFile(`packages/theme/src/${name}.css`,'utf8');checkStyles(parts[name],light,name==='floating'?['--available-height','--available-width','--anchor-width','--toast-swipe-movement-x','--toast-swipe-movement-y']:[]);}
-  const component=styleParts.map(name=>parts[name]).join('\n');
+  const component=composeComponentStyles(styleParts.map(name=>parts[name]).join('\n'));
   checkStyles(await readFile('examples/shared/layout.css','utf8'),light);
-  const files = { 'tokens.css':css, 'components.css':component, 'style.css':css+'\n'+component,'critical.css':css+'\n'+styleParts.filter(name=>name!=='floating').map(name=>parts[name]).join('\n'),...Object.fromEntries(styleParts.map(name=>[`${name}.css`,parts[name]])) };
+  const files = { 'tokens.css':css, 'components.css':component, 'style.css':css+'\n'+component,'critical.css':css+'\n'+composeComponentStyles(styleParts.filter(name=>name!=='floating').map(name=>parts[name]).join('\n')),...Object.fromEntries(styleParts.map(name=>[`${name}.css`,parts[name]])) };
   await mkdir(outputDirectory,{recursive:true});
   for (const [name,value] of Object.entries(files)) {
     const path = `${outputDirectory}/${name}`;

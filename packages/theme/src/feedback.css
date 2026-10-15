@@ -67,7 +67,7 @@
   .xui-metric-card {padding:var(--metric-padding);min-inline-size:0;}
   .xui-metric-card-content {display:grid;gap:var(--metric-gap);min-inline-size:0;margin:0;}
   .xui-metric-card-header {display:flex;align-items:flex-start;flex-wrap:wrap;gap:var(--space-control-gap);min-inline-size:0;}
-  .xui-metric-card-label {flex:1 1 auto;min-inline-size:0;max-inline-size:100%;overflow-wrap:anywhere;color:var(--muted-foreground);font:var(--font-weight-control) var(--font-size-body-xs)/var(--line-height-body-xs) var(--font-sans);}
+  .xui-metric-card-label {flex:1 1 auto;min-inline-size:0;max-inline-size:100%;overflow-wrap:anywhere;color:var(--muted-foreground);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);font-weight:var(--font-weight-control);}
   .xui-metric-card-marker {display:inline-flex;align-items:flex-start;flex-wrap:wrap;flex:0 1 auto;min-inline-size:0;max-inline-size:100%;margin-inline-start:auto;gap:var(--space-text-gap);overflow-wrap:anywhere;}
   .xui-metric-card-marker>* {min-inline-size:0;max-inline-size:100%;}
   .xui-metric-card-marker:empty {display:none;}

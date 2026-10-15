@@ -645,3 +645,5 @@ React `/display` 与根入口公开 `OverflowText` / `OverflowTextProps`。runti
 ### 集合视图纯模型
 
 `/collection-view`与runtime根入口提供统一状态/分页校验、稳定key校验和同回合请求防重入，不依赖React/DOM，不持有查询、缓存、HTTP或业务提交。DataTable既有导出的getDataTableState/createDataTableRequestGuard/dataTableDefaultLabels及对应DataTable类型分别保留为同一实现的别名；合法输入行为、分页基数、未知total和cursor合同兼容。非法集合配置继续抛TypeError，通用诊断现使用Collection前缀；列宽/列身份诊断仍归DataTable。React集合直接采用同一模型与footer，不能由消费者另加兼容分页或复制控件。
+
+文字 slot 的字体族、字号、行高与字重由[DESIGN 唯一映射](DESIGN.md#公共文字槽验收)定义，属于正式 CSS 合同和 xui 发布验收；宿主非必要不自设字号。本轮不新增字体 API、字号档位或原生 UI 入口。

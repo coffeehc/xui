@@ -315,6 +315,10 @@ React Disclosure 由组件维护装饰性 chevron；自定义 indicator 应自�
 
 ### Typography
 
+字体、字号、行高和字重由 xui 的[公共文字槽映射](DESIGN.md#公共文字槽验收)统一定义，消费项目非必要不得自行设置内容字号。Heading 分开指定 `level` 与 `visualRole`，Text 为正文、Link 继承所属文字槽，Code 为技术值；slot 的裸文本自动继承它的角色，嵌套 Button/Badge/Field 保留自身规则。不要在 meta 里包一层正文 Text 再用 CSS 改小；直接传字符串或无样式 span。
+
+本合同同时是 xui 发布门槛：正式独立消费者的[文字槽示例](../examples/typography-slots-react/app.tsx)不引入私有 CSS；浏览器逐项检查计算后的四项字体属性、父槽与子组件边界、主题、长中文与放大。纯布局/无文字部件按映射记不适用，新增文字 part 必须有角色及对应证据。
+
 
 ### Copyable
 

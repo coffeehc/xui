@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（本轮为 0.18.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（本轮为 1.1.3）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -101,6 +101,36 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | SLOT-005 | 可选 slot 内容为空 | 按该组件合同折叠或保持语义容器；不留下视觉空高、装饰分隔或空焦点目标 | 空值渲染 DOM、geometry 与键盘轨迹 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
 | SLOT-006 | slot 对应内容进入 loading/busy/empty/error/disabled/selected 等状态 | 只验证该组件公开支持且该业务真实适用的状态；状态文案、颜色、动作与事实一致 | 组件公开状态、业务状态 fixture 与浏览器截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
 | SLOT-007 | slot 内容超出容器或出现在弹层/工作区 | 按组件合同确定唯一滚动 owner；键盘焦点、页尾/操作区及弹层关闭入口保持可达 | scrollHeight/scrollTop、focus trace 与滚动录像 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+
+## 公共文字槽逐项验收
+
+这些条目也是 xui 自身的发布验收；消费方逐实例检测接线与覆盖，xui 逐公共 part 验证默认实现。角色值只以 [DESIGN 唯一映射](DESIGN.md#公共文字槽验收)为准。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| TYPE-001 | 任何公共组件内容 | 宿主非必要不自设字号；逐项定位font/font-size/family/line-height/weight、style及文字工具类覆盖 | 覆盖扫描、用途和限定范围 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-002 | AppHeader/HeaderBrand各文字slot | brand、路径、context、status、辅助及账号逐槽匹配公共映射，内嵌控件保持自身角色 | 逐slot四项computed与嵌套Button | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-003 | AppShell/MenuLayout侧栏 | header/footer裸说明为meta，控件保持自身control角色；slot不递归覆盖字体 | 324px/窄屏200%时三动作与导航、footer几何 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-004 | PageHeader/Section | title、description、meta、章节正文分别匹配page/section/body/meta，动作不被降字号 | 每个文字slot四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-005 | Card/CardGroup | 标题、说明、正文、归属badge、footerMeta、计数和分页逐槽匹配；元信息内Button保持control | 每张卡各slot和集合footer计算样式 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-006 | MetricCard | label/value/marker分别使用label/metric与所用状态组件，值用Mono/tabular | 字体族、四项computed及完整长值 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-007 | Field/Fieldset/ChoiceGroup | label/legend、help、error及各选择标签分别匹配label/meta，错误不靠缩字避让 | 每字段及legend/错误四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-008 | Input/Textarea/Password/Select/Combobox | 输入值与trigger使用control，option/group使用label/meta；报告原生select平台行高差异 | 正式控件四项computed及原生高度/编辑验证 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-009 | InputGroup | Addon单位为meta，内部Input与Button仍为control，不能从小字号单位继承动作字重 | Addon/输入/嵌套动作四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-010 | Button/IconButton/Toggle | 文字为control，既有size只按公开几何；放入sidebar/meta/footer不变成小字 | 跨slot及size的computed比较与键盘操作 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-011 | Tabs/Disclosure/Accordion | trigger为control，panel/body为body，父标题或meta不改变trigger字体 | trigger与content四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-012 | NavigationMenu/Nav/Breadcrumbs/Pagination | 主label为control、组标题为meta-heading、路径body、页码meta；主名称无自造副描述小字 | 主项、组、路径、页码、动作逐项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-013 | Menu/ContextMenu/Command | item/submenu等为label，group为meta；tone和键盘状态不改文字尺寸 | 两类菜单各item和group四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-014 | Calendar/DateTimePicker | 月标题、weekday、day、时间输入/清空分别匹配映射；保留日期值与键盘语义 | 各文字part四项computed与键盘选日/焦点 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-015 | Dialog/Sheet/AlertDialog/Popover/Tooltip | 标题、说明、body、footer、提示各自角色，portals采用相同比例且不改变嵌套控件 | 逐part computed、长内容滚动及关闭回焦点 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-016 | Alert/Loading/Empty/Error/Toast | 文案、标题、说明及retry/action分别匹配映射；块反馈继承正文、行内反馈继承所属文字槽 | 每种反馈四项computed及动作 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-017 | Table/DataTable | caption、th/sort、td/expanded、count/footer/分页说明、cell动作逐项匹配，状态用Badge技术值用Code | 各part计算样式和内部控件隔离 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-018 | Typography/Copyable/Badge/Tag/Avatar/Image | 正文、技术值、状态、复制反馈、fallback分别匹配映射，Mono不用作普通正文 | 四项computed、复制结果与长值 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-019 | 登录/KeyManager/业务日志/结构化日志组合 | 沿用其公共子组件角色和既有登录专用Token，无消费方字体皮肤 | 组成组件映射、登录专用Token与实际computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-020 | 纯布局/无文字部件 | 按公共映射说明无独立文字part；可见内容用适合的文字/业务组件，不能整片统一字号 | 不适用理由或拥有文字角色的子组件 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-021 | 需要领域阅读例外 | 记录必要用途、集中语义映射/公开入口、作用范围与缩放证据；公共缺口仍交给xui | 逐项例外说明与computed、范围检查 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-022 | xui自身发布或新增文字part | 公共映射、CSS、正式示例与computed断言同步；逐项报告通过/失败/未跑，不以宿主修补验收 | 正式tarball、角色矩阵与执行报告 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-023 | 任何文字slot主题/放大验收 | light/dark/system、桌面/窄屏、长中文、200%文字与真实zoom分别验证，无截断动作/焦点丢失 | 各环境computed、截图及键盘轨迹 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 
 ## 页面标题、工具栏与卡片
 

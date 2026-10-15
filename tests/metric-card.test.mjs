@@ -41,7 +41,7 @@ test('optional marker preserves zero, host accessibility and interactive content
 test('MetricCard uses existing statistical and Surface tokens with content-driven dimensions',async()=>{
   const root=await declarations('.xui-metric-card'),content=await declarations('.xui-metric-card-content'),label=await declarations('.xui-metric-card-label'),value=await declarations('.xui-metric-card-value');
   assert.equal(root.padding,'var(--metric-padding)');assert.equal(content.gap,'var(--metric-gap)');
-  assert.match(label.font,/var\(--font-size-body-xs\)/);assert.equal(label.color,'var(--muted-foreground)');
+  assert.equal(label['font-size'],'var(--font-size-body-xs)');assert.equal(label['font-weight'],'var(--font-weight-control)');assert.equal(label.color,'var(--muted-foreground)');
   assert.match(value.font,/var\(--font-weight-heading\) var\(--font-size-metric\)\s*\/\s*var\(--line-height-metric\) var\(--font-mono\)/);assert.equal(value['font-variant-numeric'],'tabular-nums');assert.equal(value['overflow-wrap'],'anywhere');assert.equal(label['overflow-wrap'],'anywhere');
   assert.equal(label['min-inline-size'],'0');assert.equal(label.flex,'1 1 auto');assert.equal(label['max-inline-size'],'100%');
   assert.equal((await declarations('.xui-metric-card-marker:empty')).display,'none');
