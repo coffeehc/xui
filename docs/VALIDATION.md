@@ -2,6 +2,31 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## Popover.Content 的 Portal 容器（2026-10-15）
+
+以 xAgent 实际固定的 `595380a6d2467d56623a0df0dedc026e0331a4ff` / DESIGN 0.13.1 对照修改前 main `57f4e8c0f8c7c640b4f8b1faa1fbf7438581d27f`：Popover 实现未变化，Content 尚无容器扩展。当前新增 React `/popover` 与根入口的 `PopoverContentProps`、Content.portalProps；复用公开 Portal 类型与原有 Root/Positioner/Popup，不新增叠层、焦点或打开状态 owner。实际类型、默认值与就绪接线见[组件手册](COMPONENTS.md#popover-的-portal-容器)，独立消费者为[Dialog/Sheet 示例](../examples/popover-portal-react/app.tsx)。本轮只改 xui，没有升级或修改 xAgent、业务 API、后端或认证。
+
+首个正式包候选在 390px/200%文字下通过内滚、搜索与节点连续性，但 Escape 关闭后父 Dialog 的恢复帧覆盖了子 Popover 回焦点，原始失败保留于 `critical.json`/`critical-run.log`/trace。该 peer 1.7.0 竞争发生于移除持焦的嵌套 Portal；默认目标没有该失败，公开 keepMounted 策略也可避免它。最终 Content 对显式 container 默认 keepMounted=true，让 peer 隐藏稳定子树；省略 portalProps 保持原目标/关闭卸载，关闭父模态释放子树及 Portal ref。显式 keepMounted=false 仍采用 peer 卸载语义，模态内 Escape 回焦点限制未被修复或伪称通过；该覆盖项仅验收触发器关闭和确实卸载。
+
+另一候选的 RefObject 在模态节点就绪前挂载保留子树，current=null 时按 peer 回退父 Portal，产生错误目标；失败为 `critical-retained.json`。正式示例改为节点就绪后挂载 Content，再传已就绪稳定的节点或 RefObject，没有改私有 DOM、手工搬节点或轮询 ref。类型消费者验证 HTMLElement/ShadowRoot/RefObject/null/undefined；callback container、选择器字符串和 portal children 均为负向编译检查，Portal callback ref 则可编译。原生 createPopoverController 没有 React Portal 参数，本轮不改原生定位/焦点职责。
+
+最终 source generation 为 `47bcfa6a217451d6193b32bdc35982941f970593b8bf89ba0a1528694a233300`，DESIGN 0.15.0，三包仍为私有 0.1.0；384 tokens、默认变量 CSS 指纹、101 个 manifest 入口和既有 gzip 预算不变。正式消费检查逐项对比 ESM/CSS/types/init 与本代产物，保持 React/ReactDOM/Base UI 各一份、原生无 React，不使用 packages/src alias。CSS 为 17239 gzip bytes，未新增组件 CSS 或提高 17536-byte 预算。
+
+证据集中于 `.artifacts/popover-portal/`，正式固定源码 SHA、三包摘要及可复制消费者随交付归档记录。
+
+| 检查 | 结果 | 原始证据 |
+| --- | --- | --- |
+| 构建 / types / tokens / docs / 单测 | 通过；完整单测 **522/522**，384 tokens，101入口 | `build-final.log`、`typecheck-final.log`、`tokens-release.log`、`docs-release.log`、`unit-release.log` |
+| 独立正式 tarball 消费者 | 通过；真实 ESM/CSS/types/init、命名类型及 peer/打包边界 | `consumer-final.log`、正式 metadata 与消费者 metafile |
+| Chromium 新组合 | **38/38 唯一用例通过**：24项两类容器×三主题×桌面/390px×根字号16/32，默认兼容2、keepMounted2、显式卸载2、正常动效2、真实200%浏览器缩放6 | `browser-final.json`（36）及 `animated-final.json`（2），截图/几何及 `screenshots/` |
+| 相关默认浮层 / 原生回归 | **38/38**：旧边界36（含两端及6项真实缩放）、foundation菜单/Popover/Tooltip生命周期2 | `regression-final.json`、`foundation-final.json` |
+| Firefox 精选 | **8/8**：两类模态的浅/深390px根字号32、默认目标与保留子树 | `firefox-final.json` |
+| WebKit 精选 | **8/8**：两类模态的浅/深390px根字号32、默认目标与保留子树 | `webkit-final.json` |
+
+新组合实际检查搜索/空结果/键盘选择/取消/后续确认、受控拒绝关闭与宿主打开、草稿/选区/节点身份、单一可见 backdrop、隐藏搜索退出 Tab 顺序、内滚/末项命中与完整焦点环、Escape 分层回到同一触发器及父模态卸载释放。system 在打开状态跟随浅深切换且保留节点/焦点。真实 Chrome 缩放通过设置页操作，核对 DPR翻倍、CSS视口减半、根字号不变、CSS zoom=1、visualViewport.scale=1；不是用CSS放大替代。抽查了浅色Dialog、深色Sheet与实际缩放的可见内容及焦点截图。
+
+未跑：xAgent 四处真实消费页面及其认证/网络/部署、ShadowRoot 的浏览器运行场景、独立 SSR 自定义容器、移动OS/触屏和读屏器、全仓全部浏览器用例与冷启动/watch。不能把本轮合成消费者验收当成 xAgent 已升级或产品验收。`critical.log` 的首次 grep 没有收集到用例，不计为任何行为通过；候选失败与最终通过分别保留。
+
 ## xLead 公共接入反馈（2026-10-15）
 
 以正式595380a / DESIGN0.13.1对照当前main排重，五项均未已有解决：原生装饰logo空alt、完整登录及新密码组合的显隐文案转交、Key已确认吊销后的能力读回为公共缺陷；初始化手动只读核对与Textarea自动增高为显式可选扩展。此次仅修改xui，没有修改xLead、其它消费方或baseservice，也没有新增后端端点/DTO/密码策略。
@@ -34,7 +59,7 @@
 
 xLead原26项真实产品回归属于595380基线，不能替代本轮库级合成消费者结果。其产品升级、回调接线和实际后端回归由采用项目另行执行。本轮未跑全仓浏览器套件、真实移动OS/Wails、读屏器、生产会话或真实Key/初始化事务。
 
-另外仅核对并记录xAgent的固定595380请求：Popover.Content只有Popup props与positionerProps，暂无Portal.container透传。公开Portal本身支持container，但不能改变Content内部新建Portal的目标；该项待公共增强与嵌套弹层验收，本批未实现，也不要求宿主私有CSS补丁。
+本批曾仅记录xAgent固定595380的Content容器缺口，未在xLead反馈批次实现；后续公开增强与嵌套弹层验收见本页[Popover.Content的Portal容器](#popovercontent-的-portal-容器)。历史固定产物本身没有被补写能力。
 
 ## 长内容 Popover 碰撞尺寸（2026-10-15）
 

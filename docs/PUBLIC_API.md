@@ -655,6 +655,8 @@ React `/date-time` 与根入口导出 DateTimePicker/DateTimePickerProps；runti
 
 Popover.Content 的 positionerProps 保持peer合同，align=end无需改用其他入口。浮层定位外壳的gap包含于可用碰撞尺寸，正式CSS负责完整边界与内滚；原生controller使用独立视口测量合同，见[组件手册](COMPONENTS.md)。
 
+React `/popover` 及根入口新增 `PopoverContentProps`；`Popover.Content.portalProps` 配置组合内唯一 Portal，其类型来自公开 `Popover.Portal` props（排除由 Content 拥有的 children）。可配置 container、keepMounted、Portal ref 及 DOM 属性；省略时兼容原默认 body Portal 与关闭卸载。显式 container 时 Content 默认 keepMounted=true，以避开 peer 模态与被移除子树的回焦点竞争；显式 false 采用 peer 卸载行为及其限制。节点/RefObject/ShadowRoot/null 的真实类型、生命周期边界与 Dialog/Sheet 接线见[Popover 的 Portal 容器](COMPONENTS.md#popover-的-portal-容器)及[独立消费者示例](../examples/popover-portal-react/app.tsx)。Root、Popup 与 Positioner 的状态/焦点/定位职责保持不变。
+
 ## 接入反馈的兼容扩展
 
 完整登录页 `LoginPageConfig.labels.showPassword/hidePassword` 与新密码组合 `NewPasswordLabels.showPassword/hidePassword` 均为可选字段，保持英文默认，可配置中文，见[完整登录页文案](COMPONENTS.md#完整登录页密码显隐文案与品牌替代文本)。AdminSetupPage/createAdminSetupPage 可选 onCheck 与底层 controller.check() 只执行宿主权威只读核对，新增 checking/checkFailed 呈现；默认没有该动作，见[初始化页](COMPONENTS.md#管理员初始化页)。TextareaProps.autoResize 与原生 /dom 的 bindTextareaAutoResize 为显式启用的行数上限尺寸能力，不拥有草稿或提交。

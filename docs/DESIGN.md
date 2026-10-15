@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.14.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.15.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -1014,7 +1014,7 @@ xui既提供控件，也定义它们如何形成清楚的任务界面。每个�
 
 菜单、Popover、Dialog、Drawer 使用不透明 overlay、明确边界和一套浮层阴影：0 8px 24px -4px（浅色ink18%、深色black60%），辅以1px边界。深色四级层次为 canvas #090b0e → structural #11151c → active #161e28 → overlay #1a2230。实际阴影色仍来自集中变量。普通 flat/subtle/surface/raised 无投影；不把浮层配方复制到每张卡。
 
-Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index 掩盖遮挡，不以高阴影代替真实区域边界。无法交互的背景保持模态语义。
+Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index 掩盖遮挡，不以高阴影代替真实区域边界。无法交互的背景保持模态语义。React Popover.Content 可通过公开 portalProps 指定所属 Dialog/Sheet 的实际容器，保留同一 Root、定位器与焦点生命周期；省略时仍使用默认 body。扩展不新增 overlay 或打开状态 owner，不要求采用项目复制 Content 部件接线。
 
 ## Shapes
 

@@ -50,6 +50,33 @@ NavItem 默认渲染原生 a，也支持公开 render 元素或回调。例如 `
 
 启用状态保留原生 href、修改键、中键、target 和 download 的浏览器语义。宿主路由链接必须先调用合并的 onClick，再检查 defaultPrevented，且只拦截自己支持的同源普通主键导航。xui 不把全部链接点击强制转换为客户端路由。正式最小消费者 tests/fixtures/nav-contract.tsx 演示这项接入；产品路由是否避免文档重载仍要由采用项目验证。
 
+### Popover 的 Portal 容器
+
+React `/popover` 与根入口导出 `PopoverContentProps`。`Popover.Content` 的可选 `portalProps` 类型为 `Omit<React.ComponentProps<typeof Popover.Portal>, 'children'>`，配置组合内部的唯一 Portal；`children` 仍属于 Content，`positionerProps` 仍只配置定位器。省略整个字段时保持默认 Portal 与关闭卸载：顶层目标为 body，嵌套时由 peer 继承父 Portal。Portal ref、标准 DOM 属性与 render 沿用公开 peer 合同，不另建 state、overlay 或 focus trap。
+
+传入非 null/undefined 的 `container` 时，Content 默认 `keepMounted=true`：由 peer 隐藏关闭的子树，维持模态内回焦点与再次打开的节点/搜索连续性，父模态卸载时一并释放。原因是当前 peer 1.7.0 移除仍持有焦点的嵌套 Portal 后，父模态的延后恢复可覆盖子浮层回焦点。显式 `keepMounted=false` 保留 peer 的关闭卸载语义，也保留该嵌套回焦点限制；模态内选择器应使用默认保留策略，不通过定时 focus 补丁竞争。无 container、container=null/undefined 仍默认 false；公开 Portal 部件本身的默认行为没有改变。
+
+当前固定 Base UI 1.7.0 的 `container` 接受 HTMLElement、ShadowRoot、RefObject<HTMLElement | ShadowRoot | null>、null 或 undefined，不接受选择器字符串或返回节点的回调；Portal 自己的 `ref` 则可以使用 React callback ref。显式 null 会等待目标，undefined 或 current=null 的 RefObject 会继承父 Portal/回退 body；更改 ref.current 本身不触发重新定位目标。宿主应在实际模态节点已挂载后渲染 Content（下面用节点状态作就绪条件），再传该节点或已就绪的稳定 RefObject；保持打开期间的容器身份稳定。更换容器可重新挂载 portal 子树，不承诺保留该子树的 DOM/焦点。
+
+```tsx
+const [modalContainer, setModalContainer] = React.useState<HTMLDivElement | null>(null);
+<Dialog.Root>
+  <Dialog.Trigger>编辑</Dialog.Trigger>
+  <Dialog.Content ref={setModalContainer}>
+    <Dialog.Title>编辑资源</Dialog.Title>
+    <Popover.Root>
+      <Popover.Trigger>选择资源</Popover.Trigger>
+      {modalContainer && <Popover.Content portalProps={{container: modalContainer}} positionerProps={{align: 'start'}}>
+        <Popover.Title>可选资源</Popover.Title>
+        {/* 公共 Field/Input 与业务候选项 */}
+      </Popover.Content>}
+    </Popover.Root>
+  </Dialog.Content>
+</Dialog.Root>
+```
+
+Sheet 使用相同接线。不要再在 Content 外包一层 Portal，也不要把 `portalProps` 传给 Popup；选值、搜索、草稿和请求仍由宿主管理。完整可运行的[Dialog/Sheet 示例](../examples/popover-portal-react/app.tsx)由独立 tarball 安装消费，包含受控打开、搜索、取消和后续确认。原生 `createPopoverController` 接收宿主已有 popup 节点并使用浏览器 Popover API，没有 React Portal 或 `portalProps` 参数；原生定位与模态所属关系沿用原合同。
+
 ## 原生控制器
 
 ### 原生公共结构与 controllers

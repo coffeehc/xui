@@ -141,6 +141,15 @@ for (const kind of ['vanilla','react']) {
   await writeFile(`dist/${kind}/choice-state-contract.html`,'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><script src="./theme-init.js"></script><link rel="stylesheet" href="./choice-state-contract.css"></head><body class="xui"><div id="root"></div><script type="module" src="./choice-state-contract.js"></script></body></html>');
   await writeFile(`dist/${kind}/choice-state-contract-metafile.json`,JSON.stringify(choiceStateBuild.metafile,null,2));
   if (kind === 'react') {
+    const portal=resolve(cwd,'popover-portal'),portalOutput=resolve('dist/popover-portal-react');
+    await cp('examples/popover-portal-react',portal,{recursive:true});
+    await copyFile('tests/fixtures/popover-portal-types.tsx',`${cwd}/popover-portal-types.tsx`);
+    const portalBuild=await build({entryPoints:[`${portal}/app.tsx`],outdir:portalOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+    assert(Object.keys(portalBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Popover portal escaped its standalone tarball install');
+    assert(!Object.keys(portalBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Popover portal requires private CSS');
+    execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','popover-portal-types.tsx','popover-portal/app.tsx'],{cwd,stdio:'inherit'});
+    await copyFile(`${portal}/index.html`,`${portalOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${portalOutput}/theme-init.js`);
+    await writeFile(`${portalOutput}/metafile.json`,JSON.stringify(portalBuild.metafile,null,2));
     await copyFile('tests/fixtures/peer-contract.tsx',`${cwd}/peer-contract.tsx`);
     const fixture = await build({entryPoints:[`${cwd}/peer-contract.tsx`],outfile:'dist/react/peer-contract.js',bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
     assert(Object.keys(fixture.metafile.inputs).every(file => resolve(file).startsWith(`${cwd}/`)), 'Peer fixture read outside the packed consumer');
