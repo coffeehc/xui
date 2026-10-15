@@ -2,6 +2,28 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## stacked InputGroup 的 Textarea 自动增高（2026-10-15）
+
+在侧栏合同提交 `429298e53e3f14ba04616964a2f7811593804905` 之后独立修复；只修改 xui，不升级消费项目。以正式 `511383729302901d8ff7284f520a943519ee7051` 的三包安装到独立消费者复现：同一受控长文本中，独立 Textarea 从72px增长至120px，stacked InputGroup 实际仍70px，尽管内联 block-size 已为118px、scrollHeight272px。根因为公共纵向 flex 的伸缩基准覆盖共享测量结果，不是宿主 value、请求或另一个高度 owner。
+
+共享 `bindTextareaAutoResize` 在活跃期间标记自身尺寸归属，公共 forms.css 仅对 stacked 中已启用的 Textarea 采用其测量高度；销毁恢复原属性和内联尺寸。React 继续复用同一绑定，没有第二套测量、状态或事件机制；公开 ESM/types 和 autoResize/maxRows/update/destroy 签名不变。未启用时保留原 flex、手动resize与rows，只有原本声明自动增高但被压缩的组合表现得到修正。具体合同及正式双端例子见[Textarea](COMPONENTS.md#textarea-可选自动增高)。
+
+最终 source generation：`800d60ac70149bf505c06df26168f25886947a38ca361d0cee0ae50560802bf9`；DESIGN **0.16.1**，三包私有版本仍0.1.0，384 tokens/101公开入口。正式 CSS gzip **17351/17536**，未提高预算。独立 npm tarball 安装逐个核对 ESM/CSS/types/init，React/ReactDOM/Base UI 各一份，原生无 React，未使用 packages/src alias 或消费者 flex/高度补丁。
+
+| 检查 | 结果 | 原始证据（`.artifacts/textarea-composition/`） |
+| --- | --- | --- |
+| build/types/tokens/docs/单测 | 通过；单测 **523/523** | `build-final.log`、`typecheck-final.log`、`tokens-final.log`、`docs-final.log`、`unit-final.log` |
+| 独立正式消费者 | 通过；公开入口、命名类型、peer与gzip门禁 | `consumer-final.log`、release metadata |
+| Chromium 新组合 | **64/64**：两端plain/Dialog及stacked/Sheet ×3主题 ×1280/390 ×16/32字号48项；交叉容器rows4共4项；单侧Addon4项；默认未启用2项；真实Chrome200%缩放6项 | `browser-final.json`、`screenshots/` |
+| 原自动增高回归 | **30/30**：原Dialog全矩阵及真实缩放 | `regression-final.json` |
+| Firefox / WebKit 精选 | 每引擎 **8个唯一用例通过**，包含两端窄屏200%文字stacked/Sheet、rows4交叉容器及默认行为 | `firefox-keyboard-final.json`、`webkit-keyboard-final.json`；Chromium只读真实按键的2项定向复验 `chromium-keyboard-final.json` 不重复累计 |
+
+检查真实高度增长、5行封顶/内部滚动、删除缩回、rows下限、受控更新、原节点/选区/焦点、上下/单侧工具区、readOnly/disabled/busy、无额外input事件、合成composition与实际文字输入、恢复默认flex和手动resize、Dialog/Sheet滚动、关闭回触发器和无页面横溢。真实缩放由Chrome设置页200%执行，断言DPR翻倍、CSS视口减半、根字号不变、CSS zoom=1及pinch=1。已实际查看桌面浅色、窄屏深色大字及system真实缩放截图。
+
+初轮测试错误与trace保留，未据此放宽生产实现：多行fill的原生事件数由浏览器决定，断言改为重测/受控同步不增发事件；测试向浏览器evaluate显式传入草稿。自动化insertText作用于只读框时，WebKit会折叠选区，Firefox还会产生原生input但值未变；现用真实按键验证只读值不变、零input，另行核对公共同步/测量保留选区和不增发事件，不将浏览器/驱动注入差异归因给尺寸绑定。三个引擎相同合同重验通过，初轮与定向报告保留。
+
+未跑xAgent真实页面、后端/认证/生产部署、移动OS实体键盘/读屏器、独立SSR hydration和全仓浏览器/watch/coldstart；合成IME不等于OS IME验收。侧栏两项的独立证据见下节，不重复累计；最终正式包同时包含该侧栏提交及此修复，宿主仍需按固定产物接入验收。
+
 ## 底部导航开关与业务 footer 同行（2026-10-15）
 
 基于固定 `511383729302901d8ff7284f520a943519ee7051` 补齐同一侧栏公共布局合同。React MenuLayout/AppShell、原生 createMenuLayout 新增可选 `sidebarTogglePlacement='top'|'bottom'`；默认 top 保留旧位置，bottom 将原控件放在菜单和可选业务 footer 之后，顶部没有占位。窄屏仍移动同一个按钮到顶栏打开原 drawer；折叠/抽屉/roving/导航事实沿用原 owner。直接 AppShell 入口是 `/layout`，没有新增 `/app-shell` 别名。

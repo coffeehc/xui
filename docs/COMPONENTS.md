@@ -126,7 +126,7 @@ React NumberInput/SearchInput 使用受控 value/onValueChange；PasswordInput �
 
 React `/forms` 的 `TextareaProps.autoResize?: {maxRows:number}` 显式启用；`InputGroup.Textarea` 共享同一入口。原生 `/dom` 提供 `bindTextareaAutoResize(textarea,{maxRows})`，返回 `update(options?)` / `destroy()`。maxRows 必须是正整数；最小高度仍取已有 rows 与公共 CSS minimum，maxRows 不得压缩此下限。默认不启用，原有 rows、滚动和手动 resize 不变。
 
-启用后按实际字体、内距、边线和宽度测量内容，增长到行数上限后内部滚动，删除内容会缩回；尊重公开 CSS max-height 约束。不改变 value、选区、焦点、表单、required/disabled/readOnly 或 IME/提交策略，不派发额外 input/change。组件测量不可见副本，避免先压缩正在编辑的框导致 Dialog 滚动跳动。自身高度不做过渡动画。
+启用后按实际字体、内距、边线和宽度测量内容，增长到行数上限后内部滚动，删除内容会缩回；尊重公开 CSS max-height 约束。不改变 value、选区、焦点、表单、required/disabled/readOnly 或 IME/提交策略，不派发额外 input/change。组件测量不可见副本，避免先压缩正在编辑的框导致 Dialog 滚动跳动。自身高度不做过渡动画。stacked InputGroup 同样按内容增长：共享尺寸绑定与公共 CSS 协作，避免纵向 flex 压缩已测高度；未启用自动增高的 InputGroup 保留原 flex 与手动 resize 行为。不要在消费方覆盖 flex、固定高度或再加测量器。
 
 React 受控值随提交后的 props 更新；原生通过 input/字体加载/宽度/窗口变化自动更新，直接设置 value 或更改外部样式后显式调用 update。表单 reset 后重测；启用期间由绑定独占 block-size/overflow-y/resize，外部通过 rows/maxRows/CSS max-height 调整边界，不并行测高或写高度。禁用自动增高或 destroy 恢复原内联尺寸/resize 并释放观察器、动画帧和监听。长编辑器仍由 Dialog.Body/Sheet.Body 管理所属滚动，不能把整页扩大成第二个滚动 owner。
 
@@ -134,7 +134,7 @@ React 受控值随提交后的 props 更新；原生通过 input/字体加载/�
 <Field label="想法内容"><Textarea rows={2} value={draft} onChange={e=>setDraft(e.target.value)} autoResize={{maxRows:6}} /></Field>
 ```
 
-原生：`const sizing=bindTextareaAutoResize(textarea,{maxRows:6}); textarea.value=draft; sizing.update();`。正式双端示例见 [React 文本输入](../examples/text-inputs-react/app.tsx) / [原生文本输入](../examples/text-inputs-vanilla/app.js) 的按需草稿 Dialog。
+原生：`const sizing=bindTextareaAutoResize(textarea,{maxRows:6}); textarea.value=draft; sizing.update();`。正式双端示例见 [React 文本输入](../examples/text-inputs-react/app.tsx) / [原生文本输入](../examples/text-inputs-vanilla/app.js) 的按需草稿 Dialog；查询 `?sizing&layout=stacked&surface=sheet` 展示上下 Addon 与 Sheet，`rows=4`、`addons=top|bottom`、`manual` 用于核对原生行数、单侧工具区和未启用的默认行为。
 
 ### NumberInput
 

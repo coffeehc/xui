@@ -15,6 +15,7 @@ export function bindTextareaAutoResize(input:HTMLTextAreaElement,initial:Textare
   const checked=(value:TextareaAutoResizeOptions)=>{if(!value||!Number.isSafeInteger(value.maxRows)||value.maxRows<1)throw new TypeError('Textarea maxRows must be a positive integer');return {...value};};
   let options=checked(initial);if(owners.has(input))throw new Error('Textarea already has an auto-resize owner');
   const doc=input.ownerDocument,view=doc.defaultView;if(!view)throw new TypeError('Textarea needs a browsing context');
+  const resizeAttribute='data-xui-auto-resize',originalResizeAttribute=input.getAttribute(resizeAttribute);
   const properties=['block-size','overflow-y','resize'] as const;
   const original=properties.map(name=>({name,value:input.style.getPropertyValue(name),priority:input.style.getPropertyPriority(name)}));
   const mirror=doc.createElement('textarea');mirror.setAttribute('aria-hidden','true');mirror.tabIndex=-1;mirror.inert=true;mirror.disabled=true;
@@ -41,6 +42,8 @@ export function bindTextareaAutoResize(input:HTMLTextAreaElement,initial:Textare
   const reset=(event:Event)=>{if(event.target===input.form){clearTimeout(resetTimer);resetTimer=setTimeout(schedule,0);}};
   const observer=new view.ResizeObserver(entries=>{const next=entries[0]?.contentRect.width;if(next!==undefined&&next!==width){width=next;schedule();}});
   observer.observe(input);input.addEventListener('input',schedule);input.addEventListener('compositionend',schedule);doc.addEventListener('reset',reset,true);view.addEventListener('resize',schedule);doc.fonts?.addEventListener('loadingdone',schedule);void doc.fonts?.ready.then(schedule);
-  owners.add(input);measure();
-  return {update(next){if(dead)return;if(next)options=checked(next);measure();},destroy(){if(dead)return;dead=true;observer.disconnect();view.cancelAnimationFrame(frame);clearTimeout(resetTimer);input.removeEventListener('input',schedule);input.removeEventListener('compositionend',schedule);doc.removeEventListener('reset',reset,true);view.removeEventListener('resize',schedule);doc.fonts?.removeEventListener('loadingdone',schedule);mirror.remove();for(const {name,value,priority} of original)if(value)input.style.setProperty(name,value,priority);else input.style.removeProperty(name);owners.delete(input);}};
+  // Let a stacked InputGroup honor this owner's measured block size without
+  // changing the flex behavior of ordinary, manually sized textareas.
+  owners.add(input);input.setAttribute(resizeAttribute,'');measure();
+  return {update(next){if(dead)return;if(next)options=checked(next);measure();},destroy(){if(dead)return;dead=true;observer.disconnect();view.cancelAnimationFrame(frame);clearTimeout(resetTimer);input.removeEventListener('input',schedule);input.removeEventListener('compositionend',schedule);doc.removeEventListener('reset',reset,true);view.removeEventListener('resize',schedule);doc.fonts?.removeEventListener('loadingdone',schedule);mirror.remove();for(const {name,value,priority} of original)if(value)input.style.setProperty(name,value,priority);else input.style.removeProperty(name);if(originalResizeAttribute===null)input.removeAttribute(resizeAttribute);else input.setAttribute(resizeAttribute,originalResizeAttribute);owners.delete(input);}};
 }

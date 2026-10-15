@@ -89,6 +89,7 @@
  .xui-input-group>.xui-input {min-block-size:var(--input-group-control-min-height);}
  .xui-input-group>.xui-textarea {min-block-size:var(--input-group-textarea-min-height);}
  .xui-input-group[data-layout='stacked'] {flex-direction:column;align-items:stretch;}
+ .xui-input-group[data-layout='stacked']>.xui-textarea[data-xui-auto-resize] {flex:none;}
  .xui-input-group[data-layout='stacked']>.xui-input-addon {display:flex;flex-wrap:wrap;min-inline-size:0;gap:var(--space-control-gap);padding:var(--space-text-gap) var(--space-control-gap);}
  .xui-input-group>.xui-input-addon:empty {display:none;}
  .xui-input-addon {display:inline-flex;align-items:center;gap:var(--space-text-gap);padding-inline:var(--space-control-gap);color:var(--muted-foreground);}

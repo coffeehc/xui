@@ -147,7 +147,7 @@
 | theme/init/useTheme | dark、sessionStorage key `ui.theme.mode`、persist 开启，同标签页刷新保留、不主动跨页同步、不读取或迁移旧localStorage；无保存值/非法值回 dark，只有显式 system 在媒体读取失败时生效 light，storage 失败保留内存。传 mode 为受控且不读写 storage；同步 init 复用 window.xuiTheme，useTheme 只订阅 |
 | 原生 UI ID | 按 ownerDocument 共享分配，跨 bundle/多实例/卸载重建不重用；无 crypto/randomUUID 或 HTTPS 前置条件。已有显式 DOM ID 与 Toast message.id 保留。仅临时 UI 身份，不是认证/安全随机或持久业务 ID，见 [内网 HTTP 接入](ADOPTION.md#原生-ui-id-与内网-http) |
 | Button/IconButton | type=button、variant=primary、size=default；busy 与 disabled 分开，无隐式防重复；IconButton 要求 aria-label。render/ref/事件沿用公开 peer 合并合同 |
-| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Textarea 可选 autoResize={maxRows}，原生 /dom 的 bindTextareaAutoResize 只拥有尺寸，见[文本输入](COMPONENTS.md#textarea-可选自动增高)；Fieldset 独立关联 legend/help/error |
+| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Textarea 可选 autoResize={maxRows}，原生 /dom 的 bindTextareaAutoResize 只拥有尺寸，包含 stacked InputGroup 的上下 Addon 组合，默认未启用时行为不变，见[文本输入](COMPONENTS.md#textarea-可选自动增高)；Fieldset 独立关联 legend/help/error |
 | MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留原生链接，菜单键盘/drawer owner 由库提供 |
 | GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](COMPONENTS.md#groupedcombobox-与-disclosure) |
 | Pagination/Disclosure | Pagination 默认第 1 页，pageCount 由宿主；受控 page 只请求确认。Disclosure 默认关闭，装饰性 chevron 与公开 DisclosureIndicator 复用相同 tokens。两者不发请求、不自动路由 |
