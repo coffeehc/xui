@@ -9,6 +9,7 @@
 | [COMPONENTS](docs/COMPONENTS.md) | 组件使用、组合、状态与生命周期，按章节查阅 |
 | [PUBLIC_API](docs/PUBLIC_API.md) | 全部公开入口、HTTP/认证/Key/日志运行时合同 |
 | [VALIDATION](docs/VALIDATION.md) | 实际验证结果、未完成与未测范围 |
+| [PUBLIC_REQUESTS](docs/PUBLIC_REQUESTS.md) | 消费项目公共能力请求、当前状态与验收边界 |
 
 Codex 接入流程：[adopt-xui](.agents/skills/adopt-xui/SKILL.md)。
 
