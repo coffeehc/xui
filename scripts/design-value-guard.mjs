@@ -101,9 +101,9 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
         // Base UI Positioner supplies both measurements; the native popover
         // controller supplies anchor width and applies its own collision cap.
         const selectionAnchor = match[1] === '--anchor-width' && property === 'inline-size' && context.selector === '.xui-select-popup,.xui-combobox-popup' && expression === 'max(var(--anchor-width),var(--popover-width))';
-        const selectionAvailable = match[1] === '--available-width' && property === 'max-inline-size' && context.selector === '.xui-positioner :is(.xui-select-popup,.xui-combobox-popup)' && expression === 'min(var(--available-width),calc(100vw-var(--layout-viewport-inset)*2))';
+        const floatingAvailable = match[1] === '--available-width' && property === 'max-inline-size' && context.selector === '.xui-positioner .xui-floating' && expression === 'min(var(--available-width),calc(100vw-var(--layout-viewport-inset)*2))';
         const sideAvailable = match[1] === '--available-width' && property === 'max-inline-size' && context.selector === ".xui-positioner:is([data-side='left'],[data-side='right']) .xui-floating" && expression === 'min(calc(var(--available-width)-var(--floating-offset)-var(--floating-offset)),calc(100vw-var(--layout-viewport-inset)-var(--layout-viewport-inset)))';
-        const peer = context.file === 'packages/theme/src/floating.css' && (selectionAnchor || selectionAvailable || sideAvailable || ({ '--available-height': 'max-block-size', '--toast-swipe-movement-x': 'transform', '--toast-swipe-movement-y': 'transform' })[match[1]] === property);
+        const peer = context.file === 'packages/theme/src/floating.css' && (selectionAnchor || floatingAvailable || sideAvailable || ({ '--available-height': 'max-block-size', '--toast-swipe-movement-x': 'transform', '--toast-swipe-movement-y': 'transform' })[match[1]] === property);
         assert(tokens.has(match[1]) || peer, `${where(context)} Undefined semantic token ${match[1]}`);
         if (peer) exceptions.add(`${context.file}: peer measurement ${match[1]}`);
       }

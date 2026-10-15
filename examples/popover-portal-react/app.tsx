@@ -3,12 +3,14 @@ import {createRoot} from 'react-dom/client';
 import {Popover,type PopoverContentProps} from '@coffeehc/xui-react/popover';
 import {Dialog} from '@coffeehc/xui-react/dialog';
 import {Sheet} from '@coffeehc/xui-react/sheet';
+import {Combobox} from '@coffeehc/xui-react/combobox';
 import {Button} from '@coffeehc/xui-react/button';
 import {Field,Input} from '@coffeehc/xui-react/forms';
 import {createThemeController} from '@coffeehc/xui-runtime/theme';
 import '@coffeehc/xui-theme/style.css';
 
 const params=new URLSearchParams(location.search);
+const wide=params.has('wide'),align=(['start','center','end'].includes(params.get('align')??'')?params.get('align'):'start') as 'start'|'center'|'end',side=(['top','bottom','left','right'].includes(params.get('side')??'')?params.get('side'):'bottom') as 'top'|'bottom'|'left'|'right';
 const items=Array.from({length:24},(_,i)=>`资源${String(i+1).padStart(2,'0')} · 研发团队共享的长中文名称与访问范围`);
 
 function Editor({kind}:{kind:'dialog'|'sheet'}){
@@ -30,11 +32,11 @@ function Editor({kind}:{kind:'dialog'|'sheet'}){
     <Field label="保留草稿"><Input defaultValue="原有草稿"/></Field>
     <Popover.Root open={pickerOpen} onOpenChange={next=>{events.current.push(next);if(accept)setPickerOpen(next);}}>
      <Popover.Trigger ref={pickerTrigger} render={<Button variant="outline"/>}>选择资源</Popover.Trigger>
-     {container&&<Popover.Content portalProps={portalProps} positionerProps={{align:'start'}} initialFocus={searchRef} data-testid="picker" data-revision={revision}>
+     {container&&<Popover.Content portalProps={portalProps} positionerProps={{align,side}} style={wide?{width:'calc(100vw - var(--layout-viewport-inset) * 2)'}:undefined} initialFocus={searchRef} data-testid="picker" data-revision={revision}>
       <Popover.Title>选择共享资源</Popover.Title><Popover.Description>搜索名称或使用键盘访问下方资源。</Popover.Description>
-      <Field label="搜索资源"><Input ref={searchRef} value={query} onChange={event=>setQuery(event.currentTarget.value)}/></Field>
+      <>{wide?<Combobox.Root<string> inline open items={items} onValueChange={item=>{if(item){setValue(item);setPickerOpen(false);}}}><Combobox.Input ref={searchRef} aria-label="搜索资源"/><Combobox.List>{items.map(item=><Combobox.Item key={item} value={item}>{item}</Combobox.Item>)}</Combobox.List></Combobox.Root>:<><Field label="搜索资源"><Input ref={searchRef} value={query} onChange={event=>setQuery(event.currentTarget.value)}/></Field>
       <div className="xui-stack" aria-label="可选资源">{items.filter(item=>item.includes(query)).map(item=><Button key={item} variant="ghost" onClick={()=>{setValue(item);setPickerOpen(false);}}>{item}</Button>)}{!items.some(item=>item.includes(query))&&<p role="status">没有匹配资源</p>}</div>
-      <Button variant="outline" onClick={()=>setPickerOpen(false)}>取消选择</Button>
+      </>}</><Button variant="outline" onClick={()=>setPickerOpen(false)}>取消选择</Button>
       <Button variant="outline" onClick={()=>{setPickerOpen(false);setConfirmOpen(true);}}>查看后续确认</Button>
      </Popover.Content>}
     </Popover.Root>

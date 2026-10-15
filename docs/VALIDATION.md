@@ -2,6 +2,25 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## Popover 可用宽度边界（2026-10-15）
+
+以固定 `17d8be6fa5ef3baf3845206c0e8bc89b62f0f053` 隔离复核，独立正式包消费者在 Dialog 实际节点内 Portal、align=start、32rem 目标宽度及内联 Combobox 下复现：普通 640px 视口和真实 Chrome 200%（innerWidth640/innerHeight406）均为 left134/right646、width512，而 positioner 的 available-width 仅372px。根因是 top/bottom 公共浮层只限制视口宽度，没有同时采用定位器的可用宽度。
+
+floating.css 将现有 Select/Combobox 的可用宽度约束统一到定位器内的公共浮层；左右侧继续扣除定位间距。React API、公开 types、Portal container、受控 open、回焦点与宿主草稿合同不变；原生仍由既有 createPopoverController 计算原生 top-layer 的边界。没有复制定位器、修改宿主 CSS、认证/API 或引入新业务 owner。DESIGN 保持 **0.17.0**，386 tokens、102 入口，三包私有0.1.0；本修正不要求消费者迁移后续 Card/Token/接入规范。
+
+正式 source generation `0b746d9f9c156ca6d34d4ddafea4b64ace029ae9d6128b4d4e5ba87aa25b73a5`。独立 tarball 安装验证正式 ESM/CSS/types、命名类型和单份 React/ReactDOM/Base UI，原生无 React，无源码 alias；CSS/JS 预算未改变。
+
+| 检查 | 结果 | 原始证据 |
+| --- | --- | --- |
+| build / 类型 / tokens / 单测 | 通过，单测 **524/524** | `.artifacts/popover-bounds/` 中 `build-final.log`、`typecheck.log`、`tokens-final.log`、`unit-final.log` |
+| 正式消费者 | 通过，同代包、正式入口、types 与体积门禁 | `consumer-final.log` |
+| 初始最小复现与修正 | 初始两项几何失败；修正后关键三项通过 | `baseline-failed-evidence/`、`critical-final.json` |
+| Chromium 新专项 | **54/54**；两类父弹层、四侧/三个对齐、三主题、1280/390、根字号16/32、真实Chrome200% | `.artifacts/popover-available-bounds/` |
+| Firefox / WebKit | 各 **4/4**，两类父弹层的浅色窄屏与深色200%文字 | `firefox-keyboard-adjusted-final.json`、`webkit-keyboard-adjusted-final.json` |
+| 既有弹层回归 | Portal **32/32**、双端边界 **30/30**（排除旧脚本硬编码的其他端口缩放） | `portal-regression-final.json`、`boundary-regression-final.json` |
+
+复开使用真实 Tab 从内联搜索到取消按钮，断言焦点、完整按钮边界；Escape 返回触发按钮，父弹层、草稿和节点身份保持。浏览器缩放由 Chrome 设置执行，核对 DPR 翻倍、CSS视口减半、根字号不变、CSS zoom=1、pinch=1。初轮一个 Firefox 用例在复开后立即 programmatic focus 时记录到不同的滚动结果，证据保留；随后使用验收要求的真实 Tab 路径通过定向与完整精选复验。没有放宽边界或改动生产焦点代码，不能将该结果外推为任意时机的程序化焦点操作均已验收。未跑消费项目产品复验、实体移动设备和读屏器；独立消费者不代替宿主升级验收。
+
 ## 通用卡片长标题（2026-10-15）
 
 基于固定 `68b017cea090109967226aa4056064492583e2c1` 排重：此前只有 NavigationMenu.Label / createNavigationLabel 的导航专用滚动，没有卡片可用的通用入口。新增 React `/display` 与 root 的 OverflowText/OverflowTextProps、runtime `/display-dom` 与 root 的 createOverflowText/OverflowTextOptions/OverflowTextController。源码只改xui；没有升级或修改xAgent、后端、认证、API及其既有adapter。本次文本部件不构成完整卡片Header/Footer槽位框架交付，也没有实施尚在讨论的公共API接入规范变更。
