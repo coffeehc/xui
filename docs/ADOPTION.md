@@ -89,6 +89,8 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 
 普通需求优先完整页面或组合；特殊业务可用公开扩展点或组合基础控件。允许声明的 props/render/parts、受信任 renderer、数据配置和 callbacks；不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
 
+侧栏需要底部收拢入口时，给 MenuLayout/AppShell 或原生 createMenuLayout 传 `sidebarTogglePlacement="bottom"`；不要移动库内按钮。业务底部动作与版本状态需要同行时使用 `SidebarFooterRow`（原生公开同名 CSS 角色），保留既有回调与 busy，见[侧栏底部接入](COMPONENTS.md#侧栏底部接入与迁移)。省略新扩展时保留原顶部开关和默认全宽 footer。
+
 Dialog/Sheet 内需要指定 Popover 的挂载目标时，使用 `Popover.Content.portalProps.container`，保留公共 Content 的定位/样式接线；不要外包第二层 Portal。容器就绪、默认 keepMounted 策略及 peer 类型边界见[Popover 的 Portal 容器](COMPONENTS.md#popover-的-portal-容器)。
 
 业务流程、领域数据、业务页面和产品布局由宿主负责；领域 API、权限/tenant 与校验须可独立测试。xui 提供通用组件、公开组合、请求接入及 typed adapter/loader 边界。仅选用默认 HTTP client 或页面 adapter 时，服务须满足对应明确 wire 合同；宿主可通过 ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 或 BusinessLogLoader 连接自己的领域接口，业务 API 迁移是宿主独立任务。页面所需前置见 [默认适配器前置](PUBLIC_API.md#默认适配器的服务前置)。

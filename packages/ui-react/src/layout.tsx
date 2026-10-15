@@ -8,8 +8,8 @@ import type {ThemeController} from '@coffeehc/xui-runtime/theme';
 import {createHeaderLocaleSelect,isHeaderLocaleEnabled,type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
 import type {ThemeModeLabels} from '@coffeehc/xui-runtime/theme-control';
 export type {HeaderLocaleOptions,HeaderLocaleOption} from '@coffeehc/xui-runtime/header-controls';
-import type {ShellScrollMode,ShellContentInset} from '@coffeehc/xui-runtime/menu-layout';
-export type {ShellScrollMode,ShellContentInset} from '@coffeehc/xui-runtime/menu-layout';
+import type {ShellScrollMode,ShellContentInset,SidebarTogglePlacement} from '@coffeehc/xui-runtime/menu-layout';
+export type {ShellScrollMode,ShellContentInset,SidebarTogglePlacement} from '@coffeehc/xui-runtime/menu-layout';
 import {ShellNavigationContext} from './shell-context.js';
 
 export function Container({className,...props}:React.ComponentProps<'div'>){return <div {...props} className={cx('xui-container',className)}/>;}
@@ -89,20 +89,26 @@ export function SidebarFooterContent({icon,children,className,...props}:SidebarF
     <span className="xui-sidebar-footer-label">{children}</span>
   </span>;
 }
+/** Natural-width footer groups share a line when they fit and wrap without truncation. */
+export function SidebarFooterRow({className,...props}:React.ComponentProps<'div'>){
+  return <div {...props} className={cx('xui-sidebar-footer-row',className)}/>;
+}
 export interface AppShellProps extends Omit<React.ComponentProps<'div'>,'children'> {
   /** Workspace content spacing; defaults to standard and is retained in other scroll modes. */
   contentInset?:ShellContentInset;
+  /** Desktop only, defaults to top. Bottom follows the menu and optional sidebarFooter. */
+  sidebarTogglePlacement?:SidebarTogglePlacement;
   theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:ShellScrollMode;sidebar:React.ReactNode;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;header?:React.ReactNode;headerSlots?:AppHeaderSlots;children:React.ReactNode;
   collapsed?:boolean;defaultCollapsed?:boolean;onCollapsedChange?:(collapsed:boolean)=>void;compactLabel?:string;expandLabel?:string;
   restoreSidebarFocus?:boolean;navigationLabel?:string;skipLabel?:string;closeLabel?:string;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
 }
 /** One sidebar tree; routing, navigation selection and data remain with the host. */
-export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scrollMode='document',contentInset='standard',sidebar,sidebarHeader,sidebarFooter,pageHeader,pageToolbar,pageFooter,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,compactLabel='Compact navigation',expandLabel='Expand navigation',header,headerSlots,children,navigationLabel='Navigation',skipLabel='Skip to content',closeLabel='Close navigation',sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,className,...props}:AppShellProps){
+export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scrollMode='document',contentInset='standard',sidebarTogglePlacement='top',sidebar,sidebarHeader,sidebarFooter,pageHeader,pageToolbar,pageFooter,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,compactLabel='Compact navigation',expandLabel='Expand navigation',header,headerSlots,children,navigationLabel='Navigation',skipLabel='Skip to content',closeLabel='Close navigation',sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,className,...props}:AppShellProps){
   const [internal,setInternal]=React.useState(defaultSidebarOpen),[narrow,setNarrow]=React.useState(false);
   const [internalCollapsed,setInternalCollapsed]=React.useState(defaultCollapsed);const collapsed=controlledCollapsed??internalCollapsed,sidebarId=React.useId(),drawerId=React.useId();
   const requestCollapsed=(next:boolean)=>{if(controlledCollapsed===undefined)setInternalCollapsed(next);onCollapsedChange?.(next);};
-  const hasFooter=hasContent(sidebarFooter),hasHeader=hasContent(sidebarHeader),hasSections=hasHeader||hasFooter;
+  const hasFooter=hasContent(sidebarFooter),hasHeader=hasContent(sidebarHeader),hasSections=hasHeader||hasFooter||sidebarTogglePlacement==='bottom';
   const [sidebarElement,setSidebarElement]=React.useState<HTMLElement|null>(null),[navigationControl,setNavigationControl]=React.useState<HTMLDivElement|null>(null);
   const desktopSlot=React.useRef<HTMLDivElement>(null),drawerSlot=React.useRef<HTMLDivElement>(null),headerElement=React.useRef<HTMLElement>(null),headerToggleSlot=React.useRef<HTMLSpanElement>(null),controlHadFocus=React.useRef(false);
   // A constant portal target moves between the desktop grid and the existing drawer.
@@ -113,7 +119,7 @@ export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scro
   React.useLayoutEffect(()=>{if(!navigationControl)return;const focus=(event:FocusEvent)=>{if(event.target!==document.body&&!navigationControl.contains(event.target as Node))controlHadFocus.current=false;},pointer=(event:PointerEvent)=>{if(!navigationControl.contains(event.target as Node))controlHadFocus.current=false;};document.addEventListener('focusin',focus,true);document.addEventListener('pointerdown',pointer,true);return()=>{document.removeEventListener('focusin',focus,true);document.removeEventListener('pointerdown',pointer,true);};},[navigationControl]);
   React.useLayoutEffect(()=>{if(!sidebarElement)return;sidebarElement.classList.toggle('xui-shell-sidebar-with-footer',hasSections);if(!hasSections)sidebarElement.style.blockSize='';const target=narrow?drawerSlot.current:desktopSlot.current;if(target&&sidebarElement.parentNode!==target)target.append(sidebarElement);sidebarElement.setAttribute('aria-label',navigationLabel);},[hasSections,sidebarElement,narrow,navigationLabel]);
   // One owned control moves with the responsive frame, preserving its DOM and focus.
-  React.useLayoutEffect(()=>{if(!sidebarElement||!navigationControl)return;const target=narrow?headerToggleSlot.current:sidebarElement;if(!target||navigationControl.parentNode===target)return;const active=document.activeElement,focused=!!active&&navigationControl.contains(active)||controlHadFocus.current&&active===document.body;narrow?target.append(navigationControl):target.prepend(navigationControl);if(focused)navigationControl.querySelector<HTMLButtonElement>('button')?.focus();else controlHadFocus.current=false;},[sidebarElement,navigationControl,narrow]);
+  React.useLayoutEffect(()=>{if(!sidebarElement||!navigationControl)return;const target=narrow?headerToggleSlot.current:sidebarElement,atEnd=narrow||sidebarTogglePlacement==='bottom';if(!target||navigationControl.parentNode===target&&(atEnd?target.lastElementChild:target.firstElementChild)===navigationControl)return;const active=document.activeElement,focused=!!active&&navigationControl.contains(active)||controlHadFocus.current&&active===document.body;atEnd?target.append(navigationControl):target.prepend(navigationControl);if(focused)navigationControl.querySelector<HTMLButtonElement>('button')?.focus();else controlHadFocus.current=false;},[sidebarElement,navigationControl,narrow,sidebarTogglePlacement,hasHeader,hasFooter]);
   React.useLayoutEffect(()=>{if(!hasSections||!sidebarElement||!headerElement.current)return;const headerNode=headerElement.current;const measure=()=>{sidebarElement.style.blockSize=!narrow&&scrollMode==='document'?`max(var(--nav-sidebar-min-height), calc(100dvh - ${headerNode.getBoundingClientRect().height}px))`:'';};measure();const observer=new ResizeObserver(measure);observer.observe(headerNode);return()=>observer.disconnect();},[hasSections,sidebarElement,narrow,scrollMode]);
   // The owned control must occupy its final space before locating the active row.
   React.useLayoutEffect(()=>{sidebarElement?.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});},[hasSections,sidebarElement,navigationControl,narrow,navigationLabel,scrollMode]);
@@ -122,11 +128,11 @@ export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scro
   const navigationToggle=<Dialog.Trigger ref={trigger} render={<Button className="xui-shell-toggle" variant="ghost" data-icon="true" data-xui-menu-toggle=""/>} aria-label={narrow?navigationLabel:collapsed?expandLabel:compactLabel} aria-expanded={narrow?open:!collapsed} aria-haspopup={narrow?'dialog':undefined} aria-controls={narrow?drawerId:sidebarId} data-collapsed={!narrow&&collapsed} onFocus={()=>{controlHadFocus.current=true;}} onClick={event=>{if(!narrow){event.preventBaseUIHandler();requestCollapsed(!collapsed);}}}><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--nav-icon-stroke-width)"><path d="M3 4h14v12H3zM7 4v12"/><path className="xui-shell-toggle-arrow" d="m13 8-2 2 2 2"/></svg></Dialog.Trigger>;
   React.useEffect(()=>{const media=window.matchMedia('(max-width: 47.999rem)');let wasNarrow=media.matches;setNarrow(wasNarrow);const update=()=>{setNarrow(media.matches);if(wasNarrow&&!media.matches)request(false);wasNarrow=media.matches;};media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[request]);
   const navigationSidebar=<ShellNavigationContext.Provider value={{collapsed,onCollapsedChange:requestCollapsed,fallbackFocus:()=>drawer.current?.hasAttribute('data-open')?drawer.current.querySelector<HTMLElement>('.xui-dialog-footer button')??drawer.current:trigger.current}}>{sidebar}</ShellNavigationContext.Provider>;
-  return <Dialog.Root open={narrow&&open} onOpenChange={next=>request(next)}><div {...props} data-collapsed={collapsed} data-scroll-mode={scrollMode} data-content-inset={contentInset} className={cx('xui-shell',className)}>
+  return <Dialog.Root open={narrow&&open} onOpenChange={next=>request(next)}><div {...props} data-collapsed={collapsed} data-scroll-mode={scrollMode} data-content-inset={contentInset} data-sidebar-toggle-placement={sidebarTogglePlacement} className={cx('xui-shell',className)}>
     <a className="xui-skip-link" href={`#${id}`}>{skipLabel}</a>
     <header ref={headerElement} className="xui-shell-header"><AppHeaderFrame {...headerSlots} legacyPrimary={headerSlots?undefined:header} navigation={<span className="xui-shell-toggle-slot" ref={headerToggleSlot}/>} theme={theme} themeLabels={themeLabels} locale={locale}>{headerSlots?header:undefined}</AppHeaderFrame></header>
     {<div ref={desktopSlot} className="xui-shell-sidebar-host"/>}
-    {typeof document==='undefined'&&<aside id={sidebarId} className="xui-shell-sidebar" aria-label={navigationLabel}><div className="xui-shell-navigation-control">{navigationToggle}</div>{navigationSidebar}</aside>}
+    {typeof document==='undefined'&&<aside id={sidebarId} className={cx('xui-shell-sidebar',hasSections?'xui-shell-sidebar-with-footer':undefined)} aria-label={navigationLabel}>{sidebarTogglePlacement==='top'&&<div className="xui-shell-navigation-control">{navigationToggle}</div>}{hasHeader&&<div className="xui-shell-sidebar-header">{sidebarHeader}</div>}{hasSections?<div className="xui-shell-sidebar-menu">{navigationSidebar}</div>:navigationSidebar}{hasFooter&&<div className="xui-shell-sidebar-footer">{sidebarFooter}</div>}{sidebarTogglePlacement==='bottom'&&<div className="xui-shell-navigation-control">{navigationToggle}</div>}</aside>}
     {navigationControl&&createPortal(navigationToggle,navigationControl)}
     {sidebarElement&&createPortal(<>{hasHeader&&<div className="xui-shell-sidebar-header">{sidebarHeader}</div>}<div className={hasSections?"xui-shell-sidebar-menu":undefined}>{navigationSidebar}</div>{hasFooter&&<div className="xui-shell-sidebar-footer">{sidebarFooter}</div>}</>,sidebarElement)}
     <main className="xui-shell-main" id={id} ref={main} tabIndex={-1}>{hasContent(pageHeader)&&<div className="xui-shell-page-header">{pageHeader}</div>}{hasContent(pageToolbar)&&<div className="xui-shell-page-toolbar">{pageToolbar}</div>}<div className="xui-shell-content">{children}</div>{hasContent(pageFooter)&&<footer className="xui-shell-page-footer">{pageFooter}</footer>}</main>

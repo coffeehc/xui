@@ -2,6 +2,28 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## 底部导航开关与业务 footer 同行（2026-10-15）
+
+基于固定 `511383729302901d8ff7284f520a943519ee7051` 补齐同一侧栏公共布局合同。React MenuLayout/AppShell、原生 createMenuLayout 新增可选 `sidebarTogglePlacement='top'|'bottom'`；默认 top 保留旧位置，bottom 将原控件放在菜单和可选业务 footer 之后，顶部没有占位。窄屏仍移动同一个按钮到顶栏打开原 drawer；折叠/抽屉/roving/导航事实沿用原 owner。直接 AppShell 入口是 `/layout`，没有新增 `/app-shell` 别名。
+
+新增 React `/layout` 和根入口的 `SidebarFooterRow`，原生使用公开 `.xui-sidebar-footer-row`，只启用自然宽度、按空间换行的行排列。原 footer 的递归全宽规则在 Row 内不再强制，Button 的 icon/size 尺寸保留；未使用 Row 的默认 footer 保持全宽。长版本/授权事实完整换行，紧凑 rail 按分组纵排并保留 SidebarFooterContent 的 icon/label 合同。业务返回、更新、版本来源、权限/disabled/busy 均由宿主提供。完整合同和代码见[侧栏底部](COMPONENTS.md#侧栏底部接入与迁移)及两端[示例](../examples/sidebar-footer-react/app.tsx)。
+
+source generation 为 `eb2537520a8ebcafd525bd9f83967cc3fc2785873c758e0cd9856d07a4e719fa`；DESIGN 0.16.0，384 tokens，101 manifest入口，三包仍为私有 0.1.0。正式 CSS 113800 bytes / gzip17338，未提高17536预算。独立 tarball 消费者逐项验证 ESM/CSS/types/init、Root及子入口命名类型、合法枚举与非法值负向编译；React/ReactDOM/Base UI 各一份，原生无 React，无源码 alias。
+
+| 检查 | 结果 | 原始证据（`.artifacts/sidebar-bottom/`） |
+| --- | --- | --- |
+| build / types / tokens / docs / 单测 | 通过；完整单测 **523/523** | `build-final.log`、`typecheck-final.log`、`unit-release.log`、`tokens-release.log`、`docs-release.log` |
+| 正式 tarball 消费者 | 通过；公共入口、同代包、CSS和peer门禁 | `consumer-final.log`、release metadata |
+| Chromium 新组合 | **51/51**：React MenuLayout/AppShell、原生 MenuLayout × 三主题 × 1280/390px × 根字号16/32共36项；document/workspace长版本及移除footer6项；真实Chrome200%缩放9项 | `browser-final.json`、`chromium-targeted-final.json`（4项定向复验，不重复累计）、`screenshots/` |
+| 默认兼容回归 | **84/84**：原 sidebar-control/sidebar-footer/menu-layout 全部 | `regression-final.json` |
+| Firefox / WebKit 精选 | 每引擎 **9/9唯一用例通过**：三种组合的桌面浅色、窄屏200%文字深色与document长footer | `firefox-final.json`；WebKit初轮7/9及 `webkit-targeted-final.json` 中失败两项2/2 |
+
+新专项真实检查324px展开/60px compact（随根字号缩放）、短菜单与80项长菜单的独立滚动、footer同行及busy/disabled、唯一开关的点击/Enter/Space、aria-expanded/controls、菜单单一Tab停靠及方向键、footer→开关Tab顺序、top/bottom更新后的同一焦点/按钮/滚动、断点移动后同一侧栏/业务footer/草稿节点和焦点、完整焦点环与末项可达。长中文/版本和放大场景自然换行；抽查浅色桌面、深色大字drawer与真实缩放截图。Chrome缩放通过设置页操作并核对DPR翻倍、CSS视口减半、根字号不变、CSS zoom=1、visualViewport.scale=1。
+
+候选构建曾因SSR class组合向cx传入false而失败，按已有cx类型改为undefined，未放宽类型。WebKit初轮的两个失败是窄屏→桌面后立即读取DOM，测试未等待React媒体状态；已等待桌面可访问名和公开placement事实，保留严格的末子节点/焦点条件，生产代码未因该失败修改。原报告及trace保留，不将复验重复算作新增通过。
+
+未跑xAgent真实页面/认证/API/部署、移动OS/读屏器、独立SSR hydration和全仓浏览器/watch/coldstart；这里只验证合成公共消费者，不代表宿主已升级。旧511归档及已交付Portal能力保持不变。同轮另行核对的stacked Textarea增长缺陷由独立修复提交处理，不把侧栏验收当作该项已通过。
+
 ## Popover.Content 的 Portal 容器（2026-10-15）
 
 以 xAgent 实际固定的 `595380a6d2467d56623a0df0dedc026e0331a4ff` / DESIGN 0.13.1 对照修改前 main `57f4e8c0f8c7c640b4f8b1faa1fbf7438581d27f`：Popover 实现未变化，Content 尚无容器扩展。当前新增 React `/popover` 与根入口的 `PopoverContentProps`、Content.portalProps；复用公开 Portal 类型与原有 Root/Positioner/Popup，不新增叠层、焦点或打开状态 owner。实际类型、默认值与就绪接线见[组件手册](COMPONENTS.md#popover-的-portal-容器)，独立消费者为[Dialog/Sheet 示例](../examples/popover-portal-react/app.tsx)。本轮只改 xui，没有升级或修改 xAgent、业务 API、后端或认证。

@@ -2,7 +2,7 @@ import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 import {flushSync} from 'react-dom';
 import {MenuLayout,NavigationMenu} from '@coffeehc/xui-react/menu-layout';
-import {AppShell,SidebarFooterContent,Stack,Section,Toolbar} from '@coffeehc/xui-react/layout';
+import {AppShell,SidebarFooterContent,SidebarFooterRow,Stack,Section,Toolbar,type SidebarTogglePlacement} from '@coffeehc/xui-react/layout';
 import {Button} from '@coffeehc/xui-react/button';
 import {Field,Input} from '@coffeehc/xui-react/forms';
 import {Dialog} from '@coffeehc/xui-react/dialog';
@@ -23,13 +23,22 @@ function Footer({owner,versionRef}:{owner:ActionModel;versionRef:React.Ref<HTMLS
     <SidebarFooterContent ref={versionRef} icon={<span>v1</span>} data-testid="footer-version">{copy.version}</SidebarFooterContent>
   </>;
 }
+function FooterRow({owner,versionRef,onReturn}:{owner:ActionModel;versionRef:React.Ref<HTMLSpanElement>;onReturn:()=>void}){
+ const state=React.useSyncExternalStore(owner.subscribe,owner.getState,owner.getState);
+ return <SidebarFooterRow data-testid="footer-row">
+  <Button variant="ghost" data-testid="footer-return" onClick={onReturn}><SidebarFooterContent icon={<Symbol/>}>返回会话</SidebarFooterContent></Button>
+  <Toolbar><SidebarFooterContent ref={versionRef} data-testid="footer-version" icon={<Symbol/>}>{config.longFooter?'企业版 · 具有完整授权来源与长中文版本说明的构建 v0.0.1.20261015':'企业版 · v0.0.1'}</SidebarFooterContent>
+   <Button variant="ghost" data-icon="true" aria-label="检查更新" data-testid="footer-action" aria-busy={state.busy} disabled={state.disabled||state.busy} onClick={()=>owner.invoke()}><Symbol/></Button>
+  </Toolbar>
+ </SidebarFooterRow>;
+}
 function App(){
-  const [options,setOptions]=React.useState<NavigationMenuOptions>({items:config.items,activeId:config.activeId,location:location.href}),[collapsed,setCollapsed]=React.useState(config.collapsed),[open,setOpen]=React.useState(false),[footerKind,setFooter]=React.useState<FooterKind>('original'),[draft,setDraft]=React.useState(copy.draft),[modal,setModal]=React.useState(false);
+  const [options,setOptions]=React.useState<NavigationMenuOptions>({items:config.items,activeId:config.activeId,location:location.href}),[placement,setPlacement]=React.useState<SidebarTogglePlacement>(config.togglePlacement),[collapsed,setCollapsed]=React.useState(config.collapsed),[open,setOpen]=React.useState(false),[footerKind,setFooter]=React.useState<FooterKind>('original'),[draft,setDraft]=React.useState(copy.draft),[modal,setModal]=React.useState(false);
   const [repeat,setRepeat]=React.useState(0),hostFocus=React.useRef<HostFocus>('trigger'),heading=React.useRef<HTMLHeadingElement>(null),modalAction=React.useRef<HTMLButtonElement>(null),versionRef=React.useRef<HTMLSpanElement>(null);
   const state=React.useSyncExternalStore(model.subscribe,model.getState,model.getState);
-  const original=React.useMemo(()=><Footer owner={model} versionRef={versionRef}/>,[]);
+  const original=React.useMemo(()=>config.footerRow?<FooterRow owner={model} versionRef={versionRef} onReturn={()=>{heading.current?.focus();}}/>:<Footer owner={model} versionRef={versionRef}/>,[]);
   const update=(next:Partial<NavigationMenuOptions>)=>setOptions(current=>({...current,...next}));
-  window.sidebarFooterDemo={update,setList:long=>update({items:long?longItems:shortItems,activeId:long?'record-79':'overview'}),setFooter,repeatFooter:()=>setRepeat(value=>value+1),setActionState:model.setState,finish:model.finish,snapshot:model.getState,setMode:mode=>window.xuiTheme!.setMode(mode),setHostFocus:target=>{hostFocus.current=target;},setOpen,getVersionNode:()=>versionRef.current};
+  window.sidebarFooterDemo={update,setPlacement,setList:long=>update({items:long?longItems:shortItems,activeId:long?'record-79':'overview'}),setFooter,repeatFooter:()=>setRepeat(value=>value+1),setActionState:model.setState,finish:model.finish,snapshot:model.getState,setMode:mode=>window.xuiTheme!.setMode(mode),setHostFocus:target=>{hostFocus.current=target;},setOpen,getVersionNode:()=>versionRef.current};
   const navigate:NonNullable<NavigationMenuOptions['navigation']>['navigate']=request=>{
     if(!request.sameLocation)history.pushState(null,'',request.url);
     // The host may move focus to its new page or modal after the drawer closes.
@@ -47,7 +56,7 @@ function App(){
     <Section title="独立正文滚动">{Array.from({length:50},(_,index)=><p key={index}>第 {index+1} 条合成记录：导航更新保留草稿、底部动作与主内容。</p>)}</Section>
   </Stack>;
   const sidebarFooter=footerKind==='none'?null:footerKind==='plain'?<SidebarFooterContent data-testid="footer-plain">{copy.plain}</SidebarFooterContent>:footerKind==='replacement'?<SidebarFooterContent icon={<Symbol/>} data-testid="footer-replacement">{copy.replacement}</SidebarFooterContent>:original;
-  const shellProps={sidebarFooter,headerSlots:{brand:<strong>{copy.title}</strong>},scrollMode:config.scrollMode,sidebarOpen:open,onSidebarOpenChange:setOpen,closeLabel:'关闭导航'};
+  const shellProps={sidebarTogglePlacement:placement,sidebarFooter,headerSlots:{brand:<strong>{copy.title}</strong>},scrollMode:config.scrollMode,sidebarOpen:open,onSidebarOpenChange:setOpen,closeLabel:'关闭导航'};
   return <>{config.composition==='shell'
     ?<AppShell {...shellProps} navigationLabel="工作导航" collapsed={collapsed} onCollapsedChange={setCollapsed} compactLabel="紧凑导航" expandLabel="展开导航" sidebar={<NavigationMenu {...options} label="工作导航" compactLabel="紧凑导航" expandLabel="展开导航" navigation={{navigate}}/>}>{content}</AppShell>
     :<MenuLayout {...options} {...shellProps} collapsed={collapsed} onCollapsedChange={setCollapsed} title={copy.title} label="工作导航" compactLabel="紧凑导航" expandLabel="展开导航" navigation={{navigate}}>{content}</MenuLayout>}

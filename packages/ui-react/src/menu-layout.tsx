@@ -3,7 +3,8 @@ import {bindNavigationPresentation} from '@coffeehc/xui-runtime/internal/navigat
 import {useRender} from '@base-ui/react/use-render';
 import {indexNavigation,getNavigationActiveId,resolveNavigationIcon,navigateNavigationItem,createNavigationKeyboard,type NavigationItem,type NavigationMenuOptions,type NavigationMenuState,type NavigationIconResolver} from '@coffeehc/xui-runtime/navigation';
 import {NavItem} from './navigation.js';
-import {AppShell,type AppHeaderSlots,type ShellScrollMode,type ShellContentInset} from './layout.js';
+import {AppShell,type AppHeaderSlots,type ShellScrollMode,type ShellContentInset,type SidebarTogglePlacement} from './layout.js';
+export type {SidebarTogglePlacement} from './layout.js';
 import {Button} from './button.js';
 import {cx} from './shared.js';
 import type {HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
@@ -70,12 +71,14 @@ export const NavigationMenu=Object.assign(NavigationMenuRoot,{Label:NavigationMe
 export interface MenuLayoutProps extends NavigationMenuProps {
   /** Workspace content spacing; defaults to standard and is retained in other scroll modes. */
   contentInset?:ShellContentInset;
+  /** Desktop control order; top (default) or bottom after the menu/footer. */
+  sidebarTogglePlacement?:SidebarTogglePlacement;
   theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;restoreSidebarFocus?:boolean;style?:React.CSSProperties;scrollMode?:ShellScrollMode;children:React.ReactNode;title?:string;header?:React.ReactNode;headerSlots?:AppHeaderSlots;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
   skipLabel?:string;closeLabel?:string;
 }
 /** Owns the default menu and shell; no route key is applied to either. */
-export function MenuLayout({theme,themeLabels,locale,restoreSidebarFocus=true,style,scrollMode,contentInset,children,title,header,headerSlots,sidebarHeader,sidebarFooter,pageHeader,pageToolbar,pageFooter,sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,skipLabel,closeLabel,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,className,...menu}:MenuLayoutProps){
+export function MenuLayout({theme,themeLabels,locale,restoreSidebarFocus=true,style,scrollMode,contentInset,sidebarTogglePlacement,children,title,header,headerSlots,sidebarHeader,sidebarFooter,pageHeader,pageToolbar,pageFooter,sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,skipLabel,closeLabel,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,className,...menu}:MenuLayoutProps){
   const [internalOpen,setInternalOpen]=React.useState(defaultSidebarOpen),[internalCollapsed,setInternalCollapsed]=React.useState(defaultCollapsed);
   const nodes=React.useMemo(()=>indexNavigation(menu.items),[menu.items]),active=getNavigationActiveId(nodes,menu),signature=JSON.stringify([active,nodes.get(active??'')?.ancestors]);
   const [internalExpanded,setInternalExpanded]=React.useState<readonly string[]>(()=>[...new Set([...(menu.defaultExpandedIds??[]),...(nodes.get(active??'')?.ancestors??[])])]);
@@ -85,6 +88,6 @@ export function MenuLayout({theme,themeLabels,locale,restoreSidebarFocus=true,st
   const requestCollapsed=(next:boolean)=>{if(controlledCollapsed===undefined)setInternalCollapsed(next);onCollapsedChange?.(next);};
   const requestExpanded=(next:readonly string[])=>{if(menu.expandedIds===undefined)setInternalExpanded(next);menu.onExpandedChange?.(next);};
   const navigation=menu.navigation?{canNavigate:menu.navigation.canNavigate,navigate:(request:Parameters<NonNullable<NavigationMenuOptions['navigation']>['navigate']>[0])=>{requestOpen(false);menu.navigation!.navigate(request);}}:undefined;
-  return <AppShell theme={theme} themeLabels={themeLabels} locale={locale} collapsed={collapsed} onCollapsedChange={requestCollapsed} compactLabel={menu.compactLabel} expandLabel={menu.expandLabel} restoreSidebarFocus={restoreSidebarFocus} style={style} scrollMode={scrollMode} contentInset={contentInset} className={cx('xui xui-menu-layout',className)} data-collapsed={collapsed} navigationLabel={menu.label} skipLabel={skipLabel} closeLabel={closeLabel} sidebarOpen={open} onSidebarOpenChange={requestOpen} header={header} headerSlots={{...headerSlots,brand:headerSlots?.brand===undefined?(title?<strong title={title}>{title}</strong>:undefined):headerSlots.brand}}
+  return <AppShell theme={theme} themeLabels={themeLabels} locale={locale} collapsed={collapsed} onCollapsedChange={requestCollapsed} compactLabel={menu.compactLabel} expandLabel={menu.expandLabel} restoreSidebarFocus={restoreSidebarFocus} style={style} scrollMode={scrollMode} contentInset={contentInset} sidebarTogglePlacement={sidebarTogglePlacement} className={cx('xui xui-menu-layout',className)} data-collapsed={collapsed} navigationLabel={menu.label} skipLabel={skipLabel} closeLabel={closeLabel} sidebarOpen={open} onSidebarOpenChange={requestOpen} header={header} headerSlots={{...headerSlots,brand:headerSlots?.brand===undefined?(title?<strong title={title}>{title}</strong>:undefined):headerSlots.brand}}
     sidebarHeader={sidebarHeader} sidebarFooter={sidebarFooter} pageHeader={pageHeader} pageToolbar={pageToolbar} pageFooter={pageFooter} sidebar={<NavigationMenu {...menu} navigation={navigation} collapsed={collapsed} onCollapsedChange={requestCollapsed} expandedIds={menu.expandedIds??internalExpanded} onExpandedChange={requestExpanded}/>}>{children}</AppShell>;
 }

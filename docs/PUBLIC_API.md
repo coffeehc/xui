@@ -635,7 +635,7 @@ React `/menu-layout` 的 NavigationMenuProps/MenuLayoutProps 与 runtime `/navig
 
 ## 导航收起与展开
 
-AppShell/MenuLayout 与 runtime/createMenuLayout 的唯一导航开关由公共组件定位：桌面在侧栏内部，窄屏在顶栏打开隐藏导航；宿主继续使用既有collapsed/defaultCollapsed/onCollapsedChange及sidebarOpen/onSidebarOpenChange，不搬私有DOM。原生getMenu().setCollapsed/update遵循同一受控状态合同。详见 [导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
+AppShell/MenuLayout 与 runtime/createMenuLayout 的唯一导航开关由公共组件定位：桌面在侧栏内部，sidebarTogglePlacement可选top（默认）/bottom；bottom位于菜单和业务footer之后，窄屏仍将同一控件移至顶栏打开原导航；宿主继续使用既有collapsed/defaultCollapsed/onCollapsedChange及sidebarOpen/onSidebarOpenChange，不搬私有DOM。原生getMenu().setCollapsed/update遵循同一受控状态合同。SidebarTogglePlacement在runtime/menu-layout、React/layout和menu-layout及根入口公开；React/layout与根入口导出SidebarFooterRow，原生使用公开xui-sidebar-footer-row类；自然宽度行排列是显式启用，旧footer全宽行为不变。详见 [导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 
 ## 日历月份控制
 

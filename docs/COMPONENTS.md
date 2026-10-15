@@ -669,6 +669,22 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 
 `sidebarFooter` 是 MenuLayout/原生 createMenuLayout 的侧栏底部内容插槽，AppShell也可组合；`headerSlots` 保持顶栏用途。没有返回、授权状态、版本/账号、服务地址等内置领域规则。业务传现有内容/回调和真实disabled/busy状态，不复制定位、尺寸或底部容器内部DOM。
 
+需要“返回动作 + 版本/授权事实与更新动作”在空间足够时同行，可使用 React `/layout`（根入口同样导出）的 `SidebarFooterRow`；原生采用公开 `div.xui-sidebar-footer-row`。它只提供自然宽度、可换行的分组排列，内部可继续使用公共 Toolbar、SidebarFooterContent 与 Button，不拥有返回、许可、更新请求或 busy。未使用 Row 的 footer 按钮仍保持原全宽默认；Row 内按钮恢复各自公开尺寸（包含 icon/size），不覆盖宿主按钮宽度。长中文/版本完整换行、不截断；紧凑 rail 按行分组纵排，SidebarFooterContent 的既有 icon/label 合同不变。底部开关位于业务 footer 之后，位于 footer 自身滚动区之外。
+
+```tsx
+<MenuLayout items={items} sidebarTogglePlacement="bottom" sidebarFooter={
+  <SidebarFooterRow>
+    <Button onClick={onOpenSessions}><SidebarFooterContent icon={returnIcon}>返回会话</SidebarFooterContent></Button>
+    <Toolbar>
+      <SidebarFooterContent icon={editionIcon}>{edition} · {version}</SidebarFooterContent>
+      <Button data-icon="true" aria-label="检查更新" disabled={busy} aria-busy={busy} onClick={checkUpdates}>{updateIcon}</Button>
+    </Toolbar>
+  </SidebarFooterRow>
+}>{children}</MenuLayout>
+```
+
+上述内容、图标、回调与状态均由宿主提供。两个正式示例增加 `?toggle=bottom&row`，可用 `composition=shell` 验证直接 React AppShell、`longFooter` 验证长版本，未加参数仍呈现旧默认。原生 `layout.update({sidebarTogglePlacement:'bottom'})` 与 React props 更新复用按钮、侧栏、业务节点和焦点，不通过重挂布局改位置。
+
 图标/短表示为装饰，完整名称留在label。图标可为任意React内容；直接SVG采用公共control-icon-size。名称长时展开/窄屏换行；紧凑栏只对有icon的部件视觉隐藏label。没有icon时仍显示文字，不要求消费者自写隐藏CSS；需要更具体紧凑表示时提供icon。真实交互语义、tooltip/解释入口及权限由内容所属组件决定。
 
 原生同一Node/Fragment赋回保留节点；替换内容须传新的Node/Fragment，传null/undefined移除。不要重用已被替换的空Fragment来恢复旧子节点；保留内容Node引用或新建Fragment。React按常规key/type协调，改变内容组件key或有意移除footer属于宿主重建。
@@ -679,13 +695,13 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 
 ### 导航内部唯一收起/展开控件
 
-AppShell/MenuLayout及原生createMenuLayout只生成一个导航开关。桌面控件在侧栏顶部的独立辅助行：展开时靠inline-end，紧凑rail时居中，不与宿主新建/搜索动作争同一行。点击/Enter/Space请求收起或展开侧栏；窄屏同一控件节点移至顶栏，请求已有导航抽屉，抽屉内部沿用原关闭入口。不改变正文导航adapter或单模态owner。开关采用公共icon按钮尺寸、motion与focus，桌面可访问名取compactLabel/expandLabel，aria-expanded表示侧栏展开事实；窄屏名取label（AppShell为navigationLabel），aria-expanded表示抽屉事实且有aria-haspopup=dialog。aria-controls对应当前受控区域。缩放/断点切换保持collapsed，变宽关闭抽屉；受控回调仍只请求，等宿主回传才改变事实。
+AppShell/MenuLayout及原生createMenuLayout只生成一个导航开关。桌面可选 sidebarTogglePlacement="top" | "bottom"，默认 top 兼容原顶部独立辅助行；bottom 将同一个控件放在菜单与可选 sidebarFooter 业务区之后，顶部没有占位，短菜单贴底、长菜单独立滚动。展开时靠inline-end，紧凑rail时居中，不与宿主新建/搜索动作争同一行。点击/Enter/Space请求收起或展开侧栏；窄屏同一控件节点移至顶栏，请求已有导航抽屉，抽屉内部沿用原关闭入口。不改变正文导航adapter或单模态owner。开关采用公共icon按钮尺寸、motion与focus，桌面可访问名取compactLabel/expandLabel，aria-expanded表示侧栏展开事实；窄屏名取label（AppShell为navigationLabel），aria-expanded表示抽屉事实且有aria-haspopup=dialog。aria-controls对应当前受控区域。缩放/断点切换保持collapsed，变宽关闭抽屉；受控回调仍只请求，等宿主回传才改变事实。
 
 React AppShell支持collapsed/defaultCollapsed/onCollapsedChange、compactLabel/expandLabel（同MenuLayout默认）；所属NavigationMenu自动接其非显式紧凑状态并移除内部开关。普通页面只使用MenuLayout传数据和状态；无需另传开关内容或尺寸。独立NavigationMenu/createNavigationMenu仍可显示自己的紧凑按钮，显式 showCollapseToggle=false 可关闭；该选项不能在MenuLayout中重新添加重复按钮。原生createNavigationMenu第三参数的可选fallbackFocus与共享createNavigationKeyboard同名回调仅供公共结构组合的空菜单焦点退路，普通宿主无需连接。
 
 迁移时删除产品自行实现的侧栏顶部/顶栏菜单按钮及其宽度、位置、媒体监听和点击绑定，继续传collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange及原标签配置。
 
-React宿主只传 `collapsed={collapsed}` / `onCollapsedChange={setCollapsed}`（或defaultCollapsed）；原生可用 `layout.getMenu().setCollapsed(true|false)`，受控时通过 `layout.update({collapsed})` 确认。两端既有 `compactLabel/expandLabel` 控制桌面名称，窄屏名称仍取label/navigationLabel。没有新增“搬按钮”、位置、图标或侧栏DOM接口。公开类型和状态语义保持兼容，桌面默认控件位置随本次规范更新。不要把sidebarOpen当桌面compact状态。顶栏DOM先于侧栏，桌面Tab依次经过顶栏已有链接/动作、侧栏内部开关，再进入菜单的单一tab停靠点；窄屏开关位于顶栏，抽屉取消后回到该入口。跨断点保留按钮节点、草稿和侧栏内容，不能重挂整个布局来搬位置。
+React宿主只传 `collapsed={collapsed}` / `onCollapsedChange={setCollapsed}`（或defaultCollapsed）；原生可用 `layout.getMenu().setCollapsed(true|false)`，受控时通过 `layout.update({collapsed})` 确认。两端既有 `compactLabel/expandLabel` 控制桌面名称，窄屏名称仍取label/navigationLabel。SidebarTogglePlacement 从 runtime/menu-layout、React/layout、React/menu-layout 与根入口导出，AppShellProps、MenuLayoutProps 和原生 MenuLayoutOptions 接受同名 sidebarTogglePlacement。没有提供私有DOM或图标替换接口；省略位置保持原顶部默认，显式 bottom 才采用新排列。不要把sidebarOpen当桌面compact状态。顶栏DOM先于侧栏，桌面 top 的Tab顺序保持原样；bottom 按DOM依次经过菜单的单一tab停靠、业务footer可用动作、唯一开关；窄屏开关位于顶栏，抽屉取消后回到该入口。跨断点保留按钮节点、草稿和侧栏内容，不能重挂整个布局来搬位置。
 
 ### 富条目、独立行尾动作与上下文菜单
 

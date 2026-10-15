@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {transform} from 'esbuild';
 import * as React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {SidebarFooterContent,AppShell} from '../packages/ui-react/dist/layout.js';
+import {SidebarFooterContent,SidebarFooterRow,AppShell} from '../packages/ui-react/dist/layout.js';
 import {SidebarFooterContent as RootSidebarFooterContent} from '../packages/ui-react/dist/index.js';
 import {Button} from '../packages/ui-react/dist/button.js';
 
@@ -42,6 +42,17 @@ test('AppShell without a footer keeps its original sidebar and does not expose t
   const markup=renderToStaticMarkup(React.createElement(AppShell,{sidebar:React.createElement('nav',null,'Primary navigation'),sidebarFooter:null},'Main content'));
   assert.match(markup,/<aside[^>]+class="xui-shell-sidebar"[^>]*><div class="xui-shell-navigation-control">[\s\S]*?<\/div><nav>Primary navigation<\/nav><\/aside>/);
   assert.doesNotMatch(markup,/xui-shell-sidebar-menu|xui-shell-sidebar-footer|sidebarFooter=/);
+});
+
+test('bottom placement follows navigation and business footer in SSR reading order with one control',()=>{
+ const markup=renderToStaticMarkup(React.createElement(AppShell,{sidebar:React.createElement('nav',null,'NAVIGATION'),sidebarTogglePlacement:'bottom',sidebarFooter:React.createElement(SidebarFooterRow,{id:'business-row'},React.createElement(Button,null,'返回会话'),React.createElement(SidebarFooterContent,null,'企业版 · v0.0.1'))},'Main content'));
+ const aside=markup.slice(markup.indexOf('<aside'),markup.indexOf('</aside>'));
+ assert.ok(aside.indexOf('NAVIGATION')<aside.indexOf('business-row'));
+ assert.ok(aside.indexOf('business-row')<aside.indexOf('xui-shell-navigation-control'));
+ assert.equal((aside.match(/data-xui-menu-toggle/g)??[]).length,1);
+ assert.match(markup,/data-sidebar-toggle-placement="bottom"/);
+ assert.doesNotMatch(markup,/sidebarTogglePlacement=/);
+ assert.match(aside,/class="xui-sidebar-footer-row"/);
 });
 
 test('synthetic action gate blocks disabled, busy and same-tick duplicates without automatic replay',()=>{

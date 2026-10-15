@@ -1,5 +1,6 @@
 import type {NavigationItem,NavigationMenuOptions} from '@coffeehc/xui-runtime/navigation';
 import type {ThemeMode} from '@coffeehc/xui-runtime/theme';
+import type {SidebarTogglePlacement} from '@coffeehc/xui-runtime/menu-layout';
 
 // Shared synthetic data only. Permissions, real authorization, requests and
 // version provenance remain with the adopting application's domain owner.
@@ -24,7 +25,9 @@ export function fixtureOptions(search:string){
   const query=new URLSearchParams(search),long=query.get('list')==='long';
   return {items:long?longItems:shortItems,activeId:query.get('page')??(long?'record-79':'overview'),
     collapsed:query.get('collapsed')==='true',composition:query.get('composition')??'layout',
-    scrollMode:query.get('scroll')==='document'?'document' as const:'viewport' as const};
+    scrollMode:query.get('scroll')==='document'?'document' as const:query.get('scroll')==='workspace'?'workspace' as const:'viewport' as const,
+    togglePlacement:query.get('toggle')==='bottom'?'bottom' as const:'top' as const,
+    footerRow:query.has('row'),longFooter:query.has('longFooter')};
 }
 export interface ActionState {disabled:boolean;busy:boolean;calls:number}
 /** A synchronous domain gate: busy is fact, disabled is a separate host policy. */
@@ -51,5 +54,6 @@ export interface FixtureOwner {
   setMode:(mode:ThemeMode)=>void;
   setHostFocus:(target:HostFocus)=>void;
   setOpen:(open:boolean)=>void;
+  setPlacement:(placement:SidebarTogglePlacement)=>void;
   getVersionNode:()=>HTMLElement|null;
 }

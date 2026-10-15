@@ -20,6 +20,12 @@ let originalFooter=document.createDocumentFragment();originalFooter.append(actio
 const replacement=footerContent(copy.replacement,symbol());replacement.dataset.testid='footer-replacement';const plain=footerContent(copy.plain);plain.dataset.testid='footer-plain';
 let footerKind='original',hostFocus='trigger';
 const content=element('div','xui-stack'),header=element('header','xui-page-header'),heading=element('h1',null,copy.title);heading.tabIndex=-1;heading.dataset.testid='page-heading';header.append(heading,element('p',null,'合成数据；没有产品后端、授权判断或真实许可证操作。'));
+let rowFooter=null;
+if(config.footerRow){
+ const row=element('div','xui-sidebar-footer-row');row.dataset.testid='footer-row';const back=button('','ghost');back.dataset.testid='footer-return';back.append(footerContent('返回会话',symbol()));back.onclick=()=>heading.focus();
+ const group=element('div','xui-toolbar');version.querySelector('.xui-sidebar-footer-icon').replaceChildren(symbol());version.querySelector('.xui-sidebar-footer-label').textContent=config.longFooter?'企业版 · 具有完整授权来源与长中文版本说明的构建 v0.0.1.20261015':'企业版 · v0.0.1';
+ action.replaceChildren(symbol());action.dataset.icon='true';action.setAttribute('aria-label','检查更新');group.append(version,action);row.append(back,group);originalFooter.replaceChildren(row);rowFooter=row;
+}
 const section=element('section','xui-section');section.append(element('h2',null,'宿主业务状态'));
 const field=element('div','xui-field'),label=element('label','xui-label','草稿'),draft=element('input','xui-input');label.htmlFor='footer-draft';draft.id='footer-draft';draft.value=copy.draft;field.append(label,draft);
 const count=element('p');count.setAttribute('role','status');count.dataset.testid='action-count';const route=element('p',null,config.activeId);route.dataset.testid='current-route';
@@ -32,10 +38,10 @@ const modalOwner=createDialogController(modal,button('合成宿主入口'),{init
 const syncAction=()=>{const state=model.getState();action.disabled=state.disabled||state.busy;action.setAttribute('aria-busy',String(state.busy));count.textContent=`已执行 ${state.calls} 次合成操作`;};const unsubscribe=model.subscribe(syncAction);syncAction();
 let owner;
 function update(next){owner.update(next);if('activeId' in next)route.textContent=next.activeId??'';}
-owner=createMenuLayout(root,{items:config.items,activeId:config.activeId,location:location.href,defaultCollapsed:config.collapsed,scrollMode:config.scrollMode,title:copy.title,sidebarFooter:originalFooter,content,label:'工作导航',compactLabel:'紧凑导航',expandLabel:'展开导航',closeLabel:'关闭导航',navigation:{navigate:request=>{if(!request.sameLocation)history.pushState(null,'',request.url);update({activeId:request.id,location:request.url});if(hostFocus==='main')heading.focus();if(hostFocus==='dialog')modalOwner.open();}}});
+owner=createMenuLayout(root,{items:config.items,activeId:config.activeId,location:location.href,defaultCollapsed:config.collapsed,scrollMode:config.scrollMode,sidebarTogglePlacement:config.togglePlacement,title:copy.title,sidebarFooter:originalFooter,content,label:'工作导航',compactLabel:'紧凑导航',expandLabel:'展开导航',closeLabel:'关闭导航',navigation:{navigate:request=>{if(!request.sameLocation)history.pushState(null,'',request.url);update({activeId:request.id,location:request.url});if(hostFocus==='main')heading.focus();if(hostFocus==='dialog')modalOwner.open();}}});
 const pop=()=>update({location:location.href,activeId:new URL(location.href).searchParams.get('page')??'overview'});window.addEventListener('popstate',pop);
-window.sidebarFooterDemo={update,setList:long=>update({items:long?longItems:shortItems,activeId:long?'record-79':'overview'}),
-  setFooter:kind=>{if(kind==='original'&&footerKind!=='original'){originalFooter=document.createDocumentFragment();originalFooter.append(action,theme,version);}footerKind=kind;owner.update({sidebarFooter:kind==='none'?null:kind==='plain'?plain:kind==='replacement'?replacement:originalFooter});},
+window.sidebarFooterDemo={update,setPlacement:sidebarTogglePlacement=>owner.update({sidebarTogglePlacement}),setList:long=>update({items:long?longItems:shortItems,activeId:long?'record-79':'overview'}),
+  setFooter:kind=>{if(kind==='original'&&footerKind!=='original'){originalFooter=document.createDocumentFragment();originalFooter.append(...(rowFooter?[rowFooter]:[action,theme,version]));}footerKind=kind;owner.update({sidebarFooter:kind==='none'?null:kind==='plain'?plain:kind==='replacement'?replacement:originalFooter});},
   repeatFooter:()=>owner.update({sidebarFooter:footerKind==='none'?null:footerKind==='plain'?plain:footerKind==='replacement'?replacement:originalFooter}),
   setActionState:model.setState,finish:model.finish,snapshot:model.getState,setMode:mode=>window.xuiTheme.setMode(mode),setHostFocus:target=>{hostFocus=target;},setOpen:open=>owner.update({sidebarOpen:open}),getVersionNode:()=>version,
 };
