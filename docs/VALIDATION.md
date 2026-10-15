@@ -201,3 +201,17 @@ DateTime证据：.artifacts/date-time-browser-aggregated-final.json（及其原�
 最新证据位于.artifacts/theme-session-{browser,header-controls-browser,foundation-browser,ui-browser,date-time-browser,date-time-zoom}-final.json与对应日志；完整单测theme-session-unit-final.log。独立React安装的npm ls仅一个React19.2.8/ReactDOM19.2.8/BaseUI1.7.0，各模块从consumer与已安装xui-react解析到同一绝对路径；证据theme-session-react-peer-tree-final.log与theme-session-react-peer-singleton-final.log。正式CSS预算保持当前16512-byte gate，实际16440bytes（危险状态增加56bytes的有限调整见上文）；未再扩大预算。新的sessionStorage生命周期是本轮明确兼容性变化，受控接口/显式memory-only及CSS值保持。未跑其他浏览器、读屏器和任何消费项目实际集成，不声称这些通过。
 
 2026-10-15 接入自查标准澄清（规范0.10.2）：DESIGN给出高信噪比列表/表单/详情/多阶段任务页面组合，统一表单分组/列宽/跨列/动作与草稿规则，明确首次加载、同范围刷新、范围切换、失败、稳定身份与生命周期；ADOPTION列出实现基础检查及所需代码/Network/挂载/焦点等证据，adopt-xui按引用执行。截图审阅可确认大框小控件、混排、空表与常驻技术说明等问题，不能证明实际请求链路或组件来源。文档链接、skill frontmatter与公开100入口检查通过；contract5/5核对376 tokens、CSS指纹及历史协议边界，diff检查通过。本次只修改规范、元数据与对应版本断言，没有修改运行时代码或消费项目；未重跑浏览器、完整单测或重新打包，之前0220435固定代码产物保持原样，不将这些规范声明冒充产品页面整改通过。
+
+## 2026-10-15 NavigationMenu 分支名称浏览器验收
+
+`NavigationMenuOptions` 新增 `expandBranchLabel` 与 `collapseBranchLabel`，供 React 与原生公开组合按当前 item/确认展开状态提供 accessible name；未提供时保留 `Expand …` / `Collapse …` 默认值。双端 rich-navigation 示例通过独立安装消费者构建，`window.navigationLabelsDemo.update` 仅为示例验收桥；`projectItems` 只替换示例项目数据以验证真实菜单的 disabled 继承，不是产品 API。
+
+| 门禁 | 最终结果 | 范围与证据 |
+| --- | --- | --- |
+| build / 类型 / token / unit | build generation `118f347dfeb0`；typecheck、check:tokens 通过；504/504 unit | `.artifacts/navigation-labels-validation/build.log`、`typecheck-final.log`、`check-tokens.log`、`test-unit.log` |
+| 正式 consumer | React 与 native 独立 tarball 安装、公开 exports/types/CSS 与 gzip 门禁通过；native 无 React 导入 | `.artifacts/navigation-labels-validation/test-consumer-final.log`；React peer tree 显示 React 19.2.8、ReactDOM 19.2.8、Base UI 1.7.0 各单实例，app 与 xui 的 resolve 路径一致，见 `react-peer-tree.log` / `react-peer-singleton.log`；仅从已打包 xui 入口构建，不用源码 alias |
+| 导航浏览器 | 40/40 通过：新增双端动态默认/中英文标签、DOM identity/aria-controls/focus、受控展开外部接受/拒绝、Enter/Space 单次回调、disabled 继承与 roving 跳过；加既有 rich-navigation 回归 | `.artifacts/navigation-labels-validation/navigation-browser-final.json` 与 `navigation-browser-final.log` |
+| 视口/字号矩阵 | 24/24：React/native × light/dark/system × 1280/390px × 根字号 100%/200%；检查焦点四边和视口几何、真实展开/收起点击、无页面横向溢出 | 同上 JSON；查看的代表截图在 `.artifacts/navigation-labels-validation/` |
+| 真 Chrome 页面缩放 | 6/6：React/native × light/dark/system，Chrome 设置 Zoom 200%，DPR 1→2、CSS 视口 1280×813→640×406、根字号仍 16px、CSS zoom=1、pinch scale=1；检查分支键盘展开、中文名称、焦点和横向溢出 | `.artifacts/navigation-labels-validation/navigation-zoom-final.json`、`navigation-zoom.log`、对应 PNG/JSON 附件 |
+
+实际查看浅色桌面、深色窄屏 200% 根字号、system 窄屏 200% 根字号，以及真页面缩放下的深浅主题截图。窄屏侧栏用公开“工作导航”按钮打开；焦点保持在分支按钮，图标与右侧独立动作仍可见。首轮浏览器运行的 14 项失败是测试脚本未序列化 Node 变量、窄屏没有打开抽屉；修正测试编排后整批 40/40 通过，生产实现未因该首轮失败修改。既有 rich-navigation 回归覆盖主链接、独立配置 action、ContextMenu、Escape 回焦点和菜单键盘顺序。其它浏览器、读屏器及消费产品集成未在本轮执行。

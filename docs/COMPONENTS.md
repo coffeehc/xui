@@ -601,6 +601,25 @@ React `renderButton` 仅用于没有 href 的分支，返回一个透传全部 p
 
 `renderAction` 返回 null 表示无动作，否则返回一个原生 button 或透传 props/ref 的单 button 组件。库将它作为主链接/分支按钮和独立展开按钮的 sibling，接入 `.xui-menu-row-action`、单一 roving 停靠和继承禁用；不要求宿主 stopPropagation。宿主提供明确 aria-label（省略回退 Actions for + item.label）、非交互内容、事件、aria-busy 与自身 disabled。busy 只陈述事实；防重复与权限由宿主明确禁用并在动作入口同步拦截。图标按钮尺寸和 compact 布局消费现有 control/nav/space tokens；compact 中动作另起一行，不增宽侧栏，窄屏恢复正常行布局。
 
+带 `href` 且有子项的条目有库生成的独立展开按钮。React `NavigationMenu`/`MenuLayout` 和原生 `NavigationMenuOptions`/`createNavigationMenu`/`createMenuLayout` 统一接受 `expandBranchLabel?: (item:NavigationItem)=>string`、`collapseBranchLabel?: (item:NavigationItem)=>string`；formatter 返回包含当前真实条目名的非空纯文本。默认仍为 `Expand ${item.label}` / `Collapse ${item.label}`，两项可分别配置。它们只控制独立分支按钮的可访问名称；`expandLabel`/`compactLabel` 仍控制整体导航，主链接、无 href 分支主按钮与配置动作的命名不变。
+
+```tsx
+<NavigationMenu label="会话导航" items={items} defaultExpandedIds={['team']}
+  expandBranchLabel={item=>`展开 ${item.label}`}
+  collapseBranchLabel={item=>`收起 ${item.label}`} />
+```
+
+```js
+const menu=createNavigationMenu(root,{items,defaultExpandedIds:['team'],
+  expandBranchLabel:item=>`展开 ${item.label}`,
+  collapseBranchLabel:item=>`收起 ${item.label}`});
+// 语言/条目更新保留按钮与焦点；展开事实仍由 expandedIds 确认。
+menu.update({expandBranchLabel:item=>`Expand ${item.label}`,
+  collapseBranchLabel:item=>`Collapse ${item.label}`});
+```
+
+React props 变化或原生 `update` 使用最新 formatter、条目名与已确认展开事实更新名称，不触发展开/导航回调；受控宿主拒绝展开请求时名称、`aria-expanded` 和内容仍维持原事实。原生显式传 `undefined` 可恢复默认 formatter。`aria-controls` 保持同一子列表关联，禁用、单 roving 停靠、Enter/Space、独立动作与 ContextMenu 的既有行为不变。正式双端富导航示例提供中英文文案切换；消费者无需改私有 aria-label 或重新实现按钮。
+
 键盘采用普通 nav/link/button，绝非 listbox/option。每个 NavigationMenu 保留一个 Tab 停靠；ArrowUp/Down、Home/End 按 DOM 顺序遍历可见可用的主项、独立展开按钮、行尾动作与子项。左右键只在主项/展开按钮处理树展开与父子移动（RTL 反转），在行尾动作上不改变树。动作 Enter/Space 只激活自己，链接 Enter 保留原生语义；Tab 离开整个菜单。搜索框、Disclosure 和组外加载按钮按正常 Tab 顺序独立可达。公开 ContextMenu 的键盘/回焦点由它自己拥有；Portal 内事件不会被导航 roving 接管。焦点项移除、隐藏或禁用时由库回到可用停靠/公开 fallback；宿主已经转移的新焦点不应被旧操作夺回。
 
 #### 原生 slots 与 lifecycle

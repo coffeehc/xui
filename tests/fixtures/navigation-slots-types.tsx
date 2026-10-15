@@ -6,6 +6,15 @@ import {createMenuLayout,type MenuLayoutOptions} from '@coffeehc/xui-runtime/men
 function Branch({ref,...props}:React.ComponentPropsWithRef<'button'>){return <ContextMenu.Root disabled={props.disabled}><ContextMenu.Trigger render={<button {...props} ref={ref}/>}/><ContextMenu.Content><ContextMenu.Item>设置</ContextMenu.Item></ContextMenu.Content></ContextMenu.Root>;}
 const props:NavigationMenuProps={items:[{id:'group',label:'项目',children:[{id:'page',label:'详情',href:'/detail'}]}],renderButton:()=> <Branch/>,renderAction:item=><button aria-label={`配置 ${item.label}`} disabled aria-busy>⚙</button>};
 const menu=<NavigationMenu {...props}/>;
+const translated:NavigationMenuProps={...props,expandBranchLabel:item=>`展开 ${item.label}`,collapseBranchLabel:item=>`收起 ${item.label}`};
+const translatedNative:NavigationMenuDOMOptions={items:props.items,expandBranchLabel:translated.expandBranchLabel,collapseBranchLabel:translated.collapseBranchLabel};
+const invalidLabel:NavigationMenuProps={...props,
+// @ts-expect-error branch labels are formatters receiving the current item, not fixed strings
+expandBranchLabel:'展开'};
+const invalidNative:NavigationMenuDOMOptions={items:props.items,
+// @ts-expect-error accessible names must be text, not React elements
+collapseBranchLabel:item=><span>{item.label}</span>};
+void translatedNative;void invalidLabel;void invalidNative;
 const layout=<MenuLayout {...props}>{menu}</MenuLayout>;
 const options:NavigationMenuDOMOptions={items:props.items,renderLabel:item=>({element:document.createTextNode(item.label),update(next,state){this.element.textContent=next.label;const facts:NavigationRowState=state;void facts;}}),renderAction:item=>{const slot:NavigationDOMSlot<HTMLButtonElement>={element:document.createElement('button'),update(next,state){this.element.disabled=state.disabled;this.element.setAttribute('aria-label',next.label);},destroy(){}};slot.element.textContent=item.label;return slot;},decorateItem(element,item,state){const life:NavigationDOMLifecycle={update(next,facts){element.title=next.label+String(facts.active);},destroy(){}};void item;void state;return life;}};
 const owner=createNavigationMenu(document.createElement('div'),options);owner.update({renderAction:()=>null});owner.destroy();
