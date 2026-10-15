@@ -2,6 +2,37 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## 导航名称滚动、首行对齐与 324px 默认侧栏（2026-10-15）
+
+规范升至0.13.0，默认主题384 tokens。经用户明确确认，桌面展开侧栏默认由216px提升到324px（`nav-item-height × 9`）；60px compact rail与视口约束的288px窄屏drawer独立保留。此项会改变所有使用默认展开宽度的消费页面，需随固定正式包升级并复核主内容净宽，不能把历史216px或未升级产品截图当成新版事实。
+
+React `NavigationMenu`/`MenuLayout` 与原生 `NavigationMenuOptions`/`createNavigationMenu`/`createMenuLayout` 共用新增 `labelOverflow?: 'wrap' | 'marquee'`、`actionAlignment?: 'center' | 'start'`。默认wrap/center保持兼容。显式marquee仅移动公开名称部件：React `NavigationMenu.Label`、原生`createNavigationLabel`；富描述、Badge、图标与分支/配置按钮不移动。默认纯文本名称自动组合；自定义renderer显式声明名称，不猜私有标签。独立动作在空间足够时与首行同轴，空间不足时折到下一行并保留主项最小空间；compact维持既有堆叠。没有新增路由、查询、权限或配置owner。
+
+可hover的精细指针及键盘主项焦点以400ms延迟、40 CSS px/s单次滚至末端保持；离开/失焦取消并复位。触控、无hover、减少动效或缺少Web Animations时显示完整静态换行名称。RTL向逻辑末端滚动；名称、选项、几何及媒体变化更新同一controller，卸载释放监听、观察器、计时器和动画。`internal/navigation-presentation`仅为双端包间接线，已列入完整exports索引，非消费者稳定API。
+
+最终 package source generation 为 `d85924520822d80660201d011590e3bf001ba95ad5df9d7c031f95a1d18df2e1`。独立tarball消费者逐个核对正式ESM/CSS/types/init；React/ReactDOM/Base UI单实例，原生无React。完整CSS为112549原始字节、17187 gzip字节，比上一交付16767增加420字节；新增8个主题token和导航样式后，原16768-byte门禁不再够用，本轮仅将该预算增加768至17536，Button/JS等其他预算不变。
+
+最终执行证据集中在 `.artifacts/navigation-presentation/`，均使用上述同代正式包。unit首跑511/512，缺失内部manifest入口映射导致文档守卫失败；补齐PUBLIC_API映射后文档用例1/1通过，其余511项结果有效，没有重复运行整套512项。不是全仓浏览器套件、消费产品或生产API验收。
+
+| 检查 | 最终结果 | 原始证据 |
+| --- | --- | --- |
+| 构建 / tokens / types / unit | 通过；384 tokens；512项各自通过（511项原结果＋文档1项修复后复验） | `build-final.log`、`check-tokens.log`、`typecheck.log`、`unit.log`、`docs-test-rerun.log` |
+| 独立正式消费者 / peers / 体积 | 通过；101个manifest入口、双端正式ESM/CSS/types；CSS 17187 gzip bytes | `consumer-final.log`及正式metadata |
+| Chromium新名称/对齐专项 | **32/32唯一用例通过**：24项双端主题/1280或390px/根字号16或32px矩阵，加滚动、更新/RTL、减少动效/触控、禁用/分组/compact；静态多行首行对齐另定向复验2/2 | `browser-final.json`、`browser-disabled-rerun.json`、`reduced-first-line.json`及各自截图/日志 |
+| Chromium相关回归 | **314/314唯一用例覆盖通过**：数据表布局、布局/字体、菜单、分支翻译、页面编排、侧栏开关/页脚、workspace；中断首轮与修复后82/82去重，不重复累计 | `regression-final.log`、`recheck-final.json`与`coverage-summary.json` |
+| Chrome真实浏览器zoom200% | **12/12**；rich-navigation与page-composition各6项，双端三主题 | `zoom-rich-navigation-final.json`、`zoom-page-composition-final.json` |
+| Firefox / WebKit精选专项 | **12/12**；每引擎6项，双端桌面首行、鼠标/键盘单次滚动及更新/RTL | `firefox-final.json`、`webkit-final.json` |
+| 文档 / 差异 | 通过；10文件、642链接、101公开入口、1 skill；无空白错误 | `docs-final.log`、提交前差异检查 |
+| Stitch实际截图视觉终审 | **4/4 Pass**；React浅色、原生深色、390px/200%文字及名称滚动末端截图 | `stitch-final-approval.txt/.png` |
+
+相关回归首轮有7项失败，都是已过时的测试前提：窄屏Sheet仍期望384px而已交付合同为全宽、原生名称仍定位strong、桌面开关仍定位顶栏。改为公开名称部件与现行布局/焦点归属，并保留原几何容差、滚动、草稿及节点连续性断言；对应三个文件82/82复验通过，生产代码未因此再改。首轮被明确中断，原始逐项执行以log为准；后续收集报告另命名为`regression-collection.json`，不是执行结果。去重摘要明确列出日志与复验JSON的来源。
+
+Stitch已核准全局324px范围、可读降级和动作折行，并对4张正式包合成截图给出视觉终审Pass。其视觉判断不替代动态交互实测、辅助技术或产品现场验收；真实Chrome缩放另核对视口、DPR、根字号未变、CSS zoom=1、pinch=1，未用CSS缩放冒充。
+
+早期窄屏/200%文字候选真实出现名称0px：独立按钮挤占全部可用空间。由公共布局保留主项最小宽度并允许动作落到下一行修复，原名称可读性断言未放宽。一次候选浏览器在正式消费者复制完成前读到旧CSS，已等待同代消费者完成后重跑。新专项初跑30/32，余下两项仅在收拢过渡开始立即量到324px；改为等待最终60px几何后2/2通过，生产代码未因该测试再改。失败日志/trace保留并与最终复验分开。
+
+本轮不修改xAgent/Argus或其他消费者、业务API、认证、后端；未跑真实移动OS/Wails、读屏器或全仓完整浏览器套件，没有registry发布。
+
 ## 导航侧栏内部收起/展开（2026-10-15）
 
 规范升至0.12.0，默认主题376 tokens及默认变量CSS指纹不变。React AppShell/MenuLayout与原生createMenuLayout将桌面唯一开关放在侧栏内部顶部独立辅助行，展开时靠末端、60px紧凑栏居中；窄屏同一按钮节点移到顶栏打开既有drawer。继续使用既有collapsed/defaultCollapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange与名称接口，原生setCollapsed/update遵守相同受控合同。没有新增位置/私有DOM接口、第二个按钮或抽屉；默认位置变化须随正式包升级获得，公共types/exports保持兼容。

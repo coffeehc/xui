@@ -20,7 +20,7 @@
 
 ## 全部正式入口
 
-下表完整覆盖当前 100 个 manifest exports；组件用法按 [组件手册](COMPONENTS.md) 查阅，签名以固定版本的正式 types 为准。
+下表完整覆盖当前 101 个 manifest exports；组件用法按 [组件手册](COMPONENTS.md) 查阅，签名以固定版本的正式 types 为准。
 
 ### @coffeehc/xui-theme
 
@@ -60,6 +60,7 @@
 | `@coffeehc/xui-runtime/menu-layout` <!-- public-entry: @coffeehc/xui-runtime/menu-layout --> | [源码](../packages/runtime/src/menu-layout.ts) | [合同](COMPONENTS.md#导航与菜单) | [示例](../examples/menu-vanilla/app.js) |
 | `@coffeehc/xui-runtime/dom` <!-- public-entry: @coffeehc/xui-runtime/dom --> | [源码](../packages/runtime/src/dom.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
 | `@coffeehc/xui-runtime/internal/dialog-layout` <!-- public-entry: @coffeehc/xui-runtime/internal/dialog-layout --> | [内部实现](../packages/runtime/src/dialog-layout.ts) | 包间保留接线，非消费者稳定API；使用公开Dialog/Sheet | [内部类型](../packages/runtime/src/dialog-layout.ts) |
+| `@coffeehc/xui-runtime/internal/navigation-presentation` <!-- public-entry: @coffeehc/xui-runtime/internal/navigation-presentation --> | [内部实现](../packages/runtime/src/navigation-presentation.ts) | 包间保留接线，非消费者稳定 API；使用公开 NavigationMenu 选项与名称部件 | [公共合同](COMPONENTS.md#导航与菜单) |
 | `@coffeehc/xui-runtime/api-key` <!-- public-entry: @coffeehc/xui-runtime/api-key --> | [源码](../packages/runtime/src/api-key.ts) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-vanilla/app.js) |
 | `@coffeehc/xui-runtime/api-key-dom` <!-- public-entry: @coffeehc/xui-runtime/api-key-dom --> | [源码](../packages/runtime/src/api-key-dom.ts) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-vanilla/app.js) |
 | `@coffeehc/xui-runtime/structured-log` <!-- public-entry: @coffeehc/xui-runtime/structured-log --> | [源码](../packages/runtime/src/structured-log.ts) | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-vanilla/app.js) |
@@ -627,6 +628,10 @@ useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/�
 ## 导航分支按钮翻译
 
 React `/menu-layout` 的 `NavigationMenuProps`/`MenuLayoutProps` 继承 runtime `/navigation` 的 `NavigationMenuOptions`：`expandBranchLabel?:(item:NavigationItem)=>string`、`collapseBranchLabel?:(item:NavigationItem)=>string` 分别生成带 href 分支的独立展开/收起按钮可访问名称。原生 `createNavigationMenu`/`createMenuLayout` 使用相同字段；各自根入口同样公开。默认英文带真实条目名保持兼容，语言/条目/受控展开更新规则与两端示例见[导航富条目合同](COMPONENTS.md#富条目独立行尾动作与上下文菜单)。这些字段不接管整体导航的 `expandLabel`/`compactLabel`，也不创建 i18n owner。
+
+## 导航名称与首行对齐
+
+React `/menu-layout` 的 NavigationMenuProps/MenuLayoutProps 与 runtime `/navigation` 的 NavigationMenuOptions/NavigationMenuDOMOptions 统一接受 `labelOverflow?: 'wrap' | 'marquee'`、`actionAlignment?: 'center' | 'start'`，默认wrap/center保持兼容。React `NavigationMenu.Label`及NavigationMenuLabelProps与原生`createNavigationLabel(document,text)`为名称部件，原生返回element/setText，富描述/Badge在名称外组合。根入口同步导出这些公共能力；共享动画控制器仅在runtime/internal下用于包间实现，不作为宿主操作入口。完整降级、动态更新和双端消费见[富导航合同](COMPONENTS.md#富条目独立行尾动作与上下文菜单)。
 
 ## 导航收起与展开
 

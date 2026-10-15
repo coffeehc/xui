@@ -31,7 +31,7 @@ test('AppShell preserves legacy header markup and adds the default right theme c
 test('compact sidebar derives exactly one item plus symmetric insets from DESIGN',async()=>{
   const {light}=checkContract(await readFile('docs/DESIGN.md','utf8'));
   const number=name=>{const expression=expand(light[name],light).replace(/calc/g,'').replace(/rem/g,'*16').replace(/px/g,'');assert.match(expression,/^[\d\s.*+()/\-]+$/);return Function(`return (${expression})`)();};
-  assert.equal(number('--nav-sidebar-width'),216);
+  assert.equal(number('--nav-sidebar-width'),324);
   assert.equal(number('--nav-sidebar-padding'),12);
   assert.equal(number('--nav-collapsed-width'),60);
   assert.equal(number('--nav-collapsed-width'),number('--nav-collapsed-item-size')+2*number('--nav-sidebar-padding'));

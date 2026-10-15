@@ -19,7 +19,14 @@ const themes=['light','dark','system'];
 const selectors={shell:'.xui-shell',header:'.xui-shell-header',main:'.xui-shell-main',content:'.xui-shell-content',workspace:'[data-testid="workspace"]',history:'[data-testid="history"]',inspector:'[data-testid="inspector"]',composer:'form[aria-label="Composer"]',draft:'input[aria-label="Message draft"]',sidebar:'.xui-shell-sidebar',navigation:'nav[aria-label="Workspace navigation"]'};
 const draft=page=>page.getByRole('textbox',{name:'Message draft',exact:true});
 const send=page=>page.getByRole('button',{name:'Send message',exact:true});
-const navToggle=page=>page.locator('.xui-shell-header [data-xui-menu-toggle]');
+const navToggle=page=>page.locator('[data-xui-menu-toggle]');
+async function tabTo(page,target,key,max=5){
+  for(let index=0;index<max;index++){
+    await page.keyboard.press(key);
+    if(await target.evaluate(node=>node===document.activeElement))return;
+  }
+  await expect(target).toBeFocused();
+}
 const near=(actual,expected,label)=>expect(Math.abs(actual-expected),`${label}: ${actual} vs ${expected} CSS px`).toBeLessThanOrEqual(1);
 function contained(inner,outer,label){
   expect(inner.width,`${label} has nonzero width`).toBeGreaterThan(0);expect(inner.height,`${label} has nonzero height`).toBeGreaterThan(0);
@@ -70,6 +77,9 @@ async function metrics(page){
 }
 async function assertWorkspace(page,{slots=true,long=true,shellHeight}={}){
   await settle(page);const m=await metrics(page);
+  await expect(navToggle(page)).toHaveCount(1);
+  if(m.viewport.width>=768)await expect(page.locator('.xui-shell-sidebar [data-xui-menu-toggle]')).toHaveCount(1);
+  else await expect(page.locator('.xui-shell-header [data-xui-menu-toggle]')).toHaveCount(1);
   near(m.shell.height,shellHeight??m.viewport.height,'root block size');near(m.main.y,m.header.bottom,'main follows naturally measured app header');near(m.main.bottom,m.shell.bottom,'main reaches root end');
   expect(m.document.scrollWidth,'document horizontal overflow').toBeLessThanOrEqual(m.document.clientWidth+1);
   expect(m.document.scrollHeight,'document must not own workspace scrolling').toBeLessThanOrEqual(m.document.clientHeight+1);
@@ -166,19 +176,19 @@ for(const kind of kinds){
 
     test(`${kind} workspace ${viewport.width}px: optional leading slot precedes brand and the sole toggle without its own blank space`,async({page},info)=>{
       await setup(page,kind,{viewport});await assertWorkspace(page);await retainNodes(page);
-      const primary=page.locator('.xui-app-header-primary'),toggle=navToggle(page);const empty=await toggle.boundingBox(),start=await primary.boundingBox();
-      await expect(page.locator('.xui-app-header-leading:visible')).toHaveCount(0);await expect(page.getByRole('button',{name:'Platform action',exact:true})).toHaveCount(0);near((await page.locator('.xui-app-header-brand').boundingBox()).x,start.x,'absent leading reserves no inline space before brand');expect(empty.x).toBeGreaterThan(start.x);
+      const primary=page.locator('.xui-app-header-primary'),toggle=navToggle(page),brand=page.locator('.xui-app-header-brand');const emptyBrand=await brand.boundingBox(),start=await primary.boundingBox();
+      await expect(page.locator('.xui-app-header-leading:visible')).toHaveCount(0);await expect(page.getByRole('button',{name:'Platform action',exact:true})).toHaveCount(0);near(emptyBrand.x,start.x,'absent leading reserves no inline space before brand');
       await draft(page).focus();await page.evaluate(()=>window.workspaceDemo.setLeading(true));await expect(draft(page)).toBeFocused();await assertRetained(page);
       const action=page.getByRole('button',{name:'Platform action',exact:true}),leading=page.locator('.xui-app-header-leading');await expect(action).toBeVisible();await expect(toggle).toHaveCount(1);
-      const slot=await leading.boundingBox(),button=await action.boundingBox(),navigation=await toggle.boundingBox();
-      expect(slot.x).toBeLessThan(navigation.x);expect(slot.x+slot.width).toBeLessThanOrEqual(navigation.x+1);near(button.width,slot.width,'intrinsic leading width is preserved');
+      const slot=await leading.boundingBox(),button=await action.boundingBox(),brandBox=await brand.boundingBox();
+      expect(slot.x).toBeLessThan(brandBox.x);expect(slot.x+slot.width).toBeLessThanOrEqual(brandBox.x+1);near(button.width,slot.width,'intrinsic leading width is preserved');
       expect(await leading.evaluate(node=>getComputedStyle(node).flexShrink)).toBe('0');expect(await action.evaluate(node=>node.scrollWidth<=node.clientWidth+1)).toBe(true);
-      expect(await leading.evaluate(node=>!!(node.compareDocumentPosition(node.closest('.xui-app-header-primary').querySelector('.xui-app-header-navigation'))&Node.DOCUMENT_POSITION_FOLLOWING)),'leading precedes navigation in DOM order').toBe(true);
-      await action.focus();await page.keyboard.press('Tab');await expect(toggle).toBeFocused();await page.keyboard.press('Shift+Tab');await expect(action).toBeFocused();
+      expect(await leading.evaluate(node=>!!(node.compareDocumentPosition(node.closest('.xui-app-header-primary').querySelector('.xui-app-header-brand'))&Node.DOCUMENT_POSITION_FOLLOWING)),'leading precedes the brand within the header').toBe(true);
+      await action.focus();await tabTo(page,toggle,'Tab');await expect(toggle).toBeFocused();await toggle.focus();await tabTo(page,action,'Shift+Tab');await expect(action).toBeFocused();
       expect(await action.evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle!=='none')).toBe(true);
       await page.evaluate(()=>window.workspaceDemo.navigate());await expect(action).toBeFocused();await assertRetained(page);
       await draft(page).focus();await page.evaluate(()=>window.workspaceDemo.setLeading(false));await expect(action).toHaveCount(0);await expect(draft(page)).toBeFocused();await assertRetained(page);
-      near((await toggle.boundingBox()).x,empty.x,'removing leading restores the original toggle position');
+      near((await brand.boundingBox()).x,emptyBrand.x,'removing leading restores the original brand position');
       // Host fullscreen/platform changes can remove the safe area while the
       // library menu toggle keeps its identity and keyboard focus.
       await toggle.focus();
@@ -192,8 +202,8 @@ for(const kind of kinds){
     await page.getByRole('button',{name:'Compact navigation',exact:true}).click();await finishMotion(page);
     for(const viewport of [viewports[0],viewports[1],viewports[0]]){
       await page.setViewportSize(viewport);await settle(page);await assertWorkspace(page);
-      const button=await action.boundingBox(),toggle=await navToggle(page).boundingBox();near(button.width,original.width,'host leading content does not shrink');expect(button.x+button.width).toBeLessThanOrEqual(toggle.x+1);
-      await action.focus();await page.keyboard.press('Tab');await expect(navToggle(page)).toBeFocused();await assertRetained(page);
+      const button=await action.boundingBox(),brand=await page.locator('.xui-app-header-brand').boundingBox();near(button.width,original.width,'host leading content does not shrink');expect(button.x+button.width).toBeLessThanOrEqual(brand.x+1);
+      await action.focus();await tabTo(page,navToggle(page),'Tab');await expect(navToggle(page)).toBeFocused();await assertRetained(page);
     }
     await capture(page,info,'platform-leading');
   });
@@ -252,7 +262,7 @@ for(const kind of kinds){
 
 for(const theme of themes)for(const viewport of viewports)test(`direct React AppShell ${theme} at ${viewport.width}px shares workspace and leading contracts`,async({page},info)=>{
   await setup(page,'react',{query:'?direct&platform',theme,viewport});await retainNodes(page);await assertInternalScrolling(page);await assertKeyboardSend(page);
-  const action=page.getByRole('button',{name:'Platform action',exact:true});await action.focus();await page.keyboard.press('Tab');await expect(navToggle(page)).toBeFocused();
+  const action=page.getByRole('button',{name:'Platform action',exact:true});await action.focus();await tabTo(page,navToggle(page),'Tab');await expect(navToggle(page)).toBeFocused();
   await draft(page).focus();await page.evaluate(()=>{window.workspaceDemo.setSlots(false);window.workspaceDemo.navigate();});await assertWorkspace(page,{slots:false});await expect(draft(page)).toBeFocused();await expect(draft(page)).toHaveValue('Unsent workspace draft');await assertRetained(page);
   await page.evaluate(()=>window.workspaceDemo.setSlots(true));await assertWorkspace(page);await expect(draft(page)).toBeFocused();await assertRetained(page);await capture(page,info,`direct-shell-${theme}-${viewport.width}`);
 });

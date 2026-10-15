@@ -21,7 +21,7 @@ const viewports=[{width:1280,height:900},{width:1920,height:1080},{width:390,hei
 const clamp=(minimum,preferred,maximum)=>Math.max(minimum,Math.min(preferred,maximum));
 const expectedDialog=(width,inset=16)=>Math.min(clamp(384,width*.4,768),width-inset*2);
 const expectedConfirm=(width,inset=16)=>Math.min(clamp(320,width*.3,512),width-inset*2);
-const expectedSideSheet=width=>Math.min(clamp(384,width*.6,1024),width);
+const expectedSideSheet=width=>width<=640?width:Math.min(clamp(384,width*.6,1024),width);
 const expectedBlockSheet=height=>Math.min(736,height*.8);
 async function settle(page){await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});}
 async function configure(page,viewport){
@@ -107,7 +107,7 @@ for(const kind of kinds){
         expectNear(lateral.height,viewport.height,'lateral sheet height');expectNear(lateral.y,0,'lateral sheet top');
         expectNear(side==='start'?lateral.x:lateral.right,side==='start'?0:viewport.width,`${side} sheet edge`);
         await assertFooter(sheet,viewport);
-        // Intentional defaults: lateral Sheet widths are 768/1024/384/320px
+        // Intentional defaults: lateral Sheet widths are 768/1024/390/320px
         // at 1280/1920/390/320px, replacing the previous fixed 46rem cap.
         await capture(page,info,`sheet-${side}`,{width:sheetWidth,height:viewport.height,previousFixedWidth:736});
         if(side==='end'){
@@ -150,13 +150,13 @@ for(const kind of kinds){
     }
   }
 
-  test(`${kind} responsive overlays preserve 216/60px navigation and the separate 288px drawer cap`,async({page},info)=>{
+  test(`${kind} responsive overlays preserve 324/60px navigation and the separate 288px drawer cap`,async({page},info)=>{
     test.setTimeout(60000);await configure(page,viewports[0]);
     for(const viewport of viewports){
       await page.setViewportSize(viewport);await page.goto(`/layout-typography-${kind}/`);await page.waitForFunction(()=>!!window.layoutTypography);await settle(page);
       if(viewport.width>=768){
-        const sidebar=page.locator('.xui-shell-sidebar');expectNear((await box(sidebar)).width,216,'expanded navigation rail');
-        await capture(page,info,`nav-${viewport.width}-expanded`,{sidebarWidth:216});
+        const sidebar=page.locator('.xui-shell-sidebar');expectNear((await box(sidebar)).width,324,'expanded navigation rail');
+        await capture(page,info,`nav-${viewport.width}-expanded`,{sidebarWidth:324});
         await page.getByRole('button',{name:'紧凑导航',exact:true}).click();await settle(page);expectNear((await box(sidebar)).width,60,'compact navigation rail');
         await capture(page,info,`nav-${viewport.width}-compact`,{sidebarWidth:60});
       }else{

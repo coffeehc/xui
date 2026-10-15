@@ -618,7 +618,7 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 
 公开 CSS 结构为 `xui-app-header`、`xui-app-header-primary/secondary` 和 `xui-app-header-navigation/brand/breadcrumb/status/actions/legacy`。React 与原生使用相同 `theme/layout.css`；普通采用应使用 props/Node，不穿透结构改排列。`AppHeader` 是 div 组合，独立使用时由宿主提供所属语义 header。breadcrumb 内容可以使用公开 `Breadcrumbs` / `.xui-breadcrumbs` 的 nav/ol/li/a 结构；链接的焦点轮廓保持在截断边界内。
 
-紧凑侧栏默认216px展开、60px收起；这些数值是根16px下的 CSS 像素，非设备像素。公开token `--nav-sidebar-width`、`--nav-sidebar-padding`、`--nav-collapsed-width` 与 `--nav-collapsed-item-size` 在 DESIGN 中定义，默认36px项+左右各12px；图标仍16px，选中短竖线/hover/独立focus不改变宽度。独立支路开关收起时移到所属链接下一行，窄屏抽屉恢复完整标签与既有键盘/路由合同。独立使用 NavigationMenu 的外层宽度由宿主布局决定，MenuLayout 才拥有完整侧栏宽度。
+紧凑侧栏默认324px展开、60px收起；这些数值是根16px下的 CSS 像素，非设备像素。公开token `--nav-sidebar-width`、`--nav-sidebar-padding`、`--nav-collapsed-width` 与 `--nav-collapsed-item-size` 在 DESIGN 中定义，默认36px项+左右各12px；图标仍16px，选中短竖线/hover/独立focus不改变宽度。独立支路开关收起时移到所属链接下一行，窄屏抽屉恢复完整标签与既有键盘/路由合同。独立使用 NavigationMenu 的外层宽度由宿主布局决定，MenuLayout 才拥有完整侧栏宽度。
 
 迁移顺序：先固定新SHA并重新构建正式包；把原 header 中品牌/路径/状态/动作内容分别送入公开角色；删除消费方仅用于通用 header flex/grid/gap、长中文截断、紧凑栏宽度和图标对齐的 CSS。保留领域内容布局、授权判断、事件、路由和有明确理由的产品token覆盖。不要删除业务规则来套入公共布局，不再叠加第二条rail。实际执行范围与限制见 [VALIDATION.md](VALIDATION.md)。
 
@@ -646,7 +646,27 @@ React宿主只传 `collapsed={collapsed}` / `onCollapsedChange={setCollapsed}`�
 
 ### 富条目、独立行尾动作与上下文菜单
 
-长名称自然换行时，当前独立分支按钮与行尾动作沿整项居中。会话页设计复审提出首行对齐的可选公共增强，尚无此配置；它不阻断现有导航、键盘或独立动作。宿主不能把renderAction误作内部独立分支按钮的替换入口，也不以私有CSS修改其对齐。
+`actionAlignment?: 'center' | 'start'` 默认center兼容现有布局；显式start将独立分支按钮与行尾动作对准名称首行文字行框的中轴，描述增加不令其下沉，主图标和无href分支箭头同步对齐。布局使用nav-row-first-line-height及派生padding/offset tokens，不固定字体或按钮像素；紧凑rail仍逐动作纵排，不加宽。start或marquee保留nav-row-primary-min-width的主项空间；两侧动作无法同时容纳时自然换到下一行，不压掉名称、缩字或移除动作。该选项只改变排版，不发出展开/导航/配置回调。renderAction仍不能替换库生成的独立分支按钮。
+
+`labelOverflow?: 'wrap' | 'marquee'` 默认wrap。显式marquee在mouse hover或键盘主项focus时，名称溢出才等待nav-label-scroll-delay（默认400ms），按nav-label-scroll-speed（默认40 CSS px/秒）单次滚到末端停驻；hover与focus均离开时取消并复位。只有名称文字移动，主控件点击区域、图标、描述、Badge及两个独立动作固定。无hover/粗指针、减少动态效果、不支持Web Animations时显示完整静态换行；禁用项、分组标题和紧凑隐藏名称保持静态。原title及可访问名称保留，触屏不依赖title/长按查看，也不拦截导航、手势或ContextMenu。
+
+普通默认label自动采用名称部件；富renderLabel用React `NavigationMenu.Label`或原生`createNavigationLabel(document,text)`明确标记名称，描述/Badge放在它外部。未标记的富内容保持原样，库不猜strong/br、不把整段富内容改成跑马灯。原生返回 `{element,setText(text)}`，更新名称用setText保留节点；两端选项更新保留主项、独立按钮及焦点。React名称部件只接受非交互内容、className/title/lang/dir，不嵌套动作。
+```tsx
+<NavigationMenu items={items} labelOverflow="marquee" actionAlignment="start"
+  renderLabel={item=><><NavigationMenu.Label>{item.label}</NavigationMenu.Label><small>静态描述</small></>}
+  renderAction={item=><button aria-label={`配置 ${item.label}`} onClick={()=>configure(item.id)}>⚙</button>} />
+```
+
+```js
+const menu=createNavigationMenu(root,{items,labelOverflow:'marquee',actionAlignment:'start',
+  renderLabel(item){
+    const name=createNavigationLabel(document,item.label),wrapper=document.createElement('span'),detail=document.createElement('small');
+    detail.textContent='静态描述';wrapper.append(name.element,detail);
+    return {element:wrapper,update(next){name.setText(next.label);}};
+  }});
+menu.update({labelOverflow:'wrap',actionAlignment:'center'}); // 只更新呈现
+```
+
 
 `children`、`resolveIcon`、`renderLabel` 和 `renderLink` 原已支持子层级、自定义图标、非交互富标签与单链接适配。通过 `renderButton(item)` 与 `renderAction(item)` 扩展，不将业务数据塞进 Combobox option，也不引入另一份查询或路由 owner。
 

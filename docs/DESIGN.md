@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.12.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.13.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -485,7 +485,15 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     --nav-collapsed-item-size: 2.25rem;
     --nav-selected-indicator-inset-collapsed: 2px;
     /* shell-role-tokens:start */
-    --nav-sidebar-width: calc(var(--nav-item-height) * 6);
+    --nav-sidebar-width: calc(var(--nav-item-height) * 9);
+    --nav-row-first-line-height: max(var(--nav-item-height), var(--button-height), calc(var(--line-height-body-sm) + var(--space-text-gap) * 2 + var(--line-width-surface) * 2));
+    --nav-label-scroll-delay: calc(var(--motion-duration-fast) * 4);
+    --nav-label-scroll-speed: 40;
+    --nav-row-primary-min-width: calc(var(--nav-item-height) * 3);
+    --nav-row-padding-block: calc((var(--nav-row-first-line-height) - var(--line-height-body-sm)) / 2);
+    --nav-row-icon-offset: calc((var(--line-height-body-sm) - var(--control-icon-size)) / 2);
+    --nav-row-group-offset: calc((var(--nav-row-first-line-height) - var(--line-height-body-xs)) / 2);
+    --nav-row-action-offset: calc((var(--nav-row-first-line-height) - max(var(--button-height), calc(var(--line-height-body-sm) + var(--space-text-gap) * 2 + var(--line-width-surface) * 2))) / 2);
     --nav-sidebar-padding: var(--space-content-gap);
     --nav-collapsed-width: calc(var(--nav-collapsed-item-size) + var(--nav-sidebar-padding) * 2);
     --layout-header-primary-min: var(--layout-field-min);
@@ -1286,7 +1294,9 @@ SSR/预渲染和客户端首次hydration必须给出相同文本与结构；轻�
 
 应用头部按brand、breadcrumb、status、actions角色组合。桌面收起/展开入口归导航侧栏内部，由公共组件放在顶部独立辅助行：展开时沿侧栏内距靠末端，紧凑rail中居中。窄屏侧栏不可见时，同一入口移至顶栏以打开已有导航抽屉；不在两处复制按钮或另建抽屉。公共层统一其按钮尺寸、位置、动效、键盘焦点、可访问名称和aria-expanded/controls，跨断点复用同一个控件节点，宿主仅传状态与事件，受控请求不能冒充已确认状态。导航入口和品牌/路径为左侧主组，状态和动作在右侧；采用方提供内容、名称、链接语义及实际动作，不在公共库写入产品权限或版本规则。主组保留layout-header-primary-min的合理宽度，窄屏优先完整保留导航入口，品牌与路径各在所属空间省略长文字；链接可聚焦，完整名称保留可访问语义，宿主可提供title或明确详情入口。状态/动作空间不足时整组换到下一行，动作组内部按需换行，不能盖住品牌、互相重叠或令整页横向溢出。不静默隐藏状态或重要动作，不用缩小字体解决空间问题；没有动作时不预留空白占位。旧任意header内容继续支持，迁移后通用排列由公共组合负责。
 
-展开侧栏用nav-sidebar-width，默认216px；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。焦点环和短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
+展开侧栏用nav-sidebar-width，默认324px；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。焦点环和短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
+
+长名称默认保持wrap兼容；显式labelOverflow=marquee时，只有公开名称部件在有hover、fine pointer且未减少动态效果时单行省略，主项悬停或聚焦停留后按nav-label-scroll-delay开始，以nav-label-scroll-speed（单位CSS px/秒）单次滚到末端并停驻。离开且失焦即取消和复位，短名称、禁用、紧凑隐藏名称不滚动；触屏/无hover/减少动态效果或不支持动画时保留完整静态换行。富标签使用公开名称部件分隔主名称，描述和Badge保持静止；库不猜消费者strong/br结构。actionAlignment=start将独立分支与行尾动作中心对准首行文字行框，主图标及无href分支箭头同步定位；start或marquee呈现用nav-row-primary-min-width保留可读名称净宽，空间不足时独立动作自然换到下一行，不能把名称压成零宽；默认center兼容既有布局，紧凑栏仍逐控件纵排。两项呈现更新不得重建主控件、切换路由或更改展开状态；宿主只声明公开选项，不穿透DOM写样式。默认展开324px是用户明确授权的全局变更，窄屏drawer独立封顶视口，阅读列max宽度仍是上限而非刚性占宽。
 
 导航的当前页选中与键盘焦点相互独立：已有真实菜单焦点优先；没有菜单焦点时，菜单状态更新可把可用当前页设为单一tab停靠点。打开抽屉本身必须保留打开前合法的菜单停靠点，不能由浏览器默认聚焦首项而意外改写它。原生shell/dialog由公共owner在模态建立前确定初始焦点并避免中途首项focusin；无可用菜单项时回退关闭按钮。保留的焦点项在长菜单中应可见；取消回可见入口，宿主已移动到新标题或新模态的焦点不得被旧关闭事件夺走。
 
@@ -1393,7 +1403,7 @@ LoadingState layout=inline 复用既有 Spinner 与一个 status 文本，无块
 
 Dialog偏好layout-dialog-width-ratio=40%，min/max分别24rem/48rem；Confirm偏好30%，min/max为20rem/32rem；侧向Sheet偏好60%，min/max为24rem/64rem。layout-dialog/confirm/drawer-width仍是公开组合结果，可单独覆盖；比例与rem边界均集中定义。普通Dialog/Confirm最后用视口减去两侧layout-viewport-inset封顶，min下限不能让320px视口溢出。原生dialog显式使用同一最大宽度以覆盖浏览器UA额外max-width。侧向Sheet紧贴边缘、窄屏封顶完整视口；上下Sheet只使用独立layout-sheet-block-size与sheet-max-block-size，绝不把横向百分比再用作纵向尺寸。
 
-1280px宽、16px根字号下，Dialog/Confirm仍为512/384px，侧向Sheet改为768px；1920px时分别768/512/1024px上限。窄屏由各自最终视口约束决定，不能只验证字符串。导航drawer继续由nav-drawer-max-inline-size限制为默认288px，独立于这些详情面板；展开216px/紧凑60px侧栏不变。本段是用户追加的响应式宽度默认变更，不能并入“其余设计token迁移默认不变”的声明。
+1280px宽、16px根字号下，Dialog/Confirm仍为512/384px，侧向Sheet改为768px；1920px时分别768/512/1024px上限。窄屏由各自最终视口约束决定，不能只验证字符串。导航drawer继续由nav-drawer-max-inline-size限制为默认288px，独立于这些详情面板；展开侧栏按本轮授权改为324px，紧凑侧栏保留60px。本段是用户追加的响应式宽度默认变更，不能并入“其余设计token迁移默认不变”的声明。
 
 ### 公共布局插槽与默认顶栏工具
 

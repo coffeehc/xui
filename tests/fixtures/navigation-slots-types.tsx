@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {NavigationMenu,MenuLayout,type NavigationMenuProps} from '@coffeehc/xui-react/menu-layout';
 import {ContextMenu} from '@coffeehc/xui-react/context-menu';
-import {createNavigationMenu,type NavigationMenuDOMOptions,type NavigationDOMSlot,type NavigationRowState,type NavigationDOMLifecycle} from '@coffeehc/xui-runtime/navigation';
+import {createNavigationMenu,createNavigationLabel,type NavigationMenuDOMOptions,type NavigationDOMSlot,type NavigationRowState,type NavigationDOMLifecycle} from '@coffeehc/xui-runtime/navigation';
 import {createMenuLayout,type MenuLayoutOptions} from '@coffeehc/xui-runtime/menu-layout';
 function Branch({ref,...props}:React.ComponentPropsWithRef<'button'>){return <ContextMenu.Root disabled={props.disabled}><ContextMenu.Trigger render={<button {...props} ref={ref}/>}/><ContextMenu.Content><ContextMenu.Item>设置</ContextMenu.Item></ContextMenu.Content></ContextMenu.Root>;}
 const props:NavigationMenuProps={items:[{id:'group',label:'项目',children:[{id:'page',label:'详情',href:'/detail'}]}],renderButton:()=> <Branch/>,renderAction:item=><button aria-label={`配置 ${item.label}`} disabled aria-busy>⚙</button>};
@@ -23,3 +23,11 @@ const bad:NavigationMenuDOMOptions={items:[],
 // @ts-expect-error actions are one button, never an anchor or arbitrary Node
 renderAction:()=>({element:document.createElement('a')})};
 void bad;void layout;
+
+const presentation=<NavigationMenu {...props} labelOverflow="marquee" actionAlignment="start" renderLabel={item=><><NavigationMenu.Label><strong>{item.label}</strong></NavigationMenu.Label><small>静态描述</small></>}/>;
+const nativeName=createNavigationLabel(document,'原生名称');nativeName.setText('更新名称');
+// @ts-expect-error only the supported enum values are accepted
+const badPresentation=<NavigationMenu {...props} labelOverflow="scroll"/>;
+// @ts-expect-error CSS positioning is not the public action-alignment contract
+const badAlignment=<MenuLayout {...props} actionAlignment="flex-start">{menu}</MenuLayout>;
+void presentation;void badPresentation;void badAlignment;

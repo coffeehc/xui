@@ -1,3 +1,4 @@
+import {bindNavigationPresentation} from './navigation-presentation.js';
 import {generateDomId} from './dom-id.js';
 import {bindPressFeedback} from './dom.js';
 /** Shared, serializable menu data. Icons are identifiers resolved once by the host. */
@@ -17,6 +18,10 @@ export interface NavigationNode {item:NavigationItem;parentId:string|null;ancest
 export interface NavigationMenuState {activeId:string|null;collapsed:boolean;expandedIds:readonly string[]}
 export interface NavigationMenuOptions extends NavigationSelection {
   items:readonly NavigationItem[];navigation?:NavigationAdapter;resolveIcon?:NavigationIconResolver;
+  /** Optional name-only hover/keyboard scrolling. Defaults to wrap; touch and reduced motion retain full static names. */
+  labelOverflow?:'wrap'|'marquee';
+  /** Align independent branch/actions with the first text line. Defaults to center; compact rail keeps its stacked layout. */
+  actionAlignment?:'center'|'start';
   showCollapseToggle?:boolean;label?:string;emptyLabel?:string;compactLabel?:string;expandLabel?:string;
   /** Accessible name of a linked item's independent expand button. Return text including the current item label; defaults to `Expand ${item.label}`. */
   expandBranchLabel?:(item:NavigationItem)=>string;
@@ -102,6 +107,11 @@ export function renderNavigationIcon(doc:Document,icon:NavigationIcon):SVGSVGEle
   const svg=doc.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox',icon.viewBox??'0 0 20 20');svg.setAttribute('aria-hidden','true');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','var(--nav-icon-stroke-width)');
   for(const d of icon.paths){const path=doc.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',d);svg.append(path);}return svg;
 }
+/** Name-only part for rich native labels. Append descriptions/badges beside it, and update text without replacing its nodes. */
+export function createNavigationLabel(doc:Document,text:string){
+  const element=doc.createElement('span'),content=doc.createElement('span');element.className='xui-navigation-label';content.className='xui-navigation-label-text';content.textContent=text;element.append(content);
+  return {element,setText(next:string){if(content.textContent!==next)content.textContent=next;}};
+}
 const menuOwners=new WeakMap<HTMLElement,unknown>();
 /** Owns the menu structure and listeners; update never replaces the host root. */
 export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuDOMOptions,behavior:{fallbackFocus?:()=>HTMLElement|null}={}){
@@ -110,8 +120,8 @@ export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuDOMO
   const doc=root.ownerDocument,original=Array.from(root.childNodes),nav=doc.createElement('nav'),list=doc.createElement('ul'),compact=doc.createElement('button'),empty=doc.createElement('p');
   nav.className='xui-navigation-menu xui-layer';list.className='xui-menu-list';compact.type='button';compact.className='xui-button xui-menu-compact-toggle';compact.dataset.variant='ghost';empty.className='xui-menu-empty';nav.append(compact,list,empty);root.replaceChildren(nav);
   type Entry={li:HTMLLIElement;row:HTMLDivElement;primary:HTMLElement;label:HTMLSpanElement;icon?:SVGSVGElement;chevron?:HTMLSpanElement;toggle?:HTMLButtonElement;children:HTMLUListElement;kind:string;
-    labelFactory?:NavigationMenuDOMOptions['renderLabel'];labelSlot?:NavigationDOMSlot|null;actionFactory?:NavigationMenuDOMOptions['renderAction'];actionSlot?:NavigationDOMSlot<HTMLButtonElement>|null;actionDisabled?:boolean;actionForced?:boolean;actionLabel?:string;actionTitle?:string;decoratorFactory?:NavigationMenuDOMOptions['decorateItem'];decoration?:NavigationDOMLifecycle|void};
-  const records=new Map<string,Entry>();
+    plainLabel?:ReturnType<typeof createNavigationLabel>;labelFactory?:NavigationMenuDOMOptions['renderLabel'];labelSlot?:NavigationDOMSlot|null;actionFactory?:NavigationMenuDOMOptions['renderAction'];actionSlot?:NavigationDOMSlot<HTMLButtonElement>|null;actionDisabled?:boolean;actionForced?:boolean;actionLabel?:string;actionTitle?:string;decoratorFactory?:NavigationMenuDOMOptions['decorateItem'];decoration?:NavigationDOMLifecycle|void};
+  const records=new Map<string,Entry>(),presentation=bindNavigationPresentation(nav);
   const release=(entry:Entry)=>{entry.labelSlot?.destroy?.();entry.actionSlot?.destroy?.();entry.decoration?.destroy?.();entry.li.remove();};
   const assertContent=(element:Node)=>{if(element.nodeType===1&&(element as Element).matches('a,button,input,select,textarea,[tabindex],[contenteditable="true"]')||'querySelector' in element&&(element as Element).querySelector('a,button,input,select,textarea,[tabindex],[contenteditable="true"]'))throw new TypeError('Navigation label and action content must be non-interactive');};
   const snapshot=():NavigationMenuState=>Object.freeze({activeId:getNavigationActiveId(nodes,options),collapsed:options.collapsed??collapsed,expandedIds:Object.freeze([...(options.expandedIds??expanded)])});
@@ -122,7 +132,7 @@ export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuDOMO
     if(dead)return;const active=getNavigationActiveId(nodes,options),signature=JSON.stringify([active,nodes.get(active??'')?.ancestors]);
     if(signature!==activeSignature&&options.expandedIds===undefined){for(const id of nodes.get(active??'')?.ancestors??[])expanded.add(id);activeSignature=signature;}
     const state=snapshot(),focused=doc.activeElement as HTMLElement|null,focusId=focused?.dataset.menuId,focusControl=focused?.dataset.menuControl;
-    compact.hidden=options.showCollapseToggle===false;nav.setAttribute('aria-label',options.label??'Navigation');nav.dataset.collapsed=String(state.collapsed);compact.setAttribute('aria-label',state.collapsed?options.expandLabel??'Expand navigation':options.compactLabel??'Compact navigation');compact.setAttribute('aria-pressed',String(state.collapsed));compact.textContent=state.collapsed?'›':'‹';empty.textContent=options.emptyLabel??'No navigation items';empty.hidden=options.items.length>0;
+    nav.dataset.labelOverflow=options.labelOverflow??'wrap';nav.dataset.actionAlignment=options.actionAlignment??'center';compact.hidden=options.showCollapseToggle===false;nav.setAttribute('aria-label',options.label??'Navigation');nav.dataset.collapsed=String(state.collapsed);compact.setAttribute('aria-label',state.collapsed?options.expandLabel??'Expand navigation':options.compactLabel??'Compact navigation');compact.setAttribute('aria-pressed',String(state.collapsed));compact.textContent=state.collapsed?'›':'‹';empty.textContent=options.emptyLabel??'No navigation items';empty.hidden=options.items.length>0;
     const used=new Set<string>();
     const build=(items:readonly NavigationItem[],parent:HTMLElement)=>{
       const children:HTMLElement[]=[];
@@ -132,8 +142,8 @@ export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuDOMO
         if(kind!=='group'){primary.dataset.menuControl='primary';primary.setAttribute('aria-disabled',String(node.disabled));primary.setAttribute('title',item.label);primary.dataset.collapsed=String(state.collapsed);}
         entry.icon?.remove();entry.icon=undefined;if(item.icon||state.collapsed){entry.icon=renderNavigationIcon(doc,resolveNavigationIcon(item.icon,options.resolveIcon));primary.insertBefore(entry.icon,entry.label);}
         const rowState:NavigationRowState={disabled:node.disabled,collapsed:state.collapsed,expanded:kind==='group'||state.expandedIds.includes(item.id),active:active===item.id};
-        if(entry.labelFactory!==options.renderLabel||!entry.labelSlot){const previous=entry.labelSlot;entry.labelSlot=undefined;previous?.destroy?.();entry.labelFactory=options.renderLabel;entry.labelSlot=options.renderLabel?.(item,rowState);if(entry.labelSlot)assertContent(entry.labelSlot.element);entry.label.replaceChildren(...(entry.labelSlot?[entry.labelSlot.element]:[]));}
-        entry.labelSlot?.update?.(item,rowState);if(entry.labelSlot)assertContent(entry.labelSlot.element);if(!entry.labelSlot)entry.label.textContent=item.label;
+        if(entry.labelFactory!==options.renderLabel||!entry.labelSlot&&options.renderLabel){const previous=entry.labelSlot;entry.labelSlot=undefined;previous?.destroy?.();entry.labelFactory=options.renderLabel;entry.labelSlot=options.renderLabel?.(item,rowState);if(entry.labelSlot)assertContent(entry.labelSlot.element);entry.plainLabel=undefined;entry.label.replaceChildren(...(entry.labelSlot?[entry.labelSlot.element]:[]));}
+        entry.labelSlot?.update?.(item,rowState);if(entry.labelSlot)assertContent(entry.labelSlot.element);if(!entry.labelSlot){if(options.labelOverflow==='marquee'){if(!entry.plainLabel){entry.plainLabel=createNavigationLabel(doc,item.label);entry.label.replaceChildren(entry.plainLabel.element);}entry.plainLabel.setText(item.label);}else{entry.plainLabel=undefined;if(entry.label.textContent!==item.label)entry.label.textContent=item.label;}}
         if(kind==='link'){const link=primary as HTMLAnchorElement;node.disabled?link.removeAttribute('href'):link.setAttribute('href',item.href!);link.toggleAttribute('aria-current',active===item.id);if(active===item.id)link.setAttribute('aria-current','page');for(const name of ['target','rel'] as const)item[name]===undefined?link.removeAttribute(name):link.setAttribute(name,item[name]!);item.download===undefined||item.download===false?link.removeAttribute('download'):link.setAttribute('download',item.download===true?'':item.download);}
         const hasChildren=!!item.children?.length,open=kind==='group'||state.expandedIds.includes(item.id);nested.hidden=!open;
         if(kind==='toggle'){(primary as HTMLButtonElement).type='button';(primary as HTMLButtonElement).disabled=node.disabled||!hasChildren;primary.setAttribute('aria-expanded',String(open));primary.setAttribute('aria-controls',nested.id);if(!entry.chevron){entry.chevron=doc.createElement('span');entry.chevron.className='xui-menu-chevron';entry.chevron.setAttribute('aria-hidden','true');entry.chevron.textContent='⌄';primary.append(entry.chevron);}}
@@ -145,7 +155,7 @@ export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuDOMO
         build(item.children??[],nested);children.push(li);
       }arrange(parent,children);
     };build(options.items,list);for(const [id,entry] of records)if(!used.has(id)){release(entry);records.delete(id);}
-    keyboard.refresh();if(focusId&&(!focused?.isConnected||doc.activeElement!==focused)&&(doc.activeElement===doc.body||doc.activeElement===focused)){const entry=records.get(focusId),target=focusControl==='toggle'?entry?.toggle:focusControl==='action'?entry?.actionSlot?.element:entry?.primary;if(target&&!target.closest('[hidden]')&&!target.matches(':disabled,[aria-disabled="true"]'))target.focus();else nav.querySelector<HTMLElement>('[data-menu-control][tabindex="0"]')?.focus();}
+    keyboard.refresh();presentation.refresh();if(focusId&&(!focused?.isConnected||doc.activeElement!==focused)&&(doc.activeElement===doc.body||doc.activeElement===focused)){const entry=records.get(focusId),target=focusControl==='toggle'?entry?.toggle:focusControl==='action'?entry?.actionSlot?.element:entry?.primary;if(target&&!target.closest('[hidden]')&&!target.matches(':disabled,[aria-disabled="true"]'))target.focus();else nav.querySelector<HTMLElement>('[data-menu-control][tabindex="0"]')?.focus();}
     if(nav.closest('[data-scroll-mode="viewport"],[data-scroll-mode="workspace"],.xui-shell-sidebar-with-footer'))nav.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});
   };
   const click=(event:MouseEvent)=>{const control=(event.target as HTMLElement).closest<HTMLElement>('[data-menu-control]');if(!control||!nav.contains(control)||control.dataset.menuControl==='action')return;const node=nodes.get(control.dataset.menuId!);if(!node||node.disabled){event.preventDefault();return;}if(control.dataset.menuControl==='toggle'||!node.item.href){requestExpanded(node.item.id,!snapshot().expandedIds.includes(node.item.id));return;}navigateNavigationItem(node.item,event,{...options,location:options.location??doc.location?.href,baseURL:options.baseURL??doc.baseURI});};
@@ -155,6 +165,6 @@ export function createNavigationMenu(root:HTMLElement,initial:NavigationMenuDOMO
     getElement:()=>nav,getState:snapshot,
     update(next:Partial<NavigationMenuDOMOptions>){if(dead)return;const candidate={...options,...next},indexed=indexNavigation(candidate.items);options=candidate;nodes=indexed;render();},
     setExpanded:requestExpanded,setCollapsed(next:boolean){if(dead)return;if(options.collapsed===undefined)collapsed=next;options.onCollapsedChange?.(next);render();},
-    destroy(){if(dead)return;dead=true;keyboard.destroy();releasePress();nav.removeEventListener('click',guardAction,true);nav.removeEventListener('click',click);compact.removeEventListener('click',compactClick);for(const entry of records.values())release(entry);records.clear();root.replaceChildren(...original);menuOwners.delete(root);},
+    destroy(){if(dead)return;dead=true;presentation.destroy();keyboard.destroy();releasePress();nav.removeEventListener('click',guardAction,true);nav.removeEventListener('click',click);compact.removeEventListener('click',compactClick);for(const entry of records.values())release(entry);records.clear();root.replaceChildren(...original);menuOwners.delete(root);},
   };menuOwners.set(root,owner);return owner;
 }

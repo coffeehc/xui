@@ -111,7 +111,7 @@ for(const kind of kinds){
         const icon=await bounds(link.locator('svg'));expect(icon.width).toBeCloseTo(16,1);expect(icon.height).toBeCloseTo(16,1);expect(icon.x-item.x).toBeCloseTo(10,1);
       }
       expect(rects[1].y-rects[0].bottom).toBeCloseTo(4,1);expect(rects[2].y-rects[1].bottom).toBeCloseTo(4,1);expect(rail.scrollWidth).toBeLessThanOrEqual(rail.clientWidth);
-      await page.getByRole('button',{name:'展开导航',exact:true}).click();await expect(page.locator('.xui-menu-layout')).toHaveAttribute('data-collapsed','false');await finishMotion(page);expect((await bounds(sidebar)).width).toBeCloseTo(216,1);
+      await page.getByRole('button',{name:'展开导航',exact:true}).click();await expect(page.locator('.xui-menu-layout')).toHaveAttribute('data-collapsed','false');await finishMotion(page);expect((await bounds(sidebar)).width).toBeCloseTo(324,1);
       const label=links.nth(1).locator('.xui-menu-label');expect(await label.evaluate(node=>getComputedStyle(node).whiteSpace)).not.toBe('nowrap');
       await page.getByRole('button',{name:'紧凑导航',exact:true}).click();await expect(page.locator('.xui-menu-layout')).toHaveAttribute('data-collapsed','true');await finishMotion(page);
     }

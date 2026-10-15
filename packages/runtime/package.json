@@ -178,6 +178,10 @@
     "./date-time-dom": {
       "types": "./dist/date-time-dom.d.ts",
       "import": "./dist/date-time-dom.js"
+    },
+    "./internal/navigation-presentation": {
+      "types": "./dist/navigation-presentation.d.ts",
+      "import": "./dist/navigation-presentation.js"
     }
   },
   "types": "./dist/index.d.ts",
