@@ -1,3 +1,4 @@
+import {bindTextareaAutoResize,createDialogController} from '@coffeehc/xui-runtime/dom';
 import {createNumberInput,createPasswordInput,createSearchInput} from '@coffeehc/xui-runtime/text-inputs-dom';
 import '@coffeehc/xui-theme/style.css';
 const root=document.getElementById('root'),form=document.createElement('form'),numberHost=document.createElement('div'),passwordHost=document.createElement('div'),searchHost=document.createElement('div'),output=document.createElement('output');root.className='xui-container';root.style.padding='var(--layout-content-inset)';output.className='xui-code';output.setAttribute('aria-label','State');root.append(form);form.append(numberHost,passwordHost,searchHost);let number=2,password='',search='',submits=0,clears=0,revision=0,readOnly=false;
@@ -7,3 +8,16 @@ const passwordInput=createPasswordInput(passwordHost,{label:'Password',name:'pas
 const searchInput=createSearchInput(searchHost,{label:'Search',name:'query',value:search,clearOnEscape:true,onValueChange:value=>{search=value;render();},onSubmit:()=>{submits++;render();}});
 for(const [label,action] of [['Rerender',()=>{revision++;render();}],['Toggle readonly',()=>{readOnly=!readOnly;render();}],['Remove password',()=>passwordInput.destroy()]]){const button=document.createElement('button');button.className='xui-button';button.type='button';button.textContent=label;button.onclick=action;form.append(button);}
 for(const [type,label] of [['reset','Reset form'],['submit','Submit form']]){const button=document.createElement('button');button.className='xui-button';button.type=type;button.textContent=label;form.append(button);}form.onsubmit=event=>{event.preventDefault();submits++;render();};form.append(output);render();
+
+// Public native form and dialog composition; the binding owns sizing only.
+const draftTrigger=document.createElement('button'),draftDialog=document.createElement('dialog');draftTrigger.type='button';draftTrigger.className='xui-button';draftTrigger.textContent='编辑长想法';draftDialog.className='xui-layer xui-native-dialog';draftDialog.setAttribute('aria-labelledby','draft-title');
+const draftHeader=document.createElement('div'),draftTitle=document.createElement('h2'),draftBody=document.createElement('div'),draftFooter=document.createElement('div'),draftField=document.createElement('label'),draftLabel=document.createElement('span'),draftInput=document.createElement('textarea'),draftHelp=document.createElement('p');
+draftHeader.className='xui-dialog-header';draftTitle.className='xui-dialog-title';draftTitle.id='draft-title';draftTitle.textContent='想法草稿';draftHeader.append(draftTitle);draftBody.className='xui-dialog-body';draftFooter.className='xui-dialog-footer';draftField.className='xui-field';draftLabel.className='xui-label';draftLabel.textContent='想法内容';draftInput.className='xui-textarea';draftInput.name='idea';draftInput.rows=2;draftHelp.className='xui-help';draftHelp.id='draft-help';draftHelp.textContent='长中文与分段输入；超过六行后在输入框内滚动。';draftInput.setAttribute('aria-describedby',draftHelp.id);draftField.append(draftLabel,draftInput);draftBody.append(draftField,draftHelp);draftDialog.append(draftHeader,draftBody,draftFooter);root.append(draftTrigger,draftDialog);
+let draftSizing=bindTextareaAutoResize(draftInput,{maxRows:6});const draftOwner=createDialogController(draftDialog,draftTrigger);
+const setDraft=value=>{draftInput.value=value;draftSizing?.update();};
+const toggleDraftSizing=()=>{if(draftSizing){draftSizing.destroy();draftSizing=undefined;}else draftSizing=bindTextareaAutoResize(draftInput,{maxRows:6});};
+for(const [label,action] of [['清空想法',()=>setDraft('')],['切换自动增高',toggleDraftSizing],['切换只读',()=>{draftInput.readOnly=!draftInput.readOnly;}],['切换禁用',()=>{draftInput.disabled=!draftInput.disabled;}],['完成编辑',()=>draftOwner.close()]]){const button=document.createElement('button');button.className='xui-button';button.type='button';button.textContent=label;button.dataset.variant=label==='完成编辑'?'primary':label==='清空想法'?'outline':'ghost';button.onclick=action;draftFooter.append(button);}
+// A hidden dialog is measured after it opens without changing its draft.
+draftDialog.addEventListener('toggle',()=>draftSizing?.update());
+window.textareaDemo={setValue:setDraft,toggle:toggleDraftSizing};
+window.addEventListener('pagehide',()=>{draftSizing?.destroy();draftOwner.destroy();},{once:true});

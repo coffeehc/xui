@@ -269,8 +269,8 @@ export function createAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncod
   return client;
 }
 
-export const loginPageDefaultLabels={username:'Username',password:'Password',submit:'Sign in',checking:'Checking your sign-in…',signingIn:'Signing in…',usernameRequired:'Enter your username.',passwordRequired:'Enter your password.',credentialsError:'The username or password is incorrect.',forbidden:'Sign in is not allowed.',rateLimited:'Too many attempts. Try again later.',timeout:'The request timed out. Please try again.',network:'Could not connect. Check your connection and try again.',error:'Sign in could not be completed.',cancelled:'Waiting cancelled. The server may have completed the request.',checkSession:'Retry connection',opening:'Opening app…',navigationError:'You are signed in, but the app could not be opened. Try again.',retryNavigation:'Try opening app again'} as const;
-export type LoginPageLabels={ [Key in keyof typeof loginPageDefaultLabels]:string };
+export const loginPageDefaultLabels={username:'Username',password:'Password',showPassword:'Show password',hidePassword:'Hide password',submit:'Sign in',checking:'Checking your sign-in…',signingIn:'Signing in…',usernameRequired:'Enter your username.',passwordRequired:'Enter your password.',credentialsError:'The username or password is incorrect.',forbidden:'Sign in is not allowed.',rateLimited:'Too many attempts. Try again later.',timeout:'The request timed out. Please try again.',network:'Could not connect. Check your connection and try again.',error:'Sign in could not be completed.',cancelled:'Waiting cancelled. The server may have completed the request.',checkSession:'Retry connection',opening:'Opening app…',navigationError:'You are signed in, but the app could not be opened. Try again.',retryNavigation:'Try opening app again'} as const;
+export type LoginPageLabels={ [Key in Exclude<keyof typeof loginPageDefaultLabels,'showPassword'|'hidePassword'>]:string } & {/** Full-page password toggle names; omitted fields retain English defaults. */showPassword?:string;hidePassword?:string};
 /** Both layouts are centered single columns; fullscreen omits the card surface. */
 export type LoginPageLayout='fullscreen'|'card';
 export interface LoginPageConfig {layout?:LoginPageLayout;productName:string;title?:string;description?:string;logo?:{src:string;alt?:string};returnTo?:string;fallbackReturnTo?:string;labels?:Partial<LoginPageLabels>}
@@ -278,7 +278,7 @@ export interface LoginPageConfig {layout?:LoginPageLayout;productName:string;tit
 export type AuthPageConfig=Pick<LoginPageConfig,'layout'|'productName'|'description'|'logo'>&{title:string};
 export function resolveLoginPageConfig(input:LoginPageConfig){
   const string=(value:unknown,limit:number)=>{if(typeof value!=='string'||!value||value.length>limit)throw new TypeError('Invalid login page text');return value;};
-  const labels=Object.freeze(Object.fromEntries(Object.entries(loginPageDefaultLabels).map(([key,value])=>[key,input.labels?.[key as keyof LoginPageLabels]===undefined?value:string(input.labels[key as keyof LoginPageLabels],300)]))) as Readonly<LoginPageLabels>;
+  const labels=Object.freeze(Object.fromEntries(Object.entries(loginPageDefaultLabels).map(([key,value])=>[key,input.labels?.[key as keyof LoginPageLabels]===undefined?value:string(input.labels[key as keyof LoginPageLabels],300)]))) as Readonly<Required<LoginPageLabels>>;
   let logo:Readonly<{src:string;alt:string}>|undefined;
   if(input.logo){let url:URL;try{url=new URL(input.logo.src,'https://xui.invalid');}catch{throw new TypeError('Invalid login logo');}if(!['http:','https:'].includes(url.protocol)||url.username||url.password||input.logo.src.length>2048)throw new TypeError('Invalid login logo');logo=Object.freeze({src:input.logo.src,alt:input.logo.alt??input.productName});}
   const layout=input.layout??'card';if(layout!=='fullscreen'&&layout!=='card')throw new TypeError('Invalid login layout');

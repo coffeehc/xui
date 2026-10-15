@@ -53,6 +53,24 @@ for (const kind of ['vanilla','react']) {
   }
   const allTypes=esm.map((entry,index)=>`import type {${entry.symbols.map((name,n)=>`${name} as Entry${index}Symbol${n}`).join(',')}} from '${entry.specifier}';`).join('\n');await writeFile(`${cwd}/public-types.ts`,allTypes+'\n');
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--target','es2022','--moduleResolution','bundler','--module','esnext','public-types.ts'],{cwd,stdio:'inherit'});
+  await writeFile(`${cwd}/public-feedback-types.ts`,[
+    "import {type AdminSetupLabels,type AdminSetupCheck,createAdminSetupController} from '@coffeehc/xui-runtime/admin-setup';",
+    "import {bindTextareaAutoResize,type TextareaAutoResizeOptions} from '@coffeehc/xui-runtime/dom';",
+    "import {type LoginPageConfig,type LoginPageLabels} from '@coffeehc/xui-runtime/auth';",
+    "const config:LoginPageConfig={productName:'Example',labels:{showPassword:'显示密码',hidePassword:'隐藏密码'}};",
+    "import {type NewPasswordLabels} from '@coffeehc/xui-runtime/password';const legacyPassword:NewPasswordLabels={} as Omit<NewPasswordLabels,'showPassword'|'hidePassword'>;",
+    "const legacyLogin:LoginPageLabels={} as Omit<LoginPageLabels,'showPassword'|'hidePassword'>;const legacySetup:AdminSetupLabels={} as Omit<AdminSetupLabels,'check'|'checking'|'checkError'>;",
+    "const onCheck:AdminSetupCheck=({signal})=>signal.aborted?'unconfirmed':'complete';",
+    "createAdminSetupController({state:{status:'unconfirmed'},onSubmit:()=> 'unconfirmed',onCheck}).check();",
+    "const size:TextareaAutoResizeOptions={maxRows:6};const binding=bindTextareaAutoResize(document.createElement('textarea'),size);binding.update(size);binding.destroy();",
+    "// @ts-expect-error a read cannot authorize another initialization write",
+    "const invalidRead:AdminSetupCheck=()=> 'idle';",
+    "// @ts-expect-error row caps are numeric",
+    "const invalidSize:TextareaAutoResizeOptions={maxRows:'six'};",
+    ...(kind==='react'?["import {type TextareaProps} from '@coffeehc/xui-react/forms';const props:TextareaProps={autoResize:size,rows:2,readOnly:true};"]:[]),
+  ].join('\n'));
+  execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','public-feedback-types.ts'],{cwd,stdio:'inherit'});
+
   await copyFile('tests/fixtures/identity-contract.ts',`${cwd}/identity-contract.ts`);
   execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--target','es2022','--moduleResolution','bundler','--module','esnext','identity-contract.ts'],{cwd,stdio:'inherit'});
   const allValues=esm.map((entry,index)=>`import * as Entry${index} from '${entry.specifier}';`).concat(available.filter(entry=>entry.kind==='css').map(entry=>`import '${entry.specifier}';`)).join('\n')+`\nglobalThis.xuiPublicEntries={${esm.map((entry,index)=>`${JSON.stringify(entry.specifier)}:Entry${index}`).join(',')}};`;
@@ -316,13 +334,20 @@ for (const kind of ['vanilla','react']) {
     await build({entryPoints:[`${login}/app.tsx`],outdir:strictOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"development"'}});
     for(const file of ['index.html','theme-init.js','mark.svg','visual.svg'])await copyFile(`${loginOutput}/${file}`,`${strictOutput}/${file}`);
   }
+  const passwordChange=resolve(cwd,'password-change'),passwordChangeOutput=resolve(`dist/password-change-${kind}`);
+  await cp(`examples/password-change-${kind}`,passwordChange,{recursive:true});
+  const passwordChangeBuild=await build({entryPoints:[`${passwordChange}/app.${kind==='react'?'tsx':'js'}`],outdir:passwordChangeOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+  assert(Object.keys(passwordChangeBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Password labels escaped the standalone install');
+  if(kind==='vanilla')assert(!Object.keys(passwordChangeBuild.metafile.inputs).some(file=>/node_modules\/(react|react-dom|@base-ui)\//.test(file)),'Native password labels imported React');
+  if(kind==='react')execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','password-change/app.tsx'],{cwd,stdio:'inherit'});
+  await copyFile(`${passwordChange}/index.html`,`${passwordChangeOutput}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${passwordChangeOutput}/theme-init.js`);await writeFile(`${passwordChangeOutput}/metafile.json`,JSON.stringify(passwordChangeBuild.metafile,null,2));
   const adminSetup=resolve(cwd,'admin-setup'),adminSetupOutput=resolve(`dist/admin-setup-${kind}`);
   await cp(`examples/admin-setup-${kind}`,adminSetup,{recursive:true});
   const adminBuild=await build({entryPoints:[`${adminSetup}/app.${kind==='react'?'tsx':'js'}`],outdir:adminSetupOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
   assert(Object.keys(adminBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Admin setup escaped its standalone install');
   let adminHtml=await readFile(`${adminSetup}/index.html`,'utf8');
   if(kind==='react'){
-    const ssr=execFileSync('node',['--input-type=module','-e',"import React from 'react';import {renderToString} from 'react-dom/server';import {AdminSetupPage} from '@coffeehc/xui-react/admin-setup';console.log(renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'创建管理员'},state:{status:'idle'},onSubmit:()=>{throw Error('SSR must not submit')}})));"],{cwd,encoding:'utf8'});
+    const ssr=execFileSync('node',['--input-type=module','-e',"import React from 'react';import {renderToString} from 'react-dom/server';import {AdminSetupPage} from '@coffeehc/xui-react/admin-setup';console.log(renderToString(React.createElement(AdminSetupPage,{config:{productName:'Example',title:'创建管理员'},state:{status:'idle'},passwordLabels:{showPassword:'显示密码',hidePassword:'隐藏密码'},onSubmit:()=>{throw Error('SSR must not submit')}})));"],{cwd,encoding:'utf8'});
     adminHtml=adminHtml.replace('<!--ssr-->',ssr.trim());
     execFileSync('node',[require.resolve('typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','admin-setup/app.tsx'],{cwd,stdio:'inherit'});
   }

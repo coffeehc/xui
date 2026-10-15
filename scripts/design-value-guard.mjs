@@ -175,7 +175,9 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
         const measuredTableMinimum = file === 'packages/runtime/src/data-table.ts' && prop === 'minBlockSize' && ['`${componentMinimum}px`', '`max(var(--data-table-min-block-size), ${componentMinimum}px)`'].includes(raw);
         // Explicit positive image dimensions are consumer data, validated before DOM writes.
         const imageWidth = file === 'packages/runtime/src/display-dom.ts' && prop === 'width' && raw === '`${options.width}px`';
-        if (measuredPosition || measuredSidebar || measuredTableTrack || measuredTableMinimum || imageWidth) { exceptions.add(`${file}: measured ${prop}`); return; }
+        // Textarea height derives solely from computed font/box metrics and its declared row cap.
+        const measuredTextarea = file === 'packages/runtime/src/textarea.ts' && prop === 'blockSize' && raw === "`${style.boxSizing==='border-box'?size:size-padding-border}px`";
+        if (measuredTextarea || measuredPosition || measuredSidebar || measuredTableTrack || measuredTableMinimum || imageWidth) { exceptions.add(`${file}: measured ${prop}`); return; }
         errors.push(`${where(loc(node))} ${prop}: Unreviewed dynamic style template ${raw}`);
       }
     }

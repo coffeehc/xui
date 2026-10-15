@@ -95,6 +95,20 @@ DataTable 双端始终保留其状态行；登录页空反馈/隐藏动作不占
 
 React NumberInput/SearchInput 使用受控 value/onValueChange；PasswordInput 支持显式受控或 DOM 非受控模式。各组件保留 input ref、name、id、disabled、readOnly、required、placeholder、autocomplete 等原生属性；放在 Field 中复用 label/help/error，显式 id 可通过 Field.controlId 统一。原生 createX(host, options) 必填 label（安全文本），有同等 name/id/help/error/required/disabled/readOnly/placeholder/autoComplete；返回 element/input/update(partial)/destroy()。同一 host 单 owner，更新保持输入 identity，destroy 幂等释放监听并恢复原内容，不覆盖宿主自行替换的内容。宿主发布值是唯一已确认事实。
 
+### Textarea 可选自动增高
+
+React `/forms` 的 `TextareaProps.autoResize?: {maxRows:number}` 显式启用；`InputGroup.Textarea` 共享同一入口。原生 `/dom` 提供 `bindTextareaAutoResize(textarea,{maxRows})`，返回 `update(options?)` / `destroy()`。maxRows 必须是正整数；最小高度仍取已有 rows 与公共 CSS minimum，maxRows 不得压缩此下限。默认不启用，原有 rows、滚动和手动 resize 不变。
+
+启用后按实际字体、内距、边线和宽度测量内容，增长到行数上限后内部滚动，删除内容会缩回；尊重公开 CSS max-height 约束。不改变 value、选区、焦点、表单、required/disabled/readOnly 或 IME/提交策略，不派发额外 input/change。组件测量不可见副本，避免先压缩正在编辑的框导致 Dialog 滚动跳动。自身高度不做过渡动画。
+
+React 受控值随提交后的 props 更新；原生通过 input/字体加载/宽度/窗口变化自动更新，直接设置 value 或更改外部样式后显式调用 update。表单 reset 后重测；启用期间由绑定独占 block-size/overflow-y/resize，外部通过 rows/maxRows/CSS max-height 调整边界，不并行测高或写高度。禁用自动增高或 destroy 恢复原内联尺寸/resize 并释放观察器、动画帧和监听。长编辑器仍由 Dialog.Body/Sheet.Body 管理所属滚动，不能把整页扩大成第二个滚动 owner。
+
+```tsx
+<Field label="想法内容"><Textarea rows={2} value={draft} onChange={e=>setDraft(e.target.value)} autoResize={{maxRows:6}} /></Field>
+```
+
+原生：`const sizing=bindTextareaAutoResize(textarea,{maxRows:6}); textarea.value=draft; sizing.update();`。正式双端示例见 [React 文本输入](../examples/text-inputs-react/app.tsx) / [原生文本输入](../examples/text-inputs-vanilla/app.js) 的按需草稿 Dialog。
+
 ### NumberInput
 
 value 是 number|null，空白提交 null，绝不转为 0。min/max 必须有限且顺序正确，step 默认为 1 且必须正数；外部 value 必须有限且绝对值不超过 Number.MAX_SAFE_INTEGER。本组件不适用于精确金额、大整数、ID；这些继续用字符串 Input 加领域 parser，不提供格式化/本地化或 decimal 引擎。
@@ -992,21 +1006,24 @@ owner确认有效authenticated后，无论来自初始session检查还是主动l
 
 - idle：宿主确认当前允许初始化；用户显式提交后进入 submitting。
 - submitting：阻止重复提交，密码输入立即清空。
-- unconfirmed：仅显示“暂时无法确认创建结果，不能再次提交。”，全部写入锁定；不生成额外核对按钮或技术说明。
+- unconfirmed：显示“暂时无法确认创建结果，不能再次提交。”，全部写入锁定；仅配置 onCheck 时生成手动核对入口。
+- checking：仅执行宿主只读核对，字段与写入保持锁定，禁止并发核对。
 - complete：初始化已确认完成，仍未登录。
 - unavailable：当前不能初始化；界面不猜测原因。
 
-state 可含 `rejected?: boolean`（仅 idle 有效）与 `revision?: number`（安全整数）。React 对 status/rejected/revision 的事实变化应用新权威状态，普通 inline 对象重渲染不取消进行中的提交。宿主在相同状态值上发布新的权威观察（例如 unconfirmed 后又权威确认可以提交）时递增 revision。原生显式 update({state}) 本身就是新权威观察。不要将页面暂态写回权威输入来循环同步。
+可选 `onCheck: AdminSetupCheck` 接收 `{signal}`，只由用户在 unconfirmed/unavailable 状态明确触发，返回 `complete | unconfirmed | unavailable`。回调不接收密码，不得执行初始化或自动登录；其请求、期限和权威事实仍由宿主负责。拒绝、异常或非法返回产生 unconfirmed 与 `checkFailed:true`，显示可翻译的 checkError 并保留手动重试，绝不解锁写入。普通回调返回 idle/rejected 不能授权再次初始化；只有宿主另行发布权威 state 才能改变写入许可。库不自动请求、不新增端点、轮询、恢复协议或导航；完成后宿主可按现有路由回登录。labels 增加可选 check/checking/checkError，旧完整 labels 对象仍可编译；未配置时保持原 UI。
 
-React 使用一个稳定 form、非受控密码输入和稳定密码字段 ref。`ref: AdminSetupPageHandle` 提供 clear() 清密码，React 卸载/pagehide 中止本地等待，丢弃迟到结果；StrictMode 重放不销毁仍需使用的 owner。原生返回 getElement/getState/update/clear/destroy，update 接受 state/config，保留 form、字段及未受影响焦点；destroy 清密码、释放事件/订阅、恢复原 root 内容。pagehide 使进行中结果变为 unconfirmed，不因返回页面重发。
+state 可含 `checkFailed?: boolean`（仅 unconfirmed/unavailable 有效）、`rejected?: boolean`（仅 idle 有效）与 `revision?: number`（安全整数）。React 对 status/rejected/revision 的事实变化应用新权威状态，普通 inline 对象重渲染不取消进行中的提交。宿主在相同状态值上发布新的权威观察（例如 unconfirmed 后又权威确认可以提交）时递增 revision。原生显式 update({state}) 本身就是新权威观察。不要将页面暂态写回权威输入来循环同步。
 
-底层 `createAdminSetupController`（runtime/admin-setup）也公开相同状态/submit 合同，subscribe/getState/setState/suspend/destroy 不包含用户名或密码快照。视图已经拥有该控制器，普通产品不需创建第二个。
+React 使用一个稳定 form、非受控密码输入和稳定密码字段 ref。`ref: AdminSetupPageHandle` 提供 clear() 清密码，React 卸载/pagehide 中止本地等待，丢弃迟到结果；StrictMode 重放不销毁仍需使用的 owner。原生返回 getElement/getState/update/clear/destroy，update 接受 state/config，保留 form、字段及未受影响焦点；destroy 清密码、释放事件/订阅、恢复原 root 内容。pagehide 使进行中的写入或核对变为 unconfirmed，不因返回页面重发。
+
+底层 `createAdminSetupController`（runtime/admin-setup）也公开相同状态/submit 合同及可选 onCheck/check()，subscribe/getState/setState/suspend/destroy 不包含用户名或密码快照。视图已经拥有该控制器，普通产品不需创建第二个。
 
 #### 正式示例与接入
 
 [React SSR/hydration 示例](../examples/admin-setup-react/app.tsx) 与 [原生示例](../examples/admin-setup-vanilla/app.js) 只使用合成状态和 submit 回调。迁移已有手写 setup 时，删除被公共页接管的用户名/submit/feedback、密码清理与忙态 UI，保留宿主领域 owner、接口与权威状态映射。
 
-单测入口为 [admin-setup.test.mjs](../tests/admin-setup.test.mjs)，浏览器入口为 [admin-setup.spec.mjs](../tests/browser/admin-setup.spec.mjs)。正式构建/consumer 后可访问 `/admin-setup-react/` 与 `/admin-setup-vanilla/`；`?long` 为合成长错误。检查未知状态关键句全文、完成不自动登录、稳定输入/焦点、卸载清理及浅深/system、窄屏/放大；实际运行证据见 [VALIDATION.md](VALIDATION.md#认证页验收)，不以 SSR 静态通过代替 hydration 或真实产品验证。
+单测入口为 [admin-setup.test.mjs](../tests/admin-setup.test.mjs)，浏览器入口为 [admin-setup.spec.mjs](../tests/browser/admin-setup.spec.mjs)。正式构建/consumer 后可访问 `/admin-setup-react/` 与 `/admin-setup-vanilla/`；`?long` 为合成长错误；`?check` 启用合成只读核对回调。检查未知状态关键句全文、完成不自动登录、稳定输入/焦点、卸载清理及浅深/system、窄屏/放大；实际运行证据见 [VALIDATION.md](VALIDATION.md#认证页验收)，不以 SSR 静态通过代替 hydration 或真实产品验证。
 
 ### 菜单危险操作语义
 
@@ -1038,3 +1055,11 @@ const picker=createDateTimePicker(host,{label:'开始日期时间',value:null,
   onValueChange:value=>picker.update({value})});
 // 外部受控确认：picker.update({value:'2026-10-15T09:30'})；无额外回调。
 ```
+
+### 完整登录页密码显隐文案与品牌替代文本
+
+`LoginPageConfig.labels` 公开 `showPassword` / `hidePassword`，两项在完整 labels 类型中也保持可选，分别转交共享 PasswordInput 的 showLabel/hideLabel；默认仍为 Show password / Hide password。React ConfigurableLoginPage 与原生 createLoginPage 使用同一配置：`labels:{showPassword:'显示密码',hidePassword:'隐藏密码'}`。切换只改变同一 input 的显隐及 aria-pressed/名称，不更换输入或认证 owner；忙状态、清密和防重复合同不变。
+
+AuthPage/createAuthPage、完整 LoginPage 和初始化页的 `logo.alt:''` 必须首次即输出显式 `alt=""`；非空替代文本与更新/移除 logo 遵从已有配置，不能用 DOM 属性的默认空值推断已输出属性。
+
+`NewPasswordLabels.showPassword/hidePassword` 同样为可选字段，由 NewPasswordFields/createNewPasswordFields 转交给新密码和确认两个内部输入；AdminSetupPage 的 passwordLabels 原样支持。默认英文与旧配置保持兼容，密码规则和强度建议不变。独立改密表单的合成正式消费者见 [React](../examples/password-change-react/app.tsx) / [原生](../examples/password-change-vanilla/app.js)，只演示宿主提交与清密，没有新增改密 API。

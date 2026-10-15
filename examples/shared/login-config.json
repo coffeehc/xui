@@ -10,6 +10,8 @@
   "labels": {
     "username": "用户名",
     "password": "密码",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
     "submit": "登录",
     "checking": "正在确认登录状态…",
     "signingIn": "正在登录…",

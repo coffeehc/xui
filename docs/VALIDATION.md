@@ -2,6 +2,40 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## xLead 公共接入反馈（2026-10-15）
+
+以正式595380a / DESIGN0.13.1对照当前main排重，五项均未已有解决：原生装饰logo空alt、完整登录及新密码组合的显隐文案转交、Key已确认吊销后的能力读回为公共缺陷；初始化手动只读核对与Textarea自动增高为显式可选扩展。此次仅修改xui，没有修改xLead、其它消费方或baseservice，也没有新增后端端点/DTO/密码策略。
+
+| 反馈 | 已实现公开合同 | 责任边界与兼容 |
+| --- | --- | --- |
+| AuthPage空alt | 原生比较getAttribute('alt')，空字符串在首次创建也显式输出；更新/移除/重加与React一致 | 继续采用完整公共页，不要求消费者修改节点 |
+| 显隐密码翻译 | LoginPageConfig.labels与NewPasswordLabels均新增可选showPassword/hidePassword；新密码/确认两个输入同步转交，AdminSetupPage的passwordLabels沿用 | 默认英文不变；旧完整labels对象仍可编译；不改变认证、清密或固定6–32码点规则 |
+| 吊销后权限陈旧 | 已确认revoke后通过现有adapter.list读取一次权威metadata/capabilities | 成功前后均不推断删除授权；读失败保留已知revoked和锁定能力，使用原列表错误/刷新入口，不重放revoke；事务/权限/CAS仍归后端 |
+| 初始化复核 | 可选onCheck({signal})返回complete/unconfirmed/unavailable；底层controller.check()；checking与checkFailed反馈 | 仅手动只读；异常/非法结果不解锁写入，不创建会话或导航；宿主提供权威回调和期限。未配置时无新动作。穷举AdminSetupStatus的代码需处理新增checking分支 |
+| Textarea自动增高 | React autoResize={maxRows}；原生/dom的bindTextareaAutoResize/update/destroy | 默认关闭，已有rows/CSS下限保留；增长、上限滚动、缩回，保留value/选区/焦点/IME及所属Dialog滚动。只拥有尺寸，未新增皮肤 |
+
+初始化写入/复核复用同一个controller；挂起、权威状态替换与销毁会中断本地等待，拒绝迟到结果，即使宿主忽略AbortSignal也不会悬挂本地调用者。这不证明后端已撤销已提交事务。完整登录与改密的合成消费者分别采用相同公开输入，原生不会安装React。
+
+规范升至0.14.0，384 tokens、默认变量CSS指纹与101个manifest入口不变。最终package source generation为`02c5446c1133239437f50aecd48f45c9e779595ad59b2ccba085da7bc9b78d45`；三包仍为私有0.1.0，必须连同固定源码SHA和正式tarball识别，未发布registry。独立消费者逐项核对ESM/CSS/types/init与peer单实例；完整CSS仍为17239 gzip bytes，既有17536预算未提高。
+
+证据集中于`.artifacts/xlead-public-feedback/`。首轮unit519/520，唯一失败是旧合成revoke只计数、普通list永远返回expired；修正夹具中的权威状态后page-api14/14通过。最后两项补充为忽略abort的本地等待终止，以及新密码组合显隐文案；最终六文件定向单测49/49，不宣称全仓完整单测已在最终代重跑。
+
+首次专项27/48，15项是新增原生示例误用React的xui-dialog类，导致关闭后仍可见；改用已有公开xui-native-dialog。另6项完成消息断言匹配到密码强度status，改为精确定位完成反馈，不改产品行为。更正后候选48/48通过；其后补齐NewPasswordFields同根转交和正式改密消费者，最终结果以release报告为准。一次既有回归在确认失败根因后中断，原日志保留：旧密码模糊label会匹配新增中文显隐按钮，简单exact又漏掉必填星号，最终使用限定标签正则；Key手动再试成功后按新合同多一次普通读取，计数同步而非删除断言。跨引擎第一次尝试继承了Chromium专用可执行路径，未执行有效引擎验收即停止，独立config清除该启动项后再验证；不将启动候选算成Firefox/WebKit通过。
+
+| 最终同代检查 | 结果 | 原始证据（`.artifacts/xlead-public-feedback/`） |
+| --- | --- | --- |
+| 构建 / types / tokens / 定向单测 | 通过；384 tokens；六文件49/49，未重跑最终全仓完整单测 | `build-release.log`、`typecheck-release.log`、tokens/unit release日志 |
+| 独立正式tarball消费者 | 通过；101入口、17239 gzip；React/ReactDOM/Base UI单实例，原生无React | `consumer-release.log`及正式metadata/peer树 |
+| Chromium新专项 | **52/52**；双端三主题/宽窄/根字号16或32，6项真实浏览器zoom200%，初始化与改密双字段显隐/清密/忙态 | `browser-release.json`、`browser-release-output/` |
+| Chromium相关回归 | **192个唯一用例各自通过**；原164项中154先通过，10项英文标签旧预期同步后复验通过，另28项登录视觉首次通过；不重复累计复验 | `regression-final.json`、`regression-labels-rerun.json`及各自log/output |
+| Firefox / WebKit精选 | **各12/12**；两端200%文字Textarea/Dialog、装饰logo、完整登录中文、新密码组合、手动只读复核 | `firefox-release.json`、`webkit-release.json`及对应log/output |
+
+真实Chrome缩放分别断言CSS视口减半、DPR翻倍、根字号不变、CSS zoom=1与pinch=1，不拿根字号放大替代。Textarea检查原节点、原选区、焦点、增高/缩回、超过行数内部滚动、恢复默认resize、只读/禁用、输入与composition事件不增发、Dialog关闭回触发器；IME为合成事件与真实文本输入，不声称实体移动键盘验收。初始化/改密示例均只调用合成宿主回调，未触达真实写接口。最后的回归10项错误完整保留；修正的是配置已中文化后的对应名称断言，没有删除状态、像素、键盘或清密检查。
+
+xLead原26项真实产品回归属于595380基线，不能替代本轮库级合成消费者结果。其产品升级、回调接线和实际后端回归由采用项目另行执行。本轮未跑全仓浏览器套件、真实移动OS/Wails、读屏器、生产会话或真实Key/初始化事务。
+
+另外仅核对并记录xAgent的固定595380请求：Popover.Content只有Popup props与positionerProps，暂无Portal.container透传。公开Portal本身支持container，但不能改变Content内部新建Portal的目标；该项待公共增强与嵌套弹层验收，本批未实现，也不要求宿主私有CSS补丁。
+
 ## 长内容 Popover 碰撞尺寸（2026-10-15）
 
 固定0fd37c1与本轮修改前ad9dc9d的Popover/原生定位器/浮层CSS相同。独立正式包消费者用公开React Popover.Root/Trigger/Content/Title、`positionerProps={{align:'end'}}`及className宽度扩展复现：390×844、根字号32px、12项合成上下文数据，Popup top256、height591、bottom847，底边超出3px；原生同样内容bottom812，无越界。说明这不是宿主误用入口，也不需要宿主改成其它组件或编写内部CSS补丁。

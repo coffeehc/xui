@@ -27,6 +27,8 @@ export function validateNewPassword(password:string,confirmation:string):NewPass
 }
 /** 本地文案可翻译，固定校验范围和估算器不由项目配置。 */
 export interface NewPasswordLabels {
+  /** Optional reveal labels shared by both fields; omitted labels retain English defaults. */
+  showPassword?:string;hidePassword?:string;
  password:string;confirmation:string;invalidUnicode:string;confirmationMismatch:string;
  /** Generic fixed-range error when a caller does not provide the actual character count. */
  length:(minimum:number,maximum:number)=>string;

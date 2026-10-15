@@ -1,7 +1,7 @@
 import {createAuthPage} from '@coffeehc/xui-runtime/login-dom';
 import {createDisclosureController} from '@coffeehc/xui-runtime/dom';
 import '@coffeehc/xui-theme/critical.css';
-let config={productName:'轻舟协作工作台',title:'创建管理员',description:'设置第一个管理员账户。',logo:{src:'./mark.svg',alt:'轻舟协作工作台'}},submissions=0;
+let config={productName:'轻舟协作工作台',title:'创建管理员',description:'设置第一个管理员账户。',logo:{src:'./mark.svg',alt:new URLSearchParams(location.search).has('decorative')?'':'轻舟协作工作台'}},submissions=0;
 const content=document.createElement('div');content.className='xui-stack';
 const field=(name,label,type='text',help)=>{const group=document.createElement('div');group.className='xui-field';const caption=document.createElement('label');caption.className='xui-label';caption.textContent=label;const required=document.createElement('span');required.setAttribute('aria-hidden','true');required.textContent=' *';caption.append(required);const input=document.createElement('input');input.className='xui-input';input.name=name;input.id='setup-'+name;input.type=type;input.required=true;input.autocomplete=type==='password'?'new-password':'username';caption.htmlFor=input.id;group.append(caption,input);if(help){const description=document.createElement('p');description.className='xui-help';description.id=input.id+'-help';description.textContent=help;input.setAttribute('aria-describedby',description.id);group.append(description);}content.append(group);return input;};
 field('administrator','管理员用户名','text','用于登录和管理工作台。');const password=field('password','密码','password','请按实际服务的密码要求设置。'),confirmation=field('confirmation','确认密码','password');

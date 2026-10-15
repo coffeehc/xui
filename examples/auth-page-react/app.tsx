@@ -7,7 +7,7 @@ import {Alert} from '@coffeehc/xui-react/feedback';
 import {Disclosure} from '@coffeehc/xui-react/navigation';
 import '@coffeehc/xui-theme/critical.css';
 const root=createRoot(document.getElementById('root')!);
-const initial:AuthPageConfig={productName:'轻舟协作工作台',title:'创建管理员',description:'设置第一个管理员账户。',logo:{src:'./mark.svg',alt:'轻舟协作工作台'}};
+const initial:AuthPageConfig={productName:'轻舟协作工作台',title:'创建管理员',description:'设置第一个管理员账户。',logo:{src:'./mark.svg',alt:new URLSearchParams(location.search).has('decorative')?'':'轻舟协作工作台'}};
 let submissions=0;
 const detailsMode=new URLSearchParams(location.search).has('feedbackDetails');
 const detailsSummary='上次操作结果尚未确认，不能再次提交。';

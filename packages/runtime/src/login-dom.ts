@@ -45,7 +45,7 @@ export function createAuthPage(root:HTMLElement,initial:AuthPageOptions){
   const synchronizeFeedback=()=>{support.hidden=!Array.from(feedback.childNodes).some(hasVisibleFeedback);};
   const render=()=>{
     page.dataset.layout=config.layout;card.classList.toggle('xui-surface',config.layout==='card');if(product.textContent!==config.productName)product.textContent=config.productName;if(title.textContent!==config.title)title.textContent=config.title;
-    logo.hidden=!config.logo;if(config.logo){if(logo.getAttribute('src')!==config.logo.src)logo.src=config.logo.src;if(logo.alt!==config.logo.alt)logo.alt=config.logo.alt;}else{logo.removeAttribute('src');logo.alt='';}
+    logo.hidden=!config.logo;if(config.logo){if(logo.getAttribute('src')!==config.logo.src)logo.src=config.logo.src;if(logo.getAttribute('alt')!==config.logo.alt)logo.alt=config.logo.alt;}else{logo.removeAttribute('src');logo.alt='';}
     description.hidden=config.description===undefined;const text=config.description??'';if(description.textContent!==text)description.textContent=text;
     for(const name of slotNames)replaceSlot(name,options[name]);
     actions.hidden=slots.actions.nodes.length===0;alternatives.hidden=slots.alternatives.nodes.length===0;visual.hidden=slots.brandVisual.nodes.length===0;
@@ -75,7 +75,7 @@ export function createLoginPage(root:HTMLElement,{auth,config:input,onAuthentica
   const fields=node('div','xui-stack'),username=node('input','xui-input'),usernameField=node('div','xui-field'),usernameLabel=node('label','xui-label',labels.username),usernameRequired=node('span','',' *'),usernameError=node('p','xui-error'),passwordHost=node('div');
   usernameRequired.setAttribute('aria-hidden','true');usernameLabel.append(usernameRequired);username.id=prefix+'-username';username.name='username';username.required=true;username.type='text';username.autocomplete='username';username.maxLength=128;usernameLabel.htmlFor=username.id;usernameError.id=username.id+'-error';username.setAttribute('aria-describedby',usernameError.id);usernameError.hidden=true;usernameField.append(usernameLabel,username,usernameError);fields.append(usernameField,passwordHost);
   username.oninput=()=>{username.removeAttribute('aria-invalid');usernameError.hidden=true;};
-  const passwordControl=createPasswordInput(passwordHost,{label:labels.password,id:prefix+'-password',name:'password',required:true,autoComplete:'current-password'}),password=passwordControl.input;password.maxLength=4096;
+  const passwordControl=createPasswordInput(passwordHost,{label:labels.password,showLabel:labels.showPassword,hideLabel:labels.hidePassword,id:prefix+'-password',name:'password',required:true,autoComplete:'current-password'}),password=passwordControl.input;password.maxLength=4096;
   password.oninput=()=>passwordControl.update({error:undefined});
   const before=node('fieldset','xui-login-extension'),after=node('fieldset','xui-login-extension');if(beforeFields)before.append(beforeFields);if(afterFields)after.append(afterFields);body.append(before,fields,after);
   const feedback=node('div','xui-alert'),actions=doc.createDocumentFragment(),alternativeContent=doc.createDocumentFragment(),feedbackActions=doc.createDocumentFragment(),submit=button(labels.submit),check=button(labels.checkSession,'ghost'),retryNavigation=button(labels.retryNavigation,'ghost');

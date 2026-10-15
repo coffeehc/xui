@@ -90,7 +90,7 @@
 | `@coffeehc/xui-runtime/search-toolbar-dom` <!-- public-entry: @coffeehc/xui-runtime/search-toolbar-dom --> | 及根入口：`createSearchToolbar` / `SearchToolbarOptions` / `SearchToolbarController`，对应 Node/null 槽，稳定 update/getElement/getExpanded/destroy。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/display` <!-- public-entry: @coffeehc/xui-runtime/display --> | createCopyController、copyableLabels、validateImageOptions 与文字/复制/图片共享类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/display-dom` <!-- public-entry: @coffeehc/xui-runtime/display-dom --> | createTypographyHeading/Text/Link/Code、createCopyable、createSeparator、createTag、createImage 与原生 options。 | [组件合同](COMPONENTS.md) | — |
-| `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup --> | createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。 | [组件合同](COMPONENTS.md) | — |
+| `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup --> | AdminSetupCheck/CheckResult、createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/admin-setup-dom` <!-- public-entry: @coffeehc/xui-runtime/admin-setup-dom --> | createAdminSetupPage、AdminSetupPageOptions、AdminSetupPageController。 | [组件合同](COMPONENTS.md) | — |
 
 ### @coffeehc/xui-react
@@ -147,7 +147,7 @@
 | theme/init/useTheme | dark、sessionStorage key `ui.theme.mode`、persist 开启，同标签页刷新保留、不主动跨页同步、不读取或迁移旧localStorage；无保存值/非法值回 dark，只有显式 system 在媒体读取失败时生效 light，storage 失败保留内存。传 mode 为受控且不读写 storage；同步 init 复用 window.xuiTheme，useTheme 只订阅 |
 | 原生 UI ID | 按 ownerDocument 共享分配，跨 bundle/多实例/卸载重建不重用；无 crypto/randomUUID 或 HTTPS 前置条件。已有显式 DOM ID 与 Toast message.id 保留。仅临时 UI 身份，不是认证/安全随机或持久业务 ID，见 [内网 HTTP 接入](ADOPTION.md#原生-ui-id-与内网-http) |
 | Button/IconButton | type=button、variant=primary、size=default；busy 与 disabled 分开，无隐式防重复；IconButton 要求 aria-label。render/ref/事件沿用公开 peer 合并合同 |
-| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Fieldset 独立关联 legend/help/error |
+| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Textarea 可选 autoResize={maxRows}，原生 /dom 的 bindTextareaAutoResize 只拥有尺寸，见[文本输入](COMPONENTS.md#textarea-可选自动增高)；Fieldset 独立关联 legend/help/error |
 | MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留原生链接，菜单键盘/drawer owner 由库提供 |
 | GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](COMPONENTS.md#groupedcombobox-与-disclosure) |
 | Pagination/Disclosure | Pagination 默认第 1 页，pageCount 由宿主；受控 page 只请求确认。Disclosure 默认关闭，装饰性 chevron 与公开 DisclosureIndicator 复用相同 tokens。两者不发请求、不自动路由 |
@@ -654,3 +654,9 @@ DataTableRowContext、DataTableRowEvents 从 runtime/data-table、runtime/data-t
 React `/date-time` 与根入口导出 DateTimePicker/DateTimePickerProps；runtime `/date-time` 与根入口导出 DateTimeOptions/DateTimeValue/DateTimeParts/DateTimeError/DateTimePickerLabels、parseDateTimeValue、createDateTimeModel；`/date-time-dom` 与根入口导出 NativeDateTimePickerOptions/createDateTimePicker。沿用正式 style.css（critical.css+floating.css），不增加组件私有 CSS。完整行为见[组件手册](COMPONENTS.md#日期时间选择)，双端[React](../examples/date-time-react/app.tsx)/[原生](../examples/date-time-vanilla/app.js)可从独立 tarball 消费。
 
 Popover.Content 的 positionerProps 保持peer合同，align=end无需改用其他入口。浮层定位外壳的gap包含于可用碰撞尺寸，正式CSS负责完整边界与内滚；原生controller使用独立视口测量合同，见[组件手册](COMPONENTS.md)。
+
+## 接入反馈的兼容扩展
+
+完整登录页 `LoginPageConfig.labels.showPassword/hidePassword` 与新密码组合 `NewPasswordLabels.showPassword/hidePassword` 均为可选字段，保持英文默认，可配置中文，见[完整登录页文案](COMPONENTS.md#完整登录页密码显隐文案与品牌替代文本)。AdminSetupPage/createAdminSetupPage 可选 onCheck 与底层 controller.check() 只执行宿主权威只读核对，新增 checking/checkFailed 呈现；默认没有该动作，见[初始化页](COMPONENTS.md#管理员初始化页)。TextareaProps.autoResize 与原生 /dom 的 bindTextareaAutoResize 为显式启用的行数上限尺寸能力，不拥有草稿或提交。
+
+已确认 revoke 成功后，ApiKeyManager 通过既有 adapter.list 普通读取一次最新 metadata/capabilities；不能推断 deleteRecord=true。读取期间禁止该写动作并发，失败保留已确认 revoked 行与锁定能力，展示原列表错误/刷新入口，不重放 revoke。关闭/卸载、较新读取或动作使用既有代际取消迟到结果；最终权限、事务、删除条件和 expected_version 仍由后端负责，未新增 HTTP API 或 DTO。

@@ -279,3 +279,4 @@ export function createToastController(viewport:HTMLElement,options:{limit?:numbe
 export function createSubmenuController(trigger:HTMLElement,popup:HTMLElement,options:OpenOptions={}){const parent=trigger.closest<HTMLElement>('[role="menu"]');if(!parent||!parent.contains(popup))throw new TypeError('Submenu needs a parent menu and nested popup');const controller=createPopoverController(trigger,popup,{...options,menu:true,submenu:true});let dead=false;const parentClosing=(event:Event)=>{if((event as ToggleEvent).newState==='closed')controller.syncOpen(false);};parent.addEventListener('beforetoggle',parentClosing);return {...controller,destroy(){if(dead)return;dead=true;parent.removeEventListener('beforetoggle',parentClosing);controller.destroy();}};}
 
 export {bindSelectControl,type SelectControlBinding} from './select-control.js';
+export {bindTextareaAutoResize,type TextareaAutoResizeOptions,type TextareaAutoResizeBinding} from './textarea.js';

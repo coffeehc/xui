@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {bindSelectControl} from '@coffeehc/xui-runtime/dom';
+import {bindSelectControl,bindTextareaAutoResize,type TextareaAutoResizeOptions} from '@coffeehc/xui-runtime/dom';
 import { cx, branded } from './shared.js';
 type FieldInfo = { id: string; describedBy?: string; invalid: boolean; required: boolean };
 const FieldContext = React.createContext<FieldInfo | null>(null);
@@ -20,7 +20,18 @@ function useField(props: {id?: string; 'aria-describedby'?: string; 'aria-invali
   return {id: field?.id ?? props.id, required: props.required ?? field?.required, 'aria-invalid': props['aria-invalid'] ?? (field?.invalid || undefined), 'aria-describedby': [field?.describedBy,props['aria-describedby']].filter(Boolean).join(' ') || undefined};
 }
 export function Input({className,...props}: React.ComponentProps<'input'>) { return <input {...props} {...useField(props)} className={cx('xui-input',className)} />; }
-export function Textarea({className,...props}: React.ComponentProps<'textarea'>) { return <textarea {...props} {...useField(props)} className={cx('xui-textarea',className)} />; }
+export type TextareaProps=React.ComponentProps<'textarea'>&{
+  /** Opt in with a row cap. Default scrolling and native resize remain unchanged when omitted. */
+  autoResize?:TextareaAutoResizeOptions;
+};
+export function Textarea({className,autoResize,ref,...props}:TextareaProps) {
+  const input=React.useRef<HTMLTextAreaElement>(null),binding=React.useRef<ReturnType<typeof bindTextareaAutoResize>|null>(null);
+  React.useImperativeHandle(ref,()=>input.current!);
+  const enabled=autoResize!==undefined;
+  React.useLayoutEffect(()=>{if(enabled)binding.current=bindTextareaAutoResize(input.current!,autoResize!);return()=>{binding.current?.destroy();binding.current=null;};},[enabled]);
+  React.useLayoutEffect(()=>{if(autoResize)binding.current?.update(autoResize);});
+  return <textarea ref={input} {...props} {...useField(props)} className={cx('xui-textarea',className)} />;
+}
 export type ControlSize='sm'|'default'|'lg';
 export function NativeSelect({className,controlSize='default',...props}: React.ComponentProps<'select'>&{controlSize?:ControlSize}) { return <select {...props} {...useField(props)} data-control-size={controlSize} className={cx('xui-select',className)} />; }
 /** Themed popup selection with the same form values/events as NativeSelect. */

@@ -97,7 +97,7 @@ export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensi
     <div className="xui-stack">
       <fieldset className="xui-login-extension" disabled={locked}>{beforeFields}</fieldset>
       <Field label={labels.username} required error={errors.username}><Input ref={username} name="username" autoComplete="username" maxLength={128} disabled={locked} onChange={()=>setErrors(current=>({...current,username:undefined}))}/></Field>
-      <Field label={labels.password} required error={errors.password}><PasswordInput ref={passwordRef} controlRef={passwordControl} name="password" autoComplete="current-password" maxLength={4096} disabled={locked} onInput={()=>setErrors(current=>({...current,password:undefined}))}/></Field>
+      <Field label={labels.password} required error={errors.password}><PasswordInput ref={passwordRef} controlRef={passwordControl} showLabel={labels.showPassword} hideLabel={labels.hidePassword} name="password" autoComplete="current-password" maxLength={4096} disabled={locked} onInput={()=>setErrors(current=>({...current,password:undefined}))}/></Field>
       <fieldset className="xui-login-extension" disabled={locked}>{afterFields}</fieldset>
     </div>
   </AuthPage>;

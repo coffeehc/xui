@@ -127,10 +127,10 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
     catch{if(!dead&&generation===actionGeneration&&listSession===listGeneration)emit({listBusy:false,listError:labels.listError});}
     finally{action.signal.removeEventListener('abort',abort);if(listAbort===controller)listAbort=undefined;if(verificationAbort===controller)verificationAbort=undefined;}
   }
-  async function write<T>(send:(context:ApiKeyWriteContext)=>Promise<T>,success:(result:T,current:()=>boolean)=>void,errorLabel:string,rejectedLabel:string,patch:Partial<ApiKeyManagerState>={}){
+  async function write<T>(send:(context:ApiKeyWriteContext)=>Promise<T>,success:(result:T,current:()=>boolean)=>void|Promise<void>,errorLabel:string,rejectedLabel:string,patch:Partial<ApiKeyManagerState>={}){
     const generation=++actionGeneration,controller=new AbortController(),current=()=>!dead&&generation===actionGeneration&&!controller.signal.aborted;actionAbort=controller;stopList();if(!current())return;emit({...patch,...(listAbort?{}:{listBusy:false}),actionBusy:true,fieldErrors:Object.freeze({}),actionError:null});
     if(!current())return;
-    try{const result=await wait(()=>send({signal:controller.signal}),controller);if(!current())return;stopList();if(!current())return;success(result,current);if(current())actionAbort=undefined;}
+    try{const result=await wait(()=>send({signal:controller.signal}),controller);if(!current())return;stopList();if(!current())return;await success(result,current);if(current())actionAbort=undefined;}
     catch(error){if(!current())return;secret=null;const unknown=uncertain(error);if(unknown)await verifyList(generation,controller);if(!current())return;actionAbort=undefined;emit({actionBusy:false,actionError:unknown?errorLabel:rejectedLabel});}
   }
   const permissionError=(draft:Readonly<ApiKeyDraft>|Readonly<ApiKeyUpdateDraft>)=>new Set(draft.permissionIds).size!==draft.permissionIds.length||draft.permissionIds.some(id=>!permissionIds.has(id)||permissions.find(item=>item.id===id)?.disabled)||permissions.some(item=>item.required&&!draft.permissionIds.includes(item.id));
@@ -156,7 +156,16 @@ export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKey
   async function confirmAction(operation:'revoke'|'delete'){
     const target=state.revokeTarget,session=actionGeneration;if(dead||state.phase!==operation||state.actionBusy||!target)return;
     const permitted=operation==='revoke'?canRevoke(target):canDeleteRecord(target);if(!permitted||dead||session!==actionGeneration||state.phase!==operation||state.revokeTarget!==target||state.actionBusy)return;
-    await write(context=>operation==='revoke'?options.adapter.revoke(target,context):options.adapter.deleteRecord!(target,context),result=>{if(result!==undefined)throw new TypeError('A successful management callback returns void');closeAction({rows:Object.freeze(operation==='delete'?state.rows.filter(row=>row.id!==target.id):state.rows.map(row=>row.id===target.id?Object.freeze({...row,status:'revoked' as const,...(row.capabilities?{capabilities:Object.freeze({...row.capabilities,revoke:false})}:{})}):row)),listBusy:false});},operation==='revoke'?labels.revokeError:labels.deleteError,operation==='revoke'?labels.revokeRejected:labels.deleteRejected);
+    await write(context=>operation==='revoke'?options.adapter.revoke(target,context):options.adapter.deleteRecord!(target,context),async(result,current)=>{
+      if(result!==undefined)throw new TypeError('A successful management callback returns void');
+      if(operation==='delete'){closeAction({rows:Object.freeze(state.rows.filter(row=>row.id!==target.id)),listBusy:false});return;}
+      // A confirmed revoke changes status, but cannot grant deletion permission.
+      // Refresh authority once through the existing ordinary list owner; read
+      // failure keeps the known revoked row locked and exposes list retry.
+      emit({rows:Object.freeze(state.rows.map(row=>row.id===target.id?Object.freeze({...row,status:'revoked' as const,capabilities:Object.freeze({...row.capabilities,revoke:false,deleteRecord:false})}):row))});
+      if(!current())return;await verifyList(actionGeneration,actionAbort!);
+      if(current())closeAction({listBusy:!!listAbort});
+    },operation==='revoke'?labels.revokeError:labels.deleteError,operation==='revoke'?labels.revokeRejected:labels.deleteRejected);
   }
   async function copySecret(writeText:(value:string)=>Promise<void>){
     if(dead||state.phase!=='result'||secret===null||state.copyStatus==='copying')return;const generation=++copyGeneration;emit({copyStatus:'copying'});
