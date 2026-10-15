@@ -44,3 +44,17 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 现有替代是保留 Argus 已使用的公共 DataTable、Field、Disclosure 与反馈组件，呈现真实的“分组 → 组内记录 → 详情”流程；不要求消费项目复制 Explorer 或自行增强公共组件。
 
 接口适配边界仍遵守 [程序错误观察合同](PUBLIC_API.md#程序错误观察)：当前默认 HTTP adapter 是宿主提供路径的四个 POST 查询 facade，并不等同于上述 Argus GET 领域接口。将来支持省略 records 也不自动证明其余 DTO、筛选、分页和权限合同已匹配，不能据此新增前端兼容层或未经授权改动后端。本项本次只登记，尚无实现、正式产物或新增浏览器验收。
+
+## 后续公开维护项（2026-10-16）
+
+### XUI-REQ-20261016-03：固定列与全表分割线一致（待处理）
+
+来源：xAgent维护线程转交；宿主固定 `b700606624ae1453ce2796afdad2882dd938d9ee`、DESIGN/三包1.1.0，调用点为 `frontend/packages/business/src/features/sessions/components/session-list-table-columns.tsx`，操作列公开配置 `sticky: 'end'`。宿主地址及现象按反馈登记，未在本轮访问该产品。
+
+当前 [公共table CSS](../packages/theme/src/table.css) 对固定列单独增加起止侧边框，其余列没有纵线，源码核对属实。待修正合同：全表采用一致的分割线策略，不能仅因sticky增加一条纵线；由公共默认或正式全表设置表达，保留固定列与横向滚动，不能靠取消sticky或消费方私有CSS掩盖。验收应覆盖普通/左/右/双侧固定、适用的统一行列线模式、三主题、长中文/窄屏/200%、横滚及空/加载/刷新，固定背景、焦点和分隔仍可辨，无重复边框。本轮仅登记，未修改分割线实现或声称已解决。
+
+### XUI-REQ-20261016-04：Dialog内Select选项被底栏遮挡（待修复）
+
+来源：本轮组件加载居中扩大回归。API Key创建页公开有效期SimpleSelect选择 `demo.never` 时，选项中心被 `.xui-dialog-footer` 截获，鼠标无法完成选择并超时。在未修改的前一轮1.1.0正式独立安装重建同一公开示例，也复现同样的底栏拦截；1.1.1加载改动下三次隔离复验均失败。记录见 [加载验收](VALIDATION.md#组件内容加载居中2026-10-16)，原始失败trace保存在固定产物验证目录。
+
+此项属于公共弹层叠放/操作可达性问题，待由xui修复；不能改成强制点击、只换键盘路径、隐藏Footer或要求宿主覆盖私有z-index。后续验收须同时保留指针、键盘、Escape回焦、滚动、嵌套弹层和大字窄屏可达。本轮不混入Select/Dialog实现变更。
