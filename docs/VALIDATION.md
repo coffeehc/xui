@@ -4,6 +4,23 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 统一表格行分割线（2026-10-16）
+
+DESIGN及三个私有包 **1.1.2**，393 Token、85正式入口、249项逐项检查。解决 [XUI-REQ-20261016-03](PUBLIC_REQUESTS.md#xui-req-20261016-03固定列与全表分割线一致112已实现待宿主验收)：公共Table/DataTable默认全表仅行线，所有th/td列线为0；移除sticky专属侧边框，保留既有位置、不透明背景、交互图层、表头交点层级和焦点。整体frame、表头/行底线、唯一footer分隔继续各有归属，末行不叠底栏边框。没有新增props、网格模式、API/query owner或原生UI；DataTableColumn.sticky及Table的stickyOffset用法不变。
+
+正式React示例增加 `?sticky=none|start|end|both`，通过公开columns配置比较普通、左/右及双侧固定，不使用消费者CSS或DOM改造。最终source generation为 `2c7edd64342311b82fcae4d2de7f0c953830b2fa751b98ec1c36134612e1b500`。独立目录安装本轮三个tarball，核对85个公开ESM/CSS/types/init、命名导出、同代产物和peer单实例。仍采用上一轮已验的同版本peer文件与锁文件，通过npm重新安装三个xui包，不使用源码alias或放宽peer检查；过程记录在 `table-dividers-prepare-peer-lock.cjs` 与 `table-dividers-consumer.log`。初始JS gzip **133623/135168 bytes**，critical CSS **17768/17792 bytes**，Button **6619 bytes**，预算未提高。
+
+| 检查 | 结果 | 原始证据（`.artifacts/`） |
+|---|---|---|
+| build / 类型 / Token / 完整单测 | 通过；单测 **426/426** | `table-dividers-build.log`、`table-dividers-types.log`、`table-dividers-tokens.log`、`table-dividers-unit.log` |
+| 独立正式包消费者 | 通过；85公开入口及peer、完整类型/ESM/CSS | `table-dividers-consumer.log`、正式metafile与performance元数据 |
+| Chromium | **76/76**：新分割线27、DataTable布局25/cursor4/feedback5、加载居中15 | `table-dividers-browser.json`、`table-dividers-images/` |
+| Firefox / WebKit | 各 **8/8**，共16；四种sticky × 桌面浅色/窄屏200%深色 | `table-dividers-cross.json`、`table-dividers-cross.log` |
+
+新27项覆盖四种固定组合、三主题及system实时切换、1280/390、100%/200%界面比例、长中文和三主题真实Chrome 200%浏览器缩放。每项检查空/加载/正常/刷新，逐个读取所有th/td的实际侧边框，检查表头与末行/footer分隔；横滚最左/中间/末端核对固定位置和表头正文列对齐、不透明背景及无替代阴影；真实键盘动作与命中检查，刷新保持行节点、焦点与横滚位置。截图已目视核对桌面浅色及窄屏深色大字。初次快速检查早于正式消费者构建完成，读到旧dist的竖线，不计入最终结果；本节只使用完成构建后的独立包验证。
+
+本轮未验xAgent或其他消费项目的真实页面、后端及部署，未重跑watch/cold-start、全仓浏览器全集、实体触屏/读屏器或独立SSR hydration。Select/Dialog既有缺陷及侧栏/字体后续任务不纳入本轮分割线修复。
+
 ## 组件内容加载居中（2026-10-16）
 
 DESIGN及三个私有包 **1.1.1**，393 Token、85正式入口、248项接入检查。只修改xui。LoadingState默认block的图标与文案整体相对内容区居中；inline继续随动作/计数，不覆盖旧内容。DataRegion直接包含唯一LoadingState或无children的首次busy反馈时，分配自身内容区；API Key、程序错误日志和业务日志组合同步区分首次等待与有确认数据的刷新。DataTable保留表头及aria-hidden占位行，唯一status在可见表体轨道内，避开真实表头高度，不跟随超宽列横滚；CardGroup在body内居中。首次集合加载不再叠加骨架列表，Skeleton公开入口仍保留。没有新增请求、缓存、分页或提交owner。

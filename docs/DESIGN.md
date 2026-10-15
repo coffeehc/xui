@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：1.1.1。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：1.1.2。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1066,7 +1066,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 
 层级由职责决定，不能只看嵌套深度。独立 Card/Section 使用 raised 中性表面、一层1px surface-line、无投影；嵌入子组可以无框但保留标题/gap/分隔。连续 Item 只画底线，末项无底线；资产卡 footer 有分隔。统计采用独立轻框，或单外框加内部连续线，不能叠两套边界。
 
-表格由表头、行线和不透明条纹组织；条纹与默认底先完成不透明合成，sticky 同步该行 default/偶数/hover/selected/expanded 背景。透明条纹或透明固定列不得让横滚底层文字穿透。普通 hover 不浮起、缩放或平移。
+Table与DataTable全表默认仅使用行分割线，所有th/td均无列分割线；sticky只固定位置，不额外增加竖线、阴影或伪元素分隔。表头底线、行线、整体外框及footer分隔各有归属，不叠加重复边框；最后数据行与footer交界由footer维护。当前不提供行列网格模式或分割线开关。表格由表头、行线和不透明条纹组织；条纹与默认底先完成不透明合成，sticky 同步该行 default/偶数/hover/selected/expanded 背景。透明条纹或透明固定列不得让横滚底层文字穿透。普通 hover 不浮起、缩放或平移。
 
 菜单、Popover、Dialog、Drawer 使用不透明 overlay、明确边界和一套浮层阴影：0 8px 24px -4px（浅色ink18%、深色black60%），辅以1px边界。深色四级层次为 canvas #090b0e → structural #11151c → active #161e28 → overlay #1a2230。实际阴影色仍来自集中变量。普通 flat/subtle/surface/raised 无投影；不把浮层配方复制到每张卡。
 

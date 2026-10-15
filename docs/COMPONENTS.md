@@ -729,11 +729,13 @@ Sheet复用Dialog lifecycle，标题/描述/关闭部件复用同一组件；正
 
 ContextMenu支持鼠标右键、Shift+F10/ContextMenu键、方向键、disabled、检查项保留、外部关闭和Esc回焦点。普通点击Trigger不执行业务。没有声明跨移动OS长按一致；必要操作还须由可点击按钮/菜单访问。React 键盘与 popup 定位由已安装 Base UI peer 提供。
 
+Table与DataTable全表默认仅行分割线，所有普通/左固定/右固定/双侧固定的th/td都不画列线；sticky不附带边框、阴影或伪元素分隔。沿用现有sticky/stickyOffset/stickyHeader接口，无需新prop或消费方CSS；当前没有行列网格模式。整体frame、表头/行底线与footer分隔保持各自唯一归属，最后数据行不与footer叠边。
+
 表格为语义table，条纹排除expanded内容行，hover/selected优先级明确；sticky cell继承所属行的非透明背景，避免滚动穿透。多个同侧sticky列的offset由宿主显式给出，不测量/推断列宽；仅所属TableContainer横向滚动。展开按钮是正常button，不截获行所有点击，也不实现查询、虚拟化、权限、排序或选择引擎。
 
 全部组合使用已有 motion token/reduced-motion，动画不延后操作；受控变化、可取消意图与 React 生命周期沿用[接入与组件分层](ADOPTION.md#组件层次与扩展原则)。键盘/焦点/长中文/窄屏/200%根字体的实际检查见[验证记录](VALIDATION.md#chromium-浏览器结果)，真实移动OS、读屏器和其他浏览器未验。
 
-Table 支持 stickyHeader 布尔 prop；表头在所属TableContainer顶端sticky，与列sticky交点提高一层，边界使用现有surface-line。多个表头行/额外上方控件的offset由宿主明确style，不猜高度。行的raised/support底色保持不透明，hover/selected语义色以同色gradient叠在底色上，sticky单元格继承完整底色/图层；允许产品交互色有alpha而不穿透。产品基础layer仍须是可读不透明背景。selected优先hover，条纹/expanded基础层仍保留，无新增默认品牌值或产品color-mix配方。
+Table 支持 stickyHeader 布尔 prop；表头在所属TableContainer顶端sticky，与列sticky交点提高一层，表头/行底线使用separator-line，整体外框使用surface-line，不为固定列单独添加竖线。多个表头行/额外上方控件的offset由宿主明确style，不猜高度。行的raised/support底色保持不透明，hover/selected语义色以同色gradient叠在底色上，sticky单元格继承完整底色/图层；允许产品交互色有alpha而不穿透。产品基础layer仍须是可读不透明背景。selected优先hover，条纹/expanded基础层仍保留，无新增默认品牌值或产品color-mix配方。
 
 
 其它组合与 HTML 合同见[选择与复合控件](COMPONENTS.md#选择与复合控件)，它们复用既有token、motion、Field/Combobox/按钮，不增加界面密度或业务引擎。
@@ -907,6 +909,8 @@ busy/disabled 阻止重复分页、条数和默认重试，另有同步单事件
 ACL/权限过滤后的有界扫描可连续返回空 list 与非空 next_cursor；这仍可继续翻页，不保证下一页含记录，也不表示剩余数量。仅显式 null 是 cursor 末页。DataTable 不因空行禁用下一页，React 有针对性回归；此补充不改变共享 fixture 的字节或 hash。
 
 `TableActions` 从 React 根入口及 `/table` 导出，接受标准 div props/ref，只负责换行与 table-action-gap。标签、排序、权限和写入结果由宿主拥有。长标签可换行，单元格保留焦点间隙。
+
+DataTable正式示例可使用 `?sticky=none`、`?sticky=start`、`?sticky=end` 或 `?sticky=both` 检查同一套行线策略；不指定仍演示双侧固定。它们只改变示例通过公开列配置传入的sticky，既有布局和查询owner不变。
 
 ## 登录与管理员表单
 

@@ -189,6 +189,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | TABLE-006 | 表格需要计数/分页/补充说明 | 使用唯一 `DataTable.footer`，不在外部复制另一个分页/计数 owner | footer DOM 与翻页动作计数 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
 | TABLE-007 | offset/cursor 分页 | 发布已确认的受控 pagination facts；只有成功响应后再更新行与页事实 | 请求 query/cursor 与前后状态快照 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
 | TABLE-008 | DataTable 同范围刷新失败 | 旧行/旧计数继续可见，`feedback` 显示失败及真实可用恢复入口；不得改成空态 | 失败注入、旧行 identity、错误文案和恢复事件 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| TABLE-009 | 普通或含sticky列的Table/DataTable | 全表仅行线，固定列不额外画竖线/阴影；保留固定、横滚、行底色及焦点，不以取消sticky或私有CSS修补 | 普通/左/右/双侧固定、主题/窄屏/200%、空/加载/刷新截图和computed border、横滚及命中 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
 | OVERLAY-001 | 打开 Dialog | 标题和可选描述进入公开 `Dialog.Header` | 组件组合与标题 ID 关联 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | OVERLAY-002 | Dialog 内容较长 | 输入/内容放 `Dialog.Body`，由其及真实祖先拥有滚动 | body scrollTop、容器滚动录像 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | OVERLAY-003 | Dialog 有提交/取消动作 | 操作进入 `Dialog.Footer`，主次动作和键盘序列明确 | DOM slot 与 Tab/Enter/Escape 录像 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |

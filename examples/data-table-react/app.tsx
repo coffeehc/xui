@@ -21,6 +21,9 @@ const root=createRoot(document.getElementById('root')!);
 const cards=query.has('cards'),internal=query.has('internal')&&!cards;
 const layout=query.get('layout')==='workspace'?'workspace':query.get('layout')==='document'?'document':undefined;
 const noSearch=query.has('no-search'),noActions=query.has('no-actions');
+// Public column configuration demonstrates the same row-only separators with
+// no frozen columns, either side, or both. This is an example URL option.
+const sticky=query.get('sticky')??'both';
 const title=query.has('tall')?'超高页面标题与全部操作仍应可以通过滚动和键盘到达。'.repeat(60):query.has('long')?'合成记录：用于检查长中文标题、页内筛选与独立表体滚动的公共组合':'合成记录';
 const items=[{id:'records',label:'合成记录',href:'#records',icon:'list' as const}];
 const rowKey=(row:ExampleRow)=>row.id;
@@ -44,12 +47,12 @@ function App(){
   // Stable callbacks and row keys preserve the action node across confirmed reads.
   // Inspecting a retained row is a local, read-only action and stays available during refresh.
   const columns=React.useMemo<readonly DataTableColumn<ExampleRow>[]>(()=>[
-    {id:'id',header:'编号',cell:row=>row.id,sticky:'start'},
+    {id:'id',header:'编号',cell:row=>row.id,sticky:sticky==='both'||sticky==='start'?'start':undefined},
     {id:'name',header:'名称',cell:row=>row.name},
     {id:'kind',header:'类型',cell:row=>row.kind},
     {id:'scope',header:'范围',cell:row=>row.scope},
     {id:'source',header:'来源',cell:row=>row.source},
-    {id:'actions',header:'操作',sticky:'end',cell:row=><Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button>},
+    {id:'actions',header:'操作',sticky:sticky==='both'||sticky==='end'?'end':undefined,cell:row=><Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button>},
   ],[inspect]);
   const visibleColumns=React.useMemo(()=>columns.filter(column=>!columnView.hidden.includes(column.id)&&(!noActions||column.id!=='actions')).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'||query.has('fluid-content')?160:undefined):column.id==='name'&&columnView.mode==='mixed'&&query.has('fluid-content')?undefined:widths[column.id as keyof typeof widths]})),[columns,columnView]);
   const toolbar=noSearch?undefined:<DataTableToolbar aria-label="记录筛选" data-testid="record-filters">
