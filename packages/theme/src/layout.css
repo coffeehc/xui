@@ -1,4 +1,5 @@
 @layer xui-components {
+  :is(.xui-shell-sidebar-header,.xui-shell-sidebar-footer) {display:flex;flex-direction:column;flex:0 1 auto;min-block-size:0;min-inline-size:0;overflow:auto;overscroll-behavior:contain;gap:var(--space-text-gap);}
   .xui-shell {min-block-size:100dvh;display:grid;grid-template-columns:var(--nav-sidebar-width) minmax(0,1fr);grid-template-rows:auto 1fr;grid-template-areas:'header header' 'sidebar main';}
   .xui-shell:is([data-scroll-mode='viewport'],[data-scroll-mode='workspace']) {block-size:100dvh;min-block-size:0;overflow:hidden;grid-template-rows:auto minmax(0,1fr);}
   :where(.xui-shell:is([data-scroll-mode='viewport'],[data-scroll-mode='workspace'])) :is(.xui-shell-sidebar,.xui-shell-main) {min-block-size:0;overflow:auto;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
@@ -52,14 +53,15 @@
   .xui-shell-sidebar-with-footer {display:flex;flex-direction:column;min-block-size:0;overflow:hidden;}
   .xui-shell:is([data-scroll-mode='viewport'],[data-scroll-mode='workspace']) .xui-shell-sidebar-with-footer {overflow:hidden;}
   .xui-shell[data-scroll-mode='document'] .xui-shell-sidebar-with-footer {position:sticky;inset-block-start:0;align-self:start;}
+  .xui-shell-sidebar-menu .xui-tab-panel {padding-block:0;}
   .xui-shell-sidebar-menu {flex:1 1 0;min-block-size:0;min-inline-size:0;overflow:auto;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
-  .xui-shell-sidebar-footer {display:flex;flex-direction:column;flex:0 1 auto;min-block-size:0;min-inline-size:0;max-block-size:var(--nav-sidebar-footer-max);overflow:auto;overscroll-behavior:contain;gap:var(--space-text-gap);padding-block-start:var(--space-control-gap);margin-block-start:var(--space-control-gap);border-block-start:var(--line-width-surface) solid var(--separator-line);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
-  .xui-shell-sidebar-footer>* {min-inline-size:0;max-inline-size:100%;flex-shrink:0;}
-  .xui-shell-sidebar-footer .xui-button {justify-content:flex-start;min-inline-size:0;white-space:normal;font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
-  .xui-shell-sidebar-footer .xui-button:not(:where(.xui-sidebar-footer-row *)) {inline-size:100%;}
+  .xui-shell-sidebar-footer {max-block-size:var(--nav-sidebar-footer-max);padding-block-start:var(--space-control-gap);margin-block-start:var(--space-control-gap);border-block-start:var(--line-width-surface) solid var(--separator-line);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+  :is(.xui-shell-sidebar-header,.xui-shell-sidebar-footer)>* {min-inline-size:0;max-inline-size:100%;flex-shrink:0;}
+  .xui-shell-sidebar-footer>.xui-button {justify-content:flex-start;min-inline-size:0;white-space:normal;font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
   .xui-sidebar-footer-row {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-control-gap);min-inline-size:0;max-inline-size:100%;}
   .xui-sidebar-footer-row>* {min-inline-size:0;max-inline-size:100%;flex-shrink:0;}
-  .xui-shell-sidebar-footer :is(button,a):focus-visible,.xui-shell-sidebar-menu :is(button,a):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
+  :is(.xui-shell-sidebar-header,.xui-shell-sidebar-footer,.xui-shell-sidebar-menu) :is(button,a,input,textarea,select,[tabindex]):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
+  :is(.xui-shell-sidebar-header,.xui-shell-sidebar-footer,.xui-shell-sidebar-menu) :is([aria-invalid='true']:focus-visible,.xui-input-group:focus-within) {outline-offset:calc(calc(-1 * var(--focus-width)) - var(--line-width-surface));}
   .xui-sidebar-footer-content {display:flex;align-items:center;gap:var(--space-control-gap);min-inline-size:0;max-inline-size:100%;overflow-wrap:anywhere;text-align:start;}
   .xui-sidebar-footer-icon {display:inline-flex;align-items:center;justify-content:center;flex:none;min-inline-size:var(--control-icon-size);min-block-size:var(--control-icon-size);}
   .xui-sidebar-footer-icon>svg {inline-size:var(--control-icon-size);block-size:var(--control-icon-size);flex:none;}
@@ -74,7 +76,7 @@
 
     :is(.xui-shell[data-collapsed='true'] .xui-shell-sidebar-with-footer,.xui-shell-sidebar-with-footer:has(.xui-navigation-menu[data-collapsed='true'])) .xui-sidebar-footer-content:has(>.xui-sidebar-footer-icon) {justify-content:center;inline-size:100%;gap:0;}
     :is(.xui-shell[data-collapsed='true'] .xui-shell-sidebar-with-footer,.xui-shell-sidebar-with-footer:has(.xui-navigation-menu[data-collapsed='true'])) .xui-sidebar-footer-content:has(>.xui-sidebar-footer-icon)>.xui-sidebar-footer-label {position:absolute;inline-size:var(--a11y-hidden-size);block-size:var(--a11y-hidden-size);padding:0;margin:var(--a11y-hidden-offset);overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
-    :is(.xui-shell[data-collapsed='true'] .xui-shell-sidebar-with-footer,.xui-shell-sidebar-with-footer:has(.xui-navigation-menu[data-collapsed='true'])) :is(.xui-shell-sidebar-header,.xui-shell-sidebar-footer) .xui-button {padding-inline:0;justify-content:center;}
+    :is(.xui-shell[data-collapsed='true'] .xui-shell-sidebar-with-footer,.xui-shell-sidebar-with-footer:has(.xui-navigation-menu[data-collapsed='true'])) .xui-shell-sidebar-footer .xui-button {padding-inline:0;justify-content:center;}
   }
   .xui-shell-main {grid-area:main;min-inline-size:0;padding:var(--layout-content-inset);}
   .xui-shell[data-collapsed='true'] {grid-template-columns:var(--nav-collapsed-width) minmax(0,1fr);}
@@ -146,10 +148,8 @@
   @media(forced-colors:active) {
     .xui-header-locale {border-color:var(--foreground);}
   }
-  .xui-shell-sidebar-header {display:flex;flex-direction:column;flex:0 1 auto;min-block-size:0;min-inline-size:0;max-block-size:var(--nav-sidebar-header-max);overflow:auto;overscroll-behavior:contain;gap:var(--space-text-gap);padding-block-end:var(--space-control-gap);margin-block-end:var(--space-control-gap);border-block-end:var(--line-width-surface) solid var(--separator-line);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
-  .xui-shell-sidebar-header>* {min-inline-size:0;max-inline-size:100%;flex-shrink:0;}
-  .xui-shell-sidebar-header .xui-button {inline-size:100%;min-inline-size:0;white-space:normal;font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
-  .xui-shell-sidebar-header :is(button,a):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
+  .xui-shell-sidebar-header {max-block-size:var(--nav-sidebar-header-max);overflow:auto;overscroll-behavior:contain;gap:var(--space-text-gap);padding-block-end:var(--space-text-gap);margin-block-end:var(--space-text-gap);border-block-end:var(--line-width-surface) solid var(--separator-line);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
+  .xui-shell-sidebar-header .xui-button {min-inline-size:0;white-space:normal;font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);}
   .xui-shell-sidebar-with-footer:has(>.xui-shell-sidebar-header:not([hidden]))>.xui-shell-sidebar-menu {min-block-size:var(--nav-item-height);}
   .xui-shell-content,.xui-shell-page-header,.xui-shell-page-footer {min-inline-size:0;overflow-wrap:anywhere;}
   .xui-shell-page-header {margin-block-end:var(--layout-section-gap);}

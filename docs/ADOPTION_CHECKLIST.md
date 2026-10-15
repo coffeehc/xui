@@ -84,6 +84,9 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | SHELL-017 | 页面有主要业务内容 | 内容只放 `content`/shell children，切换其他 slot 时正文节点身份稳定 | 节点 identity 前后记录 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
 | SHELL-018 | 页面有页尾说明或操作 | 内容只放 `pageFooter`，不使用固定覆盖层模拟页尾 | DOM 顺序、底部滚动可达截图 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
 | SHELL-019 | 可选 slot 无内容 | 不产生可见空条、空边距或键盘停靠点 | 空 slot DOM/geometry 与 Tab 序列 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-020 | sidebarHeader 放直属Button、Toolbar或业务布局 | slot不强改按钮宽度/字号/折叠态padding；默认内容宽，宿主显式公开style/className的全宽或内容宽均保留 | 直属/Toolbar/业务布局、width=100%/max-content的几何与字体计算值 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
+| SHELL-021 | sidebarHeader内Tabs.List控制sidebar内Tabs.Panel | 一个Tabs.Root与受控值；侧栏Panel不叠内容padding，Header分隔紧凑，普通页面Tabs保持原Token间距 | 切换前后间距、首项位置、search草稿与普通Tabs对照 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
+| SHELL-022 | 侧栏Header/列表/Footer有可聚焦控件 | Header保留限高/独立滚动、菜单最小高度和Footer；各控件inset焦点可绘制，invalid边界仍可读 | 324px/窄屏/200%文字与真实zoom、键盘焦点和滚动记录 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
 
 ## 每个页面和组件的 slot 矩阵
 

@@ -1018,7 +1018,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 
 | 层/区域 | 内容与公开归属 | 呈现与着色 | 空槽、状态与滚动 |
 | --- | --- | --- | --- |
-| 应用壳 | AppShell/MenuLayout 的 headerSlots、sidebarHeader/sidebar/sidebarFooter、pageHeader/pageToolbar/children/pageFooter | 顶栏与侧栏用 shell 表面；主内容用 canvas；全局动作与页面动作分开 | 一个导航/主题 owner；正文容器稳定，模式与焦点见布局手册 |
+| 应用壳 | AppShell/MenuLayout 的 headerSlots、sidebarHeader/sidebar/sidebarFooter、pageHeader/pageToolbar/children/pageFooter | 顶栏与侧栏用 shell 表面；主内容用 canvas；全局动作与页面动作分开 | 一个导航/主题 owner；侧栏Header分隔用space-text-gap，内嵌Tabs.Panel不叠内容padding；正文容器稳定，模式与焦点见布局手册 |
 | 应用顶栏 | leading=平台区域、brand=品牌、breadcrumb=路径、context=工作区；status=真实状态、actions=全局动作、auxiliary=辅助、account=账号 | 品牌/路径为正文，状态按真实 tone；辅助与账号不抢页面主动作 | 缺失扩展不占位；保留唯一导航、主题和显式启用的语言入口 |
 | 页面标题 | PageHeader.title/description/meta/actions | title 唯一 h1/page-title；description 为 muted/body-sm；meta 为 muted/body-xs；actions 中 primary 为任务主操作 | 描述/meta/动作空则无包装；长标题换行，动作整组换行，不把刷新状态写进标题 |
 | 页面工具 | pageToolbar 或 DataTable.toolbar 中的 SearchToolbar.search/actions/advanced | 搜索与常用筛选、动作、展开筛选各居其槽；默认中性，真实异常另用反馈 | 每组工具只有一个位置；高级筛选按需打开，焦点/草稿保持 |

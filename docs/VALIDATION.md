@@ -4,6 +4,16 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 侧栏header组合边界（2026-10-16）
+
+侧栏Header/Footer组合布局属于本轮独立修复。sidebarHeader不再向直属或后代Button强制宽度、字体和compact padding；默认动作按内容宽度，宿主可通过公开style/className明确选100%或内容宽。sidebarFooter去除递归按钮字体与强制宽度，现有父容器stretch行为保留。Header分隔上下间距各4px，sidebar-menu内Tabs.Panel不再叠加正文padding；普通Tabs.Panel保持现有12px。所有侧栏区域的交互控件采用内部焦点绘制，并保留invalid边框及独立滚动边界。
+
+[侧栏示例](../examples/sidebar-footer-react/app.tsx)提供`header=actions|long|direct|full|content|business|tabs`，用公开Toolbar、Field、Tabs、NavigationMenu验证常见组合；Tabs.Root可跨header和正文，keepMounted面板保留输入草稿与导航状态。没有增加会话专属组件或修改消费项目。[SHELL-020～022](ADOPTION_CHECKLIST.md)分别检查按钮宽度归属、Tabs与分隔间距、焦点和滚动。
+
+[header浏览器测试](../tests/browser/sidebar-header-toolbar.spec.mjs) **33/33**，包含三主题、桌面/窄屏/200%文字、长中文Toolbar、直属按钮的默认/显式宽度、宿主组合、Sidebar Tabs和三主题真实Chrome200%缩放；sidebar-footer布局与基础焦点回归通过。Firefox/WebKit各两项header精选通过。验证动作可达、准确宽度、首个导航位置、普通Tabs padding不变、草稿与焦点保持、滚动及无水平溢出，已实际审阅代表截图。
+
+兼容性变化是依赖旧header强制满宽的直接按钮需要在公开style/className中明确满宽；默认内容宽度修复Toolbar多动作被拆为多行的问题。普通Tabs、导航折叠、Footer底部归属与受控状态接口保持；未新增props或变更公开导出。浏览器证据与实际未跑范围同上节。
+
 ## 统一表格行分割线（2026-10-16）
 
 DESIGN及三个私有包 **1.1.2**，393 Token、85正式入口、249项逐项检查。解决 [XUI-REQ-20261016-03](PUBLIC_REQUESTS.md#xui-req-20261016-03固定列与全表分割线一致112已实现待宿主验收)：公共Table/DataTable默认全表仅行线，所有th/td列线为0；移除sticky专属侧边框，保留既有位置、不透明背景、交互图层、表头交点层级和焦点。整体frame、表头/行底线、唯一footer分隔继续各有归属，末行不叠底栏边框。没有新增props、网格模式、API/query owner或原生UI；DataTableColumn.sticky及Table的stickyOffset用法不变。

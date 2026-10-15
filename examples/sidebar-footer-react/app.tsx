@@ -2,9 +2,10 @@ import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 import {flushSync} from 'react-dom';
 import {MenuLayout,NavigationMenu} from '@coffeehc/xui-react/menu-layout';
-import {AppShell,SidebarFooterContent,SidebarFooterRow,Stack,Section,Toolbar,type SidebarTogglePlacement} from '@coffeehc/xui-react/layout';
+import {AppShell,SidebarFooterContent,SidebarFooterRow,Stack,Section,Toolbar,PageHeader,type SidebarTogglePlacement} from '@coffeehc/xui-react/layout';
 import {Button} from '@coffeehc/xui-react/button';
 import {Field,Input} from '@coffeehc/xui-react/forms';
+import {Tabs} from '@coffeehc/xui-react/tabs';
 import {Dialog} from '@coffeehc/xui-react/dialog';
 import type {NavigationMenuOptions} from '@coffeehc/xui-runtime/navigation';
 import '@coffeehc/xui-runtime/init.js';
@@ -34,7 +35,8 @@ function FooterRow({owner,versionRef,onReturn}:{owner:ActionModel;versionRef:Rea
 }
 function App(){
   const [options,setOptions]=React.useState<NavigationMenuOptions>({items:config.items,activeId:config.activeId,location:location.href}),[placement,setPlacement]=React.useState<SidebarTogglePlacement>(config.togglePlacement),[collapsed,setCollapsed]=React.useState(config.collapsed),[open,setOpen]=React.useState(false),[footerKind,setFooter]=React.useState<FooterKind>('original'),[draft,setDraft]=React.useState(copy.draft),[modal,setModal]=React.useState(false);
-  const [repeat,setRepeat]=React.useState(0),hostFocus=React.useRef<HostFocus>('trigger'),heading=React.useRef<HTMLHeadingElement>(null),modalAction=React.useRef<HTMLButtonElement>(null),versionRef=React.useRef<HTMLSpanElement>(null);
+  const [tab,setTab]=React.useState('active');
+  const [repeat,setRepeat]=React.useState(0),hostFocus=React.useRef<HostFocus>('trigger'),heading=React.useRef<HTMLSpanElement>(null),modalAction=React.useRef<HTMLButtonElement>(null),versionRef=React.useRef<HTMLSpanElement>(null);
   const state=React.useSyncExternalStore(model.subscribe,model.getState,model.getState);
   const original=React.useMemo(()=>config.footerRow?<FooterRow owner={model} versionRef={versionRef} onReturn={()=>{heading.current?.focus();}}/>:<Footer owner={model} versionRef={versionRef}/>,[]);
   const update=(next:Partial<NavigationMenuOptions>)=>setOptions(current=>({...current,...next}));
@@ -48,7 +50,7 @@ function App(){
   };
   React.useEffect(()=>{const pop=()=>update({location:location.href,activeId:new URL(location.href).searchParams.get('page')??'overview'});window.addEventListener('popstate',pop);return()=>window.removeEventListener('popstate',pop);},[]);
   const content=<Stack data-repeat={repeat}>
-    <header className="xui-page-header"><div><h1 ref={heading} tabIndex={-1} data-testid="page-heading">{copy.title}</h1><p>合成数据；没有产品后端、授权判断或真实许可证操作。</p></div></header>
+    <PageHeader title={<span ref={heading} tabIndex={-1} data-testid="page-heading">{copy.title}</span>} description="合成数据；没有产品后端、授权判断或真实许可证操作。"/>
     <Section title="宿主业务状态"><Field label="草稿" controlId="footer-draft"><Input value={draft} onChange={event=>setDraft(event.currentTarget.value)}/></Field>
       <p role="status" data-testid="action-count">已执行 {state.calls} 次合成操作</p><p data-testid="current-route">{options.activeId}</p>
       <Toolbar><Button variant="outline" onClick={()=>model.finish()}>完成合成请求</Button><Button variant="outline" onClick={()=>model.setState({disabled:!state.disabled})}>切换禁用状态</Button></Toolbar>
@@ -56,11 +58,22 @@ function App(){
     <Section title="独立正文滚动">{Array.from({length:50},(_,index)=><p key={index}>第 {index+1} 条合成记录：导航更新保留草稿、底部动作与主内容。</p>)}</Section>
   </Stack>;
   const sidebarFooter=footerKind==='none'?null:footerKind==='plain'?<SidebarFooterContent data-testid="footer-plain">{copy.plain}</SidebarFooterContent>:footerKind==='replacement'?<SidebarFooterContent icon={<Symbol/>} data-testid="footer-replacement">{copy.replacement}</SidebarFooterContent>:original;
-  const shellProps={sidebarTogglePlacement:placement,sidebarFooter,headerSlots:{brand:<strong>{copy.title}</strong>},scrollMode:config.scrollMode,sidebarOpen:open,onSidebarOpenChange:setOpen,closeLabel:'关闭导航'};
-  return <>{config.composition==='shell'
-    ?<AppShell {...shellProps} navigationLabel="工作导航" collapsed={collapsed} onCollapsedChange={setCollapsed} compactLabel="紧凑导航" expandLabel="展开导航" sidebar={<NavigationMenu {...options} label="工作导航" compactLabel="紧凑导航" expandLabel="展开导航" navigation={{navigate}}/>}>{content}</AppShell>
+  const headerKind=new URLSearchParams(location.search).get('header');
+  const headerButtons=<><Button size="sm" data-testid="header-session">{headerKind==='long'?'创建新的跨团队协作会话':'新会话'}</Button><Button size="sm" data-testid="header-team">{headerKind==='long'?'创建具有很长中文名称的研发团队':'新团队'}</Button><Button size="sm" data-icon="true" aria-label="刷新会话" data-testid="header-refresh"><Symbol/></Button></>;
+  const headerActions=<Toolbar aria-label="会话快捷操作" data-testid="sidebar-header-tools">{headerButtons}</Toolbar>;
+  let sidebarHeader:React.ReactNode;
+  if(headerKind==='tabs')sidebarHeader=<>{headerActions}<Input type="search" aria-label="搜索会话" placeholder="搜索会话"/><Tabs.List aria-label="会话范围"><Tabs.Tab value="active">当前</Tabs.Tab><Tabs.Tab value="archived">已归档</Tabs.Tab></Tabs.List></>;
+  else if(headerKind==='business')sidebarHeader=<div role="group" aria-label="业务快捷操作" data-testid="sidebar-header-tools" style={{display:'flex',flexWrap:'wrap',gap:'var(--space-control-gap)'}}>{headerButtons}</div>;
+  else if(headerKind==='direct'||headerKind==='full'||headerKind==='content')sidebarHeader=<Button size="sm" data-testid="header-direct" style={headerKind==='full'?{width:'100%'}:headerKind==='content'?{width:'max-content'}:undefined}>新会话</Button>;
+  else if(headerKind)sidebarHeader=headerActions;
+  const navigationMenu=<NavigationMenu {...options} label="工作导航" compactLabel="紧凑导航" expandLabel="展开导航" navigation={{navigate}}/>;
+  const shellSidebar=headerKind==='tabs'?<><Tabs.Panel value="active" keepMounted>{navigationMenu}</Tabs.Panel><Tabs.Panel value="archived" keepMounted><NavigationMenu {...options} label="已归档工作导航" showCollapseToggle={false} navigation={{navigate}}/></Tabs.Panel></>:navigationMenu;
+  const shellProps={sidebarHeader,sidebarTogglePlacement:placement,sidebarFooter,headerSlots:{brand:<strong>{copy.title}</strong>},scrollMode:config.scrollMode,sidebarOpen:open,onSidebarOpenChange:setOpen,closeLabel:'关闭导航'};
+  const view=<>{config.composition==='shell'
+    ?<AppShell {...shellProps} navigationLabel="工作导航" collapsed={collapsed} onCollapsedChange={setCollapsed} compactLabel="紧凑导航" expandLabel="展开导航" sidebar={shellSidebar}>{content}</AppShell>
     :<MenuLayout {...options} {...shellProps} collapsed={collapsed} onCollapsedChange={setCollapsed} title={copy.title} label="工作导航" compactLabel="紧凑导航" expandLabel="展开导航" navigation={{navigate}}>{content}</MenuLayout>}
     <Dialog.Root open={modal} onOpenChange={setModal}><Dialog.Content initialFocus={modalAction} data-testid="host-dialog"><Dialog.Title>宿主新操作面板</Dialog.Title><Dialog.Description>导航后新表层应持有自己的焦点。</Dialog.Description><Dialog.Body><Button ref={modalAction} data-testid="host-dialog-action">新表层操作</Button></Dialog.Body><Dialog.Footer><Dialog.Close render={<Button variant="outline"/>}>关闭新面板</Dialog.Close></Dialog.Footer></Dialog.Content></Dialog.Root>
   </>;
+  return headerKind==='tabs'?<Tabs.Root value={tab} onValueChange={value=>setTab(String(value))}>{view}</Tabs.Root>:view;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

@@ -82,6 +82,7 @@ test('official React footer consumer uses only public package CSS and keeps acti
     const source=await readFile('examples/sidebar-footer-react/app.tsx','utf8');
     const styles=[...source.matchAll(/import\s+['"]([^'"]+\.css)['"]/g)].map(match=>match[1]);
     assert.deepEqual(styles,['@coffeehc/xui-theme/style.css']);
-    assert.doesNotMatch(source,/style=|\.style\.|position\s*:\s*['"](?:fixed|absolute)|packages\/[^\s]+\/src/);
+    // Public width/flow choices belong to the host; private geometry and font skins do not.
+    assert.doesNotMatch(source,/\b(?:fontSize|fontFamily|fontWeight|lineHeight|backgroundColor|borderRadius|padding)\s*:|\.style\.|position\s*:\s*['"](?:fixed|absolute)|packages\/[^\s]+\/src/);
     assert.match(source,/sidebarFooter/);
 });
