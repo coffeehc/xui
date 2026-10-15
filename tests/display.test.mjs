@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as React from 'react';
 import {renderToString} from 'react-dom/server';
-import {Typography,Separator,Tag,Copyable,Image} from '../packages/ui-react/dist/display.js';
+import {Typography,Separator,Tag,Copyable,Image,OverflowText} from '../packages/ui-react/dist/display.js';
 import {Typography as RootTypography} from '../packages/ui-react/dist/index.js';
 import {createCopyController,validateImageOptions} from '../packages/runtime/dist/display.js';
 import {createTypographyHeading,createTypographyText,createTypographyCode,createTypographyLink,createSeparator,createTag,createCopyable,createImage} from '../packages/runtime/dist/display-dom.js';
@@ -64,4 +64,9 @@ test('disabled copy never writes and native default clipboard belongs to the sup
 });
 test('native Image validation rejects updates atomically and same src never triggers implicit retry',()=>{
  const {doc}=navigationDOM(),options={src:'a',alt:'',aspectRatio:2},owner=createImage(doc,options),image=owner.element.querySelector('img');fire(image,'error');assert.throws(()=>owner.update({...options,aspectRatio:-1}),TypeError);assert.equal(owner.element.style.aspectRatio,'2');assert.equal(owner.element.querySelector('img'),image);owner.update({...options,fallback:'不能显示'});assert.equal(owner.element.querySelector('img'),image);assert.equal(owner.element.dataset.status,'error');owner.destroy();
+});
+
+test('OverflowText preserves safe complete SSR text and heading semantics without synthetic interaction',()=>{
+ const name='完整长中文 <script> & resource';const markup=renderToString(React.createElement('h3',null,React.createElement(OverflowText,{text:name})));
+ assert.match(markup,/^<h3><span class="xui-overflow-text">/);assert.match(markup,/完整长中文 &lt;script&gt; &amp; resource/);assert.doesNotMatch(markup,/tabindex|role=|<button|aria-hidden|style=/);
 });

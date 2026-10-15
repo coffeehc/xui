@@ -1,3 +1,4 @@
+import {overflowTextGeometry} from './overflow-text.js';
 /** Internal shared DOM behavior. Only a declared navigation name moves; controls and rich metadata stay fixed. */
 export function bindNavigationPresentation(nav:HTMLElement){
   const doc=nav.ownerDocument,win=doc.defaultView;
@@ -10,9 +11,8 @@ export function bindNavigationPresentation(nav:HTMLElement){
   const refresh=()=>{
     if(dead)return;nav.dataset.labelMotion=enabled()?'enabled':'static';const next=focused??hovered,name=next?.querySelector<HTMLElement>('.xui-navigation-label'),text=name?.firstElementChild as HTMLElement|null;
     if(!next||!name||!text||!next.isConnected||doc.hidden||!enabled()||nav.dataset.labelOverflow!=='marquee'||next.matches(':disabled,[aria-disabled="true"]')||win.getComputedStyle(name.closest('.xui-menu-label')??name).position==='absolute'){stop();return;}
-    const distance=Math.max(0,text.scrollWidth-name.clientWidth),style=win.getComputedStyle(text),speed=Number.parseFloat(style.getPropertyValue('--nav-label-scroll-speed'));
-    const delayText=style.animationDelay.split(',')[0],delay=Number.parseFloat(delayText)*(delayText.endsWith('ms')?1:1000),direction=style.direction==='rtl'?1:-1;
-    if(distance<=1||!Number.isFinite(speed)||speed<=0||!Number.isFinite(delay)){stop();return;}
+    const {distance,speed,delay,direction,valid}=overflowTextGeometry(name,text,'--nav-label-scroll-speed');
+    if(!valid){stop();return;}
     const nextSignature=JSON.stringify([text.textContent,distance,direction,speed,delay]);
     if(next===active&&name===viewport&&text===track&&nextSignature===signature)return;
     stop();active=next;viewport=name;track=text;signature=nextSignature;observer?.observe(name);observer?.observe(text);

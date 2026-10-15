@@ -61,6 +61,7 @@
 | `@coffeehc/xui-runtime/dom` <!-- public-entry: @coffeehc/xui-runtime/dom --> | [源码](../packages/runtime/src/dom.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
 | `@coffeehc/xui-runtime/internal/dialog-layout` <!-- public-entry: @coffeehc/xui-runtime/internal/dialog-layout --> | [内部实现](../packages/runtime/src/dialog-layout.ts) | 包间保留接线，非消费者稳定API；使用公开Dialog/Sheet | [内部类型](../packages/runtime/src/dialog-layout.ts) |
 | `@coffeehc/xui-runtime/internal/navigation-presentation` <!-- public-entry: @coffeehc/xui-runtime/internal/navigation-presentation --> | [内部实现](../packages/runtime/src/navigation-presentation.ts) | 包间保留接线，非消费者稳定 API；使用公开 NavigationMenu 选项与名称部件 | [公共合同](COMPONENTS.md#导航与菜单) |
+| `@coffeehc/xui-runtime/internal/overflow-text` <!-- public-entry: @coffeehc/xui-runtime/internal/overflow-text --> | [内部实现](../packages/runtime/src/overflow-text.ts) | 包间展示接线，非消费者稳定 API；使用 OverflowText/createOverflowText | [公共合同](COMPONENTS.md#通用长标题) |
 | `@coffeehc/xui-runtime/api-key` <!-- public-entry: @coffeehc/xui-runtime/api-key --> | [源码](../packages/runtime/src/api-key.ts) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-vanilla/app.js) |
 | `@coffeehc/xui-runtime/api-key-dom` <!-- public-entry: @coffeehc/xui-runtime/api-key-dom --> | [源码](../packages/runtime/src/api-key-dom.ts) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-vanilla/app.js) |
 | `@coffeehc/xui-runtime/structured-log` <!-- public-entry: @coffeehc/xui-runtime/structured-log --> | [源码](../packages/runtime/src/structured-log.ts) | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-vanilla/app.js) |
@@ -89,7 +90,7 @@
 | `@coffeehc/xui-runtime/widgets-dom` <!-- public-entry: @coffeehc/xui-runtime/widgets-dom --> | [源码](../packages/runtime/src/widgets-dom.ts)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-runtime/search-toolbar-dom` <!-- public-entry: @coffeehc/xui-runtime/search-toolbar-dom --> | 及根入口：`createSearchToolbar` / `SearchToolbarOptions` / `SearchToolbarController`，对应 Node/null 槽，稳定 update/getElement/getExpanded/destroy。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/display` <!-- public-entry: @coffeehc/xui-runtime/display --> | createCopyController、copyableLabels、validateImageOptions 与文字/复制/图片共享类型。 | [组件合同](COMPONENTS.md) | — |
-| `@coffeehc/xui-runtime/display-dom` <!-- public-entry: @coffeehc/xui-runtime/display-dom --> | createTypographyHeading/Text/Link/Code、createCopyable、createSeparator、createTag、createImage 与原生 options。 | [组件合同](COMPONENTS.md) | — |
+| `@coffeehc/xui-runtime/display-dom` <!-- public-entry: @coffeehc/xui-runtime/display-dom --> | createTypographyHeading/Text/Link/Code、createCopyable、createSeparator、createTag、createImage、createOverflowText/OverflowTextOptions/OverflowTextController。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup --> | AdminSetupCheck/CheckResult、createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/admin-setup-dom` <!-- public-entry: @coffeehc/xui-runtime/admin-setup-dom --> | createAdminSetupPage、AdminSetupPageOptions、AdminSetupPageController。 | [组件合同](COMPONENTS.md) | — |
 
@@ -662,3 +663,7 @@ React `/popover` 及根入口新增 `PopoverContentProps`；`Popover.Content.por
 完整登录页 `LoginPageConfig.labels.showPassword/hidePassword` 与新密码组合 `NewPasswordLabels.showPassword/hidePassword` 均为可选字段，保持英文默认，可配置中文，见[完整登录页文案](COMPONENTS.md#完整登录页密码显隐文案与品牌替代文本)。AdminSetupPage/createAdminSetupPage 可选 onCheck 与底层 controller.check() 只执行宿主权威只读核对，新增 checking/checkFailed 呈现；默认没有该动作，见[初始化页](COMPONENTS.md#管理员初始化页)。TextareaProps.autoResize 与原生 /dom 的 bindTextareaAutoResize 为显式启用的行数上限尺寸能力，不拥有草稿或提交。
 
 已确认 revoke 成功后，ApiKeyManager 通过既有 adapter.list 普通读取一次最新 metadata/capabilities；不能推断 deleteRecord=true。读取期间禁止该写动作并发，失败保留已确认 revoked 行与锁定能力，展示原列表错误/刷新入口，不重放 revoke。关闭/卸载、较新读取或动作使用既有代际取消迟到结果；最终权限、事务、删除条件和 expected_version 仍由后端负责，未新增 HTTP API 或 DTO。
+
+## 通用长标题
+
+React `/display`与根入口公开 `OverflowText` / `OverflowTextProps`；runtime `/display-dom`及根入口公开 `createOverflowText` / `OverflowTextOptions` / `OverflowTextController`。仅字符串text，现有交互表面使用React interactionRef或原生interactionTarget，不新增Tab/role/点击语义。触屏/减少动效/无键盘入口完整静态换行；完整更新、销毁与消费组合见[长标题合同](COMPONENTS.md#通用长标题)。

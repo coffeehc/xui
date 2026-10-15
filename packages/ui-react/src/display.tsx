@@ -1,3 +1,4 @@
+import {bindOverflowTextPresentation} from '@coffeehc/xui-runtime/internal/overflow-text';
 import * as React from 'react';
 import {createCopyController,copyableLabels,validateImageOptions,type HeadingLevel,type HeadingRole,type TextTone,type CopyStatus,type CopyableLabels,type ClipboardWriter,type ImageOptions,type ImageStatus} from '@coffeehc/xui-runtime/display';
 import {Button} from './button.js';
@@ -36,4 +37,19 @@ function ImageResource({src,alt,retryKey,fallback='图片无法加载',loadingLa
 export function Image({src,alt,width,height,aspectRatio,fit='contain',retryKey,fallback,loadingLabel,onStatusChange,className,style,...props}:ImageProps){
   validateImageOptions({src,alt,width,height,aspectRatio} as ImageOptions);
   return <span {...props} className={cx('xui-image',className)} data-fit={fit} style={{...style,width:width===undefined?'100%':width,aspectRatio:aspectRatio??width!/height!}}><ImageResource key={JSON.stringify([src,retryKey])} {...{src,alt,retryKey,fallback,loadingLabel,onStatusChange}}/></span>;
+}
+
+/** A non-interactive text part. Keep headings, icons, badges and actions outside it. */
+export type OverflowTextProps=Omit<React.ComponentProps<'span'>,'children'|'dangerouslySetInnerHTML'>&{
+ text:string;
+ /** Existing containing card/control; its own keyboard actions trigger the same reveal. */
+ interactionRef?:React.RefObject<HTMLElement|null>;
+};
+export function OverflowText({text,interactionRef,ref,className,...props}:OverflowTextProps){
+ const viewport=React.useRef<HTMLSpanElement>(null),track=React.useRef<HTMLSpanElement>(null),target=React.useRef(interactionRef);target.current=interactionRef;
+ const binding=React.useRef<ReturnType<typeof bindOverflowTextPresentation>|null>(null);
+ React.useImperativeHandle(ref,()=>viewport.current!,[]);
+ React.useLayoutEffect(()=>{binding.current=bindOverflowTextPresentation(viewport.current!,track.current!,()=>target.current?.current??null);return()=>{binding.current?.destroy();binding.current=null;};},[]);
+ React.useLayoutEffect(()=>binding.current?.refresh());
+ return <span {...props} ref={viewport} className={cx('xui-overflow-text',className)}><span ref={track} className="xui-overflow-text-content">{text}</span></span>;
 }

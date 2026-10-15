@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Typography,Tag,Copyable,Image,Separator,type ImageProps} from '@coffeehc/xui-react/display';
+import {Typography,Tag,Copyable,Image,Separator,OverflowText,type OverflowTextProps,type ImageProps} from '@coffeehc/xui-react/display';
 import {createImage,createTag,createCopyable} from '@coffeehc/xui-runtime/display-dom';
 export const valid=<><Typography.Heading level={3} visualRole="section">Title</Typography.Heading><Typography.Text as="p" ref={React.createRef<HTMLParagraphElement>()}>Text</Typography.Text><Typography.Link href="/next" target="_blank" download>Native link</Typography.Link><Typography.Code value="<script>safe</script>" block/><Separator decorative/><Tag label="Passive"/><Tag label="Active" removeLabel="Remove active" onRemove={()=>{}} onRemoveFocus={button=>button.blur()}/><Image src="a.png" alt="" aspectRatio={2}/><Copyable value="explicit" writeText={async value=>{void value;}}/></>;
 // @ts-expect-error Heading level is explicit.
@@ -21,3 +21,10 @@ createCopyable(document,{value:'x'}).destroy();
 createImage(document,{src:'x',aspectRatio:2});
 // @ts-expect-error Native matches remove label.
 createTag(document,{label:'x',onRemove(){}});
+
+const card=React.createRef<HTMLElement>();
+export const overflow=<h3><OverflowText text="长标题" interactionRef={card} ref={React.createRef<HTMLSpanElement>()}/></h3>;
+// @ts-expect-error OverflowText accepts safe text, not arbitrary interactive children.
+const unsafeOverflow=<OverflowText text="x"><button>nested</button></OverflowText>;
+// @ts-expect-error No HTML injection into the text part.
+const unsafeMarkup:OverflowTextProps={text:'x',dangerouslySetInnerHTML:{__html:'x'}};

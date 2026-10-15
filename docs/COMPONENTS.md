@@ -1106,3 +1106,21 @@ const picker=createDateTimePicker(host,{label:'开始日期时间',value:null,
 AuthPage/createAuthPage、完整 LoginPage 和初始化页的 `logo.alt:''` 必须首次即输出显式 `alt=""`；非空替代文本与更新/移除 logo 遵从已有配置，不能用 DOM 属性的默认空值推断已输出属性。
 
 `NewPasswordLabels.showPassword/hidePassword` 同样为可选字段，由 NewPasswordFields/createNewPasswordFields 转交给新密码和确认两个内部输入；AdminSetupPage 的 passwordLabels 原样支持。默认英文与旧配置保持兼容，密码规则和强度建议不变。独立改密表单的合成正式消费者见 [React](../examples/password-change-react/app.tsx) / [原生](../examples/password-change-vanilla/app.js)，只演示宿主提交与清密，没有新增改密 API。
+
+### 通用长标题
+
+React `@coffeehc/xui-react/display` 的 `OverflowText` / `OverflowTextProps`，原生 `@coffeehc/xui-runtime/display-dom` 的 `createOverflowText` / `OverflowTextOptions` / `OverflowTextController`，根入口同步公开。只接收 `text:string`，保留安全完整文本，不接受交互 children 或 HTML。组件本身是无 role、无 tabindex 的 span；宿主保留 h3、图标、右侧 Badge、摘要、元数据与操作。中性归属标签不跟随名称滚动，不因长标题改成错误/成功着色。
+
+```tsx
+const cardRef = React.useRef<HTMLElement>(null);
+<Surface ref={cardRef}>
+  <h3><OverflowText text={title} interactionRef={cardRef} /></h3>
+  <Button onClick={onOpen}>查看资源</Button>
+</Surface>
+```
+
+`interactionRef` 是包含此名称的现有卡片/控件表面；在该表面 hover 或已有按钮/链接/input 获得焦点时，只有实际溢出的名称停留后按共享 token 单次滚至末端，保留焦点与操作。未传时尝试名称现有的可交互祖先；找不到键盘入口时保留完整静态换行，不加标题Tab停靠/伪按钮。离开且失焦复位，短名称不动画。触屏/any-pointer:coarse、无hover、减少动效、无Web Animations或JS未运行均完整静态换行，英文无空格也可折行；完整名称一直保留在DOM和可访问文本中，不依赖title提示。
+
+原生：`const name=createOverflowText(document,{text:title,interactionTarget:card}); heading.append(name.element);`；`name.update({text:nextTitle,interactionTarget:card})` 保持element，`destroy()`取消timer/动画、释放ResizeObserver及媒体/字体/文档/窗口/目标事件并移除所属span。update为完整新配置，省略target即恢复默认祖先选择；target须同document并包含名称，否则保持静态。React props更新共享同一呈现owner；现有ref当前值更换需正常render确认。尺寸/字体变化自动重测，不另建查询/状态/点击owner。
+
+表面宽度和内容排列继续采用公开布局；此部件不创造完整卡片Header/Footer槽位。正式双端[React](../examples/display-react/app.tsx)/[原生](../examples/display-vanilla/app.js)增加 `?overflow`，h3名称和右侧中性“公共”Badge分离，下方摘要/草稿/既有动作不移动。合成样例不是产品业务或完整卡片框架验收。

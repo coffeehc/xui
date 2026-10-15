@@ -1,3 +1,4 @@
+import {bindOverflowTextPresentation} from './overflow-text.js';
 import {createCopyController,copyableLabels,validateImageOptions,type HeadingLevel,type HeadingRole,type TextTone,type CopyableLabels,type ClipboardWriter,type CopyStatus,type ImageOptions,type ImageStatus} from './display.js';
 export type {HeadingLevel,HeadingRole,TextTone,CopyableLabels,ClipboardWriter,CopyStatus,ImageOptions,ImageSize,ImageStatus} from './display.js';
 export function createTypographyHeading(doc:Document,options:{level:HeadingLevel;visualRole?:HeadingRole;text:string}){if(!Number.isInteger(options.level)||options.level<1||options.level>6)throw new TypeError('Heading level must be 1–6');const element=doc.createElement(`h${options.level}`);element.className='xui-heading';element.dataset.visualRole=options.visualRole??'section';element.textContent=options.text;return element;}
@@ -33,4 +34,21 @@ export function createImage(doc:Document,initial:ImageOptions){
     const complete=(next:ImageStatus)=>{if(destroyed||token!==generation)return;status=next;render();options.onStatusChange?.(next);};const loaded=()=>complete('loaded'),failed=()=>complete('error');current.addEventListener('load',loaded);current.addEventListener('error',failed);release=()=>{current.removeEventListener('load',loaded);current.removeEventListener('error',failed);};element.append(current,placeholder);render();if(options.src)current.src=options.src;
   };load();
   return Object.freeze({element,update(next:ImageOptions){if(destroyed)return;validateImageOptions(next);const changed=next.src!==options.src||next.retryKey!==options.retryKey;options=next;if(changed)load();else render();},destroy(){if(destroyed)return;destroyed=true;generation++;release();image?.removeAttribute('src');element.remove();}});
+}
+
+/** Safe text only. The optional target is an existing containing surface with keyboard actions. */
+export interface OverflowTextOptions {text:string;interactionTarget?:HTMLElement|null}
+export interface OverflowTextController {
+ readonly element:HTMLSpanElement;
+ /** Replace the declared text/interaction target, retaining the element and host focus. */
+ update(options:OverflowTextOptions):void;
+ /** Cancel motion and release measurements/listeners; removes only the owned element. */
+ destroy():void;
+}
+export function createOverflowText(doc:Document,initial:OverflowTextOptions):OverflowTextController {
+ const element=doc.createElement('span'),track=doc.createElement('span');element.className='xui-overflow-text';track.className='xui-overflow-text-content';element.append(track);
+ let options=initial,dead=false;
+ const check=(next:OverflowTextOptions)=>{if(typeof next.text!=='string')throw new TypeError('OverflowText requires text');if(next.interactionTarget&&next.interactionTarget.ownerDocument!==doc)throw new TypeError('OverflowText target must share its document');};
+ check(initial);track.textContent=initial.text;const owner=bindOverflowTextPresentation(element,track,()=>options.interactionTarget??null);
+ return {element,update(next){if(dead)return;check(next);options=next;if(track.textContent!==next.text)track.textContent=next.text;owner.refresh();},destroy(){if(dead)return;dead=true;owner.destroy();element.remove();}};
 }

@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.16.1。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.17.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -487,8 +487,10 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     /* shell-role-tokens:start */
     --nav-sidebar-width: calc(var(--nav-item-height) * 9);
     --nav-row-first-line-height: max(var(--nav-item-height), var(--button-height), calc(var(--line-height-body-sm) + var(--space-text-gap) * 2 + var(--line-width-surface) * 2));
-    --nav-label-scroll-delay: calc(var(--motion-duration-fast) * 4);
-    --nav-label-scroll-speed: 40;
+    --text-overflow-scroll-delay: calc(var(--motion-duration-fast) * 4);
+    --text-overflow-scroll-speed: 40;
+    --nav-label-scroll-delay: var(--text-overflow-scroll-delay);
+    --nav-label-scroll-speed: var(--text-overflow-scroll-speed);
     --nav-row-primary-min-width: calc(var(--nav-item-height) * 3);
     --nav-row-padding-block: calc((var(--nav-row-first-line-height) - var(--line-height-body-sm)) / 2);
     --nav-row-icon-offset: calc((var(--line-height-body-sm) - var(--control-icon-size)) / 2);
@@ -1495,3 +1497,7 @@ Calendar共享model独立管理查看月份与已选日期。公开month/onMonth
 完整登录页和新密码组合的显隐密码名称可通过同一公开配置翻译，装饰 logo 显式输出空 alt。初始化页可选手动只读权威核对，checking/失败/完成沿用公共反馈；未确认结果继续锁定写入，不自动重放初始化、登录或新增恢复协议。Key 吊销后的能力以普通权威列表为准，读失败不推断授权。
 
 Textarea 自动增高由公共控件显式启用并声明 maxRows，使用已有文字/尺寸语义，不新增皮肤或默认高度；保留草稿、IME、焦点、required/readOnly/disabled 与所属弹层滚动，超过上限内部滚动，内容减少缩回。stacked InputGroup 的公共 flex 与共享测量协作，仅在启用自动增高期间按测量高度排列，避免尺寸被纵向 flex 压缩；关闭后恢复原 flex、手动 resize 与 rows。具体双端合同见[组件手册](COMPONENTS.md#textarea-可选自动增高)。
+
+### 通用长标题展示
+
+OverflowText/createOverflowText仅承载名称字符串，不拥有h3、图标、归属Badge、摘要、footer或动作。公共文本部件占其分配的剩余净宽；仅此文本在鼠标悬停或现有交互表面内的键盘焦点停留后单次滚动至末端，离开且失焦复位。text-overflow-scroll-delay/speed定义共享节奏（400ms、40 CSS px/秒），原nav-label-scroll-*保留同值别名与原覆盖合同。没有溢出不播放动画；无现有键盘入口、触屏/粗指针、减少动效、缺少动画支持或JS未运行时显示完整静态换行，无空格英文也可折行。全文始终保留可访问名称，不新增Tab停靠、伪按钮、业务状态或查询owner；公共标题接口见[长标题](COMPONENTS.md#通用长标题)。

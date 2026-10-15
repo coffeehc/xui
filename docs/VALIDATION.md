@@ -2,6 +2,28 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## 通用卡片长标题（2026-10-15）
+
+基于固定 `68b017cea090109967226aa4056064492583e2c1` 排重：此前只有 NavigationMenu.Label / createNavigationLabel 的导航专用滚动，没有卡片可用的通用入口。新增 React `/display` 与 root 的 OverflowText/OverflowTextProps、runtime `/display-dom` 与 root 的 createOverflowText/OverflowTextOptions/OverflowTextController。源码只改xui；没有升级或修改xAgent、后端、认证、API及其既有adapter。本次文本部件不构成完整卡片Header/Footer槽位框架交付，也没有实施尚在讨论的公共API接入规范变更。
+
+h3、图标、中性归属Badge、摘要、footer和动作保留宿主语义；只有text字符串参与动画。interactionRef/interactionTarget指向现有包含该名称且有键盘入口的表面，其hover/focus触发同一名称展示；没有现有键盘入口时完整静态换行，不新增Tab或伪按钮。短名称、减少动效、触屏、无动画支持保留完整静态文本；英文无空格可折行。原导航呈现复用共享几何，原nav-label-scroll-*改为新text-overflow-scroll-*的同值别名，仍接受原公开覆盖。完整合同与合成消费者见[通用长标题](COMPONENTS.md#通用长标题)。
+
+最终 source generation `aeb93d3bdd9e99a3960c245f0065f43e601940f5611d56f3b8c671bda571bb91`；DESIGN **0.17.0**，386 tokens、102 manifest入口，三包仍为私有0.1.0。正式CSS gzip **17424/17536**，预算未提高。独立tarball消费者验证正式ESM/CSS/types/init、命名类型与负向编译；React/ReactDOM/Base UI各一份，原生无React，没有源码alias或消费者动画/CSS补丁。新增internal/overflow-text仅包间接线，消费者使用公开display入口。
+
+| 检查 | 结果 | 原始证据（`.artifacts/overflow-text/`） |
+| --- | --- | --- |
+| build / types / tokens / docs / 单测 | 通过；单测 **524/524**，包括完整安全SSR标题、不增加交互语义 | `build-final.log`、`typecheck-final.log`、`tokens-final.log`、`docs-final.log`、`unit-final.log` |
+| 正式tarball消费者 | 通过；入口/类型/同代包/peer/gzip门禁 | `consumer-final.log`、release metadata |
+| Chromium新专项 | **40/40**：两端 ×三主题 ×1280/390 ×16/32字号24项；减少动效/无target/无动画6项；触屏2项；销毁2项；真实Chrome200%缩放6项 | `browser-final.json`、`screenshots/` |
+| 导航与展示回归 | **50/50**：navigation-presentation、display、display-foundation-contract | `regression-final.json` |
+| Firefox / WebKit精选 | 每引擎 **10/10**：两端桌面浅色、窄屏深色200%文字、减少动效、无target和销毁 | `firefox-final.json`、`webkit-final.json` |
+
+浏览器实际断言仅名称移动、Badge固定且不被裁切、完整h3名称、无新增Tab停靠、真实Tab/输入焦点触发展示、延迟/距离/速度与末端几何、短名称无动画、16/22rem表面及动态中英文标题更新、原节点/草稿/选区、降级全文折行、销毁取消动画/释放ResizeObserver后重挂只有一个owner。Chrome缩放由设置页执行200%，分别确认DPR翻倍、CSS视口减半、根字号不变、CSS zoom=1、pinch=1。实际查看桌面浅色、窄屏深色大字和system真实缩放截图。
+
+候选构建先因固定token数量未同步、事件监听动态方法失去DOM重载类型而失败，已同步精确386并使用明确的add/remove；未放宽类型/预算。关键浏览器初轮4/6，两个失败为容器宽度更新后测试仍读取RO重测前旧动画；现等待当前距离/速度与动画时长匹配后在同一evaluate取值并finish，保留末端、时长和节点断言，生产动画未因该失败改动。初轮与复验报告完整保留。
+
+未跑xAgent真实卡片、产品部署、后端/认证/API、实体触屏设备/读屏器和独立SSR hydration；模拟触屏与SSR字符串测试不代表这些已通过。此次新能力不授权消费项目更改其原有协议或业务owner。
+
 ## stacked InputGroup 的 Textarea 自动增高（2026-10-15）
 
 在侧栏合同提交 `429298e53e3f14ba04616964a2f7811593804905` 之后独立修复；只修改 xui，不升级消费项目。以正式 `511383729302901d8ff7284f520a943519ee7051` 的三包安装到独立消费者复现：同一受控长文本中，独立 Textarea 从72px增长至120px，stacked InputGroup 实际仍70px，尽管内联 block-size 已为118px、scrollHeight272px。根因为公共纵向 flex 的伸缩基准覆盖共享测量结果，不是宿主 value、请求或另一个高度 owner。

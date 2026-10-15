@@ -49,7 +49,7 @@ export function checkContract(document) {
   const lightRule = rules.find(rule => rule.selector === ':root[data-theme="light"]');
   assert(lightRule, 'Missing explicit light recipe');
   const light = { ...defaults, ...declarations(lightRule) };
-  assert.equal(Object.keys(defaults).length, 384, 'Default token count');
+  assert.equal(Object.keys(defaults).length, 386, 'Default token count');
   for (const name of ['--font-scale','--line-height-scale']) {
     const registration=tree.nodes.find(node=>node.type==='atrule'&&node.name==='property'&&node.params===name);
     assert(registration, `Missing typed ${name} registration`);

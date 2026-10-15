@@ -1,4 +1,4 @@
-import {createTypographyHeading,createTypographyText,createTypographyLink,createTypographyCode,createSeparator,createImage,createTag,createCopyable} from '@coffeehc/xui-runtime/display-dom';
+import {createTypographyHeading,createTypographyText,createTypographyLink,createTypographyCode,createSeparator,createImage,createTag,createCopyable,createOverflowText,type OverflowTextOptions,type OverflowTextController} from '@coffeehc/xui-runtime/display-dom';
 import {createCopyController,type ImageSize} from '@coffeehc/xui-runtime/display';
 const dimensions:ImageSize={aspectRatio:2};
 createTypographyHeading(document,{level:2,text:'Heading'});createTypographyText(document,{text:'Safe',as:'p'});createTypographyLink(document,{text:'Native',href:'/next',download:'file'});createTypographyCode(document,{value:'<text>',block:true});createSeparator(document,{decorative:true});
@@ -10,3 +10,8 @@ createImage(document,{src:'a',aspectRatio:2});
 createImage(document,{src:'a',alt:''});
 // @ts-expect-error No unnamed remove action.
 createTag(document,{label:'Tag',onRemove(){}});
+
+const overflowOptions:OverflowTextOptions={text:'长标题',interactionTarget:document.createElement('section')};
+const overflow:OverflowTextController=createOverflowText(document,overflowOptions);overflow.update({text:'更新标题'});overflow.destroy();
+// @ts-expect-error Native safe text is required.
+createOverflowText(document,{children:'x'});

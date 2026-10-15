@@ -69,3 +69,10 @@
   .xui-image[data-fit="cover"]>.xui-image-content {object-fit:cover;}
   .xui-image-placeholder {position:absolute;inset:0;display:flex;align-items:safe center;justify-content:safe center;padding:var(--space-control-gap);overflow:auto;overflow-wrap:anywhere;background:var(--muted);color:var(--muted-foreground);}
 }
+
+@layer xui-components {
+ .xui-overflow-text {display:block;min-inline-size:0;max-inline-size:100%;white-space:normal;overflow-wrap:anywhere;}
+ .xui-overflow-text[data-overflow-motion='enabled'] {overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+ .xui-overflow-text[data-overflow-motion='enabled']>.xui-overflow-text-content {display:inline-block;min-inline-size:100%;animation-delay:var(--text-overflow-scroll-delay);}
+ .xui-overflow-text[data-scrolling='true'] {text-overflow:clip;}
+}

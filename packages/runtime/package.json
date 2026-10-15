@@ -182,6 +182,10 @@
     "./internal/navigation-presentation": {
       "types": "./dist/navigation-presentation.d.ts",
       "import": "./dist/navigation-presentation.js"
+    },
+    "./internal/overflow-text": {
+      "types": "./dist/overflow-text.d.ts",
+      "import": "./dist/overflow-text.js"
     }
   },
   "types": "./dist/index.d.ts",
