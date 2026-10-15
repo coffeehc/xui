@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(kind+' absolute month and controlled navigation preserve date-only selection and focus',async({page})=>{
   await page.goto('/calendar-month-'+kind+'/');const calendar=page.locator('.xui-calendar[aria-label="受控日期"]');
   await page.getByRole('button',{name:'定位年月'}).click();

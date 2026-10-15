@@ -121,7 +121,16 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.18.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：1.0.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+
+### React 唯一 UI 与运行时边界
+
+所有消费项目统一使用React，`@coffeehc/xui-react`是唯一持续发展的UI实现。页面、组件、layout、slot、交互状态、焦点与布局机制属于UI层；`@coffeehc/xui-runtime`使用TypeScript构建，新增职责以services和utils为主，包括HTTP、认证、查询/资源生命周期、主题、缩放、下载及ID工具；`@coffeehc/xui-theme`集中提供Token与正式CSS。不得为新增组件再开发无框架DOM副本，也不得把一套原生UI工厂改名为runtime工具继续扩张。共享服务方法直接复用，不另包React版服务owner。
+
+原生DOM UI工厂、控制器、公开入口、示例和专属测试在1.0.0统一移除，不提供第二套UI实现或兼容转发层。runtime保留HTTP/auth/query/theme/scale/download、纯模型/解析器/工具；React内部必要的DOM测量、事件及焦点操作由React包维护。此删除由用户明确授权，属于破坏性升级；旧原生消费者不能直接升级，须使用公开React组件。项目实际迁移与部署结果应由项目自身证据说明，本仓库不代替消费项目宣称完成。
+
+HTML语义元素、React NativeSelect、浏览器/OS控件及HTTP nativeOrigin不属于被删除的原生UI副本；保留label、button/input/select的真实语义和现有服务协议。
+
 
 ### 简单、简洁、灵动、快速
 
@@ -194,7 +203,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
 
 三层是依赖关系，不要求引入 Tailwind、Vue 或第二份调色板。第一层 `palette-* / base-*` 只供主题编排；第二层定义颜色、文字、空间、布局、动效和焦点语义；第三层定义有独立调整需要的组件参数。层内复用必须无环，语义层不能反向依赖某个组件，组件参数不能跳过语义层直接引用调色板。历史名称 `input-surface` 及表格 background/foreground 是第二层语义角色；名称兼容不改变其职责。
 
-默认值只有本文件一份，生成 CSS 后由 React 与原生共同消费。`scripts/tokens.mjs` 在生成和检查时验证依赖方向、完整图、浅深/system 配方与来源指纹；设计值守卫检查组件、示例中的原始色值和私造尺度。新增 token 必须说明角色、依赖、覆盖范围及两主题行为，不按每个页面/slot 再造变量。主题 owner 仍负责 sessionStorage 与首屏；组件不各自读 storage 或判断主题。
+默认值只有本文件一份，生成 CSS 后由 React 公共组件消费。`scripts/tokens.mjs` 在生成和检查时验证依赖方向、完整图、浅深/system 配方与来源指纹；设计值守卫检查组件、示例中的原始色值和私造尺度。新增 token 必须说明角色、依赖、覆盖范围及两主题行为，不按每个页面/slot 再造变量。主题 owner 仍负责 sessionStorage 与首屏；组件不各自读 storage 或判断主题。
 
 [Stitch 架构参考](design-sources/stitch-token-architecture.v1.txt)提供三层 Token、自包含组件与视图连续性的方向；实际合同采用本文件已公开名称、尺度、三模式和无障碍规则。参考中的原始色值不替换现有品牌；普通正文不统一 mono，不新增 10/11px 提示角色；密码显隐保留键盘入口、label/错误关联，密码评分沿用公开建议而非安全熵事实。错误可自然增高或使用已有反馈槽，不能绝对定位遮住字段；管理员创建后的认证与导航由真实宿主事实决定，不内置自动登录承诺。
 
@@ -205,6 +214,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
 <!-- design-default-css:start -->
 ~~~css
 /* typography-registration:start */
+@property --interface-scale { syntax: "<number>"; inherits: true; initial-value: 1; }
 @property --font-scale { syntax: "<number>"; inherits: true; initial-value: 1; }
 @property --line-height-scale { syntax: "<number>"; inherits: true; initial-value: 1; }
 /* typography-registration:end */
@@ -493,7 +503,9 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     --nav-collapsed-item-size: 2.25rem;
     --nav-selected-indicator-inset-collapsed: 2px;
     /* shell-role-tokens:start */
-    --nav-sidebar-width: calc(var(--nav-item-height) * 9);
+    --nav-sidebar-min-width: calc(var(--nav-item-height) * 9);
+    --nav-sidebar-max-width: calc(var(--nav-item-height) * 12);
+    --nav-sidebar-width: min(clamp(var(--nav-sidebar-min-width), 25vw, var(--nav-sidebar-max-width)), 50vw);
     --nav-row-first-line-height: max(var(--nav-item-height), var(--button-height), calc(var(--line-height-body-sm) + var(--space-text-gap) * 2 + var(--line-width-surface) * 2));
     --card-title-min-inline-size: calc(var(--control-height) * 3);
     --text-overflow-scroll-delay: calc(var(--motion-duration-fast) * 4);
@@ -512,6 +524,8 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     /* centralized-component-tokens:start */
     --dialog-body-min-block-size: calc(var(--control-height) + (var(--focus-width) + var(--focus-offset)) * 2);
     --button-padding-block-xs: max(0px, calc((var(--control-height-xs) - var(--line-height-body-sm)) / 2 - var(--line-width-surface)));
+    --interface-scale: 1;
+    --interface-root-font-size: calc(100% * clamp(1, var(--interface-scale), 2));
     --font-scale: 1;
     --line-height-scale: var(--font-scale);
     --radius-full: 50%;
@@ -966,7 +980,7 @@ xui既提供控件，也定义它们如何形成清楚的任务界面。每个�
 
 空状态、无权限或前置不足时，保留用户能理解的位置与下一步；独立功能仍按实际需要可见。不能为了“页面完整”堆空表、重复计数、无效确认项或大块解释；必要业务风险、确认与数据缺口要用可理解的短说明表达，完整规则/协议细节按需阅读。真正需要专业JSON/规则编辑的任务遵循表单标准，不把内部模型默认当作普通操作界面。
 
-执行时在实际公开入口中完成页面区域到组件/slots的映射，记录支持视口与状态样本。已有[列表/表单/详情](../examples/foundation-react/app.tsx)、[原生同构示例](../examples/foundation-vanilla/app.js)、[工作区](../examples/workspace-react/app.tsx)和[数据表格](../examples/data-table-react/app.tsx)提供公开消费参考；它们的合成数据不证明业务流程。外部设计图可以用于校准布局，须再映射真实公开能力并验收，不从图稿复制第二套控件皮肤或把图稿当作功能通过证据。
+执行时在实际公开入口中完成页面区域到组件/slots的映射，记录支持视口与状态样本。已有[列表/表单/详情](../examples/foundation-react/app.tsx)、[工作区](../examples/workspace-react/app.tsx)和[数据表格](../examples/data-table-react/app.tsx)提供公开消费参考；它们的合成数据不证明业务流程。外部设计图可以用于校准布局，须再映射真实公开能力并验收，不从图稿复制第二套控件皮肤或把图稿当作功能通过证据。
 
 私有组合组件沿用同一优先级，不把组件内部最显眼的统计值或按钮自动提升为整页重点。例如项目的“任务执行面板”先说明任务对象、当前状态、阻断原因和可用动作，再显示支持判断的指标；执行历史与原始日志按需查看。未执行的任务不显示完成勾，未知进度不填百分比，重试只在领域能力确实支持时出现。该例说明信息关系，不要求所有项目采用相同页面布局。
 
@@ -998,7 +1012,7 @@ xui既提供控件，也定义它们如何形成清楚的任务界面。每个�
 
 layout 是从页面壳到控件内部的公共结构合同。每段内容先确定归属，再选择公开 slot/part；slot 的顺序、宽度约束、文字角色、着色、空态与滚动由 xui 维护，宿主提供事实、可访问名称、领域内容和动作。不能仅引入 Input/Button 后在外面重新组织同职责的通用页面或组件皮肤。公开 slot 中的领域内容仍须遵循本表，任意 JSX/Node 并不自动证明合规。
 
-每个采用页面在实施前记录“内容 → 公共入口.slot/part → 文字/颜色角色 → 状态 → 滚动 owner → 检查 ID”，以固定版本类型为准。没有合适 slot 时列为 xui 公共缺口，不穿透私有 DOM/CSS。纯领域画布/编辑器等保留自己的内容和布局；不能用这种例外重写已有通用框架。槽位是布局 API，不将内部类名全部升级为可覆盖 API；原生只使用组件手册明确公开的结构。
+每个采用页面在实施前记录“内容 → 公共入口.slot/part → 文字/颜色角色 → 状态 → 滚动 owner → 检查 ID”，以固定版本类型为准。没有合适 slot 时列为 xui 公共缺口，不穿透私有 DOM/CSS。纯领域画布/编辑器等保留自己的内容和布局；不能用这种例外重写已有通用框架。槽位是布局 API，不将内部类名全部升级为可覆盖 API。
 
 | 层/区域 | 内容与公开归属 | 呈现与着色 | 空槽、状态与滚动 |
 | --- | --- | --- | --- |
@@ -1007,7 +1021,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 | 页面标题 | PageHeader.title/description/meta/actions | title 唯一 h1/page-title；description 为 muted/body-sm；meta 为 muted/body-xs；actions 中 primary 为任务主操作 | 描述/meta/动作空则无包装；长标题换行，动作整组换行，不把刷新状态写进标题 |
 | 页面工具 | pageToolbar 或 DataTable.toolbar 中的 SearchToolbar.search/actions/advanced | 搜索与常用筛选、动作、展开筛选各居其槽；默认中性，真实异常另用反馈 | 每组工具只有一个位置；高级筛选按需打开，焦点/草稿保持 |
 | 内容章节 | Section.title/actions/children | 章节 h2/section-title，局部动作 ghost/outline，内容不额外加卡片边框 | 没有标题/动作时不生成空头部；正文自然延展 |
-| 资源卡片 | Card.title/icon/badge/actions/description/children/footerMeta/footerActions | title 语义 h2–h6、section-title；icon 装饰；归属 badge 默认 neutral；description muted/body-sm；footerMeta muted/body-xs；更多动作在头部、对象动作在页尾 | 一层 Surface；标题用 OverflowText，badge/动作独立；空槽折叠，header/footer 空间不足换行；卡片不成为伪按钮 |
+| 资源卡片 | Card的header/content/footer三段；title/icon/badge/actions归header，description/children归content，footerMeta/footerActions归footer | title 语义 h2–h6、section-title；icon 装饰；归属 badge 默认 neutral；description muted/body-sm；footerMeta muted/body-xs；更多动作在头部、对象动作在页尾 | 一层Surface，仅header/content/footer为根级区域；内容自然撑开，不固定高度或等分三段；标题用OverflowText，空content/footer不占位，header/footer不足时换行；卡片不成为伪按钮 |
 | 指标与详情 | MetricCard.label/value/marker；详情用 dl 或公开展示组件 | 名称 muted/body-xs、值 metric/mono/tabular；marker 只承载真实状态。普通详情不每字段套 Card | 未知用明确占位而非 0；数值完整，标记不挤压主值 |
 | 表单组 | Fieldset.legend、FormGrid.Item、FormActions.secondary/children | 语义分组、最多两列；长内容跨列；主次动作按所属表单排列 | 净宽决定列数；草稿独立于查询；提交错误在所属反馈区 |
 | 字段 | Field.label/children/help/error；InputGroup.Addon/控件/动作 | label 为字段名，help 为 muted，error 为 error 文本；单层输入边界；单位就近展示 | required/invalid/describedby 真实关联；长错误自然换行，焦点和输入节点保持 |
@@ -1020,7 +1034,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 
 组件的详细 part 名称、React/native 差异和替换生命周期以 [COMPONENTS](COMPONENTS.md) 为准，公开入口以 [PUBLIC_API](PUBLIC_API.md) 为准；上表不发明所有控件共有的万能 renderSlot。完整判定按 [逐项清单](ADOPTION_CHECKLIST.md) 每个对象逐条记录，通过、不适用、失败、未跑分别报告。宿主填错 slot、私自着色或重复 owner 属于接入失败；公共类型和合法内容仍无法满足矩阵时属于 xui 缺口。
 
-状态的统一边界：布局组件不请求、不缓存、不猜权限；交互组件拥有局部 focus/open/checked 等公开状态；resource/auth/业务 controller 拥有请求与确认事实。`busy` 不等于 `disabled`，`readOnly` 不等于 `disabled`，错误不等于空数据。正常 React render/原生 update 是更新，切换 key、清空 DOM 或条件卸载是重建，不能用后者实现同范围刷新。刷新与范围切换、取消、失败恢复按下方连续性合同执行。
+状态的统一边界：布局组件不请求、不缓存、不猜权限；交互组件拥有局部 focus/open/checked 等公开状态；resource/auth/业务 controller 拥有请求与确认事实。`busy` 不等于 `disabled`，`readOnly` 不等于 `disabled`，错误不等于空数据。正常 React render 是更新，切换 key、清空 DOM 或条件卸载是重建，不能用后者实现同范围刷新。刷新与范围切换、取消、失败恢复按下方连续性合同执行。
 
 ### 表单和响应式
 
@@ -1067,7 +1081,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 
 优先复用已有公共组件及声明变体。页面负责布局组合，控件负责尺寸/颜色/状态；不再写同名按钮或输入皮肤。公共展示组件不请求 API、不判断业务权限。
 
-标准界面默认采用 xui 公共控件封装。简单选择使用 SimpleSelect / bindSelectControl，搜索选择使用 Combobox / CommandPicker；不把裸 select、datalist 或操作系统选择面板作为标准示例和默认采用入口。原生 JavaScript 消费与 React 遵循同一规则，封装内部保留语义 DOM 和隐藏 select 表单桥。NativeSelect 及显式平台 binding 仅用于明确需要平台控件的场景与独立合同审计，其系统面板仍由浏览器/OS负责；不为统一外观替换文件、日期、颜色等尚无实际消费需求的系统能力。
+标准界面默认采用 xui 公共控件封装。简单选择使用 SimpleSelect，搜索选择使用 Combobox / CommandPicker；不把裸 select、datalist 或操作系统选择面板作为标准示例和默认采用入口。React封装内部保留语义DOM和select表单桥，浮层复用公共Select。React NativeSelect 仅用于明确需要平台控件的场景与独立合同审计，其系统面板仍由浏览器/OS负责；不为统一外观替换文件、日期、颜色等尚无实际消费需求的系统能力。
 
 | 状态 | 必须呈现的语义 |
 | --- | --- |
@@ -1258,7 +1272,7 @@ prefers-reduced-motion=reduce是可访问性例外：默认CSS的design-accessib
 
 1. 原生选择保持浏览器/OS键盘、面板及滚动，不假称全部由CSS控制。自定义选择组合复用公共触发器、输入、列表与浮层。
 2. Dropdown默认bottom/start、offset4px；Popover bottom/center、4px；Tooltip top/center、4px；子菜单right/start、0px。使用锚点定位和碰撞避让，不固定页面坐标；叠层遵守公共角色，不逐页加高。
-3. 可用碰撞尺寸属于定位外壳；React浮层内容的border box须从相应轴可用空间扣除外壳两侧floating-offset留白，不能令外壳padding叠加在可用高度/宽度之外。原生定位器已按视口inset、锚点与gap计算内容上限，不重复扣除React外壳留白。宿主使用公开Content或原生controller即可，不硬编码collisionPadding或补高度/边距来修公共边界。
+3. 可用碰撞尺寸属于定位外壳；React浮层内容的border box须从相应轴可用空间扣除外壳两侧floating-offset留白，不能令外壳padding叠加在可用高度/宽度之外。宿主使用公开Content即可，不硬编码collisionPadding或补高度/边距来修公共边界。
 4. 菜单在available-height内纵滚，活动项可滚入视区；长值有完整入口。子菜单关闭不改变父表格滚动，抽屉滚动不让底部操作离屏。
 5. Enter/Space打开或执行；方向键移动、Home/End到边界；子菜单左右键进退。Command输入保持搜索焦点，方向键移动活动项、Enter执行；视觉hover不是持久选中。
 6. Escape关闭最上层并恢复触发器；特殊checkbox/radio菜单遵守其已有关闭规则。非模态外点和Tab按所属组件语义关闭或移出，不全局添加focus trap。模态Dialog保持焦点限制；触发器移除时回到所属工作区可用入口。
@@ -1334,11 +1348,11 @@ SSR/预渲染和客户端首次hydration必须给出相同文本与结构；轻�
 
 应用头部按brand、breadcrumb、status、actions角色组合。桌面收起/展开入口归导航侧栏内部，由公共组件管理位置：sidebarTogglePlacement默认top保持原顶部独立辅助行；显式bottom将同一个控件放在菜单与可选业务sidebarFooter之后，菜单独立滚动，顶部不留占位。业务sidebarFooter需要同行时用公开SidebarFooterRow，自然宽度并按空间换行，长事实不截断；默认非Row组合保持全宽，紧凑rail按组纵排。展开时沿侧栏内距靠末端，紧凑rail中居中。窄屏侧栏不可见时，同一入口移至顶栏以打开已有导航抽屉；不在两处复制按钮或另建抽屉。公共层统一其按钮尺寸、位置、动效、键盘焦点、可访问名称和aria-expanded/controls，跨断点复用同一个控件节点，宿主仅传状态与事件，受控请求不能冒充已确认状态。导航入口和品牌/路径为左侧主组，状态和动作在右侧；采用方提供内容、名称、链接语义及实际动作，不在公共库写入产品权限或版本规则。主组保留layout-header-primary-min的合理宽度，窄屏优先完整保留导航入口，品牌与路径各在所属空间省略长文字；链接可聚焦，完整名称保留可访问语义，宿主可提供title或明确详情入口。状态/动作空间不足时整组换到下一行，动作组内部按需换行，不能盖住品牌、互相重叠或令整页横向溢出。不静默隐藏状态或重要动作，不用缩小字体解决空间问题；没有动作时不预留空白占位。旧任意header内容继续支持，迁移后通用排列由公共组合负责。
 
-展开侧栏用nav-sidebar-width，默认324px；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。焦点环和短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
+展开侧栏用nav-sidebar-width，按视口25%动态计算，在nav-sidebar-min-width与nav-sidebar-max-width之间夹取，默认根16px下324–432px，再以50vw封顶（视口约束优先于最小宽度）；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。焦点环和短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
 
 长名称默认保持wrap兼容；显式labelOverflow=marquee时，只有公开名称部件在有hover、fine pointer且未减少动态效果时单行省略，主项悬停或聚焦停留后按nav-label-scroll-delay开始，以nav-label-scroll-speed（单位CSS px/秒）单次滚到末端并停驻。离开且失焦即取消和复位，短名称、禁用、紧凑隐藏名称不滚动；触屏/无hover/减少动态效果或不支持动画时保留完整静态换行。富标签使用公开名称部件分隔主名称，描述和Badge保持静止；库不猜消费者strong/br结构。actionAlignment=start将独立分支与行尾动作中心对准首行文字行框，主图标及无href分支箭头同步定位；start或marquee呈现用nav-row-primary-min-width保留可读名称净宽，空间不足时独立动作自然换到下一行，不能把名称压成零宽；默认center兼容既有布局，紧凑栏仍逐控件纵排。两项呈现更新不得重建主控件、切换路由或更改展开状态；宿主只声明公开选项，不穿透DOM写样式。默认展开324px是用户明确授权的全局变更，窄屏drawer独立封顶视口，阅读列max宽度仍是上限而非刚性占宽。
 
-导航的当前页选中与键盘焦点相互独立：已有真实菜单焦点优先；没有菜单焦点时，菜单状态更新可把可用当前页设为单一tab停靠点。打开抽屉本身必须保留打开前合法的菜单停靠点，不能由浏览器默认聚焦首项而意外改写它。原生shell/dialog由公共owner在模态建立前确定初始焦点并避免中途首项focusin；无可用菜单项时回退关闭按钮。保留的焦点项在长菜单中应可见；取消回可见入口，宿主已移动到新标题或新模态的焦点不得被旧关闭事件夺走。
+导航的当前页选中与键盘焦点相互独立：已有真实菜单焦点优先；没有菜单焦点时，菜单状态更新可把可用当前页设为单一tab停靠点。打开抽屉本身必须保留打开前合法的菜单停靠点，不能由浏览器默认聚焦首项而意外改写它。React shell/dialog由公共owner在模态建立前确定初始焦点并避免中途首项focusin；无可用菜单项时回退关闭按钮。保留的焦点项在长菜单中应可见；取消回可见入口，宿主已移动到新标题或新模态的焦点不得被旧关闭事件夺走。
 
 侧栏底部是独立于顶栏角色的可选公共内容区域，不内置返回、授权、账号、版本等领域含义。短菜单时底部位于侧栏末端；长菜单使用上方唯一菜单滚动区，底部不覆盖末项。无底部时保留既有滚动合同；有底部时document模式仅侧栏有界并保持正文文档滚动，viewport模式仍使用所属窗口的可用高度。底部内容超出可用侧栏一半时允许自身滚动，以保留菜单和所有动作的可达性，不能裁掉放大文字。底部使用body-xs、space-text-gap/space-control-gap、separator-line与既有按钮状态/motion，禁止消费者额外复制定位和尺寸规则。
 
@@ -1364,9 +1378,9 @@ UI是人类观察系统状态和数据、直接操作并介入Agent操作的入�
 
 层级顺序为紧凑品牌身份→任务标题→可选任务说明→常显标签/字段→唯一主动作→局部反馈。品牌名采用body-xs 13/20px、500与muted-foreground，logo32px；品牌到标题8px。任务标题复用page-title 20/28px、600，随font-scale/line-height-scale与根字号缩放。description属于标题说明而非品牌口号，使用body-sm 14/22px，标题到说明8px；整个标题组到首字段16px。宿主标题建议使用“登录”或“创建管理员”等任务名，不重复品牌全称；显式配置仍原样保留，不猜测删词。字段label采用body-xs 13/20px、500，输入和主动作采用body-sm 14/22px。login-control-height默认44px由control-height-lg+space-text-gap派生，InputGroup包含外边框也为44px；字号增大时控件自然增高。label到input8px、字段间16px、最后字段到主动作16px；字段和主动作同宽（默认376px可操作区）。帮助与错误仍body-xs 13/20px，沿用通用颜色与间距，不增加仅登录使用的调色板、字体栈或焦点规则。
 
-反馈仍在主按钮之后。feedback与feedbackActions均为空或隐藏时不占位；React识别空Fragment与条件空值，原生保留槽节点并跟随内容和hidden变化收起support。没有固定或最小反馈轨道高度，form到support不额外叠加间隔。checking、错误、未知后果与实际恢复动作按内容自然增高；字段和主动作的尺寸、相对顺序与DOM保持，整体居中卡片可因此调整位置。不得为零位移设置大块空白、固定反馈高度、裁切或要求用户在单行消息窗口内滚动。长页使用文档自然滚动；验收须区分必要内容增长与控件重建/尺寸跳变。
+反馈仍在主按钮之后。feedback与feedbackActions均为空或隐藏时不占位；React识别空Fragment与条件空值，空反馈槽不生成占位。没有固定或最小反馈轨道高度，form到support不额外叠加间隔。checking、错误、未知后果与实际恢复动作按内容自然增高；字段和主动作的尺寸、相对顺序与DOM保持，整体居中卡片可因此调整位置。不得为零位移设置大块空白、固定反馈高度、裁切或要求用户在单行消息窗口内滚动。长页使用文档自然滚动；验收须区分必要内容增长与控件重建/尺寸跳变。
 
-必要结果摘要必须完整显示，未知结果及实际可用的后续操作不可隐藏在详情中。登录和 Key 管理按各自公开合同通过普通会话或列表单次核验，不增加持久写入门禁或自动重发写请求。宿主有独立冗长说明时，可在现有feedback slot中组合公共Disclosure/原生createDisclosureController；默认摘要仍在外部，展开有明确名称、支持Enter/Space、全文随文档滚动，收起与回焦点保留输入。公共布局不能猜截断宿主文案、另造摘要或改变业务语义；仅给了一个长消息时显示全文。不新增详情API或业务动作。反馈动作在同一反馈区域自然换行，不与长消息争夺窄小横向空间。
+必要结果摘要必须完整显示，未知结果及实际可用的后续操作不可隐藏在详情中。登录和 Key 管理按各自公开合同通过普通会话或列表单次核验，不增加持久写入门禁或自动重发写请求。宿主有独立冗长说明时，可在现有feedback slot中组合公共Disclosure；默认摘要仍在外部，展开有明确名称、支持Enter/Space、全文随文档滚动，收起与回焦点保留输入。公共布局不能猜截断宿主文案、另造摘要或改变业务语义；仅给了一个长消息时显示全文。不新增详情API或业务动作。反馈动作在同一反馈区域自然换行，不与长消息争夺窄小横向空间。
 
 提交忙态仅在主按钮原位显示一次状态文案并以单一live/status语义发布，配合aria-busy和既有禁重入。与按钮不同的session核对、未知、错误与恢复信息仍在反馈区域；不能为去重隐藏重要事实。React/native必填字段按已有Field惯例显示aria-hidden星号，真实required与准确可访问名称保持。普通密码登录不显示新密码规则或强度；管理员初始化采用NewPasswordFields。没有虚构的注册、找回密码、SSO或验证码入口。安全可重试读取使用公共ghost动作；未知写入不自动refresh/logout/重放。
 
@@ -1386,13 +1400,13 @@ SSO显式配置时作为主动作后的次级组。极端长主动作保留完�
 
 ### 表单编排的公共入口
 
-此次编排依据用户指定的 [Stitch v2 设计](https://stitch.withgoogle.com/projects/13033986353155220257)及与其逐项确认的容器宽度、动作、反馈与滚动规则。Stitch 负责视觉与交互设计，xui 对真实公开接口、可访问性与工程证据负责；不复制图稿中的虚构业务字段或另造控件皮肤。完整接线见[页面编排 React](../examples/page-composition-react/app.tsx) 与[原生示例](../examples/page-composition-vanilla/app.js)，合成数据不证明产品业务流程。
+此次编排依据用户指定的 [Stitch v2 设计](https://stitch.withgoogle.com/projects/13033986353155220257)及与其逐项确认的容器宽度、动作、反馈与滚动规则。Stitch 负责视觉与交互设计，xui 对真实公开接口、可访问性与工程证据负责；不复制图稿中的虚构业务字段或另造控件皮肤。完整接线见[页面编排 React](../examples/page-composition-react/app.tsx)，合成数据不证明产品业务流程。
 
 FormGrid 按自身容器净宽形成一列或最多两列，使用 layout-field-min 与 layout-field-gap；默认值在根字号16px时为240px与16px，两列阈值496px。净宽不足时回到一列，增加根字号会同步提高阈值；不按整个窗口宽度猜抽屉可容纳的列数。columns=1 可显式单列；FormGrid.Item span=full 用于长标签/说明、整行确认、错误摘要和规则编辑。保持 DOM 阅读及 Tab 顺序，短相关字段可同行，标签明显不对称时跨列，不固定标签行数或隐藏全文来凑对齐。Fieldset 的 layout=stack 用于纵向分组，默认 inline 保持原有成组选项兼容。
 
 FormActions 在所属表单末尾或公共 Footer 中放置动作：secondary 在前、主操作组在后；宽度足够时分别靠起止边，窄时自然换行，按钮按内容宽度，不默认拉满。Sheet 继续由自己的 Body 滚动、Footer 提供动作，不增加第二层正文滚动。侧向 Sheet 在不超过40rem的视口全宽；导航抽屉仍遵守独立宽度。焦点四边留出 focus-width+focus-offset，不能把默认4px当成新的静态设计值。
 
-React 使用 layout/forms/feedback 正式子入口；原生使用同名公开 CSS 结构与既有 Sheet/SearchToolbar/DataTable 控制器，纯排版不添加控制器或新的表单、请求 owner。具体组合见[组件手册](COMPONENTS.md#表单与页面编排)。
+React使用layout/forms/feedback正式子入口；纯排版不增加表单或请求owner。具体组合见[组件手册](COMPONENTS.md#表单与页面编排)。
 
 ### 数据刷新与视图连续性
 
@@ -1407,7 +1421,7 @@ React 使用 layout/forms/feedback 正式子入口；原生使用同名公开 CS
 | 身份/权限/对象/查询范围变化 | 按真实范围与权限清理或明确隔离旧事实，不能把旧范围结果当作新结果；不以保留画面为由展示已失去权限的内容。保留筛选草稿或导航位置须符合该范围合同 |
 | 相同范围视图 | 页面壳、未变化记录/字段的身份、滚动、焦点、选择和未提交输入保留；真实记录删除或失效时按公共合同回到仍可用入口，不抢走宿主已转移的焦点 |
 
-禁止用location.reload、整页导航、刷新父路由或销毁重建应用来实现普通数据刷新。禁止为同一次刷新使用随机/时间戳key，或用loading条件把整个正文替换为Loading再挂回；也不能把索引当成可排序/插入/分页记录的稳定业务身份。React组件type/key保持业务含义，避免在父render内重新定义子组件类型；原生组合优先公开update，不能每次请求都destroy/create。真实对象切换或显式重置有其生命周期，需与普通刷新区分。
+禁止用location.reload、整页导航、刷新父路由或销毁重建应用来实现普通数据刷新。禁止为同一次刷新使用随机/时间戳key，或用loading条件把整个正文替换为Loading再挂回；也不能把索引当成可排序/插入/分页记录的稳定业务身份。React组件type/key保持业务含义，避免在父render内重新定义子组件类型。真实对象切换或显式重置有其生命周期，需与普通刷新区分。
 
 验收覆盖连续刷新、慢请求、刷新失败和恢复；检查Network是否出现主Document导航，检查页面壳/未变化记录的节点身份和组件mount/unmount，记录前后滚动、焦点与草稿是否保持。截图只能证明某一帧，不能独自证明没有闪烁或重挂。开发期HMR/依赖预构建导致的文档刷新与产品刷新分开归因，必要时在正式构建复现，不通过关闭HMR/StrictMode掩盖问题。
 
@@ -1417,20 +1431,30 @@ LoadingState layout=inline 复用既有 Spinner 与一个 status 文本，无块
 
 同一请求、认证、查询、业务事实和编辑草稿各有明确owner，不因页面组合复制另一份。请求不在render中直接发起；effects依赖与订阅保持真实且稳定，不用依赖循环制造重复查询，也不以压制依赖检查掩盖旧闭包。并发请求按key/generation及明确业务顺序确认，取消/卸载后拒绝晚到结果，包括不合作的Abort Promise；旧查询不能覆盖新查询，旧任务的finally不能解除新任务的busy。
 
-定时器、轮询、事件监听、订阅、连接、对象URL和原生controller在所属生命周期结束时释放，重挂不增加重复监听或并发轮询。遵循已有公共生命周期，不能为自查新增竞争请求/缓存owner。未知、失败、未加载不填成功或零；乐观反馈须与权威确认区分，并有符合业务合同的失败处理。组件渲染异常与Promise失败分别处理，重置视图不自动重试业务请求。
+定时器、轮询、事件监听、订阅、连接、对象URL和组件布局观察器在所属生命周期结束时释放，重挂不增加重复监听或并发轮询。遵循已有公共生命周期，不能为自查新增竞争请求/缓存owner。未知、失败、未加载不填成功或零；乐观反馈须与权威确认区分，并有符合业务合同的失败处理。组件渲染异常与Promise失败分别处理，重置视图不自动重试业务请求。
 
 性能结论依据真实请求/渲染/浏览器记录，检查重复读取、无界轮询、可避免的大块DOM重建、长任务和布局抖动；不能仅因没有memo、缓存或虚拟化就判失败，不为满足“最佳实践”清单强加一套引擎。语义、键盘、标签/错误关联与disabled/readOnly等基础交互继续遵循Components规范。
 
 
 关键 CSS 预先构建并随首屏加载；非关键模块可以真正按需 import，并为模块或样式失败提供显式恢复入口。等待与失败期间关键内容和操作仍可读、可用；状态区域避免无必要位移。首屏预算必须统计实际同步初始化、静态依赖和必要 CSS。组件按需消费检查最终输出贡献与压缩字节，不以源文件 imports 或 sideEffects 声明替代证明。
 
-公共产物须能在独立安装中消费正式 exports 和类型，不能暗依赖 monorepo 源码别名或下游扫描依赖目录。框架 peer 保持宿主单实例；原生宿主不加载框架运行时。本地 watch 覆盖规范、样式、控件、类型、初始化脚本、包入口和构建逻辑，失败明确记录，修复后重建；旧产物不能标记为本次成功。参考消费者的体积、受控延迟和布局证据仅证明该消费者，产品采用仍须在真实页面验收。
+公共产物须能在独立安装中消费正式 exports 和类型，不能暗依赖 monorepo 源码别名或下游扫描依赖目录。框架 peer 保持宿主单实例；本地 watch 覆盖规范、样式、控件、类型、初始化脚本、包入口和构建逻辑，失败明确记录，修复后重建；旧产物不能标记为本次成功。参考消费者的体积、受控延迟和布局证据仅证明该消费者，产品采用仍须在真实页面验收。
+
+### 公共界面缩放
+
+`@coffeehc/xui-runtime/theme`（及runtime根入口）的 `setInterfaceScale(scale, options?)` 是唯一设置方法，React页面直接调用，不再封装另一套比例owner或设置组件。`InterfaceScale` 为 `1 | 1.25 | 1.5 | 2`，分别对应100%、125%、150%、200%；默认100%保留既有尺度。`options.window`只用于明确的同源iframe文档或隔离测试，不提供组件子树缩放。无浏览器时导入及合法调用均安全无操作；非法运行时参数抛出TypeError，且不改DOM/存储。
+
+方法写当前document根的 `data-interface-scale` 与语义变量 `--interface-scale`，以 `--interface-root-font-size` 中的百分比派生根字号。文字、图标、rem间距、控件与布局约束共同放大；内容根据实际可用宽度换行，表单继续按净宽决定列数。展开侧栏使用公开nav-sidebar-min-width/max-width约束，默认分别为9/12个nav-item-height（100%时324/432px），首选25vw，并以50vw封顶，为中等视口放大后的正文保留至少一半宽度；compact rail和窄屏抽屉保持各自合同。视口百分比/上限不机械倍增，细边框、焦点线、媒体查询阈值和真实像素测量保留各自语义。该方法不采用transform或CSS zoom，不重挂组件、不刷新Document、不发业务请求、不创建订阅。浏览器默认字号与浏览器zoom仍独立生效；宿主不得用固定html字号、组件尺寸补丁或第二套CSS zoom覆盖此owner。
+
+合法设置保存在当前同源标签页的sessionStorage键 `ui.interface.scale`，值为上述倍率字符串；与主题键独立。正式 `@coffeehc/xui-runtime/init.js` 在CSS和可见内容之前同步加载，首屏恢复比例，即使已有主题owner也会恢复。无值、非法值、读取失败均保留默认100%；写入失败仍即时应用当前页，不伪称已经持久化。切回100%调用 `setInterfaceScale(1)`。刷新/同标签页导航保留；关闭会话后的生命周期遵循浏览器sessionStorage，复制标签页/opener可能复制初值，不能宣称所有新标签页都强制重置。
+
+缩放设置只改变呈现；正在输入的值、节点身份、焦点及选区必须保持。动态放大后仍通过原有滚动边界到达动作，关闭弹层焦点仍回到触发器。验收分别记录界面倍率、用户文字设置和真实浏览器zoom，不互相冒充；浅/深/system、桌面/窄屏、长中文与错误/刷新状态均沿用原合同。
 
 ### 公共文字比例与设计值验收边界
 
 --font-scale 是统一文字比例，默认1；--line-height-scale 默认引用 --font-scale，可单独增加行距。两者均为无单位number，正常支持0.5至2，超范围数值按此范围夹取；支持@property的浏览器中非数字或带单位值回退1，遵循[CSS Properties and Values API](https://www.w3.org/TR/css-properties-values-api-1/)的类型与初值规则。旧浏览器仍可消费有效number，宿主不得提供非法输入；不宣称未验证旧引擎也有类型回退。覆盖必须在同一:root的product-overrides层，不能只改子树根并假定祖先派生别名重算。
 
-七组字号按原rem尺度乘比例并保留0.75rem阅读下限，即默认16px根字号下12px；七组行高同步派生，且不低于该角色原有行高/字号比。仅改font-scale会连同行高调整；只增line-height-scale会增加行高，不改变字号。字号缩小不改变spacing、控件最小高度、图标、边框或圆角；文字放大时内容可自然增高/换行，不能承诺控件实际盒子永远固定。保持html根字号由浏览器/用户偏好决定，rem下限与文字随用户放大，不用固定px上限压制200%文字。此入口不增加密度UI或本地持久化，不更换默认品牌；默认1的既有文字与布局值不变。实际浏览器zoom与根字号200%测试分别报告。
+七组字号按原rem尺度乘比例并保留0.75rem阅读下限，即默认16px根字号下12px；七组行高同步派生，且不低于该角色原有行高/字号比。仅改font-scale会连同行高调整；只增line-height-scale会增加行高，不改变字号。字号缩小不改变spacing、控件最小高度、图标、边框或圆角；文字放大时内容可自然增高/换行，不能承诺控件实际盒子永远固定。默认html根字号由浏览器/用户偏好决定；采用公共界面缩放时在该基准上乘所选倍率，rem下限与文字随用户放大，不用固定px上限压制200%文字。此入口不增加密度UI或本地持久化，不更换默认品牌；默认1的既有文字与布局值不变。实际浏览器zoom与根字号200%测试分别报告。
 
 设计值只在design-default-css集中声明，组件CSS及库自建行内样式必须消费语义var。范围包括字体/字号/行高/字重、留白/尺寸/边框/圆角、颜色与混色权重、层级、动效时间与中间透明度；不能在var后混入局部设计倍率或fallback设计值。新增必要组件参数保留既有默认值，不以复用数值为由错误绑定其它组件的语义。
 
@@ -1441,32 +1465,32 @@ LoadingState layout=inline 复用既有 Spinner 与一个 status 文本，无块
 
 ### 响应式Dialog与侧向Sheet宽度
 
-Dialog偏好layout-dialog-width-ratio=40%，min/max分别24rem/48rem；Confirm偏好30%，min/max为20rem/32rem；侧向Sheet偏好60%，min/max为24rem/64rem。layout-dialog/confirm/drawer-width仍是公开组合结果，可单独覆盖；比例与rem边界均集中定义。普通Dialog/Confirm最后用视口减去两侧layout-viewport-inset封顶，min下限不能让320px视口溢出。原生dialog显式使用同一最大宽度以覆盖浏览器UA额外max-width。侧向Sheet紧贴边缘、窄屏封顶完整视口；上下Sheet只使用独立layout-sheet-block-size与sheet-max-block-size，绝不把横向百分比再用作纵向尺寸。
+Dialog偏好layout-dialog-width-ratio=40%，min/max分别24rem/48rem；Confirm偏好30%，min/max为20rem/32rem；侧向Sheet偏好60%，min/max为24rem/64rem。layout-dialog/confirm/drawer-width仍是公开组合结果，可单独覆盖；比例与rem边界均集中定义。普通Dialog/Confirm最后用视口减去两侧layout-viewport-inset封顶，min下限不能让320px视口溢出。侧向Sheet紧贴边缘、窄屏封顶完整视口；上下Sheet只使用独立layout-sheet-block-size与sheet-max-block-size，绝不把横向百分比再用作纵向尺寸。
 
 1280px宽、16px根字号下，Dialog/Confirm仍为512/384px，侧向Sheet改为768px；1920px时分别768/512/1024px上限。窄屏由各自最终视口约束决定，不能只验证字符串。导航drawer继续由nav-drawer-max-inline-size限制为默认288px，独立于这些详情面板；展开侧栏按本轮授权改为324px，紧凑侧栏保留60px。本段是用户追加的响应式宽度默认变更，不能并入“其余设计token迁移默认不变”的声明。
 
 ### 公共布局插槽与默认顶栏工具
 
-AppHeader/AppShell/MenuLayout与原生createMenuLayout在右侧默认提供一个主题图标按钮，light→dark→system→light循环；复用文档现有theme owner，不另建存储。语言入口只在locale.enabled显式true时显示，语言value/options/onValueChange与词典均由宿主现有i18n owner提供。顶栏主区域、工具组与独立账号区，以及sidebarHeader/sidebarFooter、pageHeader/pageToolbar/content/pageFooter的顺序和所有权见[公共布局插槽](COMPONENTS.md#布局与顶栏)。这些槽只消费公共var及布局原语，不授予产品动作、不放新业务内容默认值；空槽无视觉占位，更新保留正文与导航实例，导航抽屉仍只拥有一份侧栏。默认登录页继续仅继承外观，不新增这些顶栏工具。
+AppHeader/AppShell/MenuLayout在右侧默认提供一个主题图标按钮，light→dark→system→light循环；复用文档现有theme owner，不另建存储。语言入口只在locale.enabled显式true时显示，语言value/options/onValueChange与词典均由宿主现有i18n owner提供。顶栏主区域、工具组与独立账号区，以及sidebarHeader/sidebarFooter、pageHeader/pageToolbar/content/pageFooter的顺序和所有权见[公共布局插槽](COMPONENTS.md#布局与顶栏)。这些槽只消费公共var及布局原语，不授予产品动作、不放新业务内容默认值；空槽无视觉占位，更新保留正文与导航实例，导航抽屉仍只拥有一份侧栏。默认登录页继续仅继承外观，不新增这些顶栏工具。
 
 ### 有界工作区与平台前置安全区
 
 公共scrollMode保留document默认自然滚动与viewport独立main滚动，新增workspace显式工作区模式：shell默认100dvh，header自然换行，main按自然pageHeader/pageToolbar/pageFooter占用分配剩余确定高度给content；库默认维护min-block-size:0与弹性收缩链，layout-workspace-content-min-block-size是显式可覆盖的内容下限（默认0px、受100dvh约束），业务区域通过公开内容组合选择内部滚动owner。不得要求消费者减固定header高度、修私有selector或绝对定位发送区。大于可用高度且不可拆分的内容保留滚动可达兜底，不把文字或操作裁掉。公开root尺寸可由已知宿主窗口大小覆盖，不更改既有默认尺度。
 
-公共 `contentInset` 使用共享 `ShellContentInset = 'standard' | 'edge'`，默认 standard。edge 仅在 workspace 移除 shell main 的页面内距与 content 的焦点 gutter；header、品牌、sidebar、页内槽自己的布局以及控件/卡片内距保持各自合同。document/viewport 保留原间距并记住选择，切回 workspace 生效。`ScrollArea.Viewport.focusMode='inset'` 是独立显式选项，默认 gutter，不由 edge 递归推断。零 gutter 与原宽度/颜色的内部焦点指示在同一 CSS @scope 增强中启用；最近 ScrollArea、弹层及其他公共滚动边界拥有自己的策略，嵌套默认 gutter 不受外层 edge/inset 覆盖。不支持 @scope 的旧引擎保留原有安全绘制空间，不以缺失焦点换取贴边；这里不构成各浏览器或旧 WebView 的实测声明。Surface 可显式 `padding='none'`（原生 data-padding=none），仅省略该表面的 card-padding，保留背景、边线和圆角，不新增裁切。
+公共 `contentInset` 使用共享 `ShellContentInset = 'standard' | 'edge'`，默认 standard。edge 仅在 workspace 移除 shell main 的页面内距与 content 的焦点 gutter；header、品牌、sidebar、页内槽自己的布局以及控件/卡片内距保持各自合同。document/viewport 保留原间距并记住选择，切回 workspace 生效。`ScrollArea.Viewport.focusMode='inset'` 是独立显式选项，默认 gutter，不由 edge 递归推断。零 gutter 与原宽度/颜色的内部焦点指示在同一 CSS @scope 增强中启用；最近 ScrollArea、弹层及其他公共滚动边界拥有自己的策略，嵌套默认 gutter 不受外层 edge/inset 覆盖。不支持 @scope 的旧引擎保留原有安全绘制空间，不以缺失焦点换取贴边；这里不构成各浏览器或旧 WebView 的实测声明。Surface 可显式 `padding='none'`，仅省略该表面的 card-padding，保留背景、边线和圆角，不新增裁切。
 
-headerSlots.leading是可选、默认空且不收缩的最前区域，位于自动导航按钮之前；品牌继续独立。库负责顺序与窄屏布局，不内置macOS窗口控件尺寸或平台检测。平台/全屏状态、安全区真实尺寸、drag/no-drag由宿主集成提供，不把业务/OS规则带入默认皮肤。完整合同及两端正式消费者见[布局插槽](COMPONENTS.md#布局与顶栏)。
+headerSlots.leading是可选、默认空且不收缩的最前区域，位于自动导航按钮之前；品牌继续独立。库负责顺序与窄屏布局，不内置macOS窗口控件尺寸或平台检测。平台/全屏状态、安全区真实尺寸、drag/no-drag由宿主集成提供，不把业务/OS规则带入默认皮肤。完整合同及React正式消费者见[布局插槽](COMPONENTS.md#布局与顶栏)。
 
 
 ### 富导航行与独立辅助动作
 
-带层级、图标和描述的业务导航保持普通nav/link/button语义。主要导航/展开控件与行尾辅助button必须为sibling，标签只包含非交互描述，不能嵌入button/link/input或伪装成listbox option。库维护单一roving停靠：上下/Home/End遍历可见可用控件，左右只处理主控件的层级，辅助动作Enter/Space不触发导航。ContextMenu的浮层键盘和回焦点保持独立，不能借事件穿透要求消费方stopPropagation。库提供公开单元素renderer/原生稳定slot生命周期；disabled继承，busy和业务防重复由宿主明确提供。
+带层级、图标和描述的业务导航保持普通nav/link/button语义。主要导航/展开控件与行尾辅助button必须为sibling，标签只包含非交互描述，不能嵌入button/link/input或伪装成listbox option。库维护单一roving停靠：上下/Home/End遍历可见可用控件，左右只处理主控件的层级，辅助动作Enter/Space不触发导航。ContextMenu的浮层键盘和回焦点保持独立，不能借事件穿透要求消费方stopPropagation。库提供公开单元素renderer与稳定slot生命周期；disabled继承，busy和业务防重复由宿主明确提供。
 
 行尾按钮和紧凑排列复用现有control/nav/space语义变量，根据可用窗口自适应；紧凑辅助按钮在同项下一行，不写产品固定宽高或加宽轨道。共享查询、各组独立cursor/hasMore、关闭取消与迟到丢弃属于宿主，不在通用组件猜total/pageCount或内置领域请求与写入。可用Input、Section/Disclosure、独立NavigationMenu与组外加载按钮组成富分组导航，简单选择仍采用原有listbox合同。
 
 ### 公共表格整体与紧凑顶栏工具
 
-完整DataTable复用Table/Toolbar/Field/Pagination/DataRegion原语。共享DataTableLayout明确natural/workspace/document；React与原生默认natural，少量/零行随内容自然收缩，以max-block-size:100%对实际有界父级限高，多行只滚动表体，真实计数、唯一每页条数和分页留在同一正常流底栏。父级高度为auto时仍按文档流增长，不自动创造视口边界。显式workspace保留旧填满正文和组件最小高度；document在有界父级也不采用高度上限。依赖旧默认填满的调用必须显式选workspace，shell的scrollMode默认不变。
+完整DataTable复用Table/Toolbar/Field/Pagination/DataRegion原语。共享DataTableLayout明确natural/workspace/document；默认natural，少量/零行随内容自然收缩，以max-block-size:100%对实际有界父级限高，多行只滚动表体，真实计数、唯一每页条数和分页留在同一正常流底栏。父级高度为auto时仍按文档流增长，不自动创造视口边界。显式workspace保留旧填满正文和组件最小高度；document在有界父级也不采用高度上限。依赖旧默认填满的调用必须显式选workspace，shell的scrollMode默认不变。
 
 标题/主操作可置于既有pageHeader；内部toolbar、表体与footer共用一层frame，已有行的反馈位于footer计数区域，无反馈不在thead上方预留空行，外部pageToolbar仍可放筛选但与内部toolbar二选一，不复制搜索或查询owner。保留列头、行和底栏信息边界，不额外复制工具条下边框、要求宿主测量pageHeader或定位分页。筛选采用data-table-filter-min，搜索可沿长字段尺度增长，窄屏自然换行。data-table-min-block-size保留为显式workspace组件下限，不强制natural填满，也不是固定表体高度。workspace shell的layout-workspace-content-min-block-size默认0px保留旧收缩语义；需要极端超高页头下非零正文视口的组合，须在shell公开style显式绑定为var(--data-table-min-block-size)。该下限受100dvh约束，main可自然滚动，不改变natural表格的内容高度。库不通过父级:has探测表格，不测量或固定页头高度。设计门禁仅允许这个精确语义alias赋值，不放宽任意token重定义、裸尺寸或fallback。
 
@@ -1476,15 +1500,15 @@ DataTable默认横向铺满，通常省略列宽；仅在列内容或用户尺�
 
 通用记录页按任务把名称/摘要与真实状态前置，不重复页面标题作可见表题；表格仍有准确可访问名称。显式 xui-record-table 中的主列使用 table-primary-min-inline-size（默认复用字段最小宽度），短状态、行操作、时间和计数保留完整词组，次要列在表内横滚；不将此规则施加到普通 Table 或用户自定义长正文列。空反馈与隐藏辅助动作不预留占位，实际错误及风险仍完整可读。
 
-空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，既有分页保持受控；本地分页由宿主筛选/排序后切片并发布事实，服务端分页保留确认响应且不二次切片。未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。列表wire由commons/webfacade统一：total省略表示未计算，0是真实零；next_cursor缺失表示未声明，非空字符串是opaque续页token，null是cursor明确末页，可与total共存。DataTable保留旧offset类型与默认值，新增显式cursor受控模式复用框内前后控件；即使有total也不算编号页数，宿主唯一owner负责历史与响应确认。完整API与双端公共消费见[DataTable](COMPONENTS.md#数据表格)。
+空数据保留列头，empty/加载/错误在表体结构内各自表达；刷新保留既有行和焦点，恢复入口可达。查询、列内容、权限、页基数与总数属于宿主事实，既有分页保持受控；本地分页由宿主筛选/排序后切片并发布事实，服务端分页保留确认响应且不二次切片。未知total/cursor不得伪造编号页数，组件不新增HTTP/query owner。列表wire由commons/webfacade统一：total省略表示未计算，0是真实零；next_cursor缺失表示未声明，非空字符串是opaque续页token，null是cursor明确末页，可与total共存。DataTable保留旧offset类型与默认值，新增显式cursor受控模式复用框内前后控件；即使有total也不算编号页数，宿主唯一owner负责历史与响应确认。完整API与React公共消费见[DataTable](COMPONENTS.md#数据表格)。
 
-顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单 SimpleSelect 保留输入边界。两端默认采用同一主题选择浮层，forced-colors 保留公共控件的边界、选中与键盘焦点语义。
+顶栏secondary相邻工具组与账号区采用space-control-gap；图标/账号入口保留原按钮尺寸、内边距和命中区，不用负margin/order掩盖间隔。顶栏locale采用无常驻边框的工具栏表现，透明边框保留几何，装饰性SVG为control-icon-size、两侧space-control-gap，hover/pressed/disabled分别复用interaction-hover/interaction-pressed/muted，focus-visible独立保留；普通表单 SimpleSelect 保留输入边界。默认采用同一主题选择浮层，forced-colors 保留公共控件的边界、选中与键盘焦点语义。
 
 实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](PUBLIC_API.md#显式实体身份编码)。
 
 原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止。forced-colors下progress保持原生元素、真实value/max与未知语义，采用浏览器提供的Canvas轨道、CanvasText边界与填充；颜色只由progress-forced-track/border/fill集中定义，design-accessibility层保证它们继续取系统色，不接受品牌覆盖。使用既有line-width-surface与radius-full，保留轨道形状并补可识别边界；确定状态按原生比例填充，无value仅显示由progress-forced-pending-border-style声明的空心虚线轨道，不画合成分数或全满填充，且保留已有状态脉冲及reduced-motion静止。forced-color-adjust继续为auto，不关闭用户强制颜色机制；appearance:none仅保留原生progress内部的真实比例布局与可控CSS动效，不能把computed appearance:auto当作浏览器原生绘制已恢复的证据。Checkbox/range等选择标记继续恢复各自的浏览器绘制。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
 
-公共 SimpleSelect / bindSelectControl（包含顶栏语言入口）的浮层选项之间使用 space-text-gap（默认 4px），选项组与组内标题/选项同样保留该间距；选中与悬停背景不得垂直贴合。间距由公共样式负责，不改变选项最小高度、弹层定位或隐藏语义。
+公共 SimpleSelect（包含顶栏语言入口）的浮层选项之间使用 space-text-gap（默认 4px），选项组与组内标题/选项同样保留该间距；选中与悬停背景不得垂直贴合。间距由公共样式负责，不改变选项最小高度、弹层定位或隐藏语义。
 
 HeaderBrand logo盒使用control-height-sm，图片/SVG以contain限于盒内，不被固有尺寸或长名称撑大。桌面compact无leading时logo中心对齐nav-collapsed-width侧栏中心，补偿layout-content-inset只影响品牌，不改变toggle与内容起点；有leading保留平台安全区。
 
@@ -1492,12 +1516,12 @@ HeaderBrand logo盒使用control-height-sm，图片/SVG以contain限于盒内，
 
 SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。search、actions 和 advanced 是公开内容入口，不增加查询、分页、权限或请求 owner。宽屏搜索轨道采用 flex 剩余空间与 min-inline-size:0，主操作在行末；Input 的 100% 默认宽度只相对于搜索轨道，不把操作挤到下一行。操作组按 control-height、button-padding-inline、button-gap、control-icon-size 统一按钮尺寸；长标签可自然增高，同一行 stretch，不以固定高度裁切。工具栏按自身容器 40rem 既有断点换行，搜索独占一行，操作仍完整可达，不只依赖窗口宽度。
 
-高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和原生生命周期见 [弹层与工具栏](COMPONENTS.md#searchtoolbar)。
+高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和生命周期见 [弹层与工具栏](COMPONENTS.md#searchtoolbar)。
 
 
 ### 受控成组选项
 
-CheckboxGroup/RadioGroup 复用 fieldset/legend、choice 与 help/error 的既有间距、控件尺寸、焦点和错误语义 token。全选部分态复用原 indeterminate 横线；只读/禁用仍保留明确原生状态，不以颜色代替。没有新的权限引擎、字体或密度。完整受控值、诊断、校验与双端入口见 [成组选项](COMPONENTS.md#成组选项)。
+CheckboxGroup/RadioGroup 复用 fieldset/legend、choice 与 help/error 的既有间距、控件尺寸、焦点和错误语义 token。全选部分态复用原 indeterminate 横线；只读/禁用仍保留明确原生状态，不以颜色代替。没有新的权限引擎、字体或密度。完整受控值、诊断、校验与React入口见 [成组选项](COMPONENTS.md#成组选项)。
 
 ### 多行输入组合
 
@@ -1519,11 +1543,11 @@ xs上下内距由button-padding-block-xs按实际body-sm行高及按钮line-widt
 
 ### Calendar 查看月份与日期选择
 
-Calendar共享model独立管理查看月份与已选日期。公开month/onMonthChange和原生setMonth复用原有ISO公历、UTC字段及键盘合同；月份定位不触发日期选择。受控确认与拒绝保持一个可见roving停靠，外部跳月不抢走公共年月控件焦点；浏览与选择的事件合同见[组件手册](COMPONENTS.md#选择与复合控件)。快速定位由公共Input/SimpleSelect/Button组合，不引入OS日期弹层或消费者私有DOM。
+Calendar共享model独立管理查看月份与已选日期。公开month/onMonthChange和model.setMonth复用原有ISO公历、UTC字段及键盘合同；月份定位不触发日期选择。受控确认与拒绝保持一个可见roving停靠，外部跳月不抢走公共年月控件焦点；浏览与选择的事件合同见[组件手册](COMPONENTS.md#选择与复合控件)。快速定位由公共Input/SimpleSelect/Button组合，不引入OS日期弹层或消费者私有DOM。
 
 ### 菜单危险语义
 
-普通Menu/ContextMenu动作Item可选tone=danger。默认危险文字与图标使用status-error-foreground，hover及键盘高亮使用status-error-soft/foreground，pressed使用action-danger/action-danger-foreground；disabled和独立focus继续沿菜单公共变量。无新颜色或产品皮肤，确认及权限归宿主。原生公开data-tone与React同合同，见[菜单危险操作语义](COMPONENTS.md#菜单危险操作语义)。
+普通Menu/ContextMenu动作Item可选tone=danger。默认危险文字与图标使用status-error-foreground，hover及键盘高亮使用status-error-soft/foreground，pressed使用action-danger/action-danger-foreground；disabled和独立focus继续沿菜单公共变量。无新颜色或产品皮肤，确认及权限归宿主。见[菜单危险操作语义](COMPONENTS.md#菜单危险操作语义)。
 
 ### DataTable 行交互扩展
 
@@ -1533,8 +1557,8 @@ Calendar共享model独立管理查看月份与已选日期。公开month/onMonth
 
 完整登录页和新密码组合的显隐密码名称可通过同一公开配置翻译，装饰 logo 显式输出空 alt。初始化页可选手动只读权威核对，checking/失败/完成沿用公共反馈；未确认结果继续锁定写入，不自动重放初始化、登录或新增恢复协议。Key 吊销后的能力以普通权威列表为准，读失败不推断授权。
 
-Textarea 自动增高由公共控件显式启用并声明 maxRows，使用已有文字/尺寸语义，不新增皮肤或默认高度；保留草稿、IME、焦点、required/readOnly/disabled 与所属弹层滚动，超过上限内部滚动，内容减少缩回。stacked InputGroup 的公共 flex 与共享测量协作，仅在启用自动增高期间按测量高度排列，避免尺寸被纵向 flex 压缩；关闭后恢复原 flex、手动 resize 与 rows。具体双端合同见[组件手册](COMPONENTS.md#textarea-可选自动增高)。
+Textarea 自动增高由公共控件显式启用并声明 maxRows，使用已有文字/尺寸语义，不新增皮肤或默认高度；保留草稿、IME、焦点、required/readOnly/disabled 与所属弹层滚动，超过上限内部滚动，内容减少缩回。stacked InputGroup 的公共 flex 与共享测量协作，仅在启用自动增高期间按测量高度排列，避免尺寸被纵向 flex 压缩；关闭后恢复原 flex、手动 resize 与 rows。具体React合同见[组件手册](COMPONENTS.md#textarea-可选自动增高)。
 
 ### 通用长标题展示
 
-OverflowText/createOverflowText仅承载名称字符串，不拥有h3、图标、归属Badge、摘要、footer或动作。公共文本部件占其分配的剩余净宽；仅此文本在鼠标悬停或现有交互表面内的键盘焦点停留后单次滚动至末端，离开且失焦复位。text-overflow-scroll-delay/speed定义共享节奏（400ms、40 CSS px/秒），原nav-label-scroll-*保留同值别名与原覆盖合同。没有溢出不播放动画；无现有键盘入口、触屏/粗指针、减少动效、缺少动画支持或JS未运行时显示完整静态换行，无空格英文也可折行。全文始终保留可访问名称，不新增Tab停靠、伪按钮、业务状态或查询owner；公共标题接口见[长标题](COMPONENTS.md#通用长标题)。
+OverflowText仅承载名称字符串，不拥有h3、图标、归属Badge、摘要、footer或动作。公共文本部件占其分配的剩余净宽；仅此文本在鼠标悬停或现有交互表面内的键盘焦点停留后单次滚动至末端，离开且失焦复位。text-overflow-scroll-delay/speed定义共享节奏（400ms、40 CSS px/秒），原nav-label-scroll-*保留同值别名与原覆盖合同。没有溢出不播放动画；无现有键盘入口、触屏/粗指针、减少动效、缺少动画支持或JS未运行时显示完整静态换行，无空格英文也可折行。全文始终保留可访问名称，不新增Tab停靠、伪按钮、业务状态或查询owner；公共标题接口见[长标题](COMPONENTS.md#通用长标题)。

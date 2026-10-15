@@ -61,7 +61,7 @@ test('password inputs render one field and an accessible empty strength meter wi
 
 test('password source has no policy endpoint, browser persistence or client-side truncation',async()=>{
   const {readFile}=await import('node:fs/promises');
-  for(const path of ['packages/runtime/src/password.ts','packages/runtime/src/password-dom.ts','packages/ui-react/src/password.tsx']){
+  for(const path of ['packages/runtime/src/password.ts','packages/ui-react/src/password.tsx']){
     const source=await readFile(path,'utf8');
     assert.doesNotMatch(source,/password-policy|loadPasswordPolicy|parsePasswordPolicy|localStorage|sessionStorage|maxLength|minLength|\.trim\(|\.normalize\(|\.slice\(/);
   }

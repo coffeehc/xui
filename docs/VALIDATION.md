@@ -2,6 +2,35 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
+
+## React 单栈、界面缩放与动态侧栏（2026-10-15）
+
+本轮只修改 xui。按用户最新授权，DESIGN 与三个私有包统一为 **1.0.0**：删除 runtime 的原生 DOM UI 工厂、控制器、内部 UI 入口、对应示例和专属测试，不保留兼容转发。React 成为唯一 UI 实现；runtime 保留 TypeScript 服务、纯模型、解析器与工具。React 所需的布局测量、文本呈现、键盘/焦点和行事件来源判断归 React 包内部；HTML 语义元素、React NativeSelect、下载/样式加载工具及 HTTP nativeOrigin 不属于被删除的 UI 副本。旧 DOM UI 消费者不能直接升级，消费项目实际迁移须另行验证。
+
+新增公开 `setInterfaceScale(1 | 1.25 | 1.5 | 2)`（runtime `/theme` 及根入口）：默认100%，设置写当前标签页 sessionStorage，正式 init 在首屏恢复；非法参数在修改 DOM/存储前拒绝，无浏览器安全无操作，存储拒绝时仍应用当前文档。尺寸通过根字号及既有语义 Token 派生，保留可用视口、换行和滚动边界。展开侧栏按25vw在公开 min/max Token 间响应，默认根16px下324–432px，并以50vw封顶；compact rail 与窄屏抽屉保留各自合同。
+
+Card 根级结构统一为 header/content/footer：description 与 children 同属 content，自然高度，不等分三段；空 content/footer 不占位。SimpleSelect 与顶栏语言选择统一使用 React/Base UI 公共 Select parts，保留真实 HTML select 的 FormData、值/变更、required、disabled、reset 与 SSR 回退。独立审查实际复现了继承 fieldset disabled 与关联 label 的 ARIA 名称两项问题，均已修复并复验；没有以隐藏状态或放宽焦点要求处理。
+
+[接入清单](ADOPTION_CHECKLIST.md)现有 **240个唯一检查 ID**，逐页面/组件实例/slot记录证据，公共16项服务操作分别检查请求、成功与异常/权限。当前正式入口 **83个**、Token **391个**。这些规则与示例建立公共边界，不代表任何宿主业务、认证或真实服务已通过。
+
+最终构建 source generation：`db60b5c118b323764594db20e71f1af520d8c0d6fff9bbbb6192f731c3d23121`。该代仅清理两个 React 私有 helper 文件末尾的空白；排除 `build.json` 后，193 个 ESM/CSS/types 产物逐文件哈希与上一代一致。独立目录安装三个1.0.0 tarball，逐项检查正式 ESM/CSS/types/init、完整导出及负向边界；React/ReactDOM/Base UI 单实例，无源码 alias。完整参考页初始 JS gzip **133592/135168 bytes**，critical CSS gzip **17396/17792 bytes**；Button 单独入口 gzip **6619 bytes**，未引入整个 UI。初始 JS 上限从131072增加4096 bytes，以容纳由旧 DOM 选择器转为同一 React/Base UI 机制；增加的是预算，不能把它当成实测增量。密码强度引擎继续延迟加载。
+
+| 检查 | 结果 | 原始证据（`.artifacts/`） |
+| --- | --- | --- |
+| build / types / tokens / docs / 单测 | 通过，单测 **418/418**，11份文档、992链接、83入口与240检查一致 | `react-only-validation/build-package-final.log`、`typecheck-release.log`、`tokens-release.log`、`docs-complete.log`、`unit-release.log` |
+| watch / Vite cold-start | 各 **1/1**，隔离fixture；错误恢复及显式依赖声明避免冷启动Document重载 | `react-only-validation/watch-release.log`、`react-only-validation/cold-start-release.log` |
+| 独立正式包消费者 | 通过，正式导出、类型、peer、删除入口负向检查与体积门禁 | `react-only-validation/consumer-package-final.log`、`performance-baseline.json` |
+| Chromium 缩放/卡片/页面与表单刷新 | **25/25、16/16、17/17** | `react-only-browser-final.json` 中对应文件 |
+| Chromium 选择器/日期时间/顶栏 | 初轮9失败与1未跑；修正过时的测试假设后，27项定向复验26通过，剩余DateTime一项再定向通过 | `react-only-browser-final.json`、`react-only-browser-recheck.json`、`react-only-datetime-rerun.json` |
+| Chromium 行事件与新 React Select | 最终产物 **16/16** | `react-only-final-boundaries.json` |
+| Chromium 移动后的导航/菜单/文本/表格机制 | 初轮106项83通过，23失败均来自关闭选择器时查找尚未挂载的选项；表格首轮24/25因新 helper 改变搜索焦点，保存并恢复原焦点后 **25/25** 通过 | `react-only-moved-helpers.json`、`react-only-validation/data-table-layout-final.json`、`react-only-validation/data-table-layout-rerun.json`、`react-only-validation/dist-byte-equality.json` |
+| Firefox / WebKit 精选 | 各 **12/12**，选择器、Card与缩放 | `react-only-cross.json` |
+
+浏览器覆盖 light/dark/system、桌面与390px、长中文、125%/150%/200%界面尺寸、200%文字及真实 Chrome200%缩放，核对侧栏范围、卡片三段、表单换列、弹层滚动/分层Escape/回焦点、表单重置、受控拒绝与禁用、排序/分页后的当前记录和独立 cell 动作。刷新检查保留页面壳、旧行、输入草稿、节点与焦点，不导航 Document。实际查看了桌面浅色、窄屏深色大字和响应侧栏截图。真实浏览器缩放核对 DPR、CSS视口与根字号，不以 CSS zoom 代替。
+
+保留初轮与复验报告，不把不同批次或不同引擎重复用例相加成一次全仓全绿。未跑全仓浏览器全集、消费项目真实页面/后端、产品部署、实体移动设备、读屏器和独立 SSR hydration；SSR字符串与回退测试不能代替 hydration。设计继续按用户提供的 Stitch v2/Token材料对齐，本轮没有新增实时 Stitch 会话评审。历史0.x证据以下保留，不能用于证明1.0.0当前接口仍存在。
+
 ## Token、槽位与接入验收架构（2026-10-15）
 
 本轮只修改 xui。将用户提供的 Stitch Token 架构材料保存为带指纹的参考，统一落实到 DESIGN **0.18.0**、公开组件、原生结构、正式示例和逐项清单。设计方向由参考校准；最终合同仍采用已验证的语义尺度、可访问性和宿主事实，不引入参考中的10/11px普通提示、全mono、不可聚焦密码切换、覆盖错误文字或虚构认证流程。本轮没有新增实时 Stitch 会话评审。

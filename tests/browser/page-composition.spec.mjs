@@ -7,7 +7,7 @@ async function open(page,kind,{mode='dark',width=1280,font=16}={}){
 }
 const creation=page=>page.getByRole('dialog',{name:'创建研究任务',exact:true});
 
-for(const kind of ['react','vanilla'])for(const mode of ['light','dark','system'])for(const width of [1280,390])for(const font of [16,32]){
+for(const kind of ['react'])for(const mode of ['light','dark','system'])for(const width of [1280,390])for(const font of [16,32]){
   test(`${kind} ${mode} ${width}px text ${font/16*100}% page and form`,async({page},info)=>{
     await open(page,kind,{mode,width,font});
     await expect(page.getByRole('heading',{name:'研究任务',exact:true})).toBeVisible();
@@ -31,7 +31,7 @@ for(const kind of ['react','vanilla'])for(const mode of ['light','dark','system'
   });
 }
 
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(`${kind} refresh retains nodes, scroll, selection, focus and failure recovery`,async({page},info)=>{
   await open(page,kind,{width:960});let documents=0;page.on('request',request=>{if(request.resourceType()==='document')documents++;});
   const name=page.getByRole('button',{name:/^公开账户行为研究 1：/});await name.click();await expect(page.getByRole('dialog',{name:/^公开账户行为研究 1：/})).toBeVisible();await page.getByRole('button',{name:'关闭详情'}).click();await expect(name).toBeFocused();
@@ -64,11 +64,11 @@ for(const kind of ['react','vanilla']){
  });
 }
 
-for(const kind of ['react','vanilla'])test(`${kind} normal desktop keeps only decision columns and on-demand configuration`,async({page},info)=>{
+for(const kind of ['react'])test(`${kind} normal desktop keeps only decision columns and on-demand configuration`,async({page},info)=>{
  await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.goto('/page-composition-'+kind+'/');await expect(page.getByRole('button',{name:'公开账户行为研究 1',exact:true})).toBeVisible();await expect(page.getByRole('columnheader')).toHaveCount(4);await expect(page.getByRole('button',{name:'更多筛选'})).toHaveCount(0);await expect(page.getByRole('button',{name:'清空筛选'})).toHaveCount(0);await expect(page.getByRole('dialog')).toHaveCount(0);expect(await page.locator('.xui-data-table-body').evaluate(node=>node.scrollWidth<=node.clientWidth+1)).toBe(true);await info.attach('normal-desktop.png',{body:await page.screenshot(),contentType:'image/png'});
  await page.getByRole('button',{name:'创建研究任务',exact:true}).click();await expect(creation(page)).toBeVisible();await expect(creation(page)).toHaveCSS('opacity','1');await info.attach('normal-form.png',{body:await page.screenshot(),contentType:'image/png'});
 });
 
-for(const kind of ['react','vanilla'])test(`${kind} nested select closes before sheet and keyboard returns to opener`,async({page})=>{
+for(const kind of ['react'])test(`${kind} nested select closes before sheet and keyboard returns to opener`,async({page})=>{
  await open(page,kind);const opener=page.getByRole('button',{name:'创建研究任务',exact:true});await opener.focus();await opener.press('Enter');const dialog=creation(page),select=dialog.getByRole('combobox',{name:'冻结模板'});await select.focus();await select.press('ArrowDown');await expect(page.getByRole('listbox')).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('listbox')).toHaveCount(0);await expect(dialog).toBeVisible();await expect(select).toBeFocused();await page.keyboard.press('Escape');await expect(dialog).not.toBeVisible();await expect(opener).toBeFocused();
 });

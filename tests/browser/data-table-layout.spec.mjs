@@ -15,7 +15,7 @@ const test=base.extend({page:async({page},use,info)=>{
   expect(errors,'browser errors, including ResizeObserver feedback loops').toEqual([]);
 }});
 
-const kinds=['react','vanilla'];
+const kinds=['react'];
 const desktop={width:1280,height:800};
 const mobile={width:390,height:844};
 const selectors={
@@ -124,7 +124,20 @@ async function assertFooter(page,m,{pagination=true,compact=true}={}){
   await expect(page.locator(selectors.footer).getByRole('combobox',{name:'每页条数',exact:true})).toHaveCount(pagination?1:0);
   if(pagination){
     await expect(size(page)).toHaveText(String((await state(page)).pageSize));
-    expect(await page.locator(`[id=${JSON.stringify(await size(page).getAttribute('aria-controls'))}] [role=option]`).allTextContents()).toEqual(['20','50','100']);
+    const pageSize=size(page);
+    if(await pageSize.isEnabled()){
+      const previousActive=await page.evaluateHandle(()=>document.activeElement);
+      const restorePrevious=await previousActive.evaluate(node=>node instanceof HTMLElement&&node.isConnected&&node!==document.body&&node!==document.documentElement&&node.tabIndex>=0&&!node.matches(':disabled'));
+      await pageSize.click();
+      const listbox=page.getByRole('listbox');
+      await expect(listbox).toBeVisible();
+      expect(await listbox.getByRole('option').allTextContents()).toEqual(['20','50','100']);
+      await page.keyboard.press('Escape');
+      await expect(listbox).toBeHidden();
+      await expect(pageSize).toBeFocused();
+      if(restorePrevious)await previousActive.evaluate(node=>node.focus());
+      await previousActive.dispose();
+    }
   }
   if(compact){
     const centers=m.footerChildren.map(child=>child.y+child.height/2);

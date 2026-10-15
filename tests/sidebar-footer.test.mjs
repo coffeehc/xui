@@ -78,12 +78,10 @@ test('short and long fixtures retain stable ids and select the actual last long 
   for(const options of [short,long])assert.equal(new Set(options.items.map(item=>item.id)).size,options.items.length);
 });
 
-test('official footer consumers use only public package CSS and keep actions inside the supplied slot',async()=>{
-  for(const kind of ['react','vanilla']){
-    const source=await readFile(`examples/sidebar-footer-${kind}/app.${kind==='react'?'tsx':'js'}`,'utf8');
+test('official React footer consumer uses only public package CSS and keeps actions inside the supplied slot',async()=>{
+    const source=await readFile('examples/sidebar-footer-react/app.tsx','utf8');
     const styles=[...source.matchAll(/import\s+['"]([^'"]+\.css)['"]/g)].map(match=>match[1]);
     assert.deepEqual(styles,['@coffeehc/xui-theme/style.css']);
     assert.doesNotMatch(source,/style=|\.style\.|position\s*:\s*['"](?:fixed|absolute)|packages\/[^\s]+\/src/);
     assert.match(source,/sidebarFooter/);
-  }
 });

@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-react",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "files": [
@@ -174,7 +174,7 @@
     "react": ">=19.2.8 <20",
     "react-dom": ">=19.2.8 <20",
     "@base-ui/react": ">=1.7.0 <2",
-    "@coffeehc/xui-runtime": ">=0.1.0 <1"
+    "@coffeehc/xui-runtime": ">=1.0.0 <2"
   },
   "devDependencies": {
     "@coffeehc/xui-runtime": "workspace:*"

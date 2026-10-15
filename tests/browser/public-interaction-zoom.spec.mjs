@@ -2,7 +2,7 @@ import {test,expect,chromium} from '@playwright/test';
 import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 import {captureZoomViewport} from './zoom-capture.mjs';
 
-for(const name of ['calendar-month','menu-danger','row-events','date-time','rich-navigation'])for(const kind of ['react','vanilla'])for(const mode of ['light','dark','system']){
+for(const name of ['calendar-month','menu-danger','row-events','date-time','rich-navigation'])for(const kind of ['react'])for(const mode of ['light','dark','system']){
  test(name+' '+kind+' '+mode+' genuine Chrome zoom 200%',async({},info)=>{
   test.setTimeout(60000);
   const context=await chromium.launchPersistentContext('',{...chromiumLaunchOptions,headless:true,chromiumSandbox:true,viewport:null,args:['--window-size=1280,900']});

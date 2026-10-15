@@ -3,7 +3,7 @@ import {test as base,expect} from '@playwright/test';
 const test=base.extend({page:async({page},use,info)=>{const errors=[];page.on('pageerror',error=>errors.push(error.message));await use(page);await info.attach('browser-errors.json',{body:JSON.stringify(errors),contentType:'application/json'});expect(errors).toEqual([]);}});
 const toggle=page=>page.locator('.xui-theme-mode-toggle');
 const setup=async(page,kind,query='',mode=null)=>{await page.setViewportSize({width:1280,height:800});await page.emulateMedia({colorScheme:'light',reducedMotion:'reduce'});if(mode!==null)await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`/header-controls-${kind}/${query}`);await page.waitForFunction(()=>!!window.headerDemo);await expect(toggle(page)).toBeEnabled();};
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} default header cycles preference with one owner, icons, persistence and keyboard`,async({page},info)=>{
     await setup(page,kind);const control=toggle(page);await expect(control).toHaveCount(1);await expect(page.locator('.xui-header-locale')).toHaveCount(0);await expect(control).toHaveAttribute('data-theme-mode','dark');await expect(control).toHaveAccessibleName('暗黑模式. 切换到跟随系统');await expect(control).toHaveAttribute('title','切换到跟随系统');
     await page.evaluate(()=>{window.savedTheme=window.xuiTheme;window.savedButton=document.querySelector('.xui-theme-mode-toggle');window.icons=[];});
@@ -53,7 +53,7 @@ for(const kind of ['react','vanilla']){
   });
 }
 
-for(const kind of ['react','vanilla'])test(`${kind} compact sidebar header and footer retain symmetric icon bounds`,async({page})=>{
+for(const kind of ['react'])test(`${kind} compact sidebar header and footer retain symmetric icon bounds`,async({page})=>{
   await setup(page,kind,'?slots&locale');
   await page.getByRole('button',{name:'收起导航',exact:true}).click();
   await expect(page.locator('.xui-menu-layout')).toHaveAttribute('data-collapsed','true');
@@ -66,12 +66,12 @@ for(const kind of ['react','vanilla'])test(`${kind} compact sidebar header and f
   }
 });
 
-for(const kind of ['react','vanilla'])test(`${kind} locale option backgrounds retain shared spacing in themes and narrow windows`,async({page},info)=>{
+for(const kind of ['react'])test(`${kind} locale option backgrounds retain shared spacing in themes and narrow windows`,async({page},info)=>{
   await setup(page,kind,'?locale');
   for(const mode of ['light','dark','system'])for(const width of [1280,390]){
     await page.setViewportSize({width,height:844});await page.evaluate(mode=>window.xuiTheme.setMode(mode),mode);
     const trigger=page.getByRole('combobox',{name:'语言',exact:true});await trigger.click();
-    const popup=page.locator(`[id=${JSON.stringify(await trigger.getAttribute('aria-controls'))}]`);await expect(popup).toBeVisible();
+    await expect(trigger).toHaveAttribute('aria-controls',/\S+/);const popup=page.locator(`[id=${JSON.stringify(await trigger.getAttribute('aria-controls'))}]`);await expect(popup).toBeVisible();
     await popup.getByRole('option',{name:'English',exact:true}).hover();await expectOptionSpacing(popup.getByRole('option'));
     await info.attach(`${kind}-${mode}-${width}-locale-spacing`,{body:await popup.screenshot({animations:'disabled'}),contentType:'image/png'});
     await page.keyboard.press('Escape');await expect(popup).toBeHidden();await expect(trigger).toBeFocused();

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {observeDialogLayout} from '../packages/runtime/dist/dialog-layout.js';
+import {observeDialogLayout} from '../packages/ui-react/dist/dialog-layout-observer.js';
 function fixture(){
  const observers=[],mutations=[],queue=new Map(),events=new Map();let serial=0;
  class Element{constructor(height=0){this.height=height;this.style={display:'block',position:'static',marginTop:'0',marginBottom:'0'};this.dataset={};this.children=[];this.classList={contains:value=>value===this.className};}get offsetHeight(){return this.height;}getBoundingClientRect(){throw Error('Transformed paint geometry must not determine layout budget');}getClientRects(){return [{}];}}

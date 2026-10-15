@@ -19,7 +19,7 @@ test('hover and pressed still exclude native, aria and data disabled states',()=
 });
 test('busy remains independent, and both formal fixtures cover every public variant',()=>{
  assert.match(css,/\.xui-button\[aria-busy="true"\] \{ border-color: var\(--surface-line-strong\); \}/);
- for(const file of ['button-state-contract.tsx','button-state-contract.js']){
+ for(const file of ['button-state-contract.tsx']){
   const fixture=readFileSync(new URL(`./fixtures/${file}`,import.meta.url),'utf8');
   for(const variant of ['primary','secondary','outline','ghost','destructive','link'])assert.ok(fixture.includes(`'${variant}'`));
   for(const state of ['enabled','busy','disabled','disabled-busy'])assert.ok(fixture.includes(`'${state}'`));

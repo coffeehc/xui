@@ -1,4 +1,4 @@
-import {bindOverflowTextPresentation} from '@coffeehc/xui-runtime/internal/overflow-text';
+import {bindOverflowTextPresentation} from './overflow-text.js';
 import * as React from 'react';
 import {createCopyController,copyableLabels,validateImageOptions,type HeadingLevel,type HeadingRole,type TextTone,type CopyStatus,type CopyableLabels,type ClipboardWriter,type ImageOptions,type ImageStatus} from '@coffeehc/xui-runtime/display';
 import {Button} from './button.js';
@@ -62,6 +62,7 @@ export type CardProps=Omit<React.ComponentProps<'section'>,'title'|'children'>&{
  title:string;headingLevel?:CardHeadingLevel;icon?:React.ReactNode;badge?:CardBadge;
  /** Auxiliary header actions, such as an existing Menu trigger. */
  actions?:React.ReactNode;
+ /** Description and business content share the single natural-height content region. */
  description?:string;children?:React.ReactNode;
  /** Read-only facts and business actions occupy separate footer groups. */
  footerMeta?:React.ReactNode;footerActions?:React.ReactNode;
@@ -70,5 +71,5 @@ export function Card({title,headingLevel=3,icon,badge,actions,description,childr
  if(typeof title!=='string'||!title.trim()||!Number.isInteger(headingLevel)||headingLevel<2||headingLevel>6)throw new TypeError('Card requires a nonempty title and heading level 2–6');
  if(badge&&(typeof badge.label!=='string'||!badge.label.trim()||badge.tone&&!['neutral','info','success','warning','error'].includes(badge.tone)))throw new TypeError('Invalid Card badge');
  const root=React.useRef<HTMLElement>(null);React.useImperativeHandle(ref,()=>root.current!,[]);
- return <Surface {...props} ref={root} className={cx('xui-card',className)}><header className="xui-toolbar xui-card-header"><div className="xui-toolbar xui-card-heading">{hasContent(icon)&&<span className="xui-card-icon" aria-hidden="true">{icon}</span>}<Typography.Heading level={headingLevel} className="xui-card-title"><OverflowText text={title} interactionRef={root}/></Typography.Heading></div>{(badge||hasContent(actions))&&<div className="xui-toolbar xui-card-trailing">{badge&&<Badge tone={badge.tone??'neutral'}>{badge.label}</Badge>}{hasContent(actions)&&<div className="xui-toolbar xui-card-actions">{actions}</div>}</div>}</header>{description&&<Typography.Text as="p" tone="muted" className="xui-card-description">{description}</Typography.Text>}{hasContent(children)&&<div className="xui-card-body">{children}</div>}{(hasContent(footerMeta)||hasContent(footerActions))&&<footer className="xui-toolbar xui-card-footer">{hasContent(footerMeta)&&<div className="xui-text xui-card-meta" data-tone="muted">{footerMeta}</div>}{hasContent(footerActions)&&<div className="xui-toolbar xui-card-actions">{footerActions}</div>}</footer>}</Surface>;
+ return <Surface {...props} ref={root} className={cx('xui-card',className)}><header className="xui-toolbar xui-card-header"><div className="xui-toolbar xui-card-heading">{hasContent(icon)&&<span className="xui-card-icon" aria-hidden="true">{icon}</span>}<Typography.Heading level={headingLevel} className="xui-card-title"><OverflowText text={title} interactionRef={root}/></Typography.Heading></div>{(badge||hasContent(actions))&&<div className="xui-toolbar xui-card-trailing">{badge&&<Badge tone={badge.tone??'neutral'}>{badge.label}</Badge>}{hasContent(actions)&&<div className="xui-toolbar xui-card-actions">{actions}</div>}</div>}</header>{(description||hasContent(children))&&<div className="xui-card-content">{description&&<Typography.Text as="p" tone="muted" className="xui-card-description">{description}</Typography.Text>}{hasContent(children)&&<div className="xui-card-body">{children}</div>}</div>}{(hasContent(footerMeta)||hasContent(footerActions))&&<footer className="xui-toolbar xui-card-footer">{hasContent(footerMeta)&&<div className="xui-text xui-card-meta" data-tone="muted">{footerMeta}</div>}{hasContent(footerActions)&&<div className="xui-toolbar xui-card-actions">{footerActions}</div>}</footer>}</Surface>;
 }

@@ -66,7 +66,7 @@ async function trackEvidence(page,node,track,info,name){
  return {png,summary};
 }
 
-for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system']){
+for(const kind of ['react'])for(const theme of ['light','dark','system']){
  test(`${kind} ${theme}: Alert tones retain semantics, independent tokens and complete long text`,async({page},info)=>{
   await setup(page,kind,theme);
   const defaultAlert=page.getByTestId('alert-default');await expect(defaultAlert).toHaveAttribute('role','status');await alertColors(page,defaultAlert,'info');

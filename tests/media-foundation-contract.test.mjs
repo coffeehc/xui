@@ -6,8 +6,6 @@ import * as root from '../packages/ui-react/dist/index.js';
 import {Avatar} from '../packages/ui-react/dist/avatar.js';
 import {Image,Tag} from '../packages/ui-react/dist/display.js';
 import {Badge} from '../packages/ui-react/dist/feedback.js';
-import {createTag} from '../packages/runtime/dist/display-dom.js';
-import {navigationDOM} from './fixtures/navigation-dom.mjs';
 import {checkContract} from '../scripts/tokens.mjs';
 const css=postcss.parse((await Promise.all(['base','widgets','feedback'].map(name=>readFile(`packages/theme/src/${name}.css`,'utf8')))).join('\n'));
 const {light}=checkContract(await readFile('docs/DESIGN.md','utf8'));
@@ -32,8 +30,7 @@ test('Image frame and placeholders use content geometry and existing feedback ro
  mapping('.xui-image',{'max-inline-size':'100%',position:'relative',overflow:'hidden'});mapping('.xui-image-content',{'object-fit':'contain'});mapping('.xui-image[data-fit="cover"]>.xui-image-content',{'object-fit':'cover'});
  mapping('.xui-image-placeholder',{padding:'var(--space-control-gap)',background:'var(--muted)',color:'var(--muted-foreground)','overflow-wrap':'anywhere',overflow:'auto'});
 });
-test('Tag publishes removal intent without removing itself and metadata uses existing text metrics',()=>{
- const {doc,root}=navigationDOM();let intents=0;const owner=createTag(doc,{label:'<literal>完整标签',removeLabel:'Request removal',onRemove:()=>intents++});root.append(owner.element);const button=owner.removeButton;button.click();assert.equal(intents,1);assert.equal(owner.element.parentNode,root);assert.equal(owner.removeButton,button);assert.equal(owner.element.firstElementChild.textContent,'<literal>完整标签');owner.destroy();
+test('Tag label wraps and removal target keeps its intrinsic size',()=>{
  const badge=mapping('.xui-badge',{'font-size':'var(--font-size-body-xs)','line-height':'var(--line-height-body-xs)',gap:'var(--space-text-gap)'});assert.equal(badge.background,undefined);assert.equal(badge.border,undefined);mapping('.xui-tag-label',{'overflow-wrap':'anywhere','min-inline-size':'0'});mapping('.xui-tag>.xui-button',{flex:'none'});
  // DESIGN's ordinary-text wording does not independently settle Badge 400/500.
 });

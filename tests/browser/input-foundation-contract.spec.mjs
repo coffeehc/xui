@@ -23,7 +23,7 @@ async function focusPaint(page,control){
  for(const clip of clips){if(clip.x){expect(edges.left,clip.name).toBeGreaterThanOrEqual(clip.left);expect(edges.right,clip.name).toBeLessThanOrEqual(clip.right);}if(clip.y){expect(edges.top,clip.name).toBeGreaterThanOrEqual(clip.top);expect(edges.bottom,clip.name).toBeLessThanOrEqual(clip.bottom);}}
 
 }
-for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system']){
+for(const kind of ['react'])for(const theme of ['light','dark','system']){
  test(`${kind} ${theme}: Input and Textarea preserve readonly selection, disabled exclusion and label semantics`,async({page},info)=>{
   await setup(page,kind,theme);const form=page.locator('#input-foundation');
   for(const row of entries){

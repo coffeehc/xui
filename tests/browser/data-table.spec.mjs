@@ -12,7 +12,7 @@ const test=base.extend({page:async({page},use,info)=>{
   await info.attach('browser-errors.json',{body:JSON.stringify(errors,null,2),contentType:'application/json'});
   expect(errors,'browser errors and hydration warnings').toEqual([]);
 }});
-const kinds=['react','vanilla'];
+const kinds=['react'];
 const viewports=[{width:1280,height:800},{width:390,height:844}];
 const selectors={shell:'.xui-shell',main:'.xui-shell-main',content:'.xui-shell-content',header:'[data-testid="record-header"]',toolbar:'[data-testid="record-filters"]',table:'#records-table',frame:'#records-table .xui-data-table-frame',body:'#records-table .xui-data-table-body',footer:'#records-table .xui-data-table-footer',cards:'[data-testid="record-cards"]',cardViewport:'[aria-label="合成记录卡片"]'};
 const table=page=>page.getByRole('table',{name:'合成记录表格',exact:true});

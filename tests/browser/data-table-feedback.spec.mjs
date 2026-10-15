@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 const settle=page=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
 const ready=page=>expect.poll(()=>page.evaluate(()=>window.dataTableDemo?.owner.getState().status)).toBe('ready');
 const rects=page=>page.evaluate(()=>Object.fromEntries(['.xui-data-table-tools','.xui-data-table-body','.xui-data-table-footer','.xui-data-table-feedback'].map(selector=>{const node=document.querySelector(selector),r=node.getBoundingClientRect();return [selector,{x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,scrollHeight:node.scrollHeight,clientHeight:node.clientHeight}];})));
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} ready toolbar meets thead and short status reuses existing footer space`,async({page},info)=>{
     await page.setViewportSize({width:1700,height:1000});await page.goto(`/data-table-${kind}/?internal&layout=workspace`);await ready(page);await settle(page);
     const before=await rects(page);expect(Math.abs(before['.xui-data-table-body'].y-before['.xui-data-table-tools'].bottom),'no empty status row above thead').toBeLessThan(1.5);

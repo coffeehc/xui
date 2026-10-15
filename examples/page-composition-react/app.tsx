@@ -1,3 +1,4 @@
+import {setInterfaceScale} from '@coffeehc/xui-runtime/theme';
 import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 import {MenuLayout} from '@coffeehc/xui-react/menu-layout';
@@ -67,5 +68,5 @@ function App(){
   </>;
 }
 const root=createRoot(document.getElementById('root')!);root.render(<App/>);void owner.load();
-Object.assign(window,{pageCompositionDemo:{owner}});
+Object.assign(window,{pageCompositionDemo:{owner,setScale:setInterfaceScale}});
 window.addEventListener('pagehide',()=>{root.unmount();owner.destroy();},{once:true});

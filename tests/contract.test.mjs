@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { checkContract, checkTokenLayers, checkGraph, checkStyles, generate } from '../scripts/tokens.mjs';
 const doc = await readFile('docs/DESIGN.md','utf8');
@@ -33,8 +33,8 @@ test('Precision default, uploaded source and semantic CSS fingerprint are versio
   const source=await readFile(metadata.source.path,'utf8');
   assert.equal(createHash('sha256').update(source).digest('hex'),metadata.source.sha256);
   assert.equal(createHash('sha256').update(css).digest('hex'),metadata.defaultCssSha256);
-  assert.equal(metadata.contractVersion,'0.18.0');
-  assert.match(doc,/规范版本：0\.18\.0。/);
+  assert.equal(metadata.contractVersion,'1.0.0');
+  assert.match(doc,/规范版本：1\.0\.0。/);
   assert.equal(metadata.defaultMode,'dark');
   assert.equal(Object.keys(dark).length,metadata.defaultTokenCount);
   assert.equal(dark['--palette-canvas'],'#090b0e');
@@ -59,4 +59,19 @@ test('token tiers reject reverse dependencies and direct component palette reads
     {'--card-background':'var(--palette-primary)'},
     {'--space-control-gap':'var(--card-padding)'},
   ]) assert.throws(()=>checkTokenLayers(values),/Token layer violation/);
+});
+
+
+test('runtime 1.0 contains shared TypeScript models but no native UI entry points or React peer',async()=>{
+  const manifest=JSON.parse(await readFile('packages/runtime/package.json','utf8'));
+  const forbidden=/(?:^|\/)(?:dom|[^/]*-dom|menu-layout|navigation-presentation|overflow-text|select-control|textarea|widgets-dom|internal)(?:\.js)?$/;
+  assert.deepEqual(Object.keys(manifest.exports).filter(entry=>forbidden.test(entry)),[]);
+  assert.deepEqual(Object.keys(manifest.peerDependencies??{}).filter(name=>/^(?:react|react-dom)(?:$|\/)/.test(name)),[]);
+  assert.deepEqual(Object.keys(manifest.dependencies??{}).filter(name=>/^(?:react|react-dom)(?:$|\/)/.test(name)),[]);
+  const artifacts=await readdir('packages/runtime/dist');
+  assert.deepEqual(artifacts.filter(file=>/^(?:dom|[^/]*-dom|dialog-layout|menu-layout|navigation-presentation|overflow-text|select-control|textarea|widgets|dom-id)\.(?:js|d\.ts)$/.test(file)),[]);
+  const runtime=await import('../packages/runtime/dist/index.js');
+  for(const name of ['createCalendarModel','createDateTimeModel','getNavigationActiveId'])assert.equal(typeof runtime[name],'function',`${name} remains a pure runtime model/helper`);
+  assert.equal('isDataTableRowEvent' in runtime,false,'DOM-backed row event filtering belongs to the React package');
+  for(const name of ['Button','Card','Dialog','Field','Input','Textarea','SimpleSelect','Calendar','DateTimePicker','NavigationMenu','MenuLayout','OverflowText'])assert.equal(name in runtime,false,`${name} belongs to the React package`);
 });

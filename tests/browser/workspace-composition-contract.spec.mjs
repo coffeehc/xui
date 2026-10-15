@@ -64,7 +64,7 @@ async function assertPaintedErrorBorder(page,node,info,name,color){
  expect(delta,`${name}: error border remains painted while focus is inset`).toBeLessThanOrEqual(20);
 }
 
-for(const kind of ['react','vanilla'])test(`${kind} workspace insets keep nested paint boundaries and application state`,async({page},info)=>{
+for(const kind of ['react'])test(`${kind} workspace insets keep nested paint boundaries and application state`,async({page},info)=>{
  await page.setViewportSize({width:1280,height:560});
  await page.goto(`/workspace-${kind}/?focus&surface&long-menu`);await waitForDemo(page,'workspaceDemo');
  const shell=page.locator('.xui-shell'),content=page.locator('.xui-shell-content'),surface=page.getByTestId('workspace');
@@ -118,20 +118,20 @@ for(const kind of ['react','vanilla'])test(`${kind} workspace insets keep nested
  await info.attach(`${kind}-workspace-edge-state.json`,{body:JSON.stringify({before,after,standard,cardDefault,cardFlush,historyGutter,nestedGutterAfter},null,2),contentType:'application/json'});
 });
 
-for(const kind of ['react','vanilla'])test(`${kind} stacked InputGroup.Textarea preserves native editing, field semantics and wrapping actions`,async({page},info)=>{
+for(const kind of ['react'])test(`${kind} stacked InputGroup.Textarea preserves native editing, field semantics and wrapping actions`,async({page},info)=>{
  await page.setViewportSize({width:1280,height:1200});await page.goto(`/widgets-${kind}/`);await waitForDemo(page,'widgetsDemo');
  const group=page.getByTestId('stacked-input-group'),textarea=page.locator('#multiline-draft'),help=page.locator('#multiline-draft-help'),error=page.locator('#multiline-draft-error');
  await expect(group).toHaveAttribute('data-layout','stacked');await expect(textarea).toHaveAttribute('name','multiline');await expect(textarea).toHaveAttribute('required','');
  await expect(textarea).toHaveAccessibleName('多行草稿');await expect(help).toBeVisible();
  expect(await page.evaluate(()=>window.widgetsDemo.getComposerControl()===document.getElementById('multiline-draft'))).toBe(true);
- await textarea.fill('第一行');if(kind==='react')await expect.poll(()=>page.evaluate(()=>window.widgetsDemo.getComposerDraft())).toBe('第一行');await tabTo(page,textarea);await expect(textarea).toBeFocused();await expect(textarea).toHaveCSS('outline-style','none');
- await textarea.press('Enter');await expect(textarea).toHaveValue('第一行\n');if(kind==='react')await expect.poll(()=>page.evaluate(()=>window.widgetsDemo.getComposerDraft())).toBe('第一行\n');
+ await textarea.fill('第一行');await expect.poll(()=>page.evaluate(()=>window.widgetsDemo.getComposerDraft())).toBe('第一行');await tabTo(page,textarea);await expect(textarea).toBeFocused();await expect(textarea).toHaveCSS('outline-style','none');
+ await textarea.press('Enter');await expect(textarea).toHaveValue('第一行\n');await expect.poll(()=>page.evaluate(()=>window.widgetsDemo.getComposerDraft())).toBe('第一行\n');
  await textarea.evaluate(node=>node.setSelectionRange(2,2));
  // These are synthetic CompositionEvents. They check callback forwarding, not OS IME behavior.
  await textarea.evaluate(node=>{for(const [type,data] of [['compositionstart','拼'],['compositionupdate','拼音'],['compositionend','拼']])node.dispatchEvent(new CompositionEvent(type,{bubbles:true,data}));});
  expect(await page.evaluate(()=>window.widgetsDemo.getComposerEvents())).toEqual({start:1,update:1,end:1});
  await page.evaluate(()=>window.widgetsDemo.setComposerState({layout:'inline'}));await expect(group).toHaveAttribute('data-layout','inline');
- const retained=await page.evaluate(()=>{const node=window.widgetsDemo.getComposerControl();return {same:node===document.getElementById('multiline-draft'),focused:node===document.activeElement,value:node.value,start:node.selectionStart,end:node.selectionEnd,draft:window.widgetsDemo.getComposerDraft?.()};});expect(retained).toEqual({same:true,focused:true,value:'第一行\n',start:2,end:2,draft:kind==='react'?'第一行\n':undefined});
+ const retained=await page.evaluate(()=>{const node=window.widgetsDemo.getComposerControl();return {same:node===document.getElementById('multiline-draft'),focused:node===document.activeElement,value:node.value,start:node.selectionStart,end:node.selectionEnd,draft:window.widgetsDemo.getComposerDraft?.()};});expect(retained).toEqual({same:true,focused:true,value:'第一行\n',start:2,end:2,draft:'第一行\n'});
  await expect(textarea).toHaveAttribute('aria-describedby','multiline-draft-help');
  await page.evaluate(()=>window.widgetsDemo.setComposerState({layout:'stacked',invalid:true}));await expect(group).toHaveAttribute('data-layout','stacked');await expect(textarea).toHaveAttribute('aria-invalid','true');await expect(textarea).toHaveAttribute('aria-describedby','multiline-draft-help multiline-draft-error');await expect(error).toHaveText('草稿需要修正');
  const errorColor=await group.evaluate(node=>{const probe=document.createElement('span');probe.style.color='var(--status-error-foreground)';node.append(probe);const color=getComputedStyle(probe).color;probe.remove();return color;});await expect(group).toHaveCSS('border-top-color',errorColor);

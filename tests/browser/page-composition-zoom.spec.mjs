@@ -1,7 +1,7 @@
 import {test,expect,chromium} from '@playwright/test';
 import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 import {captureZoomViewport} from './zoom-capture.mjs';
-for(const kind of ['react','vanilla'])for(const mode of ['light','dark','system'])test(`${kind} ${mode} page form genuine Chrome zoom200`,async({},info)=>{
+for(const kind of ['react'])for(const mode of ['light','dark','system'])test(`${kind} ${mode} page form genuine Chrome zoom200`,async({},info)=>{
  test.setTimeout(60000);const context=await chromium.launchPersistentContext('',{...chromiumLaunchOptions,headless:true,chromiumSandbox:true,viewport:null,args:['--window-size=1280,900']});
  try{const page=await context.newPage();await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);await page.goto('http://127.0.0.1:4173/page-composition-'+kind+'/?long');const before=await page.evaluate(()=>({width:innerWidth,dpr:devicePixelRatio,font:getComputedStyle(document.documentElement).fontSize}));const settings=await context.newPage();await settings.goto('chrome://settings/appearance');await settings.locator('select#zoomLevel').selectOption('2');await settings.close();await page.bringToFront();await expect.poll(()=>page.evaluate(()=>devicePixelRatio)).toBeCloseTo(before.dpr*2,1);
   const after=await page.evaluate(()=>({width:innerWidth,dpr:devicePixelRatio,font:getComputedStyle(document.documentElement).fontSize,cssZoom:getComputedStyle(document.documentElement).zoom,pinch:visualViewport.scale}));expect(after.width).toBeCloseTo(before.width/2,0);expect(after.font).toBe(before.font);expect(after.cssZoom).toBe('1');expect(after.pinch).toBe(1);

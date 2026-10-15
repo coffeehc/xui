@@ -12,7 +12,7 @@ async function measure(button){return button.evaluate(node=>{
  try{const background=style.backgroundColor,foreground=style.color,l=luminance(background),f=luminance(foreground);return {background,foreground,contrast:(Math.max(l,f)+.05)/(Math.min(l,f)+.05),pressed:node.getAttribute('data-pressed'),tokens:{background:resolve('button-background','backgroundColor'),hover:resolve('button-hover-background','backgroundColor'),pressed:resolve('button-pressed-background','backgroundColor'),foreground:resolve('button-foreground','color')}};}finally{probe.remove();}
 });}
 
-for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])test(`${kind} ${theme}: primary Button D/H/P follow product primary overrides with readable contrast and keyboard activation`,async({page},info)=>{
+for(const kind of ['react'])for(const theme of ['light','dark','system'])test(`${kind} ${theme}: primary Button D/H/P follow product primary overrides with readable contrast and keyboard activation`,async({page},info)=>{
  await setup(page,kind,theme);const button=page.getByTestId('primary-enabled');await page.mouse.move(0,0);await settle(page);
  const baseline={default:await measure(button)};await button.hover();await settle(page);baseline.hover=await measure(button);const box=await button.boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await settle(page);baseline.pressed=await measure(button);await page.mouse.up();await page.mouse.move(0,0);await settle(page);
  await page.addStyleTag({content:'@layer product-overrides { :root { --action-primary:#1d4ed8; --action-primary-foreground:#ffffff; } }'});await settle(page);
@@ -22,6 +22,6 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
   expect(actual.background,`${state} changes when the product changes action-primary`).not.toBe(baseline[state].background);
  }
  expect(states.default.background).toBe('rgb(29, 78, 216)');expect(states.default.foreground).toBe('rgb(255, 255, 255)');
- await button.focus();const before=await page.evaluate(()=>window.buttonStateClicks['primary-enabled']??0);await page.keyboard.press('Space');await expect(button).toBeFocused();await expect.poll(()=>page.evaluate(()=>window.buttonStateClicks['primary-enabled']??0)).toBe(before+1);if(kind==='react')await expect(button).toHaveAttribute('data-pressed','false');
+ await button.focus();const before=await page.evaluate(()=>window.buttonStateClicks['primary-enabled']??0);await page.keyboard.press('Space');await expect(button).toBeFocused();await expect.poll(()=>page.evaluate(()=>window.buttonStateClicks['primary-enabled']??0)).toBe(before+1);await expect(button).toHaveAttribute('data-pressed','false');
  const result={theme,baseline,states,keyboard:{clicksBefore:before,clicksAfter:await page.evaluate(()=>window.buttonStateClicks['primary-enabled']??0)}};await info.attach(`${kind}-${theme}-brand-button-states.json`,{body:JSON.stringify(result,null,2),contentType:'application/json'});await info.attach(`${kind}-${theme}-brand-button-states.png`,{body:await page.screenshot({fullPage:true}),contentType:'image/png'});
 });

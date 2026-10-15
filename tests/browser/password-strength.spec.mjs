@@ -17,7 +17,7 @@ async function expectNoVisibleLegacyGuidance(page){
  const guidance=await page.locator('#app').evaluate(root=>Array.from(root.querySelectorAll('.xui-help')).filter(node=>{const style=getComputedStyle(node);return style.display!=='none'&&style.visibility!=='hidden'&&!node.matches('[data-xui-password-strength-status]');}).map(node=>node.innerText).join(' '));expect(guidance).not.toMatch(/6–32|已输入\d+个字符|等待输入|评估中|暂不可评估|改进建议|建议避开/);
 }
 
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(`${kind}: lazy local strength uses a five-step advisory meter and never gates a weak valid password`,async({page},info)=>{
   const requests=[];page.on('request',request=>requests.push(request));await page.goto(`/password-strength-${kind}/`);const {password,meter,status}=fields(page);await expect(password).toBeVisible();await expectNoVisibleLegacyGuidance(page);await expectEmptyMeter(meter,'等待输入');await expect(status).toHaveText('等待输入');expect(requests.filter(request=>request.url().includes('/password-policy'))).toHaveLength(0);expect(requests.filter(request=>request.url().includes('/password-strength-worker-'))).toHaveLength(0);
   const samples=[['password',0,'weak','弱'],['admin123',1,'weak','弱'],['December2025!',2,'medium','中'],['I love you',3,'strong','强'],['t7#Vz_9m+Lp2',4,'strong','强']];let timing;

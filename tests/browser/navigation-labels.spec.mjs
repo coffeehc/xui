@@ -7,7 +7,7 @@ const primary=(page,id)=>page.locator(`[data-menu-id="${id}"][data-menu-control=
 const action=(page,id)=>page.locator(`[data-menu-id="${id}"][data-menu-control="action"]`);
 const ready=async(page,kind)=>{await page.goto(`/rich-navigation-${kind}/`);await expect(primary(page,branchId)).toHaveCount(1);};
 
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} branch labels update in place and controlled keyboard requests notify once`,async({page})=>{
     await ready(page,kind);
     const toggle=branchToggle(page);

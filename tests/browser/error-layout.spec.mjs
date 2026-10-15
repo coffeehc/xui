@@ -3,7 +3,7 @@ const settle=page=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(
 const rectangles=async(page,selectors)=>page.evaluate(selectors=>Object.fromEntries(Object.entries(selectors).map(([key,selector])=>{const node=document.querySelector(selector),r=node.getBoundingClientRect();return [key,{x:r.x,y:r.y,width:r.width,height:r.height}];})),selectors);
 const same=(before,after)=>{for(const key of Object.keys(before))for(const dimension of ['x','y','width','height'])expect(Math.abs(after[key][dimension]-before[key][dimension]),`${key}.${dimension} is stable`).toBeLessThanOrEqual(1.5);};
 const tableSelectors={shell:'.xui-shell',head:'.xui-data-table thead',body:'.xui-data-table-body',footer:'.xui-data-table-footer',search:'input[type=search]'};
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   for(const layout of ['natural','workspace','document'])for(const width of [1280,390])test(`${kind} ${layout} ${width}: long request errors remain complete and retry preserves rows and keyboard focus`,async({page})=>{
     await page.setViewportSize({width,height:900});await page.emulateMedia({reducedMotion:'reduce'});
     await page.goto(`/data-table-${kind}/?layout=${layout}&long-error`);

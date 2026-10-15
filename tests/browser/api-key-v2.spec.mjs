@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 const openKeys=async(page,kind)=>{await page.goto(`/capabilities-${kind}/`);await page.locator('button,summary').filter({hasText:'访问密钥标准接口'}).click();await expect(page.getByRole('button',{name:'Edit 示例过期令牌',exact:true})).toBeVisible();};
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  for(const theme of ['light','dark','system'])test(`${kind} v2 edit permissions and pause/resume uses shared controls in ${theme}`,async({page})=>{
   await page.emulateMedia({colorScheme:theme==='system'?'dark':theme});await openKeys(page,kind);await page.evaluate(theme=>window.xuiTheme?.setMode(theme),theme);
   const edit=page.getByRole('button',{name:'Edit 示例过期令牌',exact:true});await edit.click();const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();await expect(page.getByRole('textbox',{name:'名称',exact:true})).toBeFocused();await page.getByRole('textbox',{name:'名称',exact:true}).fill('Edited permission key');await page.getByRole('checkbox',{name:'写入资料',exact:true}).check();await page.getByRole('checkbox',{name:'Enabled',exact:true}).uncheck();await page.getByRole('button',{name:'Save changes',exact:true}).click();await expect(dialog).toHaveCount(0);await expect(page.getByRole('cell',{name:'Disabled',exact:true})).toBeVisible();

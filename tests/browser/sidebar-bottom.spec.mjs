@@ -1,7 +1,7 @@
 import {test,expect,chromium} from '@playwright/test';
 import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 import {captureZoomViewport} from './zoom-capture.mjs';
-const variants=[['react','layout'],['react','shell'],['vanilla','layout']];
+const variants=[['react','layout'],['react','shell']];
 const control=page=>page.locator('[data-xui-menu-toggle]');
 const rail=page=>page.locator('.xui-shell-sidebar');
 async function tab(page,reverse=false){await page.keyboard.press(`${page.context().browser()?.browserType().name()==='webkit'?'Alt+':''}${reverse?'Shift+':''}Tab`);}
@@ -13,7 +13,7 @@ async function check(page,info,{desktop=true,font=16,zoom=false}={}){
  const toggle=control(page),draft=page.getByRole('textbox',{name:'草稿',exact:true});await draft.fill('底部排列后保留原有草稿');
  await page.evaluate(()=>window.bottomNodes={toggle:document.querySelector('[data-xui-menu-toggle]'),rail:document.querySelector('aside'),row:document.querySelector('[data-testid="footer-row"]'),draft:document.querySelector('#footer-draft')});
  const drawer=page.getByRole('dialog',{name:'工作导航',exact:true});
- if(desktop){await expect(rail(page).locator('[data-xui-menu-toggle]')).toHaveCount(1);await expect(page.locator('.xui-shell-header [data-xui-menu-toggle]')).toHaveCount(0);expect(await rail(page).evaluate(n=>n.lastElementChild.classList.contains('xui-shell-navigation-control')&&!n.firstElementChild.classList.contains('xui-shell-navigation-control'))).toBe(true);expect(await rail(page).evaluate(n=>n.getBoundingClientRect().width)).toBeCloseTo(324*font/16,1);await expect(toggle).toHaveAttribute('aria-expanded','true');expect(await toggle.evaluate(n=>document.getElementById(n.getAttribute('aria-controls'))===n.closest('aside'))).toBe(true);
+ if(desktop){await expect(rail(page).locator('[data-xui-menu-toggle]')).toHaveCount(1);await expect(page.locator('.xui-shell-header [data-xui-menu-toggle]')).toHaveCount(0);expect(await rail(page).evaluate(n=>n.lastElementChild.classList.contains('xui-shell-navigation-control')&&!n.firstElementChild.classList.contains('xui-shell-navigation-control'))).toBe(true);expect(await rail(page).evaluate(n=>n.getBoundingClientRect().width)).toBeCloseTo(await page.evaluate(font=>Math.min(Math.max(324*font/16,Math.min(innerWidth/4,432*font/16)),innerWidth/2),font),1);await expect(toggle).toHaveAttribute('aria-expanded','true');expect(await toggle.evaluate(n=>document.getElementById(n.getAttribute('aria-controls'))===n.closest('aside'))).toBe(true);
  }else{await expect(page.locator('.xui-shell-header [data-xui-menu-toggle]')).toHaveCount(1);await expect(rail(page).locator('[data-xui-menu-toggle]')).toHaveCount(0);await toggle.focus();await page.keyboard.press('Enter');await expect(drawer).toBeVisible();await expect(toggle).toHaveAttribute('aria-expanded','true');expect(await toggle.evaluate(n=>document.getElementById(n.getAttribute('aria-controls'))?.contains(document.querySelector('aside')))).toBe(true);}
  const footer=page.locator('.xui-shell-sidebar-footer'),back=page.getByTestId('footer-return'),update=page.getByTestId('footer-action'),version=page.getByTestId('footer-version'),menu=page.locator('.xui-shell-sidebar-menu');
  await expect(back).toHaveAccessibleName('返回会话');await expect(update).toHaveAccessibleName('检查更新');await expect(version).toContainText('企业版');

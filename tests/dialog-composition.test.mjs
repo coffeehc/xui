@@ -20,5 +20,5 @@ test('close action primitive retains flow; explicit header/button owns icon posi
 });
 test('dialog title consumes the section heading role and Key warnings belong to its body scroll owner',()=>{
  const css=postcss.parse(source('packages/theme/src/dialog.css'));const title=css.nodes.flatMap(node=>node.nodes??[]).find(node=>node.selector==='.xui-dialog-title');assert.equal(title.nodes.find(node=>node.prop==='font').value,'var(--font-weight-heading) var(--font-size-section-title) / var(--line-height-section-title) var(--font-sans)');
- const react=source('packages/ui-react/src/api-key.tsx'),native=source('packages/runtime/src/api-key-dom.ts');assert.ok(react.indexOf('<Dialog.Body')<react.indexOf('<Dialog.Description>'));assert.match(native,/body\.append\(description,form,result,revoke,actionFeedback\)/);assert.doesNotMatch(native,/dialog\.append\(dialogTitle,description/);
+ const react=source('packages/ui-react/src/api-key.tsx');assert.ok(react.indexOf('<Dialog.Body')<react.indexOf('<Dialog.Description>'));
 });

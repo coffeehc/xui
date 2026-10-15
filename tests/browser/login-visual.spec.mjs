@@ -19,7 +19,7 @@ async function evidence(page,info,name,data){
   await writeFile(json,JSON.stringify({standard:'docs/VALIDATION.md#认证页验收',expected:{title:'20/28px',brand:'13/20px',label:'13/20px',controls:'14/22px',logo:32,maxCardWidth:434,maxContentWidth:384,controlHeight:44,passwordToPrimaryGap:16,stableAcrossFeedback:['DOM identity','horizontal position','width','height','relative vertical gaps; card may recenter']},measured:data},null,2));
   await info.attach(name,{path:image,contentType:'image/png'});await info.attach(name+'-geometry',{path:json,contentType:'application/json'});
 }
-for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','system'])for(const width of [1280,1600,390]){
+for(const kind of ['react'])for(const appearance of ['light','dark','system'])for(const width of [1280,1600,390]){
   test(`${kind} login acceptance ${appearance} ${width}: centered hierarchy, idle, error and busy`,async({page},info)=>{
     await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),appearance);
     await page.goto(`/login-${kind}/?visualAcceptance&productName=${encodeURIComponent('统一协作与数据管理工作台')}&title=${encodeURIComponent('登录团队协作工作台')}`);
@@ -45,7 +45,7 @@ for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','s
     expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
   });
 }
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} login title respects independent font and line-height preferences`,async({page})=>{
     await page.goto(`/login-${kind}/`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
     const title=page.locator('.xui-login-body h1');
@@ -69,13 +69,13 @@ for(const kind of ['react','vanilla']){
   });
 }
 
-for(const kind of ['react','vanilla'])test(`${kind} startup refresh timeout clears busy state and leaves ordinary login available`,async({page})=>{
+for(const kind of ['react'])test(`${kind} startup refresh timeout clears busy state and leaves ordinary login available`,async({page})=>{
   await page.goto(`/login-${kind}/?session=hold`);await expect(page.getByRole('status')).toHaveText('正在确认登录状态…');await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);
   await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);
   expect((await page.evaluate(()=>window.loginDemo.getRequests())).filter(request=>request.path.endsWith('/refresh'))).toHaveLength(1);await page.evaluate(()=>window.loginDemo.release('session'));expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
 });
 
-for(const kind of ['react','vanilla'])test(`${kind} a confirmed session read timeout offers safe retry`,async({page})=>{
+for(const kind of ['react'])test(`${kind} a confirmed session read timeout offers safe retry`,async({page})=>{
   await page.goto(`/login-${kind}/?sessionReadTimeout&handoff=hold`);const retry=page.getByRole('button',{name:'重试连接'});await expect(retry).toBeVisible();
   const before=await page.evaluate(()=>{const state=window.loginDemo.auth.getState();return {errorKind:state.error?.kind,endpointId:state.error?.metadata.endpointId,requests:window.loginDemo.getRequests()};});expect(before.errorKind).toBe('timeout');expect(before.endpointId).toBe('auth.session');expect(before.requests.filter(request=>request.path.endsWith('/session'))).toHaveLength(1);
   await page.evaluate(()=>{window.loginDemo.setMode('session','ok');window.loginDemo.release('session');});await retry.click();await expect.poll(()=>page.evaluate(()=>window.loginDemo.auth.getState().status==='authenticated'&&window.loginDemo.auth.getState().busy===null&&window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length===2)).toBe(true);await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(page.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();

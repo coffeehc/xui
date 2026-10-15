@@ -33,7 +33,7 @@ for(const entry of pages)for(const theme of ['dark','light'])test(`capture final
  await info.attach(`${name}.json`,{body:JSON.stringify(record,null,2),contentType:'application/json'});
 });
 
-for(const kind of ['react','vanilla'])for(const theme of ['dark','light'])test(`capture final ${kind} administrator ${theme} desktop and narrow large-text focus evidence`,async({page},info)=>{
+for(const kind of ['react'])for(const theme of ['dark','light'])test(`capture final ${kind} administrator ${theme} desktop and narrow large-text focus evidence`,async({page},info)=>{
  const generation=JSON.parse(await readFile('.artifacts/dev-build-result.json','utf8')).sourceSha256;
  const save=async(name,state)=>{
   const metadata=await page.evaluate(state=>({url:location.href,theme:{mode:sessionStorage.getItem('ui.theme.mode'),effective:document.documentElement.dataset.themeEffective},viewport:{width:innerWidth,height:innerHeight},rootFontSize:getComputedStyle(document.documentElement).fontSize,state,focus:(()=>{const element=document.activeElement,target=element instanceof HTMLInputElement?(element.closest('.xui-input-group')??element):element,r=target.getBoundingClientRect(),style=getComputedStyle(target),distance=parseFloat(style.outlineWidth)/2+parseFloat(style.outlineOffset);return {label:element instanceof HTMLInputElement?(element.labels?.[0]?.textContent??element.getAttribute('aria-label')):element?.textContent?.trim(),target:target.className,outline:{style:style.outlineStyle,width:style.outlineWidth,offset:style.outlineOffset,color:style.outlineColor},bounds:{x:r.x,y:r.y,right:r.right,bottom:r.bottom},edges:{left:r.x-distance,right:r.right+distance,top:r.y-distance,bottom:r.bottom+distance}};})()}),state);

@@ -2,14 +2,16 @@ import * as React from 'react';
 import {createPortal} from 'react-dom';
 import { Dialog } from './dialog.js';
 import { Button } from './button.js';
+import {SimpleSelect} from './forms.js';
 import { cx,hasContent } from './shared.js';
 import {ThemeModeButton} from './theme.js';
 import type {ThemeController} from '@coffeehc/xui-runtime/theme';
-import {createHeaderLocaleSelect,isHeaderLocaleEnabled,type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
+import {isHeaderLocaleEnabled,type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
 import type {ThemeModeLabels} from '@coffeehc/xui-runtime/theme-control';
 export type {HeaderLocaleOptions,HeaderLocaleOption} from '@coffeehc/xui-runtime/header-controls';
-import type {ShellScrollMode,ShellContentInset,SidebarTogglePlacement} from '@coffeehc/xui-runtime/menu-layout';
-export type {ShellScrollMode,ShellContentInset,SidebarTogglePlacement} from '@coffeehc/xui-runtime/menu-layout';
+export type ShellScrollMode='document'|'viewport'|'workspace';
+export type ShellContentInset='standard'|'edge';
+export type SidebarTogglePlacement='top'|'bottom';
 import {ShellNavigationContext} from './shell-context.js';
 
 export function Container({className,...props}:React.ComponentProps<'div'>){return <div {...props} className={cx('xui-container',className)}/>;}
@@ -33,12 +35,11 @@ export type SectionProps=Omit<React.ComponentProps<'section'>,'title'> & {title?
 export function Section({title,actions,children,className,...props}:SectionProps){const id=React.useId();return <section aria-labelledby={hasContent(title)?id:undefined} {...props} className={cx('xui-section',className)}>{(hasContent(title)||hasContent(actions))&&<header className="xui-section-header">{hasContent(title)&&<h2 id={id}>{title}</h2>}{hasContent(actions)&&<div className="xui-toolbar">{actions}</div>}</header>}{children}</section>;}
 
 function HeaderLocaleSelect({locale}:{locale:HeaderLocaleOptions}){
-  const mount=React.useRef<HTMLSpanElement>(null),binding=React.useRef<ReturnType<typeof createHeaderLocaleSelect>|null>(null);
-  React.useLayoutEffect(()=>{const node=mount.current!,owner=createHeaderLocaleSelect(node.ownerDocument,locale);binding.current=owner;node.append(owner.element);return ()=>{if(owner.element.contains(node.ownerDocument.activeElement))node.closest('.xui-app-header-controls')?.querySelector<HTMLButtonElement>('.xui-theme-mode-toggle')?.focus();owner.destroy();binding.current=null;};},[]);
-  React.useLayoutEffect(()=>binding.current?.update(locale),[locale]);
-  return <span className="xui-select-host" data-xui-header-locale="" ref={mount}/>;
+ const mount=React.useRef<HTMLSpanElement>(null);
+ React.useLayoutEffect(()=>{const node=mount.current!;return()=>{const active=node.ownerDocument.activeElement,popupId=node.querySelector('[role=combobox]')?.getAttribute('aria-controls');if(node.contains(active)||popupId&&node.ownerDocument.getElementById(popupId)?.contains(active))node.closest('.xui-app-header-controls')?.querySelector<HTMLButtonElement>('.xui-theme-mode-toggle')?.focus();};},[]);
+ const known=locale.options.some(item=>item.value===locale.value);
+ return <span className="xui-select-host" data-xui-header-locale="" ref={mount}><SimpleSelect className="xui-header-locale" aria-label={locale.label??'语言'} value={locale.value} disabled={locale.disabled} onChange={event=>{const value=event.currentTarget.value;if(locale.enabled&&!locale.disabled&&value!==locale.value&&locale.options.some(item=>item.value===value&&!item.disabled))locale.onValueChange(value);}}>{!known&&<option value={locale.value} hidden disabled/>}{locale.options.map(item=><option key={item.value} value={item.value} disabled={item.disabled}>{item.label}</option>)}</SimpleSelect></span>;
 }
-
 
 /** Product identity content; its region tracks the shell rail automatically. */
 export function HeaderBrand({logo,children,className,...props}:React.ComponentProps<'span'>&{logo?:React.ReactNode}){

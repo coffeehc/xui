@@ -52,12 +52,12 @@ async function togglePaint(control){return control.evaluate(node=>{
  try{return {pressed:node.getAttribute('aria-pressed'),hover:node.matches(':hover'),focusVisible:node.matches(':focus-visible'),background:style.backgroundColor,color:style.color,borderColor:style.borderColor,outlineStyle:style.outlineStyle,outlineWidth:style.outlineWidth,outlineOffset:style.outlineOffset,tokens:Object.fromEntries(['--interaction-selected','--interaction-selected-foreground','--button-hover-background'].map(token=>[token,{specified:root.getPropertyValue(token).trim(),resolved:resolved(token)}]))};}finally{probe.remove();}
 });}
 
-for(const kind of ['react','vanilla'])for(const mode of modes)for(const size of sizes){
+for(const kind of ['react'])for(const mode of modes)for(const size of sizes){
  test(`${kind} workspace ${mode} ${size.name}: first/grouped/last controls retain all four focus edges`,async({page},info)=>{
   await page.setViewportSize({width:size.width,height:size.height});await appearance(page,mode);
   await page.goto('/react/foundation-contract.html');
   await page.waitForFunction(()=>typeof window.renderWorkspaceFocusCase==='function');
-  await page.evaluate(config=>window.renderWorkspaceFocusCase(config),{native:kind==='vanilla',mode});
+  await page.evaluate(config=>window.renderWorkspaceFocusCase(config),{mode});
   const first=page.getByRole('textbox',{name:'Workspace first',exact:true});await expect(first).toBeVisible();await settle(page);
   await expect(page.locator('html')).toHaveAttribute('data-theme-effective',mode==='system'?'dark':mode);
   for(const [label,value] of [['Workspace first','Keep first draft'],['Workspace grouped','Keep grouped draft'],['Workspace last','Keep last draft']]){

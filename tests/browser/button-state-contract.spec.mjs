@@ -18,7 +18,7 @@ function disabledPaint(actual,label){
  expect.soft(actual.cursor).toBe('not-allowed');expect.soft(actual.transform).toBe('none');
 }
 async function attach(page,info,name,values){await info.attach(`${name}.json`,{body:JSON.stringify(values,null,2),contentType:'application/json'});await info.attach(`${name}.png`,{body:await page.screenshot({fullPage:true}),contentType:'image/png'});}
-for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])for(const width of [1280,390])test(`${kind} ${theme} ${width}: every Button variant honors disabled and busy combinations`,async({page},info)=>{
+for(const kind of ['react'])for(const theme of ['light','dark','system'])for(const width of [1280,390])test(`${kind} ${theme} ${width}: every Button variant honors disabled and busy combinations`,async({page},info)=>{
  await setup(page,kind,theme,width);const measured=[];
  for(const variant of variants){
   for(const state of ['enabled','busy']){const id=`${variant}-${state}`,button=page.getByTestId(id);await expect(button).toBeEnabled();await button.click();expect(await page.evaluate(id=>window.buttonStateClicks[id],id)).toBe(1);}
@@ -30,7 +30,7 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
   }
  }
  const toggle=page.getByTestId('disabled-selected-toggle');await expect(toggle).toBeDisabled();await expect(toggle).toHaveAttribute('aria-pressed','true');const selected=await paint(toggle);disabledPaint(selected,'disabled selected toggle');measured.push({id:'disabled-selected-toggle',selected});
- if(kind==='react'){const link=page.getByTestId('disabled-link-element');await expect(link).toHaveAttribute('aria-disabled','true');disabledPaint(await paint(link),'disabled anchor');}
+ const link=page.getByTestId('disabled-link-element');await expect(link).toHaveAttribute('aria-disabled','true');disabledPaint(await paint(link),'disabled anchor');
  await attach(page,info,`${kind}-${theme}-${width}-disabled-states`,measured);
  await page.addStyleTag({content:'@layer product-overrides { :root { --button-disabled-background:var(--status-warning-soft); --button-disabled-foreground:var(--status-warning-foreground); } }'});await settle(page);
  const overrides=[];for(const variant of variants)for(const state of ['disabled','disabled-busy']){const id=`${variant}-${state}`,actual=await paint(page.getByTestId(id));disabledPaint(actual,`${id} token override`);overrides.push({id,actual});}
@@ -38,7 +38,7 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
  // Ordinary Tab skips native disabled buttons. Busy alone keeps its keyboard stop.
  const enabled=page.getByTestId('primary-enabled'),busy=page.getByTestId('primary-busy');await enabled.focus();await page.keyboard.press('Tab');await expect(busy).toBeFocused();await page.keyboard.press('Tab');await expect(page.getByTestId('secondary-enabled')).toBeFocused();
 });
-for(const kind of ['react','vanilla'])for(const scheme of ['light','dark'])test(`${kind} ${scheme}: disabled Button variants preserve platform forced-color handling`,async({page},info)=>{
+for(const kind of ['react'])for(const scheme of ['light','dark'])test(`${kind} ${scheme}: disabled Button variants preserve platform forced-color handling`,async({page},info)=>{
  await setup(page,kind,scheme,390);await page.emulateMedia({forcedColors:'active',colorScheme:scheme,reducedMotion:'reduce'});await settle(page);const measured=[];
  for(const variant of variants){const button=page.getByTestId(`${variant}-disabled-busy`);await expect(button).toBeDisabled();const actual=await paint(button);expect(actual.forcedColorAdjust).toBe('auto');expect(actual.busy).toBe('true');measured.push({variant,actual});}
  const enabled=page.getByTestId('primary-enabled');await enabled.focus();await page.keyboard.press('Tab');await expect(page.getByTestId('primary-busy')).toBeFocused();await page.keyboard.press('Tab');await expect(page.getByTestId('secondary-enabled')).toBeFocused();

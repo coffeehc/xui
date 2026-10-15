@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-const kinds=['react','vanilla'],themes=['light','dark','system'];
+const kinds=['react'],themes=['light','dark','system'];
 async function setup(page,kind,theme){
  await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});
  await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);

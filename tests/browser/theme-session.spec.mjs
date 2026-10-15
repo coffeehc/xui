@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(kind+' session preference survives reload, ignores legacy local storage and isolates independent tabs',async({page,context})=>{
   await page.goto('/header-controls-'+kind+'/');await page.evaluate(()=>{localStorage.setItem('ui.theme.mode','light');sessionStorage.removeItem('ui.theme.mode');});await page.reload();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   const toggle=page.locator('.xui-theme-mode-toggle');await toggle.click();await toggle.click();await expect(page.locator('html')).toHaveAttribute('data-theme','light');expect(await page.evaluate(()=>sessionStorage.getItem('ui.theme.mode'))).toBe('light');await page.reload();await expect(page.locator('html')).toHaveAttribute('data-theme','light');

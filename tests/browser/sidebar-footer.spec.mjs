@@ -33,7 +33,7 @@ async function capture(page,info,name){
 async function remember(page){await page.evaluate(()=>{window.footerIdentity={sidebar:document.querySelector('.xui-shell-sidebar-with-footer'),footer:document.querySelector('.xui-shell-sidebar-footer'),action:document.querySelector('[data-testid="footer-action"]'),version:document.querySelector('[data-testid="footer-version"]'),main:document.querySelector('main'),draft:document.getElementById('footer-draft'),theme:window.xuiTheme};});}
 async function assertIdentity(page){expect(await page.evaluate(()=>window.sidebarFooterDemo.getVersionNode()===document.querySelector('[data-testid="footer-version"]'))).toBe(true);expect(await page.evaluate(()=>Object.entries(window.footerIdentity).every(([key,node])=>node===({sidebar:document.querySelector('.xui-shell-sidebar-with-footer'),footer:document.querySelector('.xui-shell-sidebar-footer'),action:document.querySelector('[data-testid="footer-action"]'),version:document.querySelector('[data-testid="footer-version"]'),main:document.querySelector('main'),draft:document.getElementById('footer-draft'),theme:window.xuiTheme})[key]))).toBe(true);}
 
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   for(const mode of ['light','dark','system'])for(const collapsed of [false,true])test(`${kind} ${mode} ${collapsed?'compact':'expanded'} footer stays at the bottom with complete action names`,async({page},info)=>{
     await setup(page,kind,`?collapsed=${collapsed}`,mode);await expect(action(page)).toBeVisible();const toggle=page.locator('.xui-shell-toggle');await expect(toggle).toHaveAccessibleName(collapsed?'展开导航':'紧凑导航');await expect(toggle).toHaveAttribute('aria-expanded',String(!collapsed));await expect(sidebar(page).locator('.xui-menu-compact-toggle:visible')).toHaveCount(0);
     const rail=await bounds(sidebar(page)),bottom=await bounds(footer(page)),menuBox=await bounds(menu(page));
@@ -135,58 +135,6 @@ for(const kind of ['react','vanilla']){
     await page.evaluate(()=>window.sidebarFooterDemo.repeatFooter());await expect(page.getByTestId('footer-replacement')).toHaveCount(1);await page.evaluate(()=>window.sidebarFooterDemo.setFooter('none'));await expect(page.getByTestId('footer-replacement')).toHaveCount(0);await expect(footer(page)).toBeHidden();await nav(page,'settings').click();await expect(page.getByTestId('current-route')).toHaveText('settings');await expect(page.getByRole('textbox',{name:'草稿',exact:true})).toHaveValue('替换底部也保留');await capture(page,info,'footer-cleared');await page.evaluate(()=>window.sidebarFooterDemo.setFooter('original'));await expect(action(page)).toHaveAccessibleName(actionName);await expect(page.getByTestId('footer-version')).toHaveCount(1);await action(page).click();expect(await page.evaluate(()=>window.sidebarFooterDemo.snapshot().calls)).toBe(1);for(let count=0;count<2;count++){await page.evaluate(()=>window.sidebarFooterDemo.setFooter('none'));await expect(page.locator('.xui-shell-sidebar')).toHaveCount(1);await page.evaluate(()=>window.sidebarFooterDemo.setFooter('original'));await expect(sidebar(page)).toHaveCount(1);await expect(page.locator('.xui-shell-sidebar')).toHaveCount(1);await expect(page.locator('nav[aria-label="工作导航"]')).toHaveCount(1);}
   });
 }
-
-for(const footerKind of ['original','none'])test(`vanilla opening ${footerKind==='original'?'a footer':'a menu-only'} drawer preserves its non-first selected target`,async({page})=>{
-  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});
-  if(footerKind==='none')await page.evaluate(()=>window.sidebarFooterDemo.setFooter('none'));
-  // This is the public update/trigger sequence reported in Chromium. No menu
-  // control has had real focus, so selection supplies the pre-open tab stop.
-  await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));
-  await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await expect(nav(page,'settings')).toHaveAttribute('tabindex','0');await expect(nav(page,'overview')).toHaveAttribute('tabindex','-1');
-  await page.evaluate(()=>{window.drawerMenuFocus=[];document.addEventListener('focusin',event=>{if(event.target.matches('[data-menu-control]'))window.drawerMenuFocus.push(event.target.dataset.menuId);});});
-  const trigger=page.locator('.xui-shell-toggle');
-  for(let count=0;count<2;count++){
-    await page.evaluate(()=>{window.drawerMenuFocus=[];});await trigger.click();await expect(drawer(page)).toBeVisible();await assertMenuTarget(page,'settings');await expect(nav(page,'overview')).toHaveAttribute('tabindex','-1');
-    // Even transient focus of overview corrupts roving state and can run host
-    // focus handlers. A snapshot followed by refocusing is not sufficient.
-    await settle(page);expect(await page.evaluate(()=>window.drawerMenuFocus)).toEqual(['settings']);
-    // Tab cycles back to the same target, not whatever showModal happened to
-    // focus first. Read the expected id before opening, never from the result.
-    await page.getByRole('button',{name:'关闭导航',exact:true}).focus();await page.keyboard.press('Tab');await assertMenuTarget(page,'settings');
-    await page.keyboard.press('Escape');await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await settle(page);await expect(trigger).toBeFocused();
-  }
-});
-
-test('vanilla live navigation focus takes priority over selection and survives drawer reopening',async({page})=>{
-  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});const trigger=page.locator('.xui-shell-toggle');await trigger.click();await assertMenuTarget(page,'overview');
-  await page.keyboard.press('ArrowDown');await assertMenuTarget(page,'library');
-  await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));
-  await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await expect(nav(page,'settings')).toHaveAttribute('tabindex','-1');await assertMenuTarget(page,'library');
-  for(let count=0;count<2;count++){
-    await page.keyboard.press('Escape');await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(nav(page,'library')).toHaveAttribute('tabindex','0');
-    await trigger.click();await expect(drawer(page)).toBeVisible();await assertMenuTarget(page,'library');await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await expect(nav(page,'settings')).toHaveAttribute('tabindex','-1');
-  }
-  await page.getByRole('button',{name:'关闭导航',exact:true}).click();await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();
-});
-
-test('vanilla an initially empty drawer focuses its close fallback and restores the trigger',async({page})=>{
-  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});await page.evaluate(()=>window.sidebarFooterDemo.update({items:[],activeId:null}));const trigger=page.locator('.xui-shell-toggle');
-  for(let count=0;count<2;count++){
-    await trigger.click();await expect(drawer(page)).toBeVisible();await expect(roving(page)).toHaveCount(0);await expect(action(page)).toBeVisible();
-    const close=page.getByRole('button',{name:'关闭导航',exact:true});await expect(close).toBeFocused();await page.keyboard.press('Tab');await expect(action(page)).toBeFocused();await page.keyboard.press('Shift+Tab');await expect(close).toBeFocused();
-    await close.click();await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();
-  }
-});
-
-test('vanilla reopening a long drawer keeps the focused first item visible instead of scrolling to selection',async({page})=>{
-  await setup(page,'vanilla','?list=long&collapsed=true','light',{width:390,height:844});const trigger=page.locator('.xui-shell-toggle');await trigger.click();await assertMenuTarget(page,'record-79');
-  await page.keyboard.press('Home');await assertMenuTarget(page,'record-0');await expect(nav(page,'record-79')).toHaveAttribute('aria-current','page');within(await bounds(nav(page,'record-0')),await bounds(menu(page)));
-  for(let count=0;count<2;count++){
-    await page.keyboard.press('Escape');await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(nav(page,'record-0')).toHaveAttribute('tabindex','0');
-    await trigger.click();await expect(drawer(page)).toBeVisible();await assertMenuTarget(page,'record-0');await expect(nav(page,'record-79')).toHaveAttribute('aria-current','page');
-    await settle(page);await assertMenuTarget(page,'record-0');within(await bounds(nav(page,'record-0')),await bounds(menu(page)));
-  }
-});
 
 test('direct React AppShell consumes the same public footer on desktop and mobile',async({page},info)=>{
   await setup(page,'react','?composition=shell&collapsed=true','system');await expect(action(page)).toBeVisible();expect((await bounds(sidebar(page))).width).toBeCloseTo(60,1);await remember(page);await action(page).focus();await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'library'}));await expect(action(page)).toBeFocused();await assertIdentity(page);

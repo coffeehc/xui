@@ -15,5 +15,5 @@ test('controlled and memory-only themes access neither storage; denied session s
  const b=browser(new Map(),true),owner=createThemeController({window:b.window});assert.equal(owner.getState().mode,'dark');owner.setMode('light');assert.equal(owner.getState().mode,'light');assert.equal(b.localReads,0);owner.destroy();
 });
 test('pre-paint classic init reads session preference and shares its live owner with the application',async()=>{
- const b=browser(new Map([['ui.theme.mode','light']])),script=await readFile('packages/runtime/dist/init.js','utf8'),context={window:b.window,document:b.document};runInNewContext(script,context);const original=b.window.xuiTheme;assert.equal(b.document.documentElement.dataset.theme,'light');runInNewContext(script,context);assert.equal(b.window.xuiTheme,original);assert.equal(b.reads,1);assert.equal(b.localReads,0);original.destroy();
+ const b=browser(new Map([['ui.theme.mode','light']])),script=await readFile('packages/runtime/dist/init.js','utf8'),context={window:b.window,document:b.document};runInNewContext(script,context);const original=b.window.xuiTheme;assert.equal(b.document.documentElement.dataset.theme,'light');runInNewContext(script,context);assert.equal(b.window.xuiTheme,original);assert.equal(b.reads,3);assert.equal(b.localReads,0);original.destroy();
 });

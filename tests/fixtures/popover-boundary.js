@@ -1,6 +1,0 @@
-import {createPopoverController} from '@coffeehc/xui-runtime/dom';
-import {createThemeController} from '@coffeehc/xui-runtime/theme';
-import '@coffeehc/xui-theme/style.css';
-import './popover-boundary.css';
-const root=document.getElementById('root');root.innerHTML='<main class="xui-stack"><input class="xui-input" aria-label="保留草稿" value="原有草稿"><button id="outside">其他独立操作</button><div class="usage-toolbar"><button class="xui-button" id="usage-trigger">上下文与累计用量</button></div><div class="xui-layer xui-floating xui-popover-popup usage-popover" data-testid="usage-popup" role="dialog" aria-labelledby="usage-title"><h2 class="xui-dialog-title" id="usage-title">上下文与累计用量</h2><dl>'+Array.from({length:12},(_,i)=>`<div><dt>第${i+1}项上下文与累计用量长中文名称</dt><dd>合成统计内容：${(i+1)*12345}</dd></div>`).join('')+'</dl><button class="xui-button">末行操作</button></div></main>';
-let accept=true;const owner=createPopoverController(root.querySelector('#usage-trigger'),root.querySelector('[data-testid="usage-popup"]'),{open:false,onOpenChange:next=>{if(accept)owner.syncOpen(next);}});createThemeController();Object.assign(window,{popoverBoundary:{setOpen:owner.syncOpen,setAccept:value=>{accept=value;},getOpen:owner.getOpen,getAccept:()=>accept,destroy:owner.destroy}});

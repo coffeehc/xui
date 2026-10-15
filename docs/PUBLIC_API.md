@@ -2,9 +2,11 @@
 
 这是当前 manifests 的全部入口映射；完整通用规范只在 [DESIGN.md](DESIGN.md)，接入步骤见 [ADOPTION.md](ADOPTION.md)。没有省略 root/re-export/helper 入口，也不把规划能力列为可调用接口。
 
+新建或改造产品 UI 统一以 `@coffeehc/xui-react` 为唯一公共 UI 层。runtime 只保留无框架 TypeScript 服务、模型、解析器、presentation 数据/helper 与工具，不提供 DOM UI factory/controller；React 页面可按真实职责复用这些 TS 能力。XQuant、XLead 等产品迁移状态以各自仓库逐页验收为准。
+
 下表链接到可读源码与合同；正式 types 路径由包 exports.types 指向 dist 声明。请固定 checkout SHA，先构建再消费，不直接把源码链接设成产品 alias。根入口是相应子入口的汇总；命名类型和运行时导出逐项记录到可再生成的 `.artifacts/public-api.json`，不手写另一份函数签名。
 
-[scripts/public-api.mjs](../scripts/public-api.mjs) 从实际 manifests/构建声明取全部名字；[文档守卫](../scripts/check-docs.mjs) 检查本表入口与 manifests 完全一致。[正式消费](../scripts/consumers.mjs) 在独立 tarball 安装中逐个读取 ESM/CSS/init、编译每个命名导出的 type import、导入各模块核对运行时导出，并打包全部 ESM/CSS；原生无 React。下面的完整页面与 fixture 再证明实际组装行为，入口通过不代表未跑的产品集成通过。
+[scripts/public-api.mjs](../scripts/public-api.mjs) 从实际 manifests/构建声明取全部名字；[文档守卫](../scripts/check-docs.mjs) 检查本表入口与 manifests 完全一致。[正式消费](../scripts/consumers.mjs) 在独立 tarball 安装中读取 ESM/CSS/init、编译命名导出的 type import、核对运行时导出并打包全部 ESM/CSS。下面的完整页面与 fixture 再证明实际组装行为，入口通过不代表未跑的产品集成通过。
 
 按章节查阅：
 
@@ -20,26 +22,26 @@
 
 ## 全部正式入口
 
-下表完整覆盖当前 102 个 manifest exports；组件用法按 [组件手册](COMPONENTS.md) 查阅，签名以固定版本的正式 types 为准。
+下表完整覆盖当前 manifest 中的全部公开入口；组件用法按 [组件手册](COMPONENTS.md) 查阅，签名以固定版本的正式 types 为准。
 
 ### @coffeehc/xui-theme
 
 | import/script | 源码与导出 | 使用合同 | 示例 |
 | --- | --- | --- | --- |
-| `@coffeehc/xui-theme/style.css` <!-- public-entry: @coffeehc/xui-theme/style.css --> | [源码](../scripts/tokens.mjs) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/tokens.css` <!-- public-entry: @coffeehc/xui-theme/tokens.css --> | [源码](DESIGN.md) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/components.css` <!-- public-entry: @coffeehc/xui-theme/components.css --> | [源码](../packages/theme/src/components.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/base.css` <!-- public-entry: @coffeehc/xui-theme/base.css --> | [源码](../packages/theme/src/base.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/button.css` <!-- public-entry: @coffeehc/xui-theme/button.css --> | [源码](../packages/theme/src/button.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/forms.css` <!-- public-entry: @coffeehc/xui-theme/forms.css --> | [源码](../packages/theme/src/forms.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/navigation.css` <!-- public-entry: @coffeehc/xui-theme/navigation.css --> | [源码](../packages/theme/src/navigation.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/feedback.css` <!-- public-entry: @coffeehc/xui-theme/feedback.css --> | [源码](../packages/theme/src/feedback.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/dialog.css` <!-- public-entry: @coffeehc/xui-theme/dialog.css --> | [源码](../packages/theme/src/dialog.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/layout.css` <!-- public-entry: @coffeehc/xui-theme/layout.css --> | [源码](../packages/theme/src/layout.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/floating.css` <!-- public-entry: @coffeehc/xui-theme/floating.css --> | [源码](../packages/theme/src/floating.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/table.css` <!-- public-entry: @coffeehc/xui-theme/table.css --> | [源码](../packages/theme/src/table.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/critical.css` <!-- public-entry: @coffeehc/xui-theme/critical.css --> | [源码](../scripts/tokens.mjs) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-theme/auth.css` <!-- public-entry: @coffeehc/xui-theme/auth.css --> | [源码](../packages/theme/src/auth.css) | [合同](PUBLIC_API.md#认证会话) | [示例](../examples/login-vanilla/app.js) |
+| `@coffeehc/xui-theme/style.css` <!-- public-entry: @coffeehc/xui-theme/style.css --> | [源码](../scripts/tokens.mjs) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/tokens.css` <!-- public-entry: @coffeehc/xui-theme/tokens.css --> | [源码](DESIGN.md) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/components.css` <!-- public-entry: @coffeehc/xui-theme/components.css --> | [源码](../packages/theme/src/components.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/base.css` <!-- public-entry: @coffeehc/xui-theme/base.css --> | [源码](../packages/theme/src/base.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/button.css` <!-- public-entry: @coffeehc/xui-theme/button.css --> | [源码](../packages/theme/src/button.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/forms.css` <!-- public-entry: @coffeehc/xui-theme/forms.css --> | [源码](../packages/theme/src/forms.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/navigation.css` <!-- public-entry: @coffeehc/xui-theme/navigation.css --> | [源码](../packages/theme/src/navigation.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/feedback.css` <!-- public-entry: @coffeehc/xui-theme/feedback.css --> | [源码](../packages/theme/src/feedback.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/dialog.css` <!-- public-entry: @coffeehc/xui-theme/dialog.css --> | [源码](../packages/theme/src/dialog.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/layout.css` <!-- public-entry: @coffeehc/xui-theme/layout.css --> | [源码](../packages/theme/src/layout.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/floating.css` <!-- public-entry: @coffeehc/xui-theme/floating.css --> | [源码](../packages/theme/src/floating.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/table.css` <!-- public-entry: @coffeehc/xui-theme/table.css --> | [源码](../packages/theme/src/table.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/critical.css` <!-- public-entry: @coffeehc/xui-theme/critical.css --> | [源码](../scripts/tokens.mjs) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/auth.css` <!-- public-entry: @coffeehc/xui-theme/auth.css --> | [源码](../packages/theme/src/auth.css) | [合同](PUBLIC_API.md#认证会话) | [示例](../examples/login-react/app.tsx) |
 | `@coffeehc/xui-theme/sheet.css` <!-- public-entry: @coffeehc/xui-theme/sheet.css --> | [Sheet/确认/触发器样式](../packages/theme/src/sheet.css)，同样包含在critical/style | — | — |
 | `@coffeehc/xui-theme/widgets.css` <!-- public-entry: @coffeehc/xui-theme/widgets.css --> | [源码](../packages/theme/src/widgets.css)，也包含于critical/style | — | — |
 | `@coffeehc/xui-theme/search-toolbar.css` <!-- public-entry: @coffeehc/xui-theme/search-toolbar.css --> | 同时包含于 style/critical/components；统一尺寸和响应布局仅消费既有公共 token。 | [组件合同](COMPONENTS.md) | — |
@@ -48,51 +50,32 @@
 
 | import/script | 源码与导出 | 使用合同 | 示例 |
 | --- | --- | --- | --- |
-| `@coffeehc/xui-runtime` <!-- public-entry: @coffeehc/xui-runtime --> | [源码](../packages/runtime/src/index.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-runtime/init.js` <!-- public-entry: @coffeehc/xui-runtime/init.js --> | [源码](../packages/runtime/src/init.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-runtime/theme` <!-- public-entry: @coffeehc/xui-runtime/theme --> | [源码](../packages/runtime/src/theme.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-runtime/theme-control` <!-- public-entry: @coffeehc/xui-runtime/theme-control --> | [源码](../packages/runtime/src/theme-control.ts) | [顶栏合同](COMPONENTS.md#布局与顶栏) | [示例](../examples/header-controls-vanilla/app.js) |
-| `@coffeehc/xui-runtime/header-controls` <!-- public-entry: @coffeehc/xui-runtime/header-controls --> | [源码](../packages/runtime/src/header-controls.ts) | [语言合同](COMPONENTS.md#布局与顶栏) | [示例](../examples/header-controls-vanilla/app.js) |
-| `@coffeehc/xui-runtime/loading` <!-- public-entry: @coffeehc/xui-runtime/loading --> | [源码](../packages/runtime/src/loading.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-runtime/navigation` <!-- public-entry: @coffeehc/xui-runtime/navigation --> | [源码](../packages/runtime/src/navigation.ts) | [合同](COMPONENTS.md#导航与菜单) | [示例](../examples/menu-vanilla/app.js) |
-| `@coffeehc/xui-runtime/http` <!-- public-entry: @coffeehc/xui-runtime/http --> | [源码](../packages/runtime/src/http.ts) | [合同](PUBLIC_API.md#http-与查询) | [示例](../examples/http-vanilla/app.js) |
-| `@coffeehc/xui-runtime/query` <!-- public-entry: @coffeehc/xui-runtime/query --> | [源码](../packages/runtime/src/query.ts) | [合同](PUBLIC_API.md#http-与查询) | [示例](../examples/http-vanilla/app.js) |
-| `@coffeehc/xui-runtime/menu-layout` <!-- public-entry: @coffeehc/xui-runtime/menu-layout --> | [源码](../packages/runtime/src/menu-layout.ts) | [合同](COMPONENTS.md#导航与菜单) | [示例](../examples/menu-vanilla/app.js) |
-| `@coffeehc/xui-runtime/dom` <!-- public-entry: @coffeehc/xui-runtime/dom --> | [源码](../packages/runtime/src/dom.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-vanilla/app.js) |
-| `@coffeehc/xui-runtime/internal/dialog-layout` <!-- public-entry: @coffeehc/xui-runtime/internal/dialog-layout --> | [内部实现](../packages/runtime/src/dialog-layout.ts) | 包间保留接线，非消费者稳定API；使用公开Dialog/Sheet | [内部类型](../packages/runtime/src/dialog-layout.ts) |
-| `@coffeehc/xui-runtime/internal/navigation-presentation` <!-- public-entry: @coffeehc/xui-runtime/internal/navigation-presentation --> | [内部实现](../packages/runtime/src/navigation-presentation.ts) | 包间保留接线，非消费者稳定 API；使用公开 NavigationMenu 选项与名称部件 | [公共合同](COMPONENTS.md#导航与菜单) |
-| `@coffeehc/xui-runtime/internal/overflow-text` <!-- public-entry: @coffeehc/xui-runtime/internal/overflow-text --> | [内部实现](../packages/runtime/src/overflow-text.ts) | 包间展示接线，非消费者稳定 API；使用 OverflowText/createOverflowText | [公共合同](COMPONENTS.md#通用长标题) |
-| `@coffeehc/xui-runtime/api-key` <!-- public-entry: @coffeehc/xui-runtime/api-key --> | [源码](../packages/runtime/src/api-key.ts) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-vanilla/app.js) |
-| `@coffeehc/xui-runtime/api-key-dom` <!-- public-entry: @coffeehc/xui-runtime/api-key-dom --> | [源码](../packages/runtime/src/api-key-dom.ts) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-vanilla/app.js) |
-| `@coffeehc/xui-runtime/structured-log` <!-- public-entry: @coffeehc/xui-runtime/structured-log --> | [源码](../packages/runtime/src/structured-log.ts) | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-vanilla/app.js) |
-| `@coffeehc/xui-runtime/structured-log-dom` <!-- public-entry: @coffeehc/xui-runtime/structured-log-dom --> | [源码](../packages/runtime/src/structured-log-dom.ts) | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-vanilla/app.js) |
+| `@coffeehc/xui-runtime` <!-- public-entry: @coffeehc/xui-runtime --> | [源码](../packages/runtime/src/index.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-runtime/init.js` <!-- public-entry: @coffeehc/xui-runtime/init.js --> | [源码](../packages/runtime/src/init.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-runtime/theme` <!-- public-entry: @coffeehc/xui-runtime/theme --> | [源码](../packages/runtime/src/theme.ts)；`setInterfaceScale`、`InterfaceScale`、`InterfaceScaleOptions`，与根入口一致 | [主题与界面缩放](DESIGN.md#公共界面缩放) | [示例](../examples/page-composition-react/app.tsx) |
+| `@coffeehc/xui-runtime/theme-control` <!-- public-entry: @coffeehc/xui-runtime/theme-control --> | [源码](../packages/runtime/src/theme-control.ts) | [顶栏合同](COMPONENTS.md#布局与顶栏) | [示例](../examples/header-controls-react/app.tsx) |
+| `@coffeehc/xui-runtime/header-controls` <!-- public-entry: @coffeehc/xui-runtime/header-controls --> | [源码](../packages/runtime/src/header-controls.ts) | [语言合同](COMPONENTS.md#布局与顶栏) | [示例](../examples/header-controls-react/app.tsx) |
+| `@coffeehc/xui-runtime/loading` <!-- public-entry: @coffeehc/xui-runtime/loading --> | [源码](../packages/runtime/src/loading.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-runtime/navigation` <!-- public-entry: @coffeehc/xui-runtime/navigation --> | [源码](../packages/runtime/src/navigation.ts) | [合同](COMPONENTS.md#导航与菜单) | [示例](../examples/menu-react/app.tsx) |
+| `@coffeehc/xui-runtime/http` <!-- public-entry: @coffeehc/xui-runtime/http --> | [源码](../packages/runtime/src/http.ts) | [合同](PUBLIC_API.md#http-与查询) | [示例](../examples/http-react/app.tsx) |
+| `@coffeehc/xui-runtime/query` <!-- public-entry: @coffeehc/xui-runtime/query --> | [源码](../packages/runtime/src/query.ts) | [合同](PUBLIC_API.md#http-与查询) | [示例](../examples/http-react/app.tsx) |
+| `@coffeehc/xui-runtime/api-key` <!-- public-entry: @coffeehc/xui-runtime/api-key --> | [源码](../packages/runtime/src/api-key.ts) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-react/app.tsx) |
+| `@coffeehc/xui-runtime/structured-log` <!-- public-entry: @coffeehc/xui-runtime/structured-log --> | [源码](../packages/runtime/src/structured-log.ts) | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-react/app.tsx) |
 | `@coffeehc/xui-runtime/data-table` <!-- public-entry: @coffeehc/xui-runtime/data-table --> | [共享事实/类型](../packages/runtime/src/data-table.ts) | [完整组合](COMPONENTS.md#数据表格) | [模型](../examples/shared/data-table-model.ts) |
-| `@coffeehc/xui-runtime/data-table-dom` <!-- public-entry: @coffeehc/xui-runtime/data-table-dom --> | [原生](../packages/runtime/src/data-table-dom.ts) | [完整组合](COMPONENTS.md#数据表格) | [示例](../examples/data-table-vanilla/app.js) |
 | `@coffeehc/xui-runtime/grouped-combobox` <!-- public-entry: @coffeehc/xui-runtime/grouped-combobox --> | [源码](../packages/runtime/src/grouped-combobox.ts) | [合同](COMPONENTS.md#groupedcombobox-与-disclosure) | [示例](../examples/shared/grouped-search-model.ts) |
-| `@coffeehc/xui-runtime/grouped-combobox-dom` <!-- public-entry: @coffeehc/xui-runtime/grouped-combobox-dom --> | [源码](../packages/runtime/src/grouped-combobox-dom.ts) | [合同](COMPONENTS.md#groupedcombobox-与-disclosure) | [示例](../examples/grouped-search-vanilla/app.js) |
-| `@coffeehc/xui-runtime/business-log` <!-- public-entry: @coffeehc/xui-runtime/business-log --> | [源码](../packages/runtime/src/business-log.ts) | [合同](PUBLIC_API.md#业务日志) | [示例](../examples/business-log-vanilla/app.js) |
-| `@coffeehc/xui-runtime/business-log-dom` <!-- public-entry: @coffeehc/xui-runtime/business-log-dom --> | [源码](../packages/runtime/src/business-log-dom.ts) | [合同](PUBLIC_API.md#业务日志) | [示例](../examples/business-log-vanilla/app.js) |
+| `@coffeehc/xui-runtime/business-log` <!-- public-entry: @coffeehc/xui-runtime/business-log --> | [源码](../packages/runtime/src/business-log.ts) | [合同](PUBLIC_API.md#业务日志) | [示例](../examples/business-log-react/app.tsx) |
 | `@coffeehc/xui-runtime/auth` <!-- public-entry: @coffeehc/xui-runtime/auth --> | [源码](../packages/runtime/src/auth.ts) | [合同](PUBLIC_API.md#认证会话) | [示例](../examples/shared/login-model.ts) |
 | `@coffeehc/xui-runtime/entity-id` <!-- public-entry: @coffeehc/xui-runtime/entity-id --> | [源码](../packages/runtime/src/entity-id.ts) | [编码合同](PUBLIC_API.md#显式实体身份编码) | [合成合同](../tests/entity-id.test.mjs) |
-| `@coffeehc/xui-runtime/login-dom` <!-- public-entry: @coffeehc/xui-runtime/login-dom --> | [源码](../packages/runtime/src/login-dom.ts) | [合同](PUBLIC_API.md#认证会话) | [示例](../examples/login-vanilla/app.js) |
 | `@coffeehc/xui-runtime/password` <!-- public-entry: @coffeehc/xui-runtime/password --> | [源码](../packages/runtime/src/password.ts) | [合同](COMPONENTS.md#密码输入) | [验证](../tests/password.test.mjs) |
-| `@coffeehc/xui-runtime/password-dom` <!-- public-entry: @coffeehc/xui-runtime/password-dom --> | [源码](../packages/runtime/src/password-dom.ts) | [合同](COMPONENTS.md#密码输入) | [验证](../tests/browser/password-fields.spec.mjs) |
-| `@coffeehc/xui-runtime/choice-group` <!-- public-entry: @coffeehc/xui-runtime/choice-group --> | [源码](../packages/runtime/src/choice-group.ts) | [成组字段](COMPONENTS.md#成组选项) | [示例](../examples/choice-group-vanilla/app.js) |
-| `@coffeehc/xui-runtime/choice-group-dom` <!-- public-entry: @coffeehc/xui-runtime/choice-group-dom --> | [源码](../packages/runtime/src/choice-group-dom.ts) | [成组字段](COMPONENTS.md#成组选项) | [示例](../examples/choice-group-vanilla/app.js) |
-| `@coffeehc/xui-runtime/number-input` <!-- public-entry: @coffeehc/xui-runtime/number-input --> | [源码](../packages/runtime/src/number-input.ts) | [专用输入](COMPONENTS.md#文本输入) | [示例](../examples/text-inputs-vanilla/app.js) |
-| `@coffeehc/xui-runtime/text-inputs-dom` <!-- public-entry: @coffeehc/xui-runtime/text-inputs-dom --> | [源码](../packages/runtime/src/text-inputs-dom.ts) | [专用输入](COMPONENTS.md#文本输入) | [示例](../examples/text-inputs-vanilla/app.js) |
+| `@coffeehc/xui-runtime/choice-group` <!-- public-entry: @coffeehc/xui-runtime/choice-group --> | [源码](../packages/runtime/src/choice-group.ts) | [成组字段](COMPONENTS.md#成组选项) | [示例](../examples/choice-group-react/app.tsx) |
+| `@coffeehc/xui-runtime/number-input` <!-- public-entry: @coffeehc/xui-runtime/number-input --> | [源码](../packages/runtime/src/number-input.ts) | [专用输入](COMPONENTS.md#文本输入) | [示例](../examples/text-inputs-react/app.tsx) |
 | `@coffeehc/xui-runtime/download` <!-- public-entry: @coffeehc/xui-runtime/download --> | [下载](../packages/runtime/src/download.ts)：安全头信息、文件名、请求与显式保存 | — | — |
-| `@coffeehc/xui-runtime/api-key-http` <!-- public-entry: @coffeehc/xui-runtime/api-key-http --> | [默认原生adapter](../packages/runtime/src/api-key-http.ts)，[页面API合同](PUBLIC_API.md#默认适配器的服务前置) | — | — |
-| `@coffeehc/xui-runtime/business-log-http` <!-- public-entry: @coffeehc/xui-runtime/business-log-http --> | [默认原生loader](../packages/runtime/src/business-log-http.ts)，webfacade offset/ListData | — | — |
+| `@coffeehc/xui-runtime/api-key-http` <!-- public-entry: @coffeehc/xui-runtime/api-key-http --> | [默认 HTTP adapter](../packages/runtime/src/api-key-http.ts)，[页面API合同](PUBLIC_API.md#默认适配器的服务前置) | — | — |
+| `@coffeehc/xui-runtime/business-log-http` <!-- public-entry: @coffeehc/xui-runtime/business-log-http --> | [默认 HTTP loader](../packages/runtime/src/business-log-http.ts)，webfacade offset/ListData | — | — |
 | `@coffeehc/xui-runtime/calendar` <!-- public-entry: @coffeehc/xui-runtime/calendar --> | [源码](../packages/runtime/src/calendar.ts)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
-| `@coffeehc/xui-runtime/date-time` <!-- public-entry: @coffeehc/xui-runtime/date-time --> | [模型与值合同](../packages/runtime/src/date-time.ts) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-vanilla/app.js) |
-| `@coffeehc/xui-runtime/date-time-dom` <!-- public-entry: @coffeehc/xui-runtime/date-time-dom --> | [原生组合](../packages/runtime/src/date-time-dom.ts) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-vanilla/app.js) |
-| `@coffeehc/xui-runtime/widgets-dom` <!-- public-entry: @coffeehc/xui-runtime/widgets-dom --> | [源码](../packages/runtime/src/widgets-dom.ts)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
-| `@coffeehc/xui-runtime/search-toolbar-dom` <!-- public-entry: @coffeehc/xui-runtime/search-toolbar-dom --> | 及根入口：`createSearchToolbar` / `SearchToolbarOptions` / `SearchToolbarController`，对应 Node/null 槽，稳定 update/getElement/getExpanded/destroy。 | [组件合同](COMPONENTS.md) | — |
+| `@coffeehc/xui-runtime/date-time` <!-- public-entry: @coffeehc/xui-runtime/date-time --> | [模型与值合同](../packages/runtime/src/date-time.ts) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-react/app.tsx) |
 | `@coffeehc/xui-runtime/display` <!-- public-entry: @coffeehc/xui-runtime/display --> | createCopyController、copyableLabels、validateImageOptions 与文字/复制/图片共享类型。 | [组件合同](COMPONENTS.md) | — |
-| `@coffeehc/xui-runtime/display-dom` <!-- public-entry: @coffeehc/xui-runtime/display-dom --> | createTypographyHeading/Text/Link/Code、createCopyable、createSeparator、createTag、createImage、createOverflowText/OverflowTextOptions/OverflowTextController。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup --> | AdminSetupCheck/CheckResult、createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。 | [组件合同](COMPONENTS.md) | — |
-| `@coffeehc/xui-runtime/admin-setup-dom` <!-- public-entry: @coffeehc/xui-runtime/admin-setup-dom --> | createAdminSetupPage、AdminSetupPageOptions、AdminSetupPageController。 | [组件合同](COMPONENTS.md) | — |
 
 ### @coffeehc/xui-react
 
@@ -146,29 +129,28 @@
 | 能力 | 当前默认值与 owner |
 | --- | --- |
 | theme/init/useTheme | dark、sessionStorage key `ui.theme.mode`、persist 开启，同标签页刷新保留、不主动跨页同步、不读取或迁移旧localStorage；无保存值/非法值回 dark，只有显式 system 在媒体读取失败时生效 light，storage 失败保留内存。传 mode 为受控且不读写 storage；同步 init 复用 window.xuiTheme，useTheme 只订阅 |
-| 原生 UI ID | 按 ownerDocument 共享分配，跨 bundle/多实例/卸载重建不重用；无 crypto/randomUUID 或 HTTPS 前置条件。已有显式 DOM ID 与 Toast message.id 保留。仅临时 UI 身份，不是认证/安全随机或持久业务 ID，见 [内网 HTTP 接入](ADOPTION.md#原生-ui-id-与内网-http) |
 | Button/IconButton | type=button、variant=primary、size=default；busy 与 disabled 分开，无隐式防重复；IconButton 要求 aria-label。render/ref/事件沿用公开 peer 合并合同 |
-| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Textarea 可选 autoResize={maxRows}，原生 /dom 的 bindTextareaAutoResize 只拥有尺寸，包含 stacked InputGroup 的上下 Addon 组合，默认未启用时行为不变，见[文本输入](COMPONENTS.md#textarea-可选自动增高)；Fieldset 独立关联 legend/help/error |
-| MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留原生链接，菜单键盘/drawer owner 由库提供 |
+| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Textarea 可选 `autoResize={maxRows}`，只拥有尺寸，包含 stacked InputGroup 的上下 Addon 组合，默认未启用时行为不变，见[文本输入](COMPONENTS.md#textarea-可选自动增高)；Fieldset 独立关联 legend/help/error |
+| MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留 HTML link 导航，菜单键盘/drawer owner 由 React 组件提供 |
 | GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](COMPONENTS.md#groupedcombobox-与-disclosure) |
 | Pagination/Disclosure | Pagination 默认第 1 页，pageCount 由宿主；受控 page 只请求确认。Disclosure 默认关闭，装饰性 chevron 与公开 DisclosureIndicator 复用相同 tokens。两者不发请求、不自动路由 |
-| React Tabs/原生 tabs | React Root/List props 保留固定 peer 行为，xui 只补跳过 disabled 的方向键。原生默认手动激活、loopFocus=true；初始 value 优先 options，其次已有 selected，最后首个可用项；受控必须 syncValue |
-| Dialog/Popover/Menu/Tooltip | 关闭不保存。原生 open 默认 false；受控 syncOpen、可取消 change。React Content portal/默认定位：Select bottom/start 且 alignItemWithTrigger=false，Combobox/Menu bottom/start，Popover bottom/center，Tooltip top/center；positionerProps 可覆盖。Dialog 为模态，非模态浮层不 trap；Tooltip 只放说明 |
+| Tabs | Root/List props 保留固定 peer 行为，xui 只补跳过 disabled 的方向键；手动/自动激活、loop、RTL 与方向遵循 React peer 合同 |
+| Dialog/Popover/Menu/Tooltip | 关闭不保存。受控 open 与可取消变化遵循各自 React peer 合同。Content portal/默认定位：Select bottom/start 且 alignItemWithTrigger=false，Combobox/Menu bottom/start，Popover bottom/center，Tooltip top/center；positionerProps 可覆盖。Dialog 为模态，非模态浮层不 trap；Tooltip 只放说明 |
 | Sheet/AlertDialog/ContextMenu | Sheet默认end，确认initialFocus由宿主或安全取消/中性节点；context rightclick/Shift+F10，checked状态宿主拥有；details.cancel/finalFocus/嵌套生命周期见[弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
-| Toast | 原生按 id 去重、默认限额 5（limit 可覆盖且至少 1），未给 timeoutMs 不自动消失；显式 timeout 由 performance.now 计时，hover/focus 暂停。React Provider/manager props 保留 peer 默认，不伪称两套计时行为相同；必要错误就地持续可见 |
+| Toast | Provider/manager 使用 React peer 合同；必要错误就地持续可见，不只依赖自动消失通知 |
 | Table/layout | 真实标准元素、header cell 默认 scope=col；TableContainer 为可聚焦 region，宿主给名字。SortButton type=button；striped/expandedRow/ExpandedRow/ExpandButton与逻辑stickyOffset公开；排序/选择/查询/虚拟化不由库执行。PageHeader 主标题和 actions，AppShell 默认抽屉关闭 |
-| feedback/resource | Alert 默认 info/status，error 为 alert；DataRegion busy=false；显式传 feedback（含 null）时保留局部反馈槽，原生可用公开 xui-feedback-slot；LoadingState 默认 Loading…，ErrorState 默认 Retry。resource 初始 idle、isEmpty 未声明不猜空、无 timeout/cache/请求或自动 retry；换 key 清旧值、同 key 刷新保留，hooks 只订阅 |
+| feedback/resource | Alert 默认 info/status，error 为 alert；DataRegion busy=false；显式传 feedback（含 null）时保留局部反馈槽，使用公开 feedback slot；LoadingState 默认 Loading…，ErrorState 默认 Retry。resource 初始 idle、isEmpty 未声明不猜空、无 timeout/cache/请求或自动 retry；换 key 清旧值、同 key 刷新保留，hooks 只订阅 |
 | MetricCard | label/value 必填且原样显示（保留0）；marker默认无、空内容不占位；section/dl/dt/dd为被动展示，未内置按钮/live角色。复用Surface/stat tokens，排列仍由Grid；[合同](COMPONENTS.md#metriccard) |
 | HTTP | 默认 GET、response=ajax、same-origin credentials、Go success=true，code 为业务元数据；普通30秒/blob120秒预算，无自动重试。空/false/null payload 合法。响应模式、headers、认证/错误/重试适配与预算见 HTTP 合同，写操作不自动重放 |
 | webfacade query | pageIndexOffset 必须逐 endpoint 明确，maxPageSize/字段 codecs/sort 白名单由宿主。没有全局页基数、上限或日期/object 隐式转换；ListData 为 list + 可选 total/next_cursor；总数缺省未知，游标缺省未声明、null明确末页，见 [列表合同](PUBLIC_API.md#列表元数据与受控游标分页) |
 | API Key | 首次读取由宿主 refresh；canCreate明确true才创建、撤销/删除需capability或明确宿主许可；过期可按授权撤销，删除仅已撤销管理记录。required权限与独立confirmed保留；默认 HTTP facade/routes 见本节 API Key 与默认适配器前置章节，单一写入owner，未知结果普通列表核验一次，结束等待后可手动再试、不自动重写；完整值仅瞬时结果 |
-| 业务日志 | 显式首次 refresh，page size=50（1–200），两宿主共享loader，默认原生 HTTP facade 见本节默认适配器前置章节，auth/scope由宿主；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
+| 业务日志 | 显式首次 refresh，page size=50（1–200），React 页面使用共享 runtime loader，默认 HTTP facade 见本节默认适配器前置章节，auth/scope由宿主；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
 | 登录页/auth | 同一个 HTTP/auth/theme owner；居中单列窄框、可选 fullscreen 和 brandVisual。Bearer v2 login/refresh/logout/session；access 仅内存，protectedPaths 明确受保护端点；15秒默认预算、no-store、无写入重放。登录直接 POST，提交禁用显示正在登录；超时后普通会话核验一次，未确认则显示错误并允许手动重试。无持久门禁、恢复预请求或恢复弹窗。保留密码清理、安全回跳和宿主导航扩展，详见 [登录与会话](PUBLIC_API.md#认证会话) |
 | 独立结构化错误 | 初始 groups、page size=50（1–200），host 显式 refresh；无隐式 endpoint/scope/排序/总记录数。v1/list/cursor、纳秒时间、uint64 字符串、三态、累计/命中/首次代表；详情只按记录 ID 读取，缓存仅当前链已访问摘要，刷新新快照 |
 
 ## HTTP 与查询
 
-这是实现接口；完整通用规则只在 [DESIGN.md](DESIGN.md)。从 runtime/http、runtime/query 导入，React/原生使用同一无框架类型。React 复用 useResource/DataRegion/ErrorState，不创建第二套请求 owner。
+这是实现接口；完整通用规则只在 [DESIGN.md](DESIGN.md)。从 runtime/http、runtime/query 导入，React 使用同一无框架类型。React 复用 useResource/DataRegion/ErrorState，不创建第二套请求 owner。
 
 选用 xui 默认 HTTP 解析与页面 adapter 时的合同范围及行业标准/第三方边界见[DESIGN](DESIGN.md#规范强度与职责)。OAuth2/OIDC/SAML保持标准，第三方按其API、HTTP状态及错误格式；端点明确response/errorAdapter在内部投影。标准OAuth2非2xx的error discriminator可由显式allowlist ErrorResponseAdapter映射，不能用 nested-error adapter 猜其结构，也不要求OAuth2返回AjaxResponse。
 
@@ -209,7 +191,7 @@ createHttpClient 的默认 ajax 模式、ajaxResponseAdapter 与 createAjaxRespo
 
 响应为 payload/status/code/requestId/bodyRequestId/headerRequestId/redirect；非空 body id 优先 header，两者都保留，不伪造 traceId。redirect 只是数据，不触发应用导航。成功响应headers仅为冻结的contentType/contentDisposition/contentLength，超过长度或含控制字符的值为null；没有原始Response、完整Headers或请求对象，Authorization/Set-Cookie/WWW-Authenticate不会暴露。领域校验只在一次声明的 endpoint adapter；标准请求不把 null 改成其他字段。
 
-requestDownload默认120秒与detectAjaxErrors:true，保留HTTP200原生Go失败envelope检测；HttpClient 的 blob detectAjaxErrors 与默认 JSON AjaxResponse 复用同一 success 判定，合法 success=true/code=0/1/2 等仍返回原始 Blob，并在 HttpResponse 保留 code/request id/redirect 元数据，不拆包成 payload。success=false 的合法 envelope 是业务失败；明确attachment的JSON文件保持文件，不猜为错误。resolveDownloadFileName优先UTF-8 filename*，处理引号/重复参数/无效编码并清理路径、控制字符与方向控制字符；不是文件内容安全检查。saveDownload只在宿主明确用户动作中调用，临时link和URL释放且不改焦点。下载不是JS读取认证头的理由。无流式/SSE/WebSocket/protobuf、上传进度、断点续传或文件安全校验支持声明，这些协议另行明确接入。
+requestDownload默认120秒与detectAjaxErrors:true，保留 HTTP 200 Go 失败 envelope 检测；HttpClient 的 blob detectAjaxErrors 与默认 JSON AjaxResponse 复用同一 success 判定，合法 success=true/code=0/1/2 等仍返回原始 Blob，并在 HttpResponse 保留 code/request id/redirect 元数据，不拆包成 payload。success=false 的合法 envelope 是业务失败；明确attachment的JSON文件保持文件，不猜为错误。resolveDownloadFileName优先UTF-8 filename*，处理引号/重复参数/无效编码并清理路径、控制字符与方向控制字符；不是文件内容安全检查。saveDownload只在宿主明确用户动作中调用，临时link和URL释放且不改焦点。下载不是JS读取认证头的理由。无流式/SSE/WebSocket/protobuf、上传进度、断点续传或文件安全校验支持声明，这些协议另行明确接入。
 
 ### 安全错误、认证与重试
 
@@ -237,9 +219,9 @@ existing params 复制后清除旧受管过滤/排序和无语义 field，保留
 
 ### 可运行接入
 
-正式 [React 页面](../examples/http-react/app.tsx)、[原生页面](../examples/http-vanilla/app.js)/[HTML](../examples/http-vanilla/index.html) 共用 [typed endpoint model](../examples/shared/http-model.ts)，仅导入公开组件/工厂和 CSS。独立 tarball、types 与真实 fetch 由 [consumer](../scripts/consumers.mjs) 和 [浏览器检查](../tests/browser/http.spec.mjs) 验证。
+正式 [React 页面](../examples/http-react/app.tsx) 共用 [typed endpoint model](../examples/shared/http-model.ts)，仅导入公开组件/工厂和 CSS。独立 tarball、types 与真实 fetch 由 [consumer](../scripts/consumers.mjs) 和 [浏览器检查](../tests/browser/http.spec.mjs) 验证。
 
-根目录 pnpm build、pnpm test:consumer、pnpm preview 后访问 /http-react/ 或 /http-vanilla/；本地 /api/xui-example/records 是明确合成 fixture，页基数0/上限50不是产品默认合同，不访问真实后端。不请求 total 时 fixture 省略字段，双端示例显示未知并隐藏编号翻页，不以当前页 list.length 伪造 pageCount；需要游标使用 DataTable 的显式 cursor 模式。
+根目录 pnpm build、pnpm test:consumer、pnpm preview 后访问 /http-react/；本地 `/api/xui-example/records` 是明确合成 fixture，页基数0/上限50不是产品默认合同，不访问真实后端。不请求 total 时 fixture 省略字段，React 示例显示未知并隐藏编号翻页，不以当前页 list.length 伪造 pageCount；需要游标使用 DataTable 的显式 cursor 模式。
 
 接入先检查 headers/credentials、权限、缓存/去重、认证、日志、取消、上传/下载及业务恢复；保留必要行为，再收敛一个 transport/auth/error/resource owner。选用默认 ajax/query 或页面 adapter 时严格满足其 wire 合同；其它领域协议通过明确的 ResponseAdapter/ErrorResponseAdapter 接入，不猜别名、不要求全量业务 API 迁移。已有使用方的升级按 [发布状态原则](ADOPTION.md#发布状态与升级原则) 保留必要兼容与退出条件。
 
@@ -249,13 +231,13 @@ existing params 复制后清除旧受管过滤/排序和无语义 field，保留
 
 `createJsonApiErrorAdapter` 明确映射 `{error:{code:string,message:string,request_id:string}}`；不猜顶层 code/msg 或 JSON:API errors 数组。其它错误协议由宿主提供 typed ErrorResponseAdapter，按实际合同投影，不将正常领域适配视为必须删除的兼容层。业务 API 或后端迁移由宿主单独决定。
 
-ErrorResponseAdapter可在client或单request明确配置；原生默认adapter保留Go字段，页面默认adapters显式选原生解析，并固定Accept:application/json及JSON写入Content-Type:application/json；保留其他宿主headers，不继承临时旧编码协议。HTTP status与业务code分开；任何body解析/投影失败保持HTTP事实和readFailure，不伪造成功。解码后结构化投影上限为64KiB JSON响应（当前先完整读取，非流式读取上限），message最多2048字符；details需显式allowlist投影，最多16KiB/depth8/512节点，拒绝函数/getter/prototype/cycle/unsafe整数。投影限制不等于后端脱敏；不能全量日志或直接弹出原始敏感响应。
+ErrorResponseAdapter可在client或单request明确配置；默认 adapter 保留 Go 字段，显式按实际协议解析，并固定Accept:application/json及JSON写入Content-Type:application/json；保留其他宿主headers，不继承临时旧编码协议。HTTP status与业务code分开；任何body解析/投影失败保持HTTP事实和readFailure，不伪造成功。解码后结构化投影上限为64KiB JSON响应（当前先完整读取，非流式读取上限），message最多2048字符；details需显式allowlist投影，最多16KiB/depth8/512节点，拒绝函数/getter/prototype/cycle/unsafe整数。投影限制不等于后端脱敏；不能全量日志或直接弹出原始敏感响应。
 
 401仍在收到响应头时按现有epoch通知，不能依赖该早期回调取得body code。需要按明确领域业务码判断失效时，显式unauthorized:ignore并由已有认证owner处理最终HttpError，不另造认证owner或吞掉401。跨origin下载需后端准确CORS与Expose-Headers允许Content-Disposition等所需字段；库不会绕过浏览器策略。
 
 ### 明确的原生应用origin与transport
 
-createHttpClient({baseURL:'wails://wails/',nativeOrigin:'wails://wails',fetch:bridge})允许宿主显式声明hierarchical应用scheme/authority并注入原生fetch bridge。默认只接受HTTP(S)；自定义origin必须有host，不含URL凭据/query/hash或路径（空或/），拒绝http/https/data/blob/file/javascript/mailto作为nativeOrigin。原生同源按scheme、host、port三元组比对，绝不把不同自定义URL的origin=null当相同来源；所有目标再次拒绝凭据与外部tuple。
+createHttpClient({baseURL:'wails://wails/',nativeOrigin:'wails://wails',fetch:bridge})允许宿主显式声明hierarchical应用scheme/authority并注入原生fetch bridge。默认只接受HTTP(S)；自定义origin必须有host，不含URL凭据/query/hash或路径（空或/），拒绝http/https/data/blob/file/javascript/mailto作为nativeOrigin。自定义同源按scheme、host、port三元组比对，绝不把不同自定义URL的origin=null当相同来源；所有目标再次拒绝凭据与外部tuple。
 
 native请求强制redirect:error，拒绝follow/manual；bridge必须实际遵守不自动跟随/透明改目标。非空Response.url在读取body前再次校验同一tuple，302等非2xx保留HTTP事实，不追Location。Response.url可为空的合成/桥接响应需要宿主保证真实目标，库无法观察桥内部的物理IO。取消、budget、401 latch、adapter/error metadata、safe headers及下载继续使用同一HTTP owner，无模拟HTTP baseURL、JS色板或业务重放。
 
@@ -308,7 +290,7 @@ ACL/权限过滤后的有界扫描可以连续返回空 list 与非空 next_curs
 
 ## 认证会话
 
-`ConfigurableLoginPage` 和 `createLoginPage` 共享一个 `createAuthClient`，保持现有默认主题、布局、扩展、密码清理和安全回跳。这个自有应用合同配套 baseservice authenticationservice/webfacade；不是 OAuth/OIDC token endpoint，不替换第三方标准协议，不表示任何业务项目、生产登录链或部署已迁移。
+`ConfigurableLoginPage` 使用 `createAuthClient`，保持现有默认主题、布局、扩展、密码清理和安全回跳。这个自有应用合同配套 baseservice authenticationservice/webfacade；不是 OAuth/OIDC token endpoint，不替换第三方标准协议，不表示任何业务项目、生产登录链或部署已迁移。
 
 ### 固定 HTTP 合同
 
@@ -388,7 +370,7 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 
 ### 验证与采用
 
-[共享wire fixture](../tests/fixtures/contracts/auth.v2.json)与[baseservice 0f5dba4](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/contracts/auth.v2.json)固定字节一致（配套[后端合同](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/bearer-auth-v2.md)），含issued/session/logout和8类错误。unit覆盖严格DTO/凭据隔离/恢复/多401/旧代响应/取消等待者/refresh-logout排序/不确定结果/不重放。正式React与原生消费者只用公开入口和tarball。浏览器测试覆盖原生整页导航恢复、Cookie/Authorization隔离、跨tab锁与安全通知；实际执行范围见 [VALIDATION.md](VALIDATION.md)，测试存在不等于全部场景通过。
+[共享wire fixture](../tests/fixtures/contracts/auth.v2.json)与[baseservice 0f5dba4](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/contracts/auth.v2.json)固定字节一致（配套[后端合同](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/bearer-auth-v2.md)），含issued/session/logout和8类错误。unit覆盖严格DTO/凭据隔离/恢复/多401/旧代响应/取消等待者/refresh-logout排序/不确定结果/不重放。正式 React 消费者只用公开入口和 tarball。浏览器测试覆盖整页导航恢复、Cookie/Authorization 隔离、跨 tab 锁与安全通知；实际执行范围见 [VALIDATION.md](VALIDATION.md)，测试存在不等于全部场景通过。
 
 选用 createAuthClient 时服务须满足明确 Bearer v2 合同，修改 baseURL 不能替代协议适配；已有消费者按自己的版本与升级约束评估。产品对外hex ID使用已提供的显式 idEncoding，并与后端 facade 同步配置，不自动接受双格式。注册、密码重置、用户生命周期和业务资源策略由实际后端/身份提供方负责。真实服务注册、部署和凭据签发由宿主负责。
 
@@ -400,7 +382,7 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 
 ### 公开页面与业务能力
 
-`ApiKeyManager` / `createApiKeyManager` 共用 `createApiKeyManagerController`。权限、期限、默认值和授权确认来自服务/宿主，不能由 UI 猜测。创建要求 `canCreate:true`；行 capabilities 分别声明 `update/revoke/deleteRecord`，未知默认不启用。通用域 adapter 可使用明确 `canUpdate/canRevoke/canDeleteRecord`，但服务端的明确 false 不能被宿主 true 覆盖。后端始终重新鉴权。
+`ApiKeyManager` 使用 `createApiKeyManagerController`。权限、期限、默认值和授权确认来自服务/宿主，不能由 UI 猜测。创建要求 `canCreate:true`；行 capabilities 分别声明 `update/revoke/deleteRecord`，未知默认不启用。通用域 adapter 可使用明确 `canUpdate/canRevoke/canDeleteRecord`，但服务端的明确 false 不能被宿主 true 覆盖。后端始终重新鉴权。
 
 - create：name、permissionIds、expiryId、可选独立 confirmed；required 权限必须选中，disabled 权限不可选择，冲突配置拒绝。
 - update：`openUpdate(id)/setUpdateDraft/submitUpdate` 编辑 name、permissionIds、enabled；可增加/移除宿主声明的权限，四个 scope 也使用同一权限集合，不写产品私有分支。required/disabled 规则仍适用；`validateUpdate(draft,key)` 可返回安全的 name/permissions 错误。没有完整已知 enabled 事实时不提供编辑入口，避免猜测启停状态。
@@ -408,7 +390,7 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 - revoke：使凭据失效；过期但未撤销的密钥仍按实际 capability 授权撤销。
 - deleteRecord：仅删除已经 revoked 的管理记录，独立确认及 capability；不撤销活动凭据、不删除业务记录。
 
-`ApiKeyAdapter.update` 返回真实公共 metadata；revoke/deleteRecord 成功返回 void。通用 custom adapter 的 update、metadata.version/enabled/capabilities.update 均可选，供独立展示、领域/第三方边界与测试；第一方公共Key接入按服务前置直接使用官方HTTP adapter。React/原生页面等价，使用统一表单、选择器、弹窗、错误和焦点生命周期。
+`ApiKeyAdapter.update` 返回真实公共 metadata；revoke/deleteRecord 成功返回 void。通用 custom adapter 的 update、metadata.version/enabled/capabilities.update 均可选，供独立展示、领域/第三方边界与测试；第一方公共Key接入按服务前置直接使用官方HTTP adapter。React/React 页面等价，使用统一表单、选择器、弹窗、错误和焦点生命周期。
 
 ### 默认 HTTP adapter：严格 v2
 
@@ -417,7 +399,7 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 | 操作 | 方法/路径 | 请求和 payload |
 | --- | --- | --- |
 | 配置 | GET /api/v1/api-keys/capabilities | schema_version:2、can_create、permissions、expiry_options、default_expiry_id、default_permission_ids、confirmation_label |
-| 列表 | GET /api/v1/api-keys | 基数0 page_index/page_size/return_total=true/sort=id/sort_id=asc；原生 ListData {list,total} |
+| 列表 | GET /api/v1/api-keys | 基数0 page_index/page_size/return_total=true/sort=id/sort_id=asc；ListData {list,total} |
 | 创建 | POST /api/v1/api-keys | {name,permission_ids,expiry_id,confirmed}；{schema_version:2,metadata,secret} |
 | 更新/启停 | PUT /api/v1/api-keys/{id} | {expected_version,name,permission_ids,enabled}；{schema_version:2,id,operation:"update",completed:true,metadata} |
 | 撤销 | POST /api/v1/api-keys/{id}/revoke | {}；{schema_version:2,id,operation:"revoke",completed:true} |
@@ -445,7 +427,7 @@ controller 用当前页面的 `actionBusy` 防止重复提交；创建/保存按
 
 baseservice 的 apikeyservice/webfacade 配套严格 v2。共享 [decimal](../tests/fixtures/api-key-contracts.v2.json) / [hex](../tests/fixtures/api-key-contracts.v2.hex.json) fixtures 核对 exact body_text、普通 headers、CRUD 和 ID 编码；旧 page-contracts.v1 仅归档，不表示服务兼容。
 
-[shared capability-model](../examples/shared/capability-model.ts) 的 React/原生消费者演示普通 v2 请求和编辑启停；全部是 FAKE 合成数据，不证明真实鉴权、部署或生产接入完成。宿主保留自己的业务权限、namespace、CSRF、限速和服务端存储策略。
+[shared capability-model](../examples/shared/capability-model.ts) 的 React 消费者演示普通 v2 请求和编辑启停；全部是 FAKE 合成数据，不证明真实鉴权、部署或生产接入完成。宿主保留自己的业务权限、namespace、CSRF、限速和服务端存储策略。
 
 迁移时删除旧 writeGuard/recovery 配置及 Lookup/Resolve 接线，同步升级 xui 与 BaseService；不删除线上业务数据或执行数据库清表。custom adapter 按真实领域接口实现普通 CRUD，已有 read/write、独立 confirmed、期限和管理记录删除语义继续保留，不强制第三方采用 BaseService 协议。
 
@@ -453,7 +435,7 @@ baseservice 的 apikeyservice/webfacade 配套严格 v2。共享 [decimal](../te
 
 用途是随时调取查阅领域业务记录，提供通用字段、可扩展payload、筛选分页和详情。用户所说的“审计”指这个业务日志用途，不是正式审计体系；旧BusinessAudit命名在同一实现上统一改为BusinessLog，没有增加另一套页面。公共事件描述谁在何时对哪个业务对象做了什么、结果如何、关联哪些请求及允许披露的业务细节。现有 [错误观察功能](PUBLIC_API.md#程序错误观察) 是独立功能，severity/错误分组/首次代表不能充当业务日志。完整通用规则仅在 [DESIGN.md](DESIGN.md)。
 
-runtime/business-log 的 DTO、严格解析、loader 和单一 controller 被 React/business-log 的 BusinessLogExplorer 与 runtime/business-log-dom 的 createBusinessLogExplorer 共用。两类视图使用已有公开 Layout/Field/Table/Dialog/反馈和公共 CSS，没有新色板、私有皮肤或 Tailwind 扫描依赖。
+runtime/business-log 提供 DTO、严格解析、loader 和单一 controller；React `/business-log` 的 `BusinessLogExplorer` 使用这些 TypeScript 能力，并组合公开 Layout/Field/Table/Dialog/反馈与公共 CSS。
 
 ### 固定公共字段与可扩展 payload
 
@@ -465,7 +447,7 @@ runtime/business-log 的 DTO、严格解析、loader 和单一 controller 被 Re
 | BusinessLogActor | kind 为 user/agent/service，id 为可信标识，display_name 为允许显示的字符串或 null。服务负责归属及代理授权，UI 不由名称猜身份 |
 | BusinessLogObject | kind、id、display_name；整个 object 可为 null。不同领域自定 kind，UI 不自行生成对象路由 |
 | result | succeeded/failed/denied/unknown；unknown 不伪装完成。异步任务、部分完成等领域事实进入对应 event_type/payload，adapter 必须明确结果映射，不能由 HTTP 200 或 severity 推断 |
-| BusinessLogPage | list和明确page：原生offset的page_index/page_size/total，或领域cursor的next_cursor（末段null）与可选真实snapshot_id；不混用或造假 |
+| BusinessLogPage | list和明确page：offset的page_index/page_size/total，或领域cursor的next_cursor（末段null）与可选真实snapshot_id；不混用或造假 |
 | BusinessLogDetail | event、state（available/expired/unavailable）、payload（JSONValue）。后两种 state 的 payload 必须为 null；available 的 null 是合法业务值 |
 
 schema_version 是 **对应 event_type 的业务 payload 版本**，正安全整数；未知类型/版本仍展示公共事实及安全 JSON。公共字段的变更需同步升级 xui 接入合同与采用方，不能因这个字段任意改掉公共摘要。默认HTTP facade的route与success成功判定在下方和PAGE_APIS明确声明；业务事件词表与payload版本由宿主明确，领域loader不另猜协议。记录和关联 ID 保持字符串；整数超过 JS 安全范围必须在 payload 编码为字符串，不能经过 Number 舍入。
@@ -476,11 +458,11 @@ JSONValue 只接受 null/布尔/有限数字/字符串/数组/普通对象，深
 
 ### 两个 loader 与过滤、分页
 
-BusinessLogLoader提供list(query,{signal})与detail(eventId,{signal})，pagination声明offset/cursor。原生默认loader的query.page.index从0开始；领域cursor模型的query.page.cursor保持不透明。query 为 `{filter,page:{size,cursor,index?}}`；每个回调返回上表准确 DTO，没有 response 别名猜测。领域接口的已有 HTTP client 可以由明确 endpoint adapter 包装；第一方公共业务日志接入直接使用下方官方HTTP loader；loader 本身不决定 auth、租户、URL 或数据库。UI 显式 refresh，默认 size=50、范围 1–200；合成示例 size=2 仅便于验证分页。读失败不自动重试，取消仅结束本地等待，不证明服务停止。
+BusinessLogLoader提供list(query,{signal})与detail(eventId,{signal})，pagination声明offset/cursor。默认 loader的query.page.index从0开始；领域cursor模型的query.page.cursor保持不透明。query 为 `{filter,page:{size,cursor,index?}}`；每个回调返回上表准确 DTO，没有 response 别名猜测。领域接口的已有 HTTP client 可以由明确 endpoint adapter 包装；第一方公共业务日志接入直接使用下方官方HTTP loader；loader 本身不决定 auth、租户、URL 或数据库。UI 显式 refresh，默认 size=50、范围 1–200；合成示例 size=2 仅便于验证分页。读失败不自动重试，取消仅结束本地等待，不证明服务停止。
 
 filter 明确支持 `[since,until)` 事件时间、actor kind/id、object kind/id、event_type、action、result、correlation_id、request_id；后七者为精确过滤，不做全文 payload 搜索或 query AST。actor/object 必须配对，未知字段拒绝，时间比较保留纳秒边界。允许不存在 object 的事件，但按对象筛选时必须两字段齐全。身份和 tenant scope 从服务可信上下文取得，不由公共 filter/body 自报。
 
-默认createBusinessLogHttpLoader采用原生webfacade offset和httpx ListData，不产生cursor或snapshot。领域cursor loader的cursor须绑定scope/filter/顺序；snapshot_id可选，仅展示实际返回值，当前链保留已知真实snapshot基准，缺省metadata不抹掉基准，后来返回的真实snapshot必须一致；不填时间戳/常量/虚构ID。服务提供稳定全序（推荐记录顺序与 ID 解冲突），UI 保留返回顺序，不从事件时间猜提交顺序。缓存上一段只保存当前查询链的摘要，不重发 null cursor；下一段显式请求。过滤或刷新建新链，刷新失败保留旧事实和原已访问段编号，同时禁用旧链导航。cursor域的pageIndex只是成功访问的段；默认offset域明确将它作为基数0的服务页码，不能将两者混用。
+默认createBusinessLogHttpLoader采用 BaseService webfacade offset和httpx ListData，不产生cursor或snapshot。领域cursor loader的cursor须绑定scope/filter/顺序；snapshot_id可选，仅展示实际返回值，当前链保留已知真实snapshot基准，缺省metadata不抹掉基准，后来返回的真实snapshot必须一致；不填时间戳/常量/虚构ID。服务提供稳定全序（推荐记录顺序与 ID 解冲突），UI 保留返回顺序，不从事件时间猜提交顺序。缓存上一段只保存当前查询链的摘要，不重发 null cursor；下一段显式请求。过滤或刷新建新链，刷新失败保留旧事实和原已访问段编号，同时禁用旧链导航。cursor域的pageIndex只是成功访问的段；默认offset域明确将它作为基数0的服务页码，不能将两者混用。
 
 controller 的列表与详情各有取消/generation；替换、关闭、卸载与 destroy 拒绝迟到结果。状态转换一次通知，订阅回调的新意图优先；订阅释放/重绑不在同一次通知无限调用。权限/身份/scope 切换须销毁旧 controller，不能把摘要缓存跨租户复用。
 
@@ -490,21 +472,21 @@ controller 的列表与详情各有取消/generation；替换、关闭、卸载�
 
 使用原有领域方法时，loader adapter 将权限/不存在错误明确归一化为公共 HttpError（kind=http、status=403/404、attempts=1）；任意对象的 status 字段不自动认定为该事实。expired/unavailable 则返回上述详情 state，不能把权限异常映射成保留期结束。有限等待预算由宿主已有 client/loader 决定，controller 没有隐式 timeout。
 
-默认 payload 以格式化 JSON 文本展示，HTML/URL/脚本字符串保持普通文本。宿主可通过公开 `renderers` 注册 `{eventType,schemaVersion,render}`：React 返回 ReactNode，原生返回本窗口 Node。按类型和版本精确选中第一个注册项；未知类型/版本使用默认 JSON。注册代码来自可信应用代码，不从 payload 加载组件、eval、执行 HTML 或动态 import 路径。定制 renderer 负责保持业务权限、文本安全与自身资源生命周期，不能拿它另造通用字段皮肤。renderer 抛错给固定安全反馈并显示 JSON，不暴露异常内容；不触发重新读取。
+默认 payload 以格式化 JSON 文本展示，HTML/URL/脚本字符串保持普通文本。宿主可通过公开 `renderers` 注册 `{eventType,schemaVersion,render}`：React renderer 返回 ReactNode。按类型和版本精确选中第一个注册项；未知类型/版本使用默认 JSON。注册代码来自可信应用代码，不从 payload 加载组件、eval、执行 HTML 或动态 import 路径。定制 renderer 负责保持业务权限、文本安全与自身资源生命周期，不能拿它另造通用字段皮肤。renderer 抛错给固定安全反馈并显示 JSON，不暴露异常内容；不触发重新读取。
 
 ### 服务边界与实际采用
 
 业务服务记录日志，并负责权限/tenant、脱敏、查询顺序/快照与保留政策。xui 提供只读查询与详情展示，不实施日志写入或正式审计保证。baseservice已将业务日志放在bizlogservice；[bizlogservice/webfacade](https://github.com/coffeehc/baseservice/tree/main/bizlogservice/webfacade) 提供下述固定只读列表/详情HTTP边界，不引入独立auditservice。宿主注册路由，提供真实身份/tenant、授权与脱敏投影；xui不实现日志写入或用户管理。已有typed loader仍可在领域边界接入。
 
-已实现 [共享合成模型](../examples/shared/business-log-model.ts)、[React](../examples/business-log-react/app.tsx)、[原生](../examples/business-log-vanilla/app.js) 两类消费者，先本地打包再独立安装正式 ESM/types/CSS。pnpm build/test:consumer/preview 后访问 /business-log-react/ 和 /business-log-vanilla/。示例只注入 typed fake loader，没有访问真实业务、创建后端路由或生成秘密。baseservice已有配套facade，但示例仍使用合成数据，不代表任一产品已接入真实服务。
+已实现 [共享合成模型](../examples/shared/business-log-model.ts) 与 [React 消费者](../examples/business-log-react/app.tsx)，先本地打包再独立安装正式 ESM/types/CSS。pnpm build/test:consumer/preview 后访问 /business-log-react/。示例只注入 typed fake loader，没有访问真实业务、创建后端路由或生成秘密。baseservice已有配套facade，但示例仍使用合成数据，不代表任一产品已接入真实服务。
 
 按 [采用手册](ADOPTION.md) 先逐页接入 xui；按产品授权逐个接入baseservice facade或既有领域adapter，通过公共合同版本、消费方依赖、类型和回归联动升级。没有要求全部产品同时切换，也不因库级对齐自动修改任何产品或部署服务。 [测试](../tests/business-log.test.mjs) 与 [浏览器检查](../tests/browser/business-log.spec.mjs) 仅证明当前展示合同/生命周期，真实业务服务与权限/脱敏集成仍须采用项目另验。
 
-### 原生默认HTTP facade
+### 默认 HTTP facade
 
-createBusinessLogHttpLoader({http,timeoutMs?})固定GET /api/v1/business-logs与GET /api/v1/business-logs/{id}。原生AjaxResponse以success=true判定业务成功，code是必填安全整数元数据，不要求固定值；列表payload原生ListData{list,total}，null list显式投影空数组，unsafe总数拒绝。默认offset query为page_index基数0/page_size最大200/return_total=true/sort=recorded_at,id与两个sort_* desc；filters为since/until、actor_kind/actor_id、object_kind/object_id、event_type/action/result/correlation_id/request_id，单次URL编码。后端明确FieldDefined和半开时间边界，用原生Convert/GetTimeFormQuery处理RFC3339Nano，不改commons或降精度。
+createBusinessLogHttpLoader({http,timeoutMs?}) 固定 GET /api/v1/business-logs 与 GET /api/v1/business-logs/{id}。AjaxResponse 以 success=true 判定业务成功，code是必填安全整数元数据，不要求固定值；列表payload ListData{list,total}，null list显式投影空数组，unsafe总数拒绝。默认offset query为page_index基数0/page_size最大200/return_total=true/sort=recorded_at,id与两个sort_* desc；filters为since/until、actor_kind/actor_id、object_kind/object_id、event_type/action/result/correlation_id/request_id，单次URL编码。后端明确FieldDefined和半开时间边界，用服务现有的 Convert/GetTimeFormQuery 处理 RFC3339Nano，不改commons或降精度。
 
-请求no-store/redirect:error、默认30秒、无自动重试。详情使用现有BusinessLogDetail DTO，403/404/expired/unavailable分别处理；没有默认写入或删除API。页面实际后端缺失须报告前置条件，不能将程序故障记录、供应商凭据配置或假snapshot映射成业务日志成功。[共享默认adapter示例](../examples/shared/capability-model.ts)和[合同回归](../tests/page-api.test.mjs)使用合成原生fetch；产品真实服务/权限/脱敏仍须单独集成验收。
+请求no-store/redirect:error、默认30秒、无自动重试。详情使用现有BusinessLogDetail DTO，403/404/expired/unavailable分别处理；没有默认写入或删除API。页面实际后端缺失须报告前置条件，不能将程序故障记录、供应商凭据配置或假snapshot映射成业务日志成功。[共享默认adapter示例](../examples/shared/capability-model.ts)和[合同回归](../tests/page-api.test.mjs)使用合成 fetch；产品真实服务/权限/脱敏仍须单独集成验收。
 
 此合同用于自有业务记录，不把第三方响应或程序故障当作业务日志。第三方日志/审计API按第三方字段、分页和错误格式，宿主在内部边界投影允许披露的真实业务事实；不要求第三方AjaxResponse。行业标准/第三方优先边界见[DESIGN](DESIGN.md#规范强度与职责)。
 
@@ -518,7 +500,7 @@ createBusinessLogHttpLoader({http,timeoutMs?})固定GET /api/v1/business-logs与
 
 这是独立程序错误观察功能。业务记录查询使用 [BusinessLogExplorer 合同](PUBLIC_API.md#业务日志)，不把 severity、错误分组或首次代表映射成 actor/action/result。
 
-这是实现接口；完整通用规则只在 [DESIGN.md](DESIGN.md)。runtime/structured-log 提供无框架类型、DTO 校验、HTTP bridge 和单一查询/详情控制器；React/structured-log 的 StructuredLogExplorer 与 runtime/structured-log-dom 的 createStructuredLogExplorer 生成完整只读页面，复用公共布局、表格、字段、反馈与 Dialog。没有额外日志皮肤或下游 Tailwind 扫描要求。
+这是实现接口；完整通用规则只在 [DESIGN.md](DESIGN.md)。runtime/structured-log 提供无框架类型、DTO 校验、HTTP bridge 和单一查询/详情控制器；React `/structured-log` 的 StructuredLogExplorer 提供只读页面；runtime/structured-log 只提供无框架类型、DTO 校验、HTTP bridge 和查询/详情 controller。没有额外日志皮肤或下游 Tailwind 扫描要求。
 
 ### 配套源码基线与范围
 
@@ -591,11 +573,11 @@ cursor 最多 4096 UTF-8 字节，作为不透明值透传，绑定服务端 sco
 
 ### 已运行消费与接入责任
 
-[React 示例](../examples/log-react/app.tsx) 和 [原生示例](../examples/log-vanilla/app.js)/[HTML](../examples/log-vanilla/index.html) 共用 [typed fake facade model](../examples/shared/log-model.ts) 与 [labels](../examples/shared/log-labels.json)，经 [正式 tarball 消费](../scripts/consumers.mjs) 编译/打包；原生不安装 React，也不使用源码 alias 或示例私有 CSS。pnpm build、pnpm test:consumer、pnpm preview 后访问 /log-react/、/log-vanilla/。
+[React 示例](../examples/log-react/app.tsx) 共用 [typed fake facade model](../examples/shared/log-model.ts) 与 [labels](../examples/shared/log-labels.json)，经 [正式 tarball 消费](../scripts/consumers.mjs) 编译/打包。pnpm build、pnpm test:consumer、pnpm preview 后访问 /log-react/。
 
 这里注入合成 fetch，使用显式假路径，不实现 loopback 后端，也不连接产品。测试只有展示合同与生命周期证据，不证明 Go/PostgreSQL、真实认证/脱敏、tenant 隔离或产品集成通过；详情复制用模拟 Clipboard。控制器 [逻辑测试](../tests/structured-log.test.mjs)、两类 [浏览器测试](../tests/browser/structured-log.spec.mjs) 与限制见 [验证记录](VALIDATION.md#chromium-浏览器结果)。
 
-生产采用时先补明确 facade/DTO mapper、后端 scope/权限/错误映射、预算与脱敏，再保留产品必要业务行为后清理旧错误观察 owner。宿主稳定创建一个 controller，首次明确 refresh；React 传给 StructuredLogExplorer，原生传给 createStructuredLogExplorer(root,{controller})。视图不拥有外部 controller：卸载/页面离开关闭详情并取消读取；宿主释放自身订阅后 destroy controller/client，原生同时 destroy view。接入迁移见 [ADOPTION.md](ADOPTION.md)，不得用本例通过宣称产品已迁移。
+生产采用时先补明确 facade/DTO mapper、后端 scope/权限/错误映射、预算与脱敏，再保留产品必要业务行为后清理旧错误观察 owner。宿主稳定创建一个 controller，首次明确 refresh；React 组件接收外部 controller。视图不拥有外部 controller：卸载/页面离开关闭详情并取消读取；宿主释放自身订阅后 destroy controller/client，组件卸载释放视图订阅。接入迁移见 [ADOPTION.md](ADOPTION.md)，不得用本例通过宣称产品已迁移。
 
 ## 默认适配器的服务前置
 
@@ -604,10 +586,10 @@ cursor 最多 4096 UTF-8 字节，作为不透明值透传，绑定服务端 sco
 | 选用能力 | 默认连接 | 服务前置与合同 owner |
 | --- | --- | --- |
 | HTTP ajax / webfacade query | createHttpClient、serializeWebfacadeQuery | 明确 AjaxResponse success/message/payload/request_id/code/redirect 与 endpoint 页基数、上限、filter/sort codec；HTTP 状态和业务成功分开。响应模式、错误适配、列表三态及显式 ID 编码见 [HTTP 与查询](PUBLIC_API.md#http-与查询) |
-| ConfigurableLoginPage/createLoginPage | createAuthClient；POST `/api/v1/auth/login`、`refresh`、`logout`，GET `/api/v1/auth/session` | 固定 Bearer v2 DTO；access 仅内存，同源恢复 Cookie 与 session Bearer 分离。宿主注册 route、CSRF 和资源策略；不猜旧路由或仅改 baseURL。见 [登录与会话](PUBLIC_API.md#认证会话) |
-| ApiKeyManager/createApiKeyManager 的默认 HTTP adapter | createApiKeyHttpAdapter；`/api/v1/api-keys` 及 capabilities/update/revoke/record 路径 | 严格 DTO v2、AjaxResponse/ListData，服务提供权限、期限、独立确认、expected_version CAS 与一次性 secret。未知结果普通列表核验一次，不重发写请求。完整路径、能力和 fixture 见 [API Key 管理](PUBLIC_API.md#api-key-管理) |
-| BusinessLogExplorer/createBusinessLogExplorer 的默认 HTTP loader | createBusinessLogHttpLoader；GET `/api/v1/business-logs` 与 `/{id}` | 明确 offset query/ListData 与必需 total，公共记录字段、版本化授权 payload；服务负责身份/tenant、权限和脱敏。领域 cursor loader 依自己的明确合同，不伪造 snapshot。见 [业务日志](PUBLIC_API.md#业务日志) |
-| StructuredLogExplorer/createStructuredLogExplorer | 宿主声明 endpoints 的四操作 facade | 独立程序错误观察；服务实现明确 DTO、过滤、cursor、详情授权与保留期，不推断已有后端。见 [程序错误观察](PUBLIC_API.md#程序错误观察) |
+| ConfigurableLoginPage | createAuthClient；POST `/api/v1/auth/login`、`refresh`、`logout`，GET `/api/v1/auth/session` | 固定 Bearer v2 DTO；access 仅内存，同源恢复 Cookie 与 session Bearer 分离。宿主注册 route、CSRF 和资源策略；不猜旧路由或仅改 baseURL。见 [登录与会话](PUBLIC_API.md#认证会话) |
+| ApiKeyManager 的默认 HTTP adapter | createApiKeyHttpAdapter；`/api/v1/api-keys` 及 capabilities/update/revoke/record 路径 | 严格 DTO v2、AjaxResponse/ListData，服务提供权限、期限、独立确认、expected_version CAS 与一次性 secret。未知结果普通列表核验一次，不重发写请求。完整路径、能力和 fixture 见 [API Key 管理](PUBLIC_API.md#api-key-管理) |
+| BusinessLogExplorer 的默认 HTTP loader | createBusinessLogHttpLoader；GET `/api/v1/business-logs` 与 `/{id}` | 明确 offset query/ListData 与必需 total，公共记录字段、版本化授权 payload；服务负责身份/tenant、权限和脱敏。领域 cursor loader 依自己的明确合同，不伪造 snapshot。见 [业务日志](PUBLIC_API.md#业务日志) |
+| StructuredLogExplorer | 宿主声明 endpoints 的四操作 facade | 独立程序错误观察；服务实现明确 DTO、过滤、cursor、详情授权与保留期，不推断已有后端。见 [程序错误观察](PUBLIC_API.md#程序错误观察) |
 | AuthPage/AdminSetupPage、MenuLayout、布局、表格、字段与弹层 | 公开数据、props/parts/slots/controllers 与 callbacks | 业务 API、权威状态、路由、权限、查询范围和执行归宿主；无通用后端路由要求。管理员初始化见 [登录与会话](COMPONENTS.md#管理员初始化页) |
 
 选用默认 adapter 时严格满足其准确合同，不猜 data/token/items 或自动尝试路由；标准 OAuth2/OIDC/SAML 与第三方接口继续遵循各自标准，在宿主明确边界转换。平台 API Key 是自身签发凭据，业务日志是自身业务记录，不能由 provider key、第三方响应或程序故障记录改名替代。
@@ -624,50 +606,34 @@ useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/�
 
 ## 表单与刷新编排
 
-`@coffeehc/xui-react/layout` 正式导出 FormGrid（含 Item）/FormGridProps/FormGridItemProps、FormActions/FormActionsProps；`forms` 的 Fieldset 增加可选 layout，`feedback` 的 LoadingStateProps/DataRegionProps 分别公开 inline 加载与 flow 反馈。原生复用正式主题同名结构与现有控制器，不新增纯排版 model。默认行为、字段顺序、请求/分页/提交 owner 保持兼容；侧向 Sheet 在40rem及以下全宽，有行 DataTable 的刷新改为紧凑行内表现。签名与双端用法见[表单与页面编排](COMPONENTS.md#表单与页面编排)，标准见[DESIGN](DESIGN.md#表单编排的公共入口)。
+`@coffeehc/xui-react/layout` 正式导出 FormGrid（含 Item）/FormGridProps/FormGridItemProps、FormActions/FormActionsProps；`forms` 的 Fieldset 增加可选 layout，`feedback` 的 LoadingStateProps/DataRegionProps 分别公开 inline 加载与 flow 反馈。它们是 React UI props，不存在 runtime DOM UI 排版 factory。默认行为、字段顺序、请求/分页/提交 owner 保持兼容；侧向 Sheet 在40rem及以下全宽，有行 DataTable 的刷新改为紧凑行内表现。签名与 React 用法见[表单与页面编排](COMPONENTS.md#表单与页面编排)，标准见[DESIGN](DESIGN.md#表单编排的公共入口)。
 
-## 导航分支按钮翻译
+## React 公共组件增强索引
 
-React `/menu-layout` 的 `NavigationMenuProps`/`MenuLayoutProps` 继承 runtime `/navigation` 的 `NavigationMenuOptions`：`expandBranchLabel?:(item:NavigationItem)=>string`、`collapseBranchLabel?:(item:NavigationItem)=>string` 分别生成带 href 分支的独立展开/收起按钮可访问名称。原生 `createNavigationMenu`/`createMenuLayout` 使用相同字段；各自根入口同样公开。默认英文带真实条目名保持兼容，语言/条目/受控展开更新规则与两端示例见[导航富条目合同](COMPONENTS.md#富条目独立行尾动作与上下文菜单)。这些字段不接管整体导航的 `expandLabel`/`compactLabel`，也不创建 i18n owner。
+React `/menu-layout` 的 `NavigationMenuProps`/`MenuLayoutProps` 继承 runtime `/navigation` 的纯数据 `NavigationMenuOptions`。`expandBranchLabel` 与 `collapseBranchLabel` 可为每个真实分支名称生成可访问名称；runtime 只提供 navigation 数据、类型与 helper。当前显示、首行对齐、菜单开关和独立行尾动作由 React `/menu-layout` 拥有，详见[导航富条目合同](COMPONENTS.md#富条目独立行尾动作与上下文菜单)与[导航内部唯一收起/展开控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 
-## 导航名称与首行对齐
+AppShell/MenuLayout 的唯一侧栏开关由 React 公共组件定位：桌面位于侧栏内部，`sidebarTogglePlacement` 支持公开位置配置；窄屏将同一公共控件用于现有导航抽屉。宿主继续用受控 props/callback 管理状态，不移动私有 DOM。`SidebarTogglePlacement` 与 `SidebarFooterRow` 从 React `/layout`、`/menu-layout` 及根入口导出。详见 [导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 
-React `/menu-layout` 的 NavigationMenuProps/MenuLayoutProps 与 runtime `/navigation` 的 NavigationMenuOptions/NavigationMenuDOMOptions 统一接受 `labelOverflow?: 'wrap' | 'marquee'`、`actionAlignment?: 'center' | 'start'`，默认wrap/center保持兼容。React `NavigationMenu.Label`及NavigationMenuLabelProps与原生`createNavigationLabel(document,text)`为名称部件，原生返回element/setText，富描述/Badge在名称外组合。根入口同步导出这些公共能力；共享动画控制器仅在runtime/internal下用于包间实现，不作为宿主操作入口。完整降级、动态更新和双端消费见[富导航合同](COMPONENTS.md#富条目独立行尾动作与上下文菜单)。
+Calendar 的 `CalendarProps` 公开受控 `month`/`onMonthChange`；runtime `/calendar` 提供 `CalendarOptions` 与共享纯模型。月份状态与所选日期分开，外部更新不触发用户回调。严格年月、值、焦点合同见[Calendar](COMPONENTS.md#选择与复合控件)，正式 React 消费者见[示例](../examples/calendar-month-react/app.tsx)。
 
-## 导航收起与展开
+`MenuItemTone`/`MenuItemProps` 从 React `/menu`、`/context-menu` 与根入口导出；Menu.Item 和 ContextMenu.Item 接受 `tone="danger"`，正式主题 CSS 维护危险语义。授权、确认、回调与结果归宿主，详见[菜单危险操作语义](COMPONENTS.md#菜单危险操作语义)。
 
-AppShell/MenuLayout 与 runtime/createMenuLayout 的唯一导航开关由公共组件定位：桌面在侧栏内部，sidebarTogglePlacement可选top（默认）/bottom；bottom位于菜单和业务footer之后，窄屏仍将同一控件移至顶栏打开原导航；宿主继续使用既有collapsed/defaultCollapsed/onCollapsedChange及sidebarOpen/onSidebarOpenChange，不搬私有DOM。原生getMenu().setCollapsed/update遵循同一受控状态合同。SidebarTogglePlacement在runtime/menu-layout、React/layout和menu-layout及根入口公开；React/layout与根入口导出SidebarFooterRow，原生使用公开xui-sidebar-footer-row类；自然宽度行排列是显式启用，旧footer全宽行为不变。详见 [导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
+`DataTableRowContext`/`DataTableRowEvents` 是 React `/data-table` 的 typed 行事件合同，`DataTableProps<T>` 接受 row events；事件来源边界由 React 组件内部维护，runtime 不导出 DOM 行事件处理器。键盘可达性、独立 cell action 与分页行为见[数据表格](COMPONENTS.md#数据表格)。
 
-## 日历月份控制
+React `/date-time` 与根入口导出 `DateTimePicker`/`DateTimePickerProps`；runtime `/date-time` 保留值、解析与纯模型类型。输入为分钟精度的墙上时间字符串，不携带时区。完整行为见[日期时间选择](COMPONENTS.md#日期时间选择)及[React 示例](../examples/date-time-react/app.tsx)。
 
-`@coffeehc/xui-runtime/calendar` 的 `CalendarOptions` 及 `@coffeehc/xui-react/calendar` 的 `CalendarProps` 公开 `month?:string`、`onMonthChange?:(month:string)=>void`。根入口同样导出。原生 `createCalendar` 接受同一选项并返回 `model.setMonth(month)`；受控确认使用 `update({month})`。年月遵循严格 YYYY-MM、0001..9999；日期值与查看月份分开。默认值、回调和焦点合同见[Calendar](COMPONENTS.md#选择与复合控件)，双端正式消费者见[React](../examples/calendar-month-react/app.tsx)/[原生](../examples/calendar-month-vanilla/app.js)。
-
-## 菜单危险语义
-
-MenuItemTone/MenuItemProps 从 React `/menu`、`/context-menu` 和根入口公开。`Menu.Item` 与 `ContextMenu.Item` 接受 `tone="danger"`；默认 `default` 保持旧外观。公共 floating.css（亦包含在 style.css）承接同名data-tone投影，原生HTML与controller使用同一状态合同；详见[组件手册](COMPONENTS.md#菜单危险操作语义)。
-
-## DataTable 行事件
-
-DataTableRowContext、DataTableRowEvents 从 runtime/data-table、runtime/data-table-dom 及根入口导出；React/data-table 及根入口导出React事件适配类型。DataTableProps<T> 和 NativeDataTableOptions<T> 可传 rowEvents；DataTableCellContext/NativeDataTableCellContext沿用原字段并复用行上下文。共享 isDataTableRowEvent 只负责DOM事件来源边界，不检查业务权限。详细行为及公开自定义动作标记见[数据表格](COMPONENTS.md#数据表格)。
-
-## 日期时间选择
-
-React `/date-time` 与根入口导出 DateTimePicker/DateTimePickerProps；runtime `/date-time` 与根入口导出 DateTimeOptions/DateTimeValue/DateTimeParts/DateTimeError/DateTimePickerLabels、parseDateTimeValue、createDateTimeModel；`/date-time-dom` 与根入口导出 NativeDateTimePickerOptions/createDateTimePicker。沿用正式 style.css（critical.css+floating.css），不增加组件私有 CSS。完整行为见[组件手册](COMPONENTS.md#日期时间选择)，双端[React](../examples/date-time-react/app.tsx)/[原生](../examples/date-time-vanilla/app.js)可从独立 tarball 消费。
-
-Popover.Content 的 positionerProps 保持peer合同，align=end无需改用其他入口。浮层定位外壳的gap包含于可用碰撞尺寸，正式CSS负责完整边界与内滚；原生controller使用独立视口测量合同，见[组件手册](COMPONENTS.md)。
-
-React `/popover` 及根入口新增 `PopoverContentProps`；`Popover.Content.portalProps` 配置组合内唯一 Portal，其类型来自公开 `Popover.Portal` props（排除由 Content 拥有的 children）。可配置 container、keepMounted、Portal ref 及 DOM 属性；省略时兼容原默认 body Portal 与关闭卸载。显式 container 时 Content 默认 keepMounted=true，以避开 peer 模态与被移除子树的回焦点竞争；显式 false 采用 peer 卸载行为及其限制。节点/RefObject/ShadowRoot/null 的真实类型、生命周期边界与 Dialog/Sheet 接线见[Popover 的 Portal 容器](COMPONENTS.md#popover-的-portal-容器)及[独立消费者示例](../examples/popover-portal-react/app.tsx)。Root、Popup 与 Positioner 的状态/焦点/定位职责保持不变。
+`Popover.Content.positionerProps` 保持 peer 合同，浮层定位、碰撞边界和滚动由 React 组件与公共 CSS 负责，见[Popover 的 Portal 容器](COMPONENTS.md#popover-的-portal-容器)。
 
 ## 接入反馈的兼容扩展
 
-完整登录页 `LoginPageConfig.labels.showPassword/hidePassword` 与新密码组合 `NewPasswordLabels.showPassword/hidePassword` 均为可选字段，保持英文默认，可配置中文，见[完整登录页文案](COMPONENTS.md#完整登录页密码显隐文案与品牌替代文本)。AdminSetupPage/createAdminSetupPage 可选 onCheck 与底层 controller.check() 只执行宿主权威只读核对，新增 checking/checkFailed 呈现；默认没有该动作，见[初始化页](COMPONENTS.md#管理员初始化页)。TextareaProps.autoResize 与原生 /dom 的 bindTextareaAutoResize 为显式启用的行数上限尺寸能力，不拥有草稿或提交。
+完整登录页 `LoginPageConfig.labels.showPassword/hidePassword` 与新密码组合 `NewPasswordLabels.showPassword/hidePassword` 均为可选字段，保持英文默认，可配置中文，见[完整登录页文案](COMPONENTS.md#完整登录页密码显隐文案与品牌替代文本)。React `AdminSetupPage` 可选 `onCheck`，底层 runtime controller 提供 `check()` 只读核对，见[初始化页](COMPONENTS.md#管理员初始化页)。`TextareaProps.autoResize` 为显式启用的行数上限尺寸能力，不拥有草稿或提交。
 
 已确认 revoke 成功后，ApiKeyManager 通过既有 adapter.list 普通读取一次最新 metadata/capabilities；不能推断 deleteRecord=true。读取期间禁止该写动作并发，失败保留已确认 revoked 行与锁定能力，展示原列表错误/刷新入口，不重放 revoke。关闭/卸载、较新读取或动作使用既有代际取消迟到结果；最终权限、事务、删除条件和 expected_version 仍由后端负责，未新增 HTTP API 或 DTO。
 
 ## 通用长标题
 
-React `/display`与根入口公开 `OverflowText` / `OverflowTextProps`；runtime `/display-dom`及根入口公开 `createOverflowText` / `OverflowTextOptions` / `OverflowTextController`。仅字符串text，现有交互表面使用React interactionRef或原生interactionTarget，不新增Tab/role/点击语义。触屏/减少动效/无键盘入口完整静态换行；完整更新、销毁与消费组合见[长标题合同](COMPONENTS.md#通用长标题)。
+React `/display` 与根入口公开 `OverflowText` / `OverflowTextProps`。runtime `/display` 只提供共享类型和纯 helper。仅字符串 text，现有 React 交互表面使用 `interactionRef`，不新增 Tab/role/点击语义。触屏/减少动效/无键盘入口完整静态换行；消费组合见[长标题合同](COMPONENTS.md#通用长标题)。
 
 ## 布局与槽位架构
 
-`layout` 的 PageHeader 保留 title/description/meta/actions；空槽不占位，meta 统一次要文字。React `/display` 与 runtime `/display-dom` 新增 Card/createCard 及其声明类型，完整字段、原生部分更新与生命周期见 [Card](COMPONENTS.md#card)。本次无新协议或 endpoint。页面、组件、原子控件共用 [槽位架构](DESIGN.md#页面与组件的槽位架构)，各操作按 [逐项清单](ADOPTION_CHECKLIST.md)验收。
+`layout` 的 PageHeader 保留 title/description/meta/actions；空槽不占位，meta 统一次要文字。React `/display` 新增 Card；runtime `/display` 只导出共享 Card 类型。Card 固定 header/content/footer 三段，description 与 children 同属唯一 `.xui-card-content`，完整字段见 [Card](COMPONENTS.md#card)。页面、组件、原子控件共用 [槽位架构](DESIGN.md#页面与组件的槽位架构)，各操作按 [逐项清单](ADOPTION_CHECKLIST.md)验收。

@@ -26,7 +26,7 @@ async function focusPaint(control){
   await control.focus();await control.evaluate(node=>node.scrollIntoView({block:'center',inline:'nearest'}));
   return control.evaluate(node=>{const rect=node.getBoundingClientRect(),style=getComputedStyle(node),outset=parseFloat(style.outlineWidth)+parseFloat(style.outlineOffset),clipped=[];for(let p=node.parentElement;p;p=p.parentElement){const s=getComputedStyle(p),r=p.getBoundingClientRect();if(/hidden|clip|auto|scroll/.test(s.overflowX)&& (rect.left-outset<r.left-1||rect.right+outset>r.right+1))clipped.push(p.className);if(/hidden|clip|auto|scroll/.test(s.overflowY)&&(rect.top-outset<r.top-1||rect.bottom+outset>r.bottom+1))clipped.push(p.className);}return {clipped,left:rect.left-outset,right:rect.right+outset,viewport:innerWidth,outline:style.outlineStyle};});
 }
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   for(const mode of ['light','dark','system'])test(`${kind} SearchToolbar ${mode}: wide row, uniform buttons, container wrapping and focus`,async({page},info)=>{
     await setup(page,kind,mode);const wide=await geometry(page);
     expect(wide.search.y).toBeCloseTo(wide.actions.y,1);expect(wide.search.right).toBeLessThan(wide.actions.x);expect(wide.search.width).toBeGreaterThan(wide.actions.width);expect(wide.min).toBe('0px');

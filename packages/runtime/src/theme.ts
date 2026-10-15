@@ -1,3 +1,5 @@
+export {setInterfaceScale,type InterfaceScale,type InterfaceScaleOptions} from './interface-scale.js';
+
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type EffectiveTheme = Exclude<ThemeMode, 'system'>;
 export interface ThemeState { mode: ThemeMode; effective: EffectiveTheme }

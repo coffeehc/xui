@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 const control=(page,id)=>page.locator(`[data-menu-id="${id}"][data-menu-control="primary"]`);
 test.use({hasTouch:true});
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} data menu owns default selected skin, groups, nested links and stable navigation`,async({page})=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto(`/menu-${kind}/?page=overview`);
     await expect(control(page,'overview')).toHaveAttribute('aria-current','page');
@@ -59,7 +59,7 @@ for(const kind of ['react','vanilla']){
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);const motion=await control(page,'notes').evaluate(node=>getComputedStyle(node).transitionDuration.split(',').every(value=>parseFloat(value)<=.001));expect(motion).toBe(true);
     await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toBeHidden();
   });
-  test(`${kind} native modifiers, target, download and adapter bypass preserve browser navigation`,async({page,context})=>{
+  test(`${kind} modifiers, target, download and adapter bypass preserve browser navigation`,async({page,context})=>{
     await page.goto(`/menu-${kind}/?page=overview`);const popup=page.waitForEvent('popup');await control(page,'new-tab').click();const tab=await popup;await tab.waitForLoadState();expect(tab.url()).toContain('page=new-tab');await tab.close();expect(await page.evaluate(()=>window.menuDemo.calls())).toEqual([]);
     for(const click of [{modifiers:['ControlOrMeta']},{button:'middle'}]){const opening=context.waitForEvent('page');await control(page,'overview').click(click);const opened=await opening;await opened.waitForLoadState();expect(opened.url()).toContain('page=overview');await opened.close();expect(await page.evaluate(()=>window.menuDemo.calls())).toEqual([]);}
     const download=page.waitForEvent('download');await control(page,'download').click();expect((await download).suggestedFilename()).toBe('reference.html');expect(await page.evaluate(()=>window.menuDemo.calls())).toEqual([]);
@@ -67,6 +67,5 @@ for(const kind of ['react','vanilla']){
   });
   test(`${kind} lifecycle releases the owner and can mount once again`,async({page})=>{
     await page.goto(`/menu-${kind}/?page=overview`);await page.evaluate(()=>window.menuDemo.destroy());await expect(page.locator('nav[aria-label="工作导航"]')).toHaveCount(0);await page.evaluate(()=>window.menuDemo.mount());await expect(control(page,'overview')).toBeVisible();await control(page,'library').click();expect(await page.evaluate(()=>window.menuDemo.calls())).toEqual(['library']);
-    if(kind==='vanilla'){const results=await page.evaluate(()=>{const owner=window.menuDemo.getOwner(),before=owner.getMenu().getElement();let invalid=false;try{owner.update({items:[{id:'x',label:'X'},{id:'x',label:'Y'}]});}catch{invalid=true;}return {invalid,same:before===owner.getMenu().getElement(),stillSelected:before.querySelector('[aria-current="page"]')?.dataset.menuId};});expect(results).toEqual({invalid:true,same:true,stillSelected:'library'});}
   });
 }

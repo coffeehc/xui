@@ -169,15 +169,12 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
         let hasNumericOffset = false;
         const scanNumber = value => { if (ts.isNumericLiteral(value) && Number(value.text) !== 0) hasNumericOffset = true; ts.forEachChild(value, scanNumber); };
         for (const span of node.templateSpans) scanNumber(span.expression);
-        const measuredPosition = file === 'packages/runtime/src/dom.ts' && /^(?:left|top|maxWidth|maxHeight|--anchor-width|--available-height)$/.test(prop) && /^`\$\{[\s\S]+\}px`$/.test(raw) && /(?:anchor\.|contextPoint|win\.(?:innerWidth|innerHeight)|box\.|right-left|bottom-top|down\?below:above|trigger\.getBoundingClientRect\(\)\.width)/.test(raw) && !hasNumericOffset && !/["']\d+(?:px|rem)["']/.test(raw);
-        const measuredSidebar = ['packages/runtime/src/menu-layout.ts', 'packages/ui-react/src/layout.tsx'].includes(file) && prop === 'blockSize' && /^`max\(var\(--nav-sidebar-min-height\), calc\(100dvh - \$\{(?:header|headerNode)\.getBoundingClientRect\(\)\.height\}px\)\)`$/.test(raw);
-        const measuredTableTrack = file === 'packages/runtime/src/data-table.ts' && prop === 'gridTemplateRows' && raw === '`auto minmax(${minimum}px, 1fr) auto`';
-        const measuredTableMinimum = file === 'packages/runtime/src/data-table.ts' && prop === 'minBlockSize' && ['`${componentMinimum}px`', '`max(var(--data-table-min-block-size), ${componentMinimum}px)`'].includes(raw);
-        // Explicit positive image dimensions are consumer data, validated before DOM writes.
-        const imageWidth = file === 'packages/runtime/src/display-dom.ts' && prop === 'width' && raw === '`${options.width}px`';
+        const measuredSidebar = file === 'packages/ui-react/src/layout.tsx' && prop === 'blockSize' && /^`max\(var\(--nav-sidebar-min-height\), calc\(100dvh - \$\{(?:header|headerNode)\.getBoundingClientRect\(\)\.height\}px\)\)`$/.test(raw);
+        const measuredTableTrack = file === 'packages/ui-react/src/data-table-layout.ts' && prop === 'gridTemplateRows' && raw === '`auto minmax(${minimum}px, 1fr) auto`';
+        const measuredTableMinimum = file === 'packages/ui-react/src/data-table-layout.ts' && prop === 'minBlockSize' && ['`${componentMinimum}px`', '`max(var(--data-table-min-block-size), ${componentMinimum}px)`'].includes(raw);
         // Textarea height derives solely from computed font/box metrics and its declared row cap.
-        const measuredTextarea = file === 'packages/runtime/src/textarea.ts' && prop === 'blockSize' && raw === "`${style.boxSizing==='border-box'?size:size-padding-border}px`";
-        if (measuredTextarea || measuredPosition || measuredSidebar || measuredTableTrack || measuredTableMinimum || imageWidth) { exceptions.add(`${file}: measured ${prop}`); return; }
+        const measuredTextarea = file === 'packages/ui-react/src/textarea.ts' && prop === 'blockSize' && raw === "`${style.boxSizing==='border-box'?size:size-padding-border}px`";
+        if (measuredTextarea || measuredSidebar || measuredTableTrack || measuredTableMinimum) { exceptions.add(`${file}: measured ${prop}`); return; }
         errors.push(`${where(loc(node))} ${prop}: Unreviewed dynamic style template ${raw}`);
       }
     }

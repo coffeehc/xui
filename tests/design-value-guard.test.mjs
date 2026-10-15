@@ -67,9 +67,9 @@ test('source audit catches bracket writes, cssText, arithmetic and inline doc fr
   ]) await fixture({ [file]: content }, async root => assert.rejects(auditDesignSources({ root }), /Design value audit failed/));
 });
 
-test('measured position exception does not allow a new literal offset', async () => {
-  await fixture({ 'packages/runtime/src/dom.ts': 'popup.style.left=`${Math.max(0,anchor.left+8)}px`;' }, async root => assert.rejects(auditDesignSources({ root }), /Unreviewed dynamic/));
-  await fixture({ 'packages/runtime/src/dom.ts': 'popup.style.left=`${Math.max(0,anchor.left)}px`;' }, async root => assert.doesNotReject(auditDesignSources({ root })));
+test('unreviewed UI positioning has no measured-offset exception', async () => {
+  for(const source of ['popup.style.left=`${Math.max(0,anchor.left+8)}px`;','popup.style.left=`${Math.max(0,anchor.left)}px`;'])
+    await fixture({ 'packages/ui-react/src/sample.tsx': source }, async root => assert.rejects(auditDesignSources({ root }), /Unreviewed dynamic/));
 });
 
 test('source token references must resolve; peer variables have a narrow owner and property', async () => {
@@ -137,11 +137,11 @@ test('the public workspace table minimum permits only its documented semantic al
 
 test('only the reviewed DataTable intrinsic track measurement is exempted',async()=>{
   const measured='frame.style.gridTemplateRows=`auto minmax(${minimum}px, 1fr) auto`;';
-  await fixture({'packages/runtime/src/data-table.ts':measured},async root=>assert.doesNotReject(auditDesignSources({root})));
+  await fixture({'packages/ui-react/src/data-table-layout.ts':measured},async root=>assert.doesNotReject(auditDesignSources({root})));
   for(const [file,source] of [
     ['packages/runtime/src/sample.ts',measured],
-    ['packages/runtime/src/data-table.ts',measured.replace('${minimum}','${minimum+8}')],
-    ['packages/runtime/src/data-table.ts',measured.replace('gridTemplateRows','height')],
+    ['packages/ui-react/src/data-table-layout.ts',measured.replace('${minimum}','${minimum+8}')],
+    ['packages/ui-react/src/data-table-layout.ts',measured.replace('gridTemplateRows','height')],
   ])await fixture({[file]:source},async root=>assert.rejects(auditDesignSources({root}),/Unreviewed dynamic/));
 });
 
@@ -149,8 +149,8 @@ test('only the reviewed DataTable intrinsic track measurement is exempted',async
 test('DataTable component minimum only permits the exact reviewed measured outputs',async()=>{
   for(const expression of ['`${componentMinimum}px`','`max(var(--data-table-min-block-size), ${componentMinimum}px)`']){
     const measured='root.style.minBlockSize='+expression+';';
-    await fixture({'packages/runtime/src/data-table.ts':measured},async root=>assert.doesNotReject(auditDesignSources({root})));
-    for(const [file,source] of [['packages/runtime/src/sample.ts',measured],['packages/runtime/src/data-table.ts',measured.replace('${componentMinimum}','${componentMinimum+8}')]])
+    await fixture({'packages/ui-react/src/data-table-layout.ts':measured},async root=>assert.doesNotReject(auditDesignSources({root})));
+    for(const [file,source] of [['packages/runtime/src/sample.ts',measured],['packages/ui-react/src/data-table-layout.ts',measured.replace('${componentMinimum}','${componentMinimum+8}')]])
       await fixture({[file]:source},async root=>assert.rejects(auditDesignSources({root}),/Unreviewed dynamic/));
   }
 });

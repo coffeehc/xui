@@ -1,6 +1,0 @@
-import {createMenuLayout} from '@coffeehc/xui-runtime/menu-layout';
-import {createBusinessLogExplorer} from '@coffeehc/xui-runtime/business-log-dom';
-import {createBusinessLogExample} from '../shared/business-log-model';
-import '@coffeehc/xui-theme/critical.css';
-const layout=createMenuLayout(document.getElementById('root'),{title:'xui',label:'管理导航',items:[{id:'business-log',label:'业务日志',icon:'folder',href:location.pathname}],activeId:'business-log'}),container=document.createElement('div');container.className='xui-container';layout.getMain().append(container);
-const example=createBusinessLogExample(location.href),renderers=[{eventType:'order.approved',schemaVersion:1,render:detail=>{const paragraph=document.createElement('p');paragraph.textContent=example.renderApproved(detail);return paragraph;}},{eventType:'demo.renderer.fail',schemaVersion:1,render:()=>{throw Error('FAKE_PRIVATE_RENDER_ERROR');}}],view=createBusinessLogExplorer(container,{controller:example.controller,renderers});void example.controller.refresh();window.businessLogDemo={...example,destroy(){view.destroy();example.destroy();layout.destroy();}};window.addEventListener('pagehide',()=>window.businessLogDemo.destroy(),{once:true});

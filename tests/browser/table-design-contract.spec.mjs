@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])test(`${kind} ${theme} table header and body consume distinct DESIGN text roles`,async({page},info)=>{
+for(const kind of ['react'])for(const theme of ['light','dark','system'])test(`${kind} ${theme} table header and body consume distinct DESIGN text roles`,async({page},info)=>{
  await page.goto(`/data-table-${kind}/?size=20`);await page.waitForFunction(()=>window.dataTableDemo?.owner.getState().status==='ready');await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
  const table=page.getByRole('table',{name:'合成记录表格',exact:true}),head=table.locator('th').first(),cell=table.locator('td').first();await expect(head).toHaveCSS('font-size','13px');await expect(head).toHaveCSS('line-height','20px');await expect(head).toHaveCSS('font-weight','500');await expect(cell).toHaveCSS('font-size','14px');await expect(cell).toHaveCSS('line-height','22px');
  await page.evaluate(()=>{for(const [name,value]of Object.entries({'--font-size-body-xs':'19px','--line-height-body-xs':'29px','--font-size-body-sm':'17px','--line-height-body-sm':'27px','--font-weight-control':'700','--menu-item-focus-color':'#345678'}))document.documentElement.style.setProperty(name,value);});

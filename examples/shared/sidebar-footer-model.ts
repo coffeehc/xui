@@ -1,6 +1,6 @@
 import type {NavigationItem,NavigationMenuOptions} from '@coffeehc/xui-runtime/navigation';
 import type {ThemeMode} from '@coffeehc/xui-runtime/theme';
-import type {SidebarTogglePlacement} from '@coffeehc/xui-runtime/menu-layout';
+import type {SidebarTogglePlacement} from '@coffeehc/xui-react/layout';
 
 // Shared synthetic data only. Permissions, real authorization, requests and
 // version provenance remain with the adopting application's domain owner.

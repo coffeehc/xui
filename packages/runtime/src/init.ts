@@ -1,4 +1,7 @@
 import { createThemeController } from './theme.js';
+import { restoreInterfaceScale } from './interface-scale.js';
+
+if (typeof window !== 'undefined') restoreInterfaceScale(window);
 
 // Build as a small synchronous classic script. Put before CSS and visible body.
 // data-storage-key on the script customizes the same preference owner.

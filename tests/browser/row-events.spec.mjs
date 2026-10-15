@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(kind+' row double-click uses current record after sort, update and cursor pagination',async({page})=>{
   await page.goto('/row-events-'+kind+'/');const result=page.getByLabel('事件结果');
   await page.getByLabel('读取 row-1',{exact:true}).dblclick();

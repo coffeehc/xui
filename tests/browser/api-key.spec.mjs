@@ -11,7 +11,7 @@ async function unclipped(locator){
  for(const ancestor of metrics.ancestors){if(ancestor.clipX){expect(metrics.rect.left,`${ancestor.className} left clip`).toBeGreaterThanOrEqual(ancestor.left-1);expect(metrics.rect.right,`${ancestor.className} right clip`).toBeLessThanOrEqual(ancestor.right+1);}if(ancestor.clipY){expect(metrics.rect.top,`${ancestor.className} top clip`).toBeGreaterThanOrEqual(ancestor.top-1);expect(metrics.rect.bottom,`${ancestor.className} bottom clip`).toBeLessThanOrEqual(ancestor.bottom+1);}}
  return metrics;
 }
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(`${kind} API key metadata preserves unknown values and gates unavailable operations`,async({page})=>{
   await prepare(page);await page.goto(`/api-key-${kind}/`);await expect(page.getByRole('cell',{name:'资料读取',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'撤销 旧记录',exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'撤销 资料读取',exact:true})).toBeEnabled();
   await expect(page.getByRole('row').filter({has:page.getByRole('cell',{name:'旧记录',exact:true})})).toContainText('未知');expect(await page.evaluate(()=>window.apiKeyDemo.controller.readSecret())).toBeNull();expect(await calls(page,'create')).toBe(0);expect(await calls(page,'revoke')).toBe(0);expect(await page.evaluate(()=>window.fakeClipboardWrites.length)).toBe(0);

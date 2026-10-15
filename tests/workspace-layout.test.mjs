@@ -30,12 +30,10 @@ test('bounded public CSS gives content remaining height and keeps natural page c
   assert.match(css,/data-scroll-mode='workspace'.*?xui-shell-content.*?flex:1 1 0;min-block-size:min\(var\(--layout-workspace-content-min-block-size\),100dvh\);overflow:auto/s);
   assert.match(css,/xui-app-header-leading\s*\{[^}]*flex:none/);
 });
-test('workspace consumers use public packages and host-owned geometry only',async()=>{
-  for(const kind of ['react','vanilla']){
-    const source=await readFile(`examples/workspace-${kind}/app.${kind==='react'?'tsx':'js'}`,'utf8');
+test('workspace consumer uses public React packages and host-owned geometry only',async()=>{
+    const source=await readFile('examples/workspace-react/app.tsx','utf8');
     assert.match(source,/@coffeehc\/xui-theme\/style.css/);
     assert.doesNotMatch(source,/xui-shell-|xui-app-header-|getBoundingClientRect|position:\s*['"](?:absolute|fixed)|packages\/.*\/src/);
-  }
 });
 
 test('workspace minimum stays opt-in through the public shell style contract',async()=>{

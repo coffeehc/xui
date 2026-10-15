@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Menu as Base } from '@base-ui/react/menu';
-import {bindMenuKeyboardFocus} from '@coffeehc/xui-runtime/dom';
+import {bindMenuKeyboardFocus} from './menu-keyboard.js';
 import {branded,cx} from './shared.js';
 /** Optional visual emphasis only; permissions, confirmation and execution remain with the host. */
 export type MenuItemTone='default'|'danger';

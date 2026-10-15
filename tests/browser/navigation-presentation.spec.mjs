@@ -17,7 +17,7 @@ async function metrics(page){return primary(page).evaluate(node=>{
 });}
 async function attach(page,info,label){await info.attach(label+'.json',{body:JSON.stringify(await metrics(page),null,2),contentType:'application/json'});await info.attach(label+'.png',{body:await page.screenshot(),contentType:'image/png'});}
 const animations=page=>track(page).evaluate(node=>node.getAnimations().length);
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  for(const mode of ['light','dark','system'])for(const width of [1280,390])for(const font of [16,32])test(`${kind} first-line actions ${mode} ${width}px root${font}`,async({page},info)=>{
   const errors=await ready(page,kind,{width,font,mode});const m=await metrics(page);await attach(page,info,'first-line');
   expect(m.title.width).toBeGreaterThan(10);expect(m.title.height).toBeLessThanOrEqual(m.lineHeight+2);expect(m.pageWidth).toBeLessThanOrEqual(width+1);

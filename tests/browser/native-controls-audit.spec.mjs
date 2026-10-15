@@ -47,7 +47,10 @@ test('native controls: keyboard, readonly, disabled actions, FormData, system an
  await setup(page,'system');
  const text=page.getByLabel('text default',{exact:true});await text.fill('Changed');expect(await page.locator('#audit-form').evaluate(form=>new FormData(form).get('text-default'))).toBe('Changed');
  const readonly=page.getByLabel('text readonly',{exact:true});await readonly.focus();await page.keyboard.type('ignored');await expect(readonly).toHaveValue('Sample');
- for(const name of ['Checkbox readonly','Switch readonly','Native readonly']){const node=page.getByLabel(name,{exact:true});await node.focus();await page.keyboard.press('Space');await expect(node).toBeChecked();await node.click();await expect(node).toBeChecked();}
+ for(const name of ['Checkbox readonly','Switch readonly']){const node=page.getByLabel(name,{exact:true});await node.focus();await page.keyboard.press('Space');await expect(node).toBeChecked();await node.click();await expect(node).toBeChecked();}
+ // The raw HTML checkbox documents the platform contract: unlike xui's React
+ // Checkbox, HTML checkbox readOnly is not enforced by the browser.
+ const nativeReadonly=page.getByLabel('Native readonly',{exact:true});await nativeReadonly.focus();await page.keyboard.press('Space');await expect(nativeReadonly).not.toBeChecked();await nativeReadonly.click();await expect(nativeReadonly).toBeChecked();
  const mixed=page.getByLabel('Mixed default',{exact:true});await mixed.focus();await page.keyboard.press('Space');expect(await mixed.evaluate(node=>node.indeterminate)).toBe(false);await expect(mixed).toBeChecked();
  const range=page.getByLabel('range default',{exact:true});await range.focus();await page.keyboard.press('ArrowRight');await expect(range).toHaveValue('51');
  const number=page.getByLabel('number default',{exact:true});await number.focus();await page.keyboard.press('ArrowUp');await expect(number).toHaveValue('5');

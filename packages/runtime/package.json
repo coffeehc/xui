@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-runtime",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "files": [
@@ -35,37 +35,17 @@
       "types": "./dist/query.d.ts",
       "import": "./dist/query.js"
     },
-    "./menu-layout": {
-      "types": "./dist/menu-layout.d.ts",
-      "import": "./dist/menu-layout.js"
-    },
-    "./dom": {
-      "types": "./dist/dom.d.ts",
-      "import": "./dist/dom.js"
-    },
     "./api-key": {
       "types": "./dist/api-key.d.ts",
       "import": "./dist/api-key.js"
-    },
-    "./api-key-dom": {
-      "types": "./dist/api-key-dom.d.ts",
-      "import": "./dist/api-key-dom.js"
     },
     "./structured-log": {
       "types": "./dist/structured-log.d.ts",
       "import": "./dist/structured-log.js"
     },
-    "./structured-log-dom": {
-      "types": "./dist/structured-log-dom.d.ts",
-      "import": "./dist/structured-log-dom.js"
-    },
     "./business-log": {
       "types": "./dist/business-log.d.ts",
       "import": "./dist/business-log.js"
-    },
-    "./business-log-dom": {
-      "types": "./dist/business-log-dom.d.ts",
-      "import": "./dist/business-log-dom.js"
     },
     "./auth": {
       "types": "./dist/auth.d.ts",
@@ -74,10 +54,6 @@
     "./entity-id": {
       "types": "./dist/entity-id.d.ts",
       "import": "./dist/entity-id.js"
-    },
-    "./login-dom": {
-      "types": "./dist/login-dom.d.ts",
-      "import": "./dist/login-dom.js"
     },
     "./download": {
       "types": "./dist/download.d.ts",
@@ -95,10 +71,6 @@
       "types": "./dist/calendar.d.ts",
       "import": "./dist/calendar.js"
     },
-    "./widgets-dom": {
-      "types": "./dist/widgets-dom.d.ts",
-      "import": "./dist/widgets-dom.js"
-    },
     "./theme-control": {
       "types": "./dist/theme-control.d.ts",
       "import": "./dist/theme-control.js"
@@ -111,81 +83,33 @@
       "types": "./dist/grouped-combobox.d.ts",
       "import": "./dist/grouped-combobox.js"
     },
-    "./grouped-combobox-dom": {
-      "types": "./dist/grouped-combobox-dom.d.ts",
-      "import": "./dist/grouped-combobox-dom.js"
-    },
     "./data-table": {
       "types": "./dist/data-table.d.ts",
       "import": "./dist/data-table.js"
-    },
-    "./data-table-dom": {
-      "types": "./dist/data-table-dom.d.ts",
-      "import": "./dist/data-table-dom.js"
     },
     "./password": {
       "types": "./dist/password.d.ts",
       "import": "./dist/password.js"
     },
-    "./password-dom": {
-      "types": "./dist/password-dom.d.ts",
-      "import": "./dist/password-dom.js"
-    },
-    "./search-toolbar-dom": {
-      "types": "./dist/search-toolbar-dom.d.ts",
-      "import": "./dist/search-toolbar-dom.js"
-    },
     "./display": {
       "types": "./dist/display.d.ts",
       "import": "./dist/display.js"
-    },
-    "./display-dom": {
-      "types": "./dist/display-dom.d.ts",
-      "import": "./dist/display-dom.js"
     },
     "./choice-group": {
       "types": "./dist/choice-group.d.ts",
       "import": "./dist/choice-group.js"
     },
-    "./choice-group-dom": {
-      "types": "./dist/choice-group-dom.d.ts",
-      "import": "./dist/choice-group-dom.js"
-    },
     "./number-input": {
       "types": "./dist/number-input.d.ts",
       "import": "./dist/number-input.js"
-    },
-    "./text-inputs-dom": {
-      "types": "./dist/text-inputs-dom.d.ts",
-      "import": "./dist/text-inputs-dom.js"
     },
     "./admin-setup": {
       "types": "./dist/admin-setup.d.ts",
       "import": "./dist/admin-setup.js"
     },
-    "./admin-setup-dom": {
-      "types": "./dist/admin-setup-dom.d.ts",
-      "import": "./dist/admin-setup-dom.js"
-    },
-    "./internal/dialog-layout": {
-      "types": "./dist/dialog-layout.d.ts",
-      "import": "./dist/dialog-layout.js"
-    },
     "./date-time": {
       "types": "./dist/date-time.d.ts",
       "import": "./dist/date-time.js"
-    },
-    "./date-time-dom": {
-      "types": "./dist/date-time-dom.d.ts",
-      "import": "./dist/date-time-dom.js"
-    },
-    "./internal/navigation-presentation": {
-      "types": "./dist/navigation-presentation.d.ts",
-      "import": "./dist/navigation-presentation.js"
-    },
-    "./internal/overflow-text": {
-      "types": "./dist/overflow-text.d.ts",
-      "import": "./dist/overflow-text.js"
     }
   },
   "types": "./dist/index.d.ts",

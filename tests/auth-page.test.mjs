@@ -18,8 +18,8 @@ test('AuthPage owns brand, actions and feedback geometry without copying host co
   const html=renderToStaticMarkup(React.createElement(AuthPage,{config,actions:React.createElement(Button,null,'Create'),feedback:React.createElement('div',{role:'alert'},'Try again'),feedbackActions:React.createElement(Button,{variant:'ghost'},'Retry')}));
   assert.match(html,/xui-login-actions"><button[^>]*data-size="default"/);assert.match(html,/xui-login-support.*role="alert"/);
   const css=await readFile('packages/theme/src/auth.css','utf8');assert.match(css,/\.xui-login-actions>\.xui-button \{min-block-size:var\(--login-control-height\);font-size:var\(--login-control-font-size\);line-height:var\(--login-control-line-height\);padding-inline:var\(--space-section-gap\);gap:var\(--space-control-gap\);inline-size:100%/);
-  const react=await readFile('packages/ui-react/src/login.tsx','utf8'),native=await readFile('packages/runtime/src/login-dom.ts','utf8');
-  assert.match(react,/return <AuthPage config=\{config\}/);assert.match(native,/createAuthPage\(root,/);
+  const react=await readFile('packages/ui-react/src/login.tsx','utf8');
+  assert.match(react,/return <AuthPage config=\{config\}/);
 });
 
 test('AuthPage rejects a missing title and invalid JavaScript form options',()=>{

@@ -18,7 +18,7 @@ export async function buildPackages(){
     for(const name of ['runtime','ui-react']){
       const files=(await readdir(`packages/${name}/src`)).filter(file=>/\.tsx?$/.test(file)).map(file=>`packages/${name}/src/${file}`);
       await build({entryPoints:files.filter(file=>!file.endsWith('/init.ts')),outdir:`${stage}/${name}`,format:'esm',platform:'browser',target:'es2022',bundle:false,jsx:'automatic'});
-      const project={compilerOptions:{declaration:true,emitDeclarationOnly:true,rootDir:resolve(`packages/${name}/src`),outDir:`${stage}/${name}`,jsx:'react-jsx',moduleResolution:'bundler',module:'esnext',target:'es2022',strict:true,skipLibCheck:true,...(name==='ui-react'?{paths:{'@coffeehc/xui-runtime/internal/dialog-layout': [`${stage}/runtime/dialog-layout.d.ts`],'@coffeehc/xui-runtime/internal/navigation-presentation': [`${stage}/runtime/navigation-presentation.d.ts`],'@coffeehc/xui-runtime/internal/overflow-text': [`${stage}/runtime/overflow-text.d.ts`],'@coffeehc/xui-runtime': [`${stage}/runtime/index.d.ts`],'@coffeehc/xui-runtime/*': [`${stage}/runtime/*`]}}:{})},files:files.map(file=>resolve(file))};
+      const project={compilerOptions:{declaration:true,emitDeclarationOnly:true,rootDir:resolve(`packages/${name}/src`),outDir:`${stage}/${name}`,jsx:'react-jsx',moduleResolution:'bundler',module:'esnext',target:'es2022',strict:true,skipLibCheck:true,...(name==='ui-react'?{paths:{'@coffeehc/xui-runtime': [`${stage}/runtime/index.d.ts`],'@coffeehc/xui-runtime/*': [`${stage}/runtime/*`]}}:{})},files:files.map(file=>resolve(file))};
       await writeFile(`${stage}/${name}.tsconfig.json`,JSON.stringify(project));
       execFileSync('node',['node_modules/typescript/bin/tsc','--project',`${stage}/${name}.tsconfig.json`],{stdio:'inherit'});
     }

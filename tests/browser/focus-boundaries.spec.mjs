@@ -1,8 +1,8 @@
 import {test,expect} from '@playwright/test';
-async function setup(page,{native,kind,mode,width,scale=1,standalone=false,noHeader=false,titleText,side}){
+async function setup(page,{kind,mode,width,scale=1,standalone=false,noHeader=false,titleText,side}){
  await page.setViewportSize({width,height:844});await page.emulateMedia({colorScheme:mode==='light'?'light':'dark',reducedMotion:'reduce'});
  await page.goto('/react/foundation-contract.html');await page.waitForFunction(()=>!!window.renderFocusCase);
- await page.evaluate(({native,kind,mode,scale,standalone,noHeader,titleText,side})=>{document.documentElement.dataset.theme=mode;document.documentElement.dataset.themeEffective=mode==='system'?'dark':mode;document.documentElement.style.fontSize=`${16*scale}px`;window.renderFocusCase({native,kind,standalone,noHeader,titleText,side});},{native,kind,mode,scale,standalone,noHeader,titleText,side});
+ await page.evaluate(({kind,mode,scale,standalone,noHeader,titleText,side})=>{document.documentElement.dataset.theme=mode;document.documentElement.dataset.themeEffective=mode==='system'?'dark':mode;document.documentElement.style.fontSize=`${16*scale}px`;window.renderFocusCase({kind,standalone,noHeader,titleText,side});},{kind,mode,scale,standalone,noHeader,titleText,side});
  if(kind!=='card')await page.getByRole('button',{name:'Open form',exact:true}).click();
 }
 async function pointAtScrollOwner(page,owner){
@@ -48,9 +48,9 @@ async function assertFocusPaint(control){
  });
  expect(result.boxSizing).toBe('border-box');expect(result.outline).toBeGreaterThan(0);expect(result.violations).toEqual([]);
 }
-for(const native of [false,true])for(const mode of ['light','dark','system'])for(const viewport of [{width:1280,scale:1},{width:390,scale:1},{width:390,scale:2}])for(const kind of ['dialog','sheet','card']){
- test(`${native?'native':'react'} ${kind} focus paint ${mode} ${viewport.width}px ${viewport.scale*100}%`,async({page},info)=>{
-  await setup(page,{native,kind,mode,...viewport});const scope=kind==='card'?page.getByRole('region',{name:'Card form',exact:true}):page.getByRole('dialog');
+for(const mode of ['light','dark','system'])for(const viewport of [{width:1280,scale:1},{width:390,scale:1},{width:390,scale:2}])for(const kind of ['dialog','sheet','card']){
+ test(`React ${kind} focus paint ${mode} ${viewport.width}px ${viewport.scale*100}%`,async({page},info)=>{
+  await setup(page,{kind,mode,...viewport});const scope=kind==='card'?page.getByRole('region',{name:'Card form',exact:true}):page.getByRole('dialog');
   const fields=scope.locator('input');for(const index of [0,1,17])await assertFocusPaint(fields.nth(index));
   const first=fields.first();await assertFocusPaint(first);await expect(first).toHaveAttribute('aria-invalid','true');expect(await first.evaluate(node=>getComputedStyle(node).borderTopColor)).not.toBe(await first.evaluate(node=>getComputedStyle(node).outlineColor));
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width+1);
@@ -64,14 +64,14 @@ for(const native of [false,true])for(const mode of ['light','dark','system'])for
   }else {await assertFocusPaint(fields.last());await page.screenshot({path:info.outputPath('card-last-field.png')});}
  });
 }
-for(const native of [false,true])test(`${native?'native':'react'} standalone close has reserved top-right space`,async({page})=>{
- await setup(page,{native,kind:'dialog',mode:'light',width:390,scale:2,standalone:true});const dialog=page.getByRole('dialog'),close=dialog.getByRole('button',{name:'Dismiss form'});expect(await close.evaluate(node=>getComputedStyle(node).position)).toBe('absolute');await expect(close).toHaveCount(1);
+test(`React standalone close has reserved top-right space`,async({page})=>{
+ await setup(page,{kind:'dialog',mode:'light',width:390,scale:2,standalone:true});const dialog=page.getByRole('dialog'),close=dialog.getByRole('button',{name:'Dismiss form'});expect(await close.evaluate(node=>getComputedStyle(node).position)).toBe('absolute');await expect(close).toHaveCount(1);
  const title=dialog.locator('.xui-dialog-title');expect(await title.evaluate(node=>parseFloat(getComputedStyle(node).paddingInlineEnd))).toBeGreaterThan(30);
  await close.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form'})).toBeFocused();
 });
 
-for(const native of [false,true])for(const titleText of ['', '很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行'])test(`${native?'native':'react'} header safely handles ${titleText?'long':'empty'} title`,async({page},info)=>{
- await setup(page,{native,kind:'dialog',mode:'light',width:390,scale:2,titleText});const dialog=page.getByRole('dialog'),close=dialog.locator('.xui-dialog-close');await expect(close).toHaveCount(1);
+for(const titleText of ['', '很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行'])test(`React header safely handles ${titleText?'long':'empty'} title`,async({page},info)=>{
+ await setup(page,{kind:'dialog',mode:'light',width:390,scale:2,titleText});const dialog=page.getByRole('dialog'),close=dialog.locator('.xui-dialog-close');await expect(close).toHaveCount(1);
  const heading=dialog.locator('.xui-dialog-heading'),[headBox,closeBox]=await Promise.all([heading.boundingBox(),close.boundingBox()]);expect(headBox.x+headBox.width).toBeLessThanOrEqual(closeBox.x+1);
  const body=dialog.locator('.xui-dialog-body'),first=body.locator('input').first(),footer=dialog.locator('.xui-dialog-footer');const geometry=await body.evaluate((node)=>{const input=node.querySelector('input'),probe=document.createElement('span');probe.style.cssText='position:absolute;visibility:hidden;width:calc(var(--focus-width) + var(--focus-offset))';node.append(probe);const reach=parseFloat(getComputedStyle(probe).width);probe.remove();return {body:node.clientHeight,control:input.getBoundingClientRect().height,reach};});
  expect(geometry.body,'The header must not consume the body editing track').toBeGreaterThanOrEqual(geometry.control+Math.max(0,geometry.reach)*2);
@@ -86,12 +86,12 @@ for(const native of [false,true])for(const titleText of ['', '很长的标题用
  }else {await expect(dialog).toHaveAttribute('data-dialog-scroll','body');const foot=await footer.boundingBox();expect(foot.y+foot.height).toBeLessThanOrEqual(844);}
  await close.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
 });
-for(const native of [false,true])test(`${native?'native':'react'} existing body/footer without Header remains compatible`,async({page})=>{
- await setup(page,{native,kind:'dialog',mode:'dark',width:390,noHeader:true});const dialog=page.getByRole('dialog');await expect(dialog.locator('.xui-dialog-close')).toHaveCount(0);await expect(dialog.locator('.xui-dialog-header')).toHaveCount(0);await assertFocusPaint(dialog.locator('input').first());await assertFocusPaint(dialog.locator('input').last());await dialog.getByRole('button',{name:'Cancel form'}).click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form'})).toBeFocused();
+test(`React existing body/footer without Header remains compatible`,async({page})=>{
+ await setup(page,{kind:'dialog',mode:'dark',width:390,noHeader:true});const dialog=page.getByRole('dialog');await expect(dialog.locator('.xui-dialog-close')).toHaveCount(0);await expect(dialog.locator('.xui-dialog-header')).toHaveCount(0);await assertFocusPaint(dialog.locator('input').first());await assertFocusPaint(dialog.locator('input').last());await dialog.getByRole('button',{name:'Cancel form'}).click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form'})).toBeFocused();
 });
 
-for(const native of [false,true])test(`${native?'native':'react'} dialog changes scroll owner without remounting fields`,async({page},info)=>{
- await setup(page,{native,kind:'dialog',mode:'dark',width:390});
+test(`React dialog changes scroll owner without remounting fields`,async({page},info)=>{
+ await setup(page,{kind:'dialog',mode:'dark',width:390});
  const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body'),first=body.locator('input').first(),title=dialog.locator('.xui-dialog-title');
  await expect(dialog).toHaveAttribute('data-dialog-scroll','body');
  const close=dialog.getByRole('button',{name:'Dismiss form',exact:true});await expect(close).toBeFocused();await page.keyboard.press('Tab');await expect(first).toBeFocused();await first.fill('Keep this field and focus');
@@ -110,20 +110,20 @@ for(const native of [false,true])test(`${native?'native':'react'} dialog changes
  await page.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
 });
 
-test('native dialog remains reachable without ResizeObserver',async({page},info)=>{
+test('React dialog remains reachable without ResizeObserver',async({page},info)=>{
  await page.setViewportSize({width:390,height:480});await page.goto('/react/foundation-contract.html');await page.waitForFunction(()=>!!window.renderFocusCase);
- await page.evaluate(()=>{const observer=window.ResizeObserver;window.ResizeObserver=undefined;try{window.renderFocusCase({native:true,kind:'dialog',titleText:'很长的标题'.repeat(12)});}finally{window.ResizeObserver=observer;}});
+ await page.evaluate(()=>{const observer=window.ResizeObserver;window.ResizeObserver=undefined;try{window.renderFocusCase({kind:'dialog',titleText:'很长的标题'.repeat(12)});}finally{window.ResizeObserver=observer;}});
  await page.getByRole('button',{name:'Open form',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog).not.toHaveAttribute('data-dialog-scroll','body');await expect(dialog.locator('.xui-dialog-body')).toHaveCSS('overflow-y','visible');
  await pointAtScrollOwner(page,dialog);await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const b=await cancel.boundingBox();return b.y>=0&&b.y+b.height<=480;}).toBe(true);await info.attach('no-observer-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
 });
 
-for(const native of [false,true])for(const side of ['top','bottom'])test(`${native?'native':'react'} ${side} sheet respects its actual height budget`,async({page},info)=>{
- await setup(page,{native,kind:'sheet',side,mode:'light',width:390,scale:2,titleText:'很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行'});const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body');await expect(dialog).toHaveAttribute('data-dialog-scroll','whole');await expect(body).toHaveCSS('overflow-y','visible');
+for(const side of ['top','bottom'])test(`React ${side} sheet respects its actual height budget`,async({page},info)=>{
+ await setup(page,{kind:'sheet',side,mode:'light',width:390,scale:2,titleText:'很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行'});const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body');await expect(dialog).toHaveAttribute('data-dialog-scroll','whole');await expect(body).toHaveCSS('overflow-y','visible');
  await pointAtScrollOwner(page,dialog);await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const c=await cancel.boundingBox(),d=await dialog.boundingBox();return c.y>=d.y&&c.y+c.height<=d.y+d.height;}).toBe(true);await info.attach('fixed-height-sheet-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();
 });
 
-for(const native of [false,true])test(`${native?'native':'react'} last-field focus remains painted through both scroll-owner transitions`,async({page},info)=>{
- await setup(page,{native,kind:'dialog',mode:'light',width:390});const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body'),last=body.locator('input').nth(17);await expect(dialog.getByRole('button',{name:'Dismiss form',exact:true})).toBeFocused();
+test(`React last-field focus remains painted through both scroll-owner transitions`,async({page},info)=>{
+ await setup(page,{kind:'dialog',mode:'light',width:390});const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body'),last=body.locator('input').nth(17);await expect(dialog.getByRole('button',{name:'Dismiss form',exact:true})).toBeFocused();
  for(let index=0;index<18;index++){await page.keyboard.press('Tab');await expect(body.locator('input').nth(index)).toBeFocused();}
  await last.fill('Last field remains');
  for(const [scale,text,mode] of [[2,'很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行','whole'],[1,'Short title','body']]){

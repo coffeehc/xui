@@ -32,8 +32,8 @@ test('login layout retains optional branding, text escaping and an unchanged for
   const configured=render(undefined,{productName:'<script>brand</script>',logo:{src:'/brand.svg',alt:'产品 logo'}});assert.match(configured,/&lt;script&gt;brand&lt;\/script&gt;/);assert.match(configured,/alt="产品 logo"/);
   const signedIn=render({status:'authenticated',user:{id:'demo',username:'demo',display_name:'示例用户'},busy:null,error:null});assert.doesNotMatch(signedIn,/Signed in:|>Continue<|>Sign out</);assert.match(signedIn,/type="password"[^>]*disabled=""/);assert.match(signedIn,/Opening app…/);
 });
-test('both public login renderers keep theme ownership external and use the same brand roles',async()=>{
-  for(const file of ['packages/ui-react/src/login.tsx','packages/runtime/src/login-dom.ts']){const source=await readFile(file,'utf8');assert.match(source,/xui-login-identity/);assert.doesNotMatch(source,/xui-login-theme|theme\.(?:setMode|subscribe|getState|destroy)|localStorage|sessionStorage/);}
+test('public login keeps theme ownership external and uses the shared brand roles',async()=>{
+  const source=await readFile('packages/ui-react/src/login.tsx','utf8');assert.match(source,/xui-login-identity/);assert.doesNotMatch(source,/xui-login-theme|theme\.(?:setMode|subscribe|getState|destroy)|localStorage|sessionStorage/);
   const css=await readFile('packages/theme/src/auth.css','utf8');assert.doesNotMatch(css,/xui-login-theme|#[0-9a-f]{3,8}\b/i);
 });
 
@@ -63,7 +63,7 @@ test('login centers one credential core with its primary action before separate 
 test('public login removes cancelled-action UI and obsolete page labels',async()=>{
   const {loginPageDefaultLabels}=await import('../packages/runtime/dist/auth.js');
   for(const key of ['cancel','signingOut','continue','logout','theme','light','dark','system','signedIn'])assert.equal(Object.hasOwn(loginPageDefaultLabels,key),false,key);
-  for(const file of ['packages/ui-react/src/login.tsx','packages/runtime/src/login-dom.ts']){const source=await readFile(file,'utf8');assert.doesNotMatch(source,/labels\.cancel\b|canCancel|restoreFocus|cancel\.onclick/);}
+  const source=await readFile('packages/ui-react/src/login.tsx','utf8');assert.doesNotMatch(source,/labels\.cancel\b|canCancel|restoreFocus|cancel\.onclick/);
 });
 
 test('unknown login state keeps ordinary submit controls without a recovery flow',()=>{

@@ -1,6 +1,6 @@
 import {test as base,expect} from '@playwright/test';
 
-// Uses the existing independent React/native tarball consumers, never source aliases.
+// Uses the independent React tarball consumer, never source aliases.
 const test=base.extend({page:async({page},use,info)=>{
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await use(page);await info.attach('width-browser-errors.json',{body:JSON.stringify(errors,null,2),contentType:'application/json'});
@@ -61,7 +61,7 @@ async function assertWidths(page,{all=false,fluid='范围'}={}){
   assertRowAlignment(m);
   return m;
 }
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} fixed and percentage-math widths resize with the available body, with long content intact`,async({page})=>{
     await setup(page,kind);let m=await assertWidths(page);const initial=m.headers[1].width;
     const text=await table(page).locator('tbody tr').first().locator('td').nth(1).evaluate(cell=>{
@@ -104,7 +104,7 @@ for(const kind of ['react','vanilla']){
 
 // Both all-sized minima and the ordinary fluid-content configuration fill the
 // same public consumer without host CSS or a synthetic filler column.
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} all-sized minima and optional fluid columns both fill the frame`,async({page},info)=>{
     await page.setViewportSize({width:1700,height:1000});
     await page.goto(`/data-table-${kind}/?internal&widths&fluid-content&column-mode=sized&hide-column=source&size=20`);

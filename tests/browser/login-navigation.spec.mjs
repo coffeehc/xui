@@ -16,7 +16,7 @@ async function checkEvidence(page,info,name){
   for(const frame of evidence.frames){expect(frame.sameNodes).toBe(true);expect(frame.intermediateCard).toBe(false);for(const key of ['username','password','submit'])for(const dimension of ['x','width','height'])expect(Math.abs(frame[key][dimension]-evidence.before[key][dimension]),`${key}.${dimension}`).toBeLessThanOrEqual(1.5);for(const name of Object.keys(evidence.before.gaps))expect(Math.abs(frame.gaps[name]-evidence.before.gaps[name]),`${name} remains stable while the centered card reflows`).toBeLessThanOrEqual(1.5);}
   const path=info.outputPath(name+'.json');await writeFile(path,JSON.stringify(evidence,null,2));await info.attach('navigation-dom-sequence',{path,contentType:'application/json'});
 }
-for(const kind of ['react','react-strict','vanilla']){
+for(const kind of ['react','react-strict']){
   test(`${kind} a confirmed login keeps the form until one direct host navigation`,async({page},info)=>{
     await page.goto(`/login-${kind}/?handoff=hold&visualAcceptance`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await fill(page);await startRecording(page);
     await page.getByRole('button',{name:'登录',exact:true}).click();await expect(page.getByRole('button',{name:'正在进入…',exact:true})).toBeDisabled();await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);await expect(page.getByLabel(/^密码(?:\s*\*)?$/)).toHaveValue('');await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toBeDisabled();
@@ -30,30 +30,30 @@ for(const kind of ['react','react-strict','vanilla']){
     expect((await page.evaluate(()=>window.loginDemo.getRequests())).map(request=>request.path.split('/').at(-1))).toEqual(['refresh','session']);expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(destination(page)).toBeVisible();await checkEvidence(page,info,`${kind}-initial-session`);const frames=await page.evaluate(()=>window.initialNavigationFrames);expect(frames.length).toBeGreaterThan(0);expect(frames.every(value=>!value)).toBe(true);
   });
 }
-for(const kind of ['react','vanilla'])for(const source of ['login','session'])for(const failure of ['throw','reject'])test(`${kind} ${source} host navigation ${failure} retries only opening the target`,async({page},info)=>{
+for(const kind of ['react'])for(const source of ['login','session'])for(const failure of ['throw','reject'])test(`${kind} ${source} host navigation ${failure} retries only opening the target`,async({page},info)=>{
   await page.goto(`/login-${kind}/?handoff=${failure}&visualAcceptance${source==='session'?'&session=valid':''}`);
   if(source==='login'){await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await fill(page);await page.getByRole('button',{name:'登录',exact:true}).click();}
   await expect(page.getByRole('alert')).toHaveText('已登录，但暂时无法进入应用。请重试。');await expect(page.getByRole('button',{name:'重试进入'})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);await expect(page.getByLabel(/^密码(?:\s*\*)?$/)).toHaveValue('');await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toBeDisabled();
   const requests=await page.evaluate(()=>window.loginDemo.getRequests());expect(await page.evaluate(()=>window.loginDemo.auth.getState().status)).toBe('authenticated');expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);await page.evaluate(()=>{window.loginDemo.repeatAuthNotification();window.loginDemo.setHandoffMode('ok');});expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
   await page.screenshot({path:info.outputPath(`${kind}-${source}-${failure}-navigation-error.png`),animations:'disabled'});await page.getByRole('button',{name:'重试进入'}).click();await expect(destination(page)).toBeVisible();expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(2);expect(await page.evaluate(()=>window.loginDemo.getRequests())).toEqual(requests);expect(requests.filter(request=>request.path.endsWith('/login'))).toHaveLength(source==='login'?1:0);expect(requests.filter(request=>request.path.endsWith('/logout'))).toHaveLength(0);
 });
-for(const kind of ['react','vanilla'])for(const release of ['pagehide','destroy'])test(`${kind} ${release} ignores a late host navigation rejection`,async({page})=>{
+for(const kind of ['react'])for(const release of ['pagehide','destroy'])test(`${kind} ${release} ignores a late host navigation rejection`,async({page})=>{
   await page.goto(`/login-${kind}/?handoff=hold&visualAcceptance`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await fill(page);await page.getByRole('button',{name:'登录',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
   const unchanged=await page.evaluate(async release=>{if(release==='pagehide')window.dispatchEvent(new Event('pagehide'));else window.loginDemo.destroy();const before=document.getElementById('root').innerHTML;window.loginDemo.releaseHandoff(true);await new Promise(resolve=>setTimeout(resolve,0));return before===document.getElementById('root').innerHTML;},release);expect(unchanged).toBe(true);await expect(destination(page)).toHaveCount(0);expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
 });
 
-for(const kind of ['react','vanilla'])test(`${kind} a default navigation target equal to the current page cannot create a reload loop`,async({page})=>{
+for(const kind of ['react'])test(`${kind} a default navigation target equal to the current page cannot create a reload loop`,async({page})=>{
   await page.goto(`/login-${kind}/?navigate&sameTarget&session=valid`);await expect(page.getByRole('alert')).toHaveText('已登录，但暂时无法进入应用。请重试。');const before=page.url();const requests=await page.evaluate(()=>window.loginDemo.getRequests());expect(requests.map(request=>request.path.split('/').at(-1))).toEqual(['refresh','session']);await page.getByRole('button',{name:'重试进入'}).click();await expect(page.getByRole('alert')).toHaveText('已登录，但暂时无法进入应用。请重试。');expect(page.url()).toBe(before);expect(await page.evaluate(()=>window.loginDemo.getRequests())).toEqual(requests);
 });
 
-for(const kind of ['react','react-strict','vanilla'])test(`${kind} a refreshed user object with the same verified id does not repeat navigation`,async({page})=>{
+for(const kind of ['react','react-strict'])test(`${kind} a refreshed user object with the same verified id does not repeat navigation`,async({page})=>{
   await page.goto(`/login-${kind}/?session=valid&preconfirmed&handoff=hold&visualAcceptance`);await page.waitForFunction(()=>!!window.loginDemo);await expect.poll(()=>page.evaluate(()=>window.loginDemo?.getHandoffCalls())).toBe(1);
   const replaced=await page.evaluate(async()=>{const before=window.loginDemo.auth.getState().user;await window.loginDemo.auth.refresh();return before!==window.loginDemo.auth.getState().user&&before.id===window.loginDemo.auth.getState().user.id;});expect(replaced).toBe(true);expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);await page.evaluate(()=>window.loginDemo.releaseHandoff());await expect(destination(page)).toBeVisible();
 });
 test('development StrictMode replays effects without duplicating or losing the current navigation rejection',async({page})=>{
   await page.goto('/login-react-strict/?session=valid&preconfirmed&handoff=hold&visualAcceptance');await expect.poll(()=>page.evaluate(()=>window.loginDemo?.getHandoffCalls())).toBe(1);await page.evaluate(()=>window.loginDemo.releaseHandoff(true));await expect(page.getByRole('alert')).toHaveText('已登录，但暂时无法进入应用。请重试。');expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);await page.evaluate(()=>window.loginDemo.setHandoffMode('ok'));await page.getByRole('button',{name:'重试进入'}).click();await expect(destination(page)).toBeVisible();expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(2);
 });
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} persisted pagehide/pageshow restores anonymous interaction without an extra auth check`,async({page})=>{
     await page.goto(`/login-${kind}/?visualAcceptance`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();const before=await page.evaluate(()=>window.loginDemo.getRequests());await page.evaluate(()=>{window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));});expect(await page.evaluate(()=>window.loginDemo.getRequests())).toEqual(before);await fill(page);await page.getByRole('button',{name:'登录',exact:true}).click();await expect(destination(page)).toBeVisible();expect(await page.evaluate(()=>window.loginDemo.getHandoffCalls())).toBe(1);
   });
@@ -63,7 +63,7 @@ for(const kind of ['react','vanilla']){
 }
 
 // Hold the final owner read, not merely its preceding refresh notification.
-for(const kind of ['react','react-strict','vanilla']){
+for(const kind of ['react','react-strict']){
   for(const prechecking of [false,true])test(`${kind} waits for its final session result before one direct navigation (host started: ${prechecking})`,async({page},info)=>{
     await page.goto(`/login-${kind}/?sessionReadTimeout&handoff=hold&visualAcceptance${prechecking?'&prechecking':''}`);
     await expect.poll(()=>page.evaluate(()=>window.loginDemo.getRequests().filter(request=>request.path.endsWith('/session')).length)).toBe(1);

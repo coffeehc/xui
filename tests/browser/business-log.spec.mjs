@@ -4,7 +4,7 @@ const mode=(page,operation,value)=>page.evaluate(([operation,value])=>window.bus
 const ready=async(page,kind)=>{await page.goto(`/business-log-${kind}/`);await expect(page.getByRole('cell',{name:'订单审核通过',exact:true})).toBeVisible();};
 const filters=async page=>{const button=page.getByRole('button',{name:'日志筛选',exact:true});if(await button.getAttribute('aria-expanded')!=='true')await button.click();};
 const detailButton=(page,id='business-log:1')=>page.getByRole('button',{name:`查看日志详情 ${id}`,exact:true});
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(`${kind} business log shows actor, object, action, result and exact identity filters`,async({page})=>{
   await ready(page,kind);await expect(page.getByRole('cell').filter({hasText:'用户 · 示例审核员 · demo-user'})).toBeVisible();await expect(page.getByRole('cell').filter({hasText:'Agent · 示例索引助手 · demo-agent'})).toBeVisible();await expect(page.getByRole('cell',{name:'order: order-7 · 示例订单',exact:true})).toBeVisible();await expect(page.getByRole('cell',{name:'approve',exact:true})).toBeVisible();await expect(page.getByRole('cell',{name:'成功',exact:true})).toHaveCount(2);
   expect(await page.getByRole('columnheader',{name:'Severity',exact:true}).count()).toBe(0);const request=(await requests(page)).at(-1);expect(request.query.page).toEqual({size:2,cursor:null});expect(JSON.stringify(request.query)).not.toContain('page_index');expect(JSON.stringify(await page.evaluate(()=>window.businessLogDemo.controller.getState()))).not.toContain('changed_fields');

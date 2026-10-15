@@ -29,7 +29,7 @@ test.afterEach(({page})=>{ expect(pageErrors.get(page)).toEqual([]); });
 for (const entry of ['navigation','style']) for (const mode of ['light','dark']) {
   test(`${entry}.css: ${mode} navigation selected hover, disabled and keyboard focus`,async({page})=>{
     const {runDirectory}=JSON.parse(await readFile('.consumers/latest.json','utf8'));
-    const require=createRequire(resolve(runDirectory,'vanilla/package.json'));
+    const require=createRequire(resolve(runDirectory,'react/package.json'));
     const names=entry === 'navigation' ? ['tokens','base','navigation'] : ['style'];
     const sourceNavigation=await readFile('packages/theme/src/navigation.css','utf8');
     const builtNavigation=await readFile('packages/theme/dist/navigation.css','utf8');
@@ -88,7 +88,7 @@ for (const entry of ['navigation','style']) for (const mode of ['light','dark'])
   });
 }
 
-for (const kind of ['vanilla','react']) {
+for (const kind of ['react']) {
   test(`${kind}: an unset theme starts dark on a light OS and persisted light/system choices remain respected`,async({page})=>{
     await page.emulateMedia({colorScheme:'light'});
     await page.goto(`/${kind}/`);
@@ -97,16 +97,6 @@ for (const kind of ['vanilla','react']) {
     await chooseSelect(page,theme,'light','浅色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');await page.reload();await expectSelectValue(page,'外观','light','浅色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
     await chooseSelect(page,'外观','system','跟随系统');await expect(page.locator('html')).toHaveAttribute('data-theme','system');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');await page.emulateMedia({colorScheme:'dark'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');await page.reload();await expectSelectValue(page,'外观','system','跟随系统');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
     await chooseSelect(page,'外观','dark','深色');await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');await page.reload();await expectSelectValue(page,'外观','dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
-  });
-  if(kind==='vanilla')test('vanilla example synthetic persisted pagehide preserves both public select owners',async({page})=>{
-    await page.goto('/vanilla/');
-    const theme=page.getByRole('combobox',{name:'外观',exact:true}),brand=page.getByRole('combobox',{name:'主题配方',exact:true});
-    await expect(theme).toBeVisible();await expect(brand).toBeVisible();await expect(page.getByRole('combobox')).toHaveCount(2);
-    await page.evaluate(()=>{window.persistedSelectTriggers=[...document.querySelectorAll('button[role="combobox"]')];window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));});
-    expect(await page.evaluate(()=>window.persistedSelectTriggers.length===2&&window.persistedSelectTriggers.every((node,index)=>node.isConnected&&node===document.querySelectorAll('button[role="combobox"]')[index]))).toBe(true);
-    await page.evaluate(()=>window.xuiTheme.setMode('light'));await expectSelectValue(page,theme,'light','浅色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');
-    await chooseSelect(page,'主题配方','example','蓝色覆盖');await expect(brand).toHaveText('蓝色覆盖');await expect(page.locator('html')).toHaveAttribute('data-product','example');
-    await chooseSelect(page,'外观','dark','深色');await expectSelectValue(page,theme,'dark','深色');await expect(page.locator('html')).toHaveAttribute('data-theme-effective','dark');
   });
   test(`${kind}: modes, first paint, persistence, system changes, override and retained draft`,async({page})=>{
     await page.emulateMedia({colorScheme:'dark'});

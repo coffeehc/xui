@@ -19,7 +19,7 @@
 | ART-001 | 锁定 xui 依赖 | 记录完整不可缩写的源码 SHA 和 DESIGN 版本 | lockfile、Git SHA、DESIGN 元数据 | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
 | ART-002 | 安装 xui 三个包 | React、runtime、theme 均来自同一固定 SHA 的正式包 | tarball SHA-256 与构建清单 | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
 | ART-003 | 打包 React 页面 | 组件从正式 ESM exports 解析，无 packages/src alias | bundler 配置和 resolved module 路径 | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
-| ART-004 | 打包原生页面 | runtime 从正式 ESM exports 解析且页面无 React 依赖 | lockfile、bundle manifest | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-004 | 构建产品 UI | 所有产品 UI 从 React/ReactDOM 入口构建，manifest 与 bundle 中不引用 runtime DOM UI exports | exports manifest、源码 import graph、production bundle manifest | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | ART-005 | 打包包含 React 的页面 | React 只有宿主单实例，未被 xui 二次打包 | bundler stats / module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
 | ART-006 | 打包 React DOM 页面 | ReactDOM 只有宿主单实例 | bundler stats / module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
 | ART-007 | 打包 Base UI 弹层页面 | Base UI 只有宿主单实例，Dialog/Popover 等未嵌套另一份 peer | lockfile 与 bundle module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
@@ -34,6 +34,33 @@
 | THEME-006 | 主题或组件引用 `palette-*`、base 字体/间距/圆角等原始变量 | 原始层只在集中主题配方/映射中使用；页面和组件只读语义/组件层变量，不直接读 palette | CSS/TS 引用图及 `checkTokenLayers` 结果 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
 | THEME-007 | 增加或覆盖 token | 跨层依赖严格单向 base → semantic → component；同层只允许可展开的单向别名，无反向跨层引用或循环 | token graph 与脚本检查结果 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
 | THEME-008 | 产品需要品牌/组件视觉差异 | 单一集中主题 owner 映射公共 token；不复制公共默认值或在页面/组件另写色板、尺寸、状态色 | theme.css diff、CSS grep 与实际 computed token | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+| SCALE-001 | 默认与设置入口 | 无存储时100%；设置仅用同一公开方法，支持1/1.25/1.5/2，不另设第二主题/比例 owner | 入口导入、运行时DOM及比例记录 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
+| SCALE-002 | 同标签页恢复 | ui.interface.scale保存在sessionStorage；init.js于CSS/body前恢复，不通过effect制造首屏跳变 | 首次绘制、reload与存储记录 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
+| SCALE-003 | 异常存储与参数 | 读失败/非法保存值保持默认；写失败当前页仍应用；非法方法参数在DOM/存储写入前报错 | 异常注入与断言 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
+| SCALE-004 | 比例切换中的交互 | 草稿、节点、焦点、选区保留；没有Document导航或业务请求；不重挂正文 | DOM身份、activeElement、选区及网络记录 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
+| SCALE-005 | 放大布局与可达性 | 浅深system、宽窄、长中文、表单/弹层重排和全部动作可达；根字号和CSS zoom无第二owner | 各倍率几何、键盘操作与截图 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
+| SCALE-006 | 缩放证据区分 | 界面比例、用户字号与真实浏览器zoom分别记录；sessionStorage复制/关闭语义不冒充跨会话持久化 | 实际环境和独立验证记录 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
+
+## React UI 与产品迁移
+
+React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change 中移除；这只说明 xui 入口状态，不表示消费项目已迁移。XQuant、XLead 等产品的当前迁移状态应以各项目最新源码和逐页实测为准；旧审计快照不能代替本次验收。runtime TypeScript 服务、模型、解析器和工具按真实调用继续保留。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| FRAME-001 | 新建或改造产品 UI | 产品 UI 由 React/ReactDOM 挂载并使用正式 `@coffeehc/xui-react`，React/ReactDOM/Base UI peers 保持单实例 | package manifests、实际入口与 bundler module graph | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [PUBLIC_API](PUBLIC_API.md) |
+| FRAME-002 | React 页面渲染 xui 组件 | 页面 UI 从正式 `@coffeehc/xui-react/*` 导入；不存在 `packages/src` alias 或复制组件内部 DOM/CSS | 源码 import graph、resolved module path、bundle manifest | [PUBLIC_API 全部入口](PUBLIC_API.md#全部正式入口) · [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| FRAME-003 | React 页面导入 `@coffeehc/xui-runtime` | 每个 runtime import 都用于现存 TypeScript service/model/parser/tool/theme 等非 UI 职责；bundle 不引用已移除的 runtime UI factory/controller | 按 import 路径、调用点和 owner 分类的源码表；React bundle module graph | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [PUBLIC_API Runtime](PUBLIC_API.md#全部正式入口) |
+| FRAME-004 | 构建或发布消费项目 | theme、runtime、React 三个包来自同一固定 1.0.0 源码版本；React 声明与宿主 peer 实例匹配公开 exports | manifests、lockfile、正式 tarball SHA-256、types 检查与 module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
+| MIG-001 | 迁移 XQuant 页面 | 按活动页面和路由逐项盘点其旧非 React UI 调用；每个尚未切换的页面如实记失败/未跑，不能将 xui 1.0 发布等同迁移完成 | `xquant/web` 源码、构建入口、调用点到页面矩阵 | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [逐项浏览器矩阵](#逐项浏览器验收矩阵) |
+| MIG-002 | XQuant 页面引入 React UI | 正式产品入口创建 React root，并接入唯一 React/ReactDOM peers 与 xui React 包 | package/lockfile、实际入口、production module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
+| MIG-003 | XQuant 页面替换旧 UI factory | 每个旧 UI factory 调用映射到已有 React 公共组件或列为 `owner=xui` 的公共缺口 | 逐调用源码映射、React 页面 props/slot、旧调用清零扫描 | [COMPONENTS](COMPONENTS.md) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
+| MIG-004 | 发布 XQuant React 页面 | 正式产品构建解析已固定 ESM/CSS/types/init 且不含旧 runtime UI 路径；真实路由、交互和失败恢复在浏览器逐项通过 | production manifest、浏览器网络/操作记录、DOM identity 结果 | [ADOPTION 验收](ADOPTION.md#按授权范围迁移与验收) · [逐项浏览器矩阵](#逐项浏览器验收矩阵) |
+| MIG-005 | 迁移 XLead 页面 | 逐项盘点动态 app、startup、boot guard、admin setup 与 React islands 内既有 UI factory；React 依赖存在不算完成 | 源码 imports/calls、动态 chunk 图、页面和 owner 矩阵 | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) |
+| MIG-006 | XLead 页面统一 React owner | 每个产品 UI 区域都由 React 页面/组件负责，没有同一可见区域继续由旧 DOM factory 持有 | React root 清单、旧调用扫描、节点身份与交互 owner 记录 | [DESIGN 生命周期](DESIGN.md#前端状态与资源生命周期) · [COMPONENTS](COMPONENTS.md) |
+| MIG-007 | 发布 XLead React 页面 | 实际存在的 web、desktop/embed 路由分别通过正式构建和真实浏览器验收；React island 之外的页面不能漏测 | 各目标 bundle manifest、路由清单、浏览器操作结果 | [ADOPTION 验收](ADOPTION.md#按授权范围迁移与验收) · [逐项浏览器矩阵](#逐项浏览器验收矩阵) |
+| MIG-008 | UI 迁移使用 runtime | 删除 UI factory 调用后仍保留业务实际使用的 HTTP/auth/query/theme/resource 服务、模型、解析器和工具 | runtime import 分类、编译结果与请求 owner 检查 | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
+| MIG-009 | 迁移页面使用公共业务 API | 迁移前后适用 API 的 method/path/query/body/凭据/DTO/权限及成功失败语义不变；不得新增前后端双层协议转换 | 前后 Network HAR、typed wire 断言与后端合同测试 | [PUBLIC_API 默认适配器的服务前置](PUBLIC_API.md#默认适配器的服务前置) · [16个公共API](#16-个公共-api-操作逐项检查) |
+| MIG-010 | 声明产品迁移完成 | 每个目标页面、正式构建和浏览器操作均有当前固定版本证据；未验环境、页面或状态明确列为未跑，不用 xui 示例或包升级代替 | 逐页报告矩阵、生产 SHA、路由和浏览器证据 | [ADOPTION 验收](ADOPTION.md#按授权范围迁移与验收) · [逐项浏览器矩阵](#逐项浏览器验收矩阵) |
 
 ## 页面框架与具名 slot
 
@@ -89,8 +116,8 @@
 | CARD-003 | 卡片标题前有识别图标 | 图标进入 `Card.icon`，不与标题字符串拼成自定义头部控件 | props/Node 与标题行 DOM | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
 | CARD-004 | 卡片有公共/个人等归属事实 | 归属进入 `Card.badge`，默认中性色，不借用成功/错误语义 | badge props 与主题计算样式 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
 | CARD-005 | 卡片有标题旁辅助动作 | 动作进入 `Card.actions`，保留其原有权限和回调 owner | props/Node 与动作调用记录 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
-| CARD-006 | 卡片有对象摘要 | 摘要进入 `Card.description`，不与标题或元数据拼接成任意 children 排版 | slot 接线与可访问名称 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
-| CARD-007 | 卡片有主要业务正文 | 正文进入 `Card.children`/原生 content，不把 footer 元数据塞入正文 | props/Node 与 DOM 顺序 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-006 | 卡片有摘要或主要正文 | `description` 与 `children` 都归入唯一 `.xui-card-content` 内容区；description 是同一区域的便捷属性，不构成第四个结构区或独立边框 | props、DOM 子树及卡片内容顺序 | [COMPONENTS Card](COMPONENTS.md#card) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-007 | 卡片同时呈现正文与底部事实/动作 | 正文留在 content，`footerMeta`/`footerActions` 只进 footer；三段结构为 header/content/footer | props/Node、DOM 顺序与实际视觉分隔 | [COMPONENTS Card](COMPONENTS.md#card) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
 | CARD-008 | 卡片底部有时间、来源等事实 | 事实进入 `Card.footerMeta`，颜色及文字角色符合元数据语义 | slot 接线、颜色样式与截图 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
 | CARD-009 | 卡片底部有业务动作 | 操作进入 `Card.footerActions`，不放在 footerMeta 文案中 | slot 接线与可执行动作记录 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
 | CARD-010 | 卡片任意可选 slot 为空 | 空 slot 不产生空分隔、空高度或额外焦点目标 | 空槽几何、DOM 与 Tab 序列 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
@@ -100,19 +127,19 @@
 
 ## 小控件与复合控件
 
-每个实际使用的组件实例单独记录；只测该公开接口拥有的交互，不要求所有控件机械具备相同状态。原生与 React 对照各自公开合同，不能把 React peer 的行为臆测成原生行为。
+每个实际使用的组件实例单独记录；只测该公开接口拥有的交互，不要求所有控件机械具备相同状态。xui 只有一套 React UI；runtime 的纯 TypeScript 模型可按其自身公开方法测试，不把它当作第二套 UI 实现。
 
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
 | CTRL-001 | 页面有普通 Button 操作 | 使用公共 Button 变体表达主次/危险语义；保留默认 `type="button"`，提交动作显式为 submit | 正式 props、DOM type 与操作计数 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
-| CTRL-002 | 页面用 Link/NavItem 跳转 | 保留原生链接 href、修改键、中键、target/download 和可访问名称；不把普通链接伪装成按钮 | DOM role/href 与鼠标键盘导航记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-002 | 页面用 Link/NavItem 跳转 | 保留浏览器链接 href、修改键、中键、target/download 和可访问名称；不把普通链接伪装成按钮 | DOM role/href 与鼠标键盘导航记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-003 | 页面使用 IconButton | 图标动作有稳定可访问名称；busy/disabled 只按真实操作状态表达，不借图形颜色传达唯一含义 | accessibility tree 与键盘/disabled 记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-004 | 页面使用 Checkbox 或 Switch | checked 来自真实布尔事实，Space 操作一次；readOnly 不发值变化，disabled 不进入操作 | 受控前后值、change 计数及浏览器键盘记录 | [COMPONENTS 选择与复合控件](COMPONENTS.md#成组选项) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-005 | 页面使用 ToggleGroup | 当前值受控更新，方向键只移动焦点、Enter/Space 选择；`allowEmpty` 与多选只按公开配置执行 | value、activeElement 与回调轨迹 | [COMPONENTS ToggleGroup](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-006 | 页面使用 Tabs | Tab 与 Panel 关联准确；方向键、Home/End、disabled 跳过及手动/自动激活遵循实际 peer 配置 | ARIA 关系、activeElement 与按键轨迹 | [COMPONENTS Tabs](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-007 | 页面使用 Disclosure | expanded/controls 对应真实内容；Enter/Space 切换后焦点仍在触发器，收起内容不再可 Tab | aria-expanded/controls、Tab 序列和 DOM 状态 | [COMPONENTS Disclosure](COMPONENTS.md#groupedcombobox-与-disclosure) |
 | CTRL-008 | 页面使用 Accordion | 单/多展开模式按公开配置；disabled 项不可切换，内容 DOM 在更新时保留受控业务节点 | value、disabled 事件与节点 identity | [COMPONENTS Accordion](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
-| CTRL-009 | 页面使用 Calendar | 可见月份与已选日期是不同状态；翻月不改日期值/不触发日期回调，禁用日期可读但不能选 | React/native month 与 value 快照、键盘轨迹 | [COMPONENTS Calendar](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 日历月份控制](PUBLIC_API.md#日历月份控制) |
+| CTRL-009 | 页面使用 Calendar | 可见月份与已选日期是不同状态；翻月不改日期值/不触发日期回调，禁用日期可读但不能选 | React month 与 value 快照、键盘轨迹及对应 runtime 纯模型结果 | [COMPONENTS Calendar](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 日历月份控制](PUBLIC_API.md#日历月份控制) |
 | CTRL-010 | 页面使用 DateTimePicker | 值保持公开本地日期时间字符串合同和分钟精度；不得隐式解释为 UTC 或按浏览器时区转换 | 输入/回调原始值、跨时区浏览器比较 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [PUBLIC_API 日期时间选择](PUBLIC_API.md#日期时间选择) |
 | CTRL-011 | 页面使用 Typography | heading 的语义级别与视觉角色分别符合页面层级；正文、muted、technical 不因组件方便而混用 | heading outline、computed text role 与长文截图 | [COMPONENTS Typography](COMPONENTS.md#typography) · [DESIGN Typography](DESIGN.md#typography) |
 | CTRL-012 | 页面使用 Copyable | 只有明确点击复制动作才访问 clipboard；busy/成功/失败状态按公开文案呈现，复制失败仍保留原值 | clipboard spy、按钮键盘操作和状态节点 | [COMPONENTS Copyable](COMPONENTS.md#copyable) |
@@ -122,12 +149,12 @@
 | CTRL-016 | 页面使用 Toast | 仅短暂、非关键反馈进入 Toast；需要持续处理的错误/权限/风险仍在所属内容位置可见 | Provider/调用路径与错误恢复后截图 | [COMPONENTS 通用状态](COMPONENTS.md#基础组件与通用状态) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
 | CTRL-017 | 页面使用 Alert 或 ErrorState | 文案与 severity 来自真实业务结果；重试按钮只在真实可重试时出现，Alert 不吞掉表单错误关联 | HTTP/业务错误夹具、aria-describedby 与回调次数 | [COMPONENTS 局部失败反馈](COMPONENTS.md#局部失败反馈与离线边界) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
 | CTRL-018 | 页面使用 PasswordInput 显隐按钮 | 显隐按钮保留正常 Tab 顺序及可访问名称/`aria-pressed`；不得使用 `tabIndex=-1` 或 `aria-hidden` 隐藏交互 | Tab 录像、DOM 属性与密码输入节点 identity | [COMPONENTS 密码输入](COMPONENTS.md#密码输入) |
-| CTRL-019 | DateTimePicker 使用 required 或清空 | 清空回调为 null/空事实与原生 required validity 一致；不因 required 隐藏清空入口 | React/native FormData、validity 与 change 事件 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [DESIGN 表单反馈](DESIGN.md#表单搜索与反馈) |
+| CTRL-019 | DateTimePicker 使用 required 或清空 | 清空回调为 null；具名输入的 FormData 与浏览器 required validity 一致，不因 required 隐藏清空入口 | React 表单 FormData、validity 与回调计数 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [DESIGN 表单反馈](DESIGN.md#表单搜索与反馈) |
 | CTRL-020 | DateTimePicker 为 disabled | 禁止编辑、打开和清空，不接收用户值回调 | DOM disabled、开弹层键盘/点击和回调计数 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) |
 | CTRL-021 | DateTimePicker 为 readOnly | 仍可聚焦读取值，但不编辑/清空/打开；保留真实表单只读语义 | activeElement、DOM 属性及输入/按钮事件计数 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) |
 | CTRL-022 | DateTimePicker 有关联 Field.error | `aria-invalid` 和 `aria-describedby` 指向稳定错误节点，文本出现不造成字段错位或遮盖 | accessibility snapshot 与错误前后 field geometry | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [COMPONENTS 表单](COMPONENTS.md#表单与页面编排) |
 | CTRL-023 | DateTimePicker 通过键盘打开、选择或取消 | 键盘操作符合公开 Calendar/Select 语义；确认/取消/Escape 回原触发入口，外部新焦点不被抢回 | 全键盘录像、activeElement 与事件计数 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) |
-| CTRL-024 | 页面使用 Select、RadioGroup 或 ChoiceGroup | 实际值受控且可访问名称关联；按对应原生/peer 键盘、required、disabled/readOnly 合同工作，不把选择变成业务提交 | ARIA/label/form state、键盘轨迹和回调计数 | [COMPONENTS 成组选项](COMPONENTS.md#成组选项) · [COMPONENTS 选择控件](COMPONENTS.md#选择与复合控件) |
+| CTRL-024 | 页面使用 Select、RadioGroup 或 ChoiceGroup | 实际值受控且可访问名称关联；按对应浏览器/peer 键盘、required、disabled/readOnly 合同工作，不把选择变成业务提交 | ARIA/label/form state、键盘轨迹和回调计数 | [COMPONENTS 成组选项](COMPONENTS.md#成组选项) · [COMPONENTS 选择控件](COMPONENTS.md#选择与复合控件) |
 
 ## 不把设计样例误当作新规范
 
@@ -145,7 +172,7 @@
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
 | FORM-001 | 表单有可并列短字段 | 使用 `FormGrid` 正式列结构，不用每字段固定宽度堆成单列 | JSX/HTML、computed grid 与 1280px 截图 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
-| FORM-002 | 表单有长文本、规则或整行确认 | 对应 `FormGrid.Item` 使用 `span="full"`/原生公开 span | slot/属性接线与网格占列几何 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-002 | 表单有长文本、规则或整行确认 | 对应 `FormGrid.Item` 使用公开 `span="full"` | props/slot 接线与网格占列几何 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
 | FORM-003 | 字段属于独立语义组 | 使用 `Fieldset` 的 `legend`，不使用纯边框标题代替组名 | DOM fieldset/legend 与读屏树 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
 | FORM-004 | 每个 control 有可见名称 | 使用 `Field.label` 及正式 control 关联，同一 control 只关联一个主 label | label/control ID 及 accessibility snapshot | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
 | FORM-005 | 字段需要填写帮助 | 帮助进入 `Field.help` 并关联目标 control | aria-describedby 与具体 help 节点 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
@@ -170,7 +197,7 @@
 | OVERLAY-006 | Sheet 有提交/取消动作 | 操作进入 `Sheet.Footer`，可达且不会被正文遮挡 | DOM slot、滚动到底及键盘录像 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | INPUT-001 | 输入需上下工具/附件区 | 使用 `InputGroup.Addon`，不以绝对定位覆盖 control | 正式组合 DOM 与碰撞几何 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
 | INPUT-002 | 多行输入在纵向工具布局中 | 使用 `InputGroup.Root layout="stacked"` 和 `InputGroup.Textarea` | props/Options 与垂直顺序 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
-| INPUT-003 | 多行输入需要自动增高 | 明确选择公开 `autoResize`/runtime binder；未启用者保留原生行高/滚动 | props/Options、初始高度与输入录像 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
+| INPUT-003 | 多行输入需要自动增高 | 明确选择 React `TextareaProps.autoResize`；未启用者保留浏览器原生行高/滚动 | props、初始高度与输入录像 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
 | INPUT-004 | autoResize 超过 maxRows | 输入框内部滚动，外层弹层和页面不随字符无限扩张 | rect/clientHeight/scrollHeight 与滚动录像 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
 | INPUT-005 | InputGroup 内部有动作按钮 | 使用公开 Addon/Button 语义，按钮保持独立 type、disabled 和回调 | DOM、键盘与点击动作计数 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
 
@@ -181,8 +208,8 @@
 | NAV-001 | 菜单项存在子项并可展开 | 分支展开按钮用公开独立按钮入口，不让分支主链接被替代 | DOM role、href 与两按钮回调记录 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-002 | 菜单项有独立配置/更多动作 | 动作进入公开 action slot/callback，不冒泡触发行导航 | 点击动作计数与 location/history | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-003 | 菜单项配置右键菜单 | 右键菜单动作不触发主链接导航 | contextmenu 和导航事件日志 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
-| NAV-004 | 分支名长于菜单宽度 | 仅名称按 OverflowText 合同展示；折叠/展开按钮和行尾动作不被挤出 | 324px矩形、悬停录像与焦点录像 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
-| NAV-005 | 桌面默认展开或收起 | 使用统一324px展开、60px compact rail 默认，不写内部宽度覆盖 | computed width 与正式默认值 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-004 | 分支名长于菜单宽度 | 仅名称按 OverflowText 合同展示；折叠/展开按钮和行尾动作不被挤出 | 最小/中间/最大宽度矩形、悬停录像与焦点录像 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-005 | 桌面默认展开或收起 | 展开使用公共min/max与25vw动态宽度（默认324–432px）、50vw封顶；收起使用60px compact rail，不写内部宽度覆盖 | computed width 与正式默认值 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-006 | 用户键盘操作菜单 | 方向键、Home/End、Enter/Space 按公开导航合同工作 | 自动化按键轨迹与 active/expanded 状态 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-007 | 菜单处于窄屏 Drawer | 只有一个可见打开入口；关闭回到原触发按钮 | 窄屏 DOM 计数、焦点前后 activeElement | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
@@ -207,7 +234,7 @@
 | LIFE-008 | 刷新发生在用户输入草稿时 | 草稿值和 selectionStart/End 保持，除非对应业务明确提交 | 受控值、选区与节点身份记录 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-009 | 刷新或分页期间页面已滚动 | scrollTop/scrollLeft 不无故归零或跳到页面顶部 | document/容器滚动值前后记录 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-010 | 组件 busy/refreshing | 只禁用其不允许重入的动作，不使整页 inert 或卸载只读内容 | aria-busy/disabled 与键盘操作 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
-| LIFE-011 | React 组件卸载或原生 controller.destroy | 该 owner 的 observer/listener/timer/request 清理且 destroy 幂等 | listener/observer 计数、destroy 调用日志 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-011 | React 组件卸载 | 组件拥有的 observer/listener/timer/request 清理；不清理宿主仍在使用的共享 service | observer/listener/request 计数与卸载记录 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-012 | 新身份、tenant 或资源 owner 接管 | 旧身份私密资源销毁，不让旧请求迟到污染新身份 | owner generation、缓存清理与请求序列 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-013 | 刷新开始时焦点位于表格行或表单控件 | 更新后原业务节点仍是 activeElement；只有用户操作或节点被业务合法删除时才移动焦点 | 刷新前后 activeElement 与节点 identity | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 
@@ -310,6 +337,6 @@
 
 | ID | 对象/页面/组件实例/slot/API | 状态 | 期望 | 实际 | slot内容及owner | 视觉语义/token角色 | 排版与对齐 | 空槽行为 | 适用状态 | 滚动与焦点owner | 证据 | 责任 owner |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 示例：SHELL-015 | 资源列表 / AppShell / pageHeader | 未跑 | PageHeader.title 是唯一主标题 | 尚未执行 | 资源标题；PageHeader | page-title 语义 | 主标题与actions按合同排列 | 空描述/meta不占位 | 正常、窄屏 | 页面正文滚动 | — | 宿主 |
+| 示例：SHELL-015 | 资源列表 / AppShell / pageHeader | 未跑 | PageHeader.title 是唯一主标题 | 尚未执行 | 资源标题；PageHeader | page-title 语义 | 主标题与 actions 按合同排列 | 空描述/meta不占位 | 正常、窄屏 | 页面正文滚动 | — | 宿主 |
 
 逐项状态表应随交付保存；按章节写一段总评不能替代上表。对非 slot 的 API/页面行，slot 专用列填 `—`，不能省略实际请求/数据所有者。对于`不适用`必须在“实际”和“证据”列写出业务范围及核对依据。公共合同/slot/peer 能力缺失时填`失败`并标记 owner=`xui`；API 未接入或后端前置未提供时填`未跑`/`失败`并标明宿主后端 owner。

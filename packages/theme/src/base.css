@@ -1,4 +1,5 @@
 @layer xui-components {
+  :root[data-interface-scale] {font-size:var(--interface-root-font-size);}
   :where(.xui,.xui-layer) { color:var(--foreground); font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans); transition:color var(--motion-duration) var(--motion-easing),background-color var(--motion-duration) var(--motion-easing); }
   .xui {background:var(--layer-canvas);margin:0;}
   :where(.xui,.xui-layer),:where(.xui,.xui-layer) *,:where(.xui,.xui-layer) *::before,:where(.xui,.xui-layer) *::after {box-sizing:border-box;}
@@ -33,7 +34,7 @@
   /* Geometry and inset paint are one progressive enhancement. Older engines
      retain the safe gutter above. A nested public scroll boundary owns its own
      policy, including the default gutter; an edge shell never opts it in. */
-  @scope (.xui-shell[data-scroll-mode='workspace'][data-content-inset='edge']>.xui-shell-main,.xui-scroll-viewport[data-focus-mode='inset']) to (:scope :is(.xui-scroll-viewport,.xui-shell,.xui-dialog,.xui-native-dialog,.xui-dialog-body,.xui-floating,.xui-feedback-slot,.xui-table-container,.xui-data-table-placeholder)) {
+  @scope (.xui-shell[data-scroll-mode='workspace'][data-content-inset='edge']>.xui-shell-main,.xui-scroll-viewport[data-focus-mode='inset']) to (:scope :is(.xui-scroll-viewport,.xui-shell,.xui-dialog,.xui-dialog-body,.xui-floating,.xui-feedback-slot,.xui-table-container,.xui-data-table-placeholder)) {
     :scope,:scope>.xui-shell-content {padding:0;scroll-padding:0;}
     :scope :is(button,a,input,textarea,select,[tabindex],.xui-input-group) {scroll-margin:0;}
     :scope:focus-visible,
@@ -78,7 +79,8 @@
 }
 
 @layer xui-components {
- .xui-card {display:grid;gap:var(--space-content-gap);}
+ .xui-card {display:flex;flex-direction:column;gap:var(--space-content-gap);}
+ .xui-card-content {display:grid;gap:var(--space-content-gap);min-inline-size:0;overflow-wrap:anywhere;}
  .xui-card :is(.xui-card-header,.xui-card-trailing) {align-items:flex-start;}
  .xui-card .xui-card-heading {flex:1 1 var(--card-title-min-inline-size);flex-wrap:nowrap;align-items:flex-start;}
  .xui-card-title {flex:1;min-inline-size:0;}

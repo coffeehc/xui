@@ -3,7 +3,7 @@ import {test,expect} from '@playwright/test';
 import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 // Security floor: no --no-sandbox fallback on restricted workers.
 test.use({launchOptions:{...chromiumLaunchOptions,chromiumSandbox:true,args:[]}});
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(`${kind}: controlled selection, all universe, native radios, reset and focus`,async({page})=>{
   await page.goto(`/choice-group-${kind}/`);const check=page.getByRole('group',{name:'Permissions'}),radio=page.getByRole('group',{name:'Mode'}),read=check.getByLabel('Read',{exact:true}),write=check.getByLabel('Write',{exact:true});
   await check.getByLabel('Select available').check();await expect(read).toBeChecked();await expect(write).toBeChecked();await expect(check.getByLabel('Locked')).toBeChecked();await expect(page.getByLabel('State')).toContainText('unknown');

@@ -3,7 +3,7 @@ import {test,expect} from '@playwright/test';
 const view=page=>page.getByRole('combobox',{name:'分组 / 观察记录',exact:true});
 const mode=(page,kind,value)=>page.evaluate(([kind,value])=>window.logDemo.setMode(kind,value),[kind,value]);
 const openFilters=async page=>{const button=page.getByRole('button',{name:'筛选条件',exact:true});if(await button.getAttribute('aria-expanded')!=='true')await button.click();};
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(`${kind} log facade preserves cumulative/hit counts and first representative without numeric loss`,async({page})=>{
   const requests=[];page.on('request',request=>requests.push(request.url()));await page.goto(`/log-${kind}/`);await expect(page.locator('[data-log-counts]')).toHaveText('命中分组数: 3 · 过滤命中数: 5');await expect(page.getByRole('cell',{name:'首次观察：来源请求超时',exact:true})).toBeVisible();expect(requests.some(url=>url.includes('/fake-log-api/'))).toBe(false);
   await openFilters(page);await chooseSelect(page,page.getByRole('combobox',{name:'等级',exact:true}),['error']);await page.getByRole('button',{name:'应用筛选',exact:true}).click();await expect(page.locator('[data-log-counts]')).toHaveText('命中分组数: 2 · 过滤命中数: 2');const first=page.getByRole('row').filter({has:page.getByRole('cell',{name:'首次观察：来源请求超时',exact:true})});await expect(first).toContainText('3');await expect(first.getByRole('cell').nth(4)).toHaveText('1');const severityIndex=await page.getByRole('columnheader',{name:'等级',exact:true}).evaluate(node=>node.cellIndex);await expect(first.getByRole('cell').nth(severityIndex)).toHaveText('warning');

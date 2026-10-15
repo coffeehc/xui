@@ -1,7 +1,8 @@
+import {createNavigationKeyboard} from './navigation-keyboard.js';
 import * as React from 'react';
-import {bindNavigationPresentation} from '@coffeehc/xui-runtime/internal/navigation-presentation';
+import {bindNavigationPresentation} from './navigation-presentation.js';
 import {useRender} from '@base-ui/react/use-render';
-import {indexNavigation,getNavigationActiveId,resolveNavigationIcon,navigateNavigationItem,createNavigationKeyboard,type NavigationItem,type NavigationMenuOptions,type NavigationMenuState,type NavigationIconResolver} from '@coffeehc/xui-runtime/navigation';
+import {indexNavigation,getNavigationActiveId,resolveNavigationIcon,navigateNavigationItem,type NavigationItem,type NavigationMenuOptions,type NavigationMenuState,type NavigationIconResolver} from '@coffeehc/xui-runtime/navigation';
 import {NavItem} from './navigation.js';
 import {AppShell,type AppHeaderSlots,type ShellScrollMode,type ShellContentInset,type SidebarTogglePlacement} from './layout.js';
 export type {SidebarTogglePlacement} from './layout.js';

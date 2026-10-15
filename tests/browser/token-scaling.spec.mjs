@@ -25,7 +25,7 @@ const roles={
   'page-title':{font:20,line:28},
   metric:{font:24,line:28},
 };
-const kinds=['react','vanilla'];
+const kinds=['react'];
 const modes=['light','dark','system'];
 const scales=[.95,.9];
 const navItem=(page,id)=>page.locator(`[data-menu-id="${id}"][data-menu-control="primary"]`);

@@ -1,7 +1,7 @@
 import {chooseSelect} from './select-interaction.mjs';
 import {test,expect} from '@playwright/test';
 const ready=page=>expect.poll(()=>page.evaluate(()=>window.dataTableDemo.owner.getState().status)).toBe('ready');
-for(const kind of ['react','vanilla'])for(const width of [1280,390]){
+for(const kind of ['react'])for(const width of [1280,390]){
   test(`${kind} cursor ${width}px: optional count, exact next/back, failure/cancel and internal footer`,async({page})=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.setViewportSize({width,height:844});await page.goto(`/data-table-${kind}/?cursor&size=100&internal`);await ready(page);

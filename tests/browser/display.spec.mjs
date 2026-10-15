@@ -3,7 +3,7 @@ import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 // Preserve Chromium's sandbox even when the legacy workspace config overrides it.
 test.use({launchOptions:{...chromiumLaunchOptions,chromiumSandbox:true,args:[]}});
 const svg='<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10"><title>synthetic image</title><rect width="20" height="10" fill="currentColor"/></svg>';
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(`${kind}: native text/link semantics, explicit copy success/error and removal focus`,async({page})=>{
   await page.route('**/display-image-a.svg',route=>route.fulfill({contentType:'image/svg+xml',body:svg}));
   await page.goto(`/display-${kind}/`);

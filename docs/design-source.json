@@ -1,15 +1,15 @@
 {
-  "contractVersion": "0.18.0",
+  "contractVersion": "1.0.0",
   "defaultTheme": "Precision Engineering Console",
   "defaultMode": "dark",
-  "defaultTokenCount": 387,
+  "defaultTokenCount": 391,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "9c5fcd6b3706bc643faa1ae5a1b4b0080e9633abbd42121dddb6b80bf101f95b",
+  "defaultCssSha256": "53810ebe6edd5cdee5dcd7f0c141562d58881f9b8ee946a5a5a1f3601884fa06",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -87,7 +87,11 @@
     "Refine the shared single-column AuthPage from the supplied Stitch reference: 13/20 muted brand and labels, existing page-title 20/28 and body-sm 14/22 controls, 16px heading-to-fields gap, 2px semantic primary top border, and no empty feedback reservation. Remove the superseded login title and feedback-height tokens; preserve user font scaling and natural document scrolling. Derive login-group-input-height centrally so the group border is included in the 44px minimum.",
     "Foundation closeout adds toggle-height and two derived InputGroup interior minima; compact toggles and one-border input groups now match the documented outer geometry without changing the shared control scale.",
     "Record-page composition adds table-primary-min-inline-size, derived from the existing field scale, to preserve readable task columns without imposing widths on ordinary tables.",
-    "Increase the authorized global expanded navigation width from 216px to 324px (9 control heights); preserve the independent compact rail and mobile drawer. Add eight derived/semantic navigation presentation tokens for first-line control alignment, hover delay and CSS-pixel-per-second name scrolling. Existing wrap/center defaults remain compatible."
+    "Increase the authorized global expanded navigation width from 216px to 324px (9 control heights); preserve the independent compact rail and mobile drawer. Add eight derived/semantic navigation presentation tokens for first-line control alignment, hover delay and CSS-pixel-per-second name scrolling. Existing wrap/center defaults remain compatible.",
+    "Add one shared document interface-scale method and sessionStorage pre-paint restore; keep the default at 100 percent and derive rem geometry from the browser root font baseline. No new UI control or React-specific scaling owner.",
+    "Use public sidebar minimum/maximum tokens (324/432px at the default scale), a 25vw preference and a 50vw safety cap; keep the compact rail and mobile drawer independent.",
+    "Remove native DOM UI exports and implementations in the authorized 1.0.0 breaking release. React owns UI; runtime retains services, models and utilities.",
+    "Render Card as header/content/footer only; description and children share content, with natural height and no empty content track."
   ],
   "architectureReference": {
     "path": "docs/design-sources/stitch-token-architecture.v1.txt",

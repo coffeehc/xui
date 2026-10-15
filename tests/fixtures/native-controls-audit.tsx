@@ -4,7 +4,6 @@ import {Button} from '@coffeehc/xui-react/button';
 import {Field,Input,Textarea,Checkbox,Radio,Switch,InputGroup,Fieldset} from '@coffeehc/xui-react/forms';
 import {Progress} from '@coffeehc/xui-react/feedback';
 import {createThemeController} from '@coffeehc/xui-runtime';
-import {bindReadonlyChoice} from '@coffeehc/xui-runtime/widgets-dom';
 import '@coffeehc/xui-theme/style.css';
 const theme=createThemeController();
 declare global {interface Window {nativeAudit:{setMode:typeof theme.setMode}}}
@@ -14,8 +13,6 @@ const states=['default','disabled','readonly','invalid'] as const;
 function App(){
  React.useEffect(()=>{
   document.querySelectorAll<HTMLInputElement>('[data-mixed]').forEach(node=>node.indeterminate=true);
-  const binding=bindReadonlyChoice(document.getElementById('native-readonly') as HTMLInputElement);
-  return ()=>binding.destroy();
  },[]);
  return <main className="xui xui-container xui-stack">
   <h1>Native control audit</h1>

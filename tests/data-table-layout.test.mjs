@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {observeDataTableLayout} from '../packages/runtime/dist/data-table.js';
+import {observeDataTableLayout} from '../packages/ui-react/dist/data-table-layout.js';
 
 function fixture() {
   let next = 0, writes = 0, value = '', rootValue = '', callback;

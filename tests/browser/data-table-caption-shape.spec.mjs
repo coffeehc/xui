@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const source={commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),generation:JSON.parse(readFileSync('.artifacts/latest-build.json','utf8')).sourceSha256};
-for(const kind of ['react','vanilla'])for(const layout of ['natural','document','workspace'])for(const paginated of [false,true])for(const [width,enlarged] of [[1700,false],[390,false],[390,true]])test(`${kind} ${layout} twelve synthetic rows five sized columns pagination=${paginated} ${width} enlarged=${enlarged}`,async({page},info)=>{
+for(const kind of ['react'])for(const layout of ['natural','document','workspace'])for(const paginated of [false,true])for(const [width,enlarged] of [[1700,false],[390,false],[390,true]])test(`${kind} ${layout} twelve synthetic rows five sized columns pagination=${paginated} ${width} enlarged=${enlarged}`,async({page},info)=>{
  await page.setViewportSize({width,height:900});
  await page.goto(`/data-table-${kind}/?widths&column-mode=sized&hide-column=source&size=12&${paginated?'':'no-pagination&'}internal&layout=${layout}${layout==='document'?'&unbounded':''}`);
  await page.waitForFunction(()=>window.dataTableDemo?.owner.getState().status==='ready');

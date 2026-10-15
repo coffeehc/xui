@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 
 // Both pages are existing standalone npm-tarball consumers. The only CSS added
 // by this test is the documented same-root semantic-token override layer.
-for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])test(`${kind} ${theme} Separator width is independent from Surface`,async({page},info)=>{
+for(const kind of ['react'])for(const theme of ['light','dark','system'])test(`${kind} ${theme} Separator width is independent from Surface`,async({page},info)=>{
  await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});
  await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  await page.route('**/display-image-*.svg',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><title>Synthetic fixture</title></svg>'}));

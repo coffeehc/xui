@@ -21,7 +21,7 @@ async function check(page){
  }
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 }
-for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])test(`${kind} ${theme}: Typography and Surface consume independent public role tokens`,async({page},info)=>{
+for(const kind of ['react'])for(const theme of ['light','dark','system'])test(`${kind} ${theme}: Typography and Surface consume independent public role tokens`,async({page},info)=>{
  await page.setViewportSize({width:390,height:844});await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});
  await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  await page.route('**/display-image-*.svg',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><title>Synthetic fixture</title></svg>'}));

@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {readableFeedback} from './auth-feedback-helpers.mjs';
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  for(const mode of ['light','dark','system'])test(`${kind} ${mode} complete auth summary and keyboard disclosure at enlarged narrow text`,async({page},info)=>{
   await page.setViewportSize({width:390,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);await page.goto(`/auth-page-${kind}/?feedbackDetails`);await page.evaluate(()=>document.documentElement.style.fontSize='200%');
   const summary=page.locator('.xui-login-feedback>.xui-alert'),trigger=page.getByRole('button',{name:'查看详细信息'}),username=page.getByRole('textbox',{name:'管理员用户名',exact:true});await username.fill('retained-admin');await username.evaluate(node=>{window.retainedInput=node;});

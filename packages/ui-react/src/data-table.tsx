@@ -1,5 +1,7 @@
+import {isDataTableRowEvent} from './data-table-row-events.js';
+import {observeDataTableLayout} from './data-table-layout.js';
 import * as React from 'react';
-import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,observeDataTableLayout,isDataTableRowEvent,type DataTableViewOptions,type DataTableColumnWidth,type DataTableRowContext,type DataTableRowEvents as SharedRowEvents} from '@coffeehc/xui-runtime/data-table';
+import {getDataTableState,validateDataTableKeys,createDataTableRequestGuard,type DataTableViewOptions,type DataTableColumnWidth,type DataTableRowContext} from '@coffeehc/xui-runtime/data-table';
 import {Table,TableContainer,TableRow,TableCell,TableHeaderCell} from './table.js';
 import {Toolbar} from './layout.js';
 import {Field,SimpleSelect,type FieldProps} from './forms.js';
@@ -10,7 +12,12 @@ import {cx} from './shared.js';
 export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth,DataTableRowContext} from '@coffeehc/xui-runtime/data-table';
 export interface DataTableCellContext extends DataTableRowContext {}
 /** React row callbacks receive synthetic events with currentTarget equal to the semantic tr. */
-export type DataTableRowEvents<T>=SharedRowEvents<T,React.MouseEvent<HTMLTableRowElement>,React.KeyboardEvent<HTMLTableRowElement>>;
+export interface DataTableRowEvents<T> {
+  onClick?:(row:T,context:DataTableRowContext,event:React.MouseEvent<HTMLTableRowElement>)=>void;
+  onDoubleClick?:(row:T,context:DataTableRowContext,event:React.MouseEvent<HTMLTableRowElement>)=>void;
+  onContextMenu?:(row:T,context:DataTableRowContext,event:React.MouseEvent<HTMLTableRowElement>)=>void;
+  onKeyDown?:(row:T,context:DataTableRowContext,event:React.KeyboardEvent<HTMLTableRowElement>)=>void;
+}
 export interface DataTableColumn<T> {
   id:string; header:React.ReactNode; cell:(row:T,context:DataTableCellContext)=>React.ReactNode;
   /** Optional minimum track width; numeric values are pixels. Percentages use the body width. Omit unless needed. */

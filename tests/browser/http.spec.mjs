@@ -3,7 +3,7 @@ import {chooseSelect} from './select-interaction.mjs';
 const api='**/api/xui-example/records?*';
 const reply=(payload,extra={})=>({success:true,message:'',payload,request_id:'fake-body-id',code:1,...extra});
 const record=name=>({id:'fake-record',name,created:'2026-10-11 12:00:00'});
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} formal HTTP consumer uses actual fetch, exact query, page and filter contracts`,async({page})=>{
     const urls=[];page.on('request',request=>{if(request.url().includes('/api/xui-example/'))urls.push(new URL(request.url()));});await page.goto(`/http-${kind}/`);
     await expect(page.locator('[data-total]')).toHaveText('共 3 条');await expect(page.locator('tbody tr')).toHaveCount(2);
@@ -41,7 +41,7 @@ for(const kind of ['react','vanilla']){
   });
 }
 
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   test(`${kind} omitted total is unknown and never uses current-page length as numbered page count`,async({page})=>{
     await page.goto(`/http-${kind}/`);await expect(page.locator('[data-total]')).toHaveText('共 3 条');
     const response=page.waitForResponse(value=>value.url().includes('/api/xui-example/records?')&&new URL(value.url()).searchParams.get('return_total')==='false');

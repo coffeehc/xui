@@ -1,5 +1,4 @@
 import {DataTable,DataTableFilter,DataTableToolbar,type DataTableColumn,type DataTablePagination,type DataTableColumnWidth} from '@coffeehc/xui-react/data-table';
-import {createDataTable,createDataTableToolbar,createDataTableFilter,type NativeDataTableColumn} from '@coffeehc/xui-runtime/data-table-dom';
 import type {DataTableColumnWidth as ReactRootColumnWidth} from '@coffeehc/xui-react';
 import type {DataTableColumnWidth as RuntimeRootColumnWidth} from '@coffeehc/xui-runtime';
 import type {DataTableColumnWidth as SharedColumnWidth} from '@coffeehc/xui-runtime/data-table';
@@ -37,8 +36,6 @@ const booleanWidth:DataTableColumn<Row>={id:'bad',header:'Bad',width:false,cell:
 // @ts-expect-error Omit width to request automatic layout.
 const autoWidth:DataTableColumnWidth='auto';
 export const example=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Records" pagination={pagination} toolbar={<DataTableToolbar><DataTableFilter label="Search" grow><Input/></DataTableFilter></DataTableToolbar>}/>;
-const nativeColumns:readonly NativeDataTableColumn<Row>[]=[{id:'name',header:'Name',cell:row=>row.name},{id:'action',header:'Action',cell:row=>({element:document.createElement('button'),update(next,context){next.name;context.busy;},destroy(){}})}];
-const owner=createDataTable(document.createElement('section'),{rows,columns:nativeColumns,rowKey:row=>row.id,label:'Records',pagination,toolbar:createDataTableToolbar(document,[createDataTableFilter(document,{label:'Search',control:document.createElement('input')})])});owner.update({status:'refreshing'});owner.getBody();owner.destroy();
 // @ts-expect-error The endpoint page base must be explicit.
 const missingOffset:DataTablePagination={pageIndex:1,pageSize:20,total:10};
 // @ts-expect-error Cursor is not a numbered pagination contract.
@@ -48,7 +45,6 @@ export const workspace=<AppShell sidebar={null} scrollMode="workspace" style={{'
 
 // Layout is shared across all public entry points; omission above exercises natural default.
 import type {DataTableLayout} from '@coffeehc/xui-react/data-table';
-import type {DataTableLayout as NativeLayout} from '@coffeehc/xui-runtime/data-table-dom';
 import type {DataTableLayout as ReactRootLayout} from '@coffeehc/xui-react';
 import type {DataTableLayout as RuntimeRootLayout} from '@coffeehc/xui-runtime';
 import type {DataTableLayout as SharedLayout} from '@coffeehc/xui-runtime/data-table';
@@ -56,12 +52,9 @@ const naturalLayout:DataTableLayout='natural';
 const workspaceLayout:ReactRootLayout='workspace';
 const documentLayout:RuntimeRootLayout='document';
 const sharedLayout:SharedLayout=naturalLayout;
-const nativeLayout:NativeLayout=sharedLayout;
 export const naturalExample=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Natural records" layout={naturalLayout}/>;
 export const workspaceExample=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Workspace records" layout={workspaceLayout}/>;
 export const documentExample=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Document records" layout={documentLayout}/>;
-const layoutOwner=createDataTable(document.createElement('section'),{rows,columns:nativeColumns,rowKey:row=>row.id,label:'Natural records',layout:nativeLayout});
-layoutOwner.update({layout:workspaceLayout});layoutOwner.update({layout:documentLayout});layoutOwner.update({layout:undefined});layoutOwner.destroy();
 // @ts-expect-error Layout accepts only natural, workspace or document.
 const invalidLayout:DataTableLayout='viewport';
 // @ts-expect-error React props use the shared layout contract.

@@ -85,13 +85,6 @@ test('feedback is token-scaled and auth text is never constrained to a clipped l
   assert.doesNotMatch(auth,/\.xui-login-feedback[^}]*\b(?:block-size|max-block-size):|\.xui-login-feedback[^}]*overflow:\s*(?:hidden|auto|clip)/);assert.doesNotMatch(declarations(auth,'.xui-login-feedback>.xui-alert'),/max-block-size:|overflow:(?:auto|hidden|clip)/);
   for(const part of ['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets'])assert.doesNotMatch(await read(`packages/theme/src/${part}.css`),/@font-face|@import\s+['"]https?:|url\(\s*['"]?https?:/i);
 });
-test('native list views only move keyed rows when their actual order changes',async()=>{
-  for(const name of ['api-key','business-log','structured-log']){
-    const source=await read(`packages/runtime/src/${name}-dom.ts`);
-    assert.doesNotMatch(source,/tbody\.append\(entry\.row\)/);
-    assert.match(source,/tbody\.children\[rowIndex\]!==entry\.row/);
-  }
-});
 
 test('DataTable feedback and placeholder do not clip complete host content into a fixed-height status row',async()=>{
   const css=await read('packages/theme/src/table.css');

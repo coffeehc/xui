@@ -4,6 +4,7 @@ import { resolve, extname, sep } from 'node:path';
 const root = resolve('dist');
 const server = createServer(async (req,res) => {
   const pathname = decodeURIComponent(new URL(req.url,'http://localhost').pathname);
+  if(pathname==='/vanilla'||pathname.startsWith('/vanilla/')||pathname.split('/').some(segment=>segment.endsWith('-vanilla'))){res.writeHead(404).end('Not found');return;}
   if(pathname==='/api/xui-example/records'){
     const params=new URL(req.url,'http://localhost').searchParams;const index=Number(params.get('page_index')),size=Number(params.get('page_size'));
     if(req.method!=='GET'||!Number.isSafeInteger(index)||index<0||!Number.isSafeInteger(size)||size<1||size>50){res.writeHead(400,{'Content-Type':'application/json'}).end(JSON.stringify({success:false,message:'Invalid demo query',payload:null,request_id:'demo-request',code:400001}));return;}
@@ -16,4 +17,4 @@ const server = createServer(async (req,res) => {
   try { const data = await readFile(file); res.setHeader('Content-Type',({'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml'})[extname(file)] || 'application/octet-stream');res.end(data); }
   catch { res.writeHead(404).end('Not found'); }
 });
-server.listen(4173,'127.0.0.1',() => console.log('Preview at http://localhost:4173/{vanilla,react}/'));
+server.listen(4173,'127.0.0.1',() => console.log('React consumer preview at http://localhost:4173/'));

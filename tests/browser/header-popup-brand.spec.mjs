@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   const setup=async page=>{await page.goto(`/header-controls-${kind}/?compact&locale&controlled`);await page.waitForFunction(()=>!!window.headerDemo);};
   test(`${kind} locale themed popup is anchored, bounded, keyboard operable and controlled`,async({page},info)=>{
     await setup(page);const trigger=page.getByRole('combobox',{name:'语言',exact:true});await trigger.focus();await page.keyboard.press('ArrowDown');const popup=page.getByRole('listbox');await expect(popup).toBeVisible();await expect(popup.getByRole('option',{name:'Deutsch',exact:true})).toBeDisabled();
@@ -26,7 +26,7 @@ for(const kind of ['react','vanilla']){
   });
 }
 
-for(const kind of ['react','vanilla'])for(const leading of [false,true])for(const direction of ['ltr','rtl'])test(`${kind} public brand bounds oversized artwork and centers compact identity with leading=${leading} ${direction}`,async({page},info)=>{
+for(const kind of ['react'])for(const leading of [false,true])for(const direction of ['ltr','rtl'])test(`${kind} public brand bounds oversized artwork and centers compact identity with leading=${leading} ${direction}`,async({page},info)=>{
   await page.setViewportSize({width:1280,height:800});await page.goto(`/header-controls-${kind}/?brandImage${leading?'&leading':''}`);await page.waitForFunction(()=>!!window.headerDemo);await page.evaluate(direction=>document.documentElement.dir=direction,direction);
   const logo=page.locator('.xui-header-brand-logo'),name=page.locator('.xui-header-brand-name'),toggle=page.locator('[data-xui-menu-toggle]');
   await expect(logo.locator('img')).toBeVisible();expect(await logo.locator('img').evaluate(node=>getComputedStyle(node).objectFit)).toBe('contain');

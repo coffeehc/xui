@@ -13,7 +13,7 @@ const test=base.extend({page:async({page},use,info)=>{
   await info.attach('browser-errors.json',{body:JSON.stringify(errors,null,2),contentType:'application/json'});
   expect(errors,'no browser errors or hydration warnings').toEqual([]);
 }});
-const kinds=['react','vanilla'];
+const kinds=['react'];
 const viewports=[{width:1280,height:844},{width:390,height:844}];
 const themes=['light','dark','system'];
 const selectors={shell:'.xui-shell',header:'.xui-shell-header',main:'.xui-shell-main',content:'.xui-shell-content',workspace:'[data-testid="workspace"]',history:'[data-testid="history"]',inspector:'[data-testid="inspector"]',composer:'form[aria-label="Composer"]',draft:'input[aria-label="Message draft"]',sidebar:'.xui-shell-sidebar',navigation:'nav[aria-label="Workspace navigation"]'};

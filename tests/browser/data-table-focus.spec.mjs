@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-for(const kind of ['react','vanilla'])test(`${kind} first sortable header keeps all keyboard focus ring edges inside the table scrollport`,async({page},info)=>{
+for(const kind of ['react'])test(`${kind} first sortable header keeps all keyboard focus ring edges inside the table scrollport`,async({page},info)=>{
  await page.setViewportSize({width:1280,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});
  await page.addInitScript(()=>sessionStorage.setItem('ui.theme.mode','dark'));
  await page.goto(`/data-table-${kind}/?widths&column-mode=sized&hide-column=source&size=12&internal&layout=workspace`);

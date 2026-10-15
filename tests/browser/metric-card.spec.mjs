@@ -16,7 +16,7 @@ async function measure(page){return page.locator('.xui-metric-card').evaluateAll
   return {card:box(card),label:box(card.querySelector('.xui-metric-card-label')),value:box(card.querySelector('.xui-metric-card-value')),parts:[...card.querySelectorAll('.xui-metric-card-content,.xui-metric-card-header,.xui-metric-card-label,.xui-metric-card-value,.xui-metric-card-marker')].filter(node=>node.getClientRects().length).map(box)};
 }));}
 
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
   for(const mode of ['light','dark','system'])test(`${kind} MetricCard ${mode}: statistical tokens, narrow content and 200% text`,async({page},info)=>{
     await setup(page,kind,mode);
     for(const width of [1280,320,276])for(const scale of [1,2]){

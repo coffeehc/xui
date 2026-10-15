@@ -1,6 +1,6 @@
 # xui 通用组件接入手册
 
-xui 提供可复用组件、主题、公共交互和已有的通用页面组合。接入时按实际需求选择公开能力，宿主项目负责业务页面、领域图形、产品布局与业务流程，以及领域数据、鉴权、路由和接口适配。项目局部差异先在宿主自有组件中组合；只有可复用的通用能力缺口才反馈 xui，不把业务特例扩成公共 API。
+xui 为新产品 UI 统一采用 React：公共组件从 `@coffeehc/xui-react` 导入，`@coffeehc/xui-runtime` 保持 TypeScript 的主题、服务、模型与工具能力。宿主项目负责业务页面、领域图形、产品布局与业务流程，以及领域数据、鉴权、路由和接口适配。项目局部差异先在宿主自有 React 组合中表达；只有可复用的通用能力缺口才反馈 xui，不把业务特例扩成公共 API。
 
 本手册引用公共规范、正式类型与示例，不另定义组件或品牌合同。采用前核对实际消费版本、Git SHA、本地依赖或 tarball，以及 [全部公开入口与默认行为](PUBLIC_API.md)。Codex 流程的唯一源随 checkout 维护，见 [adopt-xui](../.agents/skills/adopt-xui/SKILL.md)；全局发现入口可以链接同一源，物理路径解析遵循该 skill。
 
@@ -11,7 +11,13 @@ xui 提供可复用组件、主题、公共交互和已有的通用页面组合�
 3. 在 [组件手册](COMPONENTS.md) 只读当前任务对应章节；正式入口、运行时与默认服务合同见 [PUBLIC_API](PUBLIC_API.md)。
 4. 按 [逐项接入检查清单](ADOPTION_CHECKLIST.md)建立每个页面/组件/API的检查记录，先核对槽位映射再构建并验证实际消费页面；当前已验和未验范围见 [VALIDATION](VALIDATION.md)。
 
-theme 提供无框架预构建 CSS/tokens；runtime 提供主题、DOM、resource、导航、HTTP/query、认证与共享页面控制器；ui-react 复用共享类型和 React/Base UI peers。宿主保管业务状态、权限、租户范围、导航条件、输入草稿与业务动作。公共组合通过数据、配置和已有 props/parts/slots/render/adapters 接入，不复制内部 DOM 或私有皮肤。
+## React 是唯一公共 UI
+
+theme 提供预构建 CSS/tokens；runtime 只提供无框架 TypeScript 服务、模型、解析器和工具；`@coffeehc/xui-react` 是唯一公共 UI 实现，使用宿主提供的 React/ReactDOM/Base UI peer。runtime 不提供第二套 DOM UI factory/controller。宿主保管业务状态、权限、租户范围、导航条件、输入草稿与业务动作；公共组合通过数据、配置和 React props/parts/slots/render/adapters 接入，不复制组件内部 DOM 或私有皮肤。
+
+runtime 原生 DOM UI exports 已从当前公开入口移除，原生 UI 示例也不再作为接入路径。该 breaking change 不代表 XQuant、XLead 或其他消费项目已完成 React 迁移或通过验收；消费项目须按自己的授权核实固定包版本、调用点和实际页面。HTTP/auth/query/theme/resource 等 TypeScript 服务、模型、解析器与工具继续公开，React 宿主可直接复用。
+
+当前包按 DESIGN 1.0.0 和三个私有包 1.0.0 发布合同构建。该 breaking release 删除 runtime DOM UI exports；消费方升级前须将对应 UI 重接到公开 React 组件。不得把 xui 本次入口变更写成 XQuant、XLead 或其他产品已改造，也不在本仓代替宿主完成迁移。
 
 HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方client；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 
@@ -26,24 +32,26 @@ pnpm test:consumer
 pnpm preview
 ```
 
-`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目也应固定已核对的版本或提交，使用正式构建产物；当前 manifests 为 private 包，不猜 registry 版本。React/ReactDOM/Base UI peers 保持单实例，原生只使用 theme/runtime。无需 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
+`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目也应固定已核对的 1.0.0 版本或提交，使用正式构建产物。React、ReactDOM、Base UI 与 runtime peer 保持单实例；不使用 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
 
-| 用途 | React | 原生 |
-| --- | --- | --- |
-| 最小菜单 | [menu-react](../examples/menu-react/app.tsx) | [menu-vanilla](../examples/menu-vanilla/app.js) |
-| 富条目导航 | [rich-navigation-react](../examples/rich-navigation-react/app.tsx) | [rich-navigation-vanilla](../examples/rich-navigation-vanilla/app.js) |
-| HTTP 查询 | [http-react](../examples/http-react/app.tsx) | [http-vanilla](../examples/http-vanilla/app.js) |
-| 列表/表单/详情 | [foundation-react](../examples/foundation-react/app.tsx) | [foundation-vanilla](../examples/foundation-vanilla/app.js) |
-| 标准槽位卡片（?card） | [display-react](../examples/display-react/app.tsx) | [display-vanilla](../examples/display-vanilla/app.js) |
-| 工作区 | [workspace-react](../examples/workspace-react/app.tsx) | [workspace-vanilla](../examples/workspace-vanilla/app.js) |
-| 完整表格 | [data-table-react](../examples/data-table-react/app.tsx) | [data-table-vanilla](../examples/data-table-vanilla/app.js) |
-| 高信噪比页面、表单和局部刷新 | [page-composition-react](../examples/page-composition-react/app.tsx) | [page-composition-vanilla](../examples/page-composition-vanilla/app.js) |
-| 日期时间 | [date-time-react](../examples/date-time-react/app.tsx) | [date-time-vanilla](../examples/date-time-vanilla/app.js) |
-| 登录 | [login-react](../examples/login-react/app.tsx) | [login-vanilla](../examples/login-vanilla/app.js) |
-| API Key | [api-key-react](../examples/api-key-react/app.tsx) | [api-key-vanilla](../examples/api-key-vanilla/app.js) |
-| 业务日志 | [business-log-react](../examples/business-log-react/app.tsx) | [business-log-vanilla](../examples/business-log-vanilla/app.js) |
-| 程序错误观察 | [log-react](../examples/log-react/app.tsx) | [log-vanilla](../examples/log-vanilla/app.js) |
-| 公共组合与默认页面 HTTP | [capabilities-react](../examples/capabilities-react/app.tsx) | [capabilities-vanilla](../examples/capabilities-vanilla/app.js) |
+当前可运行参考只展示 React UI；纯 TypeScript runtime 模型和服务可在 React 页面中复用。它们使用合成数据，不证明采用项目的真实后端、业务权限或页面已集成。
+
+| 用途 | React 正式示例 |
+| --- | --- |
+| 最小菜单 | [menu-react](../examples/menu-react/app.tsx) |
+| 富条目导航 | [rich-navigation-react](../examples/rich-navigation-react/app.tsx) |
+| HTTP 查询 | [http-react](../examples/http-react/app.tsx) |
+| 列表/表单/详情 | [foundation-react](../examples/foundation-react/app.tsx) |
+| 标准槽位卡片（?card） | [display-react](../examples/display-react/app.tsx) |
+| 工作区 | [workspace-react](../examples/workspace-react/app.tsx) |
+| 完整表格 | [data-table-react](../examples/data-table-react/app.tsx) |
+| 高信噪比页面、表单和局部刷新 | [page-composition-react](../examples/page-composition-react/app.tsx) |
+| 日期时间 | [date-time-react](../examples/date-time-react/app.tsx) |
+| 登录 | [login-react](../examples/login-react/app.tsx) |
+| API Key | [api-key-react](../examples/api-key-react/app.tsx) |
+| 业务日志 | [business-log-react](../examples/business-log-react/app.tsx) |
+| 程序错误观察 | [log-react](../examples/log-react/app.tsx) |
+| 公共组合与默认页面 HTTP | [capabilities-react](../examples/capabilities-react/app.tsx) |
 
 示例按各自目录名访问。合成数据、fetch 和认证模型只演示公开合同，不证明采用项目的真实后端、业务权限或页面已集成；具体已跑与未跑项以对应验证记录为准。
 
@@ -60,10 +68,6 @@ pnpm preview
 
 主题验收使用采用项目的真实构建和代表页面，覆盖浅色、深色、system 变化、窄屏、200% 浏览器缩放、长中文、输入/主操作/浮层、键盘焦点及动效偏好。只生成主题时，发现需要替换的业务控件或布局应记录位置与建议，按本次范围结束。
 
-## 原生 UI ID 与内网 HTTP
-
-原生登录、菜单/布局、API Key/日志视图、Command、Disclosure、Popover 和 Toast 的内部 UI ID 不依赖 `crypto` / `crypto.randomUUID()`，非安全上下文无需 UUID polyfill。allocator 在每个 ownerDocument 共享分配并避开已存在 ID，组件沿用已有显式 DOM ID。宿主将自动 ID 视为临时不透明标识，不解析或持久化，也不用于 token、nonce、密钥或幂等键。认证传输、Cookie、CSRF 和剪贴板仍按各自能力合同处理。
-
 ## 发布状态与升级原则
 
 采用前在宿主确认其发布状态、依赖版本、真实协议、配置、会话与持久数据影响，再决定升级步骤。必要的兼容只服务于已确认的使用方与升级约束，明确映射、保留能力和退出条件；正常 props/render/loader/adapter、标准协议边界与安全校验各自保留。组件接入或代码清理不授权删除业务数据、重置运行、改其他仓库、发布或部署。
@@ -76,7 +80,7 @@ pnpm preview
 
 交付说明采用范围、实际版本/SHA、主题与入口位置、公开能力映射、验证结果及具体缺口。业务局部需求在宿主组合；公共缺口应有可复用场景和受限位置，不默认扩展 xui API。公共合同升级后重新核对依赖、类型、adapter 和受影响页面回归，只在对应项目授权中实施。
 
-最短页面接入请求：`阅读 xui/.agents/skills/adopt-xui/SKILL.md，按实际公开合同接入当前页面需要的通用组件；保留宿主业务、权限与路由，使用正式产物，运行实际构建并报告通过、未跑和缺口。` 使用实际 checkout 路径替换 xui。
+最短页面接入请求：`阅读 xui/.agents/skills/adopt-xui/SKILL.md，使用 @coffeehc/xui-react 按实际公开合同接入当前 React 页面需要的通用组件；保留宿主业务、权限、路由与 runtime 服务 owner，使用正式产物，运行实际构建并报告通过、未跑和缺口。` 使用实际 checkout 路径替换 xui。
 
 ## 组件层次与扩展原则
 
@@ -86,11 +90,11 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 | --- | --- | --- |
 | 原子 | Button/IconButton、Input/Textarea、Checkbox/Radio/Switch、Field、Alert、公共 CSS | 直接采用公开 props/ref/render、标准元素和语义 token；图标按钮使用共享 IconButton，不新增竞争按钮/输入基础包 |
 | 组合 | MenuLayout/NavigationMenu、公共 Toolbar/Grid/Table/DataRegion、Dialog/详情布局、HTTP/query/controller | 组合原子提供通用键盘、状态、反馈和布局。Table 不抽查询引擎，query 不抽领域业务；状态与后端 adapter 通过明确公开合同连接 |
-| 页面 | AuthPage/createAuthPage纯认证布局、ConfigurableLoginPage/createLoginPage、ApiKeyManager/createApiKeyManager、BusinessLogExplorer/createBusinessLogExplorer | 填文案/品牌数据、选项、adapter/loader 与 callbacks 即可整页使用；页面内部复用下层相同控件与皮肤，业务不必手写页面 CSS |
+| 页面 | AuthPage React 纯认证布局、ConfigurableLoginPage、ApiKeyManager、BusinessLogExplorer | 填文案/品牌数据、选项、adapter/loader 与 callbacks 即可整页使用；页面内部复用下层相同控件与皮肤，业务不必手写页面 CSS |
 
-普通需求优先完整页面或组合；特殊业务可用公开扩展点或组合基础控件。允许声明的 props/render/parts、受信任 renderer、数据配置和 callbacks；不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
+产品 UI 统一使用 React 完整页面或组合；特殊业务可用公开 React props/render/parts、受信任 renderer、数据配置和 callbacks 组合基础控件。不依赖内部 DOM/伪元素或覆写内部皮肤。上层不得复制下层的状态、focus/motion/disabled 或默认色值 owner。runtime 服务、模型、工具和主题合同独立于 UI 组件继续保留。全部实际入口与默认值见 [PUBLIC_API.md](PUBLIC_API.md)，不能把规划的注册/SSO/完整用户管理列作已存在页面。
 
-侧栏需要底部收拢入口时，给 MenuLayout/AppShell 或原生 createMenuLayout 传 `sidebarTogglePlacement="bottom"`；不要移动库内按钮。业务底部动作与版本状态需要同行时使用 `SidebarFooterRow`（原生公开同名 CSS 角色），保留既有回调与 busy，见[侧栏底部接入](COMPONENTS.md#侧栏底部接入与迁移)。省略新扩展时保留原顶部开关和默认全宽 footer。
+侧栏需要底部收拢入口时，给 React MenuLayout/AppShell 传 `sidebarTogglePlacement="bottom"`；不要移动库内按钮。业务底部动作与版本状态需要同行时使用 `SidebarFooterRow`，保留既有回调与 busy，见[侧栏底部接入](COMPONENTS.md#侧栏底部接入与迁移)。
 
 Dialog/Sheet 内需要指定 Popover 的挂载目标时，使用 `Popover.Content.portalProps.container`，保留公共 Content 的定位/样式接线；不要外包第二层 Portal。容器就绪、默认 keepMounted 策略及 peer 类型边界见[Popover 的 Portal 容器](COMPONENTS.md#popover-的-portal-容器)。
 
@@ -98,14 +102,14 @@ Dialog/Sheet 内需要指定 Popover 的挂载目标时，使用 `Popover.Conten
 
 贡献与采用应能说明所属层次、复用下层的方式、公开扩展点和实际构建消费。合成页面通过不代表产品迁移通过。
 
-卡片/标题的长名称使用公开 `OverflowText` 或 `createOverflowText`，h3、图标、右侧归属 Badge、摘要和业务动作分别保留；通过 interactionRef/interactionTarget 连接现有含键盘动作的表面。无键盘入口或减少动效时完整换行，不借 NavigationMenu.Label 或自写动画。接口与示例见[通用长标题](COMPONENTS.md#通用长标题)。该文本部件不代表已提供完整卡片槽位框架。
+卡片使用公开 React `Card` 的 header/content/footer 三段槽位；标题、图标、Badge、辅助动作、正文、footerMeta/footerActions 按 [Card 合同](COMPONENTS.md#card)归位。长名称在标题内部使用公开 `OverflowText`，图标和 Badge 不进入文本滚动区域；无键盘入口或减少动效时完整静态换行。
 
 ### 接入合规与公共缺口归属
 
 以下要求适用于首次接入、升级和接入自查。先固定实际安装版本/SHA，核对正式 ESM/CSS/types 与该版本合同；源码中的新能力不等于消费项目已安装。检查实际页面调用、最终样式与请求链路，不能凭 import 数量或截图认定完成。
 
-- 已有适用完整页面或组合时直接采用，登录优先 ConfigurableLoginPage/createLoginPage 及同一 createAuthClient。品牌、文案、公开 extensions 与宿主业务可以配置；只使用公共 Input/Button 后手写另一套登录页面，不能算完整登录组合接入。认证服务前置不满足时按接入模式保留既有认证 owner并报告限制，不能猜协议或伪称完整登录通过。
-- 需要修改、增强或修复公共组件时，消费项目不得自行复制实现、fork、打补丁、穿透私有 DOM/CSS、使用 !important 或以 wrapper 建立竞争实现。消费项目列出实际入口/版本、代码位置、最小复现、业务场景、受限行为、当前公开替代入口与验收条件，统一交给 xui；由 xui 在自己的授权范围内补齐公开合同、实现和验收后，消费方再按升级授权采用。正常公开 props/slots/render/typed adapter 与领域组合仍属宿主职责。
+- 已有适用完整页面或组合时直接采用，登录优先 ConfigurableLoginPage 及同一 createAuthClient。品牌、文案、公开 extensions 与宿主业务可以配置；只使用公共 Input/Button 后手写另一套登录页面，不能算完整登录组合接入。认证服务前置不满足时按接入模式保留既有认证 owner并报告限制，不能猜协议或伪称完整登录通过。
+- 需要修改、增强或修复公共组件时，消费项目不得自行复制 React 实现、fork、打补丁、穿透私有 DOM/CSS、使用 !important 或以 wrapper 建立竞争实现。消费项目列出实际入口/版本、代码位置、最小复现、业务场景、受限行为、当前公开替代入口与验收条件，统一交给 xui；由 xui 在自己的授权范围内补齐公开合同、实现和验收后，消费方再按升级授权采用。正常公开 props/slots/render/typed adapter 与领域组合仍属宿主职责。
 - 逐项追踪已采用的 HTTP/auth/page adapter/loader，核对登录、刷新、退出、session及适用的Key/日志/下载等调用。不得悄悄改固定端点、method、DTO、解析或错误语义，不得绕过公共 client 另建重复请求、凭据、401跳转、超时、重试、loading或通知owner。领域API和标准/第三方协议按[默认适配器前置](PUBLIC_API.md#默认适配器的服务前置)保留明确typed边界，不要求全量后端迁移。
 - UI信息遵守[信息披露](DESIGN.md#首屏信息架构与信息密度)。不添加重复品牌/页面名页脚、无用统计、常驻实现背景、开发备注或接入/验收声明；保留必要标签、真实业务状态、权限、错误、风险与及时操作反馈。不得用测试说明或合成记录冒充正式业务内容。
 
@@ -148,7 +152,19 @@ const off = theme.subscribe(state => updateView(state));
 // 卸载视图时 off()，文档所有者终止时 theme.destroy()。
 ```
 
-foundation 两个参考页在首屏前从sessionStorage读取一个宿主 JSON key，再以受控模式桥接；保留其他 JSON 字段，原始 ui.theme.mode 不被覆盖。默认runtime无有效保存值时为dark；foundation受控示例显式选择system。storage不可用时保留内存选择；仅显式 system 在 matchMedia 不可用时生效 light。系统变化有单一监听。React useTheme 只订阅外部 owner，在 StrictMode 中不创建或销毁它。ESM 导入本身不读 DOM。
+foundation React参考页在首屏前从sessionStorage读取一个宿主 JSON key，再以受控模式桥接；保留其他 JSON 字段，原始 ui.theme.mode 不被覆盖。默认runtime无有效保存值时为dark；foundation受控示例显式选择system。storage不可用时保留内存选择；仅显式 system 在 matchMedia 不可用时生效 light。系统变化有单一监听。React useTheme 只订阅外部 owner，在 StrictMode 中不创建或销毁它。ESM 导入本身不读 DOM。
+
+### 界面缩放与会话恢复
+
+使用同一个runtime方法，React无需额外hook或组件：
+
+```ts
+import {setInterfaceScale} from '@coffeehc/xui-runtime/theme';
+setInterfaceScale(1.25); // 125%，即时生效并写入sessionStorage
+setInterfaceScale(1); // 恢复100%
+```
+
+只接受1、1.25、1.5、2；不传125或百分号字符串。保持正式init.js在CSS和可见body前同步执行，使 `ui.interface.scale` 在首屏恢复。不要在React effect里再恢复一次，不新增localStorage、请求、页面reload或子树缩放owner。存储拒绝时当前页仍可放大。宿主可提供设置入口，但xui不强制新增界面。根字号基于浏览器默认比例计算，保留浏览器zoom；宿主不得以固定根字号或CSS zoom覆盖。完整值/异常/生命周期见[界面缩放合同](DESIGN.md#公共界面缩放)，按[逐项清单](ADOPTION_CHECKLIST.md)提交实际证据。
 
 ## 构建与正式消费
 
@@ -159,7 +175,7 @@ foundation 两个参考页在首屏前从sessionStorage读取一个宿主 JSON k
 | 包 | 正式入口 | 职责 |
 | --- | --- | --- |
 | `@coffeehc/xui-theme` | 预构建 CSS、tokens 与按需样式分片 | 无框架依赖，完整及分片入口见 PUBLIC_API |
-| `@coffeehc/xui-runtime` | 主题、DOM、resource、导航、HTTP/query、认证和页面 controllers/factories | 无框架依赖；模块可独立导入，init.js 是有副作用的同步经典脚本 |
+| `@coffeehc/xui-runtime` | TypeScript 主题、resource、导航数据、HTTP/query、认证、服务、模型与工具 | 无框架依赖；模块可独立导入，init.js 是有副作用的同步经典脚本。UI 仅由 `@coffeehc/xui-react` 提供 |
 | `@coffeehc/xui-react` | 公共组件及各能力子入口 | React、ReactDOM、Base UI、runtime 是 peers，不捆绑宿主实例，不隐式导入 CSS |
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
@@ -182,7 +198,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.18.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 1.0.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 
@@ -192,7 +208,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖重新优化和文档刷新。宿主按实际使用的公开入口设置 `optimizeDeps.include`，保留框架插件及 React/ReactDOM/Base UI 的 `resolve.dedupe`；不要全量扫描、禁 HMR 或等待固定时间掩盖原因。分别记录冷/暖 cache 的 optimizer/HMR 日志、主 Document 请求和 shell identity，区分文档刷新与同文档路由。可重复的合成对照见 [Vite 冷启动测试](../tests/cold-start/vite.test.mjs)，不能代替产品现场归因。
 
-菜单从首次可操作时接同一 router owner。`canNavigate=false` 和缺少 adapter 都表示放行原生导航，不能当作路由 pending 的阻止开关；未就绪由真实 disabled 状态或已接管的 navigate 处理。保留修改键、中键、target/download、回退前进和宿主的滚动恢复，不以 route key 重挂整个 shell。
+菜单从首次可操作时接同一 router owner。`canNavigate=false` 和缺少 adapter 都表示放行浏览器默认链接导航，不能当作路由 pending 的阻止开关；未就绪由真实 disabled 状态或已接管的 navigate 处理。保留修改键、中键、target/download、回退前进和宿主的滚动恢复，不以 route key 重挂整个 shell。
 
 桌面导航收起/展开控件由AppShell/MenuLayout放在侧栏内部，窄屏在顶栏保留同一“打开导航”入口。宿主仅接既有collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange及名称，不复制按钮或穿透DOM搬位置。已接旧固定版本的消费项目应按授权升级正式包后获得默认布局修正，不能将新规范当成已安装能力；见[导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 

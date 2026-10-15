@@ -9,7 +9,7 @@ async function paintedControl(page,control,info,name){
   const result=await page.evaluate(async({encoded,metrics})=>{const image=new Image();image.src='data:image/png;base64,'+encoded;await image.decode();const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const context=canvas.getContext('2d');context.drawImage(image,0,0);const ratio=image.width/metrics.viewport.width,pixels=metrics.points.map(([x,y])=>Array.from(context.getImageData(Math.round(x*ratio),Math.round(y*ratio),1,1).data));context.fillStyle=metrics.color;context.fillRect(0,0,1,1);return {pixels,color:Array.from(context.getImageData(0,0,1,1).data)};},{encoded:png.toString('base64'),metrics});
   for(const pixel of result.pixels)for(let channel=0;channel<3;channel++)expect(Math.abs(pixel[channel]-result.color[channel]),name+' has four painted focus sides').toBeLessThanOrEqual(20);
 }
-for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','system'])for(const width of [1280,390])test(`${kind} public AuthPage setup ${appearance} ${width} owns positioning and full-width primary`,async({page},info)=>{
+for(const kind of ['react'])for(const appearance of ['light','dark','system'])for(const width of [1280,390])test(`${kind} public AuthPage setup ${appearance} ${width} owns positioning and full-width primary`,async({page},info)=>{
   const authRequests=[];page.on('request',request=>{if(/\/api\/v1\/auth\//.test(request.url()))authRequests.push(request.url());});
   await page.setViewportSize({width,height:800});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),appearance);await page.goto(`/auth-page-${kind}/`);
   const submit=page.getByRole('button',{name:'创建管理员',exact:true}),title=page.getByRole('heading',{name:'创建管理员',exact:true}),username=page.getByRole('textbox',{name:'管理员用户名',exact:true});await expect(submit).toBeEnabled();
@@ -19,7 +19,7 @@ for(const kind of ['react','vanilla'])for(const appearance of ['light','dark','s
   const path=info.outputPath(`auth-page-${kind}-${appearance}-${width}-setup.png`),json=info.outputPath(`auth-page-${kind}-${appearance}-${width}-setup.json`);await page.screenshot({path,animations:'disabled'});await writeFile(json,JSON.stringify({standard:'docs/VALIDATION.md#认证页验收',measured},null,2));await info.attach('setup-layout',{path,contentType:'image/png'});await info.attach('setup-geometry',{path:json,contentType:'application/json'});
   await username.fill('demo-admin');await page.locator('input[name=password]').fill('FAKE_SETUP_PASSWORD');await page.locator('input[name=confirmation]').fill('FAKE_SETUP_PASSWORD');await submit.click();await expect(page.getByRole('status')).toHaveText('已收到示例表单，未创建真实账户。');expect(await page.evaluate(()=>window.authPageDemo.getSubmissions())).toBe(1);await expect(page.locator('input[name=password]')).toHaveValue('');expect(authRequests).toEqual([]);
 });
-for(const kind of ['react','vanilla'])test(`${kind} AuthPage updates keep form identity, input value, focus and host event handlers`,async({page},info)=>{
+for(const kind of ['react'])test(`${kind} AuthPage updates keep form identity, input value, focus and host event handlers`,async({page},info)=>{
   await page.setViewportSize({width:390,height:720});await page.goto(`/auth-page-${kind}/`);const username=page.getByRole('textbox',{name:'管理员用户名',exact:true});await username.fill('retained-admin');await page.locator('input[name=password]').fill('FAKE_RETAINED_PASSWORD');await username.focus();
   await page.evaluate(()=>{window.savedAuthForm=document.querySelector('form');window.savedAuthInput=document.activeElement;window.hostInputEvents=0;window.savedAuthInput.addEventListener('input',()=>window.hostInputEvents++);window.authPageDemo.update({title:'继续设置管理员'});window.authPageDemo.feedback();});
   await expect(page.getByRole('heading',{name:'继续设置管理员',exact:true})).toBeVisible();await expect(username).toBeFocused();await expect(username).toHaveValue('retained-admin');await expect(page.locator('input[name=password]')).toHaveValue('FAKE_RETAINED_PASSWORD');expect(await page.evaluate(()=>document.querySelector('form')===window.savedAuthForm&&document.activeElement===window.savedAuthInput)).toBe(true);await page.keyboard.type('-next');expect(await page.evaluate(()=>window.hostInputEvents)).toBe(5);
@@ -28,18 +28,8 @@ for(const kind of ['react','vanilla'])test(`${kind} AuthPage updates keep form i
   await info.attach(`${kind}-setup-200-percent`,{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});
 });
 
-test('native AuthPage rejects layout-node cycles atomically and leaves a host replacement intact on destroy',async({page})=>{
-  await page.goto('/auth-page-vanilla/');await expect(page.getByRole('button',{name:'创建管理员',exact:true})).toBeEnabled();
-  const result=await page.evaluate(()=>{
-    const view=window.authPageDemo.getPage(),root=document.getElementById('root'),owned=view.getElement(),body=owned.querySelector('.xui-login-body'),input=owned.querySelector('input'),form=view.getForm();input.value='keep';input.focus();
-    const errors=[];for(const content of [owned,body])try{view.update({content});errors.push('accepted');}catch(error){errors.push(error.name);}
-    const retained=view.getElement()===owned&&view.getForm()===form&&input.value==='keep'&&document.activeElement===input;
-    const replacement=document.createElement('p');replacement.id='host-replacement';replacement.textContent='New host screen';root.replaceChildren(replacement);view.destroy();
-    return {errors,retained,hostPreserved:root.firstChild===replacement};
-  });expect(result).toEqual({errors:['TypeError','TypeError'],retained:true,hostPreserved:true});await expect(page.locator('#host-replacement')).toHaveText('New host screen');
-});
 
-for(const kind of ['react','vanilla'])test(`${kind} an AuthPage form without a callback never sends its fields through browser navigation`,async({page})=>{
+for(const kind of ['react'])test(`${kind} an AuthPage form without a callback never sends its fields through browser navigation`,async({page})=>{
   await page.goto(`/auth-page-${kind}/`);await expect(page.getByRole('button',{name:'创建管理员',exact:true})).toBeEnabled();await page.locator('input[name=administrator]').fill('demo');await page.locator('input[name=password]').fill('FAKE_NEVER_IN_URL');await page.locator('input[name=confirmation]').fill('FAKE_NEVER_IN_URL');
   const url=page.url();await page.evaluate(()=>{window.savedAuthForm=document.querySelector('form');window.authPageDemo.disableSubmit();});await page.getByRole('button',{name:'创建管理员',exact:true}).click();
   expect(page.url()).toBe(url);expect(await page.evaluate(()=>document.querySelector('form')===window.savedAuthForm)).toBe(true);expect(await page.evaluate(()=>window.authPageDemo.getSubmissions())).toBe(0);await expect(page.locator('input[name=password]')).toHaveValue('FAKE_NEVER_IN_URL');

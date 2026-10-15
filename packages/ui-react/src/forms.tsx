@@ -1,5 +1,7 @@
 import * as React from 'react';
-import {bindSelectControl,bindTextareaAutoResize,type TextareaAutoResizeOptions} from '@coffeehc/xui-runtime/dom';
+import {bindTextareaAutoResize,type TextareaAutoResizeOptions} from './textarea.js';
+import {SimpleSelectControl} from './simple-select.js';
+export type {TextareaAutoResizeOptions} from './textarea.js';
 import { cx, branded } from './shared.js';
 type FieldInfo = { id: string; describedBy?: string; invalid: boolean; required: boolean };
 const FieldContext = React.createContext<FieldInfo | null>(null);
@@ -35,12 +37,8 @@ export function Textarea({className,autoResize,ref,...props}:TextareaProps) {
 export type ControlSize='sm'|'default'|'lg';
 export function NativeSelect({className,controlSize='default',...props}: React.ComponentProps<'select'>&{controlSize?:ControlSize}) { return <select {...props} {...useField(props)} data-control-size={controlSize} className={cx('xui-select',className)} />; }
 /** Themed popup selection with the same form values/events as NativeSelect. */
-export function SimpleSelect({className,controlSize='default',ref,...props}:React.ComponentProps<'select'>&{controlSize?:ControlSize}){
-  const select=React.useRef<HTMLSelectElement>(null),binding=React.useRef<ReturnType<typeof bindSelectControl>|null>(null);
-  React.useImperativeHandle(ref,()=>select.current!);
-  React.useLayoutEffect(()=>{binding.current=bindSelectControl(select.current!);return ()=>{binding.current?.destroy();binding.current=null;};},[]);
-  React.useLayoutEffect(()=>binding.current?.update());
-  return <span className="xui-select-host"><select ref={select} {...props} {...useField(props)} data-control-size={controlSize} className={cx('xui-select',className)}/></span>;
+export function SimpleSelect(props:React.ComponentProps<'select'>&{controlSize?:ControlSize}){
+ return <SimpleSelectControl {...props} {...useField(props)}/>;
 }
 export type ChoiceProps = Omit<React.ComponentProps<'input'>,'type' | 'children'> & { label: React.ReactNode;controlSize?:ControlSize };
 function Choice({label,className,kind,controlSize='default',readOnly,onClickCapture,onKeyDownCapture,onChange,...props}: ChoiceProps & {kind:'checkbox'|'radio'|'switch'}) {

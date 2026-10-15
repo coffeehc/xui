@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 const user={id:'9007199254740993',username:'fixture',display_name:'示例用户'},access='bs-v1-sha256-access-'+'A'.repeat(43);
 const wire=(payload,status=200,code=status===200?200:40101)=>({success:status===200,message:'',payload,request_id:'',code});
 const issued=()=>({schema_version:2,user,access_token:access,token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString()});
-for(const kind of ['react','vanilla']){
+for(const kind of ['react']){
  test(`${kind} full-page navigation restores memory access through an HttpOnly refresh cookie`,async({page,context})=>{
   const requests=[];let cookieSerial=0;
   await context.route('**/api/v1/auth/**',async route=>{
@@ -53,7 +53,7 @@ test('same-origin tabs serialize recovery cookies with Web Locks and broadcast n
   else{currentCookie='';extra={'Set-Cookie':'baseservice_refresh=; Max-Age=0; HttpOnly; SameSite=Strict; Path=/'};}
   await route.fulfill({status,contentType:'application/json',headers:extra,body:JSON.stringify(wire(payload,status))});
  });
- const a=await context.newPage(),b=await context.newPage();await Promise.all([a.goto('/login-react/?transport=http'),b.goto('/login-vanilla/?transport=http')]);
+ const a=await context.newPage(),b=await context.newPage();await Promise.all([a.goto('/login-react/?transport=http'),b.goto('/login-react/?transport=http')]);
  for(const page of [a,b])await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
  await a.getByRole('textbox',{name:'用户名',exact:true}).fill('fixture');await a.getByLabel(/^密码(?:\s*\*)?$/).fill('FAKE_PASSWORD');await a.getByRole('button',{name:'登录',exact:true}).click();await expect(a.getByRole('heading',{name:'示例工作区',exact:true})).toBeVisible();
  await expect.poll(()=>b.evaluate(()=>window.loginDemo.auth.getState().status)).toBe('unknown');

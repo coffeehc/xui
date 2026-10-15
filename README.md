@@ -1,6 +1,6 @@
 # xui
 
-通用前端组件与主题：无框架 CSS/runtime、React 薄封装、公共布局、交互与可选页面组合。宿主负责业务 API、领域数据、业务 UI 和产品流程；选用默认 HTTP client/页面 adapter 时满足相应合同，也可使用公开 typed adapter/loader 接入领域能力。
+通用前端组件与主题：统一React UI、TypeScript服务与工具、公共CSS/Token、公共布局、交互与可选页面组合。宿主负责业务 API、领域数据、业务 UI 和产品流程；选用默认 HTTP client/页面 adapter 时满足相应合同，也可使用公开 typed adapter/loader 接入领域能力。
 
 | 文档 | 用途 |
 | --- | --- |
@@ -20,6 +20,6 @@ pnpm preview
 # 另一个终端：pnpm dev（构建状态与自动恢复）
 ```
 
-参考页默认由本地 preview 在 4173 端口提供：`/foundation-react/` 与 `/foundation-vanilla/` 展示列表、表单和详情；`/react/`、`/vanilla/`、`/widgets-react/` 与 `/widgets-vanilla/` 展示基础控件。登录扩展为 `/login-react/?extensions` 与 `/login-vanilla/?extensions`。示例仅使用合成数据，不证明产品或真实后端已集成。
+参考页默认由本地 preview 在4173端口提供：`/foundation-react/`展示列表、表单和详情；`/react/`、`/widgets-react/`展示基础控件。登录扩展为`/login-react/?extensions`。1.0.0已移除原生DOM UI入口与示例；runtime服务/模型继续复用。示例仅使用合成数据，不证明产品或真实后端已集成。
 
 包均为 `private: true`，仅本地打包验证，不发布。许可证尚待仓库所有者决定。

@@ -5,7 +5,7 @@ const cases=[
  {path:'business-log',global:'businessLogDemo',title:'业务日志',first:'摘要',action:'查看日志详情 business-log:1',dialog:'业务日志详情'},
  {path:'log',global:'logDemo',title:'结构化错误',first:'首次代表摘要',action:'查看观察 demo:g1'}
 ];
-for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system'])test(`${kind} ${theme}: public list pages keep task, records and compact actions ahead of secondary content`,async({page},info)=>{
+for(const kind of ['react'])for(const theme of ['light','dark','system'])test(`${kind} ${theme}: public list pages keep task, records and compact actions ahead of secondary content`,async({page},info)=>{
  await page.emulateMedia({colorScheme:theme==='light'?'light':'dark',reducedMotion:'reduce'});
  await page.addInitScript(theme=>sessionStorage.setItem('ui.theme.mode',theme),theme);
  for(const sample of cases){
@@ -41,7 +41,7 @@ for(const kind of ['react','vanilla'])for(const theme of ['light','dark','system
  }
 });
 
-for(const kind of ['react','vanilla'])test(`${kind}: a wide metric marker wraps without turning a short label into a vertical column`,async({page})=>{
+for(const kind of ['react'])test(`${kind}: a wide metric marker wraps without turning a short label into a vertical column`,async({page})=>{
  await page.goto(`/metric-card-${kind}/`);
  for(const width of [1280,390])for(const scale of [1,2]){
   await page.setViewportSize({width,height:900});await page.evaluate(scale=>document.documentElement.style.fontSize=`${scale*100}%`,scale);

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { chooseSelect, expectSelectValue } from './select-interaction.mjs';
 
-for (const kind of ['vanilla','react']) {
+for (const kind of ['react']) {
   test(`${kind}: persisted initial modes and unknown preference`,async({browser})=>{
     for (const mode of ['light','dark','system','unknown']) {
       const context=await browser.newContext({colorScheme:'dark'});const page=await context.newPage();
