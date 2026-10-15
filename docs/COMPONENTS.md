@@ -376,6 +376,42 @@ import {Button} from '@coffeehc/xui-react/button';
 
 正式 React 消费者：[display](../examples/display-react/app.tsx) 的 `?card`；完整页面继续使用 [页面/表单/刷新](../examples/page-composition-react/app.tsx)。两者是组件与页面样本，不代表产品迁移验收。
 
+### CardGroup
+
+`@coffeehc/xui-react/card-group`（及根入口）的 `CardGroup<T>` 是受控记录集合，复用 Card；`CardGroupProps<T>`、`CardGroupContext`、`CardGroupCardProps` 同步公开。运行时共享的状态/分页纯模型位于 `@coffeehc/xui-runtime/collection-view`，没有原生 UI 实现。
+
+| 内容/事实 | 公开入口与归属 |
+|---|---|
+| 当前记录和稳定身份 | `rows:readonly T[]`、`rowKey(row):string|number`；禁止索引/随机/时间戳身份，数字与等价字符串不能重复 |
+| 每条记录的卡片模板 | `renderCard(row, context):CardGroupCardProps`；返回公开 Card props，集合拥有实际 Card 实例与 key，不返回 JSX、不复制卡片 DOM/CSS |
+| 当前上下文 | `rowIndex`为当前可见页基数0位置，`rowKey`为真实身份，`busy/disabled`为当前集合事实；回调中使用当前 row，不缓存旧索引 |
+| 头部、正文、卡尾 | 模板返回 Card 的 title/icon/badge/actions、description/children、footerMeta/footerActions；三段自然高度、分类 Badge 默认 neutral |
+| 工具栏 | `toolbar`或宿主`pageToolbar`二选一，始终在 body 外；填公共 SearchToolbar/控件，不重复同一查询动作 |
+| 状态与空/错反馈 | `status`、`filtered`、`disabled`、`emptyState/errorState/feedback`、`onRetry`、`labels`；首次无数据在 body，已有卡片刷新/失败在集合 footer 保留当前内容 |
+| 计数和翻页 | `pagination`复用 `CollectionPagination`或`CollectionCursorPagination`，与DataTable相同受控事实；`footer`仅补充内容，不再复制计数/翻页 |
+| 布局和滚动 | `layout='natural'|'workspace'|'document'`默认natural；前两者正常高度在有界父容器内仅body滚动；不足以容纳工具栏/最小正文/页尾时整个集合滚动回退；document不创建内部滚动；toolbar/footer外置 |
+
+`renderCard` 的业务控件按权限与操作语义采用 context.disabled（含 busy），集合不会递归克隆/禁用任意 slot 内容。被动卡片不增加 Tab stop、整卡 click 或 selection owner；业务主动作使用正常 Button/link，输入草稿由业务稳定组件保存。空工具槽、空反馈与空附加footer不留占位；计数可通过`labels.count`明确返回空字符串。长中文完整保留，尺寸放大后按净宽自动退列；`--card-group-item-min`默认依赖`--layout-field-long-min`，仅在产品根Token层覆盖。
+
+```tsx
+<CardGroup
+  label="研究任务"
+  rows={rows}
+  rowKey={row => row.id}
+  status={status}
+  renderCard={(row, context) => ({
+    title: row.name,
+    description: row.summary,
+    footerMeta: row.ownerName,
+    footerActions: <Button disabled={context.disabled} onClick={() => open(row.id)}>查看</Button>,
+  })}
+  onRetry={retry}
+  pagination={pagination}
+/>
+```
+
+与DataTable共用同一状态和footer实现。offset需要pageIndexOffset、真实total或null；cursor需要nextCursor/hasPrevious，不推导游标/总数、自动钳位页码或自己发请求。onRetry、翻页和修改每页大小只发意图，同回合防重入，宿主确认后回传事实。刷新时宿主保留同范围rows；集合不会暗存旧记录，也不会把另一查询范围的旧数据冒充当前结果。排序/更新沿相同key协调，保留仍存在的Card与草稿；被移除或翻出页的对象按正常React生命周期卸载，不承诺跨页草稿缓存。完整[正式示例](../examples/card-group-react/app.tsx)覆盖两种工具栏归属、三种layout、offset/cursor和局部失败恢复。
+
 ### MetricCard
 
 `MetricCard` 是一个被动统计单元，复用 `Surface` 的单层表面、现有统计文字与间距 token。多卡排列仍由调用方的 `Grid` 决定。它不拥有指标列表、请求、状态引擎、数值格式化、单位推断或业务颜色映射。

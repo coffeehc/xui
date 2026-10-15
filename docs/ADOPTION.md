@@ -17,7 +17,7 @@ theme 提供预构建 CSS/tokens；runtime 只提供无框架 TypeScript 服务�
 
 runtime 原生 DOM UI exports 已从当前公开入口移除，原生 UI 示例也不再作为接入路径。该 breaking change 不代表 XQuant、XLead 或其他消费项目已完成 React 迁移或通过验收；消费项目须按自己的授权核实固定包版本、调用点和实际页面。HTTP/auth/query/theme/resource 等 TypeScript 服务、模型、解析器与工具继续公开，React 宿主可直接复用。
 
-当前包按 DESIGN 1.0.0 和三个私有包 1.0.0 发布合同构建。该 breaking release 删除 runtime DOM UI exports；消费方升级前须将对应 UI 重接到公开 React 组件。不得把 xui 本次入口变更写成 XQuant、XLead 或其他产品已改造，也不在本仓代替宿主完成迁移。
+当前包按 DESIGN 1.1.0 和三个私有包 1.1.0 构建。1.0.0 breaking release 删除 runtime DOM UI exports；消费方升级前须将对应 UI 重接到公开 React 组件。不得把 xui 本次入口变更写成 XQuant、XLead 或其他产品已改造，也不在本仓代替宿主完成迁移。
 
 HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方client；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 
@@ -32,7 +32,7 @@ pnpm test:consumer
 pnpm preview
 ```
 
-`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目也应固定已核对的 1.0.0 版本或提交，使用正式构建产物。React、ReactDOM、Base UI 与 runtime peer 保持单实例；不使用 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
+`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目也应固定已核对的 1.1.0 版本或提交，使用正式构建产物。React、ReactDOM、Base UI 与 runtime peer 保持单实例；不使用 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
 
 当前可运行参考只展示 React UI；纯 TypeScript runtime 模型和服务可在 React 页面中复用。它们使用合成数据，不证明采用项目的真实后端、业务权限或页面已集成。
 
@@ -44,6 +44,7 @@ pnpm preview
 | 列表/表单/详情 | [foundation-react](../examples/foundation-react/app.tsx) |
 | 标准槽位卡片（?card） | [display-react](../examples/display-react/app.tsx) |
 | 工作区 | [workspace-react](../examples/workspace-react/app.tsx) |
+| 卡片集合 | [card-group-react](../examples/card-group-react/app.tsx) |
 | 完整表格 | [data-table-react](../examples/data-table-react/app.tsx) |
 | 高信噪比页面、表单和局部刷新 | [page-composition-react](../examples/page-composition-react/app.tsx) |
 | 日期时间 | [date-time-react](../examples/date-time-react/app.tsx) |
@@ -198,7 +199,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 1.0.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 1.1.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 
@@ -213,3 +214,5 @@ Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖
 桌面导航收起/展开控件由AppShell/MenuLayout放在侧栏内部，窄屏在顶栏保留同一“打开导航”入口。宿主仅接既有collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange及名称，不复制按钮或穿透DOM搬位置。已接旧固定版本的消费项目应按授权升级正式包后获得默认布局修正，不能将新规范当成已安装能力；见[导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 
 正式CSS的基础作用域必须落实：应用根容器（常用body）使用公开 `class="xui"`；弹层由公共组合生成 `.xui-layer`。基础border-box、字号和焦点规则作用于这些范围，单独import style.css但省略作用域不能视为完成接入。独立消费者不能依赖其他项目的Tailwind preflight恰好补齐缺失规则，也不能仅量外框就宣称Input/Textarea没有溢出；核对控件自身的box-sizing和实际边界。不要用私有宽度补丁替代这一公开前提。
+
+卡片集合采用公开[CardGroup](COMPONENTS.md#cardgroup)：填记录、稳定key和Card配置模板，由集合负责实例、布局、局部状态及唯一分页/计数。不要把Card+Grid拼接视为已采用集合合同；不要在项目内补第二套集合加载/刷新骨架。状态和分页由同一个既有query/resource owner发布，业务数据、草稿与操作仍由宿主负责。

@@ -1,0 +1,39 @@
+import * as React from 'react';
+import {createRoot} from 'react-dom/client';
+import {CardGroup,type CardGroupContext} from '@coffeehc/xui-react/card-group';
+import {MenuLayout} from '@coffeehc/xui-react/menu-layout';
+import {PageHeader} from '@coffeehc/xui-react/layout';
+import {Button} from '@coffeehc/xui-react/button';
+import {Input,Field} from '@coffeehc/xui-react/forms';
+import {SearchToolbar} from '@coffeehc/xui-react/search-toolbar';
+import {createResource} from '@coffeehc/xui-runtime/loading';
+import {setInterfaceScale} from '@coffeehc/xui-runtime/theme';
+import type {CollectionStatus} from '@coffeehc/xui-runtime/collection-view';
+import '@coffeehc/xui-theme/critical.css';
+
+type RecordItem={id:string;name:string;revision:number};
+const params=new URLSearchParams(location.search),layout=(params.get('layout')??'workspace') as 'natural'|'workspace'|'document';
+let revision=1,fail=false,delay=100;
+const resource=createResource<readonly RecordItem[]>({timeoutMs:3000,loader:async(_key,signal)=>{
+  await new Promise<void>((resolve,reject)=>{const timer=setTimeout(resolve,delay);signal.addEventListener('abort',()=>{clearTimeout(timer);reject(new DOMException('Cancelled','AbortError'));},{once:true});});
+  if(fail)throw Error('Synthetic refresh failure');
+  return Array.from({length:18},(_,index)=>({id:'record-'+(index+1),name:'研究任务 '+(index+1)+'：跨区域长中文来源与需要人工核对的研究对象',revision}));
+}});
+const labels={loading:'正在读取任务',refreshing:'正在更新当前任务',idle:'等待读取任务',empty:'暂无任务',noMatches:'没有匹配任务',error:'任务更新失败，保留上次结果',retry:'重试',pageSize:'每页任务数',pagination:'任务翻页',previous:'上一页',next:'下一页',count:({rowCount,total}:{rowCount:number;total:number|null})=>total===null?`本页 ${rowCount} 条`:`本页 ${rowCount} 条，共 ${total} 条`};
+function Draft({id}:{id:string}){const [value,setValue]=React.useState('');return <Field label="研究备注"><Input aria-label={'备注 '+id} value={value} onChange={event=>setValue(event.target.value)}/></Field>;}
+function App(){
+  const snapshot=React.useSyncExternalStore(resource.subscribe,resource.getState,resource.getState);
+  const [query,setQuery]=React.useState(''),[reverse,setReverse]=React.useState(false),[disabled,setDisabled]=React.useState(false),[pageIndex,setPageIndex]=React.useState(0),[pageSize,setPageSize]=React.useState(6),[cursor,setCursor]=React.useState(false),[events,setEvents]=React.useState('');
+  const all=(snapshot.value??[]).filter(row=>row.name.includes(query));if(reverse)all.reverse();
+  const rows=all.slice(pageIndex*pageSize,(pageIndex+1)*pageSize),status:CollectionStatus=snapshot.busy?snapshot.hasValue?'refreshing':'loading':snapshot.status==='error'?'error':snapshot.status==='idle'?'idle':'ready';
+  const refresh=()=>{revision++;void resource.load('tasks');};
+  const pagination=cursor?{mode:'cursor' as const,pageSize,total:null,nextCursor:(pageIndex+1)*pageSize<all.length?'page-'+(pageIndex+1):null,hasPrevious:pageIndex>0,pageSizeOptions:[6,12],onNext:()=>setPageIndex(n=>n+1),onPrevious:()=>setPageIndex(n=>n-1),onPageSizeChange:(size:number)=>{setPageSize(size);setPageIndex(0);}}:{pageIndex,pageIndexOffset:0,pageSize,pageSizeOptions:[6,12],total:snapshot.hasValue?all.length:null,onPageChange:setPageIndex,onPageSizeChange:(size:number)=>{setPageSize(size);setPageIndex(0);}};
+  const toolbar=<SearchToolbar search={<Field label="搜索任务"><Input type="search" aria-label="搜索任务" placeholder="任务名称" value={query} onChange={event=>{setQuery(event.target.value);setPageIndex(0);}}/></Field>} actions={<><Button variant="outline" onClick={()=>setReverse(value=>!value)}>排序</Button><Button variant="outline" onClick={()=>setDisabled(value=>!value)}>切换禁用</Button><Button variant="outline" onClick={()=>{setCursor(value=>!value);setPageIndex(0);}}>切换游标</Button></>}/>;
+  const renderCard=(row:RecordItem,context:CardGroupContext)=>({title:row.name,headingLevel:3 as const,badge:{label:'待复核'},description:'核对来源、范围与当前研究条件。',children:<Draft id={row.id}/>,footerMeta:<span>{row.id} · 修订 {row.revision}</span>,footerActions:<Button variant="link" disabled={context.disabled} onClick={()=>setEvents(`${row.id} revision ${row.revision} index ${context.rowIndex} key ${context.rowKey}`)}>打开 {row.id}</Button>});
+  return <MenuLayout title="研究任务" label="工作导航" items={[{id:'tasks',label:'研究任务',href:'#tasks'}]} activeId="tasks" scrollMode={layout==='document'?'document':'workspace'} pageHeader={<PageHeader title="研究任务" actions={<Button disabled={snapshot.busy} aria-busy={snapshot.busy} onClick={refresh}>刷新任务</Button>}/>} pageToolbar={params.has('external')?toolbar:undefined}>
+    <CardGroup label="任务集合" layout={layout} rows={rows} rowKey={row=>row.id} renderCard={renderCard} status={status} disabled={disabled} filtered={!!query} toolbar={params.has('external')?undefined:toolbar} labels={labels} onRetry={()=>{fail=false;void resource.retry();}} pagination={pagination} footer={<output hidden aria-label="操作结果">{events}</output>}/>
+  </MenuLayout>;
+}
+const root=createRoot(document.getElementById('root')!);root.render(<React.StrictMode><App/></React.StrictMode>);void resource.load('tasks');
+Object.assign(window,{cardGroupDemo:{resource,setScale:setInterfaceScale,plan:(options:{fail?:boolean;delay?:number;revision?:number})=>{fail=options.fail??false;delay=options.delay??100;revision=options.revision??revision;}}});
+window.addEventListener('pagehide',()=>{root.unmount();resource.destroy();},{once:true});

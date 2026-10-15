@@ -26,3 +26,4 @@ export * from './number-input.js';
 
 export * from './admin-setup.js';
 export * from './date-time.js';
+export * from './collection-view.js';

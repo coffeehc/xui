@@ -3,7 +3,7 @@ import {mkdir,mkdtemp,readFile,writeFile,copyFile,rename,rm,readdir} from 'node:
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {extract} from './tokens.mjs';
-const kinds=['admin-setup-react','text-inputs-react','choice-group-react','display-react','search-toolbar-react','data-table-react','rich-navigation-react','workspace-react','header-controls-react','sidebar-footer-react','react','foundation-react','menu-react','http-react','api-key-react','log-react','business-log-react','login-react','auth-page-react','capabilities-react','widgets-react','grouped-search-react'];
+const kinds=['card-group-react','admin-setup-react','text-inputs-react','choice-group-react','display-react','search-toolbar-react','data-table-react','rich-navigation-react','workspace-react','header-controls-react','sidebar-footer-react','react','foundation-react','menu-react','http-react','api-key-react','log-react','business-log-react','login-react','auth-page-react','capabilities-react','widgets-react','grouped-search-react'];
 const names={'@coffeehc/xui-theme':'theme','@coffeehc/xui-runtime':'runtime','@coffeehc/xui-react':'ui-react'};
 /** Development aliases target published-layout dist files, never package source. Formal verify uses installed tarballs. */
 export async function buildDevExamples(){

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import * as React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
+import postcss from 'postcss';
 import {DataTable} from '../packages/ui-react/dist/data-table.js';
 import {DataRegion} from '../packages/ui-react/dist/feedback.js';
 import {ConfigurableLoginPage} from '../packages/ui-react/dist/login.js';
@@ -21,7 +22,17 @@ function loginFeedback(markup){
 }
 const authError=(kind,endpointId,status)=>new HttpError(kind,{attempts:1,endpointId,...(status===undefined?{}:{status})});
 const noRetry=markup=>assert.doesNotMatch(markup,/>Retry connection<\/button>/);
-const declarations=(css,selector)=>[...css.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([,selectors])=>selectors.split(',').some(value=>value.trim()===selector)).map(([, ,body])=>body).join(';');
+function declarations(css,selector){
+  const bodies=[];
+  postcss.parse(css).walkRules(rule=>{
+    const current=rule.selector.trim();
+    let matches=current===selector;
+    const shared=/^:is\(([^()]*)\)(.*)$/.exec(current);
+    if(!matches&&shared)matches=shared[1].split(',').some(value=>`${value.trim()}${shared[2]}`===selector);
+    if(matches)bodies.push(rule.nodes.filter(node=>node.type==='decl').map(node=>`${node.prop}:${node.value}`).join(';'));
+  });
+  return bodies.join(';');
+}
 
 test('DataTable retains a footer feedback owner without a reserved row above its table',()=>{
   for(const rows of [[],[{id:'a'}]])for(const status of ['idle','ready','loading','refreshing','error']){

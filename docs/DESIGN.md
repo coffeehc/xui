@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：1.0.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：1.1.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -461,6 +461,8 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     --card-border-color: var(--surface-line);
     --card-radius: var(--radius-lg);
     --card-padding: calc(var(--spacing) * 3.5);
+    --card-group-body-min: var(--feedback-slot-block-size);
+    --card-group-item-min: var(--layout-field-long-min);
     --card-padding-small: calc(var(--spacing) * 2.5);
     --menu-min-width: 8rem;
     --menu-item-min-height: calc(var(--spacing) * 7);
@@ -1025,6 +1027,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 | 指标与详情 | MetricCard.label/value/marker；详情用 dl 或公开展示组件 | 名称 muted/body-xs、值 metric/mono/tabular；marker 只承载真实状态。普通详情不每字段套 Card | 未知用明确占位而非 0；数值完整，标记不挤压主值 |
 | 表单组 | Fieldset.legend、FormGrid.Item、FormActions.secondary/children | 语义分组、最多两列；长内容跨列；主次动作按所属表单排列 | 净宽决定列数；草稿独立于查询；提交错误在所属反馈区 |
 | 字段 | Field.label/children/help/error；InputGroup.Addon/控件/动作 | label 为字段名，help 为 muted，error 为 error 文本；单层输入边界；单位就近展示 | required/invalid/describedby 真实关联；长错误自然换行，焦点和输入节点保持 |
+| 卡片集合 | CardGroup.rows/rowKey/renderCard、toolbar、emptyState/errorState/feedback/footer 与受控 pagination | renderCard 返回 Card 的公开配置，集合创建实例；状态与计数/分页同属集合 | 单一 body 滚动，toolbar/footer 在外；稳定 key 保草稿/焦点，卡片自然高度 |
 | 表格 | DataTable.toolbar/columns、emptyState/errorState/feedback/footer、受控 pagination | 对象主列、技术值、状态 Badge 与行操作按各自语义；唯一计数/分页 | 首次加载在数据区；刷新保留行；表内横滚和既有 sticky，不用外框遮罩 |
 | 弹层 | Dialog/Sheet.Header/Title/Description、Body、Footer | 标题与说明分开，body 负责长内容，footer 放所属 FormActions | 开关只改可见性；正常 body 滚动、极端高度公共回退；关闭返回真实触发入口 |
 | 导航/菜单 | NavigationMenu 的 items[].label/icon、renderLabel/renderAction 与公开渲染/事件扩展；Menu/ContextMenu 的 Item/Icon/Separator | 选中由真实 active/expanded，危险项使用 danger，图标继承语义色 | 独立分支和动作不导航；disabled 不执行；键盘及长名称由公共组件管理 |
@@ -1562,3 +1565,11 @@ Textarea 自动增高由公共控件显式启用并声明 maxRows，使用已有
 ### 通用长标题展示
 
 OverflowText仅承载名称字符串，不拥有h3、图标、归属Badge、摘要、footer或动作。公共文本部件占其分配的剩余净宽；仅此文本在鼠标悬停或现有交互表面内的键盘焦点停留后单次滚动至末端，离开且失焦复位。text-overflow-scroll-delay/speed定义共享节奏（400ms、40 CSS px/秒），原nav-label-scroll-*保留同值别名与原覆盖合同。没有溢出不播放动画；无现有键盘入口、触屏/粗指针、减少动效、缺少动画支持或JS未运行时显示完整静态换行，无空格英文也可折行。全文始终保留可访问名称，不新增Tab停靠、伪按钮、业务状态或查询owner；公共标题接口见[长标题](COMPONENTS.md#通用长标题)。
+
+### 卡片集合布局与状态
+
+CardGroup 是与 DataTable 同层的受控集合组合。rows 是宿主当前确认的记录，rowKey 是稳定身份，renderCard(row, context) 返回 Card 的 title/icon/badge/actions/description/children/footerMeta/footerActions 等公开配置；由集合创建 Card 实例，不接收替换整个卡片的 JSX。业务输入、权限、草稿和动作由宿主负责；模板内的组件类型保持稳定。
+
+集合独占 toolbar、body 和 footer：toolbar 与计数/状态/分页均在 body 外，宿主选择 pageToolbar 或集合 toolbar 一处接线。body 使用有序 DOM 阅读顺序的语义列表；按容器净宽自动分列，以 card-group-item-min（默认依赖 layout-field-long-min，根16px时288px）为期望下限，不足时一列。卡片按内容自然高度、顶端对齐，不等高、不固定三段高度、不为整组添加第二层卡片皮肤。分组 gap、焦点 gutter 与已有语义 Token 共用。natural 随内容并受有界父容器约束；workspace 占满父容器，正常高度只有 body 滚动；极短父容器保留 card-group-body-min 的正文轨道（默认依赖 feedback-slot-block-size），整个集合可滚动，不能把正文压到仅剩焦点padding；document 随文档自然增长。
+
+状态、offset/cursor 分页、真实/未知 total 与同回合请求防重入和 DataTable 使用同一纯 TypeScript 模型及 React footer。首次无记录加载仅在 body 内提示；同范围刷新与刷新失败保留 rows、key、Card/输入节点及焦点，footer 显示局部刷新或错误/显式重试。busy/disabled 阻止集合分页和重试意图，context 提供 busy/disabled 事实，业务控件按动作语义采用；不递归改写 slots 中的业务控件，不把被动卡片变成按钮。集合不请求、不缓存、不排序、不确认写操作，也不复制 query/resource owner。接口及示例见 [CardGroup](COMPONENTS.md#cardgroup)。

@@ -76,6 +76,7 @@
 | `@coffeehc/xui-runtime/date-time` <!-- public-entry: @coffeehc/xui-runtime/date-time --> | [模型与值合同](../packages/runtime/src/date-time.ts) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-react/app.tsx) |
 | `@coffeehc/xui-runtime/display` <!-- public-entry: @coffeehc/xui-runtime/display --> | createCopyController、copyableLabels、validateImageOptions 与文字/复制/图片共享类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup --> | AdminSetupCheck/CheckResult、createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。 | [组件合同](COMPONENTS.md) | — |
+| `@coffeehc/xui-runtime/collection-view` <!-- public-entry: @coffeehc/xui-runtime/collection-view --> | [源码](../packages/runtime/src/collection-view.ts)；CollectionStatus/Layout/RowContext/Pagination/CursorPagination/Count/Labels/ViewOptions、collectionDefaultLabels、getCollectionState、validateCollectionKeys、createCollectionRequestGuard | [集合合同](COMPONENTS.md#cardgroup) | [示例](../examples/card-group-react/app.tsx) |
 
 ### @coffeehc/xui-react
 
@@ -121,6 +122,7 @@
 | `@coffeehc/xui-react/search-toolbar` <!-- public-entry: @coffeehc/xui-react/search-toolbar --> | 及根入口：`SearchToolbar` / `SearchToolbarProps`，search/actions/advanced 三内容槽；defaultExpanded=false，支持 expanded/onExpandedChange，advancedLabel 与 div props/ref。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/display` <!-- public-entry: @coffeehc/xui-react/display --> | Typography.Heading/Text/Link/Code、Copyable、Separator、Tag、Image，及同名 props/共享类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/admin-setup` <!-- public-entry: @coffeehc/xui-react/admin-setup --> | AdminSetupPage、AdminSetupPageProps、AdminSetupPageHandle 与共享状态类型。 | [组件合同](COMPONENTS.md) | — |
+| `@coffeehc/xui-react/card-group` <!-- public-entry: @coffeehc/xui-react/card-group --> | [源码](../packages/ui-react/src/card-group.tsx)；CardGroup、CardGroupProps、CardGroupContext、CardGroupCardProps及共用Collection类型 | [CardGroup](COMPONENTS.md#cardgroup) | [示例](../examples/card-group-react/app.tsx) |
 
 ## 默认行为
 
@@ -637,3 +639,7 @@ React `/display` 与根入口公开 `OverflowText` / `OverflowTextProps`。runti
 ## 布局与槽位架构
 
 `layout` 的 PageHeader 保留 title/description/meta/actions；空槽不占位，meta 统一次要文字。React `/display` 新增 Card；runtime `/display` 只导出共享 Card 类型。Card 固定 header/content/footer 三段，description 与 children 同属唯一 `.xui-card-content`，完整字段见 [Card](COMPONENTS.md#card)。页面、组件、原子控件共用 [槽位架构](DESIGN.md#页面与组件的槽位架构)，各操作按 [逐项清单](ADOPTION_CHECKLIST.md)验收。
+
+### 集合视图纯模型
+
+`/collection-view`与runtime根入口提供统一状态/分页校验、稳定key校验和同回合请求防重入，不依赖React/DOM，不持有查询、缓存、HTTP或业务提交。DataTable既有导出的getDataTableState/createDataTableRequestGuard/dataTableDefaultLabels及对应DataTable类型分别保留为同一实现的别名；合法输入行为、分页基数、未知total和cursor合同兼容。非法集合配置继续抛TypeError，通用诊断现使用Collection前缀；列宽/列身份诊断仍归DataTable。React集合直接采用同一模型与footer，不能由消费者另加兼容分页或复制控件。

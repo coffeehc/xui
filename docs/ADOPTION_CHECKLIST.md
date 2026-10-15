@@ -340,3 +340,14 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | 示例：SHELL-015 | 资源列表 / AppShell / pageHeader | 未跑 | PageHeader.title 是唯一主标题 | 尚未执行 | 资源标题；PageHeader | page-title 语义 | 主标题与 actions 按合同排列 | 空描述/meta不占位 | 正常、窄屏 | 页面正文滚动 | — | 宿主 |
 
 逐项状态表应随交付保存；按章节写一段总评不能替代上表。对非 slot 的 API/页面行，slot 专用列填 `—`，不能省略实际请求/数据所有者。对于`不适用`必须在“实际”和“证据”列写出业务范围及核对依据。公共合同/slot/peer 能力缺失时填`失败`并标记 owner=`xui`；API 未接入或后端前置未提供时填`未跑`/`失败`并标明宿主后端 owner。
+
+## 卡片集合逐项检查
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| CGROUP-001 | 页面以卡片展示同一记录集合 | 使用CardGroup接收rows/rowKey/renderCard；模板返回公开Card配置，由集合创建实例 | 正式types、实例接线及DOM | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
+| CGROUP-002 | 集合含搜索/筛选/计数/分页 | toolbar或pageToolbar只选一处；计数分页只由集合footer呈现，body为唯一内容滚动区 | slot映射、滚动与footer矩形 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
+| CGROUP-003 | 初始/空/筛选空/刷新/失败 | 各状态真实；同范围刷新/失败保留记录和节点，局部反馈与显式重试，不加载整个页面 | Network、节点身份、录像 | [DESIGN 卡片集合](DESIGN.md#卡片集合布局与状态) |
+| CGROUP-004 | 排序、数据更新或翻页 | 当前记录与context一致，稳定key；仍存在记录的草稿/焦点保留，不承诺跨页缓存 | 事件、记录及mount日志 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
+| CGROUP-005 | 集合busy/disabled或有业务动作 | 集合分页/重试阻止重复意图，业务动作按context及自身权限禁用；卡片不变伪按钮 | Enter/Space、禁用与回调次数 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
+| CGROUP-006 | 窄屏/长中文/界面或浏览器放大 | 按容器净宽退列，卡片自然高度，三段和工具/页尾完整可达，无私有CSS或尺寸补丁 | 主题/宽度/倍率矩阵截图与焦点 | [DESIGN 卡片集合](DESIGN.md#卡片集合布局与状态) |

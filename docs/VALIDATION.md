@@ -4,6 +4,28 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## CardGroup 与统一集合合同（2026-10-15）
+
+DESIGN 与三个私有包为 **1.1.0**，393 Token、85正式入口、246项接入检查。只修改xui，在1.0 React单栈之上补齐CardGroup集合；不是让业务将Card/Grid/加载提示再拼接一遍。React `/card-group` 接收rows、稳定rowKey和typed renderCard配置，由集合创建Card实例及key，拥有toolbar/body/footer、状态与唯一计数/分页。模板复用Card三段，不新建皮肤；查询、缓存、排序、跨页草稿、权限与业务提交仍归宿主。正文直接复用公开ScrollArea.Viewport；尺寸来自既有语义Token与两个派生组件Token。
+
+runtime `/collection-view`提取同一套纯TypeScript状态/分页校验、稳定key校验及同回合防重入；原DataTable类型/方法保留为同一实现的别名，React两个集合共用footer。合法DataTable调用、offset基数、未知total与cursor规则兼容；非法配置仍抛TypeError，诊断文字改用Collection前缀，列配置仍归DataTable。没有新增原生UI、业务API或请求/选择owner。
+
+最终source generation：`884012fa71c66f4cd7f23354b245bc7d275465acb36ecaf3672643ae25ea12df`。独立目录安装同代1.1.0 tarball，逐个验证ESM/CSS/types/init、命名导出与peer单实例。正式CardGroup示例最后补上可见Field标签，并隐藏仅供断言的技术结果；在同一独立安装中重新编译该例，输入全部来自安装目录，CSS全部来自正式theme，无源码alias或私有CSS。初始JS gzip **133595/135168 bytes**，critical CSS gzip **17634/17792 bytes**；Button独立入口仍 **6619 bytes**，预算均未提高。
+
+| 检查 | 结果 | 原始证据（`.artifacts/`） |
+|---|---|---|
+| build / types / Token / 文档 / 单测 | 通过；完整单测 **425/425** | `card-group-build-bounds.log`、`card-group-validation/` |
+| watch / Vite cold-start | 各 **1/1**，隔离fixture，未修改最终dist | `card-group-validation/watch-final.log`、`cold-start-final.log` |
+| 独立正式包消费者 | 通过；85入口、同代包、types、单实例、体积与正式示例 | `card-group-validation/consumer-final.log`、`example-final.log` |
+| Chromium CardGroup与DataTable回归 | **65/65**：CardGroup22、DataTable布局25/cursor4/feedback5/row events9 | `card-group-final.json`、`card-group-final.log` |
+| Firefox / WebKit精选 | 各 **6/6**，包含窄屏大字、保留节点/草稿、排序/分页及150px极短容器 | `card-group-cross.json`、`card-group-cross.log` |
+
+CardGroup覆盖light/dark/system、1280/390、100%/200%界面比例、三主题真实Chrome200%缩放、长中文、语义列表/三段卡片、natural/workspace/document及两种工具栏归属。实际核对刷新/失败保留卡片、输入、选区、焦点、滚动和页面壳；无Document导航；成功/失败/显式重试、筛选空、disabled、排序后当前记录、受控offset/cursor、键盘Enter/Space和浮层Escape回焦点。已查看正式浅色桌面、深色窄屏大字和极短容器截图。
+
+独立审查发现并用Chromium复现了极短容器中正文被压至8px的P2。已改成最小可读正文轨道，chrome放不下时整个集合滚动回退，保留正常高度的正文滚动；同一150px场景scale1/2下正文68/128px，末卡动作完整可见、页尾可达且Enter实际翻页，独立复验关闭。初轮单测另有3项陈旧版本/独立CSS选择器断言，按共享选择器真实语义修正后完整通过；SSR字符串断言去除React插入的文本注释，不改生产行为来迎合断言。
+
+本轮设计按已有Stitch v2/Token材料落实，没有新增实时Stitch会话评审。没有跑消费项目真实页面/后端、全仓浏览器全集、实体触屏/读屏器或独立SSR hydration；本次库级通过不替代采用项目升级验收。失败、开发预览与最终正式消费者证据分别保留，不重复累计。
+
 ## React 单栈、界面缩放与动态侧栏（2026-10-15）
 
 本轮只修改 xui。按用户最新授权，DESIGN 与三个私有包统一为 **1.0.0**：删除 runtime 的原生 DOM UI 工厂、控制器、内部 UI 入口、对应示例和专属测试，不保留兼容转发。React 成为唯一 UI 实现；runtime 保留 TypeScript 服务、纯模型、解析器与工具。React 所需的布局测量、文本呈现、键盘/焦点和行事件来源判断归 React 包内部；HTML 语义元素、React NativeSelect、下载/样式加载工具及 HTTP nativeOrigin 不属于被删除的 UI 副本。旧 DOM UI 消费者不能直接升级，消费项目实际迁移须另行验证。

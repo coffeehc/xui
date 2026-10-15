@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-runtime",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "files": [
@@ -110,6 +110,10 @@
     "./date-time": {
       "types": "./dist/date-time.d.ts",
       "import": "./dist/date-time.js"
+    },
+    "./collection-view": {
+      "types": "./dist/collection-view.d.ts",
+      "import": "./dist/collection-view.js"
     }
   },
   "types": "./dist/index.d.ts",

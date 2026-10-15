@@ -71,7 +71,7 @@ test('React widths use a single colgroup while empty, hidden and reordered colum
 test('layout defaults to natural, retains explicit fill/document, and validates at the shared boundary',()=>{
   assert.equal(getDataTableState({label:'Records'},0).layout,'natural');
   for(const layout of ['natural','workspace','document']){assert.equal(getDataTableState({label:'Records',layout},1).layout,layout);assert.match(render({layout}),new RegExp(`data-layout="${layout}"`));}
-  assert.throws(()=>getDataTableState({label:'Records',layout:'fill'},1),/Invalid DataTable layout/);
+  assert.throws(()=>getDataTableState({label:'Records',layout:'fill'},1),/Invalid Collection layout/);
   assert.match(render({}),/data-layout="natural"/);
 });
 test('React toolbar, table and the one controlled footer belong to a single frame',()=>{

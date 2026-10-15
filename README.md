@@ -20,6 +20,6 @@ pnpm preview
 # 另一个终端：pnpm dev（构建状态与自动恢复）
 ```
 
-参考页默认由本地 preview 在4173端口提供：`/foundation-react/`展示列表、表单和详情；`/react/`、`/widgets-react/`展示基础控件。登录扩展为`/login-react/?extensions`。1.0.0已移除原生DOM UI入口与示例；runtime服务/模型继续复用。示例仅使用合成数据，不证明产品或真实后端已集成。
+参考页默认由本地 preview 在4173端口提供：`/foundation-react/`展示列表、表单和详情；`/card-group-react/`展示受控卡片集合与刷新；`/react/`、`/widgets-react/`展示基础控件。登录扩展为`/login-react/?extensions`。1.0.0已移除原生DOM UI入口与示例；runtime服务/模型继续复用。示例仅使用合成数据，不证明产品或真实后端已集成。
 
 包均为 `private: true`，仅本地打包验证，不发布。许可证尚待仓库所有者决定。
