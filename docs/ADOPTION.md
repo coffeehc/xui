@@ -103,6 +103,23 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 
 自查报告区分：已有公共能力误用、宿主接线/冗余内容、真实公共能力缺口及宿主业务职责；逐项附文件位置、公共入口与源码/浏览器Network等实际证据，明确通过、失败和未跑。只要求自查时保持只读；不把自查隐式升级为组件修改、依赖升级、业务API迁移或发布。
 
+### 前端实现基础自查
+
+接入自查必须包含前端实现正确性与适用的工程实践，不能只检查是否import了xui或颜色是否一致。统一标准只在DESIGN维护；本节规定检查方法，不另造组件规则或私有皮肤。
+
+| 检查项 | 依据与必须提供的证据 |
+| --- | --- |
+| 刷新与页面连续性 | 按[数据刷新标准](DESIGN.md#数据刷新与视图连续性)区分首次加载/同范围刷新/换范围。追踪刷新入口到请求再到渲染，连续与慢请求下核对Document请求、mount/unmount/稳定key或原生update、旧内容是否可见以及滚动/焦点/草稿；不只搜索reload字符串 |
+| 表单排版与编辑 | 先按[高信噪比页面组合](DESIGN.md#高信噪比页面组合)核对主任务/区域与公共组合，再按[表单标准](DESIGN.md#表单和响应式)检查实际容器净宽、列数/跨列、字段分组、label/control/help/error、长中文/错误对齐、动作宽度与位置、Tab和原生submit/reset语义；宽窄与200%放大给截图/几何及真实命中证据，不能仅证明DOM存在 |
+| 状态与并发 | 按[状态与生命周期](DESIGN.md#前端状态与资源生命周期)核对loading/refreshing/empty/error、确认值/草稿、乱序响应、取消及旧finally。复用已有测试或隔离样本复现失败/恢复，不以HTTP完成或本地状态更新推断业务成功 |
+| effects与释放 | 检查实际请求/订阅owner、effect依赖、监听/轮询/controller创建与释放，切换/卸载后是否仍请求或回写；区分开发StrictMode/HMR与生产行为，不靠关闭检查器、吞错或禁用HMR修问题 |
+| 交互与信息 | 按[公共状态矩阵](DESIGN.md#公共复用与状态矩阵)核对键盘、焦点、标签/错误关联、独立cell动作、busy/disabled/readOnly；按[信息呈现](DESIGN.md#首屏信息架构与信息密度)检查重复说明、空表堆叠、无法理解的协议/实现文字与用户任务的关系，保留必要风险和反馈 |
+| 可观测性能 | 用请求次数、渲染/节点记录、布局/长任务等实际证据定位异常；无性能症状不强加memo、缓存或虚拟化，不为审计添加生产埋点或第二个通用owner |
+
+每项明确通过、失败、未跑或不适用及理由，附页面/触发步骤、文件位置、对照标准、实际证据、用户影响和责任归属。正常React重新渲染不等于卸载，合法范围切换不等于错误清空；无法从截图判定的请求与生命周期行为如实记为待核实。
+
+宿主调用reload、清空数据、loading条件卸载、错误key/effect等属于宿主接入问题；保持公开props、记录、稳定身份与合法生命周期后，公共组件内部仍违背标准的，提供最小复现交给xui。自查不会授权消费项目修改或增强公共组件，也不自动授权修改业务API或实施性能改造。
+
 ## 设计项目组件与页面
 
 采用项目在自己的 `docs/DESIGN.md` 引用实际采用的 xui 版本/SHA，仅记录品牌差异、业务术语、信息优先级、私有组合及页面约定。公共基线与项目文件由开发者或技能显式读取，不存在 Markdown 自动继承；`theme.css` 只落实视觉变量覆盖，其余沿用默认值。完整关系见 [项目设计文件与主题](DESIGN.md#项目设计文件与主题的关系)。
@@ -164,7 +181,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.10.1；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.10.2；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 
