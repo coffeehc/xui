@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as React from 'react';
 import {renderToString} from 'react-dom/server';
-import {Typography,Separator,Tag,Copyable,Image,OverflowText} from '../packages/ui-react/dist/display.js';
+import {Typography,Separator,Tag,Copyable,Image,OverflowText,Card} from '../packages/ui-react/dist/display.js';
 import {Typography as RootTypography} from '../packages/ui-react/dist/index.js';
 import {createCopyController,validateImageOptions} from '../packages/runtime/dist/display.js';
 import {createTypographyHeading,createTypographyText,createTypographyCode,createTypographyLink,createSeparator,createTag,createCopyable,createImage} from '../packages/runtime/dist/display-dom.js';
@@ -69,4 +69,11 @@ test('native Image validation rejects updates atomically and same src never trig
 test('OverflowText preserves safe complete SSR text and heading semantics without synthetic interaction',()=>{
  const name='完整长中文 <script> & resource';const markup=renderToString(React.createElement('h3',null,React.createElement(OverflowText,{text:name})));
  assert.match(markup,/^<h3><span class="xui-overflow-text">/);assert.match(markup,/完整长中文 &lt;script&gt; &amp; resource/);assert.doesNotMatch(markup,/tabindex|role=|<button|aria-hidden|style=/);
+});
+
+test('Card emits named semantic slots, safe title and neutral badge without empty footer tracks',()=>{
+ const html=render(Card,{title:'<资源>',badge:{label:'公共'},description:'摘要',footerMeta:'时间',footerActions:React.createElement('button',null,'查看')});
+ assert.match(html,/<h3[^>]*>.*&lt;资源&gt;/);assert.match(html,/data-tone="neutral">公共/);assert.ok(html.indexOf('xui-card-header')<html.indexOf('xui-card-description'));assert.ok(html.indexOf('xui-card-meta')<html.lastIndexOf('查看'));
+ const empty=render(Card,{title:'资源',actions:React.createElement(React.Fragment),children:React.createElement(React.Fragment),footerMeta:null});assert.doesNotMatch(empty,/xui-card-footer|xui-card-body|xui-card-trailing/);
+ assert.throws(()=>render(Card,{title:'',headingLevel:3}),/nonempty/);assert.throws(()=>render(Card,{title:'x',headingLevel:1}),/2–6/);
 });

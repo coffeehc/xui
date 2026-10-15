@@ -20,7 +20,7 @@
 
 ## 全部正式入口
 
-下表完整覆盖当前 101 个 manifest exports；组件用法按 [组件手册](COMPONENTS.md) 查阅，签名以固定版本的正式 types 为准。
+下表完整覆盖当前 102 个 manifest exports；组件用法按 [组件手册](COMPONENTS.md) 查阅，签名以固定版本的正式 types 为准。
 
 ### @coffeehc/xui-theme
 
@@ -408,7 +408,7 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 - revoke：使凭据失效；过期但未撤销的密钥仍按实际 capability 授权撤销。
 - deleteRecord：仅删除已经 revoked 的管理记录，独立确认及 capability；不撤销活动凭据、不删除业务记录。
 
-`ApiKeyAdapter.update` 返回真实公共 metadata；revoke/deleteRecord 成功返回 void。通用 custom adapter 的 update、metadata.version/enabled/capabilities.update 均可选，不要求宿主或第三方平台实现 BaseService 协议。React/原生页面等价，使用统一表单、选择器、弹窗、错误和焦点生命周期。
+`ApiKeyAdapter.update` 返回真实公共 metadata；revoke/deleteRecord 成功返回 void。通用 custom adapter 的 update、metadata.version/enabled/capabilities.update 均可选，供独立展示、领域/第三方边界与测试；第一方公共Key接入按服务前置直接使用官方HTTP adapter。React/原生页面等价，使用统一表单、选择器、弹窗、错误和焦点生命周期。
 
 ### 默认 HTTP adapter：严格 v2
 
@@ -476,7 +476,7 @@ JSONValue 只接受 null/布尔/有限数字/字符串/数组/普通对象，深
 
 ### 两个 loader 与过滤、分页
 
-BusinessLogLoader提供list(query,{signal})与detail(eventId,{signal})，pagination声明offset/cursor。原生默认loader的query.page.index从0开始；领域cursor模型的query.page.cursor保持不透明。query 为 `{filter,page:{size,cursor,index?}}`；每个回调返回上表准确 DTO，没有 response 别名猜测。已有 HTTP client 可以由宿主 endpoint adapter 包装；loader 本身不决定 auth、租户、URL 或数据库。UI 显式 refresh，默认 size=50、范围 1–200；合成示例 size=2 仅便于验证分页。读失败不自动重试，取消仅结束本地等待，不证明服务停止。
+BusinessLogLoader提供list(query,{signal})与detail(eventId,{signal})，pagination声明offset/cursor。原生默认loader的query.page.index从0开始；领域cursor模型的query.page.cursor保持不透明。query 为 `{filter,page:{size,cursor,index?}}`；每个回调返回上表准确 DTO，没有 response 别名猜测。领域接口的已有 HTTP client 可以由明确 endpoint adapter 包装；第一方公共业务日志接入直接使用下方官方HTTP loader；loader 本身不决定 auth、租户、URL 或数据库。UI 显式 refresh，默认 size=50、范围 1–200；合成示例 size=2 仅便于验证分页。读失败不自动重试，取消仅结束本地等待，不证明服务停止。
 
 filter 明确支持 `[since,until)` 事件时间、actor kind/id、object kind/id、event_type、action、result、correlation_id、request_id；后七者为精确过滤，不做全文 payload 搜索或 query AST。actor/object 必须配对，未知字段拒绝，时间比较保留纳秒边界。允许不存在 object 的事件，但按对象筛选时必须两字段齐全。身份和 tenant scope 从服务可信上下文取得，不由公共 filter/body 自报。
 
@@ -535,7 +535,7 @@ createBusinessLogHttpLoader({http,timeoutMs?})固定GET /api/v1/business-logs与
 
 ### 四个显式只读操作
 
-createStructuredLogHttpAdapter(client,endpoints) 接收宿主给定的 groups、records、groupRecords、record 四个路径，向同源 HTTP client 发送 POST JSON，使用 [HTTP 与查询](PUBLIC_API.md#http-与查询) 的 Go AjaxResponse envelope；默认以 success=true 判定业务成功，code 保留为必填安全整数元数据，不要求固定值或额外 adapter。POST 在这里是明确定义的查询，客户端不自动重试；页面上的重试由用户触发。也可直接提供符合 StructuredLogAdapter 的四个回调。
+createStructuredLogHttpAdapter(client,endpoints) 接收宿主给定的 groups、records、groupRecords、record 四个路径，向同源 HTTP client 发送 POST JSON，使用 [HTTP 与查询](PUBLIC_API.md#http-与查询) 的 Go AjaxResponse envelope；默认以 success=true 判定业务成功，code 保留为必填安全整数元数据，不要求固定值或额外 adapter。POST 在这里是明确定义的查询，客户端不自动重试；页面上的重试由用户触发。独立展示/测试可直接提供符合 StructuredLogAdapter 的四个回调；公共服务接入采用官方HTTP adapter与后端wire。
 
 | adapter | Go Reader | 请求 JSON | envelope.payload |
 | --- | --- | --- | --- |
@@ -599,7 +599,7 @@ cursor 最多 4096 UTF-8 字节，作为不透明值透传，绑定服务端 sco
 
 ## 默认适配器的服务前置
 
-本节只用于选用 xui 默认 HTTP client/页面 adapter 时核对服务前置。xui 提供通用组件与公开组合；宿主拥有业务 API、领域数据、业务 UI 和产品流程。采用通用组件不要求所有业务 API 统一到 commons/webfacade。宿主可通过 typed ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 或 BusinessLogLoader 连接明确的领域接口；业务 API 迁移由宿主另行决定。通用边界见 [DESIGN](DESIGN.md#规范强度与职责)，组件层次见 [接入与组件分层](ADOPTION.md#组件层次与扩展原则)。
+本节约束已采用的16项公共服务操作：认证 login/refresh/session/logout；平台Key capabilities/list/create/update/revoke/deleteRecord；业务日志 list/detail；程序错误 groups/records/groupRecords/record。采用BaseService时直接使用对应已有facade与xui官方client/HTTP adapter；未用BaseService时后端在单一facade实现同一wire，前端仍使用官方client。不得在前端再改字段、成功/错误、认证或分页语义，也不另建重试/通知owner。每项请求、成功事实和异常检查见 [接入检查清单](ADOPTION_CHECKLIST.md#16-个公共-api-操作逐项检查)。这是所选公共模块的验收前置，不要求不存在业务的模块全部接入；后端缺失须报告。普通领域/第三方接口和独立展示继续使用明确typed扩展，公开扩展类型不代表可绕开公共16项合同。唯一职责规则见 [DESIGN](DESIGN.md#规范强度与职责)。
 
 | 选用能力 | 默认连接 | 服务前置与合同 owner |
 | --- | --- | --- |
@@ -667,3 +667,7 @@ React `/popover` 及根入口新增 `PopoverContentProps`；`Popover.Content.por
 ## 通用长标题
 
 React `/display`与根入口公开 `OverflowText` / `OverflowTextProps`；runtime `/display-dom`及根入口公开 `createOverflowText` / `OverflowTextOptions` / `OverflowTextController`。仅字符串text，现有交互表面使用React interactionRef或原生interactionTarget，不新增Tab/role/点击语义。触屏/减少动效/无键盘入口完整静态换行；完整更新、销毁与消费组合见[长标题合同](COMPONENTS.md#通用长标题)。
+
+## 布局与槽位架构
+
+`layout` 的 PageHeader 保留 title/description/meta/actions；空槽不占位，meta 统一次要文字。React `/display` 与 runtime `/display-dom` 新增 Card/createCard 及其声明类型，完整字段、原生部分更新与生命周期见 [Card](COMPONENTS.md#card)。本次无新协议或 endpoint。页面、组件、原子控件共用 [槽位架构](DESIGN.md#页面与组件的槽位架构)，各操作按 [逐项清单](ADOPTION_CHECKLIST.md)验收。

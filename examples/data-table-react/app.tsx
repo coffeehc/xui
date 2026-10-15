@@ -3,9 +3,10 @@ import {createRoot} from 'react-dom/client';
 import {MenuLayout,NavigationMenu} from '@coffeehc/xui-react/menu-layout';
 import {AppShell,Grid,PageHeader} from '@coffeehc/xui-react/layout';
 import {Disclosure} from '@coffeehc/xui-react/navigation';
+import {Card} from '@coffeehc/xui-react/display';
 import {Button} from '@coffeehc/xui-react/button';
 import {Input,SimpleSelect} from '@coffeehc/xui-react/forms';
-import {Surface,LoadingState,EmptyState,ErrorState} from '@coffeehc/xui-react/feedback';
+import {LoadingState,EmptyState,ErrorState} from '@coffeehc/xui-react/feedback';
 import {ScrollArea} from '@coffeehc/xui-react/scroll-area';
 import {DataTable,DataTableToolbar,DataTableFilter,type DataTableColumn} from '@coffeehc/xui-react/data-table';
 import {createDataTableExample,tableLabels,type ExampleRow} from '../shared/data-table-model';
@@ -65,12 +66,12 @@ function App(){
     feedback={query.has('disclosure-feedback')?<div><p>合成读取说明：现有记录仍保留。</p><Disclosure title="查看完整说明"><p>{'完整合成详情，无任何用户数据。'.repeat(40)}</p><Input aria-label="详情备注" defaultValue="保留值"/></Disclosure></div>:query.has('nested-feedback')?<table aria-label="辅助表格"><tbody><tr><td>嵌套反馈</td></tr></tbody></table>:undefined}
     pagination={query.has('no-pagination')?undefined:query.has('cursor')?{mode:'cursor',nextCursor:state.nextCursor,hasPrevious:state.hasPrevious,pageSize:state.pageSize,total:state.total,pageSizeOptions,onNext:owner.next,onPrevious:owner.previous,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions,onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}}/>;
   // The existing public ScrollArea root takes the same allocated workspace height.
-  // Grid/Surface provide the public card layout and skin; no private table/shell CSS is copied.
+  // Grid/Card provide the public card layout and skin; no private table/shell CSS is copied.
   const cardView=<ScrollArea.Root style={{blockSize:'100%'}} data-testid="record-cards"><ScrollArea.Viewport aria-label="合成记录卡片"><ScrollArea.Content>
-    {state.busy&&<LoadingState>{state.rows.length?tableLabels.refreshing:tableLabels.loading}</LoadingState>}
+    {state.busy&&<LoadingState layout={state.rows.length?'inline':'block'}>{state.rows.length?tableLabels.refreshing:tableLabels.loading}</LoadingState>}
     {state.status==='error'&&<ErrorState title={tableLabels.error} onRetry={owner.retry} retryLabel={tableLabels.retry}/>}
     {!state.busy&&state.status==='ready'&&!state.rows.length&&<EmptyState title={state.filtered?tableLabels.noMatches:tableLabels.empty}/>}
-    <Grid>{state.rows.map(row=><Surface key={row.id} aria-label={`记录卡片 ${row.id}`}><h2>{row.name}</h2><p>{row.kind} · {row.scope} · {row.source}</p><Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button></Surface>)}</Grid>
+    <Grid>{state.rows.map(row=><Card key={row.id} title={row.name} headingLevel={2} aria-label={`记录卡片 ${row.id}`} badge={{label:row.kind}} description={row.scope} footerMeta={row.source} footerActions={<Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button>}/>)}</Grid>
   </ScrollArea.Content></ScrollArea.Viewport></ScrollArea.Root>;
   const common={style:{'--layout-workspace-content-min-block-size':'var(--data-table-min-block-size)'} as React.CSSProperties,scrollMode:query.has('unbounded')?'document' as const:'workspace' as const,headerSlots:{brand:<strong>公共列表组合</strong>},pageHeader,pageToolbar:internal?undefined:toolbar};
   // A known-size host tests composition as a column-flex item, not just a block child.

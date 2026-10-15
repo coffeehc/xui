@@ -1,16 +1,16 @@
 {
-  "contractVersion": "0.17.0",
+  "contractVersion": "0.18.0",
   "defaultTheme": "Precision Engineering Console",
   "defaultMode": "dark",
-  "defaultTokenCount": 386,
+  "defaultTokenCount": 387,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "153a4f8e5b6eeaca6a975fd0ae9b98c63e041f679b49b1984833662e15ebeeaf",
-  "protocolBoundarySha256": "cd9c5481d193e039d380aaeebe76031e69d4f65d2beca33f146ee031ab5a67d8",
+  "defaultCssSha256": "9c5fcd6b3706bc643faa1ae5a1b4b0080e9633abbd42121dddb6b80bf101f95b",
+  "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
     "commit": "29139f7843d9a79a9eca42892cb87da8f08f6320",
@@ -88,5 +88,11 @@
     "Foundation closeout adds toggle-height and two derived InputGroup interior minima; compact toggles and one-border input groups now match the documented outer geometry without changing the shared control scale.",
     "Record-page composition adds table-primary-min-inline-size, derived from the existing field scale, to preserve readable task columns without imposing widths on ordinary tables.",
     "Increase the authorized global expanded navigation width from 216px to 324px (9 control heights); preserve the independent compact rail and mobile drawer. Add eight derived/semantic navigation presentation tokens for first-line control alignment, hover delay and CSS-pixel-per-second name scrolling. Existing wrap/center defaults remain compatible."
-  ]
+  ],
+  "architectureReference": {
+    "path": "docs/design-sources/stitch-token-architecture.v1.txt",
+    "sha256": "5b0c3caa7eaaa1df864b9562fa8d0f21b8d86555d3d396fcd2a7d9a5c989a785",
+    "authority": "user-provided-stitch-reference",
+    "resolution": "Adopt token tiers and slot/state ownership; retain published names, accessible scales, keyboard and actual host facts. DESIGN documents implementation corrections."
+  }
 }

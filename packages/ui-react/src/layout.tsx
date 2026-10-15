@@ -2,7 +2,7 @@ import * as React from 'react';
 import {createPortal} from 'react-dom';
 import { Dialog } from './dialog.js';
 import { Button } from './button.js';
-import { cx } from './shared.js';
+import { cx,hasContent } from './shared.js';
 import {ThemeModeButton} from './theme.js';
 import type {ThemeController} from '@coffeehc/xui-runtime/theme';
 import {createHeaderLocaleSelect,isHeaderLocaleEnabled,type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
@@ -28,9 +28,9 @@ export type FormActionsProps=React.ComponentProps<'div'>&{secondary?:React.React
 export function FormActions({secondary,children,className,...props}:FormActionsProps){return <div {...props} className={cx('xui-form-actions',className)}>{hasContent(secondary)&&<div className="xui-form-actions-secondary">{secondary}</div>}{hasContent(children)&&<div className="xui-form-actions-primary">{children}</div>}</div>;}
 export function Toolbar({className,...props}:React.ComponentProps<'div'>){return <div role="group" {...props} className={cx('xui-toolbar',className)}/>;}
 export type PageHeaderProps=Omit<React.ComponentProps<'header'>,'title'> & {title:React.ReactNode;description?:React.ReactNode;actions?:React.ReactNode;meta?:React.ReactNode};
-export function PageHeader({title,description,actions,meta,className,...props}:PageHeaderProps){return <header {...props} className={cx('xui-page-header',className)}><div><h1>{title}</h1>{description&&<p>{description}</p>}{meta}</div>{actions&&<div className="xui-toolbar">{actions}</div>}</header>;}
+export function PageHeader({title,description,actions,meta,className,...props}:PageHeaderProps){return <header {...props} className={cx('xui-page-header',className)}><div className="xui-page-header-main"><h1>{title}</h1>{hasContent(description)&&<p>{description}</p>}{hasContent(meta)&&<div className="xui-page-header-meta">{meta}</div>}</div>{hasContent(actions)&&<div className="xui-toolbar">{actions}</div>}</header>;}
 export type SectionProps=Omit<React.ComponentProps<'section'>,'title'> & {title?:React.ReactNode;actions?:React.ReactNode};
-export function Section({title,actions,children,className,...props}:SectionProps){const id=React.useId();return <section aria-labelledby={title?id:undefined} {...props} className={cx('xui-section',className)}>{(title||actions)&&<header className="xui-section-header">{title&&<h2 id={id}>{title}</h2>}{actions&&<div className="xui-toolbar">{actions}</div>}</header>}{children}</section>;}
+export function Section({title,actions,children,className,...props}:SectionProps){const id=React.useId();return <section aria-labelledby={hasContent(title)?id:undefined} {...props} className={cx('xui-section',className)}>{(hasContent(title)||hasContent(actions))&&<header className="xui-section-header">{hasContent(title)&&<h2 id={id}>{title}</h2>}{hasContent(actions)&&<div className="xui-toolbar">{actions}</div>}</header>}{children}</section>;}
 
 function HeaderLocaleSelect({locale}:{locale:HeaderLocaleOptions}){
   const mount=React.useRef<HTMLSpanElement>(null),binding=React.useRef<ReturnType<typeof createHeaderLocaleSelect>|null>(null);
@@ -39,13 +39,6 @@ function HeaderLocaleSelect({locale}:{locale:HeaderLocaleOptions}){
   return <span className="xui-select-host" data-xui-header-locale="" ref={mount}/>;
 }
 
-const hasContent=(value:React.ReactNode):boolean=>{
-  if(value===undefined||value===null||typeof value==='boolean')return false;
-  if(typeof value==='string')return value.length>0;
-  if(Array.isArray(value))return value.some(hasContent);
-  if(React.isValidElement<{children?:React.ReactNode}>(value)&&value.type===React.Fragment)return hasContent(value.props.children);
-  return true;
-};
 
 /** Product identity content; its region tracks the shell rail automatically. */
 export function HeaderBrand({logo,children,className,...props}:React.ComponentProps<'span'>&{logo?:React.ReactNode}){

@@ -2,6 +2,33 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## Token、槽位与接入验收架构（2026-10-15）
+
+本轮只修改 xui。将用户提供的 Stitch Token 架构材料保存为带指纹的参考，统一落实到 DESIGN **0.18.0**、公开组件、原生结构、正式示例和逐项清单。设计方向由参考校准；最终合同仍采用已验证的语义尺度、可访问性和宿主事实，不引入参考中的10/11px普通提示、全mono、不可聚焦密码切换、覆盖错误文字或虚构认证流程。本轮没有新增实时 Stitch 会话评审。
+
+三层 Token 在生成阶段检查依赖方向；默认浅深/reduced 与产品覆盖均不能出现语义层依赖组件、组件跳过语义层读取原始调色板。页面壳、标题、工具栏、章节、卡片、表单/字段、表格、弹层、导航、原子控件与反馈明确内容归属、文字/颜色、空槽、状态和滚动职责。布局不持有查询与业务提交；busy、disabled、readOnly、empty、error 保持不同事实。既有刷新合同继续要求旧内容、节点、输入和焦点连续，普通刷新不导航 Document 或重挂正文。
+
+新增 React Card 与原生 createCard 共用 Surface/Toolbar/Typography/Badge/OverflowText，提供 title/icon/badge/actions/description/body/footerMeta/footerActions 的统一组合；归属 Badge 默认 neutral。原生 partial update 保留未变 Node/Fragment，销毁仅释放所拥有的文本呈现；React 保留同类型/key内容。PageHeader.meta 统一次要文字，空 Fragment 不产生工具/章节占位。正式卡片列表示例复用原有数据 owner、局部刷新及失败恢复。
+
+[接入清单](ADOPTION_CHECKLIST.md)包含 **220 个唯一 ID、22类**。16个公共服务操作各有请求、成功、异常/权限三项，共48项；每个真实页面/组件实例/slot独立记录结果。公共操作由 BaseService facade 或后端一次适配同一wire，前端采用官方client；独立领域/第三方协议仍保留明确边界。该规则不授权本轮迁移任何消费项目的后端、认证或业务 API。文档守卫检查唯一ID、完整操作结果和每行合同来源，不能把清单存在当作项目验收通过。
+
+最终 source generation `31bb3741c479c053c07eef0ecf54a3289493a7c0b2649a58e7074a938bf35854`；387 tokens、102公开入口，三包私有0.1.0。独立 tarball 消费者验证正式ESM/CSS/types/init、完整命名类型和peer单实例，不使用源码alias。正式critical CSS gzip **17620/17792**，比上一固定产物 c97cc82 的17417增加203字节；对应CSS预算由17536增加256至17792，Button/JS预算保持。早期567字节为未完成消费者流水线的中间测量，不能作为最终产物数据。
+
+| 检查 | 结果 | 原始证据（`.artifacts/architecture/`） |
+| --- | --- | --- |
+| build / types / tokens / docs / 单测 | 通过，单测 **528/528**；220项检查源和102入口一致 | 最终构建与门禁日志 |
+| 正式tarball消费者 | 通过，同代包、types、导出、peer与体积门禁 | 最终consumer日志与performance-baseline |
+| Chromium槽位专项 | **32/32**，双端三主题、1280/390、16/32字号、真实Chrome200%与保行刷新 | `architecture-slots-final-0.18.json` |
+| 页面/表单/刷新回归 | **34/34** | `page-composition-final-0.18.json` |
+| Firefox / WebKit精选 | 各 **6/6**，双端桌面浅色、窄屏深色大字与刷新失败恢复 | `architecture-firefox-final-0.18.json`、`architecture-webkit-final-0.18.json` |
+
+实际核对宽窄槽位边界、图标与首行标题对齐、Badge固定、业务动作Enter/Space只执行相应回调、空槽折叠、动态标题/层级更新、父壳及记录节点/焦点/输入选区保持、局部busy/error、明确重试和零主Document刷新。已查看浅色桌面、深色窄屏大字和完整卡片列表失败恢复截图。真实浏览器缩放与根字号放大分别执行，不以CSS zoom模拟浏览器缩放。
+
+初轮查出工具栏同等选择器覆盖卡片首行对齐，已提高所属公共Card规则的明确性；另两次失败分别来自测试数组误加入其他组件、把Base UI真实Button的tabindex误判成新增焦点目标，已修正测试并保留失败证据。没有通过删状态、放宽几何、隐藏控件或修改消费项目来过验收。
+
+未跑任何采用项目的真实业务页面、真实后端16项服务、部署、实体触屏设备、读屏器及独立SSR hydration；公共SSR字符串测试不等于hydration验收。旧公开入口和默认值保持，新增Card可逐步采用；PageHeader.meta新增公共包装，依赖旧私有DOM选择器的代码须按公开slot迁移。
+
+
 ## Popover 可用宽度边界（2026-10-15）
 
 以固定 `17d8be6fa5ef3baf3845206c0e8bc89b62f0f053` 隔离复核，独立正式包消费者在 Dialog 实际节点内 Portal、align=start、32rem 目标宽度及内联 Combobox 下复现：普通 640px 视口和真实 Chrome 200%（innerWidth640/innerHeight406）均为 left134/right646、width512，而 positioner 的 available-width 仅372px。根因是 top/bottom 公共浮层只限制视口宽度，没有同时采用定位器的可用宽度。

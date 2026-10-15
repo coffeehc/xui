@@ -17,7 +17,7 @@ description: 按“仅接入xui”集成前端，按“接入xui+baseservice”�
 
 | 用户短指令 | 实施范围与完成条件 |
 | --- | --- |
-| 仅接入xui | 当前项目前端的主题、基础控件、组合组件与业务页面表现；保留后端、认证协议、业务 API、数据模型，以及已有 HTTP/auth/resource owner。通过公开布局、slots、callbacks 或 typed adapter 连接现有能力；仅在真实合同已匹配时采用默认 client，不为 UI 接入迁移 baseservice 或后端。认证不匹配完整登录 client 时采用 AuthPage 等布局接既有流程，不只因项目名称切换协议。完成实际消费页面验收 |
+| 仅接入xui | 当前项目前端的主题、基础控件、组合组件与业务页面表现；保留后端、认证协议、业务 API、数据模型，以及已有 HTTP/auth/resource owner。通过公开布局、slots、callbacks 连接现有能力；公共16项不得用前端兼容adapter规避服务前置，普通领域/第三方typed边界保留；仅在真实合同已匹配时采用默认 client，不为 UI 接入迁移 baseservice 或后端。认证不匹配完整登录 client 时采用 AuthPage 等布局接既有流程，不只因项目名称切换协议。完成实际消费页面验收 |
 | 接入xui+baseservice | 完成相同前端改造，并在当前宿主项目接入实际需要的 baseservice 服务、依赖版本、facade、路由与安全回调，执行下方联合服务接线。现有领域 API 与标准身份协议保持各自职责，不为凑齐库能力新增无需求模块。完成实际前后端联调；后端未接通不能报联合接入完成 |
 
 两种模式共用下文设计、公开组件、正式产物与验收流程；按“项目 DESIGN.md → theme.css → 基础控件 → 组合组件 → 页面”推进。主题遵循[项目主题流程](references/theming.md)，私有组合和页面使用下方设计方法。保留流式输出、编辑器、Markdown/代码展示、上传下载与桌面桥接等实际业务能力；统一通用部分，不用普通表单替换领域专用交互。裸浏览器控件的替换边界见下文“先保留业务能力”。
@@ -34,7 +34,7 @@ description: 按“仅接入xui”集成前端，按“接入xui+baseservice”�
 1. 在任务指定的 xui checkout 与采用仓库读取 AGENTS.md，检查 git status、当前 SHA、分支、包 manifests/exports 和已有改动。按任务授权正常 fetch，比较版本；保护全部提交和业务修改。不要 reset/clean/强推、用文件树 API 同步、猜 registry 版本或改其他仓库。
 2. 先读 [采用手册](../../../docs/ADOPTION.md)、[xui 默认完整规范](../../../docs/DESIGN.md)、[公开入口与默认行为](../../../docs/PUBLIC_API.md) 和 [实施映射](../../../docs/ADOPTION.md#组件层次与扩展原则)。另读采用项目自己的 `docs/DESIGN.md`，区分产品视觉要求与 xui 默认合同。以实际消费版本的正式声明和源码核对 API，不能把计划或其他版本写成可调用能力。
 3. 读 [原子→组合→页面的单一架构源](../../../docs/ADOPTION.md#组件层次与扩展原则)，为页面选择实际公开层次与扩展点；按需要读 [导航](../../../docs/COMPONENTS.md#导航与菜单)、[HTTP/query](../../../docs/PUBLIC_API.md#http-与查询)、[登录/认证](../../../docs/PUBLIC_API.md#认证会话)、[API Key](../../../docs/PUBLIC_API.md#api-key-管理) 或 [业务日志](../../../docs/PUBLIC_API.md#业务日志)；确有错误观察需求再读 [独立错误 facade](../../../docs/PUBLIC_API.md#程序错误观察)；读 [宿主边界](../../../docs/ADOPTION.md#宿主边界) 与 [实际验证和限制](../../../docs/VALIDATION.md)。不要复制完整规范、默认品牌值或另造组件合同。
-4. 首次接入、升级与自查均执行[接入合规与公共缺口归属](../../../docs/ADOPTION.md#接入合规与公共缺口归属)：核对真实消费、公共请求链路与无用UI信息；公共组件修改/增强由消费项目列举并交给xui，不在消费项目自行补丁或复制实现。必须同时执行[前端实现基础自查](../../../docs/ADOPTION.md#前端实现基础自查)，覆盖统一表单/刷新标准、状态并发、生命周期及适用工程实践。只要求自查时保持只读，按该节输出证据与分类缺口。
+4. 首次接入、升级与自查必须先建立[槽位映射](../../../docs/DESIGN.md#页面与组件的槽位架构)，逐条执行[检查清单](../../../docs/ADOPTION_CHECKLIST.md)并保留每个ID、对象、结果与证据。不得用总评替代逐项判定；只评审时保持只读。随后执行[接入合规与公共缺口归属](../../../docs/ADOPTION.md#接入合规与公共缺口归属)：核对真实消费、公共请求链路与无用UI信息；公共组件修改/增强由消费项目列举并交给xui，不在消费项目自行补丁或复制实现。必须同时执行[前端实现基础自查](../../../docs/ADOPTION.md#前端实现基础自查)，覆盖统一表单/刷新标准、状态并发、生命周期及适用工程实践。只要求自查时保持只读，按该节输出证据与分类缺口。
 
 ## 联合服务接线（仅“接入xui+baseservice”）
 
@@ -46,7 +46,7 @@ description: 按“仅接入xui”集成前端，按“接入xui+baseservice”�
 
 ## 通用组件与宿主边界
 
-xui 提供通用组件、主题、交互与可选页面组合。宿主拥有业务 API、领域数据、业务页面和产品流程。先按需求选择公共能力；仅选用默认 HTTP client/页面 adapter 时满足 [服务前置](../../../docs/PUBLIC_API.md#默认适配器的服务前置) 的明确 wire 合同，宿主可通过 typed ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 或 BusinessLogLoader 接入领域接口。采用 xui 不要求全部普通业务 API 统一到 commons/webfacade。仅接入 xui 不修改后端；联合模式允许当前宿主必要的服务接线与协议适配，不自动扩大为全部领域 API 重写。共享 xui/baseservice/commons 源码、生产数据及部署不由这两个短指令授权修改。
+xui 提供通用组件、主题、交互与可选页面组合。宿主拥有业务 API、领域数据、业务页面和产品流程。先按需求选择公共能力；仅选用默认 HTTP client/页面 adapter 时满足 [服务前置](../../../docs/PUBLIC_API.md#默认适配器的服务前置) 的明确 wire 合同，认证4项、平台Key6项、业务日志2项、程序错误4项按正式wire采用官方client/HTTP adapter：BaseService已有facade直接连接，未用BaseService由宿主后端一次实现同一wire，前端不再添协议转换。后端前置缺失时列举阻塞，不借UI范围擅自改后端。其余领域/第三方接口可用typed ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter或BusinessLogLoader。采用 xui 不要求全部普通业务 API 统一到 commons/webfacade。仅接入 xui 不修改后端；联合模式允许当前宿主必要的服务接线与协议适配，不自动扩大为全部领域 API 重写。共享 xui/baseservice/commons 源码、生产数据及部署不由这两个短指令授权修改。
 
 行业标准优先：OAuth2/OIDC/SAML保持原协议，第三方按对方API/错误格式；adapter在宿主内部边界明确转换，不强迫第三方AjaxResponse。此正常协议边界不按旧升级兼容桥梁删除。平台API Key是自有平台向Agent/集成签发的凭据，不是provider key；自身业务日志不是第三方响应或程序故障记录。唯一通用边界见[DESIGN](../../../docs/DESIGN.md#规范强度与职责)。
 

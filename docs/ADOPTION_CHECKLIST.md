@@ -1,0 +1,315 @@
+# xui 项目接入逐项验收清单
+
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（本轮为 0.18.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+
+## 使用与报告规则
+
+1. 固定并记录 xui 完整 Git SHA、DESIGN 版本、三个包版本、正式 tarball 的 SHA-256 和安装锁文件解析结果。三个包必须来自同一源码构建。
+2. 每一个实际页面实例、每一个实际组件实例、每一个适用 API 操作都单独填报告；同一组件出现在两个页面时是两个被测对象，不能用一个示例代替。
+3. 每条状态只能是 `通过`、`失败`、`未跑`、`不适用`。`不适用`须附真实业务不存在或明确范围排除的证据；没实现、缺数据、没测、环境阻塞均记`未跑`或`失败`，不可记不适用。
+4. 对公共能力缺口，状态记`失败`，责任 owner 记`xui`，附公开入口、最小复现及需要补齐的合同；消费方不得用私有 DOM、私有 CSS、`!important` 或第二套交互掩盖。
+5. 每行证据必须指向此次固定产物上的真实消费源码、浏览器/Network 记录、自动化执行结果或后端 handler/合同测试。测试文件存在、样板通过、截图好看或旧版本通过均不能单独证明产品页面通过。
+6. 每个使用中的具名 slot 都要按实际“页面/组件实例 × slot”单独检查；报告必须分别记录归属/API、填入内容、视觉语义与 token 角色、排版/对齐、空槽行为、适用状态、滚动与焦点归属。一个组件样板不能代表所有页面实例。
+7. 部署前提交逐项矩阵，至少包含：`ID、对象/页面/组件实例/slot/API、状态、期望、实际、证据、责任 owner`。不得以“符合 xui”“组件已复用”或按章节汇总代替逐行结论。
+
+## 固定产物、运行时与主题
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| ART-001 | 锁定 xui 依赖 | 记录完整不可缩写的源码 SHA 和 DESIGN 版本 | lockfile、Git SHA、DESIGN 元数据 | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-002 | 安装 xui 三个包 | React、runtime、theme 均来自同一固定 SHA 的正式包 | tarball SHA-256 与构建清单 | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-003 | 打包 React 页面 | 组件从正式 ESM exports 解析，无 packages/src alias | bundler 配置和 resolved module 路径 | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-004 | 打包原生页面 | runtime 从正式 ESM exports 解析且页面无 React 依赖 | lockfile、bundle manifest | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-005 | 打包包含 React 的页面 | React 只有宿主单实例，未被 xui 二次打包 | bundler stats / module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-006 | 打包 React DOM 页面 | ReactDOM 只有宿主单实例 | bundler stats / module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-007 | 打包 Base UI 弹层页面 | Base UI 只有宿主单实例，Dialog/Popover 等未嵌套另一份 peer | lockfile 与 bundle module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-008 | 编译正式消费者 | 使用安装包 `.d.ts` 成功编译真实页面和公开类型 | 独立 tarball consumer 编译日志 | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-009 | 加载主题 CSS | 只导入正式 CSS，未依赖消费者 Tailwind 扫描 xui 源码 | CSS import 与生产 CSS manifest | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
+| ART-010 | 文档首次可见前初始化主题 | 只加载与固定 SHA 配套的正式 `@coffeehc/xui-runtime/init.js`；顺序先于主题 CSS 和可见内容，不在宿主复制另一份 init owner | HTML/script resolved path、Network 顺序与首屏主题录像 | [ADOPTION 主题单一所有者](ADOPTION.md#主题单一所有者) |
+| THEME-001 | 首次无主题选择 | 唯一主题 owner 按合同取得默认 mode 和 effective 值 | sessionStorage 初始状态与页面主题 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+| THEME-002 | 用户切换主题 | mode 由单一受控 owner 确认并保存到合同规定的 sessionStorage key | Storage 面板及 mode/effective 记录 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+| THEME-003 | 在同一标签页刷新 | 已保存主题恢复，页面不先闪到另一主题 | Performance 截图/录屏与 sessionStorage | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+| THEME-004 | 主题设为 system 且系统配色变化 | 页面响应媒体变化；不得另有第二个媒体监听/持久化 owner | 事件监听与主题状态记录 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+| THEME-005 | 主题 storage 不可用或无效 | 按 runtime 合同回退并保留内存交互，不崩溃或伪称已持久化 | 注入失败测试和可见页面状态 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+| THEME-006 | 主题或组件引用 `palette-*`、base 字体/间距/圆角等原始变量 | 原始层只在集中主题配方/映射中使用；页面和组件只读语义/组件层变量，不直接读 palette | CSS/TS 引用图及 `checkTokenLayers` 结果 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+| THEME-007 | 增加或覆盖 token | 跨层依赖严格单向 base → semantic → component；同层只允许可展开的单向别名，无反向跨层引用或循环 | token graph 与脚本检查结果 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+| THEME-008 | 产品需要品牌/组件视觉差异 | 单一集中主题 owner 映射公共 token；不复制公共默认值或在页面/组件另写色板、尺寸、状态色 | theme.css diff、CSS grep 与实际 computed token | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+
+## 页面框架与具名 slot
+
+以下只检查已公开的 slot 和 parts。若固定版本的正式 API 没有所需 slot，该项记`失败 / owner=xui`，不得把内容塞入无关 slot 后记通过。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| SHELL-002 | AppHeader 有平台安全区/leading 内容 | 只放入 `headerSlots.leading` / `leading` | props/Options 与顶栏顺序截图 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-003 | 顶栏显示品牌 | 品牌只放入 `headerSlots.brand` / `brand`，不与 breadcrumb 合并 | props/Options 与窄屏截图 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-004 | 顶栏显示当前路径 | 路径语义只放入 `headerSlots.breadcrumb` / `breadcrumb` | props/Options 与 DOM 阅读顺序 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-005 | 顶栏需显示工作区、搜索等左中扩展 | 只放入 `headerSlots.context` / `context` | props/Options 与桌面/窄屏截图 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-006 | 顶栏显示运行健康或同步事实 | 真实状态只放入 `headerSlots.status` / `status` | 数据绑定和实际状态截图 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-007 | 顶栏显示应用级动作 | 只放入 `headerSlots.actions` / `actions`，不把认证/权限 owner 移入 shell | props/Options 与动作调用记录 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-008 | 顶栏显示帮助、版本等辅助工具 | 只放入 `headerSlots.auxiliary` / `auxiliary` | props/Options 与响应式顺序 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-009 | 顶栏有账号菜单 | 只放入 `headerSlots.account` / `account`，登录态仍归宿主认证 owner | props/Options 与认证调用记录 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-012 | 侧栏有产品标识或说明 | 内容只进入 `sidebarHeader`，不塞入 NavigationMenu label | props/Options 与侧栏顺序 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-013 | 侧栏有导航树 | 树只进入 `sidebar`/`items` 对应的公开导航位置，不塞入 sidebarHeader 限高区 | props/Options 与完整导航截图 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-014 | 侧栏有返回、版本或业务动作 | 内容只进入 `sidebarFooter`，不作为额外导航条目 | props/Options 与窄屏顺序 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-015 | 页面有标题区 | 标题只放在 `pageHeader`，不复制到 pageToolbar 或正文开头 | shell props 与主标题 DOM 数量 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-016 | 页面有常用搜索、页内筛选或 tabs | 内容只放 `pageToolbar` 或组件自有 toolbar 的一个位置 | props/Options 与控件计数 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-017 | 页面有主要业务内容 | 内容只放 `content`/shell children，切换其他 slot 时正文节点身份稳定 | 节点 identity 前后记录 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-018 | 页面有页尾说明或操作 | 内容只放 `pageFooter`，不使用固定覆盖层模拟页尾 | DOM 顺序、底部滚动可达截图 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SHELL-019 | 可选 slot 无内容 | 不产生可见空条、空边距或键盘停靠点 | 空 slot DOM/geometry 与 Tab 序列 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+
+## 每个页面和组件的 slot 矩阵
+
+对每个真实使用的 AppShell、PageHeader、SearchToolbar、Card、Form、DataTable、Dialog、Sheet、NavigationMenu 及其他有公开 slots/parts 的组件，按具体页面实例和 slot 分别填下列行。内容、颜色、排版和交互仍以链接的 xui 公共合同为准；Stitch 稿仅供设计校准，不能覆盖固定版本合同，也不能把图中某个 CSS 数值提升成 xui 默认值。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| SLOT-001 | 某页面/组件实例使用具名 slot 或公开 part | 报告记录它的正式 props/Options/part 名称、所属实例和唯一 owner；不以私有 DOM 节点冒充 slot | 正式 types、页面接线与实例清单 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SLOT-002 | slot 有内容 | 内容语义与 slot 职责一致；不把说明、状态、业务动作或数据塞入仅因位置相近的其他 slot | slot 属性/Node、实际文案和业务动作来源 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SLOT-003 | slot 内容有颜色或 Badge/tone | 颜色角色来自 DESIGN 语义映射；真实状态才用状态色，分类/归属保持中性 | slot 对应 DOM 的 tone 与 light/dark computed tokens | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SLOT-004 | slot 内容有标题、正文、meta、help、error 或技术标识 | 使用各自公共文字角色、对齐和排版；不从 Stitch 单例抄 10/11px、全 mono 或绝对定位错误文字 | computed font/line-height、slot rectangle 与长中文截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SLOT-005 | 可选 slot 内容为空 | 按该组件合同折叠或保持语义容器；不留下视觉空高、装饰分隔或空焦点目标 | 空值渲染 DOM、geometry 与键盘轨迹 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SLOT-006 | slot 对应内容进入 loading/busy/empty/error/disabled/selected 等状态 | 只验证该组件公开支持且该业务真实适用的状态；状态文案、颜色、动作与事实一致 | 组件公开状态、业务状态 fixture 与浏览器截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+| SLOT-007 | slot 内容超出容器或出现在弹层/工作区 | 按组件合同确定唯一滚动 owner；键盘焦点、页尾/操作区及弹层关闭入口保持可达 | scrollHeight/scrollTop、focus trace 与滚动录像 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
+
+## 页面标题、工具栏与卡片
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| PAGE-001 | 页面有主标题 | `PageHeader.title` 只承载该页一个可访问主标题 | props/Node 接线、heading outline | [COMPONENTS 布局与顶栏](COMPONENTS.md#布局与顶栏) · [DESIGN 高信噪比页面组合](DESIGN.md#高信噪比页面组合) |
+| PAGE-002 | 标题下有摘要 | `PageHeader.description` 只承载解释当前页面任务的短描述 | props/Node 接线与视觉层级 | [COMPONENTS 布局与顶栏](COMPONENTS.md#布局与顶栏) · [DESIGN 高信噪比页面组合](DESIGN.md#高信噪比页面组合) |
+| PAGE-003 | 标题区有状态/计数等事实 | 每项进入公共 `PageHeader.meta` 包装且值来自真实页面数据；无 meta 时包装不占位 | 数据来源、DOM slot 与空态 geometry | [COMPONENTS 布局与顶栏](COMPONENTS.md#布局与顶栏) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| PAGE-004 | 标题区有页面主操作 | 操作进入 `PageHeader.actions`，同一主要任务只有一个强调主动作 | props/Node 与操作结果记录 | [COMPONENTS 布局与顶栏](COMPONENTS.md#布局与顶栏) · [DESIGN 高信噪比页面组合](DESIGN.md#高信噪比页面组合) |
+| TOOLBAR-001 | 页面需要搜索 | 搜索控件进入 `SearchToolbar.search`，不重复出现在 actions 或正文 | slot 接线与控件计数 | [COMPONENTS SearchToolbar](COMPONENTS.md#searchtoolbar) |
+| TOOLBAR-002 | 页面有常用工具动作 | 工具动作进入 `SearchToolbar.actions`，不混入搜索输入或高级筛选 | slot 接线与键盘顺序 | [COMPONENTS SearchToolbar](COMPONENTS.md#searchtoolbar) |
+| TOOLBAR-003 | 页面有低频/高级查询 | 进入 `SearchToolbar.advanced`，通过公开展开入口按需显示 | slot 接线、展开前后 DOM 与焦点 | [COMPONENTS SearchToolbar](COMPONENTS.md#searchtoolbar) |
+| TOOLBAR-004 | 页面同时有 pageToolbar 和 DataTable.toolbar | 搜索/过滤只使用其中一个 owner，不出现重复查询条 | 两处 props、DOM 搜索/筛选数量 | [COMPONENTS SearchToolbar](COMPONENTS.md#searchtoolbar) |
+| CARD-001 | 页面呈现可识别的业务对象卡片 | 使用固定版本具名 Card 公共框架；无正式能力则记 xui 公共缺口 | 正式 types/ESM 与页面实例 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-002 | 卡片有领域标题 | `Card.title` 接收真实标题字符串，headingLevel 映射业务层级 | props/Options 与 heading outline | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-003 | 卡片标题前有识别图标 | 图标进入 `Card.icon`，不与标题字符串拼成自定义头部控件 | props/Node 与标题行 DOM | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-004 | 卡片有公共/个人等归属事实 | 归属进入 `Card.badge`，默认中性色，不借用成功/错误语义 | badge props 与主题计算样式 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-005 | 卡片有标题旁辅助动作 | 动作进入 `Card.actions`，保留其原有权限和回调 owner | props/Node 与动作调用记录 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-006 | 卡片有对象摘要 | 摘要进入 `Card.description`，不与标题或元数据拼接成任意 children 排版 | slot 接线与可访问名称 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-007 | 卡片有主要业务正文 | 正文进入 `Card.children`/原生 content，不把 footer 元数据塞入正文 | props/Node 与 DOM 顺序 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-008 | 卡片底部有时间、来源等事实 | 事实进入 `Card.footerMeta`，颜色及文字角色符合元数据语义 | slot 接线、颜色样式与截图 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-009 | 卡片底部有业务动作 | 操作进入 `Card.footerActions`，不放在 footerMeta 文案中 | slot 接线与可执行动作记录 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-010 | 卡片任意可选 slot 为空 | 空 slot 不产生空分隔、空高度或额外焦点目标 | 空槽几何、DOM 与 Tab 序列 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-011 | 卡片标题超过可用宽度 | 只滚动标题文本；Badge、摘要、元数据和动作保持原位；不溢出时不动画 | 长中文/英文矩形录像与 node identity | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-012 | Card 内现有键盘交互触发标题全文展示 | 仅沿 Card 已有键盘动作显示完整标题，不新增标题或根节点 Tab 停靠点；减少动效遵循固定组件合同 | Tab 序列、现有按键轨迹与 reduced-motion 样式 | [COMPONENTS Card](COMPONENTS.md#card) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-013 | 卡片在窄屏或放大文字下空间不足 | header/footer 按公共规则换行，完整文本与右侧动作可达 | 390px、200%文字及真实 zoom 截图 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+
+## 小控件与复合控件
+
+每个实际使用的组件实例单独记录；只测该公开接口拥有的交互，不要求所有控件机械具备相同状态。原生与 React 对照各自公开合同，不能把 React peer 的行为臆测成原生行为。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| CTRL-001 | 页面有普通 Button 操作 | 使用公共 Button 变体表达主次/危险语义；保留默认 `type="button"`，提交动作显式为 submit | 正式 props、DOM type 与操作计数 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-002 | 页面用 Link/NavItem 跳转 | 保留原生链接 href、修改键、中键、target/download 和可访问名称；不把普通链接伪装成按钮 | DOM role/href 与鼠标键盘导航记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-003 | 页面使用 IconButton | 图标动作有稳定可访问名称；busy/disabled 只按真实操作状态表达，不借图形颜色传达唯一含义 | accessibility tree 与键盘/disabled 记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-004 | 页面使用 Checkbox 或 Switch | checked 来自真实布尔事实，Space 操作一次；readOnly 不发值变化，disabled 不进入操作 | 受控前后值、change 计数及浏览器键盘记录 | [COMPONENTS 选择与复合控件](COMPONENTS.md#成组选项) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-005 | 页面使用 ToggleGroup | 当前值受控更新，方向键只移动焦点、Enter/Space 选择；`allowEmpty` 与多选只按公开配置执行 | value、activeElement 与回调轨迹 | [COMPONENTS ToggleGroup](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-006 | 页面使用 Tabs | Tab 与 Panel 关联准确；方向键、Home/End、disabled 跳过及手动/自动激活遵循实际 peer 配置 | ARIA 关系、activeElement 与按键轨迹 | [COMPONENTS Tabs](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-007 | 页面使用 Disclosure | expanded/controls 对应真实内容；Enter/Space 切换后焦点仍在触发器，收起内容不再可 Tab | aria-expanded/controls、Tab 序列和 DOM 状态 | [COMPONENTS Disclosure](COMPONENTS.md#groupedcombobox-与-disclosure) |
+| CTRL-008 | 页面使用 Accordion | 单/多展开模式按公开配置；disabled 项不可切换，内容 DOM 在更新时保留受控业务节点 | value、disabled 事件与节点 identity | [COMPONENTS Accordion](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-009 | 页面使用 Calendar | 可见月份与已选日期是不同状态；翻月不改日期值/不触发日期回调，禁用日期可读但不能选 | React/native month 与 value 快照、键盘轨迹 | [COMPONENTS Calendar](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 日历月份控制](PUBLIC_API.md#日历月份控制) |
+| CTRL-010 | 页面使用 DateTimePicker | 值保持公开本地日期时间字符串合同和分钟精度；不得隐式解释为 UTC 或按浏览器时区转换 | 输入/回调原始值、跨时区浏览器比较 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [PUBLIC_API 日期时间选择](PUBLIC_API.md#日期时间选择) |
+| CTRL-011 | 页面使用 Typography | heading 的语义级别与视觉角色分别符合页面层级；正文、muted、technical 不因组件方便而混用 | heading outline、computed text role 与长文截图 | [COMPONENTS Typography](COMPONENTS.md#typography) · [DESIGN Typography](DESIGN.md#typography) |
+| CTRL-012 | 页面使用 Copyable | 只有明确点击复制动作才访问 clipboard；busy/成功/失败状态按公开文案呈现，复制失败仍保留原值 | clipboard spy、按钮键盘操作和状态节点 | [COMPONENTS Copyable](COMPONENTS.md#copyable) |
+| CTRL-013 | 页面使用 Tag | 普通分类保持被动中性文本；只有存在移除动作时才显示独立可访问移除按钮 | Tag props、computed tone 与动作回调 | [COMPONENTS Tag](COMPONENTS.md#separator-与-tag) |
+| CTRL-014 | 页面使用 Image | 帧尺寸由公开尺寸/aspect-ratio 保持；loading/error 文案及 alt 语义真实，资源更新不替换外层布局节点 | naturalWidth、状态、外层节点 identity 与截图 | [COMPONENTS Image](COMPONENTS.md#image) |
+| CTRL-015 | 页面使用 MetricCard | 只呈现回答当前任务的真实指标；loading/unknown/error 与数值0分别表达，不把未知补成零 | 数据来源、状态样本与实际首屏位置 | [COMPONENTS MetricCard](COMPONENTS.md#metriccard) · [DESIGN 指标映射](DESIGN.md#逐组件外观与状态映射) |
+| CTRL-016 | 页面使用 Toast | 仅短暂、非关键反馈进入 Toast；需要持续处理的错误/权限/风险仍在所属内容位置可见 | Provider/调用路径与错误恢复后截图 | [COMPONENTS 通用状态](COMPONENTS.md#基础组件与通用状态) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
+| CTRL-017 | 页面使用 Alert 或 ErrorState | 文案与 severity 来自真实业务结果；重试按钮只在真实可重试时出现，Alert 不吞掉表单错误关联 | HTTP/业务错误夹具、aria-describedby 与回调次数 | [COMPONENTS 局部失败反馈](COMPONENTS.md#局部失败反馈与离线边界) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
+| CTRL-018 | 页面使用 PasswordInput 显隐按钮 | 显隐按钮保留正常 Tab 顺序及可访问名称/`aria-pressed`；不得使用 `tabIndex=-1` 或 `aria-hidden` 隐藏交互 | Tab 录像、DOM 属性与密码输入节点 identity | [COMPONENTS 密码输入](COMPONENTS.md#密码输入) |
+| CTRL-019 | DateTimePicker 使用 required 或清空 | 清空回调为 null/空事实与原生 required validity 一致；不因 required 隐藏清空入口 | React/native FormData、validity 与 change 事件 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [DESIGN 表单反馈](DESIGN.md#表单搜索与反馈) |
+| CTRL-020 | DateTimePicker 为 disabled | 禁止编辑、打开和清空，不接收用户值回调 | DOM disabled、开弹层键盘/点击和回调计数 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) |
+| CTRL-021 | DateTimePicker 为 readOnly | 仍可聚焦读取值，但不编辑/清空/打开；保留真实表单只读语义 | activeElement、DOM 属性及输入/按钮事件计数 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) |
+| CTRL-022 | DateTimePicker 有关联 Field.error | `aria-invalid` 和 `aria-describedby` 指向稳定错误节点，文本出现不造成字段错位或遮盖 | accessibility snapshot 与错误前后 field geometry | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [COMPONENTS 表单](COMPONENTS.md#表单与页面编排) |
+| CTRL-023 | DateTimePicker 通过键盘打开、选择或取消 | 键盘操作符合公开 Calendar/Select 语义；确认/取消/Escape 回原触发入口，外部新焦点不被抢回 | 全键盘录像、activeElement 与事件计数 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) |
+| CTRL-024 | 页面使用 Select、RadioGroup 或 ChoiceGroup | 实际值受控且可访问名称关联；按对应原生/peer 键盘、required、disabled/readOnly 合同工作，不把选择变成业务提交 | ARIA/label/form state、键盘轨迹和回调计数 | [COMPONENTS 成组选项](COMPONENTS.md#成组选项) · [COMPONENTS 选择控件](COMPONENTS.md#选择与复合控件) |
+
+## 不把设计样例误当作新规范
+
+外部设计图、Stitch 生成代码和说明只用于校准信息层级与视觉方向；逐项核对固定 xui DESIGN/组件合同后再采用。以下检查针对具体误用，不表示图稿本身是规范源。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| EXAMPLE-001 | Stitch 样例出现 `10px`/`11px` 或其它字号/间距字面值 | 仅按固定 DESIGN 的语义角色和 token 判断；不得把样例数字照搬为公共默认值 | 样式 diff、token 引用与 computed styles | [DESIGN 三层Token](DESIGN.md#三层token的工程约束) · [DESIGN Typography/Layout](DESIGN.md#typography) |
+| EXAMPLE-002 | 页面把所有正文、表单帮助或普通标签设为等宽字体 | Mono 只用于合同适用的代码、技术标识或数值角色；普通文本继承对应 sans 角色 | 元素 font-family 与文本用途清单 | [DESIGN Typography](DESIGN.md#typography) |
+| EXAMPLE-003 | 表单错误通过绝对定位脱离字段流 | 使用公开 Field.error 关联与正常字段布局；仅已有组件明确提供 Tooltip 时按其合同使用，不做通用绝对定位补丁 | Field DOM、aria-invalid/describedby、错误出现前后几何 | [DESIGN 表单与反馈](DESIGN.md#表单搜索与反馈) · [COMPONENTS 密码输入](COMPONENTS.md#密码输入) |
+| EXAMPLE-004 | 设计稿/样例写“自动登录”或首次打开直接宣称已登录 | 只复用认证合同允许的既有 refresh→session 恢复；没有确认的登录事实不得伪造，不从图稿推导后台登录动作 | auth owner 请求顺序、session 状态与 Network 记录 | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [DESIGN 认证展示边界](DESIGN.md#认证超时与安全恢复的展示边界) |
+
+## 表单、数据表格和弹层
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| FORM-001 | 表单有可并列短字段 | 使用 `FormGrid` 正式列结构，不用每字段固定宽度堆成单列 | JSX/HTML、computed grid 与 1280px 截图 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-002 | 表单有长文本、规则或整行确认 | 对应 `FormGrid.Item` 使用 `span="full"`/原生公开 span | slot/属性接线与网格占列几何 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-003 | 字段属于独立语义组 | 使用 `Fieldset` 的 `legend`，不使用纯边框标题代替组名 | DOM fieldset/legend 与读屏树 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-004 | 每个 control 有可见名称 | 使用 `Field.label` 及正式 control 关联，同一 control 只关联一个主 label | label/control ID 及 accessibility snapshot | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-005 | 字段需要填写帮助 | 帮助进入 `Field.help` 并关联目标 control | aria-describedby 与具体 help 节点 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-006 | 字段校验失败 | 错误进入 `Field.error`，同步 aria-invalid 与描述关联 | 提交失败后的 DOM/ARIA 与错误文本 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-007 | 表单有主提交按钮 | 主操作进入 `FormActions` 主操作组，语义为实际 submit | 表单键盘提交、按钮 type 与 Network | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-008 | 表单有取消/返回等次操作 | 次操作进入 `FormActions.secondary`，取消不隐式提交 | props/Node、按钮 type 与行为录像 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-009 | 表单只有主操作或只有次操作 | 不为缺失操作组保留空占位 | 空组 DOM/geometry | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| FORM-010 | 表单布局在窄屏或200%文字下 | 网格退为可读单列，label/help/error 和操作完整换行 | viewport/字体缩放矩形与截图 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) · [DESIGN 表单和响应式](DESIGN.md#表单和响应式) |
+| TABLE-001 | DataTable 有搜索、筛选或工具动作 | 工具内容放 `DataTable.toolbar`；无工具时无空工具区 | props/Options 与表格首行 geometry | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| TABLE-002 | DataTable 首次加载 | 使用 `status=loading` 与表体内 loading/骨架事实，不把未知计数显示为0条成功 | 页面状态、DOM 和首个响应前截图 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| TABLE-003 | 已加载查询结果为空 | 使用 `emptyState`，保留列头并区分空数据与筛选无匹配 | rows/filtered事实与 tbody DOM | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| TABLE-004 | 首次请求失败 | 使用 `errorState`，不显示成功空态或假记录 | HTTP失败记录与表格 DOM | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| TABLE-005 | DataTable 同范围刷新 | 使用 `feedback` 槽表达局部刷新事实，保留旧行/旧计数与稳定行身份 | 请求日志、旧行节点 identity、刷新中截图 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| TABLE-006 | 表格需要计数/分页/补充说明 | 使用唯一 `DataTable.footer`，不在外部复制另一个分页/计数 owner | footer DOM 与翻页动作计数 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| TABLE-007 | offset/cursor 分页 | 发布已确认的受控 pagination facts；只有成功响应后再更新行与页事实 | 请求 query/cursor 与前后状态快照 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| TABLE-008 | DataTable 同范围刷新失败 | 旧行/旧计数继续可见，`feedback` 显示失败及真实可用恢复入口；不得改成空态 | 失败注入、旧行 identity、错误文案和恢复事件 | [COMPONENTS 数据表格](COMPONENTS.md#数据表格) |
+| OVERLAY-001 | 打开 Dialog | 标题和可选描述进入公开 `Dialog.Header` | 组件组合与标题 ID 关联 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
+| OVERLAY-002 | Dialog 内容较长 | 输入/内容放 `Dialog.Body`，由其及真实祖先拥有滚动 | body scrollTop、容器滚动录像 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
+| OVERLAY-003 | Dialog 有提交/取消动作 | 操作进入 `Dialog.Footer`，主次动作和键盘序列明确 | DOM slot 与 Tab/Enter/Escape 录像 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
+| OVERLAY-004 | 打开 Sheet | 标题和说明进入公开 `Sheet.Header`，不另造私有抽屉头 | 组件组合、标题可访问性 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
+| OVERLAY-005 | Sheet 内容较长 | 表单/列表进入 `Sheet.Body`，不扩大整页或裁切 footer | Sheet/body scroll 及窄屏录像 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
+| OVERLAY-006 | Sheet 有提交/取消动作 | 操作进入 `Sheet.Footer`，可达且不会被正文遮挡 | DOM slot、滚动到底及键盘录像 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
+| INPUT-001 | 输入需上下工具/附件区 | 使用 `InputGroup.Addon`，不以绝对定位覆盖 control | 正式组合 DOM 与碰撞几何 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
+| INPUT-002 | 多行输入在纵向工具布局中 | 使用 `InputGroup.Root layout="stacked"` 和 `InputGroup.Textarea` | props/Options 与垂直顺序 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
+| INPUT-003 | 多行输入需要自动增高 | 明确选择公开 `autoResize`/runtime binder；未启用者保留原生行高/滚动 | props/Options、初始高度与输入录像 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
+| INPUT-004 | autoResize 超过 maxRows | 输入框内部滚动，外层弹层和页面不随字符无限扩张 | rect/clientHeight/scrollHeight 与滚动录像 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
+| INPUT-005 | InputGroup 内部有动作按钮 | 使用公开 Addon/Button 语义，按钮保持独立 type、disabled 和回调 | DOM、键盘与点击动作计数 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
+
+## NavigationMenu、文字层级和色彩
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| NAV-001 | 菜单项存在子项并可展开 | 分支展开按钮用公开独立按钮入口，不让分支主链接被替代 | DOM role、href 与两按钮回调记录 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-002 | 菜单项有独立配置/更多动作 | 动作进入公开 action slot/callback，不冒泡触发行导航 | 点击动作计数与 location/history | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-003 | 菜单项配置右键菜单 | 右键菜单动作不触发主链接导航 | contextmenu 和导航事件日志 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-004 | 分支名长于菜单宽度 | 仅名称按 OverflowText 合同展示；折叠/展开按钮和行尾动作不被挤出 | 324px矩形、悬停录像与焦点录像 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-005 | 桌面默认展开或收起 | 使用统一324px展开、60px compact rail 默认，不写内部宽度覆盖 | computed width 与正式默认值 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-006 | 用户键盘操作菜单 | 方向键、Home/End、Enter/Space 按公开导航合同工作 | 自动化按键轨迹与 active/expanded 状态 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-007 | 菜单处于窄屏 Drawer | 只有一个可见打开入口；关闭回到原触发按钮 | 窄屏 DOM 计数、焦点前后 activeElement | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
+| COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
+| COLOR-003 | 展示警告/等待/人工介入状态 | tone 与真实状态分类逐条映射，不只用颜色传达状态 | 领域状态映射表和可访问文本 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
+| COLOR-004 | 展示错误/失败状态 | 错误语义有文本/图标辅助，不把一般信息着色成错误 | 错误来源与两主题截图 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
+| COLOR-005 | 出现删除/撤销等危险操作 | 使用公开 danger 语义；确认、权限和实际 mutation 仍归业务 owner | Item tone、公共 CSS 与确认回调 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
+| COLOR-006 | 页面存在标题/摘要/meta/disabled/help 文本 | 分别使用 DESIGN 规定文字角色和对比，不手写每页字号/颜色 | computed tokens 与角色映射 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
+| COLOR-007 | 展示数值、ID、时间或代码 | 按 DESIGN 对应文本角色呈现；不把任意正文改成 mono 或截断事实 | computed font family 与完整值 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
+
+## 刷新、身份与生命周期
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| LIFE-001 | 页面第一次加载资源 | shell/header/标题稳定存在；loading 位于数据所属区域 | DOM 时间线与首个请求 waterfall | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-002 | 已有数据同范围刷新 | 旧确认数据持续可见，局部显示 refreshing，不卸载整页/组件 | 节点 identity、快照、录屏与 Network | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-003 | 查询范围发生变化 | 旧数据清除或明确标为旧范围；不得把旧事实冒充新查询结果 | query key、范围标签和 rows 数据来源 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-004 | 刷新请求失败 | 保留上一份已确认数据、筛选草稿和局部错误/恢复入口 | 断网/HTTP错误注入及前后快照 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-005 | 同一筛选连续刷新两次 | 新请求 generation 获胜，迟到旧响应不能覆盖新结果 | 延迟响应逆序测试与最终数据断言 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-006 | 请求被取消或页面切换 | 取消的迟到结果不提交、不改变新页面状态 | AbortSignal 记录与迟到响应断言 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-007 | 同范围行值更新 | 稳定业务 key 保留行与焦点控件身份 | 更新前后 element handle/activeElement | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-008 | 刷新发生在用户输入草稿时 | 草稿值和 selectionStart/End 保持，除非对应业务明确提交 | 受控值、选区与节点身份记录 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-009 | 刷新或分页期间页面已滚动 | scrollTop/scrollLeft 不无故归零或跳到页面顶部 | document/容器滚动值前后记录 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-010 | 组件 busy/refreshing | 只禁用其不允许重入的动作，不使整页 inert 或卸载只读内容 | aria-busy/disabled 与键盘操作 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-011 | React 组件卸载或原生 controller.destroy | 该 owner 的 observer/listener/timer/request 清理且 destroy 幂等 | listener/observer 计数、destroy 调用日志 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-012 | 新身份、tenant 或资源 owner 接管 | 旧身份私密资源销毁，不让旧请求迟到污染新身份 | owner generation、缓存清理与请求序列 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-013 | 刷新开始时焦点位于表格行或表单控件 | 更新后原业务节点仍是 activeElement；只有用户操作或节点被业务合法删除时才移动焦点 | 刷新前后 activeElement 与节点 identity | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+
+## API 接入公共底座
+
+本清单的 16 项是 xui 已明确的公共业务操作，不代表所有业务/第三方 API 都须改造成这些 endpoint。OAuth/OIDC/SAML、上游模型、MCP、插件和其他领域接口继续遵循各自协议。BaseService 只能按该能力当前实际提供的 facade 使用，不能假称所有表格操作均已存在。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| API-BASE-001 | 某项目采用 xui 公共16项操作，且 BaseService 对应版本包含该项 facade | 按该能力实际存在的 BaseService 配套服务与 facade 接入，并由 xui 官方 client 发起；前端不再插入同协议转换/包装层 | 版本化服务依赖、路由注册、client 调用源码与 Network wire | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
+| API-BASE-002 | 某项目未采用 BaseService，或 BaseService 尚未提供该公共操作 | 由宿主后端在一个 facade 边界实现 PUBLIC_API wire；前端仍直接使用官方 xui client，不增加前端协议适配层 | 服务端 route/DTO projection、client 调用链与同一响应抓包 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
+| API-BASE-003 | 领域模型字段与 xui 已声明的公共 DTO 不同 | 最多在宿主后端 facade 投影一次；前端不再把领域 DTO 转成公共 DTO，也不让后端再次转换 | 唯一 mapper 调用链、前端网络 client 与响应 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
+| API-BASE-004 | 任一公共操作所需的真实服务能力不存在 | 逐项记宿主未接入/失败并标后端 owner；不以 mock、静态假响应、虚构数据或前端 adapter 记通过 | 后端路由/服务版本与逐项报告 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
+| API-BASE-005 | 前端调用任一这16项公共操作 | 由 xui 官方 client 承担 endpoint、method、query/body、envelope、解析与公开错误；不得重复实现 client 或协议解析 | 前端 call graph、模块 resolved path 与 fetch/Network 记录 | [PUBLIC_API HTTP 与查询](PUBLIC_API.md#http-与查询) · [正式入口](PUBLIC_API.md#全部正式入口) |
+| API-BASE-006 | 核验任一公共操作请求 | 逐操作对照 PUBLIC_API 中该 operation 的 method/path/query/body/credentials/header；不猜别名，不要求业务/第三方 API 改造 | 该操作的 wire fixture 与抓包逐字段比较 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
+| API-BASE-007 | 任一 HTTP 2xx 响应包含 AjaxResponse envelope | 仅 `success=true` 才是 envelope 成功；`code` 依合同作为安全整数元数据，不猜固定成功码或 payload 别名 | HTTP 200 success true/false 夹具与 UI 状态 | [PUBLIC_API HTTP 与查询](PUBLIC_API.md#http-与查询) |
+| API-BASE-008 | 任一公共操作返回非2xx、业务失败或 parser 错误 | 按该 operation 的 PUBLIC_API/runtime error kind/status/code 分支；不能把所有 API 的 403/404/409/5xx 映射成相同文案 | 对应错误注入、HttpError/state 与用户可见反馈 | [PUBLIC_API 安全错误](PUBLIC_API.md#安全错误认证与重试) |
+| API-BASE-009 | 响应 DTO 含缺失字段、额外字段、错类型或未知字段 | 严格遵循逐 adapter parser：auth 与 API-Key wire 是封闭字段合同；BusinessLog/StructuredLog 响应投影公开字段并丢弃额外内容；不能全局拒绝或允许额外字段 | 对应 runtime parser 对正负夹具的结果及实际响应字段 | [PUBLIC_API 对应 adapter/runtime](PUBLIC_API.md#全部正式入口) |
+| API-BASE-010 | 响应包含 nullable、ID 或高精度时间字段 | 按对应合同验证 null/格式/范围；ID 保留字符串精度，RFC3339Nano 时间不得经 JS Date 降到毫秒 | 边界 fixtures、原始 wire 与 UI 展示值 | [PUBLIC_API ID 编码](PUBLIC_API.md#显式实体身份编码) |
+| API-BASE-011 | 列表返回 offset total 或 StructuredLog cursor/as_of | 只显示响应确认的 total、cursor、snapshot/as_of；API-Key 要求准确 total；BusinessLog default loader 要求 total 字段存在但 null 仍是未知；StructuredLog 不得虚构 total | 原始分页响应、多页游标及 UI page facts | [PUBLIC_API 分页合同](PUBLIC_API.md#列表元数据与受控游标分页) |
+| API-BASE-012 | 任何 mutation 返回超时、断线、取消或结果未知 | xui client 不自动重放写请求；只执行该 API 明确允许的普通读取核验或用户触发只读重试 | 请求次数、取消/超时轨迹及 API 专属核验请求 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
+
+## 16 个公共 API 操作逐项检查
+
+下列每个操作独立记录三项：请求接线、成功事实、异常/权限。默认适配器的实际字段、fixture、路径可配置项和业务语义只从对应固定版本 [PUBLIC_API.md](PUBLIC_API.md) 与 runtime parser 读取；本表不另造 DTO。没有真实服务时逐项报告未接入，不构造通过证据。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| AUTH-LOGIN-REQ | 用户提交登录 | `POST /api/v1/auth/login` 只发送 username/password JSON；Accept/Content-Type 为 application/json，无 Authorization，credentials=same-origin、cache=no-store、redirect:error、无自动重试 | 浏览器 Network method/path/body/headers/credentials | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-LOGIN-OK | login 返回成功 envelope | 严格解析字段闭合的 IssuedSessionV2；Access 只在 auth owner 私有闭包内存；公开 AuthState 与 login 返回值只有 user | response fixture、AuthState keys 与 storage/log scan | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-LOGIN-ERR | login 返回拒绝或请求结果未知 | 按准确 HttpError 分支；401拒绝可保留此前确认会话；403不触发刷新；50301/50302结果未知时仅走既有 refresh→session核验，不重发login | 拒绝/503注入、Network顺序与 AuthState 时间线 | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-REFRESH-REQ | 初始化、明确 refresh 或受保护请求需要恢复 access | `POST /api/v1/auth/refresh` JSON `{}`；无 Authorization、仅同源恢复 Cookie、credentials=same-origin、no-store、redirect:error | Network method/path/body/credentials 与 Cookie | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-REFRESH-OK | refresh 返回签发 envelope | 严格解析 v2；access token 只进入 auth owner 私有内存，不进入 state/return/storage/URL/log；refresh 直接返回时只暴露用户，若由 currentUser 恢复则该调用随后完成 session 核验 | parser fixture、refresh 与 session 请求顺序、public state 和 storage scan | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-REFRESH-ERR | refresh 返回 401/409/429/503 或传输错误 | 401 按匿名恢复；409/429不自动重试；503依精确 code 保留失败/未知；不循环 bootstrap、不伪造登录 | 各类响应注入、请求次数和 AuthState | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-SESSION-REQ | 认证 owner 核对当前登录用户 | `GET /api/v1/auth/session` 带当前 session Bearer 且 credentials=omit；URL 固定同源 | Network method/path/headers/credentials | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-SESSION-OK | session 返回成功 envelope | 严格解析无秘密 AuthSessionV2；ID 按固定 encoding 保持字符串；不推断 role/tenant/permission | 真实/契约 response、AuthState 与权限数据来源 | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-SESSION-ERR | session 返回 401/403/其它错误 | 401清除当前会话；403不刷新、不重放；非403解析/传输错误维持 unknown，不伪造匿名或已认证 | 分状态码注入与 AuthState 时间线 | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-LOGOUT-REQ | 用户明确执行 logout | `POST /api/v1/auth/logout` body `{}`；不带 Authorization，仅同源恢复 Cookie；credentials=same-origin | 用户动作与 Network 请求抓包 | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-LOGOUT-OK | logout 返回 success 且 null payload | auth owner 确认 anonymous 并清理私有 access；宿主只由一个 owner 清理相关私密资源并导航 | AjaxResponse fixture、认证状态和清理/导航事件 | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| AUTH-LOGOUT-ERR | logout 拒绝或请求结果未知 | logout 已先清理本地 access，但未确认服务端退出时保留未知/错误事实；不自动重发、不宣称 cookie 已撤销 | 断线/失败注入、状态时序、请求次数与 cookie 可见事实 | [PUBLIC_API 认证会话](PUBLIC_API.md#认证会话) · [runtime/auth.ts](../packages/runtime/src/auth.ts) |
+| KEY-CAPS-REQ | API Key 管理器读取配置 | 由官方 `createApiKeyHttpAdapter` 请求 `GET /api/v1/api-keys/capabilities`；复用一个已授权 HTTP/auth owner | 调用点、Network 与 adapter 参数 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-CAPS-OK | capabilities 成功响应 | 严格 v2 解析权限、期限、默认项、确认文案和 can_create；配置来自服务，不由页面猜值 | 响应 fixture、运行时配置与控件选项 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-CAPS-ERR | capabilities 失败、无权或 schema 无效 | 能力保持未确认/不可用，不启用创建，不猜权限、期限或默认值 | 错误/schema注入与按钮状态 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-LIST-REQ | API Key 列表初读或刷新 | 官方 adapter 发 `GET /api/v1/api-keys`，`page_index` 基数0、`page_size` 按配置、`return_total=true`、`sort=id&sort_id=asc` 并按 total 完整取页 | Network query 与 pages 请求序列 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-LIST-OK | API Key 列表成功 | 解析严格 v2 ListData；ID/total准确、跨页稳定；metadata 不含 secret | response fixture、全页计数与行ID比对 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-LIST-ERR | 列表缺 total、重复ID、total变动、越预算或 HTTP/业务拒绝（含403） | 该轮读取失败，保留最近已确认列表并提示真实错误；不伪造总数/末页 | 故障响应、旧行 identity 与错误状态 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-CREATE-REQ | 用户确认并提交 API Key 创建 | `POST /api/v1/api-keys` 精确发送 name/permission_ids/expiry_id/confirmed；required/disabled/confirmed 按能力控制请求 | Network body 与表单确认事实 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-CREATE-OK | 创建返回成功 metadata 与 secret | 一次性 secret 只可经 controller 的私有结果视图读取；不进入公开状态、列表缓存、URL、storage、日志或业务 payload；关闭/pagehide/卸载清 DOM 值 | response、状态/list cache/storage/log scan 与关闭后 DOM | [PUBLIC_API 一次性值与验证边界](PUBLIC_API.md#一次性值与验证边界) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-CREATE-ERR | 创建拒绝、超时、断网或写结果未知 | 不重发创建；未知结果仅普通 list 核验一次，普通读失败保留错误；不能以同名记录证明本次提交 | 写/读请求次数与实际页面状态 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-UPDATE-REQ | 用户更新 Key 名称、权限或启用状态 | `PUT /api/v1/api-keys/{id}` 提交当前规范 ID、`expected_version`、name/permission_ids/enabled | Network path/body 与被编辑版本 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-UPDATE-OK | 更新返回成功 acknowledgement | 校验 schema_version=2、operation=update、completed=true、目标 ID 和 metadata；展示确认的版本 | 响应 fixture 与目标行版本/字段 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-UPDATE-ERR | 更新遇权限/不存在/版本冲突/未知结果 | 不覆盖更新期间服务端新版本；按准确错误处理，未知结果最多普通 list核验一次，不自动再写 | 并发冲突注入、请求数与服务器确认值 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-REVOKE-REQ | 用户明确撤销有权操作的 Key | `POST /api/v1/api-keys/{id}/revoke` body `{}`；路径 ID 与受控目标一致 | 确认动作、Network path/body | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-REVOKE-OK | revoke 返回成功 acknowledgement | 严格核验 schema_version=2、operation=revoke、completed=true 和目标 ID；按需用普通 list 读取新 metadata，不推断权限 | 响应、请求序列和最新行状态 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-REVOKE-ERR | revoke 被拒、404 或结果未知 | 按服务事实显示；不自动重发，也不把未确认状态显示为 revoked | 错误注入、行状态和请求数 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-DELETE-REQ | 用户删除管理记录 | 仅 revoked 且 capability 允许时请求 `DELETE /api/v1/api-keys/{id}/record`，无 body，动作确认独立 | 目标 metadata/capability、确认与 Network | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-DELETE-OK | 删除记录返回成功 acknowledgement | 严格核验 schema_version=2、operation=delete_record、completed=true 和目标 ID；表达为删除管理记录，不称撤销凭据 | 响应 fixture、目标ID与页面文案 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-DELETE-ERR | 删除目标未撤销、无权、找不到或结果未知 | 非 revoked 不发请求；失败/未知不冒报删除或撤销成功，未知只按明确读合同核验 | 请求计数、错误与最新列表 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| BLOG-LIST-REQ | 业务日志列表查询、筛选或 offset 翻页 | 官方 loader 发 `GET /api/v1/business-logs`；filter/page/sort 严格按固定 query contract 编码 | Network URL 与过滤/page 参数 | [PUBLIC_API 业务日志](PUBLIC_API.md#业务日志) · [runtime/business-log-http.ts](../packages/runtime/src/business-log-http.ts) · [runtime/business-log.ts](../packages/runtime/src/business-log.ts) |
+| BLOG-LIST-OK | 业务日志列表 success | 解析 AjaxResponse/ListData 且 total 字段必须存在；total=null 保持未知，不从当前页长度补值；按响应顺序展示公共业务事实 | payload fixture、total 与行内容对照 | [PUBLIC_API 业务日志](PUBLIC_API.md#业务日志) · [runtime/business-log-http.ts](../packages/runtime/src/business-log-http.ts) · [runtime/business-log.ts](../packages/runtime/src/business-log.ts) |
+| BLOG-LIST-ERR | 列表拒绝、缺 total、错类型或传输错误 | 按真实错误/合同错误显示并保留已有确认数据；响应允许的额外字段按 parser 投影丢弃，不全局因扩展字段拒绝 | 错误 fixture、parser 投影和旧行 identity | [PUBLIC_API 业务日志](PUBLIC_API.md#业务日志) · [runtime/business-log-http.ts](../packages/runtime/src/business-log-http.ts) · [runtime/business-log.ts](../packages/runtime/src/business-log.ts) |
+| BLOG-DETAIL-REQ | 用户打开一条业务日志详情 | 官方 loader 发 `GET /api/v1/business-logs/{id}`；目标由当前认证/tenant scope 约束 | 点击目标 ID 与 Network path | [PUBLIC_API 业务日志](PUBLIC_API.md#业务日志) · [runtime/business-log-http.ts](../packages/runtime/src/business-log-http.ts) · [runtime/business-log.ts](../packages/runtime/src/business-log.ts) |
+| BLOG-DETAIL-OK | 详情读取 success | 详情 event ID 等于请求目标；state=available 才呈现 payload；expired/unavailable 的 payload 必须为 null | 详情 fixture、目标 ID 与详情状态 DOM | [PUBLIC_API 业务日志](PUBLIC_API.md#业务日志) · [runtime/business-log-http.ts](../packages/runtime/src/business-log-http.ts) · [runtime/business-log.ts](../packages/runtime/src/business-log.ts) |
+| BLOG-DETAIL-ERR | 详情 HTTP 403/404、无效 DTO 或 transport error | 区分权限、当前 scope 未找到、合同/读取失败；关闭/切换目标后不保留上一条正文冒充当前记录 | 各类注入、detail state 与关闭后 DOM | [PUBLIC_API 业务日志](PUBLIC_API.md#业务日志) · [runtime/business-log-http.ts](../packages/runtime/src/business-log-http.ts) · [runtime/business-log.ts](../packages/runtime/src/business-log.ts) |
+| LOG-GROUPS-REQ | 错误观察页查询分组 | POST 到宿主明确配置的 groups endpoint；请求仅按 schema_version/filter/page 合同构造，不能猜固定产品路由 | endpoint配置、请求 body 抓包 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-GROUPS-OK | groups 返回 success | 校验 schema_version/list/group/count/page；matched_* 是服务结果，不由当前页长度推导 | 响应 fixture、计数和 UI facts | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-GROUPS-ERR | groups 返回 403/404、合同错误或 transport error | StructuredLog 按 403 forbidden、404 not_found、parser contract、其它读取错误表达；失败不伪装空列表 | 四类故障注入与 controller state | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORDS-REQ | 用户查看所有错误观察记录 | POST 到配置的 records endpoint，body 为公开 filter/page；不把详情字段置入查询 | endpoint 与实际 request JSON | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORDS-OK | records 返回 success | 只投影公共摘要字段；校验 list/page/as_of/next_cursor；无 total，后端网络列表不能携带 Detail/Stack/Related/Attributes | raw response、parser result、后端脱敏样本与 DOM | [PUBLIC_API 明确 DTO 投影](PUBLIC_API.md#明确-dto-投影) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORDS-ERR | records 返回 forbidden/not_found/contract/transport error | 保留此前确认页并报告读取失败；不能造 cursor、末页、total 或 snapshot，retry 必须用户明确触发 | 注入错误、cursor history 和请求次数 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-GROUP-RECORDS-REQ | 用户打开某个错误组的观察记录 | POST 到配置的 groupRecords endpoint；请求包含一致 filter/page 和明确 group_id | Network JSON 与当前选中组ID | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-GROUP-RECORDS-OK | groupRecords 返回 success | 响应 group ID 与所查目标相同；matched_entry_count 与 group.entry_count 保持不同事实 | 响应 fixture、组ID与两个计数 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-GROUP-RECORDS-ERR | 组记录无权/未找到/合同错误/读取错误 | 保留当前组范围并就地显示相应失败；不把其他组数据作 fallback | 错误注入、group state 与当前 rows | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORD-REQ | 用户明确查看单条错误详情 | POST 到配置的 record endpoint，body 精确为 schema_version 和 record_id；不附带组列表 filter/page | 点击目标与 Network request body | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORD-OK | record 返回 success | record.id 与目标一致；只在单记录授权响应中呈现 Detail/Stack/Related/Attributes；`details_retained=false` 表示成功读取到已过保留期事实，Detail/Stack 正文置空 | 响应 allowlist、目标ID与详情 DOM | [PUBLIC_API 详情权限与生命周期](PUBLIC_API.md#详情权限与生命周期) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORD-ERR | record 返回 403/404、contract 或 transport error | 按 403 forbidden、404 not_found、contract/transport 分类；过期由成功详情 `details_retained=false` 表示，不把404当过期 | 状态注入、detailState、正文清理记录 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+
+## 逐项浏览器验收矩阵
+
+每个相关页面/组件至少执行一条正常路径和一条错误/空/忙路径。将 viewport、文字倍率和浏览器 page zoom 分开记录；CSS `zoom`、transform、DPR、pinch 不能替代浏览器真实缩放。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| BROWSER-001 | 每个页面首次打开 | 桌面 1280px 下标题、工具、正文和页尾 slot 顺序正确且没有意外空槽 | 浏览器截图、DOM slot 标注、录屏 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-002 | 每个页面窄屏打开 | 390px 下内容无横向裁切；控件按各自公开规则换行 | viewport 记录与整页截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-003 | 页面含长中文内容 | 标题、Badge、按钮和字段帮助可完整阅读，不以省略号隐藏唯一事实 | 具体 DOM 文本、矩形和截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-004 | 页面含无空格英文标识 | 受控断行/公开 overflow 行为不遮住其他 slot | 长英文用例与 geometry | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-005 | 系统文字放大到200% | 字体以真实浏览器/页面可访问性缩放方式改变，必要区域自然增高 | browser setting、computed font 与截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-006 | 浏览器页面 zoom 设为200% | 使用浏览器真实 zoom；关键按钮、Badge、错误、footer 仍可见/可聚焦 | zoom setting、CSS viewport 与截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-007 | 主题选择 light | 每个实际页面中的文字、表面、边界、hover/focus 清晰且语义颜色一致 | computed semantic tokens 与截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-008 | 主题选择 dark | 每个实际页面中的文字、表面、边界、hover/focus 清晰且语义颜色一致 | computed semantic tokens 与截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-009 | 主题选择 system | 系统浅/深实际切换后控件状态与 contrast 仍正确 | prefers-color-scheme 设置与截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-010 | 使用键盘访问页面 | 按自然 DOM 顺序经过所有必要入口，不跳过 slot、不陷入不可见控件 | Tab/Shift+Tab 录像与 focus trace | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-011 | 聚焦按钮、输入或导航动作 | 焦点轮廓不被滚动容器/卡片/弹层裁切 | focus bounding rect 与截图 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-012 | 打开 Dialog/Sheet 内部滚动 | Tab 可达首末动作，滚动归属唯一，关闭后焦点回原触发入口 | activeElement 与各容器 scrollTop | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-013 | 用户执行 Enter/Space/箭头键 | 对应公开控件只执行一次语义操作，不同时触发行导航/表单重复提交 | event/request counter 与键盘录像 | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+| BROWSER-014 | 页面处于 reduced-motion | 非必要滚动/位移动画关闭，状态文本与静态内容完整 | media query 与 computed animation | [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) · [DESIGN 公共复用与状态矩阵](DESIGN.md#公共复用与状态矩阵) · [页面信息架构](DESIGN.md#首屏信息架构与信息密度) |
+
+## 每条检查的报告模板
+
+| ID | 对象/页面/组件实例/slot/API | 状态 | 期望 | 实际 | slot内容及owner | 视觉语义/token角色 | 排版与对齐 | 空槽行为 | 适用状态 | 滚动与焦点owner | 证据 | 责任 owner |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 示例：SHELL-015 | 资源列表 / AppShell / pageHeader | 未跑 | PageHeader.title 是唯一主标题 | 尚未执行 | 资源标题；PageHeader | page-title 语义 | 主标题与actions按合同排列 | 空描述/meta不占位 | 正常、窄屏 | 页面正文滚动 | — | 宿主 |
+
+逐项状态表应随交付保存；按章节写一段总评不能替代上表。对非 slot 的 API/页面行，slot 专用列填 `—`，不能省略实际请求/数据所有者。对于`不适用`必须在“实际”和“证据”列写出业务范围及核对依据。公共合同/slot/peer 能力缺失时填`失败`并标记 owner=`xui`；API 未接入或后端前置未提供时填`未跑`/`失败`并标明宿主后端 owner。

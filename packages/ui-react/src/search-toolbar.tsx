@@ -2,7 +2,7 @@ import * as React from 'react';
 import {Button} from './button.js';
 import {Toolbar} from './layout.js';
 import {DisclosureIndicator} from './navigation.js';
-import {cx} from './shared.js';
+import {cx,hasContent as present} from './shared.js';
 
 export type SearchToolbarProps=Omit<React.ComponentProps<'div'>,'children'> & {
   search?:React.ReactNode;
@@ -15,12 +15,7 @@ export type SearchToolbarProps=Omit<React.ComponentProps<'div'>,'children'> & {
   onExpandedChange?:(expanded:boolean)=>void;
   advancedLabel?:string;
 };
-const present=(value:React.ReactNode):boolean=>{
-  if(value===undefined||value===null||typeof value==='boolean'||value==='')return false;
-  if(Array.isArray(value))return value.some(present);
-  if(React.isValidElement<{children?:React.ReactNode}>(value)&&value.type===React.Fragment)return present(value.props.children);
-  return true;
-};
+
 /** Responsive placement and one disclosure owner. Query, values and actions stay with the host. */
 export function SearchToolbar({search,actions,advanced,defaultExpanded=false,expanded,onExpandedChange,advancedLabel='Advanced options',className,...props}:SearchToolbarProps){
   const [internal,setInternal]=React.useState(defaultExpanded),open=expanded??internal;

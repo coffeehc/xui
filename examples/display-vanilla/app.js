@@ -1,6 +1,6 @@
 import '@coffeehc/xui-theme/style.css';
-import {createTypographyHeading,createTypographyText,createTypographyLink,createTypographyCode,createSeparator,createTag,createCopyable,createImage,createOverflowText} from '@coffeehc/xui-runtime/display-dom';
-if(new URLSearchParams(location.search).has('overflow'))renderOverflow();else renderDisplay();
+import {createTypographyHeading,createTypographyText,createTypographyLink,createTypographyCode,createSeparator,createTag,createCopyable,createImage,createOverflowText,createCard} from '@coffeehc/xui-runtime/display-dom';
+if(new URLSearchParams(location.search).has('card'))renderCard();else if(new URLSearchParams(location.search).has('overflow'))renderOverflow();else renderDisplay();
 function renderDisplay(){
 
 const root=document.getElementById('root'),main=document.createElement('main');main.className='xui-stack';root.append(main);
@@ -32,4 +32,11 @@ function renderOverflow(){
  let text='很长的中文资源卡片名称：公开组件让名称独立滚动，归属标签和操作保持原位',withTarget=true,owner;
  const options=()=>({text,interactionTarget:withTarget?card:undefined}),mount=()=>{owner=createOverflowText(document,options());title.append(owner.element);owner.update(options());};mount();
  window.overflowDemo={setTitle(value){text=value;owner?.update(options());},setTarget(value){withTarget=value;owner?.update(options());},setMounted(value){if(value&&!owner)mount();else if(!value&&owner){owner.destroy();owner=undefined;}}};window.addEventListener('pagehide',()=>owner?.destroy(),{once:true});
+}
+
+function renderCard(){
+ const icon=document.createElement('span'),draft=document.createElement('input'),more=document.createElement('button'),open=document.createElement('button');icon.textContent='◇';draft.className='xui-input';draft.setAttribute('aria-label','卡片业务草稿');let calls=0;
+ for(const [button,label] of [[more,'更多'],[open,'查看资源']]){button.type='button';button.className='xui-button';button.dataset.variant='ghost';button.dataset.size='xs';button.textContent=label;button.onclick=()=>calls++;}
+ const options={title:'标准资源卡片：标题滚动与归属标签分离，正文和操作按公共槽位排列',icon,badge:{label:'公共'},actions:more,description:'这段摘要使用公共次要文字，避免把归属标签和操作混入正文。',content:draft,footerMeta:'更新于 10/15',footerActions:open};const owner=createCard(document,options);owner.element.setAttribute('aria-label','标准资源卡片');document.getElementById('root').append(owner.element);owner.update({});
+ window.cardDemo={setTitle:title=>owner.update({title}),setEmpty:value=>owner.update(value?{actions:null,description:null,content:null,footerMeta:null,footerActions:null}:{actions:more,description:options.description,content:draft,footerMeta:options.footerMeta,footerActions:open}),setBadge:value=>owner.update({badge:value?options.badge:null}),setLevel:headingLevel=>owner.update({headingLevel}),getCalls:()=>calls};window.addEventListener('pagehide',()=>owner.destroy(),{once:true});
 }

@@ -21,7 +21,9 @@ const publicAPI=await collectPublicAPI();await writeFile(`${archives}/public-api
 // Critical + floating CSS: danger added 56 gzip bytes above the 16 KiB baseline.
 // Public form/feedback composition adds 240 more; keep the bounded allowances
 // of 128 bytes for danger and 256 bytes for the new layout (16,768 total).
-const performance={budgets:{buttonMinified:65536,buttonGzip:16384,criticalCssGzip:17536,reactInitialJsGzip:131072,vanillaInitialJsGzip:16384},button:[],consumers:[]};
+// DESIGN 0.18 adds the shared Card frame and PageHeader metadata slots.
+// Allow 256 additional gzip bytes for this feature; keep JS/button budgets unchanged.
+const performance={budgets:{buttonMinified:65536,buttonGzip:16384,criticalCssGzip:17792,reactInitialJsGzip:131072,vanillaInitialJsGzip:16384},button:[],consumers:[]};
 await mkdir('.consumers',{recursive:true});
 // A fresh directory prevents npm reusing an earlier tarball with the same version.
 const runDirectory = await mkdtemp(resolve('.consumers/run-'));

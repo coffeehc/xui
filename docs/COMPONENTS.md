@@ -2,7 +2,7 @@
 
 按当前任务查阅下列章节。正式入口与类型见 [PUBLIC_API](PUBLIC_API.md)，默认视觉值与状态要求只由 [DESIGN](DESIGN.md) 定义；已执行与未测范围统一见 [VALIDATION](VALIDATION.md)。React 和原生共用公开组件与主题，公共控件不依赖消费方重写内部皮肤。
 
-项目自己的业务组合和布局按 [私有组合组件设计方法](DESIGN.md#项目私有组合组件的设计方法) 与 [页面信息呈现方法](DESIGN.md#首屏信息架构与信息密度) 设计，再从本手册选择已有能力；项目布局样式与公共控件内部皮肤分别由各自所有者维护。
+项目自己的业务组合和布局按 [私有组合组件设计方法](DESIGN.md#项目私有组合组件的设计方法) 与 [页面信息呈现方法](DESIGN.md#首屏信息架构与信息密度) 设计，再从本手册选择已有能力；项目布局样式与公共控件内部皮肤分别由各自所有者维护。实施前按 [槽位架构](DESIGN.md#页面与组件的槽位架构)逐一填写内容归属，并执行 [接入检查清单](ADOPTION_CHECKLIST.md)。
 
 按章节查阅：
 
@@ -389,6 +389,37 @@ onRemove 只发删除意图，不自动删除 DOM 或猜邻居。宿主更新其
 
 src 或显式 retryKey 改变才创建新资源；旧 img 事件不能覆盖新图。fallback 不是第二个 URL，不递归重试、不猜 CORS 代理；重试由宿主变更 retryKey 发起。原生 update 接收完整 options，校验失败不改变旧状态；destroy 断开事件并移除节点。React 更新保留外框，切换 keyed 资源隔离旧事件，卸载无迟到状态回写。SSR hydration 会读取当前 img.complete/naturalWidth，接续挂载前已完成的资源，不等待已经错过的 load/error 事件。
 
+### Card
+
+React `/display` 及根入口公开 `Card / CardProps / CardBadge / CardHeadingLevel`；原生 `/display-dom` 及根入口公开 `createCard / CardOptions / CardController`，共享类型也从 runtime `/display` 导出。CSS 使用正式 `base.css` 和已有 Surface/Badge/Toolbar 样式，完整 `style.css` 已包含。
+
+| 内容槽 | React | 原生 | 合同 |
+| --- | --- | --- | --- |
+| 名称 | title:string | title:string | 必填非空；按文本转义；独立 OverflowText，不混入 Badge/按钮 |
+| 标题层级 | headingLevel | headingLevel | 2–6，默认3；视觉为 section-title，不改变页面 h1 |
+| 图标 | icon:ReactNode | icon:Node/null | 可选装饰槽，aria-hidden；不能放交互控件 |
+| 归属/状态 | badge:{label,tone?} | 同一 CardBadge/null | 非空 label，默认 neutral；状态 tone 仅接受已有 info/success/warning/error |
+| 头部辅助动作 | actions:ReactNode | actions:Node/null | 公开 Menu trigger/按钮；与名称分离，窄屏自然换行 |
+| 摘要 | description:string | description:string/null | 可选 muted/body-sm 正文；无需额外标题或外框 |
+| 内容 | children | content:Node/null | 领域正文或公共控件；没有内容不预留 body |
+| 页尾事实 | footerMeta:ReactNode | footerMeta:Node/string/null | muted/body-xs；只放归属对象的次要事实 |
+| 页尾动作 | footerActions:ReactNode | footerActions:Node/null | 对象级主次动作；与事实分组、自然宽度、允许换行 |
+
+`Card` 自身是 section，不添加 role=button、tabIndex、路由、请求、选中或 disabled owner。交互在已有 Button/Link 中，busy/disabled 按它们的公共合同显式传入。标题 hover/focus 展示按 [OverflowText](#通用长标题)执行；卡内没有键盘动作或 reduced-motion/触屏时完整静态换行。组件只负责一层 Surface 与默认间距，宿主不复制 header/footer 布局。原生 `update(partialOptions)` 合并槽；同一 Node/已消费 Fragment 不重建，清空传 null，销毁只释放公共展示和根节点，宿主资源仍由宿主释放。React 保持正常 key/type 协调，刻意移除槽会卸载该槽。
+
+```tsx
+import {Card} from '@coffeehc/xui-react/display';
+import {Button} from '@coffeehc/xui-react/button';
+<Card title={resource.name} badge={{label:'公共'}} description={resource.summary}
+  actions={<Button variant="ghost" size="xs" onClick={openMenu}>更多</Button>}
+  footerMeta={resource.updatedLabel}
+  footerActions={<Button variant="ghost" onClick={openResource}>查看资源</Button>}>
+  {content}
+</Card>
+```
+
+双端正式消费者： [React](../examples/display-react/app.tsx) / [原生](../examples/display-vanilla/app.js) 的 `?card`；完整页面继续使用 [页面/表单/刷新](../examples/page-composition-react/app.tsx) 与 [原生](../examples/page-composition-vanilla/app.js)，两者是同一架构的组件与页面样本。
+
 ### MetricCard
 
 `MetricCard` 是一个被动统计单元，复用 `Surface` 的单层表面、现有统计文字与间距 token。多卡排列仍由调用方的 `Grid` 决定。它不拥有指标列表、请求、状态引擎、数值格式化、单位推断或业务颜色映射。
@@ -451,6 +482,8 @@ React 的 AppShell/MenuLayout 接收 ReactNode；原生 createMenuLayout 接收 
 
 Tab按真实DOM顺序经过primary（leading、品牌、导航、路径、context）、secondary（状态、actions、旧header、auxiliary、语言、主题、account），然后侧栏/正文；不使用正tabindex重排。打开抽屉仍采用原模态焦点限制；关闭回同一个顶栏菜单开关。关闭当前聚焦的语言入口会把焦点移到相邻主题按钮。槽自身交互语义/disabled/busy由其组件或宿主拥有。
 
+PageHeader 的公开 props 保持 `title/description/meta/actions`；主组 `.xui-page-header-main` 含 h1、可选 p 和 `.xui-page-header-meta`，动作放同级 `.xui-toolbar`。原生采用同一公开结构。meta 使用 muted/body-xs，空 Fragment/数组等不生成包装，长内容不撑破正文；它是页面范围事实，不重复放品牌或开发说明。
+
 ### 有界工作区与滚动所有权
 
 `scrollMode` 使用共享 `ShellScrollMode = 'document' | 'viewport' | 'workspace'`，React AppShell/MenuLayout和原生createMenuLayout完全同型。默认仍为document，旧viewport语义不变：
@@ -499,7 +532,7 @@ locale只有enabled:true才显示。value/options/onValueChange全部由现有�
 
 ### 标准列表与卡片正文
 
-现有pageHeader组合PageHeader的title/meta/actions，pageToolbar组合DataTableToolbar/DataTableFilter；workspace正文使用DataTable即可得到库维护的表体/底栏高度链。搜索只能放pageToolbar或DataTable.toolbar一处。卡片列表复用相同页槽和ScrollArea/Grid/Surface，不新增PageLayout。pageToolbar默认没有下边框且保留layout-section-gap，不再包产品整行分隔。完整合同及0/20/50/100行正式双端消费者见[DataTable](COMPONENTS.md#数据表格)。顶栏紧凑与无框语言控件见下方相邻控件合同。
+现有pageHeader组合PageHeader的title/meta/actions，pageToolbar组合DataTableToolbar/DataTableFilter；workspace正文使用DataTable即可得到库维护的表体/底栏高度链。搜索只能放pageToolbar或DataTable.toolbar一处。卡片列表复用相同页槽和ScrollArea/Grid/Card，不新增PageLayout。pageToolbar默认没有下边框且保留layout-section-gap，不再包产品整行分隔。完整合同及0/20/50/100行正式双端消费者见[DataTable](COMPONENTS.md#数据表格)。顶栏紧凑与无框语言控件见下方相邻控件合同。
 
 ### 顶栏相邻控件
 
@@ -832,7 +865,7 @@ Menu / ContextMenu 的 Item、LinkItem、CheckboxItem、RadioItem、SubmenuTrigg
 
 Dialog.Body 与 ScrollArea.Viewport 是滚动边界：两轴裁切需要给焦点外环预留 `focus-width + focus-offset` 的四边绘制空间，仅设置 scroll-padding 不够。公共 base.css 统一拥有 padding / scroll-padding 与子控件 scroll-margin；Dialog.Body 用等值负 margin 消耗 Content 已有内距，因此字段仍与标题和 footer 对齐，长正文保持有界滚动，Content 的圆角裁切不变。ScrollArea.Viewport 默认 focusMode=gutter，在自己的内容盒中留空间，不扩宽 Root；其自身键盘焦点使用 inset 指示。显式 focusMode=inset（原生 data-focus-mode=inset）把几何余量与控制项内部焦点绘制一起放在 CSS @scope 增强内，旧引擎保留 gutter；最近公共滚动边界拥有策略，嵌套默认 gutter 不被外层 edge/inset 覆盖。可聚焦的 ScrollArea.Viewport 与 TableContainer 自身使用内部焦点绘制，贴在外层零 gutter 滚动口边缘仍保持完整；其内部控制项继续采用各自边界策略。InputGroup 仍只有外层一套边框和焦点，invalid 边框不被 focus 覆盖。
 
-Surface（普通 Card）、Field、Grid 本身并不裁切：Surface 默认已有 card-padding，显式 padding=none（原生 data-padding=none）只去除此表面的内距，背景/边线/圆角保留且不增加裁切，内部卡片与控件仍保留自己的默认 padding。Card 内套 ScrollArea、Dialog/Sheet 内套 Card 与滚动表单则由对应滚动边界承担绘制空间。宿主自行增加 overflow:hidden/auto、零内距或固定窄宽度，会建立新的裁切边界；应使用正式 ScrollArea，不通过输入框逐个补丁、全局 overflow:visible、缩小 focus token 或移除 outline 处理。
+Surface（无预设内容槽的表面）、Field、Grid 本身并不裁切：Surface 默认已有 card-padding，显式 padding=none（原生 data-padding=none）只去除此表面的内距，背景/边线/圆角保留且不增加裁切，内部卡片与控件仍保留自己的默认 padding。Card 内套 ScrollArea、Dialog/Sheet 内套 Card 与滚动表单则由对应滚动边界承担绘制空间。宿主自行增加 overflow:hidden/auto、零内距或固定窄宽度，会建立新的裁切边界；应使用正式 ScrollArea，不通过输入框逐个补丁、全局 overflow:visible、缩小 focus token 或移除 outline 处理。
 
 工作区主内容贴边使用公开 [contentInset=edge](COMPONENTS.md#工作区正文贴边)，只在 workspace 生效。多行草稿与上下工具区域使用 [InputGroup stacked/Textarea](COMPONENTS.md#多行输入与上下工具区域)，唯一组表面/焦点仍由 InputGroup 拥有，不用 Surface 再套一层输入框皮肤。
 
@@ -945,7 +978,7 @@ pageToolbar 容器原本就没有常驻下边框，和下方正文之间已有 `
 
 原生同样只设置宿主 root 的公开 token，在生命周期结束时恢复宿主原值；不要查找或改写 `.xui-shell-content`：
 
-普通无边界文档页可直接使用默认 natural；只有需要显式取消有界父容器高度上限时才选择 `layout='document'`。卡片列表仍用相同 pageHeader/pageToolbar，正文复用 ScrollArea/Grid/Surface，参见消费者 cards 模式；不用另造页面骨架。
+普通无边界文档页可直接使用默认 natural；只有需要显式取消有界父容器高度上限时才选择 `layout='document'`。卡片列表仍用相同 pageHeader/pageToolbar，正文复用 ScrollArea/Grid/Card，参见消费者 cards 模式；不用另造页面骨架。
 
 ### 默认布局迁移
 

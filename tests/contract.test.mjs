@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { checkContract, checkGraph, checkStyles, generate } from '../scripts/tokens.mjs';
+import { checkContract, checkTokenLayers, checkGraph, checkStyles, generate } from '../scripts/tokens.mjs';
 const doc = await readFile('docs/DESIGN.md','utf8');
 test('complete token graph, summary and generated CSS',async()=>{checkContract(doc);await generate(true);});
 test('checker rejects cycles, missing vars, drifted front matter and system recipes',()=>{
@@ -33,8 +33,8 @@ test('Precision default, uploaded source and semantic CSS fingerprint are versio
   const source=await readFile(metadata.source.path,'utf8');
   assert.equal(createHash('sha256').update(source).digest('hex'),metadata.source.sha256);
   assert.equal(createHash('sha256').update(css).digest('hex'),metadata.defaultCssSha256);
-  assert.equal(metadata.contractVersion,'0.17.0');
-  assert.match(doc,/规范版本：0\.17\.0。/);
+  assert.equal(metadata.contractVersion,'0.18.0');
+  assert.match(doc,/规范版本：0\.18\.0。/);
   assert.equal(metadata.defaultMode,'dark');
   assert.equal(Object.keys(dark).length,metadata.defaultTokenCount);
   assert.equal(dark['--palette-canvas'],'#090b0e');
@@ -49,4 +49,14 @@ test('Precision default, uploaded source and semantic CSS fingerprint are versio
   assert.equal(light['--palette-primary'],'#0e7490');
   const boundary=/<!-- external-protocol-boundary:start -->\n([^\n]+)\n<!-- external-protocol-boundary:end -->/.exec(doc);
   assert.equal(createHash('sha256').update(boundary[1]).digest('hex'),metadata.protocolBoundarySha256);
+});
+
+test('token tiers reject reverse dependencies and direct component palette reads',()=>{
+  checkTokenLayers({'--palette-primary':'red','--action-primary':'var(--palette-primary)','--button-background':'var(--action-primary)'});
+  for (const values of [
+    {'--action-primary':'var(--button-background)'},
+    {'--palette-primary':'var(--action-primary)'},
+    {'--card-background':'var(--palette-primary)'},
+    {'--space-control-gap':'var(--card-padding)'},
+  ]) assert.throws(()=>checkTokenLayers(values),/Token layer violation/);
 });

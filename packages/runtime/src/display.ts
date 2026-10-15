@@ -35,3 +35,8 @@ export function validateImageOptions(options:ImageOptions):void {
   if(options.aspectRatio===undefined&&(options.width===undefined||options.height===undefined))throw new TypeError('Image requires width/height or aspectRatio');
   if(options.aspectRatio!==undefined&&options.height!==undefined)throw new TypeError('Choose image dimensions or aspectRatio');
 }
+
+/** Content cards are nested sections, never a second page-level heading. */
+export type CardHeadingLevel=2|3|4|5|6;
+/** Passive ownership is neutral; explicit semantic statuses use the existing Badge tones. */
+export interface CardBadge {label:string;tone?:'neutral'|'info'|'success'|'warning'|'error'}

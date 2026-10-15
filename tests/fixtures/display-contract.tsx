@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Typography,Tag,Copyable,Image,Separator,OverflowText,type OverflowTextProps,type ImageProps} from '@coffeehc/xui-react/display';
+import {Typography,Tag,Copyable,Image,Separator,OverflowText,Card,type CardProps,type OverflowTextProps,type ImageProps} from '@coffeehc/xui-react/display';
 import {createImage,createTag,createCopyable} from '@coffeehc/xui-runtime/display-dom';
 export const valid=<><Typography.Heading level={3} visualRole="section">Title</Typography.Heading><Typography.Text as="p" ref={React.createRef<HTMLParagraphElement>()}>Text</Typography.Text><Typography.Link href="/next" target="_blank" download>Native link</Typography.Link><Typography.Code value="<script>safe</script>" block/><Separator decorative/><Tag label="Passive"/><Tag label="Active" removeLabel="Remove active" onRemove={()=>{}} onRemoveFocus={button=>button.blur()}/><Image src="a.png" alt="" aspectRatio={2}/><Copyable value="explicit" writeText={async value=>{void value;}}/></>;
 // @ts-expect-error Heading level is explicit.
@@ -28,3 +28,9 @@ export const overflow=<h3><OverflowText text="长标题" interactionRef={card} r
 const unsafeOverflow=<OverflowText text="x"><button>nested</button></OverflowText>;
 // @ts-expect-error No HTML injection into the text part.
 const unsafeMarkup:OverflowTextProps={text:'x',dangerouslySetInnerHTML:{__html:'x'}};
+
+export const cardSlots=<Card title="资源" headingLevel={3} badge={{label:'公共'}} icon={<span/>} actions={<button>More</button>} description="摘要" footerMeta="时间" footerActions={<button>Open</button>}>正文</Card>;
+// @ts-expect-error The page-level heading belongs to PageHeader, not Card.
+const cardPageHeading=<Card title="x" headingLevel={1}/>;
+// @ts-expect-error Badges have a declared label/tone, not an arbitrary renderer.
+const cardBadge=<Card title="x" badge={<span>公共</span>}/>;

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {readFile} from 'node:fs/promises';
-import {AppHeader,AppShell} from '../packages/ui-react/dist/layout.js';
+import {AppHeader,AppShell,PageHeader,Section} from '../packages/ui-react/dist/layout.js';
 import {MenuLayout} from '../packages/ui-react/dist/menu-layout.js';
 
 test('workspace is opt-in for both React shell compositions; old defaults remain document',()=>{
@@ -47,4 +47,12 @@ test('workspace minimum stays opt-in through the public shell style contract',as
     const html=renderToStaticMarkup(React.createElement(Component,{...props,style:{'--layout-workspace-content-min-block-size':'var(--data-table-min-block-size)'}}));
     assert.match(html,/style="--layout-workspace-content-min-block-size:var\(--data-table-min-block-size\)"/);
   }
+});
+
+test('page and section slots omit empty fragments but preserve zero metadata',()=>{
+  const empty=React.createElement(React.Fragment,null,false,null);
+  const markup=renderToStaticMarkup(React.createElement(PageHeader,{title:'任务',description:empty,actions:empty,meta:empty}));
+  assert.doesNotMatch(markup,/<p|xui-toolbar|xui-page-header-meta/);
+  assert.match(renderToStaticMarkup(React.createElement(PageHeader,{title:'任务',meta:0})),/xui-page-header-meta">0</);
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Section,{title:empty,actions:empty},'内容')),/aria-labelledby|<header|<h2/);
 });

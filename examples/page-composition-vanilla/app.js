@@ -21,7 +21,7 @@ const filterBinding=bindSelectControl(filter);bindings.push(filterBinding);
 const toolbarRoot=el('div'),clear=button('清空筛选',owner.clear,'outline');
 const filterActions=doc.createDocumentFragment();filterActions.append(createDataTableFilter(doc,{label:'状态',control:filter}),clear);
 const toolbar=createSearchToolbar(toolbarRoot,{search:createDataTableFilter(doc,{label:'搜索任务',control:search,grow:true}),actions:filterActions});
-const header=el('header',undefined,'xui-page-header'),heading=el('div'),actions=el('div',undefined,'xui-toolbar');heading.append(el('h1','研究任务'));
+const header=el('header',undefined,'xui-page-header'),heading=el('div',undefined,'xui-page-header-main'),actions=el('div',undefined,'xui-toolbar');heading.append(el('h1','研究任务'));
 const spinner=el('span',undefined,'xui-spinner');spinner.setAttribute('aria-hidden','true');
 const refresh=button('刷新任务',()=>owner.refresh(),'outline'),create=button('创建研究任务');actions.append(refresh,create);header.append(heading,actions);
 

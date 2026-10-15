@@ -9,11 +9,11 @@ xui 提供可复用组件、主题、公共交互和已有的通用页面组合�
 1. 核对采用项目规则、工作区、固定版本与正式 exports，保护已有修改后按项目 Git 规范同步。
 2. 按项目自己的 `docs/DESIGN.md` 生成主题；xui [DESIGN](DESIGN.md) 定义公共默认值和变量合同。
 3. 在 [组件手册](COMPONENTS.md) 只读当前任务对应章节；正式入口、运行时与默认服务合同见 [PUBLIC_API](PUBLIC_API.md)。
-4. 构建并验证实际消费页面；当前已验和未验范围见 [VALIDATION](VALIDATION.md)。
+4. 按 [逐项接入检查清单](ADOPTION_CHECKLIST.md)建立每个页面/组件/API的检查记录，先核对槽位映射再构建并验证实际消费页面；当前已验和未验范围见 [VALIDATION](VALIDATION.md)。
 
 theme 提供无框架预构建 CSS/tokens；runtime 提供主题、DOM、resource、导航、HTTP/query、认证与共享页面控制器；ui-react 复用共享类型和 React/Base UI peers。宿主保管业务状态、权限、租户范围、导航条件、输入草稿与业务动作。公共组合通过数据、配置和已有 props/parts/slots/render/adapters 接入，不复制内部 DOM 或私有皮肤。
 
-HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。宿主决定领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
+HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方client；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 
 ## 固定产物与可运行示例
 
@@ -34,6 +34,7 @@ pnpm preview
 | 富条目导航 | [rich-navigation-react](../examples/rich-navigation-react/app.tsx) | [rich-navigation-vanilla](../examples/rich-navigation-vanilla/app.js) |
 | HTTP 查询 | [http-react](../examples/http-react/app.tsx) | [http-vanilla](../examples/http-vanilla/app.js) |
 | 列表/表单/详情 | [foundation-react](../examples/foundation-react/app.tsx) | [foundation-vanilla](../examples/foundation-vanilla/app.js) |
+| 标准槽位卡片（?card） | [display-react](../examples/display-react/app.tsx) | [display-vanilla](../examples/display-vanilla/app.js) |
 | 工作区 | [workspace-react](../examples/workspace-react/app.tsx) | [workspace-vanilla](../examples/workspace-vanilla/app.js) |
 | 完整表格 | [data-table-react](../examples/data-table-react/app.tsx) | [data-table-vanilla](../examples/data-table-vanilla/app.js) |
 | 高信噪比页面、表单和局部刷新 | [page-composition-react](../examples/page-composition-react/app.tsx) | [page-composition-vanilla](../examples/page-composition-vanilla/app.js) |
@@ -93,7 +94,7 @@ xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与�
 
 Dialog/Sheet 内需要指定 Popover 的挂载目标时，使用 `Popover.Content.portalProps.container`，保留公共 Content 的定位/样式接线；不要外包第二层 Portal。容器就绪、默认 keepMounted 策略及 peer 类型边界见[Popover 的 Portal 容器](COMPONENTS.md#popover-的-portal-容器)。
 
-业务流程、领域数据、业务页面和产品布局由宿主负责；领域 API、权限/tenant 与校验须可独立测试。xui 提供通用组件、公开组合、请求接入及 typed adapter/loader 边界。仅选用默认 HTTP client 或页面 adapter 时，服务须满足对应明确 wire 合同；宿主可通过 ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 或 BusinessLogLoader 连接自己的领域接口，业务 API 迁移是宿主独立任务。页面所需前置见 [默认适配器前置](PUBLIC_API.md#默认适配器的服务前置)。
+业务流程、领域数据、业务页面和产品布局由宿主负责；领域 API、权限/tenant 与校验须可独立测试。xui 提供通用组件、公开组合、请求接入及 typed adapter/loader 边界。公共 16 项服务操作必须直接使用官方 client；使用 BaseService 时保持其 facade 与 wire 合同，不使用 BaseService 时由后端一次性实现同一合同，前端不得再次转换。ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter 与 BusinessLogLoader 保留给独立领域接口、第三方协议及隔离测试，不能用来重写这 16 项的请求、响应、认证或错误语义。业务 API 迁移是宿主独立任务。页面所需前置见 [默认适配器前置](PUBLIC_API.md#默认适配器的服务前置)。
 
 贡献与采用应能说明所属层次、复用下层的方式、公开扩展点和实际构建消费。合成页面通过不代表产品迁移通过。
 
@@ -114,16 +115,9 @@ Dialog/Sheet 内需要指定 Popover 的挂载目标时，使用 `Popover.Conten
 
 接入自查必须包含前端实现正确性与适用的工程实践，不能只检查是否import了xui或颜色是否一致。统一标准只在DESIGN维护；本节规定检查方法，不另造组件规则或私有皮肤。
 
-| 检查项 | 依据与必须提供的证据 |
-| --- | --- |
-| 刷新与页面连续性 | 按[数据刷新标准](DESIGN.md#数据刷新与视图连续性)区分首次加载/同范围刷新/换范围。追踪刷新入口到请求再到渲染，连续与慢请求下核对Document请求、mount/unmount/稳定key或原生update、旧内容是否可见以及滚动/焦点/草稿；不只搜索reload字符串 |
-| 表单排版与编辑 | 先按[高信噪比页面组合](DESIGN.md#高信噪比页面组合)核对主任务/区域与公共组合，再按[表单标准](DESIGN.md#表单和响应式)检查实际容器净宽、列数/跨列、字段分组、label/control/help/error、长中文/错误对齐、动作宽度与位置、Tab和原生submit/reset语义；宽窄与200%放大给截图/几何及真实命中证据，不能仅证明DOM存在 |
-| 状态与并发 | 按[状态与生命周期](DESIGN.md#前端状态与资源生命周期)核对loading/refreshing/empty/error、确认值/草稿、乱序响应、取消及旧finally。复用已有测试或隔离样本复现失败/恢复，不以HTTP完成或本地状态更新推断业务成功 |
-| effects与释放 | 检查实际请求/订阅owner、effect依赖、监听/轮询/controller创建与释放，切换/卸载后是否仍请求或回写；区分开发StrictMode/HMR与生产行为，不靠关闭检查器、吞错或禁用HMR修问题 |
-| 交互与信息 | 按[公共状态矩阵](DESIGN.md#公共复用与状态矩阵)核对键盘、焦点、标签/错误关联、独立cell动作、busy/disabled/readOnly；按[信息呈现](DESIGN.md#首屏信息架构与信息密度)检查重复说明、空表堆叠、无法理解的协议/实现文字与用户任务的关系，保留必要风险和反馈 |
-| 可观测性能 | 用请求次数、渲染/节点记录、布局/长任务等实际证据定位异常；无性能症状不强加memo、缓存或虚拟化，不为审计添加生产埋点或第二个通用owner |
+执行 [ADOPTION_CHECKLIST](ADOPTION_CHECKLIST.md)，逐项附对象、状态、期望、实际、证据和责任owner，不再用一段“已符合最佳实践”代替。页面先列出内容到 [公开槽位](DESIGN.md#页面与组件的槽位架构)的映射；源码核对后，浏览器验证文字/色彩、空槽、宽窄/放大、焦点、请求与刷新连续性。公共API逐操作核对method/path/body、成功事实和失败/权限。
 
-每项明确通过、失败、未跑或不适用及理由，附页面/触发步骤、文件位置、对照标准、实际证据、用户影响和责任归属。正常React重新渲染不等于卸载，合法范围切换不等于错误清空；无法从截图判定的请求与生命周期行为如实记为待核实。
+每项只记通过、失败、未跑、不适用（须有业务依据）。正常React render不等于卸载，合法范围切换不等于错误清空；不能从截图判断的请求与生命周期行为记为未跑。规范给出标准，清单给出判定项，报告给出真实证据，三者职责分开。
 
 宿主调用reload、清空数据、loading条件卸载、错误key/effect等属于宿主接入问题；保持公开props、记录、稳定身份与合法生命周期后，公共组件内部仍违背标准的，提供最小复现交给xui。自查不会授权消费项目修改或增强公共组件，也不自动授权修改业务API或实施性能改造。
 
@@ -170,7 +164,7 @@ foundation 两个参考页在首屏前从sessionStorage读取一个宿主 JSON k
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
 
-`design-default-css` 是唯一受控原始值来源。生成器核对 376 个变量、全部模式依赖、前言、产品覆盖及提取字节；来源和可逆重建见[规范来源](#规范来源)。浮层只接收 peer 的 available-height、anchor-width、toast-swipe-movement-x/y 测量值，它们不是品牌 token 或缺失变量白名单。
+`design-default-css` 是唯一受控原始值来源。生成器核对全部版本化变量、全部模式依赖、前言、产品覆盖及提取字节；来源和可逆重建见[规范来源](#规范来源)。浮层只接收 peer 的 available-height、anchor-width、toast-swipe-movement-x/y 测量值，它们不是品牌 token 或缺失变量白名单。
 
 tokens.css 按规范声明 design-defaults → product-overrides → design-accessibility；组件声明位于独立的 xui-components 层。按 tokens.css 后组件样式的标准加载顺序，xui-components 首次出现于这三层之后。产品在 product-overrides 覆盖少量语义变量，design-accessibility 再落实 reduced-motion；本说明不另设 token 层或更改现有层契约。旧项目未分层 CSS 的普通声明高于所有分层声明，不能只靠导入顺序推断 xui 能覆盖旧样式。采用时显式决定旧 CSS 所在层或移除精确重复规则，再检查真实 computed style。产品覆盖在同一 document 根上；本版不支持子树独立主题。
 
@@ -188,7 +182,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.17.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.18.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 

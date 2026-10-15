@@ -1,3 +1,4 @@
+import {createCard} from '@coffeehc/xui-runtime/display-dom';
 import {createMenuLayout} from '@coffeehc/xui-runtime/menu-layout';
 import {createDisclosureController,bindSelectControl} from '@coffeehc/xui-runtime/dom';
 import {createDataTable,createDataTableToolbar,createDataTableFilter} from '@coffeehc/xui-runtime/data-table-dom';
@@ -59,7 +60,7 @@ const disclosureFeedback=element('div'),disclosureSummary=element('p','合成读
 const tableRoot=element('section');tableRoot.id='records-table';
 const tableOptions=()=>{const state=owner.getState();return {label:'合成记录表格',layout,rows:state.rows,columns:visibleColumns(),rowKey,status:state.status,filtered:state.filtered,labels:{...tableLabels,...(query.has('long-error')?{error:tableLabels.error.repeat(30)}:{}),...(query.has('no-count')?{count:()=>''}:{})},onRetry:owner.retry,striped:true,toolbar:internal&&!noSearch?toolbar:undefined,feedback:query.has('disclosure-feedback')?disclosureFeedback:query.has('nested-feedback')?feedbackTable:undefined,pagination:query.has('no-pagination')?undefined:query.has('cursor')?{mode:'cursor',nextCursor:state.nextCursor,hasPrevious:state.hasPrevious,pageSize:state.pageSize,total:state.total,pageSizeOptions,onNext:owner.next,onPrevious:owner.previous,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}:{pageIndex:state.pageIndex,pageIndexOffset:state.pageIndexOffset,pageSize:state.pageSize,total:state.total,pageSizeOptions,onPageChange:owner.page,onPageSizeChange:query.has('fixed-page-size')?undefined:owner.pageSize}};};
 const table=cards?undefined:createDataTable(tableRoot,tableOptions());
-// These classes are the documented public ScrollArea/Grid/Surface native structure.
+// These classes are the documented public ScrollArea/Grid/Card native structure.
 const cardRoot=element('div',undefined,'xui-scroll-area');cardRoot.style.blockSize='100%';cardRoot.dataset.testid='record-cards';
 const cardViewport=element('div',undefined,'xui-scroll-viewport');cardViewport.setAttribute('role','region');cardViewport.setAttribute('aria-label','合成记录卡片');cardViewport.tabIndex=0;
 const cardContent=element('div',undefined,'xui-scroll-content'),cardFeedback=element('div'),cardGrid=element('div',undefined,'xui-grid');
@@ -68,15 +69,15 @@ const retainedCards=new Map();
 function renderCards(state){
   cardRoot.setAttribute('aria-busy',String(state.busy));
   cardFeedback.replaceChildren();
-  if(state.busy){const loading=element('div',state.rows.length?tableLabels.refreshing:tableLabels.loading,'xui-state');loading.role='status';cardFeedback.append(loading);}
+  if(state.busy){const loading=element('div',state.rows.length?tableLabels.refreshing:tableLabels.loading,'xui-state');loading.role='status';loading.dataset.layout=state.rows.length?'inline':'block';cardFeedback.append(loading);}
   else if(state.status==='error'){const error=element('div',undefined,'xui-state xui-state-error');error.role='alert';error.append(element('strong',tableLabels.error,'xui-strong'),button(tableLabels.retry,()=>owner.retry(),'outline'));cardFeedback.append(error);}
   else if(state.status==='ready'&&!state.rows.length){const empty=element('div',undefined,'xui-state');empty.append(element('strong',state.filtered?tableLabels.noMatches:tableLabels.empty,'xui-strong'));cardFeedback.append(empty);}
   const keys=new Set(state.rows.map(rowKey));
-  for(const [key,card] of retainedCards)if(!keys.has(key)){card.action.onclick=null;card.node.remove();retainedCards.delete(key);}
+  for(const [key,card] of retainedCards)if(!keys.has(key)){card.action.onclick=null;card.owner.destroy();retainedCards.delete(key);}
   state.rows.forEach((row,index)=>{
     let card=retainedCards.get(row.id);
-    if(!card){const node=element('section',undefined,'xui-surface'),heading=element('h2'),meta=element('p'),action=button('查看',undefined,'link');card={node,heading,meta,action,row};action.onclick=()=>inspect(card.row);node.append(heading,meta,action);retainedCards.set(row.id,card);}
-    card.row=row;card.node.setAttribute('aria-label',`记录卡片 ${row.id}`);card.heading.textContent=row.name;card.meta.textContent=`${row.kind} · ${row.scope} · ${row.source}`;card.action.dataset.rowId=row.id;card.action.setAttribute('aria-label',`查看记录 ${row.id}`);
+    if(!card){const action=button('查看',undefined,'link'),view=createCard(doc,{title:row.name,headingLevel:2,footerActions:action});card={node:view.element,owner:view,action,row};action.onclick=()=>inspect(card.row);retainedCards.set(row.id,card);}
+    card.row=row;card.node.setAttribute('aria-label',`记录卡片 ${row.id}`);card.owner.update({title:row.name,badge:{label:row.kind},description:row.scope,footerMeta:row.source});card.action.dataset.rowId=row.id;card.action.setAttribute('aria-label',`查看记录 ${row.id}`);
     if(cardGrid.children[index]!==card.node)cardGrid.insertBefore(card.node,cardGrid.children[index]??null);
   });
 }
@@ -93,7 +94,7 @@ if(query.has('flex-host')&&!cards)flexHost.append(tableRoot);
 const shell=createMenuLayout(root,{items:[{id:'records',label:'合成记录',href:'#records',icon:'list'}],activeId:'records',label:'示例导航',scrollMode:query.has('unbounded')?'document':'workspace',headerSlots:{brand:element('strong','公共列表组合')},pageHeader,pageToolbar:internal||noSearch?undefined:toolbar,content:cards?cardRoot:query.has('flex-host')?flexHost:tableRoot});
 const unsubscribe=owner.subscribe(render);render();
 let dead=false;
-function destroy(){if(dead)return;dead=true;unsubscribe();owner.destroy();selectBindings.forEach(binding=>binding.destroy());disclosure.destroy();table?.destroy();shell.destroy();if(oldMinimum)root.style.setProperty(contentMinimum,oldMinimum,oldPriority);else root.style.removeProperty(contentMinimum);for(const control of Object.values(controls)){control.oninput=null;control.onchange=null;}for(const control of [refresh,fail,restoreButton,cancel,clear])control.onclick=null;for(const card of retainedCards.values())card.action.onclick=null;retainedCards.clear();}
+function destroy(){if(dead)return;dead=true;unsubscribe();owner.destroy();selectBindings.forEach(binding=>binding.destroy());disclosure.destroy();table?.destroy();shell.destroy();if(oldMinimum)root.style.setProperty(contentMinimum,oldMinimum,oldPriority);else root.style.removeProperty(contentMinimum);for(const control of Object.values(controls)){control.oninput=null;control.onchange=null;}for(const control of [refresh,fail,restoreButton,cancel,clear])control.onclick=null;for(const card of retainedCards.values()){card.action.onclick=null;card.owner.destroy();}retainedCards.clear();}
 window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions],setColumnView:(mode,hidden=[])=>{columnView={mode,hidden};render();}};
 if(!query.has('manual'))owner.load();
 window.addEventListener('pagehide',destroy,{once:true});

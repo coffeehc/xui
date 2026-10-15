@@ -1,6 +1,7 @@
 import {bindOverflowTextPresentation} from './overflow-text.js';
 import {createCopyController,copyableLabels,validateImageOptions,type HeadingLevel,type HeadingRole,type TextTone,type CopyableLabels,type ClipboardWriter,type CopyStatus,type ImageOptions,type ImageStatus} from './display.js';
-export type {HeadingLevel,HeadingRole,TextTone,CopyableLabels,ClipboardWriter,CopyStatus,ImageOptions,ImageSize,ImageStatus} from './display.js';
+import type {CardHeadingLevel,CardBadge} from './display.js';
+export type {CardHeadingLevel,CardBadge,HeadingLevel,HeadingRole,TextTone,CopyableLabels,ClipboardWriter,CopyStatus,ImageOptions,ImageSize,ImageStatus} from './display.js';
 export function createTypographyHeading(doc:Document,options:{level:HeadingLevel;visualRole?:HeadingRole;text:string}){if(!Number.isInteger(options.level)||options.level<1||options.level>6)throw new TypeError('Heading level must be 1–6');const element=doc.createElement(`h${options.level}`);element.className='xui-heading';element.dataset.visualRole=options.visualRole??'section';element.textContent=options.text;return element;}
 export function createTypographyText(doc:Document,options:{text:string;as?:'span'|'p';tone?:TextTone}){const element=doc.createElement(options.as??'span');element.className='xui-text';element.dataset.tone=options.tone??'default';element.textContent=options.text;return element;}
 export function createTypographyLink(doc:Document,options:{text:string;href:string;target?:string;download?:string;rel?:string}){const element=doc.createElement('a');element.className='xui-link';element.textContent=options.text;element.href=options.href;for(const key of ['target','download','rel'] as const)if(options[key]!==undefined)element.setAttribute(key,options[key]);return element;}
@@ -51,4 +52,28 @@ export function createOverflowText(doc:Document,initial:OverflowTextOptions):Ove
  const check=(next:OverflowTextOptions)=>{if(typeof next.text!=='string')throw new TypeError('OverflowText requires text');if(next.interactionTarget&&next.interactionTarget.ownerDocument!==doc)throw new TypeError('OverflowText target must share its document');};
  check(initial);track.textContent=initial.text;const owner=bindOverflowTextPresentation(element,track,()=>options.interactionTarget??null);
  return {element,update(next){if(dead)return;check(next);options=next;if(track.textContent!==next.text)track.textContent=next.text;owner.refresh();},destroy(){if(dead)return;dead=true;owner.destroy();element.remove();}};
+}
+
+/** Native equivalents of the named Card slots; Nodes retain their own callbacks/state. */
+export interface CardOptions {
+ title:string;headingLevel?:CardHeadingLevel;icon?:Node|null;badge?:CardBadge|null;actions?:Node|null;
+ description?:string|null;content?:Node|null;footerMeta?:Node|string|null;footerActions?:Node|null;
+}
+export interface CardController {
+ readonly element:HTMLElement;
+ /** Merge declared slots; pass null to clear optional content. Unchanged Nodes are retained. */
+ update(options:Partial<CardOptions>):void;
+ /** Release only the owned presentation and element; business resources remain host-owned. */
+ destroy():void;
+}
+export function createCard(doc:Document,initial:CardOptions):CardController {
+ const element=doc.createElement('section'),header=doc.createElement('header'),primary=doc.createElement('div'),icon=doc.createElement('span'),trailing=doc.createElement('div'),badge=doc.createElement('span'),actions=doc.createElement('div'),description=doc.createElement('p'),body=doc.createElement('div'),footer=doc.createElement('footer'),meta=doc.createElement('div'),footerActions=doc.createElement('div');
+ element.className='xui-surface xui-card';header.className='xui-toolbar xui-card-header';primary.className='xui-toolbar xui-card-heading';icon.className='xui-card-icon';icon.setAttribute('aria-hidden','true');trailing.className='xui-toolbar xui-card-trailing';badge.className='xui-badge';actions.className=footerActions.className='xui-toolbar xui-card-actions';description.className='xui-text xui-card-description';description.dataset.tone='muted';body.className='xui-card-body';footer.className='xui-toolbar xui-card-footer';meta.className='xui-text xui-card-meta';meta.dataset.tone='muted';primary.append(icon);trailing.append(badge,actions);header.append(primary,trailing);footer.append(meta,footerActions);element.append(header,description,body,footer);
+ let options=initial,dead=false,heading:HTMLElement|null=null;
+ const name=createOverflowText(doc,{text:initial.title,interactionTarget:element}),values=new Map<HTMLElement,Node|string|null|undefined>();
+ const slot=(host:HTMLElement,value:Node|string|null|undefined)=>{if(values.get(host)!==value){host.replaceChildren(...(value==null?[]:[typeof value==='string'?doc.createTextNode(value):value]));values.set(host,value);}host.hidden=!Array.from(host.childNodes).some(node=>node.nodeType===1?!(node as HTMLElement).hidden:!!node.textContent);};
+ const validate=(next:CardOptions)=>{const level=next.headingLevel??3;if(typeof next.title!=='string'||!next.title.trim()||!Number.isInteger(level)||level<2||level>6)throw new TypeError('Card requires a nonempty title and heading level 2–6');if(next.badge&&(typeof next.badge.label!=='string'||!next.badge.label.trim()||next.badge.tone&&!['neutral','info','success','warning','error'].includes(next.badge.tone)))throw new TypeError('Invalid Card badge');};
+ const render=()=>{const level=options.headingLevel??3;if(heading?.tagName.toLowerCase()!==`h${level}`){heading?.remove();heading=doc.createElement(`h${level}`);heading.className='xui-heading xui-card-title';heading.dataset.visualRole='section';heading.append(name.element);primary.append(heading);}slot(icon,options.icon);slot(actions,options.actions);slot(body,options.content);slot(meta,options.footerMeta);slot(footerActions,options.footerActions);description.textContent=options.description??'';description.hidden=!options.description;badge.hidden=!options.badge;if(options.badge){badge.textContent=options.badge.label;badge.dataset.tone=options.badge.tone??'neutral';}trailing.hidden=badge.hidden&&actions.hidden;footer.hidden=meta.hidden&&footerActions.hidden;name.update({text:options.title,interactionTarget:element});};
+ try{validate(options);render();}catch(error){name.destroy();throw error;}
+ return {element,update(next){if(dead)return;const merged={...options,...next};validate(merged);options=merged;render();},destroy(){if(dead)return;dead=true;name.destroy();element.remove();}};
 }

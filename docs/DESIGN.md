@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：0.17.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：0.18.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### 简单、简洁、灵动、快速
 
@@ -143,7 +143,7 @@ components:
 分为三层：通用基础定义语义 token、尺度、状态与可访问性；框架适配负责 CSS 映射及公共控件；产品扩展负责领域状态、内容、画布和图表。适配和产品扩展依赖基础，基础不能依赖业务路由、专属状态或框架 API。不同项目可以各自实现，无须共享一个运行时包。
 
 <!-- external-protocol-boundary:start -->
-xui的默认HTTP客户端与页面adapter只约束选用它们时对应的明确wire合同，不要求宿主所有普通业务API统一协议；宿主可通过typed ResponseAdapter、ErrorResponseAdapter、ApiKeyAdapter或BusinessLogLoader连接领域能力，业务API迁移由宿主独立决定。行业标准优先：OAuth2/OIDC/SAML等保留其标准协议，第三方按对方API、状态码、请求、响应与错误格式对接，由宿主在明确边界转换，不强制第三方返回AjaxResponse。正常领域adapter不属于等待删除的旧协议兼容层。
+xui公共服务操作按正式wire统一接入：使用BaseService时直接接对应已存在的facade与xui官方client/HTTP adapter；不使用BaseService时由宿主后端在一个facade边界实现同一wire，前端直接调用官方client，不再增加字段、成功语义、认证或重试的兼容转换。范围是认证4项、平台Key6项、业务日志2项和程序错误观察4项，逐项见ADOPTION_CHECKLIST；仅选择业务需要的模块。后端前置缺失时报告未接入，UI范围授权不包含擅自迁移后端。普通领域API、OAuth2/OIDC/SAML和第三方继续遵循自己的协议，typed ResponseAdapter/ErrorResponseAdapter等公开扩展保留用于这些边界、独立展示及测试；不能用它们绕过上述公共服务验收。
 <!-- external-protocol-boundary:end -->
 
 业务逻辑拥有权限、请求、执行、校验、保存与错误事实；展示组件只映射真实状态。不得从颜色、类名或 hover 推断业务含义。视觉迁移保留现有功能、信息、品牌标识和页面骨架；布局或业务需求的变更须在其授权范围内评审，不能借样式统一改变数据、聚合、认证或动作时机。
@@ -189,6 +189,14 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
 根元素data-theme为light或dark时强制对应主题；缺省为dark，只有显式system由CSS跟随系统。产品已有class/原生主题API可在实施层映射这一契约，不要求更换存储格式。主题分支只切换调色板、配方和浮层阴影；产品覆盖置于product-overrides层，因此不被更具体的默认dark选择器覆盖。design-accessibility层在产品覆盖后落实减少动效。普通未分层CSS优先于分层CSS，应避免旧全局声明意外接管规范值。
 
 默认声明和产品覆盖都作用于同一根元素。CSS变量继承的是已求值结果：需要子树主题时，必须在该作用域重新声明相关派生角色，不只覆盖子节点基础值就假定祖先别名全部重算。层叠与求值遵守[CSS变量规范](https://www.w3.org/TR/css-variables-1/#using-variables)和[CSS层叠规范](https://www.w3.org/TR/css-cascade-5/#layer-order)。
+
+### 三层Token的工程约束
+
+三层是依赖关系，不要求引入 Tailwind、Vue 或第二份调色板。第一层 `palette-* / base-*` 只供主题编排；第二层定义颜色、文字、空间、布局、动效和焦点语义；第三层定义有独立调整需要的组件参数。层内复用必须无环，语义层不能反向依赖某个组件，组件参数不能跳过语义层直接引用调色板。历史名称 `input-surface` 及表格 background/foreground 是第二层语义角色；名称兼容不改变其职责。
+
+默认值只有本文件一份，生成 CSS 后由 React 与原生共同消费。`scripts/tokens.mjs` 在生成和检查时验证依赖方向、完整图、浅深/system 配方与来源指纹；设计值守卫检查组件、示例中的原始色值和私造尺度。新增 token 必须说明角色、依赖、覆盖范围及两主题行为，不按每个页面/slot 再造变量。主题 owner 仍负责 sessionStorage 与首屏；组件不各自读 storage 或判断主题。
+
+[Stitch 架构参考](design-sources/stitch-token-architecture.v1.txt)提供三层 Token、自包含组件与视图连续性的方向；实际合同采用本文件已公开名称、尺度、三模式和无障碍规则。参考中的原始色值不替换现有品牌；普通正文不统一 mono，不新增 10/11px 提示角色；密码显隐保留键盘入口、label/错误关联，密码评分沿用公开建议而非安全熵事实。错误可自然增高或使用已有反馈槽，不能绝对定位遮住字段；管理员创建后的认证与导航由真实宿主事实决定，不内置自动登录承诺。
 
 ### 默认 CSS 变量（可直接提取）
 
@@ -487,6 +495,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     /* shell-role-tokens:start */
     --nav-sidebar-width: calc(var(--nav-item-height) * 9);
     --nav-row-first-line-height: max(var(--nav-item-height), var(--button-height), calc(var(--line-height-body-sm) + var(--space-text-gap) * 2 + var(--line-width-surface) * 2));
+    --card-title-min-inline-size: calc(var(--control-height) * 3);
     --text-overflow-scroll-delay: calc(var(--motion-duration-fast) * 4);
     --text-overflow-scroll-speed: 40;
     --nav-label-scroll-delay: var(--text-overflow-scroll-delay);
@@ -985,6 +994,34 @@ xui既提供控件，也定义它们如何形成清楚的任务界面。每个�
 验收清单：在所有声明视口首次进入/刷新，不滚动截图；核对关键内容和主操作完整可见；真实点击主操作；使用键盘及触屏方式打开说明、关闭并回焦点；触发相关错误/风险反馈；检查长值、空/加载状态与200%缩放可达性。必要的缩放可滚动阅读不等于默认视口首屏失败，但不能用改缩放作为首屏过关手段。未声明核心内容或未验证支持视口，不算完成首屏验收。
 
 
+### 页面与组件的槽位架构
+
+layout 是从页面壳到控件内部的公共结构合同。每段内容先确定归属，再选择公开 slot/part；slot 的顺序、宽度约束、文字角色、着色、空态与滚动由 xui 维护，宿主提供事实、可访问名称、领域内容和动作。不能仅引入 Input/Button 后在外面重新组织同职责的通用页面或组件皮肤。公开 slot 中的领域内容仍须遵循本表，任意 JSX/Node 并不自动证明合规。
+
+每个采用页面在实施前记录“内容 → 公共入口.slot/part → 文字/颜色角色 → 状态 → 滚动 owner → 检查 ID”，以固定版本类型为准。没有合适 slot 时列为 xui 公共缺口，不穿透私有 DOM/CSS。纯领域画布/编辑器等保留自己的内容和布局；不能用这种例外重写已有通用框架。槽位是布局 API，不将内部类名全部升级为可覆盖 API；原生只使用组件手册明确公开的结构。
+
+| 层/区域 | 内容与公开归属 | 呈现与着色 | 空槽、状态与滚动 |
+| --- | --- | --- | --- |
+| 应用壳 | AppShell/MenuLayout 的 headerSlots、sidebarHeader/sidebar/sidebarFooter、pageHeader/pageToolbar/children/pageFooter | 顶栏与侧栏用 shell 表面；主内容用 canvas；全局动作与页面动作分开 | 一个导航/主题 owner；正文容器稳定，模式与焦点见布局手册 |
+| 应用顶栏 | leading=平台区域、brand=品牌、breadcrumb=路径、context=工作区；status=真实状态、actions=全局动作、auxiliary=辅助、account=账号 | 品牌/路径为正文，状态按真实 tone；辅助与账号不抢页面主动作 | 缺失扩展不占位；保留唯一导航、主题和显式启用的语言入口 |
+| 页面标题 | PageHeader.title/description/meta/actions | title 唯一 h1/page-title；description 为 muted/body-sm；meta 为 muted/body-xs；actions 中 primary 为任务主操作 | 描述/meta/动作空则无包装；长标题换行，动作整组换行，不把刷新状态写进标题 |
+| 页面工具 | pageToolbar 或 DataTable.toolbar 中的 SearchToolbar.search/actions/advanced | 搜索与常用筛选、动作、展开筛选各居其槽；默认中性，真实异常另用反馈 | 每组工具只有一个位置；高级筛选按需打开，焦点/草稿保持 |
+| 内容章节 | Section.title/actions/children | 章节 h2/section-title，局部动作 ghost/outline，内容不额外加卡片边框 | 没有标题/动作时不生成空头部；正文自然延展 |
+| 资源卡片 | Card.title/icon/badge/actions/description/children/footerMeta/footerActions | title 语义 h2–h6、section-title；icon 装饰；归属 badge 默认 neutral；description muted/body-sm；footerMeta muted/body-xs；更多动作在头部、对象动作在页尾 | 一层 Surface；标题用 OverflowText，badge/动作独立；空槽折叠，header/footer 空间不足换行；卡片不成为伪按钮 |
+| 指标与详情 | MetricCard.label/value/marker；详情用 dl 或公开展示组件 | 名称 muted/body-xs、值 metric/mono/tabular；marker 只承载真实状态。普通详情不每字段套 Card | 未知用明确占位而非 0；数值完整，标记不挤压主值 |
+| 表单组 | Fieldset.legend、FormGrid.Item、FormActions.secondary/children | 语义分组、最多两列；长内容跨列；主次动作按所属表单排列 | 净宽决定列数；草稿独立于查询；提交错误在所属反馈区 |
+| 字段 | Field.label/children/help/error；InputGroup.Addon/控件/动作 | label 为字段名，help 为 muted，error 为 error 文本；单层输入边界；单位就近展示 | required/invalid/describedby 真实关联；长错误自然换行，焦点和输入节点保持 |
+| 表格 | DataTable.toolbar/columns、emptyState/errorState/feedback/footer、受控 pagination | 对象主列、技术值、状态 Badge 与行操作按各自语义；唯一计数/分页 | 首次加载在数据区；刷新保留行；表内横滚和既有 sticky，不用外框遮罩 |
+| 弹层 | Dialog/Sheet.Header/Title/Description、Body、Footer | 标题与说明分开，body 负责长内容，footer 放所属 FormActions | 开关只改可见性；正常 body 滚动、极端高度公共回退；关闭返回真实触发入口 |
+| 导航/菜单 | NavigationMenu 的 items[].label/icon、renderLabel/renderAction 与公开渲染/事件扩展；Menu/ContextMenu 的 Item/Icon/Separator | 选中由真实 active/expanded，危险项使用 danger，图标继承语义色 | 独立分支和动作不导航；disabled 不执行；键盘及长名称由公共组件管理 |
+| 原子控件 | Button/Link/IconButton 的内容与事件；Checkbox/Switch/Toggle/Radio 的标签与状态；Select/Combobox/Command 的公开 parts | 动作、选中、禁用、只读、错误分别映射已有语义，不依靠颜色推断业务 | 不给所有控件添加同一套 slot；保留原生/peer 表单与键盘语义 |
+| 披露与时间 | Tabs/Disclosure/Accordion 的 trigger/content；Calendar 和 DateTimePicker 的已选值、查看月份及受控事件 | 当前选项与展开状态明确；时间按分钟墙上时间/ISO 日期合同，时区归宿主 | 焦点连续，日期/月份事件独立；不隐式截断精度或转换时区 |
+| 反馈/媒体 | DataRegion.children/feedback；Alert/Toast；Typography/Copyable/Tag/Image | 临近相关操作的状态、错误、一次性反馈；文案/图像来源真实，复制/删除有明确入口 | 状态不重挂 children；图片预留真实比例；被动文本不增 Tab stop；通知只有一个 owner |
+
+组件的详细 part 名称、React/native 差异和替换生命周期以 [COMPONENTS](COMPONENTS.md) 为准，公开入口以 [PUBLIC_API](PUBLIC_API.md) 为准；上表不发明所有控件共有的万能 renderSlot。完整判定按 [逐项清单](ADOPTION_CHECKLIST.md) 每个对象逐条记录，通过、不适用、失败、未跑分别报告。宿主填错 slot、私自着色或重复 owner 属于接入失败；公共类型和合法内容仍无法满足矩阵时属于 xui 缺口。
+
+状态的统一边界：布局组件不请求、不缓存、不猜权限；交互组件拥有局部 focus/open/checked 等公开状态；resource/auth/业务 controller 拥有请求与确认事实。`busy` 不等于 `disabled`，`readOnly` 不等于 `disabled`，错误不等于空数据。正常 React render/原生 update 是更新，切换 key、清空 DOM 或条件卸载是重建，不能用后者实现同范围刷新。刷新与范围切换、取消、失败恢复按下方连续性合同执行。
+
 ### 表单和响应式
 
 标准业务表单按自身容器净宽采用一列或最多两列，普通每列至少240px、长路径至少288px、gap16px。普通两列需净宽496px；长字段两列592px。不能按整个视口宽度把抽屉字段挤成窄列。标签、控件、帮助、错误依次排列；相邻字段从顶部对齐，普通/invalid 控件顶部差不超过1px，不以帮助文案长度撑偏控件。
@@ -1374,7 +1411,7 @@ React 使用 layout/forms/feedback 正式子入口；原生使用同名公开 CS
 
 验收覆盖连续刷新、慢请求、刷新失败和恢复；检查Network是否出现主Document导航，检查页面壳/未变化记录的节点身份和组件mount/unmount，记录前后滚动、焦点与草稿是否保持。截图只能证明某一帧，不能独自证明没有闪烁或重挂。开发期HMR/依赖预构建导致的文档刷新与产品刷新分开归因，必要时在正式构建复现，不通过关闭HMR/StrictMode掩盖问题。
 
-LoadingState layout=inline 复用既有 Spinner 与一个 status 文本，无块级大留白或整块进入动效；DataTable 有行刷新使用该表现，已有表体与正常流底栏保持，首次无数据仍使用表体内加载状态。DataRegion feedbackLayout=flow 的空反馈不占空间，出现反馈后按自然高度进入文档流，不另造固定高度滚动槽；默认 reserved 保持兼容。两者只负责呈现，不持有请求或自动重试；DataTable 的底栏反馈仍由 DataTable 维护，不叠加外层反馈、计数或横滚容器。移动端可由宿主用同一确认数据组合 Surface/Stack 卡片，也可保留语义表格在表体内横滚；不把私有 tr 改造成卡片，不为适配复制查询 owner。
+LoadingState layout=inline 复用既有 Spinner 与一个 status 文本，无块级大留白或整块进入动效；DataTable 有行刷新使用该表现，已有表体与正常流底栏保持，首次无数据仍使用表体内加载状态。DataRegion feedbackLayout=flow 的空反馈不占空间，出现反馈后按自然高度进入文档流，不另造固定高度滚动槽；默认 reserved 保持兼容。两者只负责呈现，不持有请求或自动重试；DataTable 的底栏反馈仍由 DataTable 维护，不叠加外层反馈、计数或横滚容器。移动端可由宿主用同一确认数据组合 Card/Grid 卡片，也可保留语义表格在表体内横滚；不把私有 tr 改造成卡片，不为适配复制查询 owner。
 
 ### 前端状态与资源生命周期
 
