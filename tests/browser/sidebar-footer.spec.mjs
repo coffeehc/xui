@@ -35,7 +35,7 @@ async function assertIdentity(page){expect(await page.evaluate(()=>window.sideba
 
 for(const kind of ['react','vanilla']){
   for(const mode of ['light','dark','system'])for(const collapsed of [false,true])test(`${kind} ${mode} ${collapsed?'compact':'expanded'} footer stays at the bottom with complete action names`,async({page},info)=>{
-    await setup(page,kind,`?collapsed=${collapsed}`,mode);await expect(action(page)).toBeVisible();const toggle=page.locator('.xui-shell-header .xui-shell-toggle');await expect(toggle).toHaveAccessibleName(collapsed?'展开导航':'紧凑导航');await expect(toggle).toHaveAttribute('aria-expanded',String(!collapsed));await expect(sidebar(page).locator('.xui-menu-compact-toggle:visible')).toHaveCount(0);
+    await setup(page,kind,`?collapsed=${collapsed}`,mode);await expect(action(page)).toBeVisible();const toggle=page.locator('.xui-shell-toggle');await expect(toggle).toHaveAccessibleName(collapsed?'展开导航':'紧凑导航');await expect(toggle).toHaveAttribute('aria-expanded',String(!collapsed));await expect(sidebar(page).locator('.xui-menu-compact-toggle:visible')).toHaveCount(0);
     const rail=await bounds(sidebar(page)),bottom=await bounds(footer(page)),menuBox=await bounds(menu(page));
     expect(rail.width).toBeCloseTo(collapsed?60:216,1);within(bottom,rail);expect(Math.abs(rail.bottom-bottom.bottom-12)).toBeLessThanOrEqual(1);expect(menuBox.bottom).toBeLessThanOrEqual(bottom.y+1);
     expect(menuBox.scrollHeight).toBeLessThanOrEqual(menuBox.clientHeight+1);expect(bottom.scrollHeight).toBeLessThanOrEqual(bottom.clientHeight+1);
@@ -48,11 +48,11 @@ for(const kind of ['react','vanilla']){
     if(mode==='system'){await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');await capture(page,info,`system-light-${collapsed?'compact':'expanded'}`);}
   });
 
-  test(`${kind} one header toggle owns desktop keyboard collapse and narrow drawer semantics`,async({page},info)=>{
-    await setup(page,kind);const toggle=page.locator('.xui-shell-header .xui-shell-toggle');await expect(toggle).toHaveCount(1);await expect(toggle).toHaveAccessibleName('紧凑导航');await expect(toggle).toHaveAttribute('aria-expanded','true');await expect(sidebar(page).locator('.xui-menu-compact-toggle:visible')).toHaveCount(0);
+  test(`${kind} one owned toggle belongs to the desktop sidebar and opens the narrow drawer`,async({page},info)=>{
+    await setup(page,kind);const toggle=page.locator('.xui-shell-toggle');await expect(toggle).toHaveCount(1);await expect(sidebar(page).locator('.xui-shell-toggle')).toHaveCount(1);await expect(page.locator('.xui-shell-header .xui-shell-toggle')).toHaveCount(0);await expect(toggle).toHaveAccessibleName('紧凑导航');await expect(toggle).toHaveAttribute('aria-expanded','true');await expect(sidebar(page).locator('.xui-menu-compact-toggle:visible')).toHaveCount(0);
     await toggle.focus();await page.keyboard.down('Space');await expect(toggle).toHaveAttribute('data-pressed','true');await page.keyboard.up('Space');await expect(toggle).toBeFocused();await expect(toggle).toHaveAccessibleName('展开导航');await expect(toggle).toHaveAttribute('aria-expanded','false');expect((await bounds(sidebar(page))).width).toBeCloseTo(60,1);
-    await page.keyboard.press('Enter');await expect(toggle).toBeFocused();await expect(toggle).toHaveAttribute('aria-expanded','true');expect((await bounds(sidebar(page))).width).toBeCloseTo(216,1);await page.keyboard.press('Tab');await expect(page.locator('.xui-theme-mode-toggle')).toBeFocused();await page.keyboard.press('Tab');await expect(nav(page,'overview')).toBeFocused();
-    await page.setViewportSize({width:390,height:844});await expect(toggle).toHaveAccessibleName('工作导航');await expect(toggle).toHaveAttribute('aria-expanded','false');await toggle.focus();await page.keyboard.press('Enter');await expect(drawer(page)).toBeVisible();await expect(toggle).toHaveAttribute('aria-expanded','true');expect(await toggle.evaluate(node=>{const target=document.getElementById(node.getAttribute('aria-controls'));return target?.getAttribute('role')==='dialog'||target?.tagName==='DIALOG';})).toBe(true);await expect(page.locator('nav[aria-label="工作导航"]')).toHaveCount(1);await page.keyboard.press('Escape');await expect(toggle).toBeFocused();await expect(toggle).toHaveAttribute('aria-expanded','false');await capture(page,info,'header-toggle-responsive-keyboard');
+    await page.keyboard.press('Enter');await expect(toggle).toBeFocused();await expect(toggle).toHaveAttribute('aria-expanded','true');expect((await bounds(sidebar(page))).width).toBeCloseTo(216,1);await page.keyboard.press('Shift+Tab');await expect(page.locator('.xui-theme-mode-toggle')).toBeFocused();await page.keyboard.press('Tab');await expect(toggle).toBeFocused();await page.keyboard.press('Tab');await expect(nav(page,'overview')).toBeFocused();
+    await page.setViewportSize({width:390,height:844});await expect(toggle).toHaveAccessibleName('工作导航');await expect(page.locator('.xui-shell-header .xui-shell-toggle')).toHaveCount(1);await expect(sidebar(page).locator('.xui-shell-toggle')).toHaveCount(0);await expect(toggle).toHaveAttribute('aria-expanded','false');await toggle.focus();await page.keyboard.press('Enter');await expect(drawer(page)).toBeVisible();await expect(toggle).toHaveAttribute('aria-expanded','true');expect(await toggle.evaluate(node=>{const target=document.getElementById(node.getAttribute('aria-controls'));return target?.getAttribute('role')==='dialog'||target?.tagName==='DIALOG';})).toBe(true);await expect(page.locator('nav[aria-label="工作导航"]')).toHaveCount(1);await page.keyboard.press('Escape');await expect(toggle).toBeFocused();await expect(toggle).toHaveAttribute('aria-expanded','false');await capture(page,info,'sidebar-toggle-responsive-keyboard');
   });
 
   for(const scroll of ['viewport','document'])test(`${kind} ${scroll} long menu scrolls independently and never covers the footer`,async({page},info)=>{
@@ -99,7 +99,7 @@ for(const kind of ['react','vanilla']){
   });
 
   test(`${kind} one responsive drawer keeps the exact footer nodes and restores its trigger`,async({page},info)=>{
-    await setup(page,kind,'?collapsed=true');await remember(page);await page.setViewportSize({width:390,height:844});const trigger=page.locator('.xui-shell-header .xui-shell-toggle');await expect(trigger).toHaveAccessibleName('工作导航');
+    await setup(page,kind,'?collapsed=true');await remember(page);await page.setViewportSize({width:390,height:844});const trigger=page.locator('.xui-shell-toggle');await expect(trigger).toHaveAccessibleName('工作导航');
     for(let count=0;count<2;count++){
       await trigger.click();await expect(drawer(page)).toBeVisible();await expect(trigger).toHaveAttribute('aria-expanded','true');await expect(action(page)).toBeVisible();await assertIdentity(page);
       await expect(drawer(page).locator('.xui-shell-sidebar-footer')).toHaveCount(1);await expect(page.locator('nav[aria-label="工作导航"]')).toHaveCount(1);await expect(action(page)).toHaveAccessibleName(actionName);
@@ -144,7 +144,7 @@ for(const footerKind of ['original','none'])test(`vanilla opening ${footerKind==
   await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));
   await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await expect(nav(page,'settings')).toHaveAttribute('tabindex','0');await expect(nav(page,'overview')).toHaveAttribute('tabindex','-1');
   await page.evaluate(()=>{window.drawerMenuFocus=[];document.addEventListener('focusin',event=>{if(event.target.matches('[data-menu-control]'))window.drawerMenuFocus.push(event.target.dataset.menuId);});});
-  const trigger=page.locator('.xui-shell-header .xui-shell-toggle');
+  const trigger=page.locator('.xui-shell-toggle');
   for(let count=0;count<2;count++){
     await page.evaluate(()=>{window.drawerMenuFocus=[];});await trigger.click();await expect(drawer(page)).toBeVisible();await assertMenuTarget(page,'settings');await expect(nav(page,'overview')).toHaveAttribute('tabindex','-1');
     // Even transient focus of overview corrupts roving state and can run host
@@ -158,7 +158,7 @@ for(const footerKind of ['original','none'])test(`vanilla opening ${footerKind==
 });
 
 test('vanilla live navigation focus takes priority over selection and survives drawer reopening',async({page})=>{
-  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});const trigger=page.locator('.xui-shell-header .xui-shell-toggle');await trigger.click();await assertMenuTarget(page,'overview');
+  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});const trigger=page.locator('.xui-shell-toggle');await trigger.click();await assertMenuTarget(page,'overview');
   await page.keyboard.press('ArrowDown');await assertMenuTarget(page,'library');
   await page.evaluate(()=>window.sidebarFooterDemo.update({activeId:'settings'}));
   await expect(nav(page,'settings')).toHaveAttribute('aria-current','page');await expect(nav(page,'settings')).toHaveAttribute('tabindex','-1');await assertMenuTarget(page,'library');
@@ -170,7 +170,7 @@ test('vanilla live navigation focus takes priority over selection and survives d
 });
 
 test('vanilla an initially empty drawer focuses its close fallback and restores the trigger',async({page})=>{
-  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});await page.evaluate(()=>window.sidebarFooterDemo.update({items:[],activeId:null}));const trigger=page.locator('.xui-shell-header .xui-shell-toggle');
+  await setup(page,'vanilla','?collapsed=true','light',{width:390,height:844});await page.evaluate(()=>window.sidebarFooterDemo.update({items:[],activeId:null}));const trigger=page.locator('.xui-shell-toggle');
   for(let count=0;count<2;count++){
     await trigger.click();await expect(drawer(page)).toBeVisible();await expect(roving(page)).toHaveCount(0);await expect(action(page)).toBeVisible();
     const close=page.getByRole('button',{name:'关闭导航',exact:true});await expect(close).toBeFocused();await page.keyboard.press('Tab');await expect(action(page)).toBeFocused();await page.keyboard.press('Shift+Tab');await expect(close).toBeFocused();
@@ -179,7 +179,7 @@ test('vanilla an initially empty drawer focuses its close fallback and restores 
 });
 
 test('vanilla reopening a long drawer keeps the focused first item visible instead of scrolling to selection',async({page})=>{
-  await setup(page,'vanilla','?list=long&collapsed=true','light',{width:390,height:844});const trigger=page.locator('.xui-shell-header .xui-shell-toggle');await trigger.click();await assertMenuTarget(page,'record-79');
+  await setup(page,'vanilla','?list=long&collapsed=true','light',{width:390,height:844});const trigger=page.locator('.xui-shell-toggle');await trigger.click();await assertMenuTarget(page,'record-79');
   await page.keyboard.press('Home');await assertMenuTarget(page,'record-0');await expect(nav(page,'record-79')).toHaveAttribute('aria-current','page');within(await bounds(nav(page,'record-0')),await bounds(menu(page)));
   for(let count=0;count<2;count++){
     await page.keyboard.press('Escape');await expect(drawer(page)).toBeHidden();await expect(trigger).toBeFocused();await expect(nav(page,'record-0')).toHaveAttribute('tabindex','0');

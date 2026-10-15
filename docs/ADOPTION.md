@@ -182,7 +182,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.11.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 0.12.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 
@@ -193,3 +193,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖重新优化和文档刷新。宿主按实际使用的公开入口设置 `optimizeDeps.include`，保留框架插件及 React/ReactDOM/Base UI 的 `resolve.dedupe`；不要全量扫描、禁 HMR 或等待固定时间掩盖原因。分别记录冷/暖 cache 的 optimizer/HMR 日志、主 Document 请求和 shell identity，区分文档刷新与同文档路由。可重复的合成对照见 [Vite 冷启动测试](../tests/cold-start/vite.test.mjs)，不能代替产品现场归因。
 
 菜单从首次可操作时接同一 router owner。`canNavigate=false` 和缺少 adapter 都表示放行原生导航，不能当作路由 pending 的阻止开关；未就绪由真实 disabled 状态或已接管的 navigate 处理。保留修改键、中键、target/download、回退前进和宿主的滚动恢复，不以 route key 重挂整个 shell。
+
+桌面导航收起/展开控件由AppShell/MenuLayout放在侧栏内部，窄屏在顶栏保留同一“打开导航”入口。宿主仅接既有collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange及名称，不复制按钮或穿透DOM搬位置。已接旧固定版本的消费项目应按授权升级正式包后获得默认布局修正，不能将新规范当成已安装能力；见[导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
+
+正式CSS的基础作用域必须落实：应用根容器（常用body）使用公开 `class="xui"`；弹层由公共组合生成 `.xui-layer`。基础border-box、字号和焦点规则作用于这些范围，单独import style.css但省略作用域不能视为完成接入。独立消费者不能依赖其他项目的Tailwind preflight恰好补齐缺失规则，也不能仅量外框就宣称Input/Textarea没有溢出；核对控件自身的box-sizing和实际边界。不要用私有宽度补丁替代这一公开前提。

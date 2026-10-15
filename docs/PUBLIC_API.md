@@ -628,6 +628,10 @@ useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/�
 
 React `/menu-layout` 的 `NavigationMenuProps`/`MenuLayoutProps` 继承 runtime `/navigation` 的 `NavigationMenuOptions`：`expandBranchLabel?:(item:NavigationItem)=>string`、`collapseBranchLabel?:(item:NavigationItem)=>string` 分别生成带 href 分支的独立展开/收起按钮可访问名称。原生 `createNavigationMenu`/`createMenuLayout` 使用相同字段；各自根入口同样公开。默认英文带真实条目名保持兼容，语言/条目/受控展开更新规则与两端示例见[导航富条目合同](COMPONENTS.md#富条目独立行尾动作与上下文菜单)。这些字段不接管整体导航的 `expandLabel`/`compactLabel`，也不创建 i18n owner。
 
+## 导航收起与展开
+
+AppShell/MenuLayout 与 runtime/createMenuLayout 的唯一导航开关由公共组件定位：桌面在侧栏内部，窄屏在顶栏打开隐藏导航；宿主继续使用既有collapsed/defaultCollapsed/onCollapsedChange及sidebarOpen/onSidebarOpenChange，不搬私有DOM。原生getMenu().setCollapsed/update遵循同一受控状态合同。详见 [导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
+
 ## 日历月份控制
 
 `@coffeehc/xui-runtime/calendar` 的 `CalendarOptions` 及 `@coffeehc/xui-react/calendar` 的 `CalendarProps` 公开 `month?:string`、`onMonthChange?:(month:string)=>void`。根入口同样导出。原生 `createCalendar` 接受同一选项并返回 `model.setMonth(month)`；受控确认使用 `update({month})`。年月遵循严格 YYYY-MM、0001..9999；日期值与查看月份分开。默认值、回调和焦点合同见[Calendar](COMPONENTS.md#选择与复合控件)，双端正式消费者见[React](../examples/calendar-month-react/app.tsx)/[原生](../examples/calendar-month-vanilla/app.js)。

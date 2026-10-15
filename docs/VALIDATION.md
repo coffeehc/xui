@@ -2,6 +2,34 @@
 
 本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
 
+## 导航侧栏内部收起/展开（2026-10-15）
+
+规范升至0.12.0，默认主题376 tokens及默认变量CSS指纹不变。React AppShell/MenuLayout与原生createMenuLayout将桌面唯一开关放在侧栏内部顶部独立辅助行，展开时靠末端、60px紧凑栏居中；窄屏同一按钮节点移到顶栏打开既有drawer。继续使用既有collapsed/defaultCollapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange与名称接口，原生setCollapsed/update遵守相同受控合同。没有新增位置/私有DOM接口、第二个按钮或抽屉；默认位置变化须随正式包升级获得，公共types/exports保持兼容。
+
+最终 package source generation 为 `cf3565e72fbd8c8bf5005383ff46ded8221020acfd49dc70437a2d3f868980c4`，public API SHA256仍为 `d7ecf90266c528676481a0e1ee1dccbfb51232999d4c20c4f7f99e22372988c8`。独立正式tarball消费者同时核对ESM/CSS/types，React/ReactDOM/Base UI单实例；完整CSS gzip 16767 bytes，在既有16768-byte预算内，本轮没有提高预算。
+
+| 最终同代检查 | 执行结果 | 原始证据（`.artifacts/sidebar-control-final-generation/`） |
+| --- | --- | --- |
+| 构建 / tokens / types / unit | 通过；376 tokens、**512/512** 单测 | `build-final.log`、`tokens-final.log`、`typecheck-final.log`、`unit-final.log` |
+| 独立正式消费者 / 体积 / peers | 通过；双端正式入口/类型/产物，公开API未扩张 | `consumer-final.log`及最终元数据 |
+| Chromium 新导航专项 | **26/26**；24项双端主题/1280或390px/根字号16或32px矩阵，2项跨断点节点与焦点连续性 | `sidebar-control-final2-browser.json`、对应截图目录 |
+| Chromium 相关回归 | **216/216**；头部、侧栏/页脚、导航富条目/翻译、workspace、页面编排和foundation | `related-regressions-final.json`、对应输出目录 |
+| Chrome 真实浏览器zoom200% | **12/12**；rich-navigation与page-composition各6项，两端三主题 | `rich-navigation-zoom.json`、`page-composition-zoom.json` |
+| Firefox / WebKit 响应式焦点 | **4/4**；Firefox/WebKit各2项同节点/aria/焦点与宿主输入连续性 | `firefox-responsive.json`、`webkit-responsive.json` |
+| 文档 / skill / 差异 | 通过；639文档引用、100公开入口、1 skill；skill frontmatter有效，差异无空白错误 | `docs-final.log`、skill验证与提交前检查 |
+
+上述是受影响范围的专项结果，不是全仓完整浏览器套件。根字号200%核对计算值；真实Chrome缩放另核对视口、DPR、未改根字号/CSS zoom/pinch的事实。按钮焦点环、Enter/Space、aria-expanded/controls、桌面/窄屏开关归属、长中文、同按钮/侧栏/草稿节点与宿主新焦点均按实际浏览器检查。主题system跟随已有owner；本轮不另建storage或主题状态。
+
+早期候选的24/26与24/26揭示跨断点把有焦点按钮移入隐藏区域后丢失焦点，以及原生共享shell自己的media listener覆盖aria状态。修复跟踪该控件的真实焦点所有权，新焦点/指针意图结束所有权；原生在共享shell布局完成后按可取消的动画帧协调一次，不用固定等待或抢回宿主焦点，销毁释放监听和帧。旧报告保留，不计作最终通过。
+
+第一次相关回归为215/216：React首次长菜单的选中行定位早于顶部开关行占据44px空间，初始当前项下沿701px而菜单可用下沿657px。不是footer实际重叠，也不是查询或菜单失效。将定位放在开关放置及侧栏测量之后，原断言不放宽；双端viewport长菜单先2/2通过，随后上述同代26/26及216/216重验。失败trace、截图和报告保留在 `related-regressions.json`/`related-regressions-output/`，修复后证据单独归档。
+
+Stitch已对独立正式消费者的展开/收拢桌面实际截图给出位置、同轴、密度视觉通过，记录见 `.artifacts/sidebar-control-review/stitch-visual-approval.txt/.png`。这些截图在最后的选中项定位修复前生成，布局样式与默认位置未再变化；最终长菜单截图及几何以同代回归为准。视觉审查不替代键盘、屏幕阅读器或消费产品现场验收。
+
+会话交流作为独立页面类型写入DESIGN，不套用管理列表的标题/筛选/表格。另以固定旧包1672222制作仅合成数据的xAgent布局评估稿，保留真实领域owner的映射：阅读列与输入对齐、工具/审批跟随回合、必要执行状态和追加指导队列保留、文件按需、草稿/流式/历史连续。16项主题/宽度/根字号矩阵及合成状态/回焦点检查保留在 `.artifacts/xagent-session-design-review/qa/`，不是当前包或xAgent生产验收，也未跑该原型的浏览器zoom。Stitch批准其为可实施设计基线；唯一剩余首行分支对齐为不阻断实施的公共增强请求，尚未新增API。未修改xAgent代码、业务API、认证、查询或后端，也未自动升级消费依赖。
+
+本轮没有重跑全仓浏览器套件、SSR hydration、读屏器、真实移动OS/Wails或消费项目生产API；没有registry发布。接入skill已同步新开关归属及已交付日期时间入口，正式CSS仍要求公开`.xui`根作用域，不能依赖宿主reset偶然补齐。
+
 ## Stitch v2 页面编排（2026-10-15）
 
 规范按新增兼容语义升至0.11.0，默认主题的376 tokens与完整默认CSS指纹不变。新增 FormGrid/FormActions、Fieldset stack、LoadingState inline、DataRegion flow；DataTable 有行刷新不重复播放块级进入动效，侧向 Sheet 在40rem及以下全宽。Fieldset inline、LoadingState block、DataRegion reserved 默认仍保留兼容，导航 drawer 继续独立宽度。

@@ -26,7 +26,7 @@
 
 复用已有与 xui 合同兼容的单一文档主题 owner，支持 `light` / `dark` / `system`，区分用户 mode 与实际 effective 结果。默认公开 runtime/init 在sessionStorage保存主题选择，同一标签页刷新保留，不读取或迁移旧localStorage；必要时用受控 bridge 接入宿主偏好；保留存储 key、格式和其他字段。首屏初始化先于可见内容，共用同一 owner；不再创建另一套 React context、storage 或 matchMedia 监听，不在 JS 保存调色板，不因换主题重置业务状态。
 
-主题 CSS 不能统一浏览器/OS 自绘的选择面板。若发现裸 select、datalist、日期弹出面板或产品私有 xui 皮肤补丁，列出准确文件位置、影响与对应公开替代：简单选择默认 SimpleSelect / bindSelectControl，复杂选择采用 Select/Combobox 或公开原生搜索组合，date-only 选择采用 Calendar / createCalendar，输入与动作采用 Input / Button 等。Calendar 不等于现成 DatePicker 或时间选择器，缺失组合如实记录；NativeSelect 等显式平台 API 与安全文件选择窗口属于能力边界，不作为普通项目控件的默认推荐。仅当本次另有统一组件授权时迁移；theme-only 范围内保留并报告准确位置和迁移建议，不顺手改业务控件或布局。公共封装内部继续保留真实 input/button 的表单和可访问语义。
+主题 CSS 不能统一浏览器/OS 自绘的选择面板。若发现裸 select、datalist、日期弹出面板或产品私有 xui 皮肤补丁，列出准确文件位置、影响与对应公开替代：简单选择默认 SimpleSelect / bindSelectControl，复杂选择采用 Select/Combobox 或公开原生搜索组合，date-only 选择采用 Calendar / createCalendar，输入与动作采用 Input / Button 等。Calendar 本身只提供日期；日期＋时间按固定产物采用公开 [DateTimePicker / createDateTimePicker](../../../../docs/COMPONENTS.md#日期时间选择)，时区与窗口限制归宿主；其它缺失组合如实记录。NativeSelect 等显式平台 API 与安全文件选择窗口属于能力边界，不作为普通项目控件的默认推荐。仅当本次另有统一组件授权时迁移；theme-only 范围内保留并报告准确位置和迁移建议，不顺手改业务控件或布局。公共封装内部继续保留真实 input/button 的表单和可访问语义。
 
 ## 验证与交付
 

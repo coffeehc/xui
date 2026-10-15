@@ -494,7 +494,7 @@ secondary 的相邻组统一使用 `space-control-gap`。账号仍是 controls �
 
 #### 品牌区域与内容对齐
 
-AppHeader 的内容顺序是 leading/brand → navigation toggle → breadcrumb/context。leading 保留平台安全区位置。MenuLayout/AppShell 桌面身份区域使用与侧栏相同的宽度 token，计入公共间距后使 toggle 左边对齐正文内容起点；collapsed 自动跟随 rail 宽度，窄屏恢复自然品牌布局与同一 drawer 入口。直接 AppHeader 没有侧栏，按内容自然排列。
+AppHeader 的内容顺序是 leading/brand → 可选 navigation → breadcrumb/context。leading 保留平台安全区位置。MenuLayout/AppShell 桌面身份区域使用与侧栏相同的宽度 token，collapsed 自动跟随rail宽度；桌面收起/展开控件属于侧栏内部，不占顶栏内容轨道。窄屏恢复自然品牌布局，并将同一个公共控件移至顶栏作为打开导航drawer的入口。直接AppHeader没有侧栏，navigation仍可按宿主明确任务独立组合。
 
 可选 `HeaderBrand` 以 logo 和 children 提供规范内容；原生使用同名公开结构，业务链接可包在组件外。带 logo 的 compact 品牌名称仅视觉收纳，accessible 名称保留；不带 logo 的任意旧 brand 内容仍按区域截断，库不猜业务 DOM。
 
@@ -634,15 +634,19 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 
 迁移：固定包含本节的已验证提交并重新构建正式包（具体SHA见对应提交/交付记录）；将原本位于侧栏尾部的内容送入sidebarFooter，顶栏内容继续headerSlots；删除消费方底部absolute/fixed/margin-top、侧栏height/overflow与compact宽度补丁，保留业务回调/权限/状态。不要以route key重挂MenuLayout或添加第二个drawer。完整无私有CSS例子见[React](../examples/sidebar-footer-react/app.tsx)/[原生](../examples/sidebar-footer-vanilla/app.js)，正式构建、watch和独立tarball类型检查都包含它们；真实产品迁移另按产品授权实施。
 
-### 顶栏唯一菜单开关
+### 导航内部唯一收起/展开控件
 
-MenuLayout及原生createMenuLayout只生成顶栏一个菜单开关。桌面点击/Enter/Space请求收起或展开侧栏；窄屏同一入口请求已有导航抽屉。侧栏顶部不再生成第二个开关，不改变正文导航adapter或单模态owner。开关采用公共icon按钮尺寸、motion与focus，桌面可访问名取compactLabel/expandLabel，aria-expanded表示侧栏展开事实；窄屏名取label（AppShell为navigationLabel），aria-expanded表示抽屉事实且有aria-haspopup=dialog。aria-controls对应当前受控区域。缩放/断点切换保持collapsed，变宽关闭抽屉；受控回调仍只请求，等宿主回传才改变事实。
+AppShell/MenuLayout及原生createMenuLayout只生成一个导航开关。桌面控件在侧栏顶部的独立辅助行：展开时靠inline-end，紧凑rail时居中，不与宿主新建/搜索动作争同一行。点击/Enter/Space请求收起或展开侧栏；窄屏同一控件节点移至顶栏，请求已有导航抽屉，抽屉内部沿用原关闭入口。不改变正文导航adapter或单模态owner。开关采用公共icon按钮尺寸、motion与focus，桌面可访问名取compactLabel/expandLabel，aria-expanded表示侧栏展开事实；窄屏名取label（AppShell为navigationLabel），aria-expanded表示抽屉事实且有aria-haspopup=dialog。aria-controls对应当前受控区域。缩放/断点切换保持collapsed，变宽关闭抽屉；受控回调仍只请求，等宿主回传才改变事实。
 
 React AppShell支持collapsed/defaultCollapsed/onCollapsedChange、compactLabel/expandLabel（同MenuLayout默认）；所属NavigationMenu自动接其非显式紧凑状态并移除内部开关。普通页面只使用MenuLayout传数据和状态；无需另传开关内容或尺寸。独立NavigationMenu/createNavigationMenu仍可显示自己的紧凑按钮，显式 showCollapseToggle=false 可关闭；该选项不能在MenuLayout中重新添加重复按钮。原生createNavigationMenu第三参数的可选fallbackFocus与共享createNavigationKeyboard同名回调仅供公共结构组合的空菜单焦点退路，普通宿主无需连接。
 
-迁移时删除产品自行实现的侧栏顶部/顶栏菜单按钮及其宽度、位置、媒体监听和点击绑定，继续传collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange及原标签配置。不要把sidebarOpen当桌面compact状态。顶栏DOM先于侧栏，Tab依次经过顶栏已有链接/动作，再进入菜单的单一tab停靠点；测试不应再假设旧侧栏开关之后立即是菜单。
+迁移时删除产品自行实现的侧栏顶部/顶栏菜单按钮及其宽度、位置、媒体监听和点击绑定，继续传collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange及原标签配置。
+
+React宿主只传 `collapsed={collapsed}` / `onCollapsedChange={setCollapsed}`（或defaultCollapsed）；原生可用 `layout.getMenu().setCollapsed(true|false)`，受控时通过 `layout.update({collapsed})` 确认。两端既有 `compactLabel/expandLabel` 控制桌面名称，窄屏名称仍取label/navigationLabel。没有新增“搬按钮”、位置、图标或侧栏DOM接口。公开类型和状态语义保持兼容，桌面默认控件位置随本次规范更新。不要把sidebarOpen当桌面compact状态。顶栏DOM先于侧栏，桌面Tab依次经过顶栏已有链接/动作、侧栏内部开关，再进入菜单的单一tab停靠点；窄屏开关位于顶栏，抽屉取消后回到该入口。跨断点保留按钮节点、草稿和侧栏内容，不能重挂整个布局来搬位置。
 
 ### 富条目、独立行尾动作与上下文菜单
+
+长名称自然换行时，当前独立分支按钮与行尾动作沿整项居中。会话页设计复审提出首行对齐的可选公共增强，尚无此配置；它不阻断现有导航、键盘或独立动作。宿主不能把renderAction误作内部独立分支按钮的替换入口，也不以私有CSS修改其对齐。
 
 `children`、`resolveIcon`、`renderLabel` 和 `renderLink` 原已支持子层级、自定义图标、非交互富标签与单链接适配。通过 `renderButton(item)` 与 `renderAction(item)` 扩展，不将业务数据塞进 Combobox option，也不引入另一份查询或路由 owner。
 
