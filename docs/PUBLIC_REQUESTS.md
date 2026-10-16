@@ -41,6 +41,14 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 ## 后续公开维护项（2026-10-16）
 
+### XUI-REQ-20261016-06：公共交互状态的默认与完整Controller替换（已审查，未整体实现）
+
+来源：xAgent维护来件，固定消费xui `1a6772e4fcbf7be180c813e560d9d32538dabe20`、DESIGN/三包1.3.0。按公开根入口逐项核对了105个React运行时导出及其组合部件，结果和分阶段建议集中在[状态所有权矩阵](COMPONENTS.md#状态所有权与-controller-模式)。这轮是源码/类型审查，不是所有组件双模式已具备的声明。
+
+Menu.View与共享主题已有语义双模式；Calendar/DateTimePicker、Copyable、密码展示及多种组合交互仍缺少实例替换。ApiKey与两类日志目前是必填服务Controller注入，不能将其本地分页/未提交筛选草稿也声称为完整替换。Toast已支持公开toastManager动作入口，但peer Provider仍拥有真实toasts/timeout/focus状态，需先解决上游公开替换合同。handle、受控props和DOM ref分别按真实能力登记；宿主领域值/查询、React异常捕获及平台测量/加载不强造Controller。
+
+本轮不重写全部组件，不改消费项目、认证/API协议或业务owner。后续按矩阵逐项实施并补默认/注入互斥、生命周期、StrictMode、配置/实例切换、迟到与焦点/草稿/秘密清理验证；未完成项仍保持开放，不能以计划或源码审查代替正式产物验收。
+
 ### XUI-REQ-20261016-03：固定列与全表分割线一致（1.1.2已实现，待宿主验收）
 
 来源：xAgent维护线程转交；宿主固定 `b700606624ae1453ce2796afdad2882dd938d9ee`、DESIGN/三包1.1.0，调用点为 `frontend/packages/business/src/features/sessions/components/session-list-table-columns.tsx`，操作列公开配置 `sticky: 'end'`。宿主地址及现象按反馈登记，未在本轮访问该产品。

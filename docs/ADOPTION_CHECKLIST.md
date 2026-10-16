@@ -288,6 +288,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | MENU-SEP-001 | 菜单中需要分隔不同内容组 | 使用 `Menu.Separator` 或 `ContextMenu.Separator`，它不执行动作、不可成为额外键盘停靠点，浅深主题下仍清晰可辨 | role/aria、Tab顺序、主题computed样式与两种菜单组合 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | MENU-VIEW-001 | 使用数据驱动 `Menu.View` | 默认 config 模式只有一个由 View 管理的内部 Controller；注入模式完全替换它，不创建默认实例，且 Controller 生命周期归注入宿主。两种 props 模式互斥 | 正/负类型编译、Controller 创建/订阅/退订/destroy 计数与实例身份 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) · [PUBLIC_API `/menu`](PUBLIC_API.md#全部正式入口) |
 | MENU-VIEW-002 | 菜单动作执行或需自定义焦点行为 | `actionId` 只映射宿主动作；只有同步 `event.preventDefault()` 取消本次默认关闭。异步操作仍归宿主，Base UI 是方向键与实际焦点的唯一 owner | pointer/keyboard 一次动作计数、阻止关闭断言、ARIA/焦点轨迹与迟到业务回调 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) |
+| STATE-OWNER-001 | 核查任一公共组件的状态扩展 | 逐项对应Controller矩阵；区分完整替换、仅服务注入、受控props、handle/manager和平台投影。待补项不得写成已交付；业务值、查询、秘密不迁入通用UI快照 | 实际固定types、实例创建/订阅/退订/销毁与状态范围证据；不适用项逐条给owner依据 | [COMPONENTS 状态所有权与Controller模式](COMPONENTS.md#状态所有权与-controller-模式) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-003 | 展示警告/等待/人工介入状态 | tone 与真实状态分类逐条映射，不只用颜色传达状态 | 领域状态映射表和可访问文本 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
