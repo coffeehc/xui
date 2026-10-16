@@ -73,3 +73,6 @@ export function createCalendarModel(initial:CalendarOptions={}) {
   },destroy(){intent++;monthIntent++;dead=true;listeners.clear();}
  };return api;
 }
+
+/** Public React injection contract for the date/month view state owner. */
+export type CalendarController=ReturnType<typeof createCalendarModel>;

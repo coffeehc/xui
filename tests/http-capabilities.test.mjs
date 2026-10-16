@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createHttpClient,createJsonApiErrorAdapter,getHttpErrorMessage} from '../packages/runtime/dist/http.js';
+import {createJsonApiErrorAdapter,getHttpErrorMessage} from '../packages/runtime/dist/http.js';
+import {isolatedHttp} from './helpers/runtime-services.mjs';
 import {requestDownload,resolveDownloadFileName} from '../packages/runtime/dist/download.js';
 const wire=(payload=null,extra={})=>({success:true,code:1,message:'',payload,request_id:'demo:body',...extra});
 const json=(value,status=200,headers={})=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json',...headers}});
-const owner=(fetch,options={})=>createHttpClient({baseURL:'https://fixture.invalid/',fetch,...options});
+const owner=(fetch,options={})=>isolatedHttp({baseURL:'https://fixture.invalid/',fetch,...options});
 const flush=async()=>{for(let i=0;i<20;i++)await Promise.resolve();};
 test('xLead exact non-2xx JSON API errors retain HTTP status and structured code without default message/body leakage',async()=>{
   const body={error:{code:'version_conflict',message:'FAKE_PRIVATE_MESSAGE',request_id:'demo:request'},token:'FAKE_PRIVATE_TOKEN'};

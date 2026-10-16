@@ -1,3 +1,7 @@
+import {assertControllerProps} from './controller.js';
+import {useOverlay,type WithController,type OverlayController} from './interaction-hooks.js';
+import {useOwnedController,type ControllerProps} from './controller.js';
+import {createPaginationController,type PaginationController,type PaginationOptions} from '@coffeehc/xui-runtime/interaction';
 import * as React from 'react';
 import { useRender } from '@base-ui/react/use-render';
 import { cx, branded } from './shared.js';
@@ -22,18 +26,21 @@ export function NavItem({selected,'aria-current':ariaCurrent,disabled,collapsed,
 }
 
 export function Breadcrumbs({className,children,...props}:React.ComponentProps<'nav'>){return <nav aria-label="Breadcrumbs" {...props} className={cx('xui-breadcrumbs',className)}><ol>{children}</ol></nav>;}
-export type PaginationProps=Omit<React.ComponentProps<'nav'>,'onChange'> & {page?:number;defaultPage?:number;pageCount:number;onPageChange?:(page:number)=>void;disabled?:boolean;previousLabel?:string;nextLabel?:string};
-export function Pagination({page,defaultPage=1,pageCount,onPageChange,disabled,previousLabel='Previous page',nextLabel='Next page',className,...props}:PaginationProps){
-  const [internal,setInternal]=React.useState(defaultPage);const count=Math.max(1,Math.floor(pageCount)||1),current=Math.min(count,Math.max(1,Math.floor(page??internal)||1));
-  const change=(next:number)=>{if(disabled||next<1||next>count||next===current)return;if(page===undefined)setInternal(next);onPageChange?.(next);};
-  return <nav aria-label="Pagination" {...props} className={cx('xui-pagination',className)}><button className="xui-button" type="button" disabled={disabled||current===1} onClick={()=>change(current-1)}>{previousLabel}</button><span aria-live="polite">{current} / {count}</span><button className="xui-button" type="button" disabled={disabled||current===count} onClick={()=>change(current+1)}>{nextLabel}</button></nav>;
+export type PaginationProps=Omit<React.ComponentProps<'nav'>,'onChange'> & ControllerProps<PaginationController,PaginationOptions> & {previousLabel?:string;nextLabel?:string};
+export function Pagination(allProps:PaginationProps){const {controller:injected,page,defaultPage=1,pageCount,onPageChange,disabled,previousLabel='Previous page',nextLabel='Next page',className,...props}=allProps;assertControllerProps(injected,allProps,['page','defaultPage','pageCount','onPageChange','disabled']);
+  const latest=React.useRef(onPageChange);latest.current=onPageChange;
+  const controller=useOwnedController(injected,()=>createPaginationController({page,defaultPage,pageCount:pageCount!,disabled,onPageChange:next=>latest.current?.(next)}));
+  const state=React.useSyncExternalStore(controller.subscribe,controller.getState,controller.getState),count=state.pageCount,current=state.page;
+  React.useLayoutEffect(()=>{if(!injected)controller.update({page,pageCount,disabled});},[controller,injected,page,pageCount,disabled]);
+  const change=controller.setPage;
+  return <nav aria-label="Pagination" {...props} className={cx('xui-pagination',className)}><button className="xui-button" type="button" disabled={state.disabled||current===1} onClick={()=>change(current-1)}>{previousLabel}</button><span aria-live="polite">{current} / {count}</span><button className="xui-button" type="button" disabled={state.disabled||current===count} onClick={()=>change(current+1)}>{nextLabel}</button></nav>;
 }
 export interface DisclosureIndicatorProps {open:boolean;className?:string}
 /** Decorative default indicator; the trigger owns the accessible name/state. */
 export function DisclosureIndicator({open,className}:DisclosureIndicatorProps){return <svg className={cx('xui-disclosure-indicator',className)} data-open={open} aria-hidden="true" focusable="false" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)"><path d="m5 7 5 5 5-5"/></svg>;}
-export type DisclosureProps=Omit<React.ComponentProps<'div'>,'onChange'|'title'> & {title:React.ReactNode;open?:boolean;defaultOpen?:boolean;onOpenChange?:(open:boolean)=>void;disabled?:boolean};
-export function Disclosure({title,open,defaultOpen=false,onOpenChange,disabled,children,className,...props}:DisclosureProps){
-  const [internal,setInternal]=React.useState(defaultOpen),expanded=open??internal,id=React.useId(),trigger=React.useRef<HTMLButtonElement>(null),panel=React.useRef<HTMLDivElement>(null),focusWithin=React.useRef(false);
+export type DisclosureProps=Omit<React.ComponentProps<'div'>,'onChange'|'title'> & {title:React.ReactNode;disabled?:boolean}&ControllerProps<OverlayController,{open?:boolean;defaultOpen?:boolean;onOpenChange?:(open:boolean)=>void}>;
+export function Disclosure({title,controller,open,defaultOpen,onOpenChange,disabled,children,className,...props}:DisclosureProps){
+  const state=useOverlay({controller,open,defaultOpen,onOpenChange}),expanded=state.open,id=React.useId(),trigger=React.useRef<HTMLButtonElement>(null),panel=React.useRef<HTMLDivElement>(null),focusWithin=React.useRef(false);
   React.useLayoutEffect(()=>{
     if(expanded)return;
     const body=panel.current,active=body?.ownerDocument.activeElement;
@@ -42,5 +49,5 @@ export function Disclosure({title,open,defaultOpen=false,onOpenChange,disabled,c
     if(body&&(body.contains(active??null)||focusWithin.current&&active===body.ownerDocument.body))trigger.current?.focus();
     focusWithin.current=false;
   },[expanded]);
-  return <div {...props} className={cx('xui-disclosure',className)}><button ref={trigger} type="button" className="xui-disclosure-trigger" aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={()=>{if(open===undefined)setInternal(!expanded);onOpenChange?.(!expanded);}}><span className="xui-disclosure-label">{title}</span><DisclosureIndicator open={expanded}/></button><div ref={panel} id={id} hidden={!expanded} className="xui-disclosure-body" onFocusCapture={()=>{focusWithin.current=true;}} onBlurCapture={event=>{if(!event.currentTarget.hidden)focusWithin.current=event.currentTarget.contains(event.relatedTarget);}}>{children}</div></div>;
+  return <div {...props} className={cx('xui-disclosure',className)}><button ref={trigger} type="button" className="xui-disclosure-trigger" aria-expanded={expanded} aria-controls={id} disabled={disabled} onClick={()=>state.onOpenChange(!expanded,{reason:'trigger-press'})}><span className="xui-disclosure-label">{title}</span><DisclosureIndicator open={expanded}/></button><div ref={panel} id={id} hidden={!expanded} className="xui-disclosure-body" onFocusCapture={()=>{focusWithin.current=true;}} onBlurCapture={event=>{if(!event.currentTarget.hidden)focusWithin.current=event.currentTarget.contains(event.relatedTarget);}}>{children}</div></div>;
 }

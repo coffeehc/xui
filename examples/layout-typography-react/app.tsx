@@ -8,6 +8,7 @@ import {Field,Input,Checkbox,Radio,Switch,Fieldset} from '@coffeehc/xui-react/fo
 import {Menu} from '@coffeehc/xui-react/menu';
 import {ContextMenu} from '@coffeehc/xui-react/context-menu';
 import type {ThemeMode} from '@coffeehc/xui-runtime/theme';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-runtime/init.js';
 import '@coffeehc/xui-theme/style.css';
 import {copy,fixtureOptions} from '../shared/layout-typography-model';
@@ -15,6 +16,7 @@ import {copy,fixtureOptions} from '../shared/layout-typography-model';
 type FixtureOwner={updateHeader:(kind:string)=>void;navigate:(id:string)=>void;setMode:(mode:ThemeMode)=>void};
 declare global {interface Window {layoutTypography:FixtureOwner}}
 const config=fixtureOptions(location.search);
+const theme=bootstrapBrowserExample().services.getThemeService();
 function Symbol({illustration=false}:{illustration?:boolean}) {
   return <svg className={illustration?"lucide lucide-folder xui-illustration-icon":"lucide lucide-folder"} data-menu-symbol={!illustration||undefined} data-illustration={illustration||undefined} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)" aria-hidden="true"><path d="M3 7h7l2 2h9v11H3Z"/><path d="M3 7V4h6l3 3"/></svg>;
 }
@@ -42,7 +44,7 @@ function Context(){
 }
 function App(){
   const [activeId,setActiveId]=React.useState(config.activeId),[headerKind,setHeaderKind]=React.useState(config.header),[draft,setDraft]=React.useState(copy.draft),[actions,setActions]=React.useState(0);
-  window.layoutTypography={updateHeader:setHeaderKind,navigate:setActiveId,setMode:mode=>window.xuiTheme!.setMode(mode)};
+  window.layoutTypography={updateHeader:setHeaderKind,navigate:setActiveId,setMode:mode=>theme.setMode(mode)};
   const slots:AppHeaderSlots={
     ...(headerKind==='fallback'?{}:{brand:headerKind==='empty-brand'?null:<strong data-testid="header-brand" title={copy.brand}>{copy.brand}</strong>}),
     breadcrumb:<Breadcrumbs aria-label="当前位置"><li><a href="#team" title={copy.breadcrumb[0]}>{copy.breadcrumb[0]}</a></li><li aria-current="page">{copy.breadcrumb[1]}</li></Breadcrumbs>,

@@ -1,3 +1,8 @@
+import {createApiKeyManagerViewController,type ApiKeyManagerViewController} from '@coffeehc/xui-runtime/component-views';
+import type {ApiKeyManagerOptions} from '@coffeehc/xui-runtime/api-key';
+import {useOwnedController,useViewRelease,assertControllerProps} from './controller.js';
+import {getClipboardService} from '@coffeehc/xui-runtime/clipboard';
+import {Dialog as PeerDialog} from '@base-ui/react/dialog';
 import * as React from 'react';
 import {dataTableDefaultLabels} from '@coffeehc/xui-runtime/data-table';
 import type {ApiKeyMetadata,ApiKeyManagerController} from '@coffeehc/xui-runtime/api-key';
@@ -12,20 +17,31 @@ import {cx} from './shared.js';
 const metadataHeader=(label:string)=><span className="xui-table-label">{label}</span>;
 export type {ApiKeyMetadata,ApiKeyManagerController,ApiKeyManagerOptions,ApiKeyAdapter,ApiKeyDraft,CreatedApiKey,ApiKeyWriteContext,ApiKeyUpdateDraft} from '@coffeehc/xui-runtime/api-key';
 /** Client pagination over the complete metadata collection returned by adapter.list. */
-export interface ApiKeyManagerPagination {defaultPageSize?:number;pageSizeOptions?:readonly number[]}
-export interface ApiKeyManagerProps {controller:ApiKeyManagerController;className?:string;headerActions?:React.ReactNode;writeClipboard?:(value:string)=>Promise<void>;
+export type {ApiKeyManagerPagination} from '@coffeehc/xui-runtime/component-views';
+import type {ApiKeyManagerPagination} from '@coffeehc/xui-runtime/component-views';
+interface ApiKeyManagerSlots {className?:string;headerActions?:React.ReactNode;writeClipboard?:(value:string)=>Promise<void>;
  /** Defaults to 10 rows with 10/25/50 choices. false displays the complete loaded collection. */
- pagination?:ApiKeyManagerPagination|false;
+
  /** Public DataTable footer/count and status labels; never server pagination facts. */
  tableLabels?:Partial<DataTableLabels>;
 }
+export type ApiKeyManagerProps=ApiKeyManagerSlots&({viewController:ApiKeyManagerViewController;controller?:never;options?:never;pagination?:never}|{viewController?:undefined;controller:ApiKeyManagerController;options?:never;pagination?:ApiKeyManagerPagination|false}|{viewController?:undefined;controller?:undefined;options:ApiKeyManagerOptions;pagination?:ApiKeyManagerPagination|false});
 /** The caller owns the controller and backend. Unmount releases the transient result. */
-export function ApiKeyManager({controller,className,headerActions,writeClipboard,pagination,tableLabels}:ApiKeyManagerProps){
+export function ApiKeyManager({viewController:injected,controller:borrowed,options:initialOptions,className,headerActions,writeClipboard,pagination,tableLabels}:ApiKeyManagerProps){
+  assertControllerProps(injected,{controller:borrowed,options:initialOptions,pagination},['controller','options','pagination']);
+  if(borrowed&&initialOptions)throw new TypeError('controller cannot be combined with options');
+  const viewController=useOwnedController(injected,()=>createApiKeyManagerViewController(borrowed?{service:borrowed,pagination}:{options:initialOptions!,pagination}),borrowed);
+  const controller=viewController.service,viewState=React.useSyncExternalStore(viewController.subscribe,viewController.getState,viewController.getState);
+  const activeOwner=React.useRef(controller);activeOwner.current=controller;
+  React.useEffect(()=>viewController.start(),[viewController]);
   const state=React.useSyncExternalStore(controller.subscribe,controller.getState,controller.getState),{options,labels}=controller;
   const formId=React.useId(),nameRef=React.useRef<HTMLInputElement>(null),secretRef=React.useRef<HTMLTextAreaElement>(null),createRef=React.useRef<HTMLButtonElement>(null),refreshRef=React.useRef<HTMLButtonElement>(null),confirmationRef=React.useRef<HTMLInputElement>(null),dialogRef=React.useRef<HTMLDivElement>(null),lastTrigger=React.useRef<HTMLElement|null>(null);
+  const copyAbort=React.useRef(new Map<ApiKeyManagerController,AbortController>());
+  const copyText=(value:string)=>{copyAbort.current.get(controller)?.abort();const operation=new AbortController();copyAbort.current.set(controller,operation);return getClipboardService().writeText(value,{signal:operation.signal});};
   const clearSecret=React.useCallback(()=>{const node=secretRef.current;if(node){node.value='';node.defaultValue='';node.textContent='';}},[]);
-  const attachSecret=React.useCallback((node:HTMLTextAreaElement|null)=>{if(secretRef.current!==node)clearSecret();secretRef.current=node;},[clearSecret]);
-  React.useLayoutEffect(()=>{const off=controller.subscribe(()=>{if(controller.getState().phase!=='result')clearSecret();}),release=()=>{clearSecret();controller.close();};window.addEventListener('pagehide',release);return()=>{off();window.removeEventListener('pagehide',release);release();};},[controller,clearSecret]);
+  const attachSecret=React.useCallback((node:HTMLTextAreaElement|null)=>{if(secretRef.current!==node)clearSecret();secretRef.current=node;if(node&&controller.getState().phase==='result')node.value=controller.readSecret()??'';},[clearSecret,controller]);
+  React.useLayoutEffect(()=>controller.subscribe(()=>{if(controller.getState().phase!=='result'){copyAbort.current.get(controller)?.abort();clearSecret();}}),[controller,clearSecret]);
+  useViewRelease(controller,()=>{copyAbort.current.get(controller)?.abort();copyAbort.current.delete(controller);if(activeOwner.current===controller)clearSecret();controller.close();});
   React.useLayoutEffect(()=>{if(state.phase==='result')secretRef.current?.focus();},[state.phase]);
   const finalFocus=()=>{
     const dialog=dialogRef.current,doc=dialog?.ownerDocument,active=doc?.activeElement;
@@ -36,14 +52,9 @@ export function ApiKeyManager({controller,className,headerActions,writeClipboard
   };
   const submit=async()=>{await (state.phase==='update'?controller.submitUpdate():controller.submitCreate());if(['create','update'].includes(controller.getState().phase)&&Object.values(controller.getState().fieldErrors).some(Boolean))(controller.getState().fieldErrors.confirmation&&!controller.getState().fieldErrors.name?confirmationRef:nameRef).current?.focus();};
   const editing=state.phase==='update',draft=editing?state.updateDraft:state.draft,setDraft=editing?controller.setUpdateDraft:controller.setDraft;
-  const defaultPageSize=pagination===false?10:pagination?.defaultPageSize??10;
-  const [paging,setPaging]=React.useState({controller,pageIndex:0,pageSize:defaultPageSize});
-  const pageSize=paging.controller===controller?paging.pageSize:defaultPageSize;
-  const pageSizes=pagination===false?undefined:pagination?.pageSizeOptions??(pagination?.defaultPageSize===undefined?[10,25,50]:[defaultPageSize]);
-  if(pagination!==false&&(!Number.isSafeInteger(pageSize)||pageSize<1))throw new TypeError('ApiKeyManager page size must be a positive integer');
-  const pageIndex=Math.min(paging.controller===controller?paging.pageIndex:0,Math.max(0,Math.ceil(state.rows.length/pageSize)-1));
-  React.useEffect(()=>{if(paging.controller!==controller||paging.pageIndex!==pageIndex)setPaging({controller,pageIndex,pageSize});},[controller,pageIndex,pageSize,paging]);
-  const visibleRows=pagination===false?state.rows:state.rows.slice(pageIndex*pageSize,(pageIndex+1)*pageSize);
+  const {pageSize,pageIndex,pageSizeOptions:pageSizes}=viewState;
+  React.useLayoutEffect(()=>{if(!injected)viewController.updatePagination(pagination);},[viewController,injected,pagination]);
+  const visibleRows=!viewState.pagination?state.rows:state.rows.slice(pageIndex*pageSize,(pageIndex+1)*pageSize);
   const columns:readonly DataTableColumn<Readonly<ApiKeyMetadata>>[]=React.useMemo(()=>[
     {id:'name',header:metadataHeader(labels.name),cell:key=><div className="xui-table-primary">{key.name}</div>},
     {id:'status',header:metadataHeader(labels.status),cell:key=><Badge className="xui-table-label" tone={key.status==='active'?'success':key.status==='expired'?'warning':'neutral'}>{key.status===null?labels.unknown:labels[key.status]}</Badge>},
@@ -57,10 +68,10 @@ export function ApiKeyManager({controller,className,headerActions,writeClipboard
   return <section className={cx('xui-stack',className)}>
     <PageHeader title={labels.title} actions={<><Button ref={refreshRef} variant="outline" disabled={state.listBusy} aria-busy={state.listBusy} onClick={()=>controller.refresh()}>{labels.refresh}</Button><Button ref={createRef} disabled={state.actionBusy} hidden={options.canCreate!==true} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openCreate();}}>{labels.create}</Button>{headerActions}</>}/>
     <DataTable className="xui-record-table" rows={visibleRows} columns={columns} rowKey={key=>key.id} label={labels.title} status={state.listBusy?(state.hasLoaded?'refreshing':'loading'):state.listError?'error':state.hasLoaded?'ready':'idle'} disabled={state.actionBusy}
-      pagination={pagination===false||!state.hasLoaded?undefined:{pageIndex,pageIndexOffset:0,pageSize,total:state.rows.length,pageSizeOptions:pageSizes,onPageChange:index=>setPaging({controller,pageIndex:index,pageSize}),onPageSizeChange:size=>setPaging({controller,pageIndex:0,pageSize:size})}}
+      pagination={!viewState.pagination||!state.hasLoaded?undefined:{pageIndex,pageIndexOffset:0,pageSize,total:state.rows.length,pageSizeOptions:pageSizes,onPageChange:viewController.setPage,onPageSizeChange:viewController.setPageSize}}
       labels={{empty:labels.empty,idle:labels.loading,loading:labels.loading,refreshing:labels.loading,error:labels.listError,retry:labels.retry,...tableLabels,count:facts=>state.hasLoaded?(tableLabels?.count??dataTableDefaultLabels.count)(facts):''}}
       emptyState={<EmptyState title={labels.empty}/>} errorState={<ErrorState title={state.listError??labels.listError} retryLabel={labels.retry} onRetry={()=>controller.refresh()}/>}/>
-    <Dialog.Root open={state.phase!=='closed'} onOpenChange={open=>{if(!open)controller.close();}}>
+    <PeerDialog.Root open={state.phase!=='closed'} onOpenChange={open=>{if(!open)controller.close();}}>
       <Dialog.Content ref={dialogRef} finalFocus={finalFocus}>
         <Dialog.Title>{editing?labels.updateTitle:state.phase==='result'?labels.resultTitle:state.phase==='delete'?labels.deleteTitle:state.phase==='revoke'?labels.revokeTitle:labels.createTitle}</Dialog.Title>
         <Dialog.Body className="xui-stack">
@@ -81,11 +92,14 @@ export function ApiKeyManager({controller,className,headerActions,writeClipboard
         <Dialog.Footer>
           {state.phase!=='closed'&&<Button variant="outline" onClick={()=>controller.close()}>{state.phase==='result'?labels.close:labels.cancel}</Button>}
           {(state.phase==='create'||editing)&&<Button type="submit" form={formId} disabled={state.actionBusy} aria-busy={state.actionBusy}>{editing?(state.actionBusy?labels.saving:labels.save):(state.actionBusy?labels.creating:labels.submit)}</Button>}
-          {state.phase==='result'&&<Button disabled={state.copyStatus==='copying'} onClick={()=>controller.copySecret(writeClipboard??(value=>navigator.clipboard.writeText(value)))}>{state.copyStatus==='copying'?labels.copying:labels.copy}</Button>}
+          {state.phase==='result'&&<Button disabled={state.copyStatus==='copying'} onClick={()=>controller.copySecret(writeClipboard??copyText)}>{state.copyStatus==='copying'?labels.copying:labels.copy}</Button>}
           {state.phase==='delete'&&<Button variant="destructive" disabled={state.actionBusy} aria-busy={state.actionBusy} onClick={()=>controller.confirmDeleteRecord()}>{state.actionBusy?labels.deleting:labels.confirmDelete}</Button>}
           {state.phase==='revoke'&&<Button variant="destructive" disabled={state.actionBusy} aria-busy={state.actionBusy} onClick={()=>controller.confirmRevoke()}>{state.actionBusy?labels.revoking:labels.confirmRevoke}</Button>}
         </Dialog.Footer>
       </Dialog.Content>
-    </Dialog.Root>
+    </PeerDialog.Root>
   </section>;
 }
+
+export {createApiKeyManagerViewController} from '@coffeehc/xui-runtime/component-views';
+export type {ApiKeyManagerViewController} from '@coffeehc/xui-runtime/component-views';

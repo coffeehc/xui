@@ -1,4 +1,5 @@
-import {createHttpClient,type HttpClient} from '@coffeehc/xui-runtime/http';
+import {XuiServices} from '@coffeehc/xui-runtime/services';
+import type {HttpClient} from '@coffeehc/xui-runtime/http';
 import {createStructuredLogController,createStructuredLogHttpAdapter,validateLogFilter,compareLogTimestamps,type LogRecordDetail,type LogFacts,type StructuredLogFilter,type LogGroup,type LogQueryRequest} from '@coffeehc/xui-runtime/structured-log';
 import labels from './log-labels.json';
 const facts=(summary:string,extra:Partial<LogFacts>={}):LogFacts=>({source:'collector',nature:'external_dependency',category:'network',severity:'error',component:'demo-worker',operation:'fetch',code:'demo_timeout',summary,retryable:null,user_fixable:false,request_id:null,trace_id:null,subject:{kind:'source',id:'demo:s1'},...extra});
@@ -25,8 +26,8 @@ export function createStructuredLogExample(baseURL:string){
     const mode=modes[name],status=mode==='forbidden'?403:mode==='not_found'?404:mode==='error'?503:200;let payload:unknown=null;if(status===200){if(name==='record'){const row=rows.find(row=>row.id===body.record_id);if(!row)return new Response(JSON.stringify({success:false,message:'Missing fake record',payload:null,code:404001,request_id:'demo-log-request'}),{status:404,headers:{'Content-Type':'application/json'}});payload={schema_version:1,record:row};}else payload=query(name,body);}
     return new Response(JSON.stringify({success:status===200,message:status===200?'':'FAKE_PRIVATE_LOG_ERROR',payload,code:status===200?1:-1,request_id:'demo-log-request'}),{status,headers:{'Content-Type':'application/json','X-Request-ID':'demo-log-header'}});};
     if(modes[name]==='hold')return new Promise(resolve=>pending[name].push(()=>resolve(reply())));return reply();};
-  const client:HttpClient=createHttpClient({baseURL:new URL('./fake-log-api/',baseURL).href,fetch});
+  const services=new XuiServices({http:{options:{baseURL:new URL('./fake-log-api/',baseURL).href,fetch}}}),client:HttpClient=services.getHttpService();
   const adapter=createStructuredLogHttpAdapter(client,{groups:'groups',...(new URL(baseURL).searchParams.has('grouped')?{}:{records:'records'}),groupRecords:'groupRecords',record:'record'});
   const controller=createStructuredLogController({adapter,pageSize:2,labels,sources:['collector','validation','billing'],categories:['network','input','capacity'],baseURL,resolveRef:ref=>ref.kind==='source'?`./reference.html?id=${encodeURIComponent(ref.id)}`:null});
-  return {controller,getRequests:()=>requests,setMode:(kind:Kind,mode:Mode)=>{modes[kind]=mode;},release:(kind:Kind)=>pending[kind].shift()?.(),setRows:(value:LogRecordDetail[])=>{rows=value;},getRows:()=>rows,setGroupCount:(id:string,count:string)=>countOverrides.set(id,count),destroy(){controller.destroy();client.destroy();}};
+  return {controller,services,getRequests:()=>requests,setMode:(kind:Kind,mode:Mode)=>{modes[kind]=mode;},release:(kind:Kind)=>pending[kind].shift()?.(),setRows:(value:LogRecordDetail[])=>{rows=value;},getRows:()=>rows,setGroupCount:(id:string,count:string)=>countOverrides.set(id,count),destroy(){controller.destroy();services.dispose();}};
 }

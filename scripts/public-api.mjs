@@ -11,7 +11,7 @@ export async function collectPublicAPI({symbols=true}={}){
     const manifest=JSON.parse(await readFile(resolve(root,'packages',directory,'package.json'),'utf8'));
     for(const [entry,value] of Object.entries(manifest.exports)){
       const target=typeof value==='string'?value:value.import;
-      entries.push({package:manifest.name,entry,specifier:manifest.name+(entry==='.'?'':entry.slice(1)),directory,target,types:typeof value==='object'?value.types:null,kind:target.endsWith('.css')?'css':entry==='./init.js'?'classic':'esm'});
+      entries.push({package:manifest.name,entry,specifier:manifest.name+(entry==='.'?'':entry.slice(1)),directory,target,types:typeof value==='object'?value.types:null,kind:target.endsWith('.css')?'css':target.endsWith('.json')?'json':entry==='./init.js'?'classic':'esm'});
     }
   }
   if(symbols){

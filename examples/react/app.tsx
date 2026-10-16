@@ -1,12 +1,15 @@
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Button, IconButton, Field, Input, Textarea, SimpleSelect, Checkbox, Radio, Switch, Nav, NavItem, Tabs, Alert, Surface, Dialog } from '@coffeehc/xui-react';
-import { createThemeController, type ThemeMode } from '@coffeehc/xui-runtime';
+import type { ThemeMode } from '@coffeehc/xui-runtime/theme';
+import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+import type {ThemeOptions} from '@coffeehc/xui-runtime/theme';
 import '@coffeehc/xui-theme/style.css';
 import './layout.css';
 import './product.css';
-declare global { interface Window { xuiTheme?: ReturnType<typeof createThemeController> } }
-const theme = window.xuiTheme ?? createThemeController();
+declare global {interface Window {xuiThemeOptions?:ThemeOptions}}
+const app=bootstrap({},window.xuiThemeOptions?{services:{theme:{options:window.xuiThemeOptions}}}:{});
+const theme = app.services.getThemeService();
 function App() {
   const [mode,setMode] = React.useState(theme.getState().mode);
   React.useEffect(() => theme.subscribe(state => setMode(state.mode)),[]);

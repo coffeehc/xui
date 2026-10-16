@@ -45,7 +45,8 @@ window.renderFocusCase=config=>{window.focusCaseSaves=0;root.render(<FocusCaseVi
 // Formal public consumers for the workspace scrollport focus contract. There
 // is deliberately no host padding, inset-outline override, or private shell DOM.
 import {AppShell} from '@coffeehc/xui-react/layout';
-import {getThemeController,type ThemeMode} from '@coffeehc/xui-runtime/theme';
+import {getThemeService} from '@coffeehc/xui-runtime/services';
+import type {ThemeMode} from '@coffeehc/xui-runtime/theme';
 type WorkspaceFocusCase={mode:ThemeMode};
 function WorkspaceFocusFields(){return <div className="xui-stack">
  <Input aria-label="Workspace first" defaultValue="Keep first draft"/>
@@ -55,7 +56,7 @@ function WorkspaceFocusFields(){return <div className="xui-stack">
 </div>;}
 declare global{interface Window{renderWorkspaceFocusCase:(config:WorkspaceFocusCase)=>void}}
 window.renderWorkspaceFocusCase=config=>{
- const theme=getThemeController(window);theme.setMode(config.mode);
+ const theme=getThemeService(window);theme.setMode(config.mode);
  root.render(<AppShell key={`workspace-${config.mode}`} theme={theme} scrollMode="workspace" headerSlots={{brand:'Workspace focus'}} sidebar={<nav aria-label="Workspace navigation"><a href="#overview">Overview</a></nav>}><WorkspaceFocusFields/></AppShell>);
 };
 

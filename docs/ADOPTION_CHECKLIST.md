@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（本轮候选为 1.3.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（2.0.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -25,8 +25,8 @@
 | ART-007 | 打包 Base UI 弹层页面 | Base UI 只有宿主单实例，Dialog/Popover 等未嵌套另一份 peer | lockfile 与 bundle module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
 | ART-008 | 编译正式消费者 | 使用安装包 `.d.ts` 成功编译真实页面和公开类型 | 独立 tarball consumer 编译日志 | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
 | ART-009 | 加载主题 CSS | 只导入正式 CSS，未依赖消费者 Tailwind 扫描 xui 源码 | CSS import 与生产 CSS manifest | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
-| ART-010 | 文档首次可见前初始化主题 | 只加载与固定 SHA 配套的正式 `@coffeehc/xui-runtime/init.js`；顺序先于主题 CSS 和可见内容，不在宿主复制另一份 init owner | HTML/script resolved path、Network 顺序与首屏主题录像 | [ADOPTION 主题单一所有者](ADOPTION.md#主题单一所有者) |
-| THEME-001 | 首次无主题选择 | 唯一主题 owner 按合同取得默认 mode 和 effective 值 | sessionStorage 初始状态与页面主题 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
+| ART-010 | 文档首次可见前初始化主题/缩放 | 只加载固定 SHA 的正式 `@coffeehc/xui-runtime/init.js`；先于 CSS 和可见内容执行，仅预绘制根元素主题/缩放属性，不创建 ThemeController | HTML/script resolved path、首屏 Network 顺序、window.xuiTheme创建时序与根属性记录 | [ADOPTION 主题单一所有者](ADOPTION.md#主题单一所有者) |
+| THEME-001 | 首次无有效主题偏好 | `bootstrap` 以 config `theme.mode` 建立默认 mode；有效 sessionStorage `ui.theme.mode` 优先于该默认 | config、sessionStorage、ThemeState.mode/effective 与页面 computed theme | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [PUBLIC_API 启动服务](PUBLIC_API.md#启动配置与应用服务) |
 | THEME-002 | 用户切换主题 | mode 由单一受控 owner 确认并保存到合同规定的 sessionStorage key | Storage 面板及 mode/effective 记录 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
 | THEME-003 | 在同一标签页刷新 | 已保存主题恢复，页面不先闪到另一主题 | Performance 截图/录屏与 sessionStorage | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
 | THEME-004 | 主题设为 system 且系统配色变化 | 页面响应媒体变化；不得另有第二个媒体监听/持久化 owner | 事件监听与主题状态记录 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
@@ -35,11 +35,55 @@
 | THEME-007 | 增加或覆盖 token | 跨层依赖严格单向 base → semantic → component；同层只允许可展开的单向别名，无反向跨层引用或循环 | token graph 与脚本检查结果 | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
 | THEME-008 | 产品需要品牌/组件视觉差异 | 单一集中主题 owner 映射公共 token；不复制公共默认值或在页面/组件另写色板、尺寸、状态色 | theme.css diff、CSS grep 与实际 computed token | [DESIGN 三层 Token](DESIGN.md#三层token的工程约束) · [ADOPTION 主题 owner](ADOPTION.md#主题css-与单-owner) |
 | SCALE-001 | 默认与设置入口 | 无存储时100%；设置仅用同一公开方法，支持1/1.25/1.5/2，不另设第二主题/比例 owner | 入口导入、运行时DOM及比例记录 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
-| SCALE-002 | 同标签页恢复 | ui.interface.scale保存在sessionStorage；init.js于CSS/body前恢复，不通过effect制造首屏跳变 | 首次绘制、reload与存储记录 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
+| SCALE-002 | 同标签页恢复 | `ui.interface.scale` 有效值优先于 config `theme.scale` 默认；init.js在CSS/body前只恢复根元素预绘制值，不通过effect制造首屏跳变 | 首次绘制、reload、config与sessionStorage逐项记录 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
 | SCALE-003 | 异常存储与参数 | 读失败/非法保存值保持默认；写失败当前页仍应用；非法方法参数在DOM/存储写入前报错 | 异常注入与断言 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
 | SCALE-004 | 比例切换中的交互 | 草稿、节点、焦点、选区保留；没有Document导航或业务请求；不重挂正文 | DOM身份、activeElement、选区及网络记录 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
 | SCALE-005 | 放大布局与可达性 | 浅深system、宽窄、长中文、表单/弹层重排和全部动作可达；根字号和CSS zoom无第二owner | 各倍率几何、键盘操作与截图 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
 | SCALE-006 | 缩放证据区分 | 界面比例、用户字号与真实浏览器zoom分别记录；sessionStorage复制/关闭语义不冒充跨会话持久化 | 实际环境和独立验证记录 | [DESIGN 界面缩放](DESIGN.md#公共界面缩放) · [ADOPTION 使用方法](ADOPTION.md#界面缩放与会话恢复) |
+
+## 启动、配置与基础 Service
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| BOOT-001 | 浏览器应用首次挂载 | 在 React root/render 前调用一次 `bootstrap(overrides, environment)`，取得同一个 `XuiApplication.config/services` | 入口调用顺序、React mount时间和返回实例身份 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| BOOT-002 | 调用浏览器 bootstrap | 同步配置期间没有登录、refresh、session、XHR/fetch 或隐藏配置请求 | Network记录及service状态调用轨迹 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| BOOT-003 | 运行依赖需要 Window、writer、HTTP/Auth 实例或函数 | 通过第二参数 `BootstrapEnvironment.services` 注入；不放入 JSON config 或 config.json | bootstrap调用点和配置对象字段审查 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| BOOT-004 | 浏览器不存在或需 SSR | 使用请求级 `new XuiServices(options, environment)`，bootstrap 不伪造浏览器全局 | SSR请求隔离测试、Window依赖调用栈 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| CONFIG-001 | 安装正式 runtime 包 | 默认 JSON 通过 `@coffeehc/xui-runtime/config.json` 可读取，bootstrap默认从包内置配置解析且没有远端配置请求 | tarball文件、config export resolved path与Network | [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [默认配置](../packages/runtime/src/config.json) |
+| CONFIG-002 | override传入已知普通对象的部分子字段 | 仅覆盖提供字段；对象递归合并，未给同级默认值保留 | config默认值、部分override及解析后对象对照 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| CONFIG-003 | override传入数组 | 数组整体替换默认数组，不按索引合并 | 默认/override/解析结果三份数组对照 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| CONFIG-004 | override有值为 `undefined` 的对象属性 | 该属性不覆盖随包默认值 | descriptor夹具与解析结果 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| CONFIG-005 | 已知配置对象出现schema之外的字段 | `resolveConfig`/bootstrap明确拒绝未知字段，不静默丢弃 | 单个未知键正反向夹具和错误路径 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| CONFIG-006 | 配置含函数、循环对象、访问器或非JSON实例 | 解析拒绝；运行时对象必须转到第二参数注入 | 各类非JSON输入及错误结果 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| CONFIG-007 | `extensions` 携带宿主自有配置 | xui仅接受JSON值，不解释领域键；宿主在自身边界校验其业务schema | extension schema owner与输入/错误记录 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| CONFIG-008 | 维护 config.json、override、extensions | 不保存访问/刷新token、密码、cookie、私钥等secret；认证secret走其明确运行时/浏览器owner | 打包配置及仓库敏感配置审查，不以解析器测试代替 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-001 | 同一 Window重复执行相同 bootstrap | 复用已配置的注册表和服务owner；不并行创建第二套HTTP/Auth/Theme等实例 | 前后实例引用、监听数与请求数 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-002 | 同一 Window已有注册表但再次传入冲突配置/不同service | bootstrap/registry明确拒绝冲突，不静默重配或换owner | 冲突输入与错误、既有owner身份 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-003 | 取得 HTTP service 且没有 bootstrap HTTP配置或注入实例 | `getHttpService()` 明确失败，不自动猜baseURL/凭据 | 空注册表调用和错误类型 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-004 | 取得 Auth service 且 `auth.enabled=false` | 不创建认证owner；显式注入Auth与禁用配置组合时启动拒绝 | service getter、network零请求及错误结果 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-005 | `auth.enabled=true` 使用默认Auth service | AuthClient绑定同一注册表HTTP实例；没有第二fetch/token store/401 owner | HTTP/Auth实例身份与Protected请求trace | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-006 | bootstrap/XuiServices收到 `{instance}` 借用服务 | registry可提供该实例但dispose不调用其destroy/dispose | 借用实例析构spy和registry释放轨迹 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-007 | registry以 `{options}` 创建所属服务 | 所属服务由同一个registry生命周期释放；视图卸载不能提前dispose | 服务资源计数与应用关闭前后状态 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-008 | SSR并发处理多个请求 | 每请求创建隔离 `XuiServices`；Auth/HTTP/config/route/i18n状态不跨请求共享 | 并发请求使用的实例ID和secret隔离记录 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-009 | 应用退出或文档owner结束 | 通过 `disposeXuiServices(window)` 释放该Window registry，不让组件卸载销毁共享服务 | owner destroy计数与多个view卸载对照 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| THEME-009 | 有有效 sessionStorage 主题且 config 默认值不同 | 恢复存储偏好，config只作为无效/缺失偏好时的默认；显式受控 `ThemeOptions.mode` 单独按受控合同测试 | init前后root属性、bootstrap ThemeState、storage值 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| THEME-010 | 加载 `@coffeehc/xui-runtime/init.js` | 首绘脚本不创建 `window.xuiTheme`/ThemeController；正式owner由bootstrap/getThemeService建立 | 运行脚本后、bootstrap前后owner实例与ThemeState | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SCALE-007 | 有效 sessionStorage scale 与 config `theme.scale` 不同 | 首绘与bootstrap都采用已保存scale；config仅提供无有效存储值时的默认 | init前后document scale属性、bootstrap后值和storage | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| I18N-001 | 默认 config启动且未启用i18n | 服务初始locale为配置 `defaultLocale`，切换开关为false；顶栏语言入口不被默认为已启用 | config、I18nState与实际入口DOM | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| I18N-002 | 产品需要非默认翻译 | 由宿主config `messages` 或已声明locale的 `registerMessages` 提供；不得宣称xui自带全量翻译词典 | 实际messages来源、catalog条目与固定包内容 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| I18N-003 | `t(key, ..., fallback)` 查不到当前locale key | 顺序采用当前locale、fallbackLocale、显式fallback、原key | 多locale逐步缺项的返回值记录 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| I18N-004 | i18n禁用切换或目标locale未声明 | `setLocale` 返回false且当前locale不变，不伪显示目标语言 | 返回值、state revision和DOM lang | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| I18N-005 | 当前locale改变且菜单item含labelKey | document lang与菜单label同步更新；导航expandedIds/focus controller仍是独立React owner | DOM lang、菜单文本、展开集合/焦点身份 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| I18N-006 | React页面使用 `useI18n`/`ServicesProvider` | useI18n订阅注入或共享i18n服务，组件unmount只退订不销毁借用服务 | subscribe/unsubscribe计数、service身份 | [React services](PUBLIC_API.md#全部正式入口) |
+| MENU-SVC-001 | 菜单内容来自默认config/语言服务 | MenuService只管理label/items内容，不承接展开、当前route、roving焦点、权限或动作owner | MenuService快照及NavigationMenu Controller状态对照 | [COMPONENTS 菜单数据与Controller](COMPONENTS.md#数据菜单与-controller-所有权) |
+| ROUTE-001 | bootstrap连接History route service | route URI同时反映pathname/search/hash；pushState/replaceState/back/forward后订阅更新，不发document请求 | location、history event、Document请求与subscriber轨迹 | [PUBLIC_API Route](PUBLIC_API.md#启动配置与应用服务) |
+| ROUTE-002 | route设置非根basePath | 解析/生成URL限制在basePath边界内，越界URI返回不接管/失败 | 根路径、边界路径和越界fixture | [PUBLIC_API Route](PUBLIC_API.md#启动配置与应用服务) |
+| ROUTE-003 | 首次route含 `#/` 或 `#!/` hash路由 | runtime明确拒绝该路由形式，不假装支持HashRouter | 两种hash URI启动/resolve结果 | [PUBLIC_API Route](PUBLIC_API.md#启动配置与应用服务) |
+| ROUTE-004 | 点击RouteLink外链、download、target或修饰键 | 保留标准浏览器链接行为，不由route service接管该导航 | Ctrl/Meta/Shift、中键、target、download与Network | [PUBLIC_API Route](PUBLIC_API.md#启动配置与应用服务) |
+| ROUTE-005 | 部署使用非根History深链 | 宿主web server把合法深链fallback到应用shell；库本身不声称配置服务器rewrite | 直接刷新深链的HTTP状态、HTML入口和宿主server规则 | [PUBLIC_API Route](PUBLIC_API.md#启动配置与应用服务) |
+| DOWNLOAD-001 | 发起DownloadService.request | 复用registry中同一HttpClient，返回Blob/文件元数据但不自动保存/点击隐藏link | service身份、请求次数、Blob与浏览器下载事件 | [PUBLIC_API Download](PUBLIC_API.md#启动配置与应用服务) |
+| DOWNLOAD-002 | 用户明确触发下载保存 | 仅显式调用save时创建临时URL/link并清理；请求完成本身不触发下载 | 用户动作与下载事件时序、URL回收 | [PUBLIC_API Download](PUBLIC_API.md#启动配置与应用服务) |
+| UTIL-001 | 调用 `getUtilService()` | 返回冻结纯函数namespace；不创建registry、订阅、storage、网络请求或UI状态 | 两次getter身份、Object.freeze与DOM/Network零变化 | [PUBLIC_API Util](PUBLIC_API.md#启动配置与应用服务) |
 
 ## React UI 与产品迁移
 
@@ -289,7 +333,14 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | MENU-SEP-001 | 菜单中需要分隔不同内容组 | 使用 `Menu.Separator` 或 `ContextMenu.Separator`，它不执行动作、不可成为额外键盘停靠点，浅深主题下仍清晰可辨 | role/aria、Tab顺序、主题computed样式与两种菜单组合 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | MENU-VIEW-001 | 使用数据驱动 `Menu.View` | 默认 config 模式只有一个由 View 管理的内部 Controller；注入模式完全替换它，不创建默认实例，且 Controller 生命周期归注入宿主。两种 props 模式互斥 | 正/负类型编译、Controller 创建/订阅/退订/destroy 计数与实例身份 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) · [PUBLIC_API `/menu`](PUBLIC_API.md#全部正式入口) |
 | MENU-VIEW-002 | 菜单动作执行或需自定义焦点行为 | `actionId` 只映射宿主动作；只有同步 `event.preventDefault()` 取消本次默认关闭。异步操作仍归宿主，Base UI 是方向键与实际焦点的唯一 owner | pointer/keyboard 一次动作计数、阻止关闭断言、ARIA/焦点轨迹与迟到业务回调 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) |
-| STATE-OWNER-001 | 核查任一公共组件的状态扩展 | 逐项对应Controller矩阵；区分完整替换、仅服务注入、受控props、handle/manager和平台投影。待补项不得写成已交付；业务值、查询、秘密不迁入通用UI快照 | 实际固定types、实例创建/订阅/退订/销毁与状态范围证据；不适用项逐条给owner依据 | [COMPONENTS 状态所有权与Controller模式](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-OWNER-001 | 采用任一有语义交互状态组件 | 逐项选择默认或同契约注入，完整替换不创建/订阅并行默认；不得把value/onChange、handle或Toast manager算完整注入，Toast仍是明确缺口 | 默认/注入/不适用/未满足逐项证据，不得全量笼统打勾 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-OWNER-002 | 默认模式使用受控值 | 用户请求不提前发布未确认值；外部确认不触发回调循环，default仅初始化 | 拒绝/接受请求与动态值更新计数 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-OWNER-003 | 注入或替换Controller | 初始化/受控/callback互斥；实例切换退订旧实例，不destroy注入者、不覆盖其配置；DOM/焦点连续 | 正/负类型、JS冲突、订阅计数、旧实例动作与焦点 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-OWNER-004 | 默认实例生命周期或异步操作 | StrictMode不重复请求，不在effect replay永久销毁；真实退出取消所属等待并隔离迟到结果 | replay/卸载/切换、请求次数及迟到操作 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-OWNER-005 | 登录、密码、初始化、一次性Key | 秘密只在DOM/瞬时提交边界，安全快照无密码/匹配词/secret，退出清理；现有AuthClient与权限owner不替换 | 快照检查、扩展await前后读取及退出DOM/worker清理 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-OWNER-006 | ApiKey/业务日志/结构化日志View | 旧controller仅service；完整注入使用viewController且与service/options初始化互斥。默认依赖显式adapter/loader；展示草稿/客户端页不复制服务查询 | 三模式、请求次数、借用/所属销毁、取消/快照/刷新保行 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-OWNER-007 | 导航、选择与Overlay组合 | 父子共享所属语义实例，Base UI执行实际键盘/焦点/portal；路由、分组页、active事实归宿主 | 组合实例/受控拒绝、disabled、Escape和同树焦点 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-COPY-001 | 复制文本或显式writer | 使用runtime剪贴板服务或既有平台writer，写入串行、取消/迟到隔离；失败就地反馈，不读剪贴板/持久化/自动重试 | 真实指针、fallback焦点/选区/scroll、队列/失败/取消计数 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-003 | 展示警告/等待/人工介入状态 | tone 与真实状态分类逐条映射，不只用颜色传达状态 | 领域状态映射表和可访问文本 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |

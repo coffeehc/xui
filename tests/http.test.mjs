@@ -1,9 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createHttpClient,HttpError,createAjaxResponseAdapter,ajaxResponseAdapter,parseAjaxResponse,getHttpErrorMessage} from '../packages/runtime/dist/http.js';
+import {HttpError,createAjaxResponseAdapter,ajaxResponseAdapter,parseAjaxResponse,getHttpErrorMessage} from '../packages/runtime/dist/http.js';
+import {isolatedHttp,disposeServices} from './helpers/runtime-services.mjs';
 const wire=(payload=null,extra={})=>({success:true,message:'',payload,request_id:'',code:1,...extra});
 const json=(value,status=200,headers={})=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json',...headers}});
-const client=(fetch,options={})=>createHttpClient({baseURL:'https://fixture.example/api/',fetch,...options});
+const client=(fetch,options={})=>isolatedHttp({baseURL:'https://fixture.example/api/',fetch,...options});
 const flush=async()=>{for(let n=0;n<16;n++)await Promise.resolve();};
 const deferred=()=>{let resolve;const promise=new Promise(done=>resolve=done);return {promise,resolve};};
 test('AjaxResponse preserves legal null, exact fields, body/header ids and safe generic errors',async()=>{
@@ -113,11 +114,11 @@ test('retry backoff is canceled, auth is never retried and excessive Retry-After
 });
 test('destroy cancels active work, reentrant feedback cannot change facts, headers and JSON body are explicit',async()=>{
   let received;const http=client(async(url,init)=>{received={url,init};return json(wire('saved'));},{headers:{'X-Client':'default'},getHeaders:()=>({'X-Client':'provider'})});await http.request('write',{method:'POST',headers:{'X-Client':'endpoint'},json:null});assert.equal(received.url,'https://fixture.example/api/write');assert.equal(received.init.headers.get('X-Client'),'endpoint');assert.equal(received.init.headers.get('content-type'),'application/json');assert.equal(received.init.body,'null');
-  const pending=client(async()=>new Promise(()=>{}));const request=pending.request('read'),failure=assert.rejects(request,error=>error.kind==='cancel');pending.destroy();pending.destroy();await failure;await assert.rejects(pending.request('after'),error=>error.kind==='cancel');
+  const pending=client(async()=>new Promise(()=>{}));const request=pending.request('read'),failure=assert.rejects(request,error=>error.kind==='cancel');disposeServices(pending);disposeServices(pending);await failure;await assert.rejects(pending.request('after'),error=>error.kind==='cancel');
   await assert.rejects(client(async()=>json(wire(null,{success:false})),{onError(){throw Error('observer');}}).request('error'),error=>error.kind==='business');
   await assert.rejects(client(async()=>json(wire(null,{success:false})),{onError:async()=>{throw Error('async observer');}}).request('error'),error=>error.kind==='business');
 });
 test('invalid configuration and adapter shapes fail without guessed data or network requests',async()=>{
-  assert.throws(()=>createHttpClient({baseURL:'relative'}),TypeError);let count=0;const http=client(async()=>{count++;return json(wire(null));});for(const options of [{timeoutMs:0},{endpointId:'https://private.example/'},{json:undefined},{json:1,body:'both'}])await assert.rejects(http.request('invalid',options),error=>error instanceof TypeError||error instanceof RangeError);await assert.rejects(http.request('https://other.example/'),TypeError);assert.equal(count,0);
-  await assert.rejects(http.request('invalid-adapter',{adapter:()=>({data:[]})}),error=>error.kind==='parse');
+  assert.throws(()=>isolatedHttp({baseURL:'relative'}),TypeError);let count=0;const http=client(async()=>{count++;return json(wire(null));});for(const options of [{timeoutMs:0},{endpointId:'https://private.example/'},{json:undefined},{json:1,body:'both'}])await assert.rejects(http.request('invalid',options),error=>error instanceof TypeError||error instanceof RangeError);await assert.rejects(http.request('https://other.example/'),TypeError);assert.equal(count,0);
+  await assert.rejects(http.request('invalid-adapter',{adapter:()=>({data:[]})}),error=>error.kind==='parse');disposeServices(http);
 });

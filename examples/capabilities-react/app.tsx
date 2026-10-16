@@ -13,9 +13,11 @@ import {ApiKeyManager} from '@coffeehc/xui-react/api-key';
 import {BusinessLogExplorer} from '@coffeehc/xui-react/business-log';
 import {requestDownload,saveDownload} from '@coffeehc/xui-runtime/download';
 import {getHttpErrorMessage} from '@coffeehc/xui-runtime/http';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import {createCapabilityExample} from '../shared/capability-model';
 import '@coffeehc/xui-theme/critical.css';
 import '@coffeehc/xui-theme/floating.css';
+bootstrapBrowserExample();
 const owner=await createCapabilityExample(location.href),root=createRoot(document.getElementById('root')!);
 // Exercise the real public Sheet side prop in independently packed consumers.
 const requestedSheetSide=new URLSearchParams(location.search).get('sheetSide');

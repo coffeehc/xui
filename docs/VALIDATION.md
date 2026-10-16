@@ -4,6 +4,35 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 统一启动、基础Service与组件Controller（2.0.0，2026-10-16）
+
+DESIGN与三个包为 **2.0.0**，398 Token、101公开入口、352项接入检查。基础Service统一由浏览器Window注册表获取；`bootstrap(overrides, environment)`同步合并正式包内的默认`config.json`，项目参数仅覆盖需要改变的字段。HTTP/Auth/Theme/Clipboard/Route/I18n/Menu/Download共享所属依赖，Util为纯函数namespace；SSR/测试使用独立`XuiServices`。JSON不放实例/函数，借用实例不会被View或注册表销毁；启动不发请求、不登录、不恢复会话。主题和缩放的有效sessionStorage偏好优先于配置默认。
+
+组件逐项默认/完整Controller注入与生命周期边界见[矩阵](COMPONENTS.md#状态所有权与-controller-模式)。受控请求与确认分开，注入模式不创建、配置或销毁并行默认实例；Base UI继续执行实际键盘、焦点、定位和Portal行为。服务组合的未提交筛选/客户端页由View Controller拥有，领域查询/认证/权限仍归已有服务。默认service options仅初始化，普通父渲染不重建owner。秘密不进入安全快照；实例替换、StrictMode、最后View退出、迟到结果及复制取消分别核对。**Toast集合/store完整替换仍未满足**：现有peer没有公开受控集合/store入口，不使用私有store或第二队列，本批不能称为所有组件已完整替换。
+
+最终source generation为`4b08d81cbc09c5f147da79a61877ee9fe5b5e2adb2af8a6866adba23a29dbba0`。独立消费者`.consumers/run-r7rflc/react`从三个正式tarball安装ESM/CSS/types并编译全部公开入口、Controller与bootstrap正负类型fixture；没有源码alias，React/ReactDOM19.2.8与Base UI1.7.0保持单实例。常规门禁记录在`.artifacts/controller-modes-validation/`。
+
+| 门禁 | 最终结果 | 证据 |
+|---|---|---|
+| build / 类型 / Token / 文档 | 通过；398 Token、101入口、352检查项 | `build-final5.log`、`typecheck-final5.log`、`tokens-final5.log`、`docs-final5.log` |
+| 完整单测 | **470/470**，无skip；定向批次与本批重叠，不相加 | `unit-full-final5.log` |
+| 独立正式包消费者 | 通过；公开exports/types、同代安装包、无alias、Button及CSS/JS体积门禁；登录示例调试桥暴露实际theme引用以核对同一owner，不是公共API | `consumer-final5.log`、`.artifacts/performance-baseline.json` |
+| Chromium定向回归 | final4为**162通过/6失败**；受影响复验release5为**19/19通过**。原168项的6个失败已逐项闭合，另含2个展示复制用例；按文件/标题去重共170项覆盖通过，**不是单次170项全绿** | `browser-final4.json/log`、`browser-release5.json/log`、`browser-case-coverage.json` |
+
+浏览器覆盖默认/注入/受控接受拒绝、peer键盘与回焦、StrictMode与替换/卸载、默认API options保owner、多个借用View的最后退出、密码清空/reader替换、AdminSetup动态检查入口；同时回归API Key CRUD/secret、两类日志快照/取消/迟到、Calendar月份、DateTime、Select表单、choice只读禁用和富导航。bootstrap的8项检查包含合并默认、幂等/冲突、History深链与后退保草稿、语言切换、session主题/缩放优先、三主题/窄屏/长中文/200%文字与真实页面缩放。Bootstrap更新后从同一个正式consumer重编并严格类型检查，metafile全部位于独立安装目录；示例不重复PageHeader同名标题，关闭/跳过导航通过公开label与catalog接线。已查看`images-release5/`浅色桌面和深色窄屏大字、`images-final4/`真实缩放及登录截图。
+
+基础示例现在显式启动统一基础设施，并使用新增语义Controller。首屏JS gzip由1.3.1的133849增加至最终 **152144 bytes**，首轮152143超过旧135168-byte预算的真实失败保存在`consumer-release2.log`；本次2.0架构变更明确将该扩展入口预算增加18 KiB至 **153600 bytes**，没有隐藏失败或删除功能来规避。critical CSS **18418/18432 bytes**、Button **6619/16384 bytes**保持原预算。新增独立窄Service门禁要求Clipboard/Theme/I18n/Menu各自gzip不超过4096 bytes，并禁止带入services-core、HTTP/Auth/Download实现；实测分别3859/3491/3028/3253 bytes。密码强度词库worker仍独立懒加载，851531 gzip bytes不计入首屏，也不声称本轮优化了该词库。
+
+正式消费者首轮暴露React声明推导到runtime未公开子路径，已显式标注来自公开入口的返回类型；未扩大私有exports或跳过strict类型检查。单测首轮466/470，四个旧测试分别缺少真实Theme owner方法、仍假定默认scale不写DOM属性，以及直接调用新增Hook组件；按纯prepaint与React SSR合同修订后完整470/470，storage零写入断言保留。实际浏览器另外发现显式密码clear的空值确认会撤销cleared状态，已修复；旧值不能因visibility或普通父渲染恢复。
+
+浏览器初轮32项中16项失败：旧preview进程未加载History fallback；测试的Tab值错配、未启用创建权限、不可聚焦ContextMenu触发器、modal背后按钮点击和错误读取已退出Controller等按真实合同修订。后续中断的final3只保留原始日志，不计完整执行；其bootstrap窄屏失败是英文locator与实际中文“导航”不符，不能归咎旧进程。final4剩余5个登录失败是测试matcher参数位置错误；另一个Clipboard失败是**真实实现缺陷**：DOM Selection恢复后把输入选区重置0。调整为先恢复DOM Selection、再恢复原输入选区/方向，最后恢复滚动；release5通过正式包与mock execCommand验证焦点、原选区和方向、滚动及临时节点清理，未宣称真实OS剪贴板权限验收。`consumer-dist-a623-vs-4b08.json`逐文件比较147份JS/CSS，仅`clipboard-service.js`变化；其余已通过用例只在该明确范围内复用，未把历史绿色结果覆盖到新实现。
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`pnpm test:unit`、`pnpm test:consumer`；浏览器完整范围和失败复验分别见`.artifacts/controller-modes-validation/playwright.config.mjs`与`playwright-release5.config.mjs`及对应日志。修正最终文档后再执行`node --test tests/docs.test.mjs`与diff检查。原始失败、中断、复验报告分别保留，不拼成单次完整套件结论。
+
+兼容性：这是破坏性升级，基础Service的`createHttpClient/createAuthClient/createThemeController/createClipboardService`公开工厂移除，改用bootstrap/Service getter或隔离容器；组件级Controller及无状态adapter工厂继续保留。`init.js`只恢复首绘主题/缩放，不再创建或订阅ThemeController。路由使用History URI，合法深链需宿主服务器fallback；同页anchor保留浏览器滚动/焦点语义，不创建hash router、伪popstate、页面刷新或业务请求owner。新增Controller注入可选，旧受控props仍按默认模式工作，两模式配置互斥。未改任何消费项目、业务API、认证协议或后端。
+
+本批未执行完整浏览器全集、watch/cold-start、独立SSR hydration、真实OS剪贴板权限/读屏器/实体移动设备、消费产品页面或后端/部署；合成数据与隔离transport只证明对应库合同。没有新增实时Stitch审阅；沿用已确认视觉合同，源码审查和合成浏览器不能替代产品验收。
+
 ## Controller逐项审查与公共侧栏分隔（1.3.1，2026-10-16）
 
 本轮先独立提交Controller审查文档`8104fbd5461f1b4cad1cb6cf4d72f03b88c16b6c`，再实现独立侧栏补丁。审查基于1a6772e4/1.3.0源码与正式types，逐项覆盖React根入口105个运行时导出及组合部件；覆盖记录为`.artifacts/controller-audit/coverage.json`，完整矩阵见[状态所有权](COMPONENTS.md#状态所有权与-controller-模式)。明确区分完整语义替换、服务仅注入、受控props、handle/manager、DOM投影及无自有状态；Toast的manager不替换Provider状态store。Controller缺口仍开放，**本轮没有重写或新增这些组件的Controller入口**，也未把105项源码审查当作105项行为测试。

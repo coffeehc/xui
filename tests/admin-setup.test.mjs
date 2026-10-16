@@ -28,3 +28,12 @@ test('React server render is a single stable public form with no secret or autom
 test('authority change during the submitting notification prevents the callback from starting',async()=>{
  let calls=0;const controller=createAdminSetupController({state:{status:'idle'},onSubmit:()=>{calls++;return 'complete';}});controller.subscribe(()=>{if(controller.getState().status==='submitting')controller.setState({status:'unavailable'});});const credentials={username:'fixture',password:'synthetic-only'};await controller.submit(credentials);assert.equal(calls,0);assert.equal(credentials.password,'');assert.equal(controller.getState().status,'unavailable');controller.destroy();
 });
+
+test('administrator controller form aggregate owns all local errors and password visibility',()=>{
+ const controller=createAdminSetupController({state:{status:'idle'},onSubmit:()=> 'complete'}),form=controller.form,updates=[];form.subscribe(()=>updates.push(form.getState()));
+ form.setUsernameError(true);form.passwordFields.setError('confirmation_mismatch');form.passwordFields.setTipOpen(true);form.passwordFields.password.inputController.setVisible(true);form.passwordFields.confirmation.setVisible(true);
+ assert.deepEqual(form.getState(),{usernameError:true});assert.equal(form.passwordFields.getState().error,'confirmation_mismatch');assert.equal(form.passwordFields.getState().tipOpen,true);
+ assert.doesNotMatch(JSON.stringify(form.getState())+JSON.stringify(form.passwordFields.getState()),/password|synthetic/);assert.equal(updates.length,1);
+ form.clear();assert.deepEqual(form.getState(),{usernameError:false});assert.deepEqual(form.passwordFields.getState(),{error:null,tipOpen:false,strength:{status:'idle'}});assert.equal(form.passwordFields.password.inputController.getState().visible,false);assert.equal(form.passwordFields.confirmation.getState().visible,false);
+ controller.destroy();form.setUsernameError(true);assert.equal(form.getState().usernameError,false);
+});

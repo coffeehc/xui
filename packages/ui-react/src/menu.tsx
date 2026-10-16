@@ -1,3 +1,6 @@
+import {useOwnedController} from './controller.js';
+import {assertControllerProps} from './controller.js';
+import {useOverlay,useValue,type WithController,type OverlayController,type ValueController} from './interaction-hooks.js';
 import * as React from 'react';
 import { Menu as Base } from '@base-ui/react/menu';
 import {bindMenuKeyboardFocus} from './menu-keyboard.js';
@@ -19,7 +22,7 @@ function Popup({className,ref,...props}:React.ComponentProps<typeof Base.Popup>)
  return <Base.Popup {...props} ref={popup} className={branded('xui-layer xui-floating xui-menu-popup',className)}/>;
 }
 export const Menu = {
- ...Base,
+ ...Base,Root,RadioGroup,
  Popup,
  /** Serializable menu composition with an owned default or fully replaced public controller. */
  View:MenuView,
@@ -31,7 +34,7 @@ export const Menu = {
  SubmenuTrigger:function SubmenuTrigger({className,...props}:React.ComponentProps<typeof Base.SubmenuTrigger>){return <Base.SubmenuTrigger {...props} className={branded('xui-menu-item',className)}/>;},
  Item: function Item({className,tone='default',...props}:MenuItemProps){return <Base.Item {...props} data-tone={tone} className={branded('xui-menu-item',className)}/>;},
  LinkItem: function LinkItem({className,...props}:React.ComponentProps<typeof Base.LinkItem>){return <Base.LinkItem {...props} className={branded('xui-menu-item',className)}/>;},
- CheckboxItem: function CheckboxItem({className,...props}:React.ComponentProps<typeof Base.CheckboxItem>){return <Base.CheckboxItem {...props} className={branded('xui-menu-item',className)}/>;},
+ CheckboxItem: function CheckboxItem(allProps:MenuCheckboxItemProps){const {className,controller,checked,defaultChecked,onCheckedChange,...props}=allProps;assertControllerProps(controller,allProps,['checked','defaultChecked','onCheckedChange']);const state=useValue({controller,value:checked,defaultValue:defaultChecked??false,onValueChange:onCheckedChange});return <Base.CheckboxItem {...props} checked={state.value} onCheckedChange={state.onValueChange} className={branded('xui-menu-item',className)}/>;},
  RadioItem: function RadioItem({className,...props}:React.ComponentProps<typeof Base.RadioItem>){return <Base.RadioItem {...props} className={branded('xui-menu-item',className)}/>;},
  GroupLabel: function GroupLabel({className,...props}:React.ComponentProps<typeof Base.GroupLabel>){return <Base.GroupLabel {...props} className={branded('xui-help',className)}/>;},
  Content: function Content({positionerProps,...props}:React.ComponentProps<typeof Base.Popup> & {positionerProps?:React.ComponentProps<typeof Base.Positioner>}){return <Base.Portal><Base.Positioner side="bottom" align="start" {...positionerProps} className={branded('xui-positioner',positionerProps?.className)}><Popup {...props}/></Base.Positioner></Base.Portal>;},
@@ -45,18 +48,10 @@ interface MenuViewParts {
 /** Injection replaces the entire model. Config/action props belong only to an owned default. */
 export type MenuViewProps=MenuViewParts&({controller:MenuController;config?:never;onAction?:never;defaultOpen?:never}|{controller?:undefined;config:MenuConfig;onAction?:MenuControllerOptions['onAction'];defaultOpen?:boolean});
 function MenuView(props:MenuViewProps){
+ assertControllerProps(props.controller,props,['config','onAction','defaultOpen']);
  const action=React.useRef(props.onAction);action.current=props.onAction;
- const owned=React.useRef<MenuController|null>(null),lifetimes=React.useRef(new Map<MenuController,object>());
- if(!props.controller&&!owned.current)owned.current=createMenuController({config:props.config!,defaultOpen:props.defaultOpen,onAction:event=>action.current?.(event)});
- const controller=props.controller??owned.current!;
+ const controller=useOwnedController(props.controller,()=>createMenuController({config:props.config!,defaultOpen:props.defaultOpen,onAction:event=>action.current?.(event)}));
  React.useLayoutEffect(()=>{if(!props.controller)controller.setConfig(props.config!);},[controller,props.controller,props.config]);
- React.useEffect(()=>{
-  if(controller!==owned.current)return;
-  const token={};lifetimes.current.set(controller,token);
-  // StrictMode replays setup/cleanup. A new setup for the same instance cancels
-  // release; a replacement or actual unmount releases only the owned instance.
-  return()=>queueMicrotask(()=>{if(lifetimes.current.get(controller)===token){lifetimes.current.delete(controller);if(owned.current===controller)owned.current=null;controller.destroy();}});
- },[controller]);
  return <ConnectedMenu trigger={props.trigger} resolveIcon={props.resolveIcon} contentProps={props.contentProps} controller={controller}/>;
 }
 function ConnectedMenu({controller,trigger,resolveIcon,contentProps}:MenuViewParts&{controller:MenuController}){
@@ -79,7 +74,13 @@ function ConnectedMenu({controller,trigger,resolveIcon,contentProps}:MenuViewPar
    </Menu.Item>;
   });
  };
- return <Menu.Root open={state.open} disabled={state.destroyed||state.config.disabled} loopFocus={state.config.loopFocus} onOpenChange={open=>controller.setOpen(open)} onOpenChangeComplete={open=>{if(open)applyFocus();}}>
+ return <Base.Root open={state.open} disabled={state.destroyed||state.config.disabled} loopFocus={state.config.loopFocus} onOpenChange={open=>controller.setOpen(open)} onOpenChangeComplete={open=>{if(open)applyFocus();}}>
   <Menu.Trigger render={trigger} ref={triggerRef}/><Menu.Content {...contentProps} ref={node=>{if(node)popup.current=node;}} finalFocus={contentProps?.finalFocus??finalFocus}>{renderNodes(state.config.items)}</Menu.Content>
- </Menu.Root>;
+ </Base.Root>;
 }
+
+export type MenuRootProps<Payload=unknown>=WithController<React.ComponentProps<typeof Base.Root<Payload>>,'open'|'defaultOpen'|'onOpenChange',OverlayController>;
+function Root<Payload>({controller,open,defaultOpen,onOpenChange,...props}:MenuRootProps<Payload>){const state=useOverlay({controller,open,defaultOpen,onOpenChange});return <Base.Root<Payload> {...props} open={state.open} onOpenChange={state.onOpenChange}/>;}
+export type MenuCheckboxItemProps=WithController<React.ComponentProps<typeof Base.CheckboxItem>,'checked'|'defaultChecked'|'onCheckedChange',ValueController<boolean>>;
+export type MenuRadioGroupProps=WithController<React.ComponentProps<typeof Base.RadioGroup>,'value'|'defaultValue'|'onValueChange',ValueController<any>>;
+function RadioGroup(allProps:MenuRadioGroupProps){const {controller,value,defaultValue,onValueChange,...props}=allProps;assertControllerProps(controller,allProps,['value','defaultValue','onValueChange']);const state=useValue({controller,value,defaultValue:defaultValue??null,onValueChange});return <Base.RadioGroup {...props} value={state.value} onValueChange={state.onValueChange}/>;}

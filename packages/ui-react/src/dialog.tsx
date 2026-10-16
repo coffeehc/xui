@@ -1,3 +1,4 @@
+import {useOverlay,type WithController,type OverlayController} from './interaction-hooks.js';
 import {useDialogLayoutRef} from './dialog-layout.js';
 import * as React from 'react';
 import { cx, branded } from './shared.js';
@@ -12,7 +13,7 @@ function Header({className,children,showClose=true,closeButtonProps,...props}:Di
   return <div {...props} className={cx('xui-dialog-header',className)}><div className="xui-dialog-heading">{children}</div>{showClose && <CloseButton {...closeButtonProps}/>}</div>;
 }
 export const Dialog = {
-  Root: BaseDialog.Root, Trigger: BaseDialog.Trigger, Close: BaseDialog.Close, Header, CloseButton,
+  Root, Trigger: BaseDialog.Trigger, Close: BaseDialog.Close, Header, CloseButton,
   Content: function Content({className,keepMounted,ref,...props}: React.ComponentProps<typeof BaseDialog.Popup> & {keepMounted?:boolean}) {
     const layoutRef=useDialogLayoutRef(ref);
     return <BaseDialog.Portal keepMounted={keepMounted}><BaseDialog.Backdrop className="xui-backdrop" /><BaseDialog.Popup {...props} ref={layoutRef} className={branded('xui-layer xui-dialog',className)} /></BaseDialog.Portal>;
@@ -22,3 +23,10 @@ export const Dialog = {
   Body: function Body({className,...props}: React.ComponentProps<'div'>) { return <div {...props} className={cx('xui-dialog-body',className)} />; },
   Footer: function Footer({className,...props}: React.ComponentProps<'div'>) { return <div {...props} className={cx('xui-dialog-footer',className)} />; },
 };
+
+export type DialogRootProps<Payload=unknown>=WithController<React.ComponentProps<typeof BaseDialog.Root<Payload>>,'open'|'defaultOpen'|'onOpenChange',OverlayController>;
+function Root<Payload>(props:DialogRootProps<Payload>){
+ const {controller,open,defaultOpen,onOpenChange,...rest}=props;
+ const state=useOverlay({controller,open,defaultOpen,onOpenChange});
+ return <BaseDialog.Root<Payload> {...rest} open={state.open} onOpenChange={state.onOpenChange}/>;
+}

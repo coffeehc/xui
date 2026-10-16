@@ -8,14 +8,16 @@ import {Field,Input} from '@coffeehc/xui-react/forms';
 import {Tabs} from '@coffeehc/xui-react/tabs';
 import {Dialog} from '@coffeehc/xui-react/dialog';
 import type {NavigationMenuOptions} from '@coffeehc/xui-runtime/navigation';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-runtime/init.js';
 import '@coffeehc/xui-theme/style.css';
 import {copy,fixtureOptions,shortItems,longItems,createActionModel,type ActionModel,type FixtureOwner,type FooterKind,type HostFocus} from '../shared/sidebar-footer-model';
 
 declare global {interface Window {sidebarFooterDemo:FixtureOwner}}
 const config=fixtureOptions(location.search),model=createActionModel();
+const theme=bootstrapBrowserExample().services.getThemeService();
 function Symbol(){return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)" aria-hidden="true"><path d="M12 3 4 6v6c0 4 4 7 8 9 4-2 8-5 8-9V6Z"/><path d="m8 12 3 3 5-6"/></svg>;}
-function cycleTheme(){const modes=['light','dark','system'] as const;const current=window.xuiTheme!.getState().mode;window.xuiTheme!.setMode(modes[(modes.indexOf(current)+1)%modes.length]);}
+function cycleTheme(){const modes=['light','dark','system'] as const;const current=theme.getState().mode;theme.setMode(modes[(modes.indexOf(current)+1)%modes.length]);}
 function Footer({owner,versionRef}:{owner:ActionModel;versionRef:React.Ref<HTMLSpanElement>}){
   const state=React.useSyncExternalStore(owner.subscribe,owner.getState,owner.getState);
   return <>
@@ -42,7 +44,7 @@ function App(){
   const state=React.useSyncExternalStore(model.subscribe,model.getState,model.getState);
   const original=React.useMemo(()=>config.footerRow?<FooterRow owner={model} versionRef={versionRef} onReturn={()=>{heading.current?.focus();}}/>:<Footer owner={model} versionRef={versionRef}/>,[]);
   const update=(next:Partial<NavigationMenuOptions>)=>setOptions(current=>({...current,...next}));
-  window.sidebarFooterDemo={update,setPlacement,setCollapsed,setCollapseBlocked,getCollapseRequests:()=>collapseRequests.current,setList:long=>update({items:long?longItems:shortItems,activeId:long?'record-79':'overview'}),setFooter,repeatFooter:()=>setRepeat(value=>value+1),setActionState:model.setState,finish:model.finish,snapshot:model.getState,setMode:mode=>window.xuiTheme!.setMode(mode),setHostFocus:target=>{hostFocus.current=target;},setOpen,getVersionNode:()=>versionRef.current};
+  window.sidebarFooterDemo={update,setPlacement,setCollapsed,setCollapseBlocked,getCollapseRequests:()=>collapseRequests.current,setList:long=>update({items:long?longItems:shortItems,activeId:long?'record-79':'overview'}),setFooter,repeatFooter:()=>setRepeat(value=>value+1),setActionState:model.setState,finish:model.finish,snapshot:model.getState,setMode:mode=>theme.setMode(mode),setHostFocus:target=>{hostFocus.current=target;},setOpen,getVersionNode:()=>versionRef.current};
   const navigate:NonNullable<NavigationMenuOptions['navigation']>['navigate']=request=>{
     if(!request.sameLocation)history.pushState(null,'',request.url);
     // The host may move focus to its new page or modal after the drawer closes.

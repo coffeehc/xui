@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-react",
-  "version": "1.3.1",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "files": [
@@ -171,6 +171,18 @@
     "./card-group": {
       "types": "./dist/card-group.d.ts",
       "import": "./dist/card-group.js"
+    },
+    "./interaction": {
+      "types": "./dist/interaction.d.ts",
+      "import": "./dist/interaction.js"
+    },
+    "./services": {
+      "types": "./dist/services.d.ts",
+      "import": "./dist/services.js"
+    },
+    "./route": {
+      "types": "./dist/route.d.ts",
+      "import": "./dist/route.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -178,7 +190,7 @@
     "react": ">=19.2.8 <20",
     "react-dom": ">=19.2.8 <20",
     "@base-ui/react": ">=1.7.0 <2",
-    "@coffeehc/xui-runtime": ">=1.1.0 <2"
+    "@coffeehc/xui-runtime": ">=2.0.0 <3"
   },
   "devDependencies": {
     "@coffeehc/xui-runtime": "workspace:*"

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {estimatePasswordStrength} from '../packages/runtime/dist/password-strength-engine.js';
-import {createPasswordStrengthOwner} from '../packages/runtime/dist/password-strength.js';
+import {createPasswordStrengthOwner,createPasswordStrengthController,createNewPasswordFieldsController} from '../packages/runtime/dist/password-strength.js';
 import {validateNewPassword,validatePassword,getPasswordStrengthSummary} from '../packages/runtime/dist/password.js';
 const wait=()=>new Promise(resolve=>setTimeout(resolve,180));
 const ready=score=>({status:'ready',score,level:score<=1?'weak':score===2?'medium':'strong',hint:'none'});
@@ -30,4 +30,36 @@ test('the long-lived engine retains dictionaries, never a factory carrying the l
 });
 test('an asynchronous local result cannot outlive a newer input or a destroyed owner',async()=>{
  let value='synthetic-first',finish;const estimate=()=>new Promise(resolve=>finish=resolve);let destroyed=0;estimate.destroy=()=>destroyed++;const owner=createPasswordStrengthOwner({readPassword:()=>value,onChange:()=>{}},async()=>estimate);owner.refresh();await wait();owner.clear();finish(ready(4));await Promise.resolve();await Promise.resolve();assert.equal(owner.getState().status,'idle');owner.destroy();assert.equal(destroyed,1);
+});
+
+test('public password controllers notify with secret-free snapshots and replace the current reader',async()=>{
+ let value='synthetic-secret-one',changes=0;const owner=createPasswordStrengthController({readPassword:()=>value,onChange:()=>changes++}),states=[];owner.subscribe(()=>states.push(owner.getState()));
+ assert.equal(typeof Worker,'undefined','Node unit tests do not provide the browser worker runtime');owner.refresh(()=>value);assert.equal(owner.getState().status,'loading');await wait();assert.equal(owner.getState().status,'unavailable');
+ value='password';owner.refresh(()=>value);owner.update({onChange:()=>changes++});assert.equal(owner.getState().status,'loading');await wait();assert.equal(owner.getState().status,'unavailable');
+ assert.ok(states.length>0);assert.doesNotMatch(JSON.stringify(owner.getState()),/synthetic-secret-one|password/);assert.doesNotMatch(JSON.stringify(states),/synthetic-secret-one|password/);assert.ok(changes>0);
+ owner.inputController.setVisible(true);assert.equal(owner.inputController.getState().visible,true);owner.clear();assert.equal(owner.getState().status,'idle');assert.equal(owner.inputController.getState().visible,false);owner.destroy();
+});
+
+test('PasswordStrengthInput reader bindings are leased and stale releases cannot detach the replacement',()=>{
+ let originalReads=0,readerAReads=0,readerBReads=0;
+ const controller=createPasswordStrengthController({readPassword:()=>{originalReads++;return '';}});
+ const releaseA=controller.bindReader(()=>{readerAReads++;return 'a'.repeat(300);});
+ controller.refresh();assert.equal(controller.getState().status,'unavailable');assert.equal(readerAReads,1);
+ const releaseB=controller.bindReader(()=>{readerBReads++;return 'b'.repeat(300);});
+ controller.refresh();assert.equal(controller.getState().status,'unavailable');assert.equal(readerBReads,1);
+ releaseA();controller.refresh();
+ assert.equal(controller.getState().status,'unavailable','releasing the old view lease must not clear the current reader');
+ assert.equal(readerBReads,2);assert.equal(readerAReads,1);
+ releaseB();controller.refresh();
+ assert.equal(controller.getState().status,'idle','after the last view lease, refresh returns to the original empty reader');
+ assert.equal(originalReads,1);assert.equal(readerBReads,2);
+ controller.destroy();
+});
+
+test('new-password aggregate owns error, tip and both visibility states without storing secret values',()=>{
+ const controller=createNewPasswordFieldsController(),states=[];controller.subscribe(()=>states.push(controller.getState()));controller.password.refresh(()=> 'synthetic-confirmation-secret');
+ controller.setError('confirmation_mismatch');controller.setTipOpen(true);controller.password.inputController.setVisible(true);controller.confirmation.setVisible(true);
+ const snapshot=controller.getState();assert.deepEqual(snapshot.error,'confirmation_mismatch');assert.equal(snapshot.tipOpen,true);assert.equal(controller.password.inputController.getState().visible,true);assert.equal(controller.confirmation.getState().visible,true);
+ assert.doesNotMatch(JSON.stringify(snapshot)+JSON.stringify(states),/synthetic-confirmation-secret/);controller.clear();assert.deepEqual(controller.getState(),{error:null,tipOpen:false,strength:{status:'idle'}});assert.equal(controller.password.inputController.getState().visible,false);assert.equal(controller.confirmation.getState().visible,false);
+ controller.destroy();controller.setTipOpen(true);assert.equal(controller.getState().tipOpen,false);
 });

@@ -42,7 +42,11 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // 1.2 adds public Card regions/equal tracks, content-width Tabs and Icon states.
 // The formal consumer measured 18,276 gzip bytes (+488 from 1.1.3); bound this
 // compatible presentation release to 18 KiB, without changing JS/Button limits.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 18432, reactInitialJsGzip: 135168 }, button: [], consumers: [] };
+// 2.0's foundation now explicitly boots the shared HTTP/auth/config/History/i18n/menu
+// infrastructure and uses the new semantic Controllers: 152,143 gzip bytes vs the
+// previous 133,849. Bound that expanded entry to 150 KiB (+18 KiB), while keeping
+// CSS/Button budgets and independently gating narrow service imports below.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 18432, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // A fresh directory prevents npm reusing an earlier tarball with the same version.
 const runDirectory = await mkdtemp(resolve('.consumers/run-'));
@@ -58,9 +62,22 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     // npm installs real packed files in a standalone directory, never workspace aliases.
     execFileSync('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', '--cache', '/tmp/xui-npm-cache'], { cwd, stdio: 'inherit' });
     await cp(`examples/${kind}`, cwd, { recursive: true });
+    await mkdir(`${cwd}/shared`,{recursive:true});
+    await copyFile('examples/shared/bootstrap-browser.ts',`${cwd}/shared/bootstrap-browser.ts`);
+    await copyFile('tests/fixtures/controller-modes.tsx',`${cwd}/controller-modes.tsx`);
+    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx'],{cwd,stdio:'inherit'});
     await copyFile('examples/shared/layout.css', `${cwd}/layout.css`);
     await writeFile(`${cwd}/product.css`, extract(await readFile('docs/DESIGN.md', 'utf8'), 'design-product-css'));
     const require = createRequire(`${cwd}/package.json`);
+    for(const [entry,symbol] of [['clipboard','getClipboardService'],['theme','getThemeService'],['i18n','getI18nService'],['menu-service','getMenuService']]){
+        const service=await build({stdin:{contents:`import {${symbol}} from '@coffeehc/xui-runtime/${entry}';window.xuiService=${symbol};`,resolveDir:cwd,sourcefile:'service-only.js'},bundle:true,format:'esm',minify:true,write:false,metafile:true,platform:'browser',target:'es2022'});
+        const contributing=Object.values(service.metafile.outputs).flatMap(output=>Object.entries(output.inputs).filter(([,data])=>data.bytesInOutput>0).map(([path])=>path));
+        assert(contributing.every(file=>resolve(file).startsWith(`${cwd}/`)),'Narrow service escaped its standalone install');
+        assert(!contributing.some(file=>/\/(?:services-core|http-service|auth-service|download-service)\.js$/.test(file)),`${entry} pulls unrelated service implementations`);
+        const bytes=service.outputFiles[0].contents,gzip=gzipSync(bytes).length;
+        assert(gzip<=performance.budgets.narrowServiceGzip,`${entry} gzip budget: ${gzip}/${performance.budgets.narrowServiceGzip}`);
+        performance.services.push({entry,minified:bytes.length,gzip,contributing:contributing.map(file=>file.replace(cwd+'/',''))});
+    }
     assert(!String(await realpath(`${cwd}/node_modules/@coffeehc/xui-runtime`)).includes('/packages/'));
     for (const [name, entry] of [['runtime', 'index.js'], ['theme', 'style.css'], ...([['react', 'index.js']])]) {
         const localName = name === 'react' ? 'ui-react' : name;
@@ -525,7 +542,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile('tests/fixtures/navigation-slots-types.tsx', `${cwd}/navigation-slots-types.tsx`);
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', ...(['rich-navigation/app.tsx', 'navigation-slots-types.tsx'])], { cwd, stdio: 'inherit' });
     await copyFile('examples/shared/page-composition-model.ts', `${cwd}/shared/page-composition-model.ts`);
-    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition']) {
+    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition', 'bootstrap']) {
         const directory = resolve(cwd, name), output = resolve('dist/' + name + '-' + kind);
         await cp('examples/' + name + '-' + kind, directory, { recursive: true });
         const result = await build({ entryPoints: [directory + '/app.' + ('tsx')], outdir: output, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '"production"' } });

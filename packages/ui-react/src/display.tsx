@@ -3,6 +3,7 @@ import * as React from 'react';
 import {createCopyController,copyableLabels,validateImageOptions,type HeadingLevel,type HeadingRole,type TextTone,type CopyStatus,type CopyableLabels,type ClipboardWriter,type ImageOptions,type ImageStatus} from '@coffeehc/xui-runtime/display';
 import {Button} from './button.js';
 import {cx,hasContent} from './shared.js';
+import {useOwnedController,type ControllerProps,assertControllerProps} from './controller.js';
 import {Surface,Badge} from './feedback.js';
 import type {CardHeadingLevel,CardBadge} from '@coffeehc/xui-runtime/display';
 export type {CardHeadingLevel,CardBadge} from '@coffeehc/xui-runtime/display';
@@ -41,13 +42,18 @@ export function Separator({orientation='horizontal',decorative=false,className,.
 export type TagProps=Omit<React.ComponentProps<'span'>,'children'> & {label:string;disabled?:boolean} & ({onRemove?:never;removeLabel?:never;onRemoveFocus?:never}|{onRemove:()=>void;removeLabel:string;onRemoveFocus?:(trigger:HTMLButtonElement)=>void});
 /** Removal is an intent. The host owns collection state and chooses the next focus target. */
 export function Tag({label,disabled=false,onRemove,removeLabel,onRemoveFocus,className,...props}:TagProps){if(onRemove&&(!removeLabel||!removeLabel.trim()))throw new TypeError('Removable Tag requires removeLabel');return <span {...props} className={cx('xui-badge xui-tag',className)}><span className="xui-tag-label">{label}</span>{onRemove&&<Button variant="ghost" size="xs" disabled={disabled} aria-label={removeLabel} onClick={event=>{const trigger=event.currentTarget as HTMLButtonElement;onRemove();onRemoveFocus?.(trigger);}}>×</Button>}</span>;}
-export type CopyableProps=Omit<React.ComponentProps<'span'>,'children'> & {value:string;disabled?:boolean;writeText?:ClipboardWriter;labels?:Partial<CopyableLabels>;onStatusChange?:(status:CopyStatus)=>void};
-export function Copyable({value,disabled=false,writeText,labels:overrides,onStatusChange,className,...props}:CopyableProps){
-  const [status,setStatus]=React.useState<CopyStatus>('idle'),owner=React.useRef<ReturnType<typeof createCopyController>|null>(null),labels={...copyableLabels,...overrides};
-  const notify=React.useCallback((next:CopyStatus)=>{setStatus(next);onStatusChange?.(next);},[onStatusChange]);
-  React.useLayoutEffect(()=>{const instance=createCopyController({value,disabled,writeText,onStatusChange:notify});owner.current=instance;return()=>{instance.destroy();if(owner.current===instance)owner.current=null;};},[]);
-  React.useLayoutEffect(()=>{owner.current?.update({value,disabled,writeText,onStatusChange:notify});},[value,disabled,writeText,notify]);
-  return <span {...props} className={cx('xui-copyable',className)} data-status={status}><code className="xui-code">{value}</code><Button variant="ghost" size="xs" disabled={disabled||status==='copying'} onClick={()=>{void owner.current?.copy();}}>{labels.copy}</Button><span className="xui-copyable-status" role="status" aria-live="polite">{status==='idle'?'':labels[status]}</span></span>;
+type CopyController=ReturnType<typeof createCopyController>;
+type CopyableModelOptions=Parameters<typeof createCopyController>[0];
+export type CopyableProps=Omit<React.ComponentProps<'span'>,'children'> & {labels?:Partial<CopyableLabels>} & ControllerProps<CopyController,CopyableModelOptions>;
+export function Copyable(props:CopyableProps){
+  const {labels:overrides,className}=props,injected='controller'in props?props.controller:undefined,options=props as CopyableModelOptions;
+  assertControllerProps(injected,props,['value','disabled','writeText','onStatusChange']);
+  const latest=React.useRef(options.onStatusChange);latest.current=options.onStatusChange;
+  const owner=useOwnedController(injected,()=>createCopyController({...options,onStatusChange:status=>latest.current?.(status)}));
+  const state=React.useSyncExternalStore(owner.subscribe,owner.getState,owner.getState),labels={...copyableLabels,...overrides};
+  React.useLayoutEffect(()=>{if(!injected)owner.update({...options,onStatusChange:status=>latest.current?.(status)});},[owner,injected,options.value,options.disabled,options.writeText,options.onStatusChange]);
+  const {labels:_labels,className:_className,value:_value,disabled:_disabled,writeText:_writeText,onStatusChange:_onStatusChange,controller:_controller,...spanProps}=props as CopyableProps&{value?:string;disabled?:boolean;writeText?:ClipboardWriter;onStatusChange?:(status:CopyStatus)=>void;controller?:CopyController};
+  return <span {...spanProps} className={cx('xui-copyable',className)} data-status={state.status}><code className="xui-code">{state.value}</code><Button variant="ghost" size="xs" disabled={state.disabled||state.status==='copying'} onClick={()=>{void owner.copy();}}>{labels.copy}</Button><span className="xui-copyable-status" role="status" aria-live="polite">{state.status==='idle'?'':labels[state.status]}</span></span>;
 }
 export type ImageProps=ImageOptions & Omit<React.ComponentProps<'span'>,'children'|'onLoad'|'onError'>;
 function ImageResource({src,alt,retryKey,fallback='图片无法加载',loadingLabel='图片加载中',onStatusChange}:{src:string;alt:string;retryKey?:string|number;fallback?:string;loadingLabel?:string;onStatusChange?:(status:ImageStatus)=>void}){

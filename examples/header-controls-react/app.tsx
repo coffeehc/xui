@@ -5,9 +5,11 @@ import {AppHeader,HeaderBrand,PageHeader,SidebarFooterContent,Stack,type HeaderL
 import {Button} from '@coffeehc/xui-react/button';
 import {Input,SimpleSelect} from '@coffeehc/xui-react/forms';
 import {Avatar} from '@coffeehc/xui-react/avatar';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-runtime/init.js';
 import '@coffeehc/xui-theme/style.css';
 const query=new URLSearchParams(location.search),languages=[{value:'zh-CN',label:'简体中文'},{value:'en',label:'English'},{value:'de',label:'Deutsch',disabled:true}];
+bootstrapBrowserExample();
 declare global {interface Window {headerDemo:any;themeRequests?:string[]}}
 const root=createRoot(document.getElementById('root')!);
 function App(){

@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createApiKeyHttpAdapter,parseApiKeyConfiguration,parseApiKeyWireMetadata} from '../packages/runtime/dist/api-key-http.js';
-import {createHttpClient} from '../packages/runtime/dist/http.js';
+import {isolatedHttp,disposeServices} from './helpers/runtime-services.mjs';
 
 const metadata=(id='9007199254740993',version='19',extra={})=>({id,name:'Synthetic key',prefix:'FAKE',permission_ids:['read'],created_at:null,expires_at:null,last_used_at:null,status:'active',version,enabled:true,capabilities:{update:true,revoke:true,delete_record:true},...extra});
 const configuration=()=>({schema_version:2,can_create:true,permissions:[{id:'read',label:'Read',description:null,disabled:false,required:true},{id:'write',label:'Write',description:'Write access',disabled:false,required:false}],expiry_options:[{id:'30d',label:'30 days'}],default_expiry_id:'30d',default_permission_ids:[],confirmation_label:'Confirm permissions'});
 const json=(payload,status=200)=>new Response(JSON.stringify({success:status===200,message:'',payload:status===200?payload:null,request_id:'fixture',code:status===200?1:50301}),{status,headers:{'Content-Type':'application/json'}});
 const signal=new AbortController().signal;
-const client=fetch=>createHttpClient({baseURL:'https://fixture.invalid/prefix/',fetch});
+const client=fetch=>isolatedHttp({baseURL:'https://fixture.invalid/prefix/',fetch});
 
 test('API key v2 parsers enforce schema versions, allowlisted fields, capabilities and declared permissions',async()=>{
  const config=parseApiKeyConfiguration(configuration());assert.equal(config.canCreate,true);assert.deepEqual(config.defaultPermissionIds,[]);assert.equal(config.permissions[0].required,true);assert(Object.isFrozen(config.permissions));
@@ -33,11 +33,11 @@ test('HTTP writes use ordinary routes and DTOs without operation headers or desc
  assert.deepEqual(requests.map(({method,path})=>[method,path]),[['GET','/api/v1/api-keys/capabilities'],['GET','/api/v1/api-keys'],['POST','/api/v1/api-keys'],['PUT','/api/v1/api-keys/9007199254740993'],['POST','/api/v1/api-keys/9007199254740993/revoke'],['DELETE','/api/v1/api-keys/9007199254740993/record']]);
  assert.deepEqual(requests[2].body,{name:'New key',permission_ids:['read'],expiry_id:'30d',confirmed:true});assert.deepEqual(requests[3].body,{expected_version:'19',name:'Updated',permission_ids:['read'],enabled:false});assert.deepEqual(requests[4].body,{});assert.equal(requests[5].body,undefined);
  for(const request of requests){assert.equal(request.headers.get('accept'),'application/json');assert.equal(request.headers.has('x-api-key-operation-id'),false);assert.equal(request.headers.has('x-api-key-request-fingerprint'),false);assert(!JSON.stringify(request.body??{}).includes('operation_id'));assert(!JSON.stringify(request.body??{}).includes('fingerprint'));assert(!JSON.stringify(request.body??{}).includes('FAKE_ONE_TIME_VALUE'));}
- transport.destroy();
+ disposeServices(transport);
 });
 
 test('HTTP acknowledgements require strict v2 and matching records, and secrets never enter metadata',async()=>{
  const malformed=[{schema_version:1,metadata:metadata(),secret:'FAKE'},{schema_version:2,metadata:{...metadata(),secret:'FAKE'},secret:'FAKE'},{schema_version:2,metadata:metadata(),secret:'',operation_id:'legacy'},{schema_version:2,metadata:metadata(),secret:'FAKE',fingerprint:'legacy'}];
- for(const payload of malformed){const http=client(async()=>json(payload));const adapter=createApiKeyHttpAdapter({http});await assert.rejects(adapter.create({name:'Demo',permissionIds:['read'],expiryId:'30d'},{signal}),error=>error.kind==='parse');http.destroy();}
- const badConfig=client(async()=>json({...configuration(),schema_version:3})),invalid=createApiKeyHttpAdapter({http:badConfig});await assert.rejects(invalid.getConfiguration({signal}),error=>error.kind==='parse');badConfig.destroy();
+ for(const payload of malformed){const http=client(async()=>json(payload));const adapter=createApiKeyHttpAdapter({http});await assert.rejects(adapter.create({name:'Demo',permissionIds:['read'],expiryId:'30d'},{signal}),error=>error.kind==='parse');disposeServices(http);}
+ const badConfig=client(async()=>json({...configuration(),schema_version:3})),invalid=createApiKeyHttpAdapter({http:badConfig});await assert.rejects(invalid.getConfiguration({signal}),error=>error.kind==='parse');disposeServices(badConfig);
 });

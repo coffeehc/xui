@@ -31,13 +31,13 @@ test('unavailable storage still applies live scale',()=>{
 
 const script=await readFile('packages/runtime/dist/init.js','utf8');
 const initialize=b=>runInNewContext(script,{window:b.window,document:b.document});
-test('pre-paint initializer restores scale independently of the existing theme owner without writing storage',()=>{
- for(const value of ['1','1.25','1.5','2']){const b=browser(value),owner={isDestroyed:()=>false};b.window.xuiTheme=owner;initialize(b);assert.equal(b.window.xuiTheme,owner);assert.equal(b.properties.get('--interface-scale'),value);assert.equal(b.root.dataset.interfaceScale,value);assert.equal(b.writes.length,0);initialize(b);assert.equal(b.changes.length,1);}
+test('pre-paint initializer restores scale without creating a theme owner or writing storage',()=>{
+ for(const value of ['1','1.25','1.5','2']){const b=browser(value),owner={isDestroyed:()=>false,getState:()=>({mode:'dark'})};b.window.xuiTheme=owner;initialize(b);assert.equal(b.window.xuiTheme,owner);assert.equal(b.root.dataset.theme,'dark');assert.equal(b.properties.get('--interface-scale'),value);assert.equal(b.root.dataset.interfaceScale,value);assert.equal(b.writes.length,0);initialize(b);assert.equal(b.changes.length,1);}
 });
-test('missing, malformed and unavailable saved scale keep the default document untouched',()=>{
- for(const value of [undefined,'','0','100','1.1','1.25px',' 1.25 ','NaN']){const b=browser(value);initialize(b);assert.equal(b.root.dataset.interfaceScale,undefined);assert.equal(b.changes.length,0);assert.equal(b.writes.length,0);}
- const denied=browser(undefined,true);assert.doesNotThrow(()=>initialize(denied));assert.equal(denied.changes.length,0);
+test('missing, malformed and unavailable saved scale apply the default without creating a theme owner or writing storage',()=>{
+ for(const value of [undefined,'','0','100','1.1','1.25px',' 1.25 ','NaN']){const b=browser(value);initialize(b);assert.equal(b.root.dataset.interfaceScale,'1');assert.equal(b.properties.get('--interface-scale'),'1');assert.equal(b.window.xuiTheme,undefined);assert.equal(b.writes.length,0);}
+ const denied=browser(undefined,true);assert.doesNotThrow(()=>initialize(denied));assert.equal(denied.root.dataset.interfaceScale,'1');assert.equal(denied.properties.get('--interface-scale'),'1');assert.equal(denied.window.xuiTheme,undefined);assert.equal(denied.writes.length,0);
 });
 test('reload restores a saved scale while a fresh session remains at the default',()=>{
- const first=browser();setInterfaceScale(1.5,{window:first.window});const reload=browser(first.storage.get('ui.interface.scale'));initialize(reload);assert.equal(reload.root.dataset.interfaceScale,'1.5');const fresh=browser();initialize(fresh);assert.equal(fresh.root.dataset.interfaceScale,undefined);
+ const first=browser();setInterfaceScale(1.5,{window:first.window});const reload=browser(first.storage.get('ui.interface.scale'));initialize(reload);assert.equal(reload.root.dataset.interfaceScale,'1.5');const fresh=browser();initialize(fresh);assert.equal(fresh.root.dataset.interfaceScale,'1');assert.equal(reload.window.xuiTheme,undefined);assert.equal(fresh.window.xuiTheme,undefined);
 });

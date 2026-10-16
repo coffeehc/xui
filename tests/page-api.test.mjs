@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createHttpClient,createJsonApiErrorAdapter} from '../packages/runtime/dist/http.js';
+import {createJsonApiErrorAdapter} from '../packages/runtime/dist/http.js';
+import {isolatedHttp} from './helpers/runtime-services.mjs';
 import {createApiKeyHttpAdapter,parseApiKeyConfiguration,parseApiKeyWireMetadata} from '../packages/runtime/dist/api-key-http.js';
 import {createApiKeyManagerController} from '../packages/runtime/dist/api-key.js';
 import {createBusinessLogHttpLoader} from '../packages/runtime/dist/business-log-http.js';
 import {createBusinessLogController,getBusinessLogSnapshot} from '../packages/runtime/dist/business-log.js';
 const wire=payload=>({success:true,code:1,message:'',payload,request_id:'demo:request'}),json=(payload,status=200)=>new Response(JSON.stringify(payload),{status,headers:{'Content-Type':'application/json'}});
-const http=fetch=>createHttpClient({baseURL:'https://fixture.invalid/prefix/',fetch,errorAdapter:createJsonApiErrorAdapter()});
+const http=fetch=>isolatedHttp({baseURL:'https://fixture.invalid/prefix/',fetch,errorAdapter:createJsonApiErrorAdapter()});
 const metadata=(extra={})=>({id:'9007199254740993',name:'Demo',prefix:'FAKE',permission_ids:['read'],created_at:null,expires_at:null,last_used_at:null,status:'active',version:'1',enabled:true,capabilities:{update:true,revoke:true,delete_record:true},...extra});
 const configuration=()=>({schema_version:2,can_create:true,permissions:[{id:'read',label:'Read',description:null,disabled:false,required:true},{id:'write',label:'Write',description:null,disabled:false,required:false}],expiry_options:[{id:'30d',label:'30 days'}],default_expiry_id:'30d',default_permission_ids:[],confirmation_label:'Confirm these permissions'});
 const event=(id='demo:event')=>({id,event_type:'order.approved',schema_version:1,occurred_at:'2026-10-12T01:00:00.000000001Z',recorded_at:'2026-10-12T01:00:01Z',actor:{kind:'user',id:'demo:user',display_name:null},object:null,action:'approve',result:'succeeded',summary:'Demo event',correlation_id:null,request_id:null});
@@ -47,7 +48,7 @@ test('domain cursor loaders work without snapshot metadata and only compare real
 });
 
 test('native facades force JSON negotiation and bodies while retaining host authorization headers',async()=>{
- const requests=[],client=createHttpClient({baseURL:'https://fixture.invalid/',headers:{Accept:'application/x-protobuf','Content-Type':'application/x-www-form-urlencoded','X-Demo-Scope':'FAKE_SCOPE'},fetch:async(input,init)=>{requests.push(init);if(init.method==='POST')return json(wire({schema_version:2,metadata:metadata(),secret:'FAKE'}));return json(wire({list:[],total:0}));}}),signal=new AbortController().signal;
+ const requests=[],client=isolatedHttp({baseURL:'https://fixture.invalid/',headers:{Accept:'application/x-protobuf','Content-Type':'application/x-www-form-urlencoded','X-Demo-Scope':'FAKE_SCOPE'},fetch:async(input,init)=>{requests.push(init);if(init.method==='POST')return json(wire({schema_version:2,metadata:metadata(),secret:'FAKE'}));return json(wire({list:[],total:0}));}}),signal=new AbortController().signal;
  await createApiKeyHttpAdapter({http:client}).create({name:'Demo',permissionIds:['read'],expiryId:'30d',confirmed:true},{signal});await createBusinessLogHttpLoader({http:client}).list({filter:{},page:{index:0,size:2,cursor:null}},{signal});for(const init of requests){assert.equal(init.headers.get('accept'),'application/json');assert.equal(init.headers.get('x-demo-scope'),'FAKE_SCOPE');}assert.equal(requests[0].headers.get('content-type'),'application/json');
 });
 test('optional cursor snapshots preserve an earlier real anchor across missing metadata',async()=>{

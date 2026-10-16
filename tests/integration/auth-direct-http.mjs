@@ -1,7 +1,6 @@
 // Opt-in loopback BaseService fixture only; this is not a production login tool.
 import assert from 'node:assert/strict';
-import {createHttpClient} from '../../packages/runtime/dist/http.js';
-import {createAuthClient} from '../../packages/runtime/dist/auth.js';
+import {isolatedAuth} from '../helpers/runtime-services.mjs';
 
 const origin=process.env.XUI_AUTH_HTTP_FIXTURE_ORIGIN;
 if(!origin||!/^http:\/\/127\.0\.0\.1:\d+$/.test(origin))throw new Error('Set XUI_AUTH_HTTP_FIXTURE_ORIGIN to an explicitly started synthetic loopback fixture');
@@ -27,8 +26,8 @@ function fixture(){
     }
     return response;
   };
-  const http=createHttpClient({baseURL:origin,fetch}),auth=createAuthClient({http,timeoutMs:5000});
-  return {auth,requests,dropNextLogin(){dropLogin=true;},destroy(){auth.destroy();http.destroy();}};
+  const owner=isolatedAuth({baseURL:origin,fetch},{timeoutMs:5000});
+  return {auth:owner.auth,requests,dropNextLogin(){dropLogin=true;},destroy(){owner.services.dispose();}};
 }
 const login=(auth,password='synthetic-password-only')=>auth.login({username:'fixture',password});
 {

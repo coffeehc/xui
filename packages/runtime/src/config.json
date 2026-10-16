@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "app": {"name": "XUI", "title": "", "logo": null},
+  "http": {"baseURL": "/", "timeoutMs": 15000},
+  "auth": {"enabled": false, "timeoutMs": 15000, "protectedPaths": [], "idEncoding": "decimal"},
+  "router": {"basePath": "/"},
+  "theme": {"mode": "dark", "scale": 1, "persist": true},
+  "i18n": {
+    "enabled": false,
+    "defaultLocale": "zh-CN",
+    "fallbackLocale": "zh-CN",
+    "locales": [{"value": "zh-CN", "label": "简体中文"}, {"value": "en", "label": "English"}],
+    "messages": {}
+  },
+  "menu": {"label": "导航", "labelKey": null, "items": []},
+  "extensions": {}
+}

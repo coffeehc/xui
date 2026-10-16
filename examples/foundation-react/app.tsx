@@ -8,12 +8,13 @@ import {Table,TableContainer,TableCaption,TableHead,TableBody,TableRow,TableHead
 import {DataRegion,LoadingState,EmptyState,ErrorState,Skeleton,RenderBoundary,useResource} from '@coffeehc/xui-react/feedback';
 import {useTheme} from '@coffeehc/xui-react/theme';
 import {createResource,loadStylesheet} from '@coffeehc/xui-runtime/loading';
-import type {ThemeController,ThemeMode} from '@coffeehc/xui-runtime/theme';
+import type {ThemeMode} from '@coffeehc/xui-runtime/theme';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/critical.css';
 import '@coffeehc/xui-theme/floating.css';
 
-declare global{interface Window{xuiTheme?:ThemeController;foundationHost?:unknown;foundationStartup?:{ready:()=>void}}}
-const theme=window.xuiTheme!;
+declare global{interface Window{foundationHost?:unknown;foundationStartup?:{ready:()=>void}}}
+const theme=bootstrapBrowserExample().services.getThemeService();
 let attempt=0,style:HTMLLinkElement|undefined,firstPanel:React.ComponentType|undefined;
 const resource=createResource<React.ComponentType>({timeoutMs:5000,loader:async(_key,signal)=>{
   let owned:HTMLLinkElement|undefined;

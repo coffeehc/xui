@@ -1,4 +1,5 @@
-import {createHttpClient,ajaxResponseAdapter,type HttpResponseContext} from '@coffeehc/xui-runtime/http';
+import {XuiServices} from '@coffeehc/xui-runtime/services';
+import {ajaxResponseAdapter,type HttpResponseContext} from '@coffeehc/xui-runtime/http';
 import {createResource} from '@coffeehc/xui-runtime/loading';
 import {queryCodecs,serializeWebfacadeQuery,parseListData,toListPage,type WebfacadeContract,type WebfacadeQuery,type ListData} from '@coffeehc/xui-runtime/query';
 export interface ExampleRecord{id:string;name:string;created:string}
@@ -8,11 +9,11 @@ function decodeRecord(value:unknown):ExampleRecord{if(!value||typeof value!=='ob
 // Endpoint-specific decoding is declared once, outside both rendering hosts.
 function recordsAdapter(value:unknown,context:HttpResponseContext){const reply=ajaxResponseAdapter(value,context);return {...reply,payload:parseListData(reply.payload,decodeRecord)};}
 export function createExampleHttpOwner(options:{baseURL:string;onUnauthorized:()=>void}){
-  const client=createHttpClient({baseURL:options.baseURL,timeoutMs:2000,onUnauthorized:options.onUnauthorized});
+  const services=new XuiServices({http:{options:{baseURL:options.baseURL,timeoutMs:2000,onUnauthorized:options.onUnauthorized}}}),client=services.getHttpService();
   const resource=createResource<{list:readonly ExampleRecord[];total:number|null}>({isEmpty:page=>page.list.length===0,loader:async(key,signal)=>{
     const query=JSON.parse(key) as WebfacadeQuery,params=serializeWebfacadeQuery(query,contract);
     const reply=await client.request<ListData<ExampleRecord>>('records?'+params,{signal,adapter:recordsAdapter,endpointId:'example.records:list'});
     return toListPage(reply.payload,{returnTotal:query.return_total});
   }});
-  return {client,resource,load:(query:WebfacadeQuery)=>resource.load(JSON.stringify(query)),destroy(){resource.destroy();client.destroy();}};
+  return {client,services,resource,load:(query:WebfacadeQuery)=>resource.load(JSON.stringify(query)),destroy(){resource.destroy();services.dispose();}};
 }

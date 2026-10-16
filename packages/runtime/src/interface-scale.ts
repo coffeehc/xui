@@ -23,9 +23,9 @@ export function setInterfaceScale(scale: InterfaceScale, options: InterfaceScale
   try { win.sessionStorage.setItem(storageKey, String(scale)); } catch { /* Current reading size still applies. */ }
 }
 /** Internal pre-paint restore, shared by init.js; never writes storage. */
-export function restoreInterfaceScale(win: Window): void {
+export function restoreInterfaceScale(win: Window, defaultScale:InterfaceScale=1): void {
   let stored: string | null;
-  try { stored = win.sessionStorage.getItem(storageKey); } catch { return; }
-  if (!['1', '1.25', '1.5', '2'].includes(stored ?? '')) return;
+  try { stored = win.sessionStorage.getItem(storageKey); } catch { apply(defaultScale,win);return; }
+  if (!['1', '1.25', '1.5', '2'].includes(stored ?? '')) {apply(defaultScale,win);return;}
   apply(Number(stored) as InterfaceScale, win);
 }

@@ -1,4 +1,6 @@
 import {HttpError,type HttpClient,type HttpRequestOptions} from './http.js';
+export {getDownloadService} from './download-access.js';
+export type {DownloadService} from './download-service.js';
 export interface DownloadResult {blob:Blob;fileName:string;contentType:string|null;contentLength:string|null;status:number;requestId?:string}
 export interface DownloadOptions extends Omit<HttpRequestOptions<Blob>,'response'|'adapter'> {fallbackFileName?:string}
 function fileName(value:unknown):string|null{

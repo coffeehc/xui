@@ -1,9 +1,9 @@
-import {createHttpClient} from '@coffeehc/xui-runtime/http';
+import {XuiServices} from '@coffeehc/xui-runtime/services';
 import {createApiKeyHttpAdapter,type ApiKeyWireMetadata} from '@coffeehc/xui-runtime/api-key-http';
 import {createApiKeyManagerController} from '@coffeehc/xui-runtime/api-key';
 import {createBusinessLogHttpLoader} from '@coffeehc/xui-runtime/business-log-http';
 import {createBusinessLogController,type BusinessLogEvent} from '@coffeehc/xui-runtime/business-log';
-/** Synthetic native facade. It creates no real credentials and never calls a product service. */
+/** Synthetic capability transport. It creates no real credentials and never calls a product service. */
 export async function createCapabilityExample(baseURL:string){
   const modes=new Map<string,string>(),requests:{path:string;method:string;body:unknown;query:string}[]=[],held=new Map<string,(()=>void)[]>();
   let keys:ApiKeyWireMetadata[]=[{id:'9007199254740993',name:'示例过期令牌',prefix:'FAKE',permission_ids:['read'],created_at:null,expires_at:'2026-01-01T00:00:00Z',last_used_at:null,status:'expired',version:'1',enabled:true,capabilities:{update:true,revoke:true,delete_record:true}}],serial=0;
@@ -24,6 +24,6 @@ export async function createCapabilityExample(baseURL:string){
     else{const index=Number(url.searchParams.get('page_index')),size=Number(url.searchParams.get('page_size'));payload={list:keys.slice(index*size,index*size+size),total:keys.length};}
     return new Response(JSON.stringify(wire(payload)),{headers:{'Content-Type':'application/json'}});
   };
-  const http=createHttpClient({baseURL,fetch}),api=createApiKeyHttpAdapter({http}),config=await api.getConfiguration({}),keyController=createApiKeyManagerController({...config,adapter:api,labels:{title:'访问密钥示例',create:'创建访问密钥',name:'名称',permissions:'权限',expiry:'有效期',confirmation:'授权确认',submit:'确认创建',cancel:'取消',revoke:'撤销',confirmRevoke:'确认撤销',deleteRecord:'删除记录',confirmDelete:'确认删除记录',refresh:'刷新密钥',confirmationRequired:'请确认授予的权限。'}}),logController=createBusinessLogController({loader:createBusinessLogHttpLoader({http}),pageSize:2,labels:{title:'业务日志示例',refresh:'刷新日志',next:'下一页',previous:'上一页',detail:'查看详情'}});
-  return {http,keyController,logController,signOut(){keyController.destroy();},setMode(operation:string,mode:string){modes.set(operation,mode);},release(operation:string){const pending=held.get(operation)??[];held.delete(operation);pending.forEach(resolve=>resolve());},getRequests:()=>requests,destroy(){keyController.destroy();logController.destroy();http.destroy();}};
+  const services=new XuiServices({http:{options:{baseURL,fetch}}}),http=services.getHttpService(),api=createApiKeyHttpAdapter({http}),config=await api.getConfiguration({}),keyController=createApiKeyManagerController({...config,adapter:api,labels:{title:'访问密钥示例',create:'创建访问密钥',name:'名称',permissions:'权限',expiry:'有效期',confirmation:'授权确认',submit:'确认创建',cancel:'取消',revoke:'撤销',confirmRevoke:'确认撤销',deleteRecord:'删除记录',confirmDelete:'确认删除记录',refresh:'刷新密钥',confirmationRequired:'请确认授予的权限。'}}),logController=createBusinessLogController({loader:createBusinessLogHttpLoader({http}),pageSize:2,labels:{title:'业务日志示例',refresh:'刷新日志',next:'下一页',previous:'上一页',detail:'查看详情'}});
+  return {http,services,keyController,logController,signOut(){keyController.destroy();},setMode(operation:string,mode:string){modes.set(operation,mode);},release(operation:string){const pending=held.get(operation)??[];held.delete(operation);pending.forEach(resolve=>resolve());},getRequests:()=>requests,destroy(){keyController.destroy();logController.destroy();services.dispose();}};
 }

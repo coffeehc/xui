@@ -1,3 +1,7 @@
+import {assertControllerProps} from './controller.js';
+import {createNavigationPresentationController,type NavigationPresentationController} from '@coffeehc/xui-runtime/interaction';
+import {useOwnedController,type ControllerProps} from './controller.js';
+import {Dialog as PeerDialog} from '@base-ui/react/dialog';
 import * as React from 'react';
 import {createPortal} from 'react-dom';
 import { Dialog } from './dialog.js';
@@ -8,6 +12,7 @@ import { cx,hasContent } from './shared.js';
 import {ThemeModeButton} from './theme.js';
 import type {ThemeController} from '@coffeehc/xui-runtime/theme';
 import {isHeaderLocaleEnabled,type HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
+import {useI18n} from './services.js';
 import type {ThemeModeLabels} from '@coffeehc/xui-runtime/theme-control';
 export type {HeaderLocaleOptions,HeaderLocaleOption} from '@coffeehc/xui-runtime/header-controls';
 export type ShellScrollMode='document'|'viewport'|'workspace';
@@ -51,6 +56,7 @@ export interface AppHeaderSlots {
   leading?:React.ReactNode;brand?:React.ReactNode;breadcrumb?:React.ReactNode;status?:React.ReactNode;actions?:React.ReactNode;auxiliary?:React.ReactNode;context?:React.ReactNode;account?:React.ReactNode;
 }
 export type AppHeaderProps=React.ComponentProps<'div'> & AppHeaderSlots & {navigation?:React.ReactNode;theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions};
+function ConfiguredHeaderLocale(){const i18n=useI18n();return i18n.enabled?<HeaderLocaleSelect locale={{enabled:true,value:i18n.locale,options:i18n.locales,onValueChange:i18n.setLocale,label:i18n.t('xui.language',{},'语言')}}/>:null;}
 /** Role-based layout only. The host supplies names, breadcrumb semantics and actions. */
 function AppHeaderFrame({legacyPrimary,brandControl,leading,brand,breadcrumb,status,actions,auxiliary,context,account,navigation,theme,themeLabels,locale,children,className,...props}:AppHeaderProps&{legacyPrimary?:React.ReactNode;brandControl?:React.ReactNode}){
   const present=hasContent;
@@ -67,7 +73,7 @@ function AppHeaderFrame({legacyPrimary,brandControl,leading,brand,breadcrumb,sta
       {present(children)&&<div className="xui-app-header-legacy">{children}</div>}
       <div className="xui-app-header-controls">
         {present(auxiliary)&&<div className="xui-app-header-auxiliary">{auxiliary}</div>}
-        {isHeaderLocaleEnabled(locale)&&<HeaderLocaleSelect locale={locale}/>}
+        {locale===undefined?<ConfiguredHeaderLocale/>:isHeaderLocaleEnabled(locale)&&<HeaderLocaleSelect locale={locale}/>}
         <div className="xui-app-header-theme"><ThemeModeButton theme={theme} labels={themeLabels}/></div>
       </div>
       {present(account)&&<div className="xui-app-header-account">{account}</div>}
@@ -94,22 +100,24 @@ function ShellNavigationIcon({drawer}:{drawer:boolean}){
     {drawer?<path d="M3 5h14M3 10h14M3 15h14"/>:<><path d="M4 2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM7 2v16"/><path className="xui-shell-toggle-arrow" d="m14 7-4 3 4 3"/></>}
   </svg></Icon>;
 }
-export interface AppShellProps extends Omit<React.ComponentProps<'div'>,'children'> {
+interface AppShellSlots extends Omit<React.ComponentProps<'div'>,'children'> {
   /** Workspace content spacing; defaults to standard and is retained in other scroll modes. */
   contentInset?:ShellContentInset;
   /** Desktop: top (default) is the global brand row's trailing control; bottom follows the sidebar menu/footer. Narrow screens use the brand-row drawer trigger. */
   sidebarTogglePlacement?:SidebarTogglePlacement;
   theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:ShellScrollMode;sidebar:React.ReactNode;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;header?:React.ReactNode;headerSlots?:AppHeaderSlots;children:React.ReactNode;
-  collapsed?:boolean;defaultCollapsed?:boolean;onCollapsedChange?:(collapsed:boolean)=>void;compactLabel?:string;expandLabel?:string;
+  compactLabel?:string;expandLabel?:string;
   restoreSidebarFocus?:boolean;navigationLabel?:string;skipLabel?:string;closeLabel?:string;
-  sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;
 }
+export type AppShellProps=AppShellSlots&ControllerProps<NavigationPresentationController,{collapsed?:boolean;defaultCollapsed?:boolean;onCollapsedChange?:(collapsed:boolean)=>void;sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void}>;
 /** One sidebar tree; routing, navigation selection and data remain with the host. */
-export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scrollMode='document',contentInset='standard',sidebarTogglePlacement='top',sidebar,sidebarHeader,sidebarFooter,pageHeader,pageToolbar,pageFooter,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,compactLabel='Compact navigation',expandLabel='Expand navigation',header,headerSlots,children,navigationLabel='Navigation',skipLabel='Skip to content',closeLabel='Close navigation',sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,className,...props}:AppShellProps){
-  const [internal,setInternal]=React.useState(defaultSidebarOpen),[narrow,setNarrow]=React.useState(false);
-  const [internalCollapsed,setInternalCollapsed]=React.useState(defaultCollapsed);const collapsed=controlledCollapsed??internalCollapsed,sidebarId=React.useId(),drawerId=React.useId();
+export function AppShell(allProps:AppShellProps){const {controller:injected,theme,themeLabels,locale,restoreSidebarFocus=true,scrollMode='document',contentInset='standard',sidebarTogglePlacement='top',sidebar,sidebarHeader,sidebarFooter,pageHeader,pageToolbar,pageFooter,collapsed:controlledCollapsed,defaultCollapsed=false,onCollapsedChange,compactLabel='Compact navigation',expandLabel='Expand navigation',header,headerSlots,children,navigationLabel='Navigation',skipLabel='Skip to content',closeLabel='Close navigation',sidebarOpen,defaultSidebarOpen=false,onSidebarOpenChange,className,...props}=allProps;assertControllerProps(injected,allProps,['collapsed','defaultCollapsed','onCollapsedChange','sidebarOpen','defaultSidebarOpen','onSidebarOpenChange']);
+  const latest=React.useRef({onCollapsedChange,onSidebarOpenChange});latest.current={onCollapsedChange,onSidebarOpenChange};
+  const controller=useOwnedController(injected,()=>createNavigationPresentationController({collapsed:controlledCollapsed,defaultCollapsed,sidebarOpen,defaultSidebarOpen,onCollapsedChange:next=>latest.current.onCollapsedChange?.(next),onSidebarOpenChange:next=>latest.current.onSidebarOpenChange?.(next)}));
+  const state=React.useSyncExternalStore(controller.subscribe,controller.getState,controller.getState),[narrow,setNarrow]=React.useState(false),collapsed=state.collapsed,sidebarId=React.useId(),drawerId=React.useId();
+  React.useLayoutEffect(()=>{if(!injected)controller.update({collapsed:controlledCollapsed,sidebarOpen});},[controller,injected,controlledCollapsed,sidebarOpen]);
   const headerControl=narrow||sidebarTogglePlacement==='top';
-  const requestCollapsed=(next:boolean)=>{if(controlledCollapsed===undefined)setInternalCollapsed(next);onCollapsedChange?.(next);};
+  const requestCollapsed=controller.setCollapsed;
   const hasFooter=hasContent(sidebarFooter),hasHeader=hasContent(sidebarHeader),hasSections=hasHeader||hasFooter||sidebarTogglePlacement==='bottom';
   const [sidebarElement,setSidebarElement]=React.useState<HTMLElement|null>(null),[navigationControl,setNavigationControl]=React.useState<HTMLDivElement|null>(null);
   const desktopSlot=React.useRef<HTMLDivElement>(null),drawerSlot=React.useRef<HTMLDivElement>(null),headerElement=React.useRef<HTMLElement>(null),headerToggleSlot=React.useRef<HTMLSpanElement>(null),controlHadFocus=React.useRef(false);
@@ -125,13 +133,13 @@ export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scro
   React.useLayoutEffect(()=>{if(!hasSections||!sidebarElement||!headerElement.current)return;const headerNode=headerElement.current;const measure=()=>{sidebarElement.style.blockSize=!narrow&&scrollMode==='document'?`max(var(--nav-sidebar-min-height), calc(100dvh - ${headerNode.getBoundingClientRect().height}px))`:'';};measure();const observer=new ResizeObserver(measure);observer.observe(headerNode);return()=>observer.disconnect();},[hasSections,sidebarElement,narrow,scrollMode]);
   // The owned control must occupy its final space before locating the active row.
   React.useLayoutEffect(()=>{sidebarElement?.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});},[hasSections,sidebarElement,navigationControl,narrow,navigationLabel,scrollMode]);
-  const open=sidebarOpen??internal;const trigger=React.useRef<HTMLButtonElement>(null),main=React.useRef<HTMLElement>(null),drawer=React.useRef<HTMLDivElement>(null);const id=React.useId();
-  const request=React.useCallback((next:boolean)=>{if(sidebarOpen===undefined)setInternal(next);onSidebarOpenChange?.(next);},[sidebarOpen,onSidebarOpenChange]);
+  const open=state.sidebarOpen;const trigger=React.useRef<HTMLButtonElement>(null),main=React.useRef<HTMLElement>(null),drawer=React.useRef<HTMLDivElement>(null);const id=React.useId();
+  const request=React.useCallback(controller.setSidebarOpen,[controller]);
   const toggleLabel=narrow?navigationLabel:collapsed?expandLabel:compactLabel;
   const navigationToggle=<Dialog.Trigger ref={trigger} render={<Button className="xui-shell-toggle" variant="ghost" data-icon="true" data-xui-menu-toggle=""/>} aria-label={toggleLabel} title={toggleLabel} aria-expanded={narrow?open:!collapsed} aria-haspopup={narrow?'dialog':undefined} aria-controls={narrow?drawerId:sidebarId} data-collapsed={!narrow&&collapsed} onFocus={()=>{controlHadFocus.current=true;}} onClick={event=>{if(!narrow){event.preventBaseUIHandler();requestCollapsed(!collapsed);}}}><ShellNavigationIcon drawer={narrow}/></Dialog.Trigger>;
   React.useEffect(()=>{const media=window.matchMedia('(max-width: 47.999rem)');let wasNarrow=media.matches;setNarrow(wasNarrow);const update=()=>{setNarrow(media.matches);if(wasNarrow&&!media.matches)request(false);wasNarrow=media.matches;};media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[request]);
-  const navigationSidebar=<ShellNavigationContext.Provider value={{collapsed,onCollapsedChange:requestCollapsed,fallbackFocus:()=>drawer.current?.hasAttribute('data-open')?drawer.current.querySelector<HTMLElement>('.xui-dialog-footer button')??drawer.current:trigger.current}}>{sidebar}</ShellNavigationContext.Provider>;
-  return <Dialog.Root open={narrow&&open} onOpenChange={next=>request(next)}><div {...props} data-collapsed={collapsed} data-scroll-mode={scrollMode} data-content-inset={contentInset} data-sidebar-toggle-placement={sidebarTogglePlacement} className={cx('xui-shell',className)}>
+  const navigationSidebar=<ShellNavigationContext.Provider value={{controller,owned:!injected,collapsed,onCollapsedChange:requestCollapsed,fallbackFocus:()=>drawer.current?.hasAttribute('data-open')?drawer.current.querySelector<HTMLElement>('.xui-dialog-footer button')??drawer.current:trigger.current}}>{sidebar}</ShellNavigationContext.Provider>;
+  return <PeerDialog.Root open={narrow&&open} onOpenChange={next=>request(next)}><div {...props} data-collapsed={collapsed} data-scroll-mode={scrollMode} data-content-inset={contentInset} data-sidebar-toggle-placement={sidebarTogglePlacement} className={cx('xui-shell',className)}>
     <a className="xui-skip-link" href={`#${id}`}>{skipLabel}</a>
     <header ref={headerElement} className="xui-shell-header"><AppHeaderFrame {...headerSlots} legacyPrimary={headerSlots?undefined:header} brandControl={headerControl?<span className="xui-shell-toggle-slot" ref={headerToggleSlot}>{typeof document==='undefined'?navigationToggle:null}</span>:undefined} theme={theme} themeLabels={themeLabels} locale={locale}>{headerSlots?header:undefined}</AppHeaderFrame></header>
     {<div ref={desktopSlot} className="xui-shell-sidebar-host"/>}
@@ -139,5 +147,5 @@ export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scro
     {navigationControl&&createPortal(navigationToggle,navigationControl)}
     {sidebarElement&&createPortal(<>{hasHeader&&<div className="xui-shell-sidebar-header">{sidebarHeader}</div>}<div className={hasSections?"xui-shell-sidebar-menu":undefined}>{navigationSidebar}</div>{hasFooter&&<div className="xui-shell-sidebar-footer">{sidebarFooter}</div>}</>,sidebarElement)}
     <main className="xui-shell-main" id={id} ref={main} tabIndex={-1}>{hasContent(pageHeader)&&<div className="xui-shell-page-header">{pageHeader}</div>}{hasContent(pageToolbar)&&<div className="xui-shell-page-toolbar">{pageToolbar}</div>}<div className="xui-shell-content">{children}</div>{hasContent(pageFooter)&&<footer className="xui-shell-page-footer">{pageFooter}</footer>}</main>
-  </div>{<Dialog.Content id={drawerId} keepMounted ref={drawer} className="xui-shell-drawer" finalFocus={()=>{const active=document.activeElement;if(!restoreSidebarFocus||active&&active!==document.body&&active!==trigger.current&&active.isConnected&&!drawer.current?.contains(active))return false;return window.matchMedia('(max-width: 47.999rem)').matches?trigger.current:main.current;}}><Dialog.Title>{navigationLabel}</Dialog.Title><Dialog.Body ref={node=>{drawerSlot.current=node;if(node&&narrow&&sidebarElement&&sidebarElement.parentNode!==node)node.append(sidebarElement);}} className={hasSections?'xui-shell-sidebar-body':undefined}></Dialog.Body><Dialog.Footer><Dialog.Close render={<Button variant="outline"/>}>{closeLabel}</Dialog.Close></Dialog.Footer></Dialog.Content>}</Dialog.Root>;
+  </div>{<Dialog.Content id={drawerId} keepMounted ref={drawer} className="xui-shell-drawer" finalFocus={()=>{const active=document.activeElement;if(!restoreSidebarFocus||active&&active!==document.body&&active!==trigger.current&&active.isConnected&&!drawer.current?.contains(active))return false;return window.matchMedia('(max-width: 47.999rem)').matches?trigger.current:main.current;}}><Dialog.Title>{navigationLabel}</Dialog.Title><Dialog.Body ref={node=>{drawerSlot.current=node;if(node&&narrow&&sidebarElement&&sidebarElement.parentNode!==node)node.append(sidebarElement);}} className={hasSections?'xui-shell-sidebar-body':undefined}></Dialog.Body><Dialog.Footer><Dialog.Close render={<Button variant="outline"/>}>{closeLabel}</Dialog.Close></Dialog.Footer></Dialog.Content>}</PeerDialog.Root>;
 }

@@ -8,9 +8,11 @@ import {Button} from '@coffeehc/xui-react/button';
 import {ContextMenu} from '@coffeehc/xui-react/context-menu';
 import {Spinner} from '@coffeehc/xui-react/feedback';
 import {Typography} from '@coffeehc/xui-react/display';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import {createRichNavigationExample,navigationDetail,resolveRichNavigationIcon,richNavigationCopy as copy,type RichNavigationGroup} from '../shared/rich-navigation-model';
 import '@coffeehc/xui-theme/style.css';
 
+bootstrapBrowserExample();
 const owner=createRichNavigationExample();
 function SettingsIcon(){return <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)"><path d="M3 5h14M3 10h14M3 15h14M7 3v4M13 8v4M8 13v4"/></svg>;}
 function Actions({item}:{item:NavigationItem}){const state=React.useSyncExternalStore(owner.subscribe,owner.getState,owner.getState);return <ContextMenu.Content><ContextMenu.Item disabled={!!item.disabled||state.busyActions.includes(item.id)||!state.actionsEnabled} onClick={()=>owner.configure(item.id)}>配置 {item.label}</ContextMenu.Item><ContextMenu.Item disabled>删除（示例未授权）</ContextMenu.Item></ContextMenu.Content>;}

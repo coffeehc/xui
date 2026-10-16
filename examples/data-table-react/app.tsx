@@ -10,9 +10,11 @@ import {LoadingState,EmptyState,ErrorState} from '@coffeehc/xui-react/feedback';
 import {ScrollArea} from '@coffeehc/xui-react/scroll-area';
 import {DataTable,DataTableToolbar,DataTableFilter,type DataTableColumn} from '@coffeehc/xui-react/data-table';
 import {createDataTableExample,tableLabels,type ExampleRow} from '../shared/data-table-model';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-runtime/init.js';
 import '@coffeehc/xui-theme/style.css';
 
+bootstrapBrowserExample();
 const query=new URLSearchParams(location.search);
 // The synthetic twelve-row regression is an explicit supported page size.
 const pageSizeOptions=query.get('size')==='12'?[12,20,50,100]:[20,50,100];

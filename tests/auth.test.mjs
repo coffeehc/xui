@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createHttpClient,HttpError} from '../packages/runtime/dist/http.js';
-import {createAuthClient,authEndpoints,parseAuthSession,resolveLoginReturnTo,resolveLoginPageConfig} from '../packages/runtime/dist/auth.js';
+import {HttpError} from '../packages/runtime/dist/http.js';
+import {authEndpoints,parseAuthSession,resolveLoginReturnTo,resolveLoginPageConfig} from '../packages/runtime/dist/auth.js';
+import {isolatedAuth,disposeServices} from './helpers/runtime-services.mjs';
 const user={id:'42',username:'demo',display_name:'示例用户'},session={schema_version:2,user};
 const token=(id='A')=>'bs-v1-sha256-access-'+id.repeat(42)+'A';
 const issued=(id='A',extra={})=>({...session,access_token:token(id),token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString(),...extra});
@@ -10,10 +11,10 @@ const json=(value,status=200)=>new Response(JSON.stringify(value),{status,header
 const reject=(status,code=status*100+1)=>json(wire(null,{success:false,code,message:'FAKE_PRIVATE'}),status);
 const flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 const deferred=()=>{let resolve;const promise=new Promise(done=>resolve=done);return {promise,resolve};};
-const owner=(fetch,options={},authOptions={})=>{const http=createHttpClient({baseURL:'https://auth.example/custom/',fetch,...options});return {http,auth:createAuthClient({http,timeoutMs:1000,protectedPaths:['/api/business/'],...authOptions})};};
+const owner=(fetch,options={},authOptions={})=>isolatedAuth({baseURL:'https://auth.example/custom/',fetch,...options},{timeoutMs:1000,protectedPaths:['/api/business/'],...authOptions});
 const route=url=>new URL(url).pathname.split('/').at(-1);
 const normal=async url=>json(wire(route(url)==='session'?session:route(url)==='logout'?null:issued()));
-const cleanup=({auth,http})=>{auth.destroy();http.destroy();};
+const cleanup=({services})=>services.dispose();
 
 test('versioned access credentials accept configured prefix shapes and reject other algorithms or purposes',async()=>{
  for(const prefix of ['bs','xagent','xapi','a','a'.repeat(32)]){
@@ -94,7 +95,7 @@ test('protected targets reject external origins, ambiguous paths, manual credent
  let calls=0;const client=owner(async url=>{calls++;return normal(url);});await client.auth.login({username:'demo',password:'FAKE'});const baseline=calls;
  for(const [path,options] of [['https://evil.example/api/business/a',{}],['/api/business/%2fother',{}],['/api/business/a',{headers:{Authorization:'Bearer FAKE'}}],['/api/business/a',{headers:{Cookie:'FAKE'}}],['/api/business/a',{credentials:'include'}],['/api/business/a',{redirect:'follow'}],['/api/business/a',{retry:{idempotentRead:true,maxAttempts:2}}],[authEndpoints.login,{}],['/api/v1/auth/%6cogin',{}],['/api/v1/auth/LOGIN/',{}]])await assert.rejects(client.http.request(path,options));
  assert.equal(calls,baseline);cleanup(client);
- for(const path of ['https://evil.example','//evil','/api/../private','/api?x=1','/api/%2f']){const http=createHttpClient({baseURL:'https://auth.example',fetch:normal});assert.throws(()=>createAuthClient({http,protectedPaths:[path]}));http.destroy();}
+ for(const path of ['https://evil.example','//evil','/api/../private','/api?x=1','/api/%2f'])assert.throws(()=>isolatedAuth({baseURL:'https://auth.example',fetch:normal},{protectedPaths:[path]}));
 });
 test('protected subtree boundary and unprotected public calls do not receive the access token',async()=>{
  const requests=[],client=owner(async(url,init)=>{requests.push({path:new URL(url).pathname,header:init.headers.get('Authorization')});return normal(url);});await client.auth.login({username:'demo',password:'FAKE'});
@@ -104,7 +105,7 @@ test('untrusted final response origin is rejected and never accepted as a signed
  const client=owner(async()=>{const response=json(wire(issued()));Object.defineProperty(response,'url',{value:'https://evil.example/login'});return response;});await assert.rejects(client.auth.login({username:'demo',password:'FAKE'}),error=>error.kind==='network');assert.equal(client.auth.getState().status,'unknown');cleanup(client);
 });
 test('destroy clears secrets, cancels late results and keeps managed routes fail-closed',async()=>{
- const held=deferred();let calls=0;const client=owner(async()=>{calls++;return held.promise;});const request=client.auth.refresh(),failure=assert.rejects(request,error=>error.kind==='cancel');await flush();client.auth.destroy();await failure;held.resolve(json(wire(issued())));await flush();assert.equal(client.auth.getState().user,null);await assert.rejects(client.http.request('/api/business/a'),error=>error.kind==='cancel');assert.equal(calls,1);client.http.destroy();
+ const held=deferred();let calls=0;const client=owner(async()=>{calls++;return held.promise;});const request=client.auth.refresh(),failure=assert.rejects(request,error=>error.kind==='cancel');await flush();client.auth.destroy();await failure;held.resolve(json(wire(issued())));await flush();assert.equal(client.auth.getState().user,null);await assert.rejects(client.http.request('/api/business/a'),error=>error.kind==='cancel');assert.equal(calls,1);disposeServices(client.http);
 });
 test('timed-out login checks an already-applied cookie once and ignores the late login response',async()=>{
  const held=deferred(),requests=[],signals=[],newUser={...user,id:'43',display_name:'confirmed session'};

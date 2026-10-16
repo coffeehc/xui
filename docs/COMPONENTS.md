@@ -6,6 +6,8 @@
 
 按章节查阅：
 
+- [界面缩放](#界面缩放)
+- [应用服务启动与所有权](#应用服务启动与所有权)
 - [基础组件与通用状态](#基础组件与通用状态)
 - [局部反馈与离线](#局部反馈与离线)
 - [文本输入](#文本输入)
@@ -22,7 +24,15 @@
 
 ## 界面缩放
 
-统一调用 `setInterfaceScale(scale)`，scale取 `1 | 1.25 | 1.5 | 2`（`@coffeehc/xui-runtime/theme` 或runtime根入口）。这是无框架依赖的文档方法，不增加React副本、控件或比例订阅owner。默认100%，设置后写sessionStorage，正式init.js在首屏恢复。字体、图标、rem间距与控件随倍率调整；视口上限、自动分列、滚动与焦点合同继续生效。值和异常边界见[DESIGN](DESIGN.md#公共界面缩放)。[React示例](../examples/page-composition-react/app.tsx)演示正式入口。
+统一调用 `setInterfaceScale(scale)`，scale取 `1 | 1.25 | 1.5 | 2`（`@coffeehc/xui-runtime/theme` 或runtime根入口）。这是无框架依赖的文档方法，不增加React副本、控件或比例订阅owner。默认100%，设置后写sessionStorage，正式init.js只在首屏恢复根元素缩放属性；bootstrap以config的scale作为无存储时默认值。字体、图标、rem间距与控件随倍率调整；视口上限、自动分列、滚动与焦点合同继续生效。值和异常边界见[DESIGN](DESIGN.md#公共界面缩放)。[React示例](../examples/page-composition-react/app.tsx)演示正式入口。
+
+## 应用服务启动与所有权
+
+浏览器 React 应用在首次 render 前调用一次 `bootstrap(overrides, environment)`；随包 `config.json` 提供默认值，返回同一 `XuiApplication` 配置与 services。业务用 `application.services.getHttpService()/getAuthService()/getThemeService()/getRouteService()/getI18nService()/getMenuService()/getDownloadService()` 取得服务，不调用已移除的基础 Service `create*` 工厂。SSR/隔离测试按请求创建 `XuiServices`，不同请求不能共享认证或路由实例。运行实例通过 `BootstrapEnvironment.services` 第二参数注入，配置 JSON 仅放可序列化数据；`extensions` 的业务schema由宿主校验。完整合并、冲突、dispose和cookie/token边界见[PUBLIC_API 启动与服务合同](PUBLIC_API.md#启动配置与应用服务)。
+
+registry只销毁自己由 options 构造的实例，`{instance}` 注入的是借用服务；React View/provider卸载只退订，不销毁共享应用owner。默认HTTP/Auth在配置允许时复用同一个HTTP实例；没有配置HTTP/Auth时getter显式失败，auth未启用不创建认证owner。剪贴板注入使用窄类型 `SharedClipboardService`，只需实现 `writeText`；借用实例不要求也不会调用 `dispose`，注册表只释放自己创建的内部服务。组件 `create*Controller` 是语义组件模型工厂，仍由创建者按[Controller矩阵](#状态所有权与-controller-模式)管理；它与已移除的基础 Service factories不同。
+
+`init.js` 只做首绘前主题/缩放属性恢复；应用 Controller由bootstrap/getThemeService提供。config中的theme mode/scale是默认，sessionStorage有效偏好优先。`ServicesProvider` 可把已创建的menu/i18n owner传给React树，`RouteProvider` 可传同一个RouteService；它们不创建业务API、翻译词典或第二份服务。
 
 
 ## 基础组件与通用状态
@@ -44,63 +54,43 @@
 
 ### 状态所有权与 Controller 模式
 
-以下逐项审查的实现基线为 **1a6772e4 / 1.3.0**，覆盖 React 根入口全部105个运行时导出及其组合部件。它是源码、公开类型与固定 Base UI 1.7.0 的核对，**不是新完成的双模式实现或运行测试**。表中的“待补”和建议均不能作为现有 API 使用。
+2.0.0 在历史 1.3.0 基线基础上落实下表的语义状态接口。旧 Controller 草稿版本1.4.0不是当前固定产物。源码实现、定向自动测试、正式安装包和浏览器证据分别记录在 [VALIDATION](VALIDATION.md)，不能将其中任何一项替代产品验收。Toast 仍有明确缺口，不能称为全组件完整替换。
 
-完整替换指组件声明范围内的**通用语义交互状态**只有一个 Controller/model 实例：默认模式由 View 创建并清理，注入模式只消费注入实例。`value/onChange`、`open/onOpenChange`、imperative handle、回调、DOM ref 或事件发送器分别记录，不能据此宣称完整 Controller 注入。键盘、实际焦点、碰撞测量和动画挂载继续由 React/Base UI/DOM 执行；Controller 可请求或观察稳定标识，不复制 peer 算法。业务值、查询、权限、提交和认证仍归原宿主 owner。
+默认/注入两种模式使用同一公开契约。React 的 `controller` 与其对应初始化、受控值、变更回调互斥，JS 冲突输入也应拒绝。纯展示、业务权限、路由、查询和认证不因此归组件；键盘、实际焦点、定位、DOM 测量仍由原 Base UI/浏览器执行。`getState` 返回稳定只读快照，`subscribe` 返回退订函数；注入实例由宿主销毁。默认实例仅在真正卸载或依赖身份替换时销毁，StrictMode replay 不重复启动请求；注入实例替换后旧实例不再驱动 View。下列模型不支持并发绑定两个独立 View 来争夺同一表单或焦点。
 
-#### 已有模型、服务及复合交互
+| 组件/组合 | 默认 owner 与完整替换入口 | 关键状态及边界 |
+|---|---|---|
+| `Menu.View` | 既有 `config` 或 `MenuController` | items/open/动作/活动项/焦点请求；权限和业务执行归宿主。JSX `Menu.Root` 的开合合同独立见下行 |
+| `Menu.Root`、`ContextMenu.Root`、`Dialog.Root`、`Sheet.Root`、`AlertDialog.Root`、`Popover.Root`、`Tooltip.Root` | 原有 open/defaultOpen/callback 默认模式；`controller:OverlayController` 完整替换所属开合语义，工厂 `createOverlayController` | 原因/事件随请求传递，取消不改变状态；Portal、嵌套关闭、碰撞、焦点恢复仍由 peer。handle 只关联触发器，不是 Controller |
+| `Menu.CheckboxItem`、`ContextMenu.CheckboxItem` | checked/defaultChecked/callback 或 `ValueController<boolean>` | 独立 checked，不冒充 Root 统管；`createValueController({defaultValue:false})` |
+| `Menu.RadioGroup` / `RadioItem`、`ContextMenu.RadioGroup` / `RadioItem` | value/defaultValue/callback 或 `ValueController<T>` | RadioItem 由组投影，没有第二选择模型 |
+| `Tabs.Root` | value/defaultValue/callback 或 `ValueController<string|number|null>` | 选择意图、动态缺失/禁用项回正；默认隐式首项保持兼容，受控确认不擅自回正。Tab/List/Panel 保留 peer 键盘与关联 |
+| `Accordion.Root` | value/defaultValue/callback 或 `ValueController<readonly T[]>` | 展开集合；面板挂载/实际焦点留 peer |
+| `ToggleGroup.Root` | 原 props 或 `ToggleGroupController<T>`，工厂 `createToggleGroupController` | value、multiple、allowEmpty 同一 owner，程序及指针请求均遵守策略；组内 Item 不创建独立模型 |
+| 独立 `ToggleGroup.Item` | pressed/defaultPressed/callback 或 `ValueController<boolean>` | 脱组按下状态；组内禁止另注入 Item Controller |
+| `Select.Root` | 原选择/开合 props 或 `SelectionController<T>`，工厂 `createSelectionController` | value/open 为同一 owner；保留 items/表单/peer 选择算法 |
+| `Combobox.Root` | 原选择/输入/开合 props 或 `SelectionController<T>` | value/open/inputValue、键盘高亮外观及 peer 高亮观察；不复制 peer 导航算法 |
+| `Calendar` | 原 `CalendarOptions` 或 `CalendarController`，工厂 `createCalendarModel` | ISO 日期/月份/逻辑焦点，受控更新无重复通知；single/range 与禁用日期保持 |
+| `DateTimePicker` | 原 `DateTimeOptions` 或 `DateTimeController`，工厂 `createDateTimeModel` | 整个日期时间草稿、开合、格式/required反馈；分钟墙上时间不变，时区/窗口归宿主。Calendar 是受控子日期视图，其日历键盘焦点归该子视图 |
+| `Copyable` | 原复制选项或 `CopyController`，工厂 `createCopyController` | value/disabled/status 可订阅；默认复用 runtime 剪贴板服务，显式 writer 保持兼容。普通可展示文本可进入此快照，密码和一次性 secret 使用自身秘密合同 |
+| `PasswordInput` | 默认安全显隐模型或 `PasswordInputController` | 仅 visible/cleared，不含秘密值；DOM/reset/pagehide/退出清理不可禁用，宿主受控密码仍由宿主持有 |
+| `PasswordStrengthInput` | 默认强度模型或 `PasswordStrengthController` | 无秘密强度摘要及其密码显隐子模型；DOM reader 在绑定期有效，worker/迟到结果按代次隔离 |
+| `NewPasswordFields` | 默认或 `NewPasswordFieldsController` | 安全错误码、提示开合、两个显隐/强度子实例；只在提交边界瞬时读取密码，快照不含密码或匹配词 |
+| `AdminSetupPage` | 原 state/onSubmit/onCheck 或 `AdminSetupController` | 旧权威初始化状态与提交/核对合同保留，新增 form 聚合含用户名错误与密码字段展示子模型；不新建 auth/API |
+| `AppShell`、`MenuLayout`、`NavigationMenu` | 原 props 或 `NavigationPresentationController`，工厂 `createNavigationPresentationController` | collapsed/sidebarOpen/expandedIds；MenuLayout 父子共用一实例，AppShell 内导航沿用共享上下文。activeId/路由/数据分页不迁入。环境宽度、同一树 Portal、实际 roving 焦点仍由 View 执行 |
+| `Pagination` | 原 props 或 `PaginationController`，工厂 `createPaginationController` | page/pageCount/disabled；受控页只发请求，不能建立服务器页历史/query/cache |
+| `Disclosure`、`SearchToolbar` | 原开合 props 或 `OverlayController` | 仅所属开合；查询/表单值归宿主，关闭前后实际焦点仍由 View 合法恢复 |
+| `SimpleSelect` | 默认开合模型或 `OverlayController` | 只替换弹层语义；HTML select 继续拥有实际值/FormData/reset/validity，DOM options/disabled 是平台投影 |
+| `CommandPicker` | 原默认/受控值或 `SelectionController<readonly string[]>` | 查询文本、选择、peer 高亮观察；业务 onAction 保留宿主执行，不引入命令服务 |
+| `GroupedCombobox` | 原默认/受控值与输入或 `SelectionController<string|null>` | 通用选择/搜索意图及高亮观察；groups.open/分页/查询仍是宿主给定事实与请求，不能冒充业务成功 |
+| `NumberInput` | 原 value/约束/回调或 `NumberInputController`，工厂 `createNumberInputController` | 中间文本、解析反馈、步进意图；数字始终由宿主确认，IME/selection/reset 留原生 |
+| `ApiKeyManager` | 兼容旧 service `controller`；可选显式 `options` 创建唯一默认服务；`viewController:ApiKeyManagerViewController` 完整替换 | `createApiKeyManagerViewController` 引用一个 service 并持有客户端 pageIndex/pageSize；`viewController` 与旧 service/options/pagination 初始化互斥。真实总数仅完整已加载 rows.length，不加查询/权限/secret owner |
+| `BusinessLogExplorer`、`StructuredLogExplorer` | 兼容旧 service `controller`；显式 `options` 默认服务；`viewController` 完整替换 | `createBusinessLogViewController` / `createStructuredLogViewController` 持有未提交 draft、filters Controller并引用唯一服务，不复制服务结果/快照/查询。缺失 records 继续不请求、不显示入口 |
+| `ConfigurableLoginPage` | 原 auth/config/extensions/callback 或 `LoginViewController`，工厂 `createLoginViewController` | 错误、extension/登录/导航展示阶段与密码显隐；必须显式借用 AuthClient，绝不创建第二认证 owner。绑定 reader 不缓存秘密；异步扩展之后才重读密码，交给 auth 后立即清理本地引用及 DOM |
+| `ThemeModeButton`、`AppHeader` 的主题区、`useTheme` | 沿用共享文档默认 ThemeController 或 `theme` | prepaint/JSON sessionStorage 与公开缩放合同保持；按钮/头部卸载不 destroy 文档共享实例。locale 事实归宿主，展开采用 SimpleSelect 合同 |
+| `Toast` | **未满足完整集合替换**；现有 createToastManager 只是动作入口 | Base UI 1.7.0 Provider 无条件创建 ToastStore，公开 props 不接受受控集合/store。queue、timeout和关闭阶段属于语义状态，不能归为纯 DOM。保持公共 peer 焦点/计时而完成替换需要上游增加受控集合/store 合同或正式升级支持该合同；当前没有这种公开方案。未读私有 store、不造第二队列、不宣称动作 manager 已满足 |
 
-| 组件 | 当前 owner 与真实扩展 | 判定、缺口与建议范围 | 证据 |
-|---|---|---|---|
-| `Menu.View`（`Menu`的数据组合） | config模式拥有默认`MenuController`，或由同类型`controller`完整替换；两种props互斥。Base UI执行实际键盘/焦点 | **已具备语义双模式**；作为实例替换、StrictMode和销毁归属基准，不宣称替换Base UI内部物理交互store | [Menu](../packages/ui-react/src/menu.tsx)、[model](../packages/runtime/src/menu.ts) |
-| `ThemeModeButton` | 默认通过文档级`getThemeController`取得共享实例，`theme`可完整替换 | **已具备双模式**；默认由文档owner持有，按钮卸载不能destroy共享实例；注入者拥有注入实例 | [Theme](../packages/ui-react/src/theme.tsx) |
-| `AppHeader` | 主题通过同一`theme`接入上述模式；locale值/候选项/回调由宿主提供，本体是slot布局 | **主题已具备**，不另造Header总Controller。语言Select的展开缺口按SimpleSelect行处理，不把语言偏好收归Header | [Header](../packages/ui-react/src/layout.tsx) |
-| `Calendar` | 内部创建`createCalendarModel`，订阅日期、查看月份、focus；公开日期/月受控props | **待补**：公开同一model的替换入口，互斥初始化/回调配置；外部值更新不重复通知。只拥有ISO日期与浏览月份，不引入查询/时区owner | [Calendar](../packages/ui-react/src/calendar.tsx)、[model](../packages/runtime/src/calendar.ts) |
-| `DateTimePicker` | 内部创建`createDateTimeModel`，拥有文本草稿、局部错误、弹层、年月日时分；内部Calendar另按受控props展示 | **待补**：替换覆盖整个picker语义草稿/弹层/日期时间状态；Calendar是受控子视图。保留分钟墙上时间，不将业务时区/窗口限制搬进Controller | [Picker](../packages/ui-react/src/date-time.tsx)、[model](../packages/runtime/src/date-time.ts) |
-| `Copyable` | 内部`createCopyController`，通过onStatusChange同步React状态；writer可配置，View无实例注入 | **待补**：先补明确可订阅的Controller合同，再开放同实例注入。现有getStatus/update/copy/destroy与callback不是Menu式订阅接口；保留真实写入串行和迟到隔离 | [Copyable](../packages/ui-react/src/display.tsx)、[owner](../packages/runtime/src/display.ts) |
-| `PasswordStrengthInput` | 内部强度Controller通过DOM reader读取秘密值，以onChange发布无秘密强度摘要；无View实例注入 | **待补**：公开可订阅的强度Controller与瞬时reader绑定边界；卸载解除reader/停止worker。密码、匹配词和估算输入不得进入快照、日志、持久化或跨await保留 | [Strength](../packages/ui-react/src/password.tsx)、[owner](../packages/runtime/src/password-strength.ts) |
-| `PasswordInput` | 秘密值由原生input或宿主受控；本地visible/cleared及reset/pagehide清理。`controlRef.clear()`仅命令 | **通用显隐状态待补**；只替换显隐/清理意图，不把秘密值放入可订阅状态。View始终负责实际DOM秘密清理；clear handle不算完整替换 | [Input](../packages/ui-react/src/text-inputs.tsx) |
-| `NewPasswordFields` | DOM持有两份秘密，本地错误码、tipOpen；handle提供readValidatedPassword/clear | **通用验证展示状态待补**；可订阅错误码/提示开合与显隐组合，提交瞬间读取验证后的密码；不允许Controller快照持有密码或任意改写固定密码规则 | [Fields](../packages/ui-react/src/password.tsx) |
-| `AdminSetupPage` | 内部`createAdminSetupController`，state/onSubmit/onCheck来自宿主；另有usernameError与密码字段状态。handle仅clear | **待补**：默认已有，需同一Controller注入及用户名错误/表单展示边界。权威初始化状态与业务submit/check仍为宿主输入；不创建auth/API协议 | [Page](../packages/ui-react/src/admin-setup.tsx)、[owner](../packages/runtime/src/admin-setup.ts) |
-| `ApiKeyManager` | `controller`必填，拥有权威列表/CRUD/表单阶段；View另有客户端pageIndex/pageSize与DOM回焦ref | **服务Controller仅注入**，无View默认创建；且它不覆盖View分页。建议分别声明服务owner和可替换的分页/展示状态，默认模式必须显式取得宿主adapter/config，不可省略依赖后自动请求或伪造数据 | [Manager](../packages/ui-react/src/api-key.tsx)、[service](../packages/runtime/src/api-key.ts) |
-| `BusinessLogExplorer` | `controller`必填，拥有已确认筛选/快照/分页/详情；View另有尚未提交的filter draft、Disclosure开合与DOM回焦 | **服务Controller仅注入，展示状态不完整**；先补独立view状态合同与服务依赖组合方案。默认工厂只能消费显式loader，不能建立第二query/cache或将草稿当已确认筛选 | [Explorer](../packages/ui-react/src/business-log.tsx)、[service](../packages/runtime/src/business-log.ts) |
-| `StructuredLogExplorer` | `controller`必填，拥有已确认筛选/分组/快照/详情；View另有filter draft、Disclosure开合与DOM回焦 | **服务Controller仅注入，展示状态不完整**；与业务日志相同区分服务与草稿。保留可选records，不因默认模式发缺失请求或补业务API | [Explorer](../packages/ui-react/src/structured-log.tsx)、[service](../packages/runtime/src/structured-log.ts) |
-| `ConfigurableLoginPage` | `auth`必填的共享服务owner；View另有字段错误、extension busy/error、session/login视图阶段和导航反馈，秘密值在DOM/瞬时提交参数 | **服务仅注入，视图未双模式**；可评估通用登录展示状态替换，但不得创建默认认证client、改变协议或让秘密进入快照。auth注入不等于整个登录View已完整替换 | [Login](../packages/ui-react/src/login.tsx) |
-| `AppShell` | 本地collapsed、drawer open；也支持受控props；matchMedia、portal节点和焦点恢复属于View/DOM | **通用导航展示状态待补**：只统一折叠/抽屉意图，保留同一portal。viewport窄宽是环境事实，业务导航与路由不进入Controller | [Shell](../packages/ui-react/src/layout.tsx) |
-| `MenuLayout` | 本地open/collapsed/expandedIds，再以受控props接入AppShell/NavigationMenu | **待补**：组合共用同一导航展示owner，不能父子各建默认Controller；activeId/路由仍由宿主确认 | [Layout](../packages/ui-react/src/menu-layout.tsx) |
-| `NavigationMenu` | 本地collapsed/expandedIds或受控props；activeId来自显式数据/位置解析，私有helper执行键盘/名称滚动 | **待补**：公开展开树与焦点意图的model替换，保留宿主navigation callback；滚动测量不搬到纯TS model | [Navigation](../packages/ui-react/src/menu-layout.tsx) |
-| `Pagination` | defaultPage本地状态或page受控，发onPageChange | **独立控件语义状态待补**；在集合中仍只请求宿主确认下一页，不能自建服务端页历史/查询或把请求当成功 | [Pagination](../packages/ui-react/src/navigation.tsx) |
-| `Disclosure` | 本地defaultOpen或open受控，移除隐藏内容前恢复合法焦点 | **待补**：同一开合Controller；内容挂载和实际焦点由View执行 | [Disclosure](../packages/ui-react/src/navigation.tsx) |
-| `SearchToolbar` | advanced区本地defaultExpanded或expanded受控；search/actions是宿主slot | **高级区开合状态待补**；不拥有search字段值、过滤/请求或业务草稿 | [Toolbar](../packages/ui-react/src/search-toolbar.tsx) |
-| `CommandPicker` | 本地query与默认selected，value可受控；高亮由Combobox peer，action回调归宿主 | **待补**：查询文本/选择意图/高亮投影的公开状态合同；不接管业务命令执行与异步数据owner | [Command](../packages/ui-react/src/command.tsx) |
-| `GroupedCombobox` | value可受控/默认；inputValue、组open与分页facts/callback由宿主传入；DOM焦点ref本地 | **待补**：通用选择/展开/搜索意图替换；现有受控props不是Controller。真实分组查询与游标保持宿主所有 | [Grouped](../packages/ui-react/src/grouped-combobox.tsx) |
-| `NumberInput` | value由宿主确认，本地draft保留中间非法输入，composition/reset/validity接原生input | **文本编辑状态待补**：替换draft/解析反馈与步进意图；不夺取宿主数值或把IME/DOM selection伪装成业务状态 | [Number](../packages/ui-react/src/text-inputs.tsx) |
-| `SimpleSelect` | 原生select负责HTML值/FormData/reset/validity，React投影items/selected/disabled；本地open，使用Base UI Select展示 | **弹层语义状态待补**：保留原生select或宿主为值owner，只替换通用交互状态，不能再保存第二份权威value或破坏原生表单语义 | [Select control](../packages/ui-react/src/simple-select.tsx) |
-
-#### Base UI 组合：已有受控接口、handle/manager不等于Controller
-
-以下每项均保留现有公开parts；建议的Controller只桥接其可公开控制的语义状态，不能通过私有store或复制DOM实现。纯样式部件的ref不承担状态替换。
-
-| 组件 | 当前公开扩展与owner | 判定与建议范围 | 证据 |
-|---|---|---|---|
-| `Menu`的JSX parts | Root open/defaultOpen、onOpenChange；透传createHandle/handle/actionsRef；peer拥有store | **未双模式**；仅`Menu.View`具备。JSX Root应可接同一语义Controller，handle只关联trigger/发命令 | [Menu](../packages/ui-react/src/menu.tsx) |
-| `Menu.CheckboxItem`、`ContextMenu.CheckboxItem` | 各项另有checked/defaultChecked/onCheckedChange，peer拥有默认checked，不由菜单Root的open状态决定 | **选择交互待补**；当前Menu.View数据节点不含checkbox，不能声称已被其Controller覆盖。业务checked可由宿主确认，默认交互替换不得另造业务值owner | [Menu items](../packages/ui-react/src/menu.tsx)、[Context items](../packages/ui-react/src/context-menu.tsx) |
-| `Menu.RadioGroup` / `RadioItem`、`ContextMenu.RadioGroup` / `RadioItem` | RadioGroup另有value/defaultValue/onValueChange，RadioItem投影组值；不是菜单Root的开合状态 | **组选择交互待补**；当前Menu.View不含radio数据节点。公开替换要明确组语义范围，不能把Root的开合Controller算作所有菜单部件已覆盖 | [Menu groups](../packages/ui-react/src/menu.tsx)、[Context groups](../packages/ui-react/src/context-menu.tsx) |
-| `Select` | 透传peer Root的value/open/defaults/callbacks，peer拥有选择/弹层/高亮store | **待补**：语义选择/开合Controller桥接；高亮和focus执行保留peer。受控value不等于完整实例替换 | [Select](../packages/ui-react/src/select.tsx) |
-| `Combobox` | 同样有value/inputValue/open受控；xui另有键盘高亮外观phase，peer维护活动项 | **待补**：明确选择/输入/开合及phase范围，保留peer高亮算法；不可只注入value而漏掉输入和关闭状态 | [Combobox](../packages/ui-react/src/combobox.tsx) |
-| `Tabs` | Root受控/默认value，List局部适配disabled跳过，peer维护焦点/面板关系 | **待补**：页签选择意图Controller；键盘算法/DOM焦点留peer，业务面板数据继续归宿主 | [Tabs](../packages/ui-react/src/tabs.tsx) |
-| `Dialog` | Root透传open/defaultOpen/onOpenChange/handle/actionsRef；xui对象未导出createHandle；peerRoot拥有弹层store | **待补**：显式语义开合/关闭原因边界。即使取得兼容peer handle，也不是完整状态Controller替换；不新增焦点陷阱 | [Dialog](../packages/ui-react/src/dialog.tsx) |
-| `Sheet` | spread Dialog peer，含createHandle；Root受控/默认open，Content增加方位/公共布局 | **待补**：复用Dialog语义Controller；side是展示配置，不能另造Sheet状态/第二Dialog | [Sheet](../packages/ui-react/src/sheet.tsx) |
-| `AlertDialog` | spread peer，含createHandle；受控/默认open；确认动作归宿主 | **待补**：复用弹层状态合同，关闭不自动执行危险操作；handle不替代Root store | [AlertDialog](../packages/ui-react/src/alert-dialog.tsx) |
-| `Popover` | 透传createHandle/handle、open及Portal/Positioner配置；peer拥有状态/定位 | **待补**：开合语义Controller，保留既有Portal容器与嵌套回焦行为；不注入私有定位store | [Popover](../packages/ui-react/src/popover.tsx) |
-| `Tooltip` | 透传createHandle/handle、open及Provider延迟；xui补描述ID，peer负责hover/focus/延迟 | **待补**：开合语义可桥接；延迟、描述ID与焦点事实仍由peer/View，不把说明变交互弹层 | [Tooltip](../packages/ui-react/src/tooltip.tsx) |
-| `ContextMenu` | open/defaultOpen/onOpenChange与Trigger公开contextmenu路径；peer拥有虚拟anchor/菜单状态 | **待补**：菜单开合/动作意图的公开桥接，anchor为平台指针事实。没有与Menu.View等价的数据Controller入口 | [ContextMenu](../packages/ui-react/src/context-menu.tsx) |
-| `Accordion` | peer Root value/defaultValue/onValueChange、multiple等配置，peer拥有展开/焦点 | **待补**：展开集合Controller；header关系、方向键与面板挂载继续由peer维护 | [Accordion](../packages/ui-react/src/accordion.tsx) |
-| `ToggleGroup` | value/defaultValue/onValueChange；xui本地默认数组与allowEmpty取消策略；peer roving | **待补**：选择意图及allowEmpty的同一状态合同；受控业务值仍需宿主确认 | [ToggleGroup](../packages/ui-react/src/toggle-group.tsx) |
-| `ToggleGroup.Item` | 组内pressed由组值派生；脱离Group使用时Base Toggle仍支持pressed/defaultPressed/onPressedChange并拥有默认按下状态 | **独立切换语义待补**；不能以普通Button的瞬时按压投影归类，也不能宣称组Controller已覆盖脱组Item | [Toggle item](../packages/ui-react/src/toggle-group.tsx) |
-| `Toast` | 已透传`createToastManager`与Provider的`toastManager`，可发add/update/close/promise；Provider仍无条件创建ToastStore持有toasts/timeout/focus等 | **已有manager扩展，但非完整替换**。当前公开peer没有完整store注入，需先解决上游公开可控集合/实例合同；不读私有`' subscribe'`、不造第二toasts owner，不把新事件包装宣称为Controller完成 | [Toast](../packages/ui-react/src/toast.tsx) |
-
-peer证据按锁定的`@base-ui/react@1.7.0`核对：`toast/provider/ToastProvider.js`无条件初始化`ToastStore`，`toast/createToastManager.js`只向Provider发送动作；`menu/root/MenuRoot.js`明确由Root创建store、handle只attach。Dialog/Sheet/AlertDialog/Popover/Tooltip的handle是detached trigger、payload与开关命令入口，不能因它内部关联store就称为可替换该store的公开Controller。没有在本轮修改peer或访问它的私有store。
+完整服务组合使用 `viewController` 区分旧服务 `controller`，避免把旧的必填服务实例改名后误称完整展示注入。借用服务不被 View 销毁，仍按原关闭/取消合同释放所属瞬态详情/secret；options 创建的服务由默认 view model 销毁。默认服务 options 仅在首次创建时使用；父组件传入新对象不会重建服务或丢失正在编辑的草稿。显式更换借用 service 身份会创建对应新展示实例，保持 React DOM 树；业务范围需要替换默认 owner 时由宿主明确重挂载。配置更新不覆盖注入者模型；注入者调用对应 update/动作。
 
 #### 宿主事实、平台投影与无语义状态组件
 
@@ -139,15 +129,6 @@ peer证据按锁定的`@base-ui/react@1.7.0`核对：`toast/provider/ToastProvid
 | `AuthPage` | 完整认证页slot与显式form submit入口；不请求、不保存凭据 | **不适用**：保持request-free布局，不与ConfigurableLoginPage服务混淆 | [AuthPage](../packages/ui-react/src/login.tsx) |
 | `useTheme` | 仅订阅显式ThemeController，可给server snapshot | **订阅hook，不适用View默认创建**：默认共享owner在ThemeModeButton/文档入口取得 | [Theme hook](../packages/ui-react/src/theme.tsx) |
 | `useResource` | 仅订阅宿主ResourceController；loader/key/生命周期归宿主 | **订阅hook，不适用默认请求owner**：不能为满足双模式隐式新建resource/query | [Resource hook](../packages/ui-react/src/feedback.tsx) |
-
-#### 建议实施顺序与当前进度
-
-1. **已有公开model、风险可隔离**：Calendar、DateTimePicker、Copyable先收敛可订阅的明确接口与互斥props，再验证替换、StrictMode、配置同步、退出清理和焦点连续性；本轮仅审查，未提供新注入prop。
-2. **秘密与权威状态边界**：PasswordStrengthInput、PasswordInput、NewPasswordFields、AdminSetupPage单独闭环。快照仅保留安全展示状态，秘密留DOM/瞬时读写边界；默认/注入都不能关闭清理。ConfigurableLoginPage先明确视图与AuthClient边界，不自动替换认证协议。
-3. **组合交互与服务View**：AppShell/MenuLayout/NavigationMenu必须共用唯一展示owner；独立Disclosure/Pagination/SearchToolbar/NumberInput、CommandPicker/GroupedCombobox及选择控件逐项增加语义合同。ApiKey与两类日志先明确既有服务owner和新增view草稿/分页的关系，不把局部分页或未提交筛选冒充已注入完整服务状态。建议的完整视图Controller只聚合安全展示状态并委托现有服务，不复制服务快照或再创建服务owner；旧必填服务`controller`不因此自动升级为该新合同。具体兼容入口须在实施前确定，本轮没有新增此类props。
-4. **peer桥接**：逐项验证Root的公开受控能力后设计Controller桥接；保留全部parts与Base UI算法。Toast需先取得公开可替换集合/实例合同，不能用私有store补丁或另一个manager包装凑齐。
-
-所有新增双模式都应分别证明：未注入只创建一个所属默认实例；已注入不创建/订阅并行默认；切换实例先退订旧实例、不destroy注入者实例；动态配置不覆盖注入模型；卸载取消所属等待并忽略迟到结果；稳定DOM、焦点、草稿与秘密退出清理保持。共享Theme默认owner、服务owner、纯展示与平台投影不套用View私有实例的销毁规则。计划、类型草案、factory已存在或旧库测试通过，都不构成上述缺口已经交付的证据。
 
 `Badge`、`BadgeProps` 与 `BadgeTone` 从 `@coffeehc/xui-react/feedback` 及根入口导出。`tone` 为 neutral/info/success/warning/error，默认 neutral；例如 `<Badge tone="success">运行正常</Badge>`。neutral、未设置 data-tone 与普通 Tag 保留无边框、无底色的被动文字；显式状态才应用语义前景/soft/line、横向间距和4px圆角。标签文字或图标由宿主表达状态，不自动增加 live region、tab stop 或脉冲。
 
@@ -470,10 +451,10 @@ const noticeColor = 'var(--action-primary)';
 
 ### Copyable
 
-value 必填，展示完整值且仅复制这个值。默认在用户点击后使用 Clipboard API writeText；不读取剪贴板，不尝试 execCommand/权限绕过。失败显示安全的就地文字，不泄露异常消息；调用方可注入 `(value:string)=>void|Promise<void>`，宿主可注入同一 writer 合同。
+value 必填，展示完整值且仅复制这个值。用户点击后默认复用 runtime 剪贴板服务，优先调用 Clipboard API writeText；仅 API 缺失时才尝试临时 textarea/execCommand 回退。不读取剪贴板，不因权限拒绝或写入失败自动再次写入。失败显示安全的就地文字，不泄露异常消息；调用方可注入 `(value:string)=>void|Promise<void>`，宿主可注入同一 writer 合同。
 
 idle/copying/copied/error 是当前交互事实。按钮 disabled 与 copying 独立于外部业务。
-重复点击不并发写剪贴板；等待中的 write 不可取消，也不声称取消了系统写入。
+重复点击不并发写剪贴板；销毁/取消可停止本地等待，但不承诺撤回已经交给 OS 的写入。服务会等真实 writer settle 后才开始下一项，不能让后续写入越过仍未完成的 OS 操作。
 value、writer 或 disabled 改变使旧结果失效；仍等待旧 write 结束后才能发起下一次复制，以免旧复制晚到覆盖新值。旧结果不会显示新值“已复制”。
 状态不使用超时假定成功，不自动重试，不抢焦点。labels 可覆盖 copy/copying/copied/error。
 
@@ -674,9 +655,9 @@ Wails/Electron等drag/no-drag机制属于宿主桥接。仅对宿主自有非交
 ### 默认主题与可选i18n
 
 
-未传theme时复用预初始化的window.xuiTheme；若文档尚无有效owner，getThemeController(window)只建立一次。默认持久化键ui.theme.mode，无有效值为dark；显式system跟随系统变化，matchMedia不可用时生效light，存储不可用仍可内存切换。自有JSON桥接或受控偏好继续传同一个ThemeController，setMode仅请求，直到宿主syncMode才改变事实。布局卸载只解除视图订阅，不销毁共享owner。登录页继续只继承外观，不显示这个顶栏控件。
+未传受控 `ThemeOptions.mode` 时，文档owner使用非受控模式，默认持久化键为 `ui.theme.mode`；bootstrap config `theme.mode` 是默认，已有有效sessionStorage值优先，无值才回到config默认。无显式保存值和config覆盖时默认dark；显式system跟随系统变化，matchMedia不可用时effective为light，存储不可用仍可内存切换。显式注入 `ThemeOptions.mode` 是受控owner，`setMode`只请求，直到宿主 `syncMode` 才确认事实。公开init.js不创建主题owner；`bootstrap`/`getThemeService`取得同一文档owner。组件卸载只解除 `useTheme` 订阅，不销毁共享owner。登录页继续只继承外观，不显示这个顶栏控件。
 
-locale只有enabled:true才显示。value/options/onValueChange全部由现有产品i18n owner提供；库不加载词典、不猜支持语言、不设置document.lang、不另写locale存储。React 语言选择使用标准 select 语义，当前值受控；回调后不自动把请求当事实。options中的disabled语言不可选择；不在列表的当前值显示空项，不假装已选择首项。label用于控件可访问名，主题文案可用themeLabels覆盖light/dark/system/switchToLight/switchToDark/switchToSystem，沿用库现有labels模式。
+locale由共享I18nService提供；config默认禁用，`defaultLocale`为启动语言、`locales`为可选项，宿主通过config messages或已声明locale的 `registerMessages` 加入翻译资源。xui不附带全量翻译词典。`useI18n`提供当前locale、locales、`t`与 `setLocale`；查找顺序为当前资源、fallback资源、显式fallback、原key。禁用切换或不支持的语言不改变locale；成功更新同步 `document.lang` 并通知订阅者。`ServicesProvider`注入的i18n实例由宿主持有，View只订阅，不自行存储语言。
 
 可运行接线见 [React 顶栏示例](../examples/header-controls-react/app.tsx)。
 
@@ -772,11 +753,14 @@ SimpleSelect 的展开浮层在自己的事件区域消费 Escape，先请求关
 
 公开 UI 由 React `@coffeehc/xui-react/menu-layout` 提供 `NavigationMenu`、`MenuLayout` 与 `AppShell`。runtime `/navigation` 只保留 `NavigationItem`、状态/请求类型、索引/匹配/导航工具；它不创建菜单 DOM。其他 runtime 服务与模型仍按实际业务复用。
 
+应用导航数据可来自 `getMenuService()`；其 `items/label` 与配置语言联动，但菜单的 `expandedIds`、focus、active route、导航动作和权限仍由宿主与 React NavigationMenu 所有。使用 NavigationMenu 的 React `controller` 时，它替换展开等组件状态，不替换 MenuService 内容；反之传 MenuService 也不会建立额外键盘或DOM UI owner。
+
 ### 共享数据与内容扩展
 
 `NavigationItem` 是可序列化树，含稳定 id、label、图标标识、href、children、group、disabled 与 HTML 链接属性。`indexNavigation` 建立索引并验证唯一 id；`getNavigationActiveId` 匹配显式 activeId 或 location。图标由 React `resolveIcon` 或公开默认映射解析。一个菜单树由宿主提供，状态、权限与导航 adapter 不由文案或 CSS 推导。
 
 `NavigationMenu` 可使用 children、`resolveIcon`、`renderLabel`、`renderLink`、`renderButton` 与 `renderAction`。renderer 只通过公开 props/ref 扩展；`renderLabel` 提供非交互描述内容，主项仍为 link/button，独立行尾 action 是自己的 button，不触发主项导航。
+
 
 ### 数据菜单与 Controller 所有权
 

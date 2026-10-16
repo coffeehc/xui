@@ -21,3 +21,31 @@ export function stepNumber(value:number|null,direction:1|-1,constraints:NumberIn
  if(Number.isSafeInteger(scaledBase)&&Number.isSafeInteger(scaledStep)&&Number.isSafeInteger(scaledNext)&&scaledStep>0)next=scaledNext/scale;return parseNumberDraft(String(next),constraints).valid?next:value;
 }
 export function validateNumberValue(value:number|null):void {if(value!==null&&(typeof value!=='number'||!Number.isFinite(value)||Math.abs(value)>Number.MAX_SAFE_INTEGER))throw new TypeError('NumberInput value must be null or a finite safe JS number');}
+
+export interface NumberInputOptions extends NumberInputConstraints {
+ value:number|null;onValueChange:(value:number|null)=>void;
+ onDraftChange?:(draft:string)=>void;onInvalidDraft?:(draft:string,error:string)=>void;
+ disabled?:boolean;readOnly?:boolean;
+}
+export interface NumberInputState extends NumberInputConstraints {value:number|null;draft:string;error:string|null;disabled:boolean;readOnly:boolean}
+export interface NumberInputController {
+ getState:()=>Readonly<NumberInputState>;subscribe:(listener:()=>void)=>()=>void;
+ edit:(draft:string)=>void;commit:()=>boolean;step:(direction:1|-1)=>void;resetDraft:()=>void;
+ update:(options:Partial<NumberInputOptions>)=>void;destroy:()=>void;
+}
+/** Owns intermediate text and parse feedback; numeric value is always a host-confirmed fact. */
+export function createNumberInputController(initial:NumberInputOptions):NumberInputController {
+ validateNumberConstraints(initial);validateNumberValue(initial.value);
+ let options={...initial},draft=initial.value===null?'':String(initial.value),dead=false;
+ const listeners=new Set<()=>void>(),blocked=()=>dead||options.disabled||options.readOnly;
+ const snapshot=():Readonly<NumberInputState>=>{const parsed=parseNumberDraft(draft,options);return Object.freeze({value:options.value,draft,error:parsed.valid?null:parsed.error,min:options.min,max:options.max,step:options.step??1,disabled:!!options.disabled,readOnly:!!options.readOnly});};
+ let state=snapshot();const publish=()=>{if(dead)return;state=snapshot();for(const listener of [...listeners])if(listeners.has(listener))listener();};
+ const resetDraft=()=>{if(dead)return;draft=options.value===null?'':String(options.value);publish();};
+ return {getState:()=>state,subscribe(listener){if(dead)return()=>{};listeners.add(listener);return()=>{listeners.delete(listener);};},resetDraft,
+  edit(next){if(blocked())return;if(typeof next!=='string')throw new TypeError('Number draft must be text');draft=next;publish();options.onDraftChange?.(next);},
+  commit(){if(blocked())return false;const parsed=parseNumberDraft(draft,options);if(!parsed.valid){options.onInvalidDraft?.(draft,parsed.error);return false;}if(!Object.is(parsed.value,options.value))options.onValueChange(parsed.value);return true;},
+  step(direction){if(blocked())return;const parsed=parseNumberDraft(draft,options),next=stepNumber(parsed.valid?parsed.value:options.value,direction,options);draft=next===null?'':String(next);publish();if(!Object.is(next,options.value))options.onValueChange(next);},
+  update(next){if(dead)return;const proposed={...options,...next};validateNumberConstraints(proposed);validateNumberValue(proposed.value);const changed=!Object.is(options.value,proposed.value);options=proposed;if(changed)draft=options.value===null?'':String(options.value);publish();},
+  destroy(){dead=true;listeners.clear();},
+ };
+}

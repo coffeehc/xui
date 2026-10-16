@@ -1,3 +1,5 @@
+import {createLoginViewController,type LoginViewController,type LoginViewOptions} from '@coffeehc/xui-runtime/login-view';
+import {useOwnedController,type ControllerProps,assertControllerProps} from './controller.js';
 import * as React from 'react';
 import {resolveLoginPageConfig,getLoginPageError,runLoginPageExtension,type LoginPageExtensions,type LoginPageAction,type LoginPageConfig,type AuthPageConfig,type AuthClient,type AuthUser} from '@coffeehc/xui-runtime/auth';
 import type {ThemeController} from '@coffeehc/xui-runtime/theme';
@@ -39,66 +41,46 @@ export function AuthPage({config:input,brandVisual,children,actions,alternatives
     {form?<form className="xui-login-form" noValidate={form.noValidate} onSubmit={event=>{event.preventDefault();form.onSubmit?.(event);}}>{content}</form>:<section className="xui-login-form">{content}</section>}
   </section></main>;
 }
-export interface ConfigurableLoginPageProps {auth:AuthClient;theme:ThemeController;config:LoginPageConfig;brandVisual?:React.ReactNode;extensions?:LoginPageExtensions;beforeFields?:React.ReactNode;afterFields?:React.ReactNode;onAuthenticated?:(user:Readonly<AuthUser>,returnTo:string)=>void|Promise<void>}
-export function ConfigurableLoginPage({auth,config:input,onAuthenticated,extensions,beforeFields,afterFields,brandVisual}:ConfigurableLoginPageProps){
-  const config=React.useMemo(()=>resolveLoginPageConfig(input),[input]),{labels}=config,state=React.useSyncExternalStore(auth.subscribe,auth.getState,auth.getState);
-  const username=React.useRef<HTMLInputElement>(null),password=React.useRef<HTMLInputElement|null>(null),passwordControl=React.useRef<PasswordInputHandle>(null),submit=React.useRef<HTMLButtonElement>(null),feedback=React.useRef<HTMLDivElement>(null),revision=React.useRef(0),pending=React.useRef<AbortController|undefined>(undefined),alive=React.useRef(true),active=React.useRef(true);
-  const sessionFailed=React.useRef(false),[viewOperation,setViewOperation]=React.useState<'session'|'login'|'extension'|null>(null);
-  const [extensionBusy,setExtensionBusy]=React.useState<string|null>(null),[extensionError,setExtensionError]=React.useState(false),[navigationPhase,setNavigationPhase]=React.useState<'idle'|'opening'|'failed'>('idle');
-  const navigation=React.useRef<{owner:AuthClient;user:Readonly<AuthUser>|null;revision:number;phase:'idle'|'opening'|'failed'}>({owner:auth,user:null,revision:0,phase:'idle'}),navigationOptions=React.useRef({onAuthenticated,returnTo:config.returnTo});navigationOptions.current={onAuthenticated,returnTo:config.returnTo};
-  const [errors,setErrors]=React.useState<{username?:string;password?:string}>({});
+export type ConfigurableLoginPageProps={theme:ThemeController;brandVisual?:React.ReactNode;beforeFields?:React.ReactNode;afterFields?:React.ReactNode}&ControllerProps<LoginViewController,LoginViewOptions>;
+export function ConfigurableLoginPage({controller:injected,auth:borrowed,config:input,onAuthenticated,extensions:defaultExtensions,beforeFields,afterFields,brandVisual}:ConfigurableLoginPageProps){
+  assertControllerProps(injected,{auth:borrowed,config:input,onAuthenticated,extensions:defaultExtensions},['auth','config','onAuthenticated','extensions']);
+  const controller=useOwnedController(injected,()=>createLoginViewController({auth:borrowed!,config:input!,onAuthenticated,extensions:defaultExtensions}),borrowed);
+  const view=React.useSyncExternalStore(controller.subscribe,controller.getState,controller.getState),auth=controller.auth,state=React.useSyncExternalStore(auth.subscribe,auth.getState,auth.getState),config=view.config,{labels}=config,extensions=controller.getExtensions();
+  const {errors,operation:viewOperation,extensionBusy,extensionError,navigationPhase}=view,sessionFailed=view.sessionFailed;
+  const username=React.useRef<HTMLInputElement>(null),password=React.useRef<HTMLInputElement|null>(null),passwordControl=React.useRef<PasswordInputHandle>(null),submit=React.useRef<HTMLButtonElement>(null),feedback=React.useRef<HTMLDivElement>(null);
   const clearPassword=()=>{if(passwordControl.current)passwordControl.current.clear();else if(password.current){password.current.value='';password.current.defaultValue='';password.current.textContent='';}};
   const passwordRef=React.useCallback((element:HTMLInputElement|null)=>{const previous=password.current;if(previous&&previous!==element){previous.value='';previous.defaultValue='';previous.textContent='';}password.current=element;},[]);
-  const openApplication=async(user:Readonly<AuthUser>,retry=false)=>{
-    const current=auth.getState();if(navigation.current.owner!==auth||!alive.current||!active.current||current.status!=='authenticated'||current.user?.id!==user.id||current.busy||pending.current||sessionFailed.current)return;
-    if(navigation.current.owner===auth&&navigation.current.user?.id===user.id&&(!retry||navigation.current.phase!=='failed'))return;
-    const id=++navigation.current.revision;navigation.current.owner=auth;navigation.current.user=user;navigation.current.phase='opening';setNavigationPhase('opening');clearPassword();
-    try{const options=navigationOptions.current;if(options.onAuthenticated)await options.onAuthenticated(user,options.returnTo);else{const target=new URL(options.returnTo,window.location.href);if(target.pathname===window.location.pathname&&target.search===window.location.search)throw new Error('The target is the current page');window.location.assign(options.returnTo);}}
-    catch{if(alive.current&&active.current&&id===navigation.current.revision&&navigation.current.owner===auth&&(auth.getState().status==='authenticated'&&auth.getState().user?.id===user.id||auth.getState().status==='unknown'&&auth.getState().busy!=='login'&&auth.getState().busy!=='logout')){navigation.current.phase='failed';setNavigationPhase('failed');queueMicrotask(()=>{if(alive.current&&active.current&&id===navigation.current.revision)feedback.current?.focus();});}}
-  };
-  const run=async(operation:'session'|'login'|'extension',credentials?:{username:string;password:string},action?:LoginPageAction)=>{
-    if(!alive.current||!active.current)return;const id=++revision.current;pending.current?.abort();const controller=new AbortController();pending.current=controller;sessionFailed.current=false;setViewOperation(operation);setExtensionError(false);let extensionPhase=false;
-    try{if(operation==='extension'||operation==='login'&&extensions?.beforeSubmit){extensionPhase=true;setExtensionBusy(operation==='extension'?action!.label:labels.signingIn);await runLoginPageExtension(operation==='extension'?action!.run:extensions!.beforeSubmit!,{username:credentials?.username??username.current?.value??'',signal:controller.signal});if(!alive.current||!active.current||id!==revision.current||controller.signal.aborted)return;setExtensionBusy(null);extensionPhase=false;}if(operation==='extension')return;if(operation==='login')await auth.login(credentials!,{signal:controller.signal});else{const user=await auth.currentUser({signal:controller.signal});if(auth.getState().status==='authenticated'&&auth.getState().user?.id!==user?.id)throw new Error('Session identity changed');}}
-    catch{if(alive.current&&active.current&&id===revision.current&&!controller.signal.aborted){if(operation==='session')sessionFailed.current=true;else if(extensionPhase||!auth.getState().error)setExtensionError(true);queueMicrotask(()=>{if(alive.current&&active.current&&id===revision.current)feedback.current?.focus();});}}
-    finally{if(credentials)credentials.password='';if(id===revision.current&&pending.current===controller&&navigation.current.owner===auth){pending.current=undefined;if(alive.current){setExtensionBusy(null);setViewOperation(null);}clearPassword();}}
-  };
-  React.useLayoutEffect(()=>auth.subscribe(()=>{const next=auth.getState();if(next.status==='authenticated'||next.error)clearPassword();}),[auth]);
+  React.useLayoutEffect(()=>{if(!injected)controller.update({config:input!,onAuthenticated,extensions:defaultExtensions});},[controller,injected,input,onAuthenticated,defaultExtensions]);
   React.useEffect(()=>{
-    alive.current=true;active.current=true;
-    if(navigation.current.owner!==auth){sessionFailed.current=false;setViewOperation(null);navigation.current={owner:auth,user:null,revision:navigation.current.revision+1,phase:'idle'};setNavigationPhase('idle');}
-    const checkSession=()=>{const current=auth.getState();if((current.busy==='session'||current.busy==='refresh'||current.status==='unknown'&&!current.busy&&!current.error))void run('session');};
-    const release=()=>{active.current=false;revision.current++;navigation.current.revision++;pending.current?.abort();pending.current=undefined;if(alive.current){setExtensionBusy(null);setViewOperation(null);}clearPassword();};
-    const resume=(event:PageTransitionEvent)=>{if(!event.persisted||!alive.current)return;active.current=true;navigation.current.revision++;navigation.current.user=null;navigation.current.phase='idle';setNavigationPhase('idle');const current=auth.getState();if(current.busy==='session'||current.busy==='refresh')checkSession();else{if(current.status==='authenticated'&&current.user&&!current.busy)void openApplication(current.user);}};
-    window.addEventListener('pagehide',release);window.addEventListener('pageshow',resume);
-    // Join an existing owner read on mount/effect replay; cancelling a view never cancels that shared read.
-    checkSession();
-    return()=>{alive.current=false;revision.current++;pending.current?.abort();pending.current=undefined;clearPassword();window.removeEventListener('pagehide',release);window.removeEventListener('pageshow',resume);};
-  },[auth]);
-  React.useEffect(()=>{
-    if(state.status!=='authenticated'||!state.user){if(navigation.current.user&&(state.status==='anonymous'||state.busy==='login'||state.busy==='logout')){navigation.current.revision++;navigation.current.user=null;navigation.current.phase='idle';setNavigationPhase('idle');}return;}
-    if(!state.busy&&viewOperation===null)void openApplication(state.user);
-  },[auth,state.status,state.user,state.busy,viewOperation]);
-  const authenticated=state.status==='authenticated',busy=!!state.busy||viewOperation!==null||extensionBusy!==null||authenticated&&!sessionFailed.current&&navigationPhase!=='failed',locked=busy||authenticated;
-  const canCheck=!busy&&(sessionFailed.current&&!state.error||!authenticated&&state.error?.metadata.endpointId==='auth.session'&&(state.error.kind==='network'||state.error.kind==='timeout'||state.error.kind==='http'&&(state.error.status??0)>=500));
-  const navigating=authenticated&&!state.busy&&viewOperation===null&&!sessionFailed.current,navigationFailed=navigating&&navigationPhase==='failed';
-  const message=navigationFailed?labels.navigationError:navigating?labels.opening:extensionBusy??(state.error?getLoginPageError(state.error,labels):sessionFailed.current?labels.error:labels[viewOperation==='session'||state.busy==='session'||state.busy==='refresh'?'checking':'signingIn']);
+   const release=controller.bind({readCredentials:()=>({username:username.current?.value??'',password:password.current?.value??''}),clearPassword,focus:target=>(target==='feedback'?feedback:target==='username'?username:password).current?.focus(),navigate:returnTo=>{const target=new URL(returnTo,window.location.href);if(target.pathname===window.location.pathname&&target.search===window.location.search)throw new Error('The target is the current page');window.location.assign(returnTo);}});
+   const pause=()=>controller.pause(),resume=(event:PageTransitionEvent)=>{if(event.persisted)controller.resume();};
+   window.addEventListener('pagehide',pause);window.addEventListener('pageshow',resume);
+   return()=>{release();clearPassword();window.removeEventListener('pagehide',pause);window.removeEventListener('pageshow',resume);};
+  },[controller]);
+  const authenticated=state.status==='authenticated',busy=!!state.busy||viewOperation!==null||extensionBusy!==null||authenticated&&!sessionFailed&&navigationPhase!=='failed',locked=busy||authenticated;
+  const canCheck=!busy&&(sessionFailed&&!state.error||!authenticated&&state.error?.metadata.endpointId==='auth.session'&&(state.error.kind==='network'||state.error.kind==='timeout'||state.error.kind==='http'&&(state.error.status??0)>=500));
+  const navigating=authenticated&&!state.busy&&viewOperation===null&&!sessionFailed,navigationFailed=navigating&&navigationPhase==='failed';
+  const message=navigationFailed?labels.navigationError:navigating?labels.opening:extensionBusy??(state.error?getLoginPageError(state.error,labels):sessionFailed?labels.error:labels[viewOperation==='session'||state.busy==='session'||state.busy==='refresh'?'checking':'signingIn']);
   const submitLabel=navigating?labels.opening:state.busy==='login'||viewOperation==='login'?labels.signingIn:labels.submit;
-  const feedbackIsError=navigationFailed||extensionError||sessionFailed.current||!!state.error&&state.error.kind!=='cancel';
+  const feedbackIsError=navigationFailed||extensionError||sessionFailed||!!state.error&&state.error.kind!=='cancel';
   const statusInSubmit=busy&&!feedbackIsError&&message===submitLabel;
   // A new label starts in view; unrelated renders preserve deliberate label scrolling.
   React.useLayoutEffect(()=>{if(submit.current)submit.current.scrollTop=0;},[submitLabel]);
   return <AuthPage config={config} brandVisual={brandVisual}
-    form={{noValidate:true,onSubmit:event=>{event.preventDefault();if(auth.getState().status==='authenticated'||auth.getState().busy||pending.current||!active.current)return;const credentials={username:username.current?.value??'',password:password.current?.value??''},next={username:credentials.username.trim()?undefined:labels.usernameRequired,password:credentials.password?undefined:labels.passwordRequired};setErrors(next);if(next.username||next.password){(next.username?username:password).current?.focus();return;}clearPassword();void run('login',credentials);}}}
+    form={{noValidate:true,onSubmit:event=>{event.preventDefault();void controller.submit();}}}
     actions={<><Button ref={submit} className="xui-login-submit" size="lg" data-idle-label={labels.submit} data-busy-label={labels.signingIn} type="submit" disabled={locked} aria-busy={busy}><span>{submitLabel}</span><span className="xui-login-opening-reservation" aria-hidden="true">{labels.opening}</span></Button><span className="xui-login-announcement" role={statusInSubmit?'status':undefined} aria-live="polite" aria-atomic="true">{statusInSubmit?submitLabel:''}</span></>}
-    alternatives={extensions?.actions?.length?extensions.actions.map(action=><Button key={action.id} variant="outline" disabled={locked||action.disabled} onClick={()=>{if(pending.current||auth.getState().busy||auth.getState().status==='authenticated')return;clearPassword();void run('extension',undefined,action);}}>{action.label}</Button>):undefined}
-    feedback={!statusInSubmit&&(state.error||state.busy||viewOperation||extensionBusy||extensionError||sessionFailed.current||authenticated)?<Alert ref={feedback} tabIndex={-1} tone={feedbackIsError?'error':'info'}>{extensionError?(extensions?.errorLabel??'登录配置或认证方式暂不可用，请检查后重试。'):message}</Alert>:undefined}
-    feedbackActions={<>{canCheck&&<Button size="sm" variant="ghost" onClick={()=>run('session')}>{labels.checkSession}</Button>}{navigationFailed&&<Button size="sm" variant="ghost" onClick={()=>{const user=auth.getState().user;if(user)void openApplication(user,true);}}>{labels.retryNavigation}</Button>}</>}
+    alternatives={extensions?.actions?.length?extensions.actions.map(action=><Button key={action.id} variant="outline" disabled={locked||action.disabled} onClick={()=>{void controller.runAction(action.id);}}>{action.label}</Button>):undefined}
+    feedback={!statusInSubmit&&(state.error||state.busy||viewOperation||extensionBusy||extensionError||sessionFailed||authenticated)?<Alert ref={feedback} tabIndex={-1} tone={feedbackIsError?'error':'info'}>{extensionError?(extensions?.errorLabel??'登录配置或认证方式暂不可用，请检查后重试。'):message}</Alert>:undefined}
+    feedbackActions={<>{canCheck&&<Button size="sm" variant="ghost" onClick={()=>controller.checkSession()}>{labels.checkSession}</Button>}{navigationFailed&&<Button size="sm" variant="ghost" onClick={()=>controller.retryNavigation()}>{labels.retryNavigation}</Button>}</>}
   >
     <div className="xui-stack">
       <fieldset className="xui-login-extension" disabled={locked}>{beforeFields}</fieldset>
-      <Field label={labels.username} required error={errors.username}><Input ref={username} name="username" autoComplete="username" maxLength={128} disabled={locked} onChange={()=>setErrors(current=>({...current,username:undefined}))}/></Field>
-      <Field label={labels.password} required error={errors.password}><PasswordInput ref={passwordRef} controlRef={passwordControl} showLabel={labels.showPassword} hideLabel={labels.hidePassword} name="password" autoComplete="current-password" maxLength={4096} disabled={locked} onInput={()=>setErrors(current=>({...current,password:undefined}))}/></Field>
+      <Field label={labels.username} required error={errors.username}><Input ref={username} name="username" autoComplete="username" maxLength={128} disabled={locked} onChange={()=>controller.clearFieldError('username')}/></Field>
+      <Field label={labels.password} required error={errors.password}><PasswordInput controller={controller.password} ref={passwordRef} controlRef={passwordControl} showLabel={labels.showPassword} hideLabel={labels.hidePassword} name="password" autoComplete="current-password" maxLength={4096} disabled={locked} onInput={()=>controller.clearFieldError('password')}/></Field>
       <fieldset className="xui-login-extension" disabled={locked}>{afterFields}</fieldset>
     </div>
   </AuthPage>;
 }
+
+export {createLoginViewController} from '@coffeehc/xui-runtime/login-view';
+export type {LoginViewController,LoginViewOptions,LoginViewState,LoginViewBinding} from '@coffeehc/xui-runtime/login-view';

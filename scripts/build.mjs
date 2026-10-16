@@ -11,17 +11,21 @@ export async function buildPackages(){
   await mkdir('.artifacts',{recursive:true});const stage=await mkdtemp(resolve('.artifacts/build-'));
   try{
     const sourceFiles=['docs/DESIGN.md','package.json','tsconfig.json',...(await readdir('scripts')).filter(name=>name.endsWith('.mjs')).map(name=>`scripts/${name}`),...(await readdir('packages/theme/src')).map(name=>`packages/theme/src/${name}`),'packages/theme/package.json'];
-    for(const name of ['runtime','ui-react'])sourceFiles.push(...(await readdir(`packages/${name}/src`)).filter(file=>/\.tsx?$/.test(file)).map(file=>`packages/${name}/src/${file}`),`packages/${name}/package.json`);
+    for(const name of ['runtime','ui-react'])sourceFiles.push(...(await readdir(`packages/${name}/src`)).filter(file=>/\.(?:tsx?|json)$/.test(file)).map(file=>`packages/${name}/src/${file}`),`packages/${name}/package.json`);
     const sourceHash=async()=>{const hash=createHash('sha256');for(const file of sourceFiles.sort())hash.update(file).update(await readFile(file));return hash.digest('hex');};
     const sourceSha256=await sourceHash();
     await generate(false,`${stage}/theme`);
     for(const name of ['runtime','ui-react']){
       const files=(await readdir(`packages/${name}/src`)).filter(file=>/\.tsx?$/.test(file)).map(file=>`packages/${name}/src/${file}`);
       await build({entryPoints:files.filter(file=>!file.endsWith('/init.ts')),outdir:`${stage}/${name}`,format:'esm',platform:'browser',target:'es2022',bundle:false,jsx:'automatic'});
-      const project={compilerOptions:{declaration:true,emitDeclarationOnly:true,rootDir:resolve(`packages/${name}/src`),outDir:`${stage}/${name}`,jsx:'react-jsx',moduleResolution:'bundler',module:'esnext',target:'es2022',strict:true,skipLibCheck:true,...(name==='ui-react'?{paths:{'@coffeehc/xui-runtime': [`${stage}/runtime/index.d.ts`],'@coffeehc/xui-runtime/*': [`${stage}/runtime/*`]}}:{})},files:files.map(file=>resolve(file))};
+      const project={compilerOptions:{declaration:true,emitDeclarationOnly:true,rootDir:resolve(`packages/${name}/src`),outDir:`${stage}/${name}`,jsx:'react-jsx',moduleResolution:'bundler',module:'esnext',target:'es2022',strict:true,skipLibCheck:true,resolveJsonModule:true,...(name==='ui-react'?{paths:{'@coffeehc/xui-runtime': [`${stage}/runtime/index.d.ts`],'@coffeehc/xui-runtime/*': [`${stage}/runtime/*`]}}:{})},files:files.map(file=>resolve(file))};
       await writeFile(`${stage}/${name}.tsconfig.json`,JSON.stringify(project));
       execFileSync('node',['node_modules/typescript/bin/tsc','--project',`${stage}/${name}.tsconfig.json`],{stdio:'inherit'});
     }
+    // JSON is both a reviewable public asset and the sole source of embedded defaults.
+    // Consumers need no runtime JSON import support and bootstrap makes no hidden fetch.
+    await build({entryPoints:['packages/runtime/src/config-defaults.ts'],outfile:`${stage}/runtime/config-defaults.js`,bundle:true,format:'esm',platform:'browser',target:'es2022'});
+    await writeFile(`${stage}/runtime/config.json`,await readFile('packages/runtime/src/config.json'));
     // Ship a fixed self-contained worker as a lazy data module. Host bundlers need no worker plugin.
     const strengthWorker=await build({entryPoints:['packages/runtime/src/password-strength-worker-entry.ts'],bundle:true,write:false,format:'iife',platform:'browser',target:'es2022',minify:true});
     await writeFile(`${stage}/runtime/password-strength-worker-source.js`,`export const passwordStrengthWorkerSource=${JSON.stringify(strengthWorker.outputFiles[0].text)};\n`);

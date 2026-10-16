@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createHttpClient} from '../packages/runtime/dist/http.js';
-import {createAuthClient} from '../packages/runtime/dist/auth.js';
+import {isolatedAuth} from './helpers/runtime-services.mjs';
 import {createAuthCoordination} from '../packages/runtime/dist/auth-coordination.js';
 
 const deferred=()=>{let resolve;const promise=new Promise(done=>resolve=done);return {promise,resolve};};
@@ -33,8 +32,8 @@ test('refresh notifications do not synthesize identity events that a tab did not
 test('a login notification invalidates a sibling auth owner without browser storage',async t=>{
  const harness=browser(t),user={id:'42',username:'fixture',display_name:null},token='bs-v1-sha256-access-'+'A'.repeat(43);
  const response=()=>new Response(JSON.stringify({success:true,message:'',payload:{schema_version:2,user,access_token:token,token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString()},request_id:'',code:200}),{headers:{'Content-Type':'application/json'}});
- const httpA=createHttpClient({baseURL:'https://auth.example',fetch:async()=>response()}),httpB=createHttpClient({baseURL:'https://auth.example',fetch:async()=>response()}),a=createAuthClient({http:httpA}),b=createAuthClient({http:httpB});
- t.after(()=>{a.destroy();b.destroy();httpA.destroy();httpB.destroy();});
+ const ownerA=isolatedAuth({baseURL:'https://auth.example',fetch:async()=>response()},{}),ownerB=isolatedAuth({baseURL:'https://auth.example',fetch:async()=>response()},{}),{http:httpA,auth:a}=ownerA,{http:httpB,auth:b}=ownerB;
+ t.after(()=>{ownerA.services.dispose();ownerB.services.dispose();});
  await a.login({username:'fixture',password:'FAKE_PASSWORD'});assert.equal(a.getState().status,'authenticated');assert.equal(harness.messages.length,1);harness.deliver(0,1);assert.equal(b.getState().status,'unknown');assert.equal(typeof globalThis.window.localStorage,'undefined');
  a.destroy();b.destroy();
 });

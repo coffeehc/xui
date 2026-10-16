@@ -17,9 +17,9 @@ theme 提供预构建 CSS/tokens；runtime 只提供无框架 TypeScript 服务�
 
 runtime 原生 DOM UI exports 已从当前公开入口移除，原生 UI 示例也不再作为接入路径。该 breaking change 不代表 XQuant、XLead 或其他消费项目已完成 React 迁移或通过验收；消费项目须按自己的授权核实固定包版本、调用点和实际页面。HTTP/auth/query/theme/resource 等 TypeScript 服务、模型、解析器与工具继续公开，React 宿主可直接复用。
 
-当前候选按 DESIGN 1.3.0 和三个私有包 1.3.0 构建。1.0.0 breaking release 删除 runtime DOM UI exports；消费方升级前须将对应 UI 重接到公开 React 组件。不得把 xui 本次入口变更写成 XQuant、XLead 或其他产品已改造，也不在本仓代替宿主完成迁移；本轮正式验证与固定 SHA 见 [验证记录](VALIDATION.md)。
+当前候选的 DESIGN 与三个私有包均为 2.0.0，runtime 基础 Service 不再导出 `create*` 工厂；消费者需把服务装配迁至 `bootstrap`/`XuiServices` 并复核固定 ESM/CSS/types。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
 
-HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方client；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
+HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方 client，并从 bootstrap 共享 service 获取依赖；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 
 ## 固定产物与可运行示例
 
@@ -32,7 +32,7 @@ pnpm test:consumer
 pnpm preview
 ```
 
-`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目也应固定已核对的 1.3.0 版本或提交，使用正式构建产物。React、ReactDOM、Base UI 与 runtime peer 保持单实例；不使用 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
+`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目应固定同一源码构建出的 DESIGN 与三个包 2.0.0，或固定完整 SHA，并使用正式产物。React、ReactDOM、Base UI 与 runtime peer 保持单实例；不使用 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
 
 当前可运行参考只展示 React UI；纯 TypeScript runtime 模型和服务可在 React 页面中复用。它们使用合成数据，不证明采用项目的真实后端、业务权限或页面已集成。
 
@@ -65,7 +65,7 @@ pnpm preview
 3. 尺寸使用 `rem` 或依赖公开尺度的 `calc`，保留中文、系统及通用字体回退，不缩小根字号补布局。保留必要对比、键盘焦点、forced-colors 和 reduced-motion；公开变量表达不了的要求记录准确缺口，不用私有选择器、复制组件皮肤或 `!important` 补丁。
 4. 在项目既有样式入口导入这份文件。公开基础 CSS 选择一次 `style.css`，或按合同加载 `critical.css` 与可选分片；层序为 design-defaults → product-overrides → design-accessibility，组件位于独立 xui-components 层，详见 [样式分层与正式产物](#包与正式入口)。检查重复导入与未分层旧全局 CSS 的实际优先级，再确认 computed style。
 
-复用一个与 xui 合同兼容的文档主题 owner，支持 `light` / `dark` / `system`，区分用户 mode 与实际 effective。公开 init 的首屏脚本先于 CSS 和可见内容，应用复用 `window.xuiTheme`；已有偏好通过受控 bridge 接入时保留 storage key、格式和其他字段。React `useTheme` 只订阅，不另造 context、storage 或 matchMedia owner，不在 JS 保存调色板；卸载释放视图订阅，文档 owner 终止时再销毁。
+浏览器应用以 `bootstrap(overrides, environment)` 建立唯一文档服务注册表，再从同一个 `application.services` 取得 HTTP、认证、主题、菜单、i18n、路由和下载服务。包内 `config.json` 提供默认项；项目仅传 JSON override，服务实例、Window、平台 writer 等运行时依赖通过第二参数的 `environment.services` 注入。普通应用不得调用已移除的基础服务 `create*` 工厂。采用项目按页面会话使用 `ui.theme.mode` 与 `ui.interface.scale` 的 sessionStorage 偏好，存在有效保存值时优先于 config 中的 mode/scale 默认值。`init.js` 是首绘前脚本，只恢复根元素主题/缩放属性，不创建或订阅 ThemeController；React `useTheme` 订阅 bootstrap 提供的同一个主题 owner，组件卸载不销毁它。
 
 主题验收使用采用项目的真实构建和代表页面，覆盖浅色、深色、system 变化、窄屏、200% 浏览器缩放、长中文、输入/主操作/浮层、键盘焦点及动效偏好。只生成主题时，发现需要替换的业务控件或布局应记录位置与建议，按本次范围结束。
 
@@ -109,7 +109,7 @@ Dialog/Sheet 内需要指定 Popover 的挂载目标时，使用 `Popover.Conten
 
 以下要求适用于首次接入、升级和接入自查。先固定实际安装版本/SHA，核对正式 ESM/CSS/types 与该版本合同；源码中的新能力不等于消费项目已安装。检查实际页面调用、最终样式与请求链路，不能凭 import 数量或截图认定完成。
 
-- 已有适用完整页面或组合时直接采用，登录优先 ConfigurableLoginPage 及同一 createAuthClient。品牌、文案、公开 extensions 与宿主业务可以配置；只使用公共 Input/Button 后手写另一套登录页面，不能算完整登录组合接入。认证服务前置不满足时按接入模式保留既有认证 owner并报告限制，不能猜协议或伪称完整登录通过。
+- 已有适用完整页面或组合时直接采用，登录优先 ConfigurableLoginPage 及 bootstrap 注册的同一 AuthClient。品牌、文案、公开 extensions 与宿主业务可以配置；只使用公共 Input/Button 后手写另一套登录页面，不能算完整登录组合接入。认证服务前置不满足时按接入模式保留既有认证 owner并报告限制，不能猜协议或伪称完整登录通过。
 - 需要修改、增强或修复公共组件时，消费项目不得自行复制 React 实现、fork、打补丁、穿透私有 DOM/CSS、使用 !important 或以 wrapper 建立竞争实现。消费项目列出实际入口/版本、代码位置、最小复现、业务场景、受限行为、当前公开替代入口与验收条件，统一交给 xui；由 xui 在自己的授权范围内补齐公开合同、实现和验收后，消费方再按升级授权采用。正常公开 props/slots/render/typed adapter 与领域组合仍属宿主职责。
 - 逐项追踪已采用的 HTTP/auth/page adapter/loader，核对登录、刷新、退出、session及适用的Key/日志/下载等调用。不得悄悄改固定端点、method、DTO、解析或错误语义，不得绕过公共 client 另建重复请求、凭据、401跳转、超时、重试、loading或通知owner。领域API和标准/第三方协议按[默认适配器前置](PUBLIC_API.md#默认适配器的服务前置)保留明确typed边界，不要求全量后端迁移。
 - UI信息遵守[信息披露](DESIGN.md#首屏信息架构与信息密度)。不添加重复品牌/页面名页脚、无用统计、常驻实现背景、开发备注或接入/验收声明；保留必要标签、真实业务状态、权限、错误、风险与及时操作反馈。不得用测试说明或合成记录冒充正式业务内容。
@@ -138,22 +138,23 @@ Dialog/Sheet 内需要指定 Popover 的挂载目标时，使用 `Popover.Conten
 
 ## 主题单一所有者
 
-无受控 mode 时 runtime 默认持久化到 sessionStorage，默认 key 为 ui.theme.mode；persist:false 完全使用内存。传入 mode 则完全受控，不隐式读写 storage。setMode 只请求 onModeChange，宿主确认后调用 syncMode；state.mode 保留用户选择，state.effective 是当前浅深结果。显式浅深不被系统变更覆盖。同一标签页刷新保留选择，生命周期由浏览器页会话管理，不主动跨标签同步；不读取、迁移或改写旧localStorage值。
+无显式受控 `ThemeOptions.mode` 时，ThemeController 使用非受控 mode 并默认持久化到 sessionStorage，默认 key 为 `ui.theme.mode`；`persist:false` 完全使用内存。`bootstrap` 将 JSON `theme.mode` 作为非受控默认，已有有效 sessionStorage mode 优先于该默认；没有有效保存值时才使用 config 默认。显式注入 `ThemeOptions.mode` 是受控模式，不隐式读写 storage。`setMode` 只请求 `onModeChange`，宿主确认后调用 `syncMode`；`state.mode` 保留用户选择，`state.effective` 是当前浅深结果。显式浅深不被系统变更覆盖。同一标签页刷新保留选择，不主动跨标签同步；不读取、迁移或改写旧 localStorage。
 
-首屏阻塞经典脚本置于 CSS 和可见内容之前；应用复用 window.xuiTheme。window.xuiThemeOptions 可在脚本前提供受控 mode/onModeChange 或 storageKey。data-storage-key 优先于 options key。重复 init 复用存活 owner；销毁后重新执行 init 才重建。宿主确认受控值时同时更新 options.mode，使以后重建使用最新事实。
+`@coffeehc/xui-runtime/init.js` 应在 CSS 与可见内容前加载，只读有效的 sessionStorage/预设主题信息并写根元素主题/缩放属性，供首绘避免闪烁。它不创建、订阅或销毁 ThemeController。浏览器服务的正式 owner 由 `bootstrap()` 或 `getThemeService(window)` 取得；主题设置 UI 可通过 React `useTheme` 订阅同一 owner。不要让 init、React provider、主题按钮或每个 View 各自创建 storage、matchMedia 监听或控制器。
 
 ```html
-<script src="./theme-init.js" data-storage-key="ui.theme.mode"></script>
+<script src="./theme-init.js"></script>
 <link rel="stylesheet" href="./app.css">
 ```
 
 ```ts
-const theme = window.xuiTheme;
-const off = theme.subscribe(state => updateView(state));
-// 卸载视图时 off()，文档所有者终止时 theme.destroy()。
+import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+const app = bootstrap({theme: {mode: 'system'}});
+const theme = app.services.getThemeService();
+// useTheme 订阅；应用关闭时由 app/services owner 统一释放。
 ```
 
-foundation React参考页在首屏前从sessionStorage读取一个宿主 JSON key，再以受控模式桥接；保留其他 JSON 字段，原始 ui.theme.mode 不被覆盖。默认runtime无有效保存值时为dark；foundation受控示例显式选择system。storage不可用时保留内存选择；仅显式 system 在 matchMedia 不可用时生效 light。系统变化有单一监听。React useTheme 只订阅外部 owner，在 StrictMode 中不创建或销毁它。ESM 导入本身不读 DOM。
+有效 `ui.interface.scale` 同样优先于 config 的 `theme.scale` 默认。无存储值时才采用 config 默认缩放；首屏脚本负责预绘制恢复，bootstrap 安装服务后再次读取相同有效值不会产生第二个 owner。存储不可用时保留当前页内存操作。ESM 导入本身不创建浏览器 owner。
 
 ### 公共文字槽
 
@@ -169,7 +170,7 @@ setInterfaceScale(1.25); // 125%，即时生效并写入sessionStorage
 setInterfaceScale(1); // 恢复100%
 ```
 
-只接受1、1.25、1.5、2；不传125或百分号字符串。保持正式init.js在CSS和可见body前同步执行，使 `ui.interface.scale` 在首屏恢复。不要在React effect里再恢复一次，不新增localStorage、请求、页面reload或子树缩放owner。存储拒绝时当前页仍可放大。宿主可提供设置入口，但xui不强制新增界面。根字号基于浏览器默认比例计算，保留浏览器zoom；宿主不得以固定根字号或CSS zoom覆盖。完整值/异常/生命周期见[界面缩放合同](DESIGN.md#公共界面缩放)，按[逐项清单](ADOPTION_CHECKLIST.md)提交实际证据。
+只接受1、1.25、1.5、2；不传125或百分号字符串。保持正式init.js在CSS和可见body前同步执行，使 `ui.interface.scale` 在首屏预绘制恢复；它只写根元素属性，不创建服务或控制器。bootstrap 以 config 默认值启动其余服务，并复用已恢复的 scale 偏好。不要在React effect里再恢复一次，不新增localStorage、请求、页面reload或子树缩放owner。存储拒绝时当前页仍可放大。宿主可提供设置入口，但xui不强制新增界面。根字号基于浏览器默认比例计算，保留浏览器zoom；宿主不得以固定根字号或CSS zoom覆盖。完整值/异常/生命周期见[界面缩放合同](DESIGN.md#公共界面缩放)，按[逐项清单](ADOPTION_CHECKLIST.md)提交实际证据。
 
 ## 构建与正式消费
 
@@ -180,7 +181,7 @@ setInterfaceScale(1); // 恢复100%
 | 包 | 正式入口 | 职责 |
 | --- | --- | --- |
 | `@coffeehc/xui-theme` | 预构建 CSS、tokens 与按需样式分片 | 无框架依赖，完整及分片入口见 PUBLIC_API |
-| `@coffeehc/xui-runtime` | TypeScript 主题、resource、导航数据、HTTP/query、认证、服务、模型与工具 | 无框架依赖；模块可独立导入，init.js 是有副作用的同步经典脚本。UI 仅由 `@coffeehc/xui-react` 提供 |
+| `@coffeehc/xui-runtime` | TypeScript 主题、resource、导航数据、HTTP/query、认证、服务、模型与工具 | 无框架依赖；模块可独立导入。`init.js` 是仅作首绘预设的经典脚本；bootstrap 才建立应用服务 owner。UI 仅由 `@coffeehc/xui-react` 提供 |
 | `@coffeehc/xui-react` | 公共组件及各能力子入口 | React、ReactDOM、Base UI、runtime 是 peers，不捆绑宿主实例，不隐式导入 CSS |
 
 优先按能力导入，例如 `@coffeehc/xui-react/button`。根入口也经过 Button-only 最终输出贡献检查；sideEffects 标记不是验证替代品。theme 可用完整 style.css，或 tokens.css + base.css + 所需分片。`critical.css` 与 `forms.css` 均包含共享 selection 样式，保证 SimpleSelect 的基础定位、选项和指针操作可用；`floating.css` 保留完整 selection + floating 组合入口，`forms.css` 保留 forms + selection 组合入口。共享规则只有一个源码定义，使用分片时不要再手工导入内部 selection 文件。不要将 style.css 和 critical.css 同时载入后又无意重复维护默认值。所有 CSS 都是打包后文件，无下游 Tailwind 扫描 node_modules 要求。
@@ -203,7 +204,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 1.3.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 2.0.0；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 
@@ -220,3 +221,6 @@ Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖
 正式CSS的基础作用域必须落实：应用根容器（常用body）使用公开 `class="xui"`；弹层由公共组合生成 `.xui-layer`。基础border-box、字号和焦点规则作用于这些范围，单独import style.css但省略作用域不能视为完成接入。独立消费者不能依赖其他项目的Tailwind preflight恰好补齐缺失规则，也不能仅量外框就宣称Input/Textarea没有溢出；核对控件自身的box-sizing和实际边界。不要用私有宽度补丁替代这一公开前提。
 
 卡片集合采用公开[CardGroup](COMPONENTS.md#cardgroup)：填记录、稳定key和Card配置模板，由集合负责实例、布局、局部状态及唯一分页/计数。不要把Card+Grid拼接视为已采用集合合同；不要在项目内补第二套集合加载/刷新骨架。状态和分页由同一个既有query/resource owner发布，业务数据、草稿与操作仍由宿主负责。
+
+
+2.0.0 状态控制采用 [逐项双模式矩阵](COMPONENTS.md#状态所有权与-controller-模式) 与 STATE-OWNER-001～007、STATE-COPY-001。旧受控props仍有效；需要完整自定义交互时注入同契约Controller，不把value/onChange/handle当完整替换。服务页面区分旧 service controller 和 viewController，AuthClient、业务loader/adapter与权限仍归原owner。基础服务从 bootstrap/注册表获取，组件Controller factory仍按组件生命周期使用。复制统一使用 [runtime只写服务](PUBLIC_API.md#剪贴板复制服务) 或通过第二参数注入的平台writer，不新增前端传输适配/认证/查询层。Toast仍缺少集合store替换，不能给全部组件笼统宣告通过。

@@ -1,6 +1,6 @@
 import type {PasswordStrengthState} from './password-strength.js';
-export {createPasswordStrengthController} from './password-strength.js';
-export type {PasswordStrengthState,PasswordStrengthHint,PasswordStrengthControllerOptions} from './password-strength.js';
+export {createNewPasswordFieldsController,createPasswordStrengthController} from './password-strength.js';
+export type {NewPasswordFieldsController,NewPasswordFieldsControllerOptions,NewPasswordFieldsState,PasswordStrengthController,PasswordStrengthState,PasswordStrengthHint,PasswordStrengthControllerOptions} from './password-strength.js';
 /** 新设密码使用固定的 Unicode 码点范围，不接受项目配置。 */
 export const passwordMinimumCharacters=6;
 export const passwordMaximumCharacters=32;

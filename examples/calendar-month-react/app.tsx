@@ -5,10 +5,11 @@ import type {CalendarValue} from '@coffeehc/xui-runtime/calendar';
 import {Field,Input,SimpleSelect,Checkbox} from '@coffeehc/xui-react/forms';
 import {Button} from '@coffeehc/xui-react/button';
 import {Stack,Section,Toolbar} from '@coffeehc/xui-react/layout';
-import {createThemeController,type ThemeMode} from '@coffeehc/xui-runtime/theme';
+import type {ThemeMode} from '@coffeehc/xui-runtime/theme';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/style.css';
 
-const theme=window.xuiTheme??createThemeController();
+const theme=bootstrapBrowserExample().services.getThemeService();
 const range=new URLSearchParams(location.search).has('range');
 function App(){
  const [month,setMonth]=React.useState('2026-10'),[year,setYear]=React.useState('2020'),[targetMonth,setTargetMonth]=React.useState('01');

@@ -6,7 +6,7 @@ import {Sheet} from '@coffeehc/xui-react/sheet';
 import {Combobox} from '@coffeehc/xui-react/combobox';
 import {Button} from '@coffeehc/xui-react/button';
 import {Field,Input} from '@coffeehc/xui-react/forms';
-import {createThemeController} from '@coffeehc/xui-runtime/theme';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/style.css';
 
 const params=new URLSearchParams(location.search);
@@ -50,4 +50,4 @@ function Editor({kind}:{kind:'dialog'|'sheet'}){
  </Modal.Root>;
 }
 function App(){return <main className="xui-stack"><h1>弹层内资源选择</h1><Editor kind={params.get('host')==='sheet'?'sheet':'dialog'}/></main>;}
-createThemeController();createRoot(document.getElementById('root')!).render(<App/>);
+bootstrapBrowserExample();createRoot(document.getElementById('root')!).render(<App/>);

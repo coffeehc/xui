@@ -28,7 +28,16 @@ test('all menu item variants preserve Base UI props, stateful className, render 
   const ref=React.createRef(),render=React.createElement('a'),onClick=()=>{};
   for(const part of ['Item','LinkItem','CheckboxItem','RadioItem','SubmenuTrigger']){
     assert.equal(ContextMenu[part],Menu[part]);
-    const element=Menu[part]({ref,render,onClick,className:state=>state.disabled?'host-disabled':'host-enabled'});
+    const props={ref,render,onClick,className:state=>state.disabled?'host-disabled':'host-enabled'};
+    if(part==='CheckboxItem'){
+      const html=renderToStaticMarkup(React.createElement(BaseMenu.Root,{open:true},React.createElement(Menu.CheckboxItem,{...props,'data-forwarded':'yes',defaultChecked:false},'choice')));
+      assert.match(html,/^<a[^>]*role="menuitemcheckbox"/);
+      assert.match(html,/aria-checked="false"/);
+      assert.match(html,/data-forwarded="yes"/);
+      assert.match(html,/class="xui-menu-item host-enabled"/);
+      continue;
+    }
+    const element=Menu[part](props);
     assert.equal(element.type,BaseMenu[part]);
     assert.equal(element.props.ref,ref);
     assert.equal(element.props.render,render);

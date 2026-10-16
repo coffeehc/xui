@@ -1,30 +1,38 @@
 import * as React from 'react';
+import {Popover as BasePopover} from '@base-ui/react/popover';
+import {Select as BaseSelect} from '@base-ui/react/select';
 import {createDateTimeModel,dateTimeDefaultLabels,type DateTimeOptions,type DateTimePickerLabels} from '@coffeehc/xui-runtime/date-time';
+import type {DateTimeController} from '@coffeehc/xui-runtime/date-time';
 import {Field,Input,InputGroup} from './forms.js';
 import {Select} from './select.js';
 import {Calendar} from './calendar.js';
 import {Popover} from './popover.js';
 import {Button} from './button.js';
 import {Stack,Toolbar} from './layout.js';
+import {useOwnedController,type ControllerProps,assertControllerProps} from './controller.js';
 
-export type {DateTimeValue,DateTimeOptions,DateTimeParts,DateTimeError,DateTimePickerLabels} from '@coffeehc/xui-runtime/date-time';
+export type {DateTimeValue,DateTimeOptions,DateTimeParts,DateTimeError,DateTimePickerLabels,DateTimeController} from '@coffeehc/xui-runtime/date-time';
 /** One labeled native text input plus a public date/time popover. ref points to the input.
  * Valid complete text requests a value immediately; invalid text is retained as draft.
  * Required/format errors use Field and native validity; host errors retain their own copy. */
-export interface DateTimePickerProps extends DateTimeOptions {
+type DateTimePickerPresentationProps = {
  label:string;id?:string;name?:string;form?:string;help?:React.ReactNode;error?:React.ReactNode;
  describedBy?:string;placeholder?:string;autoComplete?:string;className?:string;
  labels?:Partial<DateTimePickerLabels>;ref?:React.Ref<HTMLInputElement>;
-}
-export function DateTimePicker({label,id,name,form,help,error,describedBy,placeholder='YYYY-MM-DDTHH:mm',autoComplete='off',className,labels:overrides,ref,...options}:DateTimePickerProps){
+};
+export type DateTimePickerProps=DateTimePickerPresentationProps&ControllerProps<DateTimeController,DateTimeOptions>;
+export function DateTimePicker(props:DateTimePickerProps){
+ const {label,id,name,form,help,error,describedBy,placeholder='YYYY-MM-DDTHH:mm',autoComplete='off',className,labels:overrides,ref}=props;
+ const injected='controller'in props?props.controller:undefined,options=props as DateTimeOptions;
+ assertControllerProps(injected,props,['value','defaultValue','onValueChange','disabled','readOnly','required','locale','weekStartsOn','today']);
  const labels={...dateTimeDefaultLabels,...overrides},latest=React.useRef(options);latest.current=options;
- const [model]=React.useState(()=>createDateTimeModel({...options,onValueChange:value=>latest.current.onValueChange?.(value)}));
+ const model=useOwnedController(injected,()=>createDateTimeModel({...options,onValueChange:value=>latest.current.onValueChange?.(value)}));
  const state=React.useSyncExternalStore(model.subscribe,model.getState,model.getState);
  const input=React.useRef<HTMLInputElement>(null),trigger=React.useRef<HTMLButtonElement>(null),title=React.useRef<HTMLHeadingElement>(null),popup=React.useRef<HTMLDivElement>(null),resetRevision=React.useRef(0),generated=React.useId();
  const innerOpen=React.useRef(new Set<string>()),innerEscapes=React.useRef(new WeakSet<Event>());
  React.useLayoutEffect(()=>{if(!state.open)innerOpen.current.clear();},[state.open]);
  React.useImperativeHandle(ref,()=>input.current!,[]);
- React.useLayoutEffect(()=>model.update({value:options.value,disabled:options.disabled,readOnly:options.readOnly,required:options.required,locale:options.locale,weekStartsOn:options.weekStartsOn,today:options.today}),[model,options.value,options.disabled,options.readOnly,options.required,options.locale,options.weekStartsOn,options.today]);
+ React.useLayoutEffect(()=>{if(!injected)model.update({value:options.value,disabled:options.disabled,readOnly:options.readOnly,required:options.required,locale:options.locale,weekStartsOn:options.weekStartsOn,today:options.today});},[model,injected,options.value,options.disabled,options.readOnly,options.required,options.locale,options.weekStartsOn,options.today]);
  const message=error||(state.error?labels[state.error==='format'?'invalid':'required']:undefined);
  React.useLayoutEffect(()=>{
   if(!input.current)return;
@@ -38,7 +46,7 @@ export function DateTimePicker({label,id,name,form,help,error,describedBy,placeh
   return()=>{alive=false;resetRevision.current++;doc.removeEventListener('reset',reset,true);};
  },[model]);
  const blocked=state.disabled||state.readOnly;
- return <Popover.Root open={state.open} onOpenChange={(next,details)=>{
+ return <BasePopover.Root open={state.open} onOpenChange={(next,details)=>{
   // Public peer callbacks arbitrate nested dismissal; never inspect a child popup's DOM.
   if(!next&&details.reason==='escape-key'&&(innerOpen.current.size||innerEscapes.current.has(details.event))){details.cancel();return;}
   if(next)model.open();else{innerOpen.current.clear();model.close();}
@@ -62,10 +70,10 @@ export function DateTimePicker({label,id,name,form,help,error,describedBy,placeh
     <Popover.Title ref={title} tabIndex={-1}>{labels.title}</Popover.Title>
     <Calendar label={labels.date} mode="single" month={state.month} value={state.date} today={options.today} locale={options.locale} weekStartsOn={options.weekStartsOn} disabled={blocked} onMonthChange={model.setMonth} onValueChange={value=>model.setDate(value as string|null)}/>
     <Toolbar>
-     {(['hour','minute'] as const).map(part=><Field key={part} label={labels[part]} controlId={generated+'-'+part}><Select.Root value={state[part]} disabled={blocked} onOpenChange={(next,details)=>{if(next)innerOpen.current.add(part);else{if(details.reason==='escape-key')innerEscapes.current.add(details.event);innerOpen.current.delete(part);}}} onValueChange={value=>{if(value!==null)model.setTime(part,value);}}><Select.Trigger id={generated+'-'+part} aria-label={labels[part]}><Select.Value>{value=>String(value).padStart(2,'0')}</Select.Value></Select.Trigger><Select.Content><Select.List>{Array.from({length:part==='hour'?24:60},(_,i)=><Select.Item key={i} value={i}><Select.ItemText>{String(i).padStart(2,'0')}</Select.ItemText></Select.Item>)}</Select.List></Select.Content></Select.Root></Field>)}
+     {(['hour','minute'] as const).map(part=><Field key={part} label={labels[part]} controlId={generated+'-'+part}><BaseSelect.Root value={state[part]} disabled={blocked} onOpenChange={(next,details)=>{if(next)innerOpen.current.add(part);else{if(details.reason==='escape-key')innerEscapes.current.add(details.event);innerOpen.current.delete(part);}}} onValueChange={value=>{if(value!==null)model.setTime(part,value);}}><Select.Trigger id={generated+'-'+part} aria-label={labels[part]}><Select.Value>{value=>String(value).padStart(2,'0')}</Select.Value></Select.Trigger><Select.Content><Select.List>{Array.from({length:part==='hour'?24:60},(_,i)=><Select.Item key={i} value={i}><Select.ItemText>{String(i).padStart(2,'0')}</Select.ItemText></Select.Item>)}</Select.List></Select.Content></BaseSelect.Root></Field>)}
     </Toolbar>
     <Toolbar><Button disabled={blocked||!state.date} onClick={()=>model.apply()}>{labels.apply}</Button><Button variant="outline" onClick={()=>model.close()}>{labels.cancel}</Button></Toolbar>
    </Stack>
   </Popover.Content>
- </Popover.Root>;
+ </BasePopover.Root>;
 }

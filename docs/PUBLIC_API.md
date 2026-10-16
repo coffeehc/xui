@@ -12,6 +12,7 @@
 
 - [全部正式入口](#全部正式入口)
 - [默认行为](#默认行为)
+- [启动、配置与应用服务](#启动配置与应用服务)
 - [HTTP 与查询](#http-与查询)
 - [认证会话](#认证会话)
 - [API Key 管理](#api-key-管理)
@@ -79,6 +80,19 @@
 | `@coffeehc/xui-runtime/collection-view` <!-- public-entry: @coffeehc/xui-runtime/collection-view --> | [源码](../packages/runtime/src/collection-view.ts)；CollectionStatus/Layout/RowContext/Pagination/CursorPagination/Count/Labels/ViewOptions、collectionDefaultLabels、getCollectionState、validateCollectionKeys、createCollectionRequestGuard | [集合合同](COMPONENTS.md#cardgroup) | [示例](../examples/card-group-react/app.tsx) |
 | `@coffeehc/xui-runtime/menu` <!-- public-entry: @coffeehc/xui-runtime/menu --> | [序列化配置、Controller 与动作事件](../packages/runtime/src/menu.ts)：MenuConfig/Node/Entry/ActionItem/Group/Heading/Separator、MenuController/State/Options/ActionEvent/ItemTone、createMenuController | [数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与-controller-所有权) | [示例](../examples/action-menu-react/app.tsx) |
 
+| `@coffeehc/xui-runtime/interaction` <!-- public-entry: @coffeehc/xui-runtime/interaction --> | [模型](../packages/runtime/src/interaction.ts)：开合、选择、导航、分页与Toggle策略Controller | [双模式](COMPONENTS.md#状态所有权与-controller-模式) | [正式类型及交互示例](../tests/fixtures/controller-modes.tsx) |
+| `@coffeehc/xui-runtime/component-views` <!-- public-entry: @coffeehc/xui-runtime/component-views --> | [完整服务View模型](../packages/runtime/src/component-views.ts) | [双模式](COMPONENTS.md#状态所有权与-controller-模式) | [API Key](../examples/api-key-react/app.tsx) |
+| `@coffeehc/xui-runtime/login-view` <!-- public-entry: @coffeehc/xui-runtime/login-view --> | [登录展示模型](../packages/runtime/src/login-view.ts)，显式借用AuthClient | [双模式](COMPONENTS.md#状态所有权与-controller-模式) | [登录](../examples/login-react/app.tsx) |
+| `@coffeehc/xui-runtime/clipboard` <!-- public-entry: @coffeehc/xui-runtime/clipboard --> | [只写剪贴板服务](../packages/runtime/src/clipboard.ts) | [复制合同](#剪贴板复制服务) | [正式浏览器示例](../tests/browser/clipboard.spec.mjs) |
+| `@coffeehc/xui-runtime/services` <!-- public-entry: @coffeehc/xui-runtime/services --> | [应用服务注册表](../packages/runtime/src/services.ts)：XuiServices、共享 getters、disposeXuiServices；不导出 install/create service factories | [启动、配置与应用服务](#启动配置与应用服务) | — |
+| `@coffeehc/xui-runtime/bootstrap` <!-- public-entry: @coffeehc/xui-runtime/bootstrap --> | [同步启动入口](../packages/runtime/src/bootstrap.ts)：bootstrap、BootstrapEnvironment、XuiApplication | [启动、配置与应用服务](#启动配置与应用服务) | [React示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-runtime/config` <!-- public-entry: @coffeehc/xui-runtime/config --> | [纯配置解析与类型](../packages/runtime/src/config.ts)：resolveConfig、XuiConfig、XuiConfigOverrides、ConfigService | [启动、配置与应用服务](#启动配置与应用服务) | — |
+| `@coffeehc/xui-runtime/config.json` <!-- public-entry: @coffeehc/xui-runtime/config.json --> | [随包默认配置](../packages/runtime/src/config.json) | [启动、配置与应用服务](#启动配置与应用服务) | — |
+| `@coffeehc/xui-runtime/route` <!-- public-entry: @coffeehc/xui-runtime/route --> | [History路由服务与类型](../packages/runtime/src/route.ts) | [启动、配置与应用服务](#启动配置与应用服务) | — |
+| `@coffeehc/xui-runtime/i18n` <!-- public-entry: @coffeehc/xui-runtime/i18n --> | [应用语言服务](../packages/runtime/src/i18n.ts)：类型与 getI18nService | [启动、配置与应用服务](#启动配置与应用服务) | — |
+| `@coffeehc/xui-runtime/menu-service` <!-- public-entry: @coffeehc/xui-runtime/menu-service --> | [菜单数据服务](../packages/runtime/src/menu-service.ts)：MenuService类型与 getMenuService | [启动、配置与应用服务](#启动配置与应用服务) | — |
+| `@coffeehc/xui-runtime/util-service` <!-- public-entry: @coffeehc/xui-runtime/util-service --> | [纯工具命名空间](../packages/runtime/src/util-service.ts)：getUtilService、UtilService | [启动、配置与应用服务](#启动配置与应用服务) | — |
+
 ### @coffeehc/xui-react
 
 | import/script | 源码与导出 | 使用合同 | 示例 |
@@ -127,13 +141,17 @@
 
 CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` 和 `forms.css` 包含基础 Select 定位/菜单项样式，`floating.css` 保留完整的 selection + floating 兼容组合。`forms.css` 是 forms + selection 组合入口；使用这些公开分片时不直接导入内部源码文件。
 
+| `@coffeehc/xui-react/interaction` <!-- public-entry: @coffeehc/xui-react/interaction --> | [同一TS模型及公开类型汇总](../packages/ui-react/src/interaction.ts) | [双模式](COMPONENTS.md#状态所有权与-controller-模式) | [正式类型及交互示例](../tests/fixtures/controller-modes.tsx) |
+| `@coffeehc/xui-react/services` <!-- public-entry: @coffeehc/xui-react/services --> | [React服务上下文](../packages/ui-react/src/services.tsx)：ServicesProvider、useI18n、useMenu 与公共类型 | [启动、配置与应用服务](#启动配置与应用服务) | — |
+| `@coffeehc/xui-react/route` <!-- public-entry: @coffeehc/xui-react/route --> | [History路由React绑定](../packages/ui-react/src/route.tsx)：RouteProvider、useRoute、RouteLink | [启动、配置与应用服务](#启动配置与应用服务) | — |
+
 ## 默认行为
 
 这些默认值来自上表源码；品牌原始值与 motion 参数仍只由 DESIGN 的受控 token 块定义，不在此复制色板。未改写的复合控件 props/parts 使用当前 Base UI peer 的声明与行为，不能根据另一个版本猜默认值。
 
 | 能力 | 当前默认值与 owner |
 | --- | --- |
-| theme/init/useTheme | dark、sessionStorage key `ui.theme.mode`、persist 开启，同标签页刷新保留、不主动跨页同步、不读取或迁移旧localStorage；无保存值/非法值回 dark，只有显式 system 在媒体读取失败时生效 light，storage 失败保留内存。传 mode 为受控且不读写 storage；同步 init 复用 window.xuiTheme，useTheme 只订阅 |
+| theme/init/useTheme | `bootstrap` 把 JSON `theme.mode` 作为非受控默认；有效的 `ui.theme.mode` sessionStorage 偏好优先，同标签页刷新保留、不主动跨页同步、不读取或迁移旧localStorage；无保存值时用配置默认 dark。`init.js` 只在首绘前恢复主题/缩放属性，不创建 controller；`bootstrap` / `getThemeService` 提供文档 owner，`useTheme` 只订阅。显式注入 `ThemeOptions.mode` 是受控模式，不读写 storage |
 | Button/IconButton | type=button、variant=primary、size=default；busy 与 disabled 分开，无隐式防重复；IconButton 要求 aria-label。render/ref/事件沿用公开 peer 合并合同 |
 | Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Textarea 可选 `autoResize={maxRows}`，只拥有尺寸，包含 stacked InputGroup 的上下 Addon 组合，默认未启用时行为不变，见[文本输入](COMPONENTS.md#textarea-可选自动增高)；Fieldset 独立关联 legend/help/error |
 | MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留 HTML link 导航，菜单键盘/drawer owner 由 React 组件提供 |
@@ -153,6 +171,43 @@ CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` �
 | 业务日志 | 显式首次 refresh，page size=50（1–200），React 页面使用共享 runtime loader，默认 HTTP facade 见本节默认适配器前置章节，auth/scope由宿主；固定公共事实与版本化 JSON payload。renderer 精确匹配类型/版本的首项；未匹配格式化 JSON，抛错固定反馈与 JSON。JSON 64 KiB/16 层/4096 节点；不缓存 payload |
 | 登录页/auth | 同一个 HTTP/auth/theme owner；居中单列窄框、可选 fullscreen 和 brandVisual。Bearer v2 login/refresh/logout/session；access 仅内存，protectedPaths 明确受保护端点；15秒默认预算、no-store、无写入重放。登录直接 POST，提交禁用显示正在登录；超时后普通会话核验一次，未确认则显示错误并允许手动重试。无持久门禁、恢复预请求或恢复弹窗。保留密码清理、安全回跳和宿主导航扩展，详见 [登录与会话](PUBLIC_API.md#认证会话) |
 | 独立结构化错误 | 初始 groups、page size=50（1–200），host 显式 refresh；无隐式 endpoint/scope/排序/总记录数。v1/list/cursor、纳秒时间、uint64 字符串、三态、累计/命中/首次代表；详情只按记录 ID 读取，缓存仅当前链已访问摘要，刷新新快照 |
+
+## 启动、配置与应用服务
+
+`@coffeehc/xui-runtime/config.json` 是随 runtime 包提供的默认 JSON；runtime 配置模块从同一资产导入默认值，不在启动时发配置请求。产品以 `bootstrap(overrides, environment)` 同步完成配置解析与浏览器应用服务装配，再挂载 React。`bootstrap` 不登录、不恢复会话、不发 HTTP 请求。浏览器初始化要求明确可用的 `Window`；SSR/隔离测试使用每请求独立的 `new XuiServices(options, environment)`，不得跨 SSR 请求复用模块级认证服务。
+
+`XuiConfigOverrides` 只描述可序列化配置。plain object 递归合并，数组整体替换，`undefined` 不覆盖默认值；配置已知区域中的未知键、非 JSON 值、访问器和不安全键会拒绝。`extensions` 只接受 JSON 数据，供宿主自行校验领域 schema；不得把 token、密码、cookie、私钥等 secret 放入 config.json。运行时对象、函数、Window、HTTP/Auth writer 等通过第二参数 `BootstrapEnvironment` 的 `services` 注入，不序列化进配置。配置类型与默认 JSON 见 [config.ts](../packages/runtime/src/config.ts) 和 [config.json](../packages/runtime/src/config.json)。
+
+```ts
+import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+import {ServicesProvider} from '@coffeehc/xui-react/services';
+import {RouteProvider} from '@coffeehc/xui-react/route';
+
+const app = bootstrap({
+  app: {title: '控制台'},
+  http: {baseURL: '/api/'},
+  auth: {enabled: true, protectedPaths: ['/api/v1/orders/']},
+  i18n: {enabled: true, messages: {en: {home: 'Home'}}},
+});
+const http = app.services.getHttpService();
+const auth = app.services.getAuthService(); // 仅 auth.enabled=true 时配置
+// React树中共享同一应用owner；RouteProvider可省略service并取getRouteService()。
+<ServicesProvider menu={app.services.getMenuService()} i18n={app.services.getI18nService()}>
+  <RouteProvider service={app.services.getRouteService()}>{/* app UI */}</RouteProvider>
+</ServicesProvider>;
+```
+
+`bootstrap` 返回冻结的 `XuiApplication`（resolved config 与 services）。同一个 Window 上重复使用相同配置/绑定会复用既有 owner；冲突配置或重复绑定不同 service 会明确失败，不能借重复启动换 owner。`getHttpService()` 与 `getAuthService()` 在未配置时抛错；未启用 auth 时不创建认证 owner。`disposeXuiServices(window)` 释放该 Window 的应用注册表及其所属服务。服务以 `{options}` 交由注册表创建，或以 `{instance}` 借用已有实例；借用实例不由 registry/React View 销毁。剪贴板借用实例的类型为 `SharedClipboardService`，只要求 `writeText`，不要求也不会调用 `dispose`；注册表只 dispose 自己创建的内部剪贴板服务。`getThemeService`、`getClipboardService` 等浏览器 getter 使用同一个 Window owner。组件级 `create*Controller` 是不同合同，仍按组件 Controller 生命周期使用。
+
+主题配置的 `theme.mode` 是默认选择而非受控值；有效的 `ui.theme.mode` sessionStorage 用户选择优先于 config 默认。有效的 `ui.interface.scale` 同样优先于 `theme.scale` 默认。显式注入 `ThemeOptions.mode` 才是受控主题模式。公开 `init.js` 只负责首绘前恢复主题/缩放属性，不创建、订阅或拥有 ThemeController；正式文档主题 owner 由 `bootstrap`/`getThemeService` 提供。`useTheme` 订阅共享 owner，组件卸载不销毁它。
+
+默认 `i18n.enabled=false`，默认 `locales` 只有语言选项元数据，默认 `messages` 为空；xui 不随包承诺完整翻译词典。启用后 `defaultLocale` 是初始语言，`locales` 提供受支持语言；`t` 依次查当前语言、fallbackLocale、调用时的 fallback，仍未命中则返回 key。宿主可在 config 提供 messages，或对已声明 locale 调用 `registerMessages`。React `useI18n` 订阅 locale 并提供 `t/setLocale/locales`；禁用切换或未知 locale 返回 false。locale 更新同步 document lang，并使使用 `labelKey` 的 MenuService 文本随当前语言更新。`ServicesProvider` 可在 SSR 或隔离应用中显式借用 i18n/menu 实例；它不拥有销毁权。
+
+`MenuService` 只提供 config 驱动的菜单 label/items 及语言更新；它不持有导航展开集合、活动焦点、路由或业务权限。React `NavigationMenu`/`MenuLayout` 的展开状态由 React 组件 props/Controller 持有，不能再把 runtime navigation data 当作 DOM UI controller。
+
+`RouteService` 用浏览器 History API 维护 `uri/pathname/search/hash`；接受标准 URL，不使用 `#/` 或 `#!/` 哈希路由，不拦截全局锚点，也不发页面请求。`RouteProvider/useRoute/RouteLink` 连接同一 service 并保留普通链接修改键、下载与外链行为。部署在非根 `basePath` 时，宿主服务器仍须将深链路由 fallback 到应用 shell；xui 不配置服务器 rewrite。
+
+`DownloadService` 复用注册表中的同一个 HttpClient；`request` 只取得 Blob 和文件元数据，只有宿主在明确用户动作中调用 `save` 才触发浏览器保存。它不自动保存、不另建 HTTP/auth owner。`getUtilService()` 返回冻结的纯函数 namespace（entityId/date/dateTime/number/download），不创建 registry、订阅、存储、网络或 UI 状态。
 
 ## HTTP 与查询
 
@@ -175,7 +230,7 @@ HTTP状态表达传输/请求事实，AjaxResponse的success表达业务成功�
 
 ### 单一传输与生命周期
 
-createHttpClient 配置 baseURL、fetch、headers/getHeaders、默认 response/adapter、timeoutMs/credentials、onUnauthorized/onError。baseURL 必须无 URL 凭据、为绝对 HTTP(S)；request 必须同源，各后端可各建客户端。ESM 导入不发请求、不读 DOM。裸HTTP transport不保存token、storage、cache或路由；headers/provider来自宿主。绑定[Bearer v2认证owner](PUBLIC_API.md#认证会话)后由该owner私有内存持有session access，显式protectedPaths业务请求强制Bearer/omit/error，固定cookie端点无Bearer/same-origin；禁止手动第二凭据、重试/redirect/credentials覆盖。
+浏览器应用通过 `bootstrap({http:...}, {services:{http:{options:...}}})` 配置唯一 HTTP owner，随后从 `application.services.getHttpService()` 取得客户端；SSR/隔离实例用 `new XuiServices({http:{options:...}})`。选项包括 baseURL、fetch、headers/getHeaders、默认 response/adapter、timeoutMs/credentials、onUnauthorized/onError。baseURL 必须无 URL 凭据、为绝对 HTTP(S)；request 必须同源。ESM 导入不发请求、不读 DOM。裸 HTTP transport 不保存 token、storage、cache 或路由；headers/provider 来自宿主。绑定 [Bearer v2认证owner](PUBLIC_API.md#认证会话) 后由该 owner 私有内存持有 session access，显式 protectedPaths 业务请求强制 Bearer/omit/error，固定 cookie 端点无 Bearer/same-origin；禁止手动第二凭据、重试/redirect/credentials 覆盖。应用代码不再调用已移除的 `createHttpClient` 工厂。
 
 request(path,options) 接收 method、headers、body 或 json、signal、timeoutMs、response/adapter/errorAdapter、endpointId、retry、detectAjaxErrors、credentials/cache/redirect。json:null 合法，json/body 不同时指定。默认 GET/same-origin credentials；Ajax/JSON 缺省 Accept: application/json，避免不明确的 protobuf 协商；json 补 Content-Type，FormData 不补 boundary。headers 合并顺序为 client→provider→endpoint。endpointId 是短逻辑标识，只含字母数字/点/下划线/冒号/连字符，不能传 URL。
 
@@ -193,7 +248,7 @@ request(path,options) 接收 method、headers、body 或 json、signal、timeout
 
 AjaxResponse 的 success 必须为 boolean，message/request_id 必须为 string，payload 必须存在，code 仍为必填安全整数，redirect 若存在必须为 string；不省略、不转换 code，也不接受字符串码或精度丢失。success=false 在任何合法 code 下都为业务失败。JSON 空 body/HTML/缺字段为 parse 错误，不默认为成功；204 在 ajax/json 仍不满足合同。非 2xx 保留 HTTP 事实，解析失败不把 401/403 隐藏成 parse/network；失败状态 body 超时记录 http/readFailure=timeout。
 
-createHttpClient 的默认 ajax 模式、ajaxResponseAdapter 与 createAjaxResponseAdapter() 共用 success 判定，code=0/1/2 或其他合法整数均不会把 success=true 改判为失败。仅端点确有额外严格合同才显式使用 createAjaxResponseAdapter({successCode})：此时同时要求 success=true 且 code 与指定值相等；不传 successCode 不启用码值限制。普通消费者不需要配置成功码或另写 parser。ResponseAdapter 接收未知解码值和 status/headerRequestId/endpointId/attempts，返回 payload 和可选 code/bodyRequestId/redirect；缺 payload 的结果被拒绝。客户端 adapter 属于默认模式，endpoint 明确换 response 模式时不继承不同模式的 adapter，也可提供 endpoint adapter。
+由 bootstrap/服务注册表创建的 HTTP 客户端默认 ajax 模式、ajaxResponseAdapter 与 createAjaxResponseAdapter() 共用 success 判定，code=0/1/2 或其他合法整数均不会把 success=true 改判为失败。仅端点确有额外严格合同才显式使用 createAjaxResponseAdapter({successCode})：此时同时要求 success=true 且 code 与指定值相等；不传 successCode 不启用码值限制。普通消费者不需要配置成功码或另写 parser。ResponseAdapter 接收未知解码值和 status/headerRequestId/endpointId/attempts，返回 payload 和可选 code/bodyRequestId/redirect；缺 payload 的结果被拒绝。客户端 adapter 属于默认模式，endpoint 明确换 response 模式时不继承不同模式的 adapter，也可提供 endpoint adapter。
 
 响应为 payload/status/code/requestId/bodyRequestId/headerRequestId/redirect；非空 body id 优先 header，两者都保留，不伪造 traceId。redirect 只是数据，不触发应用导航。成功响应headers仅为冻结的contentType/contentDisposition/contentLength，超过长度或含控制字符的值为null；没有原始Response、完整Headers或请求对象，Authorization/Set-Cookie/WWW-Authenticate不会暴露。领域校验只在一次声明的 endpoint adapter；标准请求不把 null 改成其他字段。
 
@@ -243,7 +298,7 @@ ErrorResponseAdapter可在client或单request明确配置；默认 adapter 保�
 
 ### 明确的原生应用origin与transport
 
-createHttpClient({baseURL:'wails://wails/',nativeOrigin:'wails://wails',fetch:bridge})允许宿主显式声明hierarchical应用scheme/authority并注入原生fetch bridge。默认只接受HTTP(S)；自定义origin必须有host，不含URL凭据/query/hash或路径（空或/），拒绝http/https/data/blob/file/javascript/mailto作为nativeOrigin。自定义同源按scheme、host、port三元组比对，绝不把不同自定义URL的origin=null当相同来源；所有目标再次拒绝凭据与外部tuple。
+桌面宿主通过 bootstrap 第二参数注入已存在的原生 HTTP transport，例如 `services:{http:{options:{baseURL:'wails://wails/',nativeOrigin:'wails://wails',fetch:bridge}}}`；服务注册表仍只创建一个应用 HTTP owner。默认只接受HTTP(S)；自定义origin必须有host，不含URL凭据/query/hash或路径（空或/），拒绝http/https/data/blob/file/javascript/mailto作为nativeOrigin。自定义同源按scheme、host、port三元组比对，绝不把不同自定义URL的origin=null当相同来源；所有目标再次拒绝凭据与外部tuple。
 
 native请求强制redirect:error，拒绝follow/manual；bridge必须实际遵守不自动跟随/透明改目标。非空Response.url在读取body前再次校验同一tuple，302等非2xx保留HTTP事实，不追Location。Response.url可为空的合成/桥接响应需要宿主保证真实目标，库无法观察桥内部的物理IO。取消、budget、401 latch、adapter/error metadata、safe headers及下载继续使用同一HTTP owner，无模拟HTTP baseURL、JS色板或业务重放。
 
@@ -288,7 +343,7 @@ ACL/权限过滤后的有界扫描可以连续返回空 list 与非空 next_curs
 - 数字类型、零、负数、符号、空白、hex 大写/前缀、溢出和未知编码均拒绝。
 - 两种字符集有交集：`"10"` 在 decimal 为十，在 hex 为十六；前后端必须选择同一合同。
 
-`createAuthClient({http,idEncoding:'hex'})` 统一校验 login/refresh/session 的用户 ID，`parseAuthSession(value,'hex')` 提供同一安全 DTO 解析；未知配置在网络请求与 owner 绑定前拒绝。`createApiKeyHttpAdapter({http,idEncoding:'hex'})` 与 `parseApiKeyWireMetadata(value,'hex')` 使用同一编码校验 list/create metadata、revoke/delete 确认及目标路径；非法动作目标在发送前拒绝，响应 ID 必须精确匹配目标。权限/期限 ID 是业务代码，保持原合同。
+`bootstrap({auth:{enabled:true,idEncoding:'hex'}})` 配置同一应用 Auth owner，`parseAuthSession(value,'hex')` 提供同一安全 DTO 解析；未知配置在网络请求与 owner 绑定前拒绝。`createApiKeyHttpAdapter({http,idEncoding:'hex'})` 与 `parseApiKeyWireMetadata(value,'hex')` 使用同一编码校验 list/create metadata、revoke/delete 确认及目标路径；非法动作目标在发送前拒绝，响应 ID 必须精确匹配目标。权限/期限 ID 是业务代码，保持原合同。
 
 省略编码等同 decimal。选用配套 baseservice facade 时，其 Options.IDEncoding 同步配置为 idservice.HexIDEncoding；内部模型、鉴权、数据库和密文 AAD 不变。业务日志没有相应 hex 选项，不能从认证配置推断。纯 ApiKeyAdapter/controller/视图仍允许宿主自己的不透明 ID，不将所有领域接口强制成数值身份。
 
@@ -296,11 +351,11 @@ ACL/权限过滤后的有界扫描可以连续返回空 list 与非空 next_curs
 
 ## 认证会话
 
-`ConfigurableLoginPage` 使用 `createAuthClient`，保持现有默认主题、布局、扩展、密码清理和安全回跳。这个自有应用合同配套 baseservice authenticationservice/webfacade；不是 OAuth/OIDC token endpoint，不替换第三方标准协议，不表示任何业务项目、生产登录链或部署已迁移。
+`ConfigurableLoginPage` 使用由 bootstrap 注册的同一 `getAuthService()` owner，保持现有默认主题、布局、扩展、密码清理和安全回跳。这个自有应用合同配套 baseservice authenticationservice/webfacade；不是 OAuth/OIDC token endpoint，不替换第三方标准协议，不表示任何业务项目、生产登录链或部署已迁移。
 
 ### 固定 HTTP 合同
 
-`createAuthClient({http, protectedPaths, timeoutMs, idEncoding})` 绑定宿主已有 `createHttpClient`。同一 transport 只能有一个认证 owner；不创建并行 fetch、token store 或第二个401拦截器。认证预算默认15秒。地址始终为根路径，不附加 baseURL 的路径、不猜 token/me/state 等旧路由。
+`bootstrap` 按配置创建 AuthClient 并绑定注册表中同一 HTTP service；也可在 `environment.services.auth` 中借用完整 AuthClient。一个 HTTP transport 只能有一个认证 owner；不创建并行 fetch、token store 或第二个401拦截器。认证预算默认15秒。地址始终为根路径，不附加 baseURL 的路径、不猜 token/me/state 等旧路由。应用代码不再调用已移除的 `createAuthClient` 工厂。
 
 | 操作 | 固定端点 | 请求凭据 | 成功 payload |
 | --- | --- | --- | --- |
@@ -314,7 +369,7 @@ ACL/权限过滤后的有界扫描可以连续返回空 list 与非空 next_curs
 AuthSessionV2 = `{schema_version:2,user:{id,username,display_name}}`。
 IssuedSessionV2 在上述字段之外恰有 `access_token`、`token_type:"Bearer"`、`expires_at`。该含秘密 DTO 的解析器不公开；login/refresh 返回值只有 user。`parseAuthSession` 只接受无 token 的 session DTO。
 
-用户 id 默认是正十进制 int64 字符串；`createAuthClient({http,idEncoding:"hex"})` 与 `parseAuthSession(value,"hex")` 可明确选择小写无前缀/前导零 hex。两者范围均为正 int64，不得转JS number；未知编码立即拒绝。详见 [共享实体编码](PUBLIC_API.md#显式实体身份编码)。username 非空、最多128 UTF-16单元；display_name 为null或最多256单元。拒绝额外字段、getter、旧版本、角色/权限/tenant投影。`access_token` 使用 `<prefix>-v1-sha256-access-<secret>`：prefix 为 `[a-z][a-z0-9]{0,31}`，secret 是32字节随机值的43字符规范无padding base64url。客户端仅接受 v1、sha256 和 access 类型的结构；服务端仍按配置前缀、凭据记录及 scope 校验，不能凭标识直接授权。此处 v1 是凭据格式版本，与 HTTP DTO 的 schema_version=2 分开；sha256 是高熵凭据摘要算法，不是密码算法，也不表示 JWT。新基线不接受旧无版本格式。expires_at 为尚未到期的UTC RFC3339；服务器默认access寿命5分钟，可由后端显式配置，不将JWT解码结果当作服务端权限。
+用户 id 默认是正十进制 int64 字符串；`bootstrap({auth:{enabled:true,idEncoding:"hex"}})` 与 `parseAuthSession(value,"hex")` 可明确选择小写无前缀/前导零 hex。两者范围均为正 int64，不得转JS number；未知编码立即拒绝。详见 [共享实体编码](PUBLIC_API.md#显式实体身份编码)。username 非空、最多128 UTF-16单元；display_name 为null或最多256单元。拒绝额外字段、getter、旧版本、角色/权限/tenant投影。`access_token` 使用 `<prefix>-v1-sha256-access-<secret>`：prefix 为 `[a-z][a-z0-9]{0,31}`，secret 是32字节随机值的43字符规范无padding base64url。客户端仅接受 v1、sha256 和 access 类型的结构；服务端仍按配置前缀、凭据记录及 scope 校验，不能凭标识直接授权。此处 v1 是凭据格式版本，与 HTTP DTO 的 schema_version=2 分开；sha256 是高熵凭据摘要算法，不是密码算法，也不表示 JWT。新基线不接受旧无版本格式。expires_at 为尚未到期的UTC RFC3339；服务器默认access寿命5分钟，可由后端显式配置，不将JWT解码结果当作服务端权限。
 
 用户名提交前trim；密码不trim且最多4096字符，只在POST body使用，不进入回调、URL、storage、日志或state。返回的 identity 不是授权决策依据。
 
@@ -323,8 +378,12 @@ IssuedSessionV2 在上述字段之外恰有 `access_token`、`token_type:"Bearer
 先创建共享HTTP，再创建auth，例如：
 
 ```ts
-const http = createHttpClient({baseURL: location.origin});
-const auth = createAuthClient({http, protectedPaths: ['/api/v1/orders/', '/api/v1/profile']});
+const app = bootstrap({
+  http: {baseURL: location.origin},
+  auth: {enabled: true, protectedPaths: ['/api/v1/orders/', '/api/v1/profile']},
+});
+const http = app.services.getHttpService();
+const auth = app.services.getAuthService();
 await auth.currentUser();
 ```
 
@@ -378,7 +437,7 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 
 [共享wire fixture](../tests/fixtures/contracts/auth.v2.json)与[baseservice 0f5dba4](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/contracts/auth.v2.json)固定字节一致（配套[后端合同](https://github.com/coffeehc/baseservice/blob/0f5dba4392279ccf85bba262ae4f453ea57bd579/docs/bearer-auth-v2.md)），含issued/session/logout和8类错误。unit覆盖严格DTO/凭据隔离/恢复/多401/旧代响应/取消等待者/refresh-logout排序/不确定结果/不重放。正式 React 消费者只用公开入口和 tarball。浏览器测试覆盖整页导航恢复、Cookie/Authorization 隔离、跨 tab 锁与安全通知；实际执行范围见 [VALIDATION.md](VALIDATION.md)，测试存在不等于全部场景通过。
 
-选用 createAuthClient 时服务须满足明确 Bearer v2 合同，修改 baseURL 不能替代协议适配；已有消费者按自己的版本与升级约束评估。产品对外hex ID使用已提供的显式 idEncoding，并与后端 facade 同步配置，不自动接受双格式。注册、密码重置、用户生命周期和业务资源策略由实际后端/身份提供方负责。真实服务注册、部署和凭据签发由宿主负责。
+选用 bootstrap Auth service 时后端须满足明确 Bearer v2 合同，修改 baseURL 不能替代协议适配；已有消费者按自己的版本与升级约束评估。产品对外hex ID使用已提供的显式 idEncoding，并与后端 facade 同步配置，不自动接受双格式。注册、密码重置、用户生命周期和业务资源策略由实际后端/身份提供方负责。真实服务注册、部署和凭据签发由宿主负责。
 
 普通 HTTP 接线使用 [auth-direct-http.mjs](../tests/integration/auth-direct-http.mjs)：显式启动 BaseService 的 loopback `TestDirectHTTPFixture` 后，以 `XUI_AUTH_HTTP_FIXTURE_ORIGIN=http://127.0.0.1:<port>` 运行脚本。它核对直接登录、普通 session/logout、真实响应丢失后的单次 refresh/session 和显式重试；传输层 Cookie jar 与业务账户均为合成替身，不证明真实 PostgreSQL、浏览器 Cookie 或产品部署。
 
@@ -605,8 +664,8 @@ cursor 最多 4096 UTF-8 字节，作为不透明值透传，绑定服务端 sco
 
 | 选用能力 | 默认连接 | 服务前置与合同 owner |
 | --- | --- | --- |
-| HTTP ajax / webfacade query | createHttpClient、serializeWebfacadeQuery | 明确 AjaxResponse success/message/payload/request_id/code/redirect 与 endpoint 页基数、上限、filter/sort codec；HTTP 状态和业务成功分开。响应模式、错误适配、列表三态及显式 ID 编码见 [HTTP 与查询](PUBLIC_API.md#http-与查询) |
-| ConfigurableLoginPage | createAuthClient；POST `/api/v1/auth/login`、`refresh`、`logout`，GET `/api/v1/auth/session` | 固定 Bearer v2 DTO；access 仅内存，同源恢复 Cookie 与 session Bearer 分离。宿主注册 route、CSRF 和资源策略；不猜旧路由或仅改 baseURL。见 [登录与会话](PUBLIC_API.md#认证会话) |
+| HTTP ajax / webfacade query | `bootstrap` / `getHttpService`、serializeWebfacadeQuery | 明确 AjaxResponse success/message/payload/request_id/code/redirect 与 endpoint 页基数、上限、filter/sort codec；HTTP 状态和业务成功分开。响应模式、错误适配、列表三态及显式 ID 编码见 [HTTP 与查询](PUBLIC_API.md#http-与查询) |
+| ConfigurableLoginPage | bootstrap / `getAuthService`；POST `/api/v1/auth/login`、`refresh`、`logout`，GET `/api/v1/auth/session` | 固定 Bearer v2 DTO；access 仅内存，同源恢复 Cookie 与 session Bearer 分离。宿主注册 route、CSRF 和资源策略；不猜旧路由或仅改 baseURL。见 [登录与会话](PUBLIC_API.md#认证会话) |
 | ApiKeyManager 的默认 HTTP adapter | createApiKeyHttpAdapter；`/api/v1/api-keys` 及 capabilities/update/revoke/record 路径 | 严格 DTO v2、AjaxResponse/ListData，服务提供权限、期限、独立确认、expected_version CAS 与一次性 secret。未知结果普通列表核验一次，不重发写请求。完整路径、能力和 fixture 见 [API Key 管理](PUBLIC_API.md#api-key-管理) |
 | BusinessLogExplorer 的默认 HTTP loader | createBusinessLogHttpLoader；GET `/api/v1/business-logs` 与 `/{id}` | 明确 offset query/ListData 与必需 total，公共记录字段、版本化授权 payload；服务负责身份/tenant、权限和脱敏。领域 cursor loader 依自己的明确合同，不伪造 snapshot。见 [业务日志](PUBLIC_API.md#业务日志) |
 | StructuredLogExplorer | 宿主声明三个必需 endpoints 与可选 records endpoint | 独立程序错误观察；服务实现明确 DTO、过滤、cursor、详情授权与保留期，不推断已有后端。缺失 records 时仅关闭跨组全量视图，不影响组/详情接口。见 [程序错误观察](PUBLIC_API.md#程序错误观察) |
@@ -673,3 +732,44 @@ React `/display` 与根入口公开 `OverflowText` / `OverflowTextProps`。runti
 `/collection-view`与runtime根入口提供统一状态/分页校验、稳定key校验和同回合请求防重入，不依赖React/DOM，不持有查询、缓存、HTTP或业务提交。DataTable既有导出的getDataTableState/createDataTableRequestGuard/dataTableDefaultLabels及对应DataTable类型分别保留为同一实现的别名；合法输入行为、分页基数、未知total和cursor合同兼容。非法集合配置继续抛TypeError，通用诊断现使用Collection前缀；列宽/列身份诊断仍归DataTable。React集合直接采用同一模型与footer，不能由消费者另加兼容分页或复制控件。
 
 文字 slot 的字体族、字号、行高与字重由[DESIGN 唯一映射](DESIGN.md#公共文字槽验收)定义，属于正式 CSS 合同和 xui 发布验收；宿主非必要不自设字号。本轮不新增字体 API、字号档位或原生 UI 入口。
+
+
+## 语义交互 Controller 双模式
+
+逐组件归属与例外见 [组件矩阵](COMPONENTS.md#状态所有权与-controller-模式)。2.0.0 保留既有默认/受控 props：受控回调发请求，只有下一次 props/model.update 确认才能发布新值。`default*` 只初始化。注入的 `controller` 与对应初始化、值和事件配置互斥，动态配置由注入者 update，不从 View 反向覆盖；宿主保留 destroy 责任。Root 的公开泛型、parts、render/ref/回调 details 与 Base UI 实际键盘/焦点仍保留，不注入私有 store。历史设计草稿中的 1.4.0 不是当前固定产物版本。
+
+```tsx
+import {createOverlayController,createSelectionController} from '@coffeehc/xui-runtime/interaction';
+import {Dialog} from '@coffeehc/xui-react/dialog';
+import {Calendar} from '@coffeehc/xui-react/calendar';
+import {createCalendarModel} from '@coffeehc/xui-runtime/calendar';
+// 在组件生命周期中稳定创建，退出时由创建者destroy；不要每次render重建。
+const dialog=createOverlayController();
+const calendar=createCalendarModel({defaultMonth:'2026-10',defaultValue:null});
+<Dialog.Root controller={dialog}>{/* 原公共Trigger/Content/parts */}</Dialog.Root>;
+<Calendar controller={calendar}/>;
+calendar.setMonth('2020-01'); // 浏览月份独立于所选值。
+const selection=createSelectionController<string|null>({defaultValue:null});
+// <Select.Root<string> controller={selection}>...公共parts...</Select.Root>
+```
+
+服务组合以 `viewController` 表示完整展示状态，旧 `controller` 继续表示既有服务，不能混称。`ApiKeyManager` 的 `options` 是 `ApiKeyManagerOptions`；日志的 `options` 分别是 `BusinessLogOptions` / `StructuredLogOptions`。显式 options 模式只创建一个所属服务，首挂载显式 start 一次；借用旧 controller 时不擅自开始宿主查询。`createApiKeyManagerViewController({service,pagination})` / `createBusinessLogViewController({service})` / `createStructuredLogViewController({service})` 引用服务，不复制结果和请求 owner；注入各自 viewController 后不可再传 service/options 初始化。API Key 页数来自完整 list，日志仍使用其真实游标/as_of，不虚构 total。`options` 只初始化当前默认服务一次；父组件传入新的等值配置对象不会重建服务、重发查询或丢弃草稿。更换业务数据 owner 时显式传入新的服务 controller/viewController，或按真实业务范围重挂载。AdminSetupController.update 可更新未来的 onSubmit/onCheck；不会重试在途操作，默认 Page 随回调更新核对入口。 PasswordStrengthController.bindReader 租用 View 的 DOM reader，释放或替换时取消旧代评估并恢复宿主原 reader；View 退出不永久保留 DOM 引用。
+
+`createLoginViewController({auth,config,extensions?,onAuthenticated?})` 必须借用实际 AuthClient，View 不创建认证协议/client。绑定的 `readCredentials` 只提供瞬时读取边界，校验/扩展只保留用户名或安全错误，异步扩展完成后才读取用于 auth 的密码。交给 AuthClient 的参数属于其 IO 边界；本模型不在任何快照/缓存/日志保留密码，不破坏自定义 AuthClient 异步读取其参数的合同。实际 DOM 在提交、pagehide、替换和卸载时清理。Secret-safe 子模型与管理员初始化 form 聚合见组件矩阵。
+
+Toast 的队列、超时与关闭阶段仍由 Base UI Provider 内部 ToastStore 持有；公开动作 manager 没有替换该集合。当前 peer 没有保持其焦点/计时并注入外部集合的公开路径，2.0.0 不声称解决此项。不得访问私有订阅/store或再造竞争队列。
+
+## 剪贴板复制服务
+
+正式入口 `@coffeehc/xui-runtime/clipboard` 和 runtime 根入口提供共享 `getClipboardService()`。剪贴板基础服务的 `createClipboardService` 工厂在 2.0.0 中已从 public exports 移除；日常浏览器应用通过 bootstrap/服务注册表获取唯一服务，隔离测试或 SSR 容器可用 `new XuiServices({clipboard:{options}})`。服务只写文本，不读取剪贴板，不持久化、不创建通知/权限状态。`writeText(value,{signal?})` 返回 `Promise<void>`；成功代表平台写入完成，取消以 AbortError 拒绝，平台失败直接拒绝。用户消息/复制状态归调用组件。
+
+```ts
+import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+const app = bootstrap();
+const clipboard = app.services.getClipboardService();
+await clipboard.writeText(text,{signal});
+```
+
+默认优先用实际 navigator.clipboard.writeText；仅该能力缺失时使用临时 textarea/execCommand 的平台回退，始终清除临时DOM并恢复原焦点、input选区、文本选区与滚动。权限拒绝/实际写入失败不自动再次写入。无 navigator/document 的环境在调用时拒绝，不在 import 阶段访问 DOM。options 的 navigator/document/execCommand 是显式平台测试/宿主注入边界。
+
+同服务 FIFO 串行执行实际写入；取消队列中尚未开始的任务不会调用 writer，取消正在等待的调用会停止本地等待，但后续写入必须等真实 writer settle 才执行，不能越过未完成的 OS 操作。`disposeXuiServices(window)` 只释放注册表创建并拥有的内部剪贴板服务；经 `services.clipboard.instance` 借用的 `SharedClipboardService` 只有 `writeText` 合同，调用方无须提供 `dispose`，registry 也不会销毁借用实例。注入 `services.clipboard.options` 时，options 中的 `writeText` 是借用的平台 writer seam，内部服务使用但不拥有或 dispose 它。调用方不能据此声称已撤回 OS 剪贴板。`createCopyController` 是组件 Controller factory，保留并默认复用共享剪贴板服务；原显式 writeText 注入仍兼容并保留自身反馈代次隔离。

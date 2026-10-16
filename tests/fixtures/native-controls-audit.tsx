@@ -3,9 +3,9 @@ import {createRoot} from 'react-dom/client';
 import {Button} from '@coffeehc/xui-react/button';
 import {Field,Input,Textarea,Checkbox,Radio,Switch,InputGroup,Fieldset} from '@coffeehc/xui-react/forms';
 import {Progress} from '@coffeehc/xui-react/feedback';
-import {createThemeController} from '@coffeehc/xui-runtime';
+import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
 import '@coffeehc/xui-theme/style.css';
-const theme=createThemeController();
+const theme=bootstrap().services.getThemeService();
 declare global {interface Window {nativeAudit:{setMode:typeof theme.setMode}}}
 window.nativeAudit={setMode:mode=>theme.setMode(mode)};
 const types=['text','search','email','url','tel','password','number','date','datetime-local','month','time','week','file','range','color'] as const;

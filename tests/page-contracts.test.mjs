@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createHttpClient} from '../packages/runtime/dist/http.js';
+import {isolatedHttp,disposeServices} from './helpers/runtime-services.mjs';
 import {createBusinessLogHttpLoader} from '../packages/runtime/dist/business-log-http.js';
 
 // Business-log cases remain useful as archived wire examples. API Key uses the current BaseService v2 contract.
 const fixture=JSON.parse(await readFile(new URL('./fixtures/page-contracts.v1.json',import.meta.url),'utf8'));
 const {cases}=fixture;
 const response=({status,body})=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
-const client=fetch=>createHttpClient({baseURL:'https://fixture.invalid/',fetch});
+const client=fetch=>isolatedHttp({baseURL:'https://fixture.invalid/',fetch});
 const signal=new AbortController().signal;
 
 test('archived business-log fixtures retain native route and query coverage',async()=>{
@@ -36,6 +36,6 @@ test('business-log HTTP adapter accepts native success independently of the fixt
    assert(expected,'Only a successful fixture endpoint is permitted');return response({...expected.response,body:{...expected.response.body,code}});
   });
   const logs=createBusinessLogHttpLoader({http});const page=await logs.list({filter:{},page:{index:0,size:20,cursor:null}},{signal});assert.equal(page.list.length,1);
-  assert.deepEqual(JSON.parse(JSON.stringify(await logs.detail(page.list[0].id,{signal}))),cases.business_log_detail.response.body.payload);http.destroy();
+  assert.deepEqual(JSON.parse(JSON.stringify(await logs.detail(page.list[0].id,{signal}))),cases.business_log_detail.response.body.payload);disposeServices(http);
  }
 });

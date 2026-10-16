@@ -100,3 +100,6 @@ export function createDateTimeModel(initial:DateTimeOptions={}) {
   destroy(){if(dead)return;dead=true;intent++;listeners.clear();},
  };
 }
+
+/** Public React injection contract for the date/time draft and picker state owner. */
+export type DateTimeController=ReturnType<typeof createDateTimeModel>;

@@ -31,6 +31,10 @@ test('copy serializes in-flight writes, fences changed values and cannot report 
  await owner.copy();assert.deepEqual(values,['old','new']);assert.equal(owner.getStatus(),'copied');
  const late=deferred();owner.update({value:'late',writeText:()=>late.promise,onStatusChange:value=>states.push(value)});const work=owner.copy(),before=states.length;owner.destroy();late.reject(Error('late'));await work;assert.equal(states.length,before);
 });
+test('copy controller subscription exposes the current immutable presentation snapshot',async()=>{
+ const pending=deferred(),owner=createCopyController({value:'first',writeText:()=>pending.promise}),states=[];owner.subscribe(()=>states.push(owner.getState()));const copy=owner.copy();assert.deepEqual(owner.getState(),{value:'first',disabled:false,status:'copying'});
+ owner.update({value:'second',writeText:()=>pending.promise});assert.deepEqual(owner.getState(),{value:'second',disabled:false,status:'copying'});pending.resolve();await copy;assert.deepEqual(owner.getState(),{value:'second',disabled:false,status:'idle'});assert.ok(states.length>=2);assert.ok(states.every(state=>Object.isFrozen(state)));owner.destroy();
+});
 test('Image requires alt and stable geometry; SSR preserves empty alt and escaped fallback',()=>{
  for(const options of [{src:'x',width:30,height:20},{src:'x',alt:'x'},{src:'x',alt:'x',aspectRatio:0},{src:'x',alt:'x',width:Infinity,height:2}])assert.throws(()=>validateImageOptions(options),TypeError);
  assert.match(render(Image,{src:'/a',alt:'',width:240,height:120}),/aspect-ratio:2/);assert.match(render(Image,{src:'/a',alt:'',aspectRatio:2}),/alt=""/);

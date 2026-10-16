@@ -1,12 +1,18 @@
 # 公共能力维护清单
 
-本页登记消费项目提交的公共能力缺口及核对结果，不定义另一份接口合同。已提供的能力以 [PUBLIC_API](PUBLIC_API.md)、[COMPONENTS](COMPONENTS.md) 和固定产物为准；待实现条目的建议字段不是现有 API。请求登记不代表已排期、实现或通过消费项目验收。
+本页登记消费项目提交的公共能力缺口及核对结果，不定义另一份接口合同。下文是各条目原提交时的固定版本、现象与历史验证，不代表 2.0.0 产品已迁移或其最新状态。当前公开服务/配置/React入口以 [PUBLIC_API](PUBLIC_API.md) 与 [COMPONENTS](COMPONENTS.md) 为准；消费项目升级和逐页验收仍由各自仓库完成。待实现条目的建议字段不是现有 API。请求登记不代表已排期、实现或通过消费项目验收。
+
+## 当前 2.0.0 公共架构说明
+
+2.0.0 的 runtime 基础 HTTP/Auth/Theme/Clipboard Service 统一由 `bootstrap` 与每个 Window 的服务注册表创建或借用；基础 `create*Service/Client` factories 已从公开 exports 移除。新应用使用包内默认 config.json 与部分覆盖，运行实例通过第二参数注入；SSR按请求持有独立 `XuiServices`。`init.js` 仅首绘前预绘制主题/缩放，不拥有主题 controller。新增 config、services、bootstrap、route、i18n、menu-service、util-service 与 React services/route 入口，逐项合同见 [PUBLIC_API 启动配置与应用服务](PUBLIC_API.md#启动配置与应用服务)。
+
+这次 xui API 与服务生命周期变更不替消费项目安装新包、不修改其适配层或业务 API，也不表示任何产品完成升级。请在消费项目固定2.0.0源码SHA后，按 [接入清单](ADOPTION_CHECKLIST.md)逐入口和实际页面记录通过、失败、未跑或不适用。
 
 ## Argus 固定版接入反馈（2026-10-16）
 
 来源记录：Argus `d3cc589fd803e20d0640321437ed280a2a4036dc` 的 `docs/xui-public-requests.md`。其消费基线为 xui `595380a6d2467d56623a0df0dedc026e0331a4ff`、DESIGN `0.13.1`、三个包 `0.1.0`。来源中的产品调用点和现场现象按反馈登记，本轮没有读取或修改 Argus，也没有重跑其页面。
 
-本轮公共库核查基线为 xui 源码 `cdeefa7193f8ae100f72e225befde36a79ee596a`（DESIGN及三个包为 `1.2.0`）；本工作树的 DESIGN 与三个包为 `1.3.0`。02/04/05对应的xui能力已进入1.3.0正式构建、独立tarball及浏览器验证，已关闭为库级请求；Argus仍须自行升级并验收真实页面、GET接口和wire，不能将库级结果写成产品已完成。
+原核查基线为 xui 源码 `cdeefa7193f8ae100f72e225befde36a79ee596a`（DESIGN及三个包为 `1.2.0`）；当时本工作树的 DESIGN 与三个包为 `1.3.0`。02/04/05对应能力的库级结论只在该时点有效；后续包版本与页面接入须按2.0.0实际产物重新核对。Argus仍须自行升级并验收真实页面、GET接口和wire，不能将旧库级结果写成产品已完成。
 
 | ID | 请求 | xui 状态 | 消费项目后续 |
 |---|---|---|---|
@@ -47,13 +53,13 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 旧正式包中桌面侧栏没有inline-end边线，独立消费者保存了展开/紧凑、LTR/RTL、100%/200%文字的16组几何，新边界断言在旧包上复现失败。1.3.1仅在已有桌面断点增加line-width-surface / separator-line逻辑边线，并从原末端padding中扣除同样线宽；保持外宽及内容净宽，不增分隔节点或resize handle。窄屏不应用该规则，仅保留既有Dialog外框；AppShell/MenuLayout共用同一CSS，React逻辑/portal/查询和业务owner不变。正式包与浏览器实际结果见[验证记录](VALIDATION.md)；不因此宣称xAgent已升级或现网页面已验收。
 
-### XUI-REQ-20261016-06：公共交互状态的默认与完整Controller替换（已审查，未整体实现）
+### XUI-REQ-20261016-06：公共交互状态的默认与完整Controller替换（2.0.0部分实现，Toast仍开放）
 
 来源：xAgent维护来件，固定消费xui `1a6772e4fcbf7be180c813e560d9d32538dabe20`、DESIGN/三包1.3.0。按公开根入口逐项核对了105个React运行时导出及其组合部件，结果和分阶段建议集中在[状态所有权矩阵](COMPONENTS.md#状态所有权与-controller-模式)。这轮是源码/类型审查，不是所有组件双模式已具备的声明。
 
-Menu.View与共享主题已有语义双模式；Calendar/DateTimePicker、Copyable、密码展示及多种组合交互仍缺少实例替换。ApiKey与两类日志目前是必填服务Controller注入，不能将其本地分页/未提交筛选草稿也声称为完整替换。Toast已支持公开toastManager动作入口，但peer Provider仍拥有真实toasts/timeout/focus状态，需先解决上游公开替换合同。handle、受控props和DOM ref分别按真实能力登记；宿主领域值/查询、React异常捕获及平台测量/加载不强造Controller。
+历史审查基线中，Menu.View与共享主题已有语义双模式；当时Calendar/DateTimePicker、Copyable、密码展示及多种组合交互仍缺少实例替换。当时ApiKey与两类日志是必填服务Controller注入，不能将其本地分页/未提交筛选草稿也声称为完整替换。Toast已支持公开toastManager动作入口，但peer Provider仍拥有真实toasts/timeout/focus状态，需先解决上游公开替换合同。handle、受控props和DOM ref分别按真实能力登记；宿主领域值/查询、React异常捕获及平台测量/加载不强造Controller。
 
-本轮不重写全部组件，不改消费项目、认证/API协议或业务owner。后续按矩阵逐项实施并补默认/注入互斥、生命周期、StrictMode、配置/实例切换、迟到与焦点/草稿/秘密清理验证；未完成项仍保持开放，不能以计划或源码审查代替正式产物验收。
+2.0.0按[当前逐项矩阵](COMPONENTS.md#状态所有权与-controller-模式)落实组件默认/注入与展示/服务边界，正式验证见[记录](VALIDATION.md)。保留消费项目、认证/API协议与业务owner；基础 Service 的创建统一经应用注册表，组件 Controller 工厂仍按组件模型使用。Toast的集合、超时、关闭阶段仍未满足完整外部替换：peer公开Provider不接受集合/store，需要上游公开合同或正式升级，当前未使用私有store或第二队列绕过，因此本请求仍部分开放，不能宣称全组件达标。
 
 ### XUI-REQ-20261016-03：固定列与全表分割线一致（1.1.2已实现，待宿主验收）
 

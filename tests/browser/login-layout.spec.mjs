@@ -16,15 +16,15 @@ for(const kind of ['react']){
       let resume;const gate=new Promise(resolve=>{resume=resolve;});
       await page.route(`**/login-${kind}/app.js`,async route=>{await gate;await route.continue();});
       await page.reload({waitUntil:'commit'});
-      await page.waitForFunction(()=>!!window.xuiTheme);
       const expectedMode=['light','dark','system'].includes(stored)?stored:'dark',expectedEffective=expectedMode==='system'?'dark':expectedMode;
       await expect(page.locator('html')).toHaveAttribute('data-theme',expectedMode);
       await expect(page.locator('html')).toHaveAttribute('data-theme-effective',expectedEffective);
+      expect(await page.evaluate(()=>window.xuiTheme),'pre-paint restores attributes without constructing an application service owner').toBeUndefined();
       await expect(page.locator('.xui-login-card')).toHaveCount(0);
-      await page.evaluate(()=>{window.loginBootstrapOwner=window.xuiTheme;window.loginFrames=[];const record=()=>{if(document.querySelector('.xui-login-card'))window.loginFrames.push({...document.documentElement.dataset});if(!window.stopLoginFrames)requestAnimationFrame(record);};requestAnimationFrame(record);});
+      await page.evaluate(()=>{window.loginFrames=[];window.stopLoginFrames=false;const record=()=>{if(document.querySelector('.xui-login-card'))window.loginFrames.push({...document.documentElement.dataset});if(!window.stopLoginFrames)requestAnimationFrame(record);};requestAnimationFrame(record);});
       resume();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await settle(page);
-      const firstPaint=await page.evaluate(()=>{window.stopLoginFrames=true;return {sameOwner:window.loginBootstrapOwner===window.xuiTheme,frames:window.loginFrames,stored:sessionStorage.getItem('ui.theme.mode')};});
-      expect(firstPaint.sameOwner).toBe(true);expect(firstPaint.frames.length).toBeGreaterThan(0);expect(firstPaint.frames.every(frame=>frame.theme===expectedMode&&frame.themeEffective===expectedEffective)).toBe(true);expect(firstPaint.stored).toBe(stored);
+      const firstPaint=await page.evaluate(()=>{window.stopLoginFrames=true;return {sameOwner:window.loginDemo.theme===window.xuiTheme,mode:window.loginDemo.theme.getState().mode,frames:window.loginFrames,stored:sessionStorage.getItem('ui.theme.mode')};});
+      expect(firstPaint.sameOwner).toBe(true,'the login view receives the bootstrap-owned theme service');expect(firstPaint.mode).toBe(expectedMode);expect(firstPaint.frames.length).toBeGreaterThan(0);expect(firstPaint.frames.every(frame=>frame.theme===expectedMode&&frame.themeEffective===expectedEffective)).toBe(true);expect(firstPaint.stored).toBe(stored);
       await expect(page.locator('.xui-login-theme')).toHaveCount(0);await expect(page.getByRole('combobox',{name:'外观',exact:true})).toHaveCount(0);
       await page.getByRole('textbox',{name:'用户名',exact:true}).fill('保留输入');
       for(const colorScheme of ['light','dark','light']){await page.emulateMedia({colorScheme});await expect(page.locator('html')).toHaveAttribute('data-theme-effective',expectedMode==='system'?colorScheme:expectedMode);await expect(page.getByRole('textbox',{name:'用户名',exact:true})).toHaveValue('保留输入');}

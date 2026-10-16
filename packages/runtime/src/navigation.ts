@@ -61,7 +61,9 @@ type NavigationClick=Pick<MouseEvent,'button'|'ctrlKey'|'metaKey'|'shiftKey'|'al
 export function navigateNavigationItem(item:NavigationItem,event:NavigationClick,options:NavigationMenuOptions):boolean{
   if(!options.navigation||!item.href||item.disabled||event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||item.target&&item.target!=='_self'||item.download!==undefined&&item.download!==false)return false;
   let current:URL,target:URL;try{current=new URL(options.location??options.baseURL??'https://xui.invalid/',options.baseURL??'https://xui.invalid/');target=new URL(item.href,current);}catch{return false;}
-  if(!['http:','https:'].includes(target.protocol)||target.origin!==current.origin)return false;
+  // WebView origins may serialize as "null"; compare their hierarchy rather
+  // than treating every opaque origin as equal or falling back to a reload.
+  if(!current.hostname||target.protocol!==current.protocol||target.hostname!==current.hostname||target.port!==current.port)return false;
   const request={id:item.id,href:item.href,url:target.href,sameLocation:target.href===current.href,event:event.nativeEvent??event as unknown as Event};
   if(options.navigation.canNavigate?.(request)===false)return false;
   event.preventDefault();options.navigation.navigate(request);return true;
