@@ -24,7 +24,7 @@ export function bindOverflowTextPresentation(viewport:HTMLElement,track:HTMLElem
   if(next!==target){listen(target,false);stop();target=next;hovered=false;focused=!!target?.contains(doc.activeElement);listen(target,true);}
   // Non-interactive text never gains an extra tab stop. Without an existing
   // keyboard entry in its declared surface it stays fully readable instead.
-  const enabled=media.matches&&!coarse.matches&&!!target?.contains(viewport)&&!!(target.matches(focusable)||target.querySelector(focusable));
+  const enabled=media.matches&&!coarse.matches&&!!target?.contains(viewport)&&!target.matches(':disabled,[aria-disabled="true"]')&&!!(target.matches(focusable)||target.querySelector(focusable));
   viewport.dataset.overflowMotion=enabled?'enabled':'static';
   if(!enabled||doc.hidden||!viewport.isConnected||(!hovered&&!focused)){stop();return;}
   const geometry=overflowTextGeometry(viewport,track,'--text-overflow-scroll-speed');

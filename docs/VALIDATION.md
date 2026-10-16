@@ -1,8 +1,26 @@
 # 验证证据与限制
 
-本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
+## Tabs扁平轨道与长名称阅读（4.2.4，2026-10-17）
 
-以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
+仅修改xui，三包/DESIGN为 **4.2.4**，仍只递增末位、无兼容分发。sourceGeneration为`3952ad3c0ef097efacb7c0cfda3f679984e2aaa67463341ba7b6cc1273686ef1`，独立正式consumer `.consumers/tabs-overlay-FDn3x8/react`安装三份tarball内ESM/CSS/types，React/ReactDOM19.2.8与Base UI1.7.0单实例，没有src alias或宿主私有CSS。405 Token、104公开入口；本轮只运行定向consumer，不将其写成全量接入验收。
+
+公开`Tabs.List.variant?: 'segmented' | 'line'`，默认segmented皮肤保持。line按已确认的扁平设计移除外胶囊/内选中框，仅保留文字/图标强调色、600字重与一条底部选中线，focus独立。所有Tab共用新增`--tabs-item-max-inline-size`，默认layout-field-min=15rem（根字号16px时240px），不超过容器；equal在该上限内分配。直属字符串/数字自动进入Label，组合内容提供`Tabs.Label`/`TabsLabelProps`，text:string且交互表面归Tab。复用OverflowText的真实测量、共享速度和单次滚动，hover/已有键盘焦点仅移动名称；Icon和计数在文本槽之外。减少动效、触屏、无动画/JS或disabled保留完整静态折行。Root允许Flex/Grid收缩，不把长名最小内容宽度传给页面。此项宽度/读名行为是默认合同更新，消费项目自定义嵌套名称应采用公开Label，不依赖内部span结构。见[Tabs](COMPONENTS.md#tabs)、TABS-LINE-001/TABS-OVERFLOW-001与[正式样板](../examples/tabs-overlay-react/app.tsx)。
+
+| 检查 | 实际结果 |
+|---|---|
+| build/typecheck/Token/docs/正式定向consumer | 通过；critical CSS gzip18702/19456；没有测量本轮完整应用initial JS或Button体积 |
+| 定向unit | 29/29，tabs-presentation、interaction-controller、contract、typography-scale；未跑全量unit |
+| Chromium Tabs专项 | 45/45，含三主题真实Chrome200%及触屏context |
+| Firefox/WebKit Tabs专项 | 各41/41，合计82/82；不含Chrome专用缩放与touch context |
+| 既有Tabs Controller回归 | 2/2，受控接受/拒绝、非首项default与取消fallback不重复通知 |
+
+上述计数按用例职责从最终组合报告筛选。浏览器覆盖默认/受控/完整Controller、production/开发StrictMode，三真实Panel的keepMounted节点/草稿/阅读滚动/游标不变；方向键/Home/End跳过disabled、手动Space激活、竖向/RTL、aria-controls/selected及focus环。长中文/无空格英文、短长动态更新、内容和宽度重测、鼠标离开且失焦复位、RTL末端对齐、图标固定、销毁取消动画；320px的200%根字号与真实Chrome200%页面缩放（DPR加倍、CSS viewport减半、根字号不变、CSS zoom/pinch=1）均无页面横溢出。已查看最终浅色桌面、深色320px/200%根字号、system真实缩放与减少动效完整名称截图。
+
+过程失败完整保留：首轮cap-probe为4/5，Base UI使用aria-disabled的Tab误进入动效，已在共享OverflowText交互表面补齐禁用判断；第二代Chromium42/57、Firefox/WebKit76/106，失败均为长名在Grid自动最小宽度下撑开Root（320px/200%页面达到608px），修复公共Root的min-inline-size后，用新正式包完成上述最终矩阵。未放宽横溢出或焦点断言。新增需求前的旧候选还有两项trace输出目录被并行Playwright清理造成ENOENT、一次受影响回归同因失败，独立输出目录复验3/3；这不是组件故障，最终各进程使用独立output目录。初始示例40dvh设计值审计失败已改用现有layout-scroll-area-height Token，未放开规则。
+
+最终证据在`.artifacts/tabs-overlay-validation/`：consumer.json/peers.json、cap-root-final-{build,typecheck,tokens,unit-targeted,docs,consumer}.log、cap-root-browser-final.json/log、cap-root-cross-final.json/log、cap-root-controller-final.json/log、final-report-summary.json及images-final；过程保留cap-probe、cap-browser-before-root/cap-cross-before-root及consumer-before-root。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/tabs-presentation.test.mjs tests/interaction-controller.test.mjs tests/contract.test.mjs tests/typography-scale.test.mjs`、`node scripts/check-docs.mjs`、`node .artifacts/tabs-overlay-validation/consumer.mjs`。预览4173，Chromium选该目录playwright.config.mjs与tabs-overlay.spec.mjs；跨引擎用cross.config.mjs，最终排除genuine Chrome、touch context。Controller回归从最新正式consumer即时bundle，使用同代正式CSS，选择controller-modes.spec.mjs的owned/injected Dialog、Sheet/AlertDialog、value controllers、Tabs preserve四项；每次并行调用必须使用独立--output。
+
+未执行全仓unit/browser、完整consumer套件、watch/cold-start、物理触屏/读屏器或消费项目页面/API/部署。没有把本库合成样板当成xAgent/xLead等产品已升级或验收完成。
 
 ## 集合刷新布局连续性（4.2.3，2026-10-17）
 

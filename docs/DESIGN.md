@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.3。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.4、4.2.5…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.4。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.5、4.2.6…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -609,6 +609,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --login-logo-size: calc(var(--control-height-lg) + var(--space-control-gap));
     --sheet-max-block-size: 80dvh;
     --tabs-padding: calc(var(--spacing) * .75);
+    --tabs-item-max-inline-size: var(--layout-field-min);
     --layout-workspace-content-min-block-size: 0px;
     --data-table-filter-min: 9rem;
     --data-table-min-block-size: calc(var(--control-height) * 4);
@@ -1019,7 +1020,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | 普通控件 | 36px |
 | 表格 cell padding | block 8px、inline 12px；header至少36px、row至少40px |
 
-按钮标准高度 xs24、sm32、default36、lg40px；对应横 padding8/10/12/16px、gap4/6/6/8px。普通图标16px，最小行操作12px；复用同一套图标尺寸和线宽，保留现有库，不混用装饰画布。默认 Checkbox为16×16px、radius-sm；Switch为28×16.6px、拇指14.4px；Tabs 项至少32px、轨道内部 padding3px，长文字自然增高；紧凑切换项高28px、gap4px。适配项目可保留语义明确的既有变体，不能每页发明尺寸。
+按钮标准高度 xs24、sm32、default36、lg40px；对应横 padding8/10/12/16px、gap4/6/6/8px。普通图标16px，最小行操作12px；复用同一套图标尺寸和线宽，保留现有库，不混用装饰画布。默认 Checkbox为16×16px、radius-sm；Switch为28×16.6px、拇指14.4px；Tabs 项至少32px、segmented轨道内部 padding3px，单项最大宽度与长名阅读见内容Tabs合同；紧凑切换项高28px、gap4px。适配项目可保留语义明确的既有变体，不能每页发明尺寸。
 
 ### 首屏信息架构与信息密度
 
@@ -1232,7 +1233,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 | 弹层 | Dialog/Sheet.Header/Title/Description、Body、Footer | 标题与说明分开，body 负责长内容，footer 放所属 FormActions | 开关只改可见性；正常 body 滚动、极端高度公共回退；关闭返回真实触发入口 |
 | 导航/菜单 | NavigationMenu 的 items[].label/icon、renderLabel/renderAction 与公开渲染/事件扩展；Menu/ContextMenu 的 Item/Icon/Separator | 选中由真实 active/expanded，危险项使用 danger，图标继承语义色 | 独立分支和动作不导航；disabled 不执行；键盘及长名称由公共组件管理 |
 | 原子控件 | Button/Link/IconButton 的内容与事件；Checkbox/Switch/Toggle/Radio 的标签与状态；Select/Combobox/Command 的公开 parts | 动作、选中、禁用、只读、错误分别映射已有语义，不依靠颜色推断业务 | 不给所有控件添加同一套 slot；保留原生/peer 表单与键盘语义 |
-| 内容Tabs | Root=value，List=轨道布局，Tab.children=名称，Icon=可选装饰图标，Panel=对应内容 | 内容宽为默认，equal为显式整行等分；未选次要文字，选中内嵌底色与强调色，图标继承Tab状态色 | 纯文字无空图标位；长中文/放大不截断名称；键盘、disabled与panel关联见组件合同，刷新不重挂Root |
+| 内容Tabs | Root=value，List=轨道布局，Tab.children/Label=名称，Icon=可选装饰图标，Panel=对应内容 | 内容宽为默认，equal在单项上限内等分可用宽度；variant=segmented默认内嵌底色，line为无外槽的文字与唯一底部选中线；强调色/字重与图标状态继承一致 | Root作为Flex/Grid子项允许收缩；纯文字无空图标位；单项上限tabs-item-max-inline-size，长名仅Label在hover/键盘聚焦滚动，减少动效/触屏等完整静态折行；键盘、disabled与panel关联见组件合同，刷新不重挂Root |
 | 披露与时间 | Disclosure/Accordion的trigger/content；Calendar和DateTimePicker的已选值、查看月份及受控事件 | 当前选项与展开状态明确；时间按分钟墙上时间/ISO日期合同，时区归宿主 | 焦点连续，日期/月份事件独立；不隐式截断精度或转换时区 |
 | 反馈/媒体 | DataRegion.children/feedback；Alert/Toast；Typography/Copyable/Tag/Image | 临近相关操作的状态、错误、一次性反馈；文案/图像来源真实，复制/删除有明确入口 | 状态不重挂 children；图片预留真实比例；被动文本不增 Tab stop；通知只有一个 owner |
 
@@ -1369,7 +1370,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 | InputGroup D/H/F/X/E；S/B按内部控件 | 同输入，一层边界和焦点，addon/清除与内容gap8 | 外层映射内部真实focus/invalid，内部不重复border/ring；帮助和错误不撑偏相邻控件，不制造第二层皮肤 |
 | Combobox/自定义选择 D/H/S/F/X/B/E | 搜索复用输入、选项复用menu-item-*；弹层popover-width288、padding12 | 持续S与键盘活动项分开，活动项F只在键盘阶段存在。搜索输入保留焦点，方向键/Enter选择；无结果与错误不同，不自动选首项、不改查询防抖；NativeSelect由平台负责面板 |
 | Checkbox/Switch/Toggle D/H/S/F/X/E；B仅业务已有 | Checkbox默认16×16px（control-icon-size）、radius-sm、1px input-border-color；Switch宽28/高16.6px、拇指14.4px，圆形轨道；Toggle使用toggle-height默认28px、gap4，放大文字可自然增高 | S用action-primary及成对前景或interaction-selected-*，必须有真实checked；H不盖S，F独立，E相关错误可见，X不可切换。Space/方向键遵循角色；不得仅换颜色模拟checked |
-| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 项至少control-height-sm32、轨道内padding3、项radius-md；label body-sm，常规body400、选中heading600；可选装饰图标16px、图文间距space-icon-gap，文字与图标颜色继承所属Tab | 轨道layer-support与一层surface-line，项间space-text-gap，默认按内容宽度且不越过容器；显式equal填满并等分。未选文字muted-foreground，H用interaction-hover，S用layer-raised、surface-line细边界与action-primary形成内嵌选中层，非选中项预留同宽透明边界，F使用独立内部focus环。没有额外selected外圈或左竖线；方向键及panel关联完整，禁用项跳过，panel加载不禁用Tab |
+| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 项至少control-height-sm32、轨道内padding3、项radius-md；label body-sm，常规body400、选中heading600；可选装饰图标16px、图文间距space-icon-gap，文字与图标颜色继承所属Tab | 轨道layer-support与一层surface-line，项间space-text-gap，默认按内容宽度且不越过容器；显式equal在单项上限内分配。未选文字muted-foreground，H用interaction-hover，S用layer-raised、surface-line细边界与action-primary形成内嵌选中层，非选中项预留同宽透明边界，F使用独立内部focus环。没有额外selected外圈或左竖线；可选line移除外槽/项内框，项预留line-width-emphasis底边，只有当前项以currentColor着色；F仍独立内部环，H不覆盖当前文字/线，普通尺寸/文字继承不变。单项上限tabs-item-max-inline-size，Label复用OverflowText且只滚名称；方向键及panel关联完整，禁用项跳过，panel加载不禁用Tab |
 | 表格/列表 D/H/S/F/B/E；X属于行控件 | cell padding8、动作gap4，表头body-xs/500、正文body-sm，分隔separator-line；opaque条纹 | H用interaction-hover，S/expanded用interaction-selected背景；sticky与整行不透明底一致。F只归焦点控件/确有键盘行，不给被动行造焦点。B/空/E保留所属状态和恢复入口，排序/分页真实禁用 |
 | Card/Section/连续Item | Card单层raised+surface-line、radius6、按三段消费card-padding14；图标tile的size/offset/background及Footer背景由组件Token定义，Footer仅一条separator-line；Section/连续Item不复制卡片分区 | Card可选plain图标/Footer，Badge有中性soft标签；默认自然高，公开stretch/equal让正文增长/Footer靠底。被动仅D/B/E，交互仍归内部控件；不加被动hover/伪按钮、不固定摘要行数或编造指标 |
 | 统计/指标 D/B/E；H/S仅已有tooltip或范围控件 | metric-padding12/gap4，label13/muted，主值24/600/tabular、单位13 | 0/未知/无数据/B/E分开，核心统计才进首屏；不以disabled表达缺数据。范围S沿选择器，tooltip H/F使用overlay；指标本体无按钮hover、焦点或选中 |

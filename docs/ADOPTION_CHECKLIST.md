@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.3）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.4）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -545,3 +545,10 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | UPLOAD-006 | disabled/readOnly/替换/退出 | 锁定不发新动作，已有请求不误取消；真实退出终止所属等待，不销毁借用 owner | 控件状态、Abort/late result、StrictMode | [公共合同](PUBLIC_API.md#文件上传) |
 | UPLOAD-007 | 文件行操作消失或删除 | Cancel/Retry/完成/Remove 均保留合理焦点；外部焦点不被后台结果抢走 | activeElement 与键盘录制 | [Upload 槽位](COMPONENTS.md#文件上传-upload) |
 | UPLOAD-008 | 所有呈现模式 | 字体继承，正文/metadata/status/actions 各归所属 slot；浅深system、窄屏、长中文、两种200%均可读可达 | 正式消费者截图、computed typography、真实浏览器 zoom 几何 | [公共合同](PUBLIC_API.md#文件上传) |
+
+## 可选内容轨道
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| TABS-LINE-001 | 采用扁平内容Tabs | List显式variant=line，无重复轨道/内选中框；状态色和独立focus由库负责，Panel与宿主范围/游标不重挂 | 三主题、长中文、键盘、节点/滚动/草稿/游标对比 | [Tabs](COMPONENTS.md#tabs) |
+| TABS-OVERFLOW-001 | Tabs长名称与尺寸 | 单项使用tabs-item-max-inline-size；名称进自动文本/Label槽，Icon/计数独立；精细鼠标hover及键盘焦点揭示全文，离开复位，不增加停靠点 | 三主题、短/长中文、RTL、窄屏、两种200%、减少动效/触屏/disabled完整静态阅读；节点/焦点与选中归属不变 | [Tabs](COMPONENTS.md#tabs) |

@@ -870,3 +870,5 @@ import {UploadService} from '@coffeehc/xui-runtime/upload';
 `Upload` 支持默认 options 或完整 controller 注入，二者互斥。View 只订阅借用实例；真实退出/替换终止所属等待，不销毁借用 Service/Controller。完整 labels 可翻译，locale 只格式化确切字节数。label、description、error、required 按 Field 关联；file input 由公共 Button 代理，拖拽区不增加多余 Tab 停靠点。required 表达“当前存在有效文件选择”，不表达远端上传成功；原生文件输入选择后清空以允许重选，此组件通过显式 start 上传，不能把它当成传统 form 的 FileList 自动提交字段。宿主依实际成功记录验证业务提交。
 
 槽位、字体和焦点见 [Upload 组件](COMPONENTS.md#文件上传-upload)；正式独立示例见 [upload-react](../examples/upload-react/app.tsx)。
+
+`@coffeehc/xui-react/tabs` 的 `TabsListProps.variant?: "segmented" | "line"` 是现有List的可选视觉组合，默认segmented兼容；line不创建选择/路由/查询owner。单项最大宽度使用公共tabs-item-max-inline-size；直属文字自动进入溢出阅读槽，组合名称公开Tabs.Label与TabsLabelProps（text:string、无interactionRef），复用OverflowText的hover/键盘与静态降级。详见[Tabs合同](COMPONENTS.md#tabs)与[正式示例](../examples/tabs-overlay-react/app.tsx)。

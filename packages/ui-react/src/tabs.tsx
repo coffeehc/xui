@@ -3,15 +3,17 @@ import * as React from 'react';
 import { cx, branded } from './shared.js';
 import { Tabs as BaseTabs } from '@base-ui/react/tabs';
 import { DirectionContext } from '@base-ui/react/internals/direction-context';
-import {Icon as DisplayIcon,type IconProps} from './display.js';
+import {Icon as DisplayIcon,type IconProps,OverflowText,type OverflowTextProps} from './display.js';
 import {assertControllerProps} from './controller.js';
 export type TabsListProps=React.ComponentProps<typeof BaseTabs.List>&{
-  /** Content follows its labels; equal fills the available width with equal tab tracks. */
+  /** Content follows its labels; equal distributes width up to the shared per-tab maximum. */
   layout?:'content'|'equal';
+  /** Segmented preserves the existing surface; line uses text and one selected bottom edge. */
+  variant?:'segmented'|'line';
 };
-function TabsList({className,onKeyDown,loopFocus=true,layout='content',...props}:TabsListProps) {
+function TabsList({className,onKeyDown,loopFocus=true,layout='content',variant='segmented',...props}:TabsListProps) {
   const direction=React.useContext(DirectionContext)?.direction;
-  return <BaseTabs.List {...props} data-layout={layout} loopFocus={loopFocus} className={branded('xui-tabs-list',className)} onKeyDown={event => {
+  return <BaseTabs.List {...props} data-layout={layout} data-variant={variant} loopFocus={loopFocus} className={branded('xui-tabs-list',className)} onKeyDown={event => {
     onKeyDown?.(event);
     // Base UI separates browser preventDefault from preventBaseUIHandler.
     if (event.baseUIHandlerPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
@@ -42,11 +44,20 @@ function TabsList({className,onKeyDown,loopFocus=true,layout='content',...props}
 }
 
 const SelectionRegistry=React.createContext<{register:(node:HTMLElement,value:BaseTabs.Tab.Value|undefined)=>void;remove:(node:HTMLElement)=>void;reconcile:()=>void}|null>(null);
-function Tab({className,ref,value,...props}:React.ComponentProps<typeof BaseTabs.Tab>){
+const TabSurface=React.createContext<React.RefObject<HTMLElement|null>|undefined>(undefined);
+/** Text slot for composed tab labels. Icons, badges and other metadata stay outside this slot. */
+export type TabsLabelProps=Omit<OverflowTextProps,'interactionRef'>;
+function TabLabel({className,...props}:TabsLabelProps){
+ const surface=React.useContext(TabSurface);
+ return <OverflowText {...props} interactionRef={surface} className={cx('xui-tab-label',className)}/>;
+}
+function Tab({className,ref,value,children,...props}:React.ComponentProps<typeof BaseTabs.Tab>){
  const registry=React.useContext(SelectionRegistry),node=React.useRef<HTMLElement|null>(null);
  React.useImperativeHandle(ref,()=>node.current as HTMLButtonElement);
  React.useLayoutEffect(()=>{const element=node.current;if(!registry||!element)return;registry.register(element,value);queueMicrotask(()=>registry.reconcile());return()=>{registry.remove(element);queueMicrotask(()=>registry.reconcile());};},[registry,value,props.disabled]);
- return <BaseTabs.Tab {...props} value={value} ref={element=>{node.current=element;}} className={branded('xui-tab',className)}/>;
+ // Only primitive label nodes are automatic. Composed content uses the public
+ // Label slot so icons/counts never become part of the moving text track.
+ return <TabSurface.Provider value={node}><BaseTabs.Tab {...props} value={value} ref={element=>{node.current=element;}} className={branded('xui-tab',className)}>{React.Children.map(children,child=>typeof child==='string'||typeof child==='number'?<TabLabel text={String(child)}/>:child)}</BaseTabs.Tab></TabSurface.Provider>;
 }
 
 // Reuse peer primitives for keyboard, relationships, portal and focus lifecycle.
@@ -54,13 +65,14 @@ export const Tabs = {
   Root,
   List: TabsList,
   Tab,
+  Label: TabLabel,
   /** Decorative only: the surrounding Tab's text supplies its accessible name. */
   Icon: function Icon({className,...props}:Omit<IconProps,'aria-label'|'aria-labelledby'|'aria-hidden'>&{'aria-label'?:never;'aria-labelledby'?:never;'aria-hidden'?:never}) {return <DisplayIcon {...props} aria-hidden="true" className={cx('xui-tab-icon',className)}/>;},
   Panel: function Panel({className,...props}: React.ComponentProps<typeof BaseTabs.Panel>) { return <BaseTabs.Panel {...props} className={branded('xui-tab-panel',className)} />; },
 };
 
 export type TabsRootProps=WithController<React.ComponentProps<typeof BaseTabs.Root>,'value'|'defaultValue'|'onValueChange',ValueController<BaseTabs.Tab.Value>>;
-function Root({controller,value,defaultValue,onValueChange,ref,...props}:TabsRootProps){
+function Root({controller,value,defaultValue,onValueChange,ref,className,...props}:TabsRootProps){
  assertControllerProps(controller,{defaultValue},['defaultValue']);
  const state=useValue({controller,value,defaultValue:defaultValue===undefined?0:defaultValue,onValueChange}),root=React.useRef<HTMLDivElement>(null),nodes=React.useRef(new Map<HTMLElement,BaseTabs.Tab.Value|undefined>()),previousIndex=React.useRef(0),initial=React.useRef(true),latest=React.useRef({controller,value,defaultValue,state});latest.current={controller,value,defaultValue,state};
  const lastFallback=React.useRef<{controller:ValueController<BaseTabs.Tab.Value>;value:BaseTabs.Tab.Value;fallback:BaseTabs.Tab.Value;items:readonly {node:HTMLElement;value:BaseTabs.Tab.Value;enabled:boolean}[]}|null>(null);
@@ -81,5 +93,5 @@ function Root({controller,value,defaultValue,onValueChange,ref,...props}:TabsRoo
   current.state.onValueChange(fallback,details);
  }}),[]);
  React.useLayoutEffect(()=>{registry.reconcile();});
- return <SelectionRegistry.Provider value={registry}><BaseTabs.Root {...props} ref={root} value={state.value} onValueChange={state.onValueChange}/></SelectionRegistry.Provider>;
+ return <SelectionRegistry.Provider value={registry}><BaseTabs.Root {...props} className={branded('xui-tabs',className)} ref={root} value={state.value} onValueChange={state.onValueChange}/></SelectionRegistry.Provider>;
 }

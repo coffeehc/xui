@@ -1287,15 +1287,19 @@ const cardRef = React.useRef<HTMLElement>(null);
 
 Tabs布局与图标部件从1.2.0提供；本版增强默认/选中对比，执行结果见[验证记录](VALIDATION.md)。固定1.1.3不包含新增部件。
 
-React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Icon/Panel` 和 `TabsListProps`。Root拥有受控value/defaultValue，List只管理轨道编排与键盘焦点；Tab的children承载名称，Icon只放装饰性图标，Panel承载对应内容。Tab拥有 body-sm 字号与行高，普通项字重400、选中项字重600；图标继承文字和状态色，Panel内公共组件保留自身文字角色。Icon不承载独立按钮、提示或业务状态，真实label不能只放在装饰槽。
+React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Label/Icon/Panel` 和 `TabsListProps/TabsLabelProps`。Root拥有受控value/defaultValue，并作为Flex/Grid子项允许收缩、不把长名称的最小内容宽度传给页面；List只管理轨道编排与键盘焦点；Tab的children承载名称，Icon只放装饰性图标，Panel承载对应内容。Tab拥有 body-sm 字号与行高，普通项字重400、选中项字重600；图标继承文字和状态色，Panel内公共组件保留自身文字角色。Icon不承载独立按钮、提示或业务状态，真实label不能只放在装饰槽。
 
-`Tabs.List.layout` 默认 `content`：轨道贴合标签组，不自动铺满父容器；最大宽度为可用空间，长中文或窄屏自然换行。显式 `equal` 才填满轨道并等分各项，适合确有完整行切换需求的容器。依赖旧满宽轨道的采用方应明确选择equal，不通过宿主内部CSS或缩字号修补。普通Tab可自然增高，图标保持公共尺寸与非收缩；纯文字不留图标空位。
+`Tabs.List.layout` 默认 `content`：轨道贴合标签组，不自动铺满父容器；轨道最大宽度为可用空间，项之间允许换行。每个Tab最大宽度由公共 `--tabs-item-max-inline-size` 统一约束，默认复用layout-field-min（根字号16px时240px），同时不超出父容器。显式 `equal` 才在该上限内等分可用宽度，不为铺满而超过单项上限；宽容器允许轨道末尾留白。依赖旧满宽轨道的采用方应明确选择equal，不通过宿主内部CSS或缩字号修补。图标保持公共尺寸与非收缩；纯文字不留图标空位。
 
-普通项使用body 400文字；选中项使用raised底色、强调色文字/图标、heading 600和细边界，透明边框预留的线宽不会改变未选项几何。普通、选中、hover、键盘focus都清晰可辨。沿用peer的controlled、activateOnFocus、loop、RTL/orientation与panel关联；xui的键盘适配仍只负责跳过disabled。刷新、busy/error及草稿属于宿主或对应Panel，不因切换轨道布局而重挂Root或业务内容。
+`Tabs.List.variant` 可选 `segmented | line`，省略时仍为现有segmented。line仅改变同一组件的外观：无外胶囊底槽、无项内选中框，普通文字/图标继承muted-foreground，当前项继承action-primary与heading字重，唯一底部选中线使用line-width-emphasis和currentColor；其他项预留同宽透明底边，hover/focus不替换选中归属。没有额外选中外圈或新状态owner。content/equal、竖向/RTL键盘仍沿用原合同；竖向line也保留每个项底部的唯一选中线。无额外原生UI实现。
+
+Tab直属字符串/数字自动进入公共Label文本槽；组合内容显式使用 `<Tabs.Label text={name}/>`，装饰Icon、计数和状态放在文本槽之外，不把整组内容一起滚动。Label复用OverflowText：支持精细鼠标且未减少动效时，长名称单行省略，Tab hover或已有键盘焦点停留后仅名称按共享速度单次滚至末端，离开且失焦复位；完整名称始终在DOM/可访问名称中，不依赖title，不新增Tab停靠或更改选择。触屏、减少动效、无动画/JS、不能键盘进入的disabled项保留完整静态折行，以保证所有人可读。短名称不动画，内容/宽度/语言更新重新测量且不重挂Tab/Panel；RTL沿相应方向揭示。自定义嵌套label不被库猜测和改写，应使用公开Label槽，不能套自己的截断/滚动CSS。
+
+默认segmented的普通项使用body 400文字；选中项使用raised底色、强调色文字/图标、heading 600和细边界，透明边框预留的线宽不会改变未选项几何。普通、选中、hover、键盘focus都清晰可辨。沿用peer的controlled、activateOnFocus、loop、RTL/orientation与panel关联；xui的键盘适配仍只负责跳过disabled。刷新、busy/error及草稿属于宿主或对应Panel，不因切换轨道布局而重挂Root或业务内容。
 
 ```tsx
 <Tabs.Root value={view} onValueChange={setView}>
-  <Tabs.List aria-label="任务视图" layout="content">
+  <Tabs.List aria-label="任务视图" layout="content" variant="line">
     <Tabs.Tab value="grid"><Tabs.Icon>{gridIcon}</Tabs.Icon>运行网格</Tabs.Tab>
     <Tabs.Tab value="logs"><Tabs.Icon>{logsIcon}</Tabs.Icon>运行日志</Tabs.Tab>
   </Tabs.List>
