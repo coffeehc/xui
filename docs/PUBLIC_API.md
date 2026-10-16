@@ -871,4 +871,4 @@ import {UploadService} from '@coffeehc/xui-runtime/upload';
 
 槽位、字体和焦点见 [Upload 组件](COMPONENTS.md#文件上传-upload)；正式独立示例见 [upload-react](../examples/upload-react/app.tsx)。
 
-`@coffeehc/xui-react/tabs` 的 `TabsListProps.variant?: "segmented" | "line"` 是现有List的可选视觉组合，默认segmented兼容；line不创建选择/路由/查询owner。单项最大宽度使用公共tabs-item-max-inline-size；直属文字自动进入溢出阅读槽，组合名称公开Tabs.Label与TabsLabelProps（text:string、无interactionRef），复用OverflowText的hover/键盘与静态降级。详见[Tabs合同](COMPONENTS.md#tabs)与[正式示例](../examples/tabs-overlay-react/app.tsx)。
+`@coffeehc/xui-react/tabs` 的 `TabsListProps.variant?: "segmented" | "line"` 是现有List的可选视觉组合，默认segmented兼容；line不创建选择/路由/查询owner。单项最大宽度使用公共tabs-item-max-inline-size；直属文字自动进入溢出阅读槽，组合名称公开Tabs.Label与TabsLabelProps（text:string、无interactionRef），复用OverflowText的hover/键盘与静态降级。详见[Tabs合同](COMPONENTS.md#tabs)与[正式示例](../examples/tabs-overlay-react/app.tsx)。弹层关闭按[完整Escape层级](COMPONENTS.md#嵌套弹层与-tooltip-的-escape-顺序)验证，不能将Tooltip消耗的一次Escape记为Sheet丢失监听。

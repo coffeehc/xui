@@ -925,6 +925,14 @@ const navigationTrigger = React.useRef<HTMLButtonElement>(null);
 
 完整受控 guard、取消/放弃示例见 [continuity-react](../examples/continuity-react/app.tsx)。业务继续决定是否离开、何时导航及新页面焦点。默认抽屉 Escape/关闭回焦与显式 finalFocus 合同不变。
 
+### 嵌套弹层与 Tooltip 的 Escape 顺序
+
+Escape只关闭当前最上层的可关闭浮层。受控Sheet内的Button打开条件挂载的Dialog，第一次Escape关闭Dialog并回文件按钮，第二次关闭Sheet并回原开关；无需document监听、私有store、延时focus或重复onKeyDown。
+
+若按钮还组合了Tooltip.Trigger，Dialog回焦点可能以trigger-focus打开Tooltip。此时第二次Escape关闭可见Tooltip，第三次才关闭Sheet；ContextMenu打开时同样先关闭菜单。这不是父Sheet失去Escape能力，不得把“Sheet仍可见”单独当作关闭故障，也不能强制同一事件同时关闭两层。3.1.1与4.2.3的独立组合均复现这一顺序；没有一个声称修复旧两次Escape的提交。
+
+名称已经完整可读且Tooltip仅重复名称时，按高信噪比规则省略该Tooltip（已有动态组合可用公开`Tooltip.Root disabled={!hasExtraInformation}`，保持同一Root/Trigger/Button节点），只保留必要Button/ContextMenu.Trigger；这条公开组合自然是Dialog→Sheet两次Escape。确有额外说明时保留Tooltip，并测试Dialog→Tooltip→Sheet的完整顺序。Tooltip是非交互说明，不承载必须操作；必要文件动作放在Button或ContextMenu。公开[示例](../examples/tabs-overlay-react/app.tsx)的`?overlay`、`?overlay&tooltip`与`?overlay&tooltip&sibling`分别展示禁用重复提示的两层、额外提示和并列React树位置组合，宿主选择真实所需的信息层级。
+
 ContextMenu支持鼠标右键、Shift+F10/ContextMenu键、方向键、disabled、检查项保留、外部关闭和Esc回焦点。普通点击Trigger不执行业务。没有声明跨移动OS长按一致；必要操作还须由可点击按钮/菜单访问。React 键盘与 popup 定位由已安装 Base UI peer 提供。
 
 Table与DataTable全表默认仅行分割线，所有普通/左固定/右固定/双侧固定的th/td都不画列线；sticky不附带边框、阴影或伪元素分隔。沿用现有sticky/stickyOffset/stickyHeader接口，无需新prop或消费方CSS；当前没有行列网格模式。整体frame、表头/行底线与footer分隔保持各自唯一归属，最后数据行不与footer叠边。

@@ -75,6 +75,12 @@ xQuant原反馈固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18`。最新
 
 新增可选`Tabs.List variant="line"`，`TabsListProps`同步公开。单项公共上限tabs-item-max-inline-size与自动文本/显式Tabs.Label支持hover/键盘溢出阅读，完整静态降级、默认/受控/Controller和正式包多引擎验收通过。默认segmented保持；line是同一Root/List/Tab/Panel的视觉配置：文字/图标状态色与字重保持，无外胶囊/内选中框，仅一个底部当前项标记，焦点环独立。受控/默认/完整Controller、方向键/disabled/Panel关联与keepMounted沿用，不创建宿主三范围状态或查询owner。合同见[Tabs](COMPONENTS.md#tabs)，固定正式包和实际已验范围见[验证记录](VALIDATION.md)；宿主须升级并显式接线，不猜API或加私有CSS。
 
+### XUI-REQ-20261017-16：预览关闭后Sheet的第二次Escape（已定位为额外Tooltip层，非父弹层失效）
+
+来源xAgent固定3.1.1 / `9a44a09906838c67eb9f59fb16abdec9ddfdbe6a`的会话文件Sheet→预览Dialog→回文件行→第二次Escape后Sheet仍可见，显式CloseButton正常。4.2.3 / `b5c770f`最新正式包独立差分：裸Button的第二次Escape正常关闭Sheet；加入与来源相同的ContextMenu.Trigger→Tooltip.Trigger→Button后，预览回焦点以trigger-focus打开Tooltip，第二次Escape只关闭Tooltip，第三次关闭Sheet。旧3.1.1同样如此。用事件原因、Tooltip可见/open、父Sheet确认状态及两次/三次关闭计数定位，未把导航确认finalFocus或Popover修复冒作本项修复。
+
+本项无公共Overlay逻辑补丁或“已修复提交”；保留最上层逐个取消合同，增加正式组合示例/回归。完整可读名称无需重复Tooltip，必要补充说明则保留真实额外层级；接线见[Escape顺序](COMPONENTS.md#嵌套弹层与-tooltip-的-escape-顺序)。宿主仍需在其固定产物、lazy预览、实际页面和权限下复验；本库不修改xAgent，不宣称其产品负例已关闭。
+
 ### XUI-REQ-20261017-09：检查到初始化的共享认证外壳（4.1.0 / 3.1.0已实现，待宿主验收）
 
 来源：xLead固定3.0.1 / `7722d385270426824e13ef1a47d85b7c6903fa31`；其startup的`auth(setup=true)`显式destroy检查AuthPage，再挂完整AdminSetupPage。旧公开声明没有可脱离外壳复用的初始化表单；这是公共组合缺口，产品节点连续性失败不等同于此前Disclosure受控时序缺陷。

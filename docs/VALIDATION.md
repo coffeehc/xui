@@ -14,13 +14,28 @@
 | Firefox/WebKit Tabs专项 | 各41/41，合计82/82；不含Chrome专用缩放与touch context |
 | 既有Tabs Controller回归 | 2/2，受控接受/拒绝、非首项default与取消fallback不重复通知 |
 
-上述计数按用例职责从最终组合报告筛选。浏览器覆盖默认/受控/完整Controller、production/开发StrictMode，三真实Panel的keepMounted节点/草稿/阅读滚动/游标不变；方向键/Home/End跳过disabled、手动Space激活、竖向/RTL、aria-controls/selected及focus环。长中文/无空格英文、短长动态更新、内容和宽度重测、鼠标离开且失焦复位、RTL末端对齐、图标固定、销毁取消动画；320px的200%根字号与真实Chrome200%页面缩放（DPR加倍、CSS viewport减半、根字号不变、CSS zoom/pinch=1）均无页面横溢出。已查看最终浅色桌面、深色320px/200%根字号、system真实缩放与减少动效完整名称截图。
+上述计数按用例职责从最终组合报告筛选；三项Chrome缩放同时覆盖嵌套弹层，不重复当成六项用例。浏览器覆盖默认/受控/完整Controller、production/开发StrictMode，三真实Panel的keepMounted节点/草稿/阅读滚动/游标不变；方向键/Home/End跳过disabled、手动Space激活、竖向/RTL、aria-controls/selected及focus环。长中文/无空格英文、短长动态更新、内容和宽度重测、鼠标离开且失焦复位、RTL末端对齐、图标固定、销毁取消动画；320px的200%根字号与真实Chrome200%页面缩放（DPR加倍、CSS viewport减半、根字号不变、CSS zoom/pinch=1）均无页面横溢出。已查看最终浅色桌面、深色320px/200%根字号、system真实缩放与减少动效完整名称截图。
 
 过程失败完整保留：首轮cap-probe为4/5，Base UI使用aria-disabled的Tab误进入动效，已在共享OverflowText交互表面补齐禁用判断；第二代Chromium42/57、Firefox/WebKit76/106，失败均为长名在Grid自动最小宽度下撑开Root（320px/200%页面达到608px），修复公共Root的min-inline-size后，用新正式包完成上述最终矩阵。未放宽横溢出或焦点断言。新增需求前的旧候选还有两项trace输出目录被并行Playwright清理造成ENOENT、一次受影响回归同因失败，独立输出目录复验3/3；这不是组件故障，最终各进程使用独立output目录。初始示例40dvh设计值审计失败已改用现有layout-scroll-area-height Token，未放开规则。
 
-最终证据在`.artifacts/tabs-overlay-validation/`：consumer.json/peers.json、cap-root-final-{build,typecheck,tokens,unit-targeted,docs,consumer}.log、cap-root-browser-final.json/log、cap-root-cross-final.json/log、cap-root-controller-final.json/log、final-report-summary.json及images-final；过程保留cap-probe、cap-browser-before-root/cap-cross-before-root及consumer-before-root。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/tabs-presentation.test.mjs tests/interaction-controller.test.mjs tests/contract.test.mjs tests/typography-scale.test.mjs`、`node scripts/check-docs.mjs`、`node .artifacts/tabs-overlay-validation/consumer.mjs`。预览4173，Chromium选该目录playwright.config.mjs与tabs-overlay.spec.mjs；跨引擎用cross.config.mjs，最终排除genuine Chrome、touch context。Controller回归从最新正式consumer即时bundle，使用同代正式CSS，选择controller-modes.spec.mjs的owned/injected Dialog、Sheet/AlertDialog、value controllers、Tabs preserve四项；每次并行调用必须使用独立--output。
+最终证据在`.artifacts/tabs-overlay-validation/`：consumer.json/peers.json、cap-root-final-{build,typecheck,tokens,unit-targeted,docs,consumer}.log、cap-root-browser-final.json/log、cap-root-cross-final.json/log、cap-root-controller-final.json/log、final-report-summary.json及images-final；过程保留cap-probe、cap-browser-before-root/cap-cross-before-root及consumer-before-root。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/tabs-presentation.test.mjs tests/interaction-controller.test.mjs tests/contract.test.mjs tests/typography-scale.test.mjs`、`node scripts/check-docs.mjs`、`node .artifacts/tabs-overlay-validation/consumer.mjs`。预览4173，Chromium选该目录playwright.config.mjs与tabs-overlay.spec.mjs；跨引擎用cross.config.mjs，最终排除genuine Chrome、touch context以及nested Escape的light320/dark/system390组（其完整矩阵在前一代已通过，新包保留light390/system320代表性回归）。Controller回归从最新正式consumer即时bundle，使用同代正式CSS，选择controller-modes.spec.mjs的owned/injected Dialog、Sheet/AlertDialog、value controllers、Tabs preserve四项；每次并行调用必须使用独立--output。
 
 未执行全仓unit/browser、完整consumer套件、watch/cold-start、物理触屏/读屏器或消费项目页面/API/部署。没有把本库合成样板当成xAgent/xLead等产品已升级或验收完成。
+
+## 嵌套预览与Tooltip的取消顺序（4.2.4，2026-10-17）
+
+来源xAgent旧3.1.1的Sheet→预览Dialog→回文件行→第二次Escape父层仍可见。独立对比旧3.1.1与最新基线4.2.3 / `b5c770f`：裸Button或禁用重复Tooltip时，第一次Escape关闭预览并回文件，第二次关闭Sheet并回开关；真实ContextMenu.Trigger→Tooltip.Trigger→Button组合回焦点后，以trigger-focus打开Tooltip，第二次Escape只关闭该Tooltip，第三次关闭Sheet。逐层open/可见性、escape-key原因和关闭计数确认，不是父Sheet丢监听；没有Overlay逻辑补丁，也没有可冒充本项修复的navigationTriggerRef/Popover提交。
+
+公共建议和[示例](../examples/tabs-overlay-react/app.tsx)按真实信息选择层级：仅重复完整可读文件名的Tooltip使用已有Root.disabled，保留相同Root/Trigger/Button节点；确有额外说明保留Tooltip及完整三层取消。`?overlay`、`?overlay&tooltip`、`?overlay&tooltip&sibling`分别覆盖两层、三层和React树中并列位置；不加document监听、延时focus、私有store或强制同一Escape关闭两层。见[公开合同](COMPONENTS.md#嵌套弹层与-tooltip-的-escape-顺序)、OVERLAY-ORDER-001。仅修改xui文档/示例/回归，不修改宿主业务选择。
+
+使用上节同一4.2.4正式包：Chromium12个嵌套矩阵和3个Chrome缩放复合用例全部通过；Firefox/WebKit各4个代表性嵌套用例通过；原有owned/injected Dialog与多类Overlay Controller回归2/2。light/dark/system、390/320、200%根字号、production/StrictMode、条件Dialog卸载、并列React树、普通/必要Tooltip、回焦点与两轮重复均覆盖。最终组合报告合计151项（57+90+4），三项缩放只计一次，0失败/跳过/flaky；394项逐项接入检查。前一代完整跨引擎嵌套矩阵均已通过，最终跨引擎只重跑代表性组；不得写成最终包全仓测试通过。
+
+基线证据为同目录baseline.json、baseline-old.json、baseline-old-packages.json及日志；最新证据与命令见上节。旧3.1.1只用于同peer单实例的差分，临时兼容consumer/preview已清理，不恢复旧版分发。未访问xAgent真实页面、lazy业务预览、权限API或部署，产品旧负例仍须其自身验收。
+
+
+本页集中记录当前可复核的执行结果与验收边界；接口和设计合同分别由各能力文档与 [DESIGN.md](DESIGN.md) 维护。测试存在、收集成功、源码检查和实际浏览器通过分别陈述，不把历史全绿或局部复验当作当前完整验收。
+
+以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
 ## 集合刷新布局连续性（4.2.3，2026-10-17）
 

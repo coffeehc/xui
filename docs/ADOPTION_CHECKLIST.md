@@ -546,9 +546,10 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | UPLOAD-007 | 文件行操作消失或删除 | Cancel/Retry/完成/Remove 均保留合理焦点；外部焦点不被后台结果抢走 | activeElement 与键盘录制 | [Upload 槽位](COMPONENTS.md#文件上传-upload) |
 | UPLOAD-008 | 所有呈现模式 | 字体继承，正文/metadata/status/actions 各归所属 slot；浅深system、窄屏、长中文、两种200%均可读可达 | 正式消费者截图、computed typography、真实浏览器 zoom 几何 | [公共合同](PUBLIC_API.md#文件上传) |
 
-## 可选内容轨道
+## 可选内容轨道与完整取消层级
 
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
 | TABS-LINE-001 | 采用扁平内容Tabs | List显式variant=line，无重复轨道/内选中框；状态色和独立focus由库负责，Panel与宿主范围/游标不重挂 | 三主题、长中文、键盘、节点/滚动/草稿/游标对比 | [Tabs](COMPONENTS.md#tabs) |
+| OVERLAY-ORDER-001 | Dialog关闭回到Sheet内带Tooltip/ContextMenu按钮 | 记录每层open与escape-key；只关闭顶层；不要仅以Sheet仍可见判父监听故障；重复名称省略Tooltip，必要补充说明保留独立层级 | 两层/三层、回焦点、条件卸载和重复循环 | [Escape顺序](COMPONENTS.md#嵌套弹层与-tooltip-的-escape-顺序) |
 | TABS-OVERFLOW-001 | Tabs长名称与尺寸 | 单项使用tabs-item-max-inline-size；名称进自动文本/Label槽，Icon/计数独立；精细鼠标hover及键盘焦点揭示全文，离开复位，不增加停靠点 | 三主题、短/长中文、RTL、窄屏、两种200%、减少动效/触屏/disabled完整静态阅读；节点/焦点与选中归属不变 | [Tabs](COMPONENTS.md#tabs) |
