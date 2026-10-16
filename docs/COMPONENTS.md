@@ -909,6 +909,22 @@ NavigationMenu 提供 children/resolveIcon/renderLabel/renderLink、单 button �
 
 Sheet复用Dialog lifecycle，标题/描述/关闭部件复用同一组件；正文滚动、footer动作保持可见，逻辑side随RTL。AlertDialog复用peer确认角色和取消/焦点，不因关闭而执行业务。嵌套时只有最上层处理取消和Tab，确认逻辑由宿主显式执行；有草稿才打开确认，空草稿直接关闭。trigger若不存在或已移除须给可见finalFocus，不能把父关闭按钮同时作为无条件子确认trigger。
 
+### 导航抽屉与未保存确认的最终焦点
+
+`AppShell`（`/layout`）和 `MenuLayout`（`/menu-layout`）公开 `navigationTriggerRef?: React.Ref<HTMLButtonElement>`，引用库拥有的唯一导航开关。支持对象 ref、callback ref 及 React 19 cleanup；响应式移动保持同一按钮，卸载清空引用。它不替换按钮，也不新增路由或草稿 owner。
+
+移动抽屉内链接触发宿主确认时，抽屉会关闭而原链接隐藏；抽屉不得抢走新 AlertDialog 的焦点。宿主给确认框 `finalFocus` 指向仍可见的开关；放弃并导航则可改为新页面的真实操作。不要返回隐藏链接、查询私有 DOM 或加 document 级焦点兜底。未传 ref 的已有默认行为保持，升级本身不会自动给宿主确认框接线。
+
+```tsx
+const navigationTrigger = React.useRef<HTMLButtonElement>(null);
+<MenuLayout navigationTriggerRef={navigationTrigger} {...navigationProps} />;
+// 保留草稿：回到当前页面的公共导航开关。
+<AlertDialog.Content finalFocus={navigationTrigger}>…</AlertDialog.Content>;
+// 多种结果使用已有 finalFocus={() => keepDraft ? navigationTrigger.current : destination.current}。
+```
+
+完整受控 guard、取消/放弃示例见 [continuity-react](../examples/continuity-react/app.tsx)。业务继续决定是否离开、何时导航及新页面焦点。默认抽屉 Escape/关闭回焦与显式 finalFocus 合同不变。
+
 ContextMenu支持鼠标右键、Shift+F10/ContextMenu键、方向键、disabled、检查项保留、外部关闭和Esc回焦点。普通点击Trigger不执行业务。没有声明跨移动OS长按一致；必要操作还须由可点击按钮/菜单访问。React 键盘与 popup 定位由已安装 Base UI peer 提供。
 
 Table与DataTable全表默认仅行分割线，所有普通/左固定/右固定/双侧固定的th/td都不画列线；sticky不附带边框、阴影或伪元素分隔。沿用现有sticky/stickyOffset/stickyHeader接口，无需新prop或消费方CSS；当前没有行列网格模式。整体frame、表头/行底线与footer分隔保持各自唯一归属，最后数据行不与footer叠边。

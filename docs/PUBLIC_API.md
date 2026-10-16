@@ -730,6 +730,8 @@ React `/menu-layout` 的 `NavigationMenuProps`/`MenuLayoutProps` 继承 runtime 
 
 1.2.0的名称槽默认伸展，既有renderLabel内的尾随非交互状态可使用完整剩余宽度；名称独立滚动仍通过NavigationMenu.Label声明，renderAction继续只接辅助button。React `/feedback` 的既有Spinner入口及span属性保持，正式CSS改为主题色开放弧，reduced-motion静止。1.3.0将top侧栏开关放入全局品牌行尾，不改变显式bottom选择。没有新增runtime DOM入口、业务状态或请求owner。接线见[富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单)与[表单与页面编排](COMPONENTS.md#表单与页面编排)。
 
+AppShell/MenuLayout 的 `navigationTriggerRef?: React.Ref<HTMLButtonElement>` 公开唯一导航按钮，供宿主确认框通过已有 `finalFocus` 恢复可见焦点；它不接管未保存确认或导航，见[抽屉确认回焦](COMPONENTS.md#导航抽屉与未保存确认的最终焦点)。
+
 AppShell/MenuLayout 的唯一侧栏开关由 React 公共组件定位：`sidebarTogglePlacement="top"`（默认）时桌面在全局品牌单元行尾，`bottom` 时在侧栏菜单/页尾后；窄屏两种设置都将同一个公共控件用于现有导航抽屉。宿主继续用受控 props/callback 管理状态，不移动私有 DOM。已设置bottom的消费方须显式改prop回top，单独升级包不会覆盖它。`SidebarTogglePlacement` 与 `SidebarFooterRow` 从 React `/layout`、`/menu-layout` 及根入口导出。详见 [导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 
 Calendar 的 `CalendarProps` 公开受控 `month`/`onMonthChange`；runtime `/calendar` 提供 `CalendarOptions` 与共享纯模型。月份状态与所选日期分开，外部更新不触发用户回调。严格年月、值、焦点合同见[Calendar](COMPONENTS.md#选择与复合控件)，正式 React 消费者见[示例](../examples/calendar-month-react/app.tsx)。

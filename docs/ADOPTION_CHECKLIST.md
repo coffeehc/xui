@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.2）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.3）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -387,6 +387,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 |---|---|---|---|---|
 | LIFE-001 | 页面第一次加载资源 | shell/header/标题稳定存在；loading 位于数据所属区域 | DOM 时间线与首个请求 waterfall | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-002 | 已有数据同范围刷新 | 旧确认数据持续可见，局部显示 refreshing，不卸载整页/组件 | 节点 identity、快照、录屏与 Network | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-FOCUS-001 | 移动导航关闭并打开未保存确认 | 确认期间焦点留在AlertDialog；保留草稿后通过navigationTriggerRef/finalFocus回到可见开关，放弃则回宿主目的操作；不访问私有DOM | 指针/Enter/Space/Escape、焦点及ref生命周期 | [抽屉确认回焦](COMPONENTS.md#导航抽屉与未保存确认的最终焦点) |
 | LIFE-003 | 查询范围发生变化 | 旧数据清除或明确标为旧范围；不得把旧事实冒充新查询结果 | query key、范围标签和 rows 数据来源 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-004 | 刷新请求失败 | 保留上一份已确认数据、筛选草稿和局部错误/恢复入口 | 断网/HTTP错误注入及前后快照 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-005 | 同一筛选连续刷新两次 | 新请求 generation 获胜，迟到旧响应不能覆盖新结果 | 延迟响应逆序测试与最终数据断言 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |

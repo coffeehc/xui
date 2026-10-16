@@ -4,6 +4,16 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 导航抽屉确认回焦（4.2.3，2026-10-17）
+
+仅修改xui，三包/DESIGN版本4.2.3，末位递增；不提供旧版兼容分发。正式sourceGeneration为`e7926e03fee210b029b2dea95f4d8569c8f1716490f3a051f61b2e3c174d1c60`，独立consumer `.consumers/run-5shx7O/react`使用tarball内ESM/CSS/types，React/ReactDOM19.2.8及Base UI1.7.0单实例，无源码alias。
+
+旧4.2.2 / `7d037443b0744226f8364ea4a660692fed2e6e15`正式consumer `.consumers/run-5Ga5AX/react`在390px复现取消未保存确认后焦点为BODY。现AppShell/MenuLayout公开`navigationTriggerRef`，宿主以AlertDialog已有`finalFocus`明确恢复到稳定开关；放弃可指向目的页面操作，确认期间不抢焦点。对象/callback ref及React19 cleanup、跨断点同一按钮与卸载清理均验证。省略新prop的行为兼容；已有宿主必须按[公开合同](COMPONENTS.md#导航抽屉与未保存确认的最终焦点)接线，不能宣称升级自动修复所有宿主确认框。未修改路由、认证、HTTP或业务guard。
+
+正式Chromium焦点新用例14/14、Firefox/WebKit各11/11通过，0失败/跳过/flaky。覆盖light/dark/system、1280/390/320、长中文、320px的200%根字号、production/开发StrictMode、Enter/Space、取消/放弃、普通Escape、草稿保留与公开ref生命周期。三主题真实Chrome200%页面缩放通过DPR加倍、CSS viewport减半、根字号不变及CSS zoom/pinch=1确认；聚焦控件和轮廓全部在visualViewport内，使用原生截图避免CSS截图裁切。已查看深色390取消回焦和system真实200%最终截图。示例`/continuity-react/`及`/continuity-react-strict/`，公共类型正/负例随正式consumer检查。
+
+证据在`.artifacts/continuity-validation/`：baseline.json/managed-baseline-final.log、browser-final.json/log、cross-final.json/log、images与focus附件；正式产物随最终源码SHA归档。复现：预览4173，`pnpm exec playwright test --config=.artifacts/continuity-validation/playwright.config.mjs continuity.spec.mjs`；跨引擎改用cross.config.mjs并排除`genuine Chrome`。未执行实体设备/读屏器或消费项目真实页面，不把本库样板当产品已升级验收。
+
 ## 业务界面决策标准融合（4.2.2，2026-10-17）
 
 用户在独立规范会话审阅Stitch三轮讨论稿后，明确要求由本主会话融合。原草案固定在2460b81；本轮以其全文及当前公开API/slot为依据，将八类决策并入唯一[DESIGN](DESIGN.md#业务界面信息与交互决策)：信息归属与披露、集合/详情形态、导航/Tab/筛选、任务容器、动作与确认、反馈、输入与离开、窄屏连续性。四类场景替换既有粗略组合表，IA-001～012进入既有接入清单，ADOPTION明确“任务→信息/交互→真实组件/slot→状态证据”的顺序。独立草案退出活动文档树，项目无需同时采用两份规范，Git保留来源。
