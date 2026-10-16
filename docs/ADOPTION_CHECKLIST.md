@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.0.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.0.1）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -251,7 +251,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CTRL-004 | 页面使用 Checkbox 或 Switch | checked 来自真实布尔事实，Space 操作一次；readOnly 不发值变化，disabled 不进入操作 | 受控前后值、change 计数及浏览器键盘记录 | [COMPONENTS 选择与复合控件](COMPONENTS.md#成组选项) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-005 | 页面使用 ToggleGroup | 当前值受控更新，方向键只移动焦点、Enter/Space 选择；`allowEmpty` 与多选只按公开配置执行 | value、activeElement 与回调轨迹 | [COMPONENTS ToggleGroup](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-006 | 页面使用 Tabs | Tab 与 Panel 关联准确；方向键、Home/End、disabled 跳过及手动/自动激活遵循实际 peer 配置 | ARIA 关系、activeElement 与按键轨迹 | [COMPONENTS Tabs](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
-| CTRL-007 | 页面使用 Disclosure | expanded/controls 对应真实内容；Enter/Space 切换后焦点仍在触发器，收起内容不再可 Tab | aria-expanded/controls、Tab 序列和 DOM 状态 | [COMPONENTS Disclosure](COMPONENTS.md#groupedcombobox-与-disclosure) |
+| CTRL-007 | 页面使用 Disclosure | expanded/controls 对应真实内容；Enter/Space 默认保留触发器焦点，收起内容不再可 Tab；受控 open 在当前提交反映，宿主 effect 可直接聚焦展开内容 | aria-expanded/controls、Tab 序列和 DOM 状态 | [COMPONENTS Disclosure](COMPONENTS.md#groupedcombobox-与-disclosure) |
 | CTRL-008 | 页面使用 Accordion | 单/多展开模式按公开配置；disabled 项不可切换，内容 DOM 在更新时保留受控业务节点 | value、disabled 事件与节点 identity | [COMPONENTS Accordion](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-009 | 页面使用 Calendar | 可见月份与已选日期是不同状态；翻月不改日期值/不触发日期回调，禁用日期可读但不能选 | React month 与 value 快照、键盘轨迹及对应 runtime 纯模型结果 | [COMPONENTS Calendar](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 日历月份控制](PUBLIC_API.md#日历月份控制) |
 | CTRL-010 | 页面使用 DateTimePicker | 值保持公开本地日期时间字符串合同和分钟精度；不得隐式解释为 UTC 或按浏览器时区转换 | 输入/回调原始值、跨时区浏览器比较 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [PUBLIC_API 日期时间选择](PUBLIC_API.md#日期时间选择) |

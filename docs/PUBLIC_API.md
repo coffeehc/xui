@@ -172,6 +172,8 @@ CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` �
 | 登录页/auth | 同一个 HTTP/auth/theme owner；居中单列窄框、可选 fullscreen 和 brandVisual。Bearer v2 login/refresh/logout/session；access 仅内存，protectedPaths 明确受保护端点；15秒默认预算、no-store、无写入重放。登录直接 POST，提交禁用显示正在登录；超时后普通会话核验一次，未确认则显示错误并允许手动重试。无持久门禁、恢复预请求或恢复弹窗。保留密码清理、安全回跳和宿主导航扩展，详见 [登录与会话](PUBLIC_API.md#认证会话) |
 | 独立结构化错误 | 初始 groups、page size=50（1–200），host 显式 refresh；无隐式 endpoint/scope/排序/总记录数。v1/list/cursor、纳秒时间、uint64 字符串、三态、累计/命中/首次代表；详情只按记录 ID 读取，缓存仅当前链已访问摘要，刷新新快照 |
 
+受控交互在当前 render 使用已确认 props，而不是等 layout effect 更新内部 model 后才反映 DOM。适用于 overlay.open、value 与 selection.value/open/inputValue；未传受控字段仍由默认 Controller 管理，完整 Controller 注入时只采用该 owner 快照。外部确认不触发 onChange，取消/拒绝不发布未确认值。
+
 ## 启动、配置与应用服务
 
 `@coffeehc/xui-runtime/config.json` 是随 runtime 包提供的默认 JSON；runtime 配置模块从同一资产导入默认值，不在启动时发配置请求。产品以 `bootstrap(overrides, environment)` 同步完成配置解析与浏览器应用服务装配，再挂载 React。`bootstrap` 不登录、不恢复会话、不发 HTTP 请求。浏览器初始化要求明确可用的 `Window`；SSR/隔离测试使用每请求独立的 `new XuiServices(options, environment)`，不得跨 SSR 请求复用模块级认证服务。

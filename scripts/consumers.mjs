@@ -74,9 +74,10 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await mkdir(`${cwd}/shared`,{recursive:true});
     await copyFile('examples/shared/bootstrap-browser.ts',`${cwd}/shared/bootstrap-browser.ts`);
     await copyFile('tests/fixtures/controller-modes.tsx',`${cwd}/controller-modes.tsx`);
+    await copyFile('tests/fixtures/controlled-render.tsx',`${cwd}/controlled-render.tsx`);
     await copyFile('tests/fixtures/toast-types.tsx',`${cwd}/toast-types.tsx`);
     await copyFile('tests/fixtures/upload-types.tsx',`${cwd}/upload-types.tsx`);
-    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','toast-types.tsx','upload-types.tsx'],{cwd,stdio:'inherit'});
+    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','controlled-render.tsx','toast-types.tsx','upload-types.tsx'],{cwd,stdio:'inherit'});
     await copyFile('examples/shared/layout.css', `${cwd}/layout.css`);
     await writeFile(`${cwd}/product.css`, extract(await readFile('docs/DESIGN.md', 'utf8'), 'design-product-css'));
     const require = createRequire(`${cwd}/package.json`);

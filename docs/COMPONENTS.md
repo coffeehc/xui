@@ -35,6 +35,8 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 `init.js` 只做首绘前主题/缩放属性恢复；应用 Controller由bootstrap/getThemeService提供。config中的theme mode/scale是默认，sessionStorage有效偏好优先。`ServicesProvider` 可把已创建的menu/i18n owner传给React树，`RouteProvider` 可传同一个RouteService；它们不创建业务API、翻译词典或第二份服务。
 
 
+受控 React props 是本次 render 已确认的事实：Disclosure 的 open、Tabs/Accordion 的 value、Select/Combobox 的 value/open/inputValue 在当前提交反映，不等待外部 store 的 layout 同步后二次渲染。宿主的 layout/passive effect 因此可读取确认后的 Disclosure 可见性、Tabs 当前项、Combobox 输入和 Select 原生 form value；Disclosure 展开后可直接把焦点交给内容，无需定时器。Select.Value 的派生标签、Portal 挂载和动画仍遵循 peer 生命周期，不承诺父 effect 内所有派生文本均已完成。Controller 的提交后同步不产生用户回调；注入完整 Controller 时仍只订阅该实例，不应用另一份 props 状态。
+
 ## 基础组件与通用状态
 
 ### React 公共组件

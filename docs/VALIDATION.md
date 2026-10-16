@@ -4,6 +4,31 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 受控交互的当前提交一致性（4.0.1，兼容回补3.0.1，2026-10-16）
+
+xLead 在固定 `b9753a4f43967c76f566eefdab38042d0423da18` / 3.0.0 上反馈：父组件确认 Disclosure `open=true` 后，其 effect 仍读取到隐藏内容，立即 focus 失败。独立正式3.0.0消费者复现了该问题；同源的 Tabs / Combobox 受控值也在父 effect 中滞后一轮。证据为 `.artifacts/controlled-render-validation/baseline-3.0.0.{json,log}` 与 `baseline-values-3.0.0.{json,log}`。本轮没有修改或验收 xLead。
+
+修复共享 `useOverlay/useValue/useSelection`：当前 render 直接投影已经确认的受控 props；layout 阶段继续同步所属 Controller，不在 render 中写外部 store。默认、非受控、取消/拒绝、借用 Controller 与清理责任保持原合同；外部确认不新增用户回调。没有改认证、服务、CSS、公共 exports 或事件类型。父 effect 可以立即读取 Disclosure 可见性并聚焦其中内容。Select 原生 form value 同步提交；其 `Select.Value` 派生标签、Portal 和动画仍遵循 peer 生命周期，未承诺父 effect 中全部派生文本同步完成。
+
+主线三包与 DESIGN 为 **4.0.1**，source generation `5c42f0165894fe990ba21affb9041166b795d541e613a1178fe3862a87c3a113`；为固定3.0.0消费者另提供兼容 **3.0.1**，generation `b2499e881c01b68125cecbf8049b88d02acb91ee2a1585c83792057e59139553`。3.0.1不包含4.0的服务/Upload迁移；无须为本修复升级主版本。两条线均使用独立正式 tarball ESM/CSS/types 消费者，React/ReactDOM 19.2.8、Base UI 1.7.0，测试构建逐输入排除源码 alias。
+
+| 检查 | 主线4.0.1 | 兼容3.0.1 |
+|---|---|---|
+| build / typecheck / Token / 独立正式消费者 | 通过；104公开入口 | 通过；102公开入口 |
+| 完整 unit | 505/505 | 491/491 |
+| Chromium 新增专项 | 最终11/11 | 11项包含于37/37 |
+| Controller / 分组搜索 / foundation 定向回归 | 26/26，来自首轮未失败范围 | 与新增专项同次37/37 |
+| Firefox / WebKit 新增专项 | 各11/11，合计22/22 | 各11/11，合计22/22 |
+| 正式包静态 SSR | controlled false/true；借用快照不变且仍可用，零回调 | 同样通过 |
+
+主线证据在 `.artifacts/controlled-render-validation/`：`build-main.log`、`{typecheck,tokens,unit}-main.log`、`consumer-main.log`、`browser-main-first.json`、`browser-main-final.json/log`、`cross-main.json/log`、`ssr-main.log`。3.x对应独立维护工作树内同名验证目录的 `build-final.log`、`typecheck.log`、`tokens.log`、`unit.log`、`consumer.log`、`browser.json/log`、`cross.json/log`、`ssr.log`，随固定产物归档。
+
+新增浏览器覆盖 production/StrictMode、受控 false↔true、父 layout/passive effect 的即时内容与焦点、从内容收起回焦及外部焦点不被夺取、Tabs / Select原生值 / Combobox输入、拒绝/取消、非受控Space，以及借用 Controller 卸载后继续使用。light/dark/system ×1280/320px和200%根字号均验证焦点、ARIA与横向边界；已查看浅色宽屏和深色窄屏代表截图。
+
+主线首轮 **35/37** 保留在日志：两项失败来自测试把 Base UI `Select.Value` 派生标签误当作父 effect 同步承诺。根据公开生命周期，改为验证同次提交的原生 form value，并继续验证标签最终更新；Disclosure 即时可见/聚焦断言未放宽。修正后新专项11/11及跨引擎22/22均通过；兼容线使用最终测试一次37/37。
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`pnpm test:unit`、`pnpm test:consumer`；配置和完整浏览器命令见上述验证目录。浏览器范围为 `controlled-render.spec.mjs controller-modes.spec.mjs grouped-search.spec.mjs foundation-contract.spec.mjs`，跨引擎只跑新增文件。未执行无关浏览器全集、watch/cold-start、SSR hydration、真实读屏器、真实浏览器200%页面缩放、实体设备及消费产品/后端/部署验收；本补丁不改尺寸或布局，未复用旧版本真缩放结果冒充本轮实测。
+
 ## 按需 Service 架构与文件上传（4.0.0，2026-10-16）
 
 本轮仅修改 xui，从 `b9753a4f43967c76f566eefdab38042d0423da18` / 3.0.0 继续。三包/DESIGN 为 **4.0.0**，404 Token、104 公开入口、374 项逐项检查。source generation 为 `3ca598047b7ed7a2d786274741dfe55423f8ceae2b77ecbe1aed3c87b9cda568`；正式独立消费者 `.consumers/run-WY19g0/react` 安装 ESM/CSS/types 与相同 build.json，未使用 src alias/私有 CSS，React/ReactDOM 19.2.8、Base UI 1.7.0 单实例。

@@ -47,6 +47,10 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 ## 后续公开维护项（2026-10-16）
 
+### XUI-REQ-20261016-08：受控 Disclosure 展开后的即时内容聚焦（4.0.1 / 3.0.1已解决，待宿主验收）
+
+来源：xLead固定 `b9753a4f43967c76f566eefdab38042d0423da18` / 3.0.0，公开 `Disclosure open/onOpenChange` 在父 effect 内仍隐藏，导致来源记录 `article tabIndex=-1` 立即focus失败。独立正式3.0.0消费者复现；主线4.0.1及兼容3.0.1将共享受控overlay/value/selection在当前render投影，提交后同步内部Controller，不引入定时器、DOM补丁或用户回调循环。默认/注入、取消、SSR和实际浏览器结果见[本轮验证](VALIDATION.md#受控交互的当前提交一致性401兼容回补3012026-10-16)。Select派生标签仍遵循peer生命周期；不能把此修复推广为所有Portal或动画都在父effect前完成。3.0.1不包含4.0迁移，不要求宿主跨主版本升级。本轮只修改xui，宿主安装、接线和实际来源跳转仍待其验证。
+
 ### XUI-REQ-20261016-07：侧栏与正文的逻辑方向分隔（1.3.1，验收记录见下）
 
 来源：xAgent维护来件，宿主部署提交`b1f45be625e8b023d95f99cce9130b9009994f54`、固定xui `1a6772e4fcbf7be180c813e560d9d32538dabe20`/1.3.0，使用公共AppShell；其他区域使用MenuLayout。截图仅按来件登记，本轮没有访问或修改宿主页面。
