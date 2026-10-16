@@ -45,3 +45,5 @@ export * from './i18n.js';
 export * from './menu-service.js';
 export * from './util-service.js';
 export * from './toast.js';
+
+export * from './upload.js';

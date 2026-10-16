@@ -1,3 +1,4 @@
+import {getThemeService} from './theme.js';
 import {resolveConfig,type XuiConfigOverrides,type XuiConfig,type ConfigReadonly} from './config.js';
 import {installXuiServices,disposeXuiServices,type XuiServices,type XuiServicesOptions} from './services-core.js';
 import {restoreInterfaceScale} from './interface-scale.js';
@@ -26,12 +27,12 @@ export function bootstrap(overrides:XuiConfigOverrides={},environment:BootstrapE
   };
   const services=installXuiServices(options,win,config);
   const existing=applications.get(services);if(existing)return existing;
-  // Materialize configured infrastructure before rendering; no API operation is executed.
+  // Only first-paint preferences are required here. Feature services load with their own module.
   try{
-    services.getHttpService();if(config.auth.enabled)services.getAuthService();
-    services.getRouteService();services.getI18nService();services.getMenuService();services.getThemeService(win);
+    getThemeService(win);
+    win.document.documentElement.lang=config.i18n.defaultLocale;
     restoreInterfaceScale(win,config.theme.scale);
     if(config.app.title)win.document.title=config.app.title;
-    const application=Object.freeze({config:services.getConfigService().getConfig(),services});applications.set(services,application);return application;
+    const application=Object.freeze({config,services});applications.set(services,application);return application;
   }catch(error){disposeXuiServices(win);throw error;}
 }

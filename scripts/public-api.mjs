@@ -23,7 +23,9 @@ export async function collectPublicAPI({symbols=true}={}){
       const module=checker.getSymbolAtLocation(source);if(!module)throw Error(`Invalid module declarations: ${entry.specifier}`);
       const exports=checker.getExportsOfModule(module);
       entry.symbols=exports.map(symbol=>symbol.getName()).sort();
-      entry.values=exports.filter(symbol=>((symbol.flags&ts.SymbolFlags.Alias)?checker.getAliasedSymbol(symbol):symbol).flags&ts.SymbolFlags.Value).map(symbol=>symbol.getName()).sort();
+      // An explicitly type-only re-export stays type-only even when its target
+      // merges a type and a value (e.g. the RouteService singleton contract).
+      entry.values=exports.filter(symbol=>!symbol.declarations?.every(declaration=>ts.isExportSpecifier(declaration)&&(declaration.isTypeOnly||declaration.parent.parent.isTypeOnly))&&(((symbol.flags&ts.SymbolFlags.Alias)?checker.getAliasedSymbol(symbol):symbol).flags&ts.SymbolFlags.Value)).map(symbol=>symbol.getName()).sort();
     }
   }
   return entries;

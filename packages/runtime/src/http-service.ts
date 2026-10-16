@@ -87,7 +87,7 @@ function retryAfter(value:string|null):number|undefined{
 
 /** One client per host transport/auth boundary. No cache, palette, credentials store or router. */
 /** Internal factory; public consumers obtain the application service from services.ts. */
-export function buildHttpClient(options:HttpClientOptions):HttpClient{
+export function buildHttpClient(options:HttpClientOptions,beforeRequest?:()=>void):HttpClient{
   let base:URL;try{base=new URL(options.baseURL);}catch{throw new TypeError('An absolute HTTP baseURL is required');}
   let native:URL|undefined;
   if(options.nativeOrigin!==undefined){
@@ -118,6 +118,7 @@ export function buildHttpClient(options:HttpClientOptions):HttpClient{
       if(retry.delayMs!==undefined)validMs(retry.delayMs,'delayMs');if(retry.maxDelayMs!==undefined)validMs(retry.maxDelayMs,'maxDelayMs');
       if(retry.statuses?.some(status=>!Number.isInteger(status)||status<400||status>599))throw new TypeError('Invalid retry statuses');}
     let body=init.body;if('json' in init){try{body=JSON.stringify(init.json);}catch{throw new TypeError('JSON body must be serializable');}if(body===undefined)throw new TypeError('JSON body must be serializable');}
+    beforeRequest?.();
     const binding=inspectHttp(client)?.binding,managed=binding?.mode(url.pathname,method,authOperation(init));
     if(managed&&(init.credentials!==undefined&&init.credentials!==(managed==='cookie'?'same-origin':'omit')||init.redirect!==undefined&&init.redirect!=='error'||retry))throw new TypeError('Managed authentication forbids credential overrides, redirects and generic retries');
     const controller=new AbortController();let epoch=authEpoch,lease:AccessLease|undefined;let stopKind:'cancel'|'timeout'='cancel',timer:ReturnType<typeof setTimeout>|undefined;
@@ -140,6 +141,9 @@ export function buildHttpClient(options:HttpClientOptions):HttpClient{
           const headers=new Headers(options.headers);const provided=await options.getHeaders?.();check();if(provided)new Headers(provided).forEach((value,key)=>headers.set(key,value));if(init.headers)new Headers(init.headers).forEach((value,key)=>headers.set(key,value));
           if(managed){if(headers.has('authorization')||headers.has('cookie')||headers.has('x-api-key'))throw new HttpError('parse',{attempts:0,endpointId:init.endpointId});if(managed==='bearer'){lease=await binding!.acquire(controller.signal,authOperation(init));check();epoch=authEpoch;headers.set('Authorization',`Bearer ${lease.value}`);}}
           if(!headers.has('accept')&&(['ajax','json'].includes(mode)||mode==='blob'&&init.detectAjaxErrors))headers.set('accept','application/json');if('json' in init&&!headers.has('content-type'))headers.set('content-type','application/json');
+          // Multipart boundaries must describe the platform's actual encoded body,
+          // including when an application supplied a default JSON Content-Type.
+          if(typeof FormData!=='undefined'&&body instanceof FormData)headers.delete('content-type');
           const response=await send(url.href,{method,headers,body,signal:controller.signal,credentials:managed?(managed==='cookie'?'same-origin':'omit'):init.credentials??options.credentials??'same-origin',cache:init.cache,redirect:native||managed?'error':init.redirect});check();
           if((native||managed)&&response.url){let final:URL;try{final=new URL(response.url);}catch{throw new HttpError('network',{...metadata,status:response.status});}if(!sameOrigin(final)||final.username||final.password)throw new HttpError('network',{...metadata,status:response.status});}
           metadata={...metadata,status:response.status,headerRequestId:response.headers.get('X-Request-ID')??undefined,retryAfterMs:retryAfter(response.headers.get('Retry-After'))};

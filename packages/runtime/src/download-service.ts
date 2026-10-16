@@ -1,5 +1,5 @@
 import type {HttpClient} from './http.js';
-import {requestDownload,saveDownload,type DownloadOptions,type DownloadResult} from './download.js';
+import {requestDownload,saveDownload,type DownloadOptions,type DownloadResult} from './download-core.js';
 export interface DownloadService {
   request:(path:string,options?:DownloadOptions)=>Promise<Readonly<DownloadResult>>;
   /** Saving is a separate explicit user action, never triggered automatically by a completed request. */

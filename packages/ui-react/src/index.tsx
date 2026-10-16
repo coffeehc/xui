@@ -44,3 +44,5 @@ export * from './card-group.js';
 export * from './interaction.js';
 export * from './services.js';
 export * from './route.js';
+
+export * from './upload.js';

@@ -34,9 +34,10 @@ test('real watch rebuilds CSS, tokens, TSX, declarations and init; errors preser
   const priorDesign=current.sourceSha256;current=await status(state=>state.state==='success'&&state.sourceSha256!==priorDesign);
   for(const name of ['theme','runtime','ui-react'])assert.equal(JSON.parse(await readFile(resolve(fixture,`packages/${name}/dist/build.json`))).sourceSha256,current.sourceSha256);
   assert.match(await readFile(resolve(fixture,'packages/theme/dist/tokens.css'),'utf8'),/watch-token-proof/);
-  await edit('packages/theme/src/button.css',text=>text+'\n/* watch-css-proof */\n');
+  await edit('packages/theme/src/button.css',text=>text.replace(/\n\}\s*$/, '\n  /* watch-css-proof */\n}\n'));
   assert.match(await readFile(resolve(fixture,'packages/theme/dist/button.css'),'utf8'),/watch-css-proof/);
-  await edit('packages/runtime/src/theme.ts',text=>text.replace('ui.theme.mode','watch.theme.mode')+'\nexport const watchTypeProof: string = "changed";\n');
+  await edit('packages/runtime/src/theme-service.ts',text=>text.replace('ui.theme.mode','watch.theme.mode'));
+  await edit('packages/runtime/src/theme.ts',text=>text+'\nexport const watchTypeProof: string = "changed";\n');
   assert.match(await readFile(resolve(fixture,'packages/runtime/dist/theme.d.ts'),'utf8'),/watchTypeProof/);
   assert.match(await readFile(resolve(fixture,'packages/runtime/dist/init.js'),'utf8'),/watch.theme.mode/);
   await edit('packages/ui-react/src/button.tsx',text=>text+'\nexport function WatchControlProof(){return <span>watch-control</span>;}\n');

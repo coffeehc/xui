@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-react",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "files": [
@@ -183,6 +183,10 @@
     "./route": {
       "types": "./dist/route.d.ts",
       "import": "./dist/route.js"
+    },
+    "./upload": {
+      "types": "./dist/upload.d.ts",
+      "import": "./dist/upload.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -190,7 +194,7 @@
     "react": ">=19.2.8 <20",
     "react-dom": ">=19.2.8 <20",
     "@base-ui/react": ">=1.7.0 <2",
-    "@coffeehc/xui-runtime": ">=3.0.0 <4"
+    "@coffeehc/xui-runtime": ">=4.0.0 <5"
   },
   "devDependencies": {
     "@coffeehc/xui-runtime": "workspace:*"

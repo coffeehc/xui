@@ -164,7 +164,7 @@ export function buildAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncodi
     if(!access||access.expiry<=Date.now())throw new HttpError('http',{attempts:0,status:401,code:authErrorCodes.required});
     return {value:access.value,generation:access.generation};
   };
-  bindHttpAuth(http,{
+  const unbind=bindHttpAuth(http,{
     mode(path,method,operation){
       let decoded:string;try{decoded=decodeURIComponent(path);}catch{throw new TypeError('Invalid authentication path');}
       const reserved=decoded.toLowerCase()==='/api/v1/auth'||decoded.toLowerCase().startsWith('/api/v1/auth/');
@@ -265,7 +265,7 @@ export function buildAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncodi
     async logout(options={}){await mutate('logout',{},options);},
     cancel(){if(dead)return;bootstrapped=false;invalidate('unknown',errorFor());},
     expire(){if(dead)return;bootstrapped=true;invalidate('anonymous');},
-    destroy(){if(dead)return;dead=true;invalidate('unknown');coordination.close();listeners.clear();},
+    destroy(){if(dead)return;dead=true;invalidate('unknown');unbind();coordination.close();listeners.clear();},
   };
   return client;
 }

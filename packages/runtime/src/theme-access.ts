@@ -1,3 +1,4 @@
+import {registerService} from './service-resolvers.js';
 import {buildThemeController,type ThemeController,type ThemeOptions} from './theme-service.js';
 import {browserState,optionsFor,sameValue,type RegistryState} from './service-state.js';
 function validThemeMode(value:unknown):value is ThemeOptions['defaultMode']{return value==='light'||value==='dark'||value==='system';}
@@ -21,3 +22,5 @@ export function resolveThemeService(state:RegistryState,win:Window|undefined=sta
     return theme;
   }
 export function getThemeService(win?:Window):ThemeController{return resolveThemeService(browserState(win),win);}
+
+registerService('theme',resolveThemeService);

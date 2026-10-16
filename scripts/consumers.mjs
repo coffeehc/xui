@@ -52,7 +52,10 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // 3.0 Toast adds its public content/actions slots and a viewport-height token.
 // The formal install measured 18,604 vs the prior 18,560 cap; bound this
 // feature to another 128 bytes. JS/Button/narrow service caps remain unchanged.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 18688, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
+// 4.0 Upload composes existing tokens into picker/file/progress/actions regions.
+// The same minified CSS probe measures 19,295 gzip bytes (+691 vs 3.0's 18,604).
+// Bound this feature to +768 bytes; retain the JS/Button/narrow-service caps.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 19456, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // A fresh directory prevents npm reusing an earlier tarball with the same version.
 const runDirectory = await mkdtemp(resolve('.consumers/run-'));
@@ -72,7 +75,8 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile('examples/shared/bootstrap-browser.ts',`${cwd}/shared/bootstrap-browser.ts`);
     await copyFile('tests/fixtures/controller-modes.tsx',`${cwd}/controller-modes.tsx`);
     await copyFile('tests/fixtures/toast-types.tsx',`${cwd}/toast-types.tsx`);
-    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','toast-types.tsx'],{cwd,stdio:'inherit'});
+    await copyFile('tests/fixtures/upload-types.tsx',`${cwd}/upload-types.tsx`);
+    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','toast-types.tsx','upload-types.tsx'],{cwd,stdio:'inherit'});
     await copyFile('examples/shared/layout.css', `${cwd}/layout.css`);
     await writeFile(`${cwd}/product.css`, extract(await readFile('docs/DESIGN.md', 'utf8'), 'design-product-css'));
     const require = createRequire(`${cwd}/package.json`);
@@ -84,6 +88,12 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
         const bytes=service.outputFiles[0].contents,gzip=gzipSync(bytes).length;
         assert(gzip<=performance.budgets.narrowServiceGzip,`${entry} gzip budget: ${gzip}/${performance.budgets.narrowServiceGzip}`);
         performance.services.push({entry,minified:bytes.length,gzip,contributing:contributing.map(file=>file.replace(cwd+'/',''))});
+    }
+    for(const [entry,symbol,allowed] of [['bootstrap','bootstrap',['theme-service']],['http','HTTPService',['http-service']],['auth','AuthService',['http-service','auth-service']],['download','DownloadService',['http-service','download-service']],['upload','UploadService',['http-service','upload-service']]]){
+        const result=await build({stdin:{contents:`import {${symbol}} from '@coffeehc/xui-runtime/${entry}';window.xuiService=${symbol};`,resolveDir:cwd,sourcefile:'progressive-service.js'},bundle:true,format:'esm',minify:true,write:false,metafile:true,platform:'browser',target:'es2022'});
+        const contributing=Object.values(result.metafile.outputs).flatMap(output=>Object.entries(output.inputs).filter(([,data])=>data.bytesInOutput>0).map(([path])=>path));
+        for(const implementation of ['http-service','auth-service','theme-service','route-core','i18n-core','menu-service-core','download-service','upload-service'])assert.equal(contributing.some(file=>file.endsWith('/'+implementation+'.js')),allowed.includes(implementation),`${entry} dependency: ${implementation}`);
+        const bytes=result.outputFiles[0].contents;performance.services.push({entry,minified:bytes.length,gzip:gzipSync(bytes).length,contributing:contributing.map(file=>file.replace(cwd+'/',''))});
     }
     assert(!String(await realpath(`${cwd}/node_modules/@coffeehc/xui-runtime`)).includes('/packages/'));
     for (const [name, entry] of [['runtime', 'index.js'], ['theme', 'style.css'], ...([['react', 'index.js']])]) {
@@ -247,7 +257,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await writeFile(`${layoutTypographyOutput}/metafile.json`, JSON.stringify(layoutTypographyBuild.metafile, null, 2));
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'layout-typography/app.tsx'], { cwd, stdio: 'inherit' });
     // These fixtures are built only from independently installed formal packages.
-    for(const name of ['typography-slots','action-menu','toast']){
+    for(const name of ['typography-slots','action-menu','toast','upload']){
       const fixture=resolve(cwd,name),output=resolve(`dist/${name}-react`);
       await cp(`examples/${name}-react`,fixture,{recursive:true});
       const options={entryPoints:[`${fixture}/app.tsx`],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}};
@@ -259,7 +269,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
       await writeFile(`${output}/metafile.json`,JSON.stringify(result.metafile,null,2));
       if(name==='action-menu')await copyFile('tests/fixtures/public-followup-types.tsx',`${cwd}/public-followup-types.tsx`);
       execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',`${name}/app.tsx`,...(name==='action-menu'?['public-followup-types.tsx']:[])],{cwd,stdio:'inherit'});
-      if(name==='action-menu'||name==='toast'){
+      if(name==='action-menu'||name==='toast'||name==='upload'){
         const strictOutput=resolve(`dist/${name}-react-strict`);
         await build({...options,outdir:strictOutput,minify:false,define:{'process.env.NODE_ENV':'"development"'}});
         await copyFile(`${fixture}/index.html`,`${strictOutput}/index.html`);

@@ -28,7 +28,7 @@
 
 ## 应用服务启动与所有权
 
-浏览器 React 应用在首次 render 前调用一次 `bootstrap(overrides, environment)`；随包 `config.json` 提供默认值，返回同一 `XuiApplication` 配置与 services。业务用 `application.services.getHttpService()/getAuthService()/getThemeService()/getRouteService()/getI18nService()/getMenuService()/getDownloadService()` 取得服务，不调用已移除的基础 Service `create*` 工厂。SSR/隔离测试按请求创建 `XuiServices`，不同请求不能共享认证或路由实例。运行实例通过 `BootstrapEnvironment.services` 第二参数注入，配置 JSON 仅放可序列化数据；`extensions` 的业务schema由宿主校验。完整合并、冲突、dispose和cookie/token边界见[PUBLIC_API 启动与服务合同](PUBLIC_API.md#启动配置与应用服务)。
+浏览器 React 应用在首次 render 前调用一次 `bootstrap(overrides, environment)`，只建立配置和首绘主题/缩放/语言。业务按模块导入 `HTTPService/AuthService/MenuService/RouteService` 等稳定单例引用；实现随窄模块加载，首用从同一注册表读取已解析配置。不导入整个 `/services` 来获得单个功能。保留的容器 getter 要求相应模块已加载；SSR/隔离测试使用显式 `XuiServices`，借用的服务不由 View 销毁。完整依赖、4.0 迁移、失败安装回滚和认证安全边界见 [PUBLIC_API](PUBLIC_API.md#按模块导入的单例与-40-迁移)。
 
 registry只销毁自己由 options 构造的实例，`{instance}` 注入的是借用服务；React View/provider卸载只退订，不销毁共享应用owner。默认HTTP/Auth在配置允许时复用同一个HTTP实例；没有配置HTTP/Auth时getter显式失败，auth未启用不创建认证owner。剪贴板注入使用窄类型 `SharedClipboardService`，只需实现 `writeText`；借用实例不要求也不会调用 `dispose`，注册表只释放自己创建的内部服务。组件 `create*Controller` 是语义组件模型工厂，仍由创建者按[Controller矩阵](#状态所有权与-controller-模式)管理；它与已移除的基础 Service factories不同。
 
@@ -1245,3 +1245,21 @@ React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Icon/Panel` 和 `TabsL
 ```
 
 [字体样板](../examples/typography-slots-react/app.tsx)使用公共Icon部件；[侧栏样板](../examples/sidebar-footer-react/app.tsx)的 `?header=tabs&row` 展示内容宽轨道，追加 `tabLayout=equal` 比较显式等宽排列。验收须分别记录布局、三主题、长中文、放大、图标状态色、键盘、disabled、关联panel和草稿连续性，不以静态截图代替交互结果。
+
+## 文件上传 Upload
+
+公共 React `Upload<T>` → 独立 `UploadController<T>` → 共享 `UploadService` → 同一 HTTP/Auth；View 不持有第二份队列，Service 不持有页面文件列表。options 与 controller 互斥；实例切换和真实卸载取消所属等待，StrictMode replay 不误取消存活视图。详细方法和文件政策见 [上传 API](PUBLIC_API.md#文件上传)。
+
+| slot | 内容与形式 | 文字与状态归属 |
+|---|---|---|
+| label / picker / hint | Field 标签、公共选择 Button、拖拽提示；不把整个区变成按钮 | 继承 Field/Button/help 字体；错误关联 help/error |
+| list / file / filename | 自然列表，稳定文件 id；完整名称允许换行 | 正文继承；宿主不另设字号或截断关键名称 |
+| metadata | 确切字节、可选 renderFileMeta | help 语义；不重复状态或塞业务操作 |
+| status | 每行唯一 Badge / role=status | queued 中性、uploading info、success 成功、invalid/error 错误、canceled 警告；同时有文字 |
+| progress | 只在 uploading 显示 Progress 与等待文案 | 在自身文件行内居中；无已测进度不显示百分比 |
+| fileActions | cancel/retry/remove | 公共小按钮，桌面行尾，窄容器自然换到所属行下方 |
+| feedback | 类型/大小错误、未知写入结果提示 | 字段错误/error 与次要说明/help；retry 关联未知结果提示 |
+| result | renderResult，仅已确认 response | 继承正文；payload 不自动映射业务事实 |
+| actions | 当前队列唯一 Upload 主操作 | 内容宽度；空队列、无 queued、busy、锁定时禁用 |
+
+交互只由明确选择/拖入追加文件，开始与重试是明确动作。disabled/readOnly 保留结果展示并禁用编辑；owner 可终止等待。焦点动作消失时转到同行可用操作；移除当前行落到下一行、上一行或选择按钮；焦点已离开组件时，后台完成不抢焦点。触屏/键盘使用同一选择按钮；文件选择器关闭遵循浏览器原生返回行为。窄屏、长中文、文字/界面/浏览器缩放依公共继承和容器 reflow，无横向页面溢出。正式示例 [upload-react](../examples/upload-react/app.tsx) 仅消费公开 ESM/CSS，不含私有皮肤。

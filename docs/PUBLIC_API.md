@@ -180,6 +180,11 @@ CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` �
 
 ```ts
 import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+import {HTTPService} from '@coffeehc/xui-runtime/http';
+import {AuthService} from '@coffeehc/xui-runtime/auth';
+import {MenuService} from '@coffeehc/xui-runtime/menu-service';
+import {I18nService} from '@coffeehc/xui-runtime/i18n';
+import {RouteService} from '@coffeehc/xui-runtime/route';
 import {ServicesProvider} from '@coffeehc/xui-react/services';
 import {RouteProvider} from '@coffeehc/xui-react/route';
 
@@ -189,11 +194,11 @@ const app = bootstrap({
   auth: {enabled: true, protectedPaths: ['/api/v1/orders/']},
   i18n: {enabled: true, messages: {en: {home: 'Home'}}},
 });
-const http = app.services.getHttpService();
-const auth = app.services.getAuthService(); // 仅 auth.enabled=true 时配置
+const http = HTTPService;
+const auth = AuthService; // 仅 auth.enabled=true 时使用
 // React树中共享同一应用owner；RouteProvider可省略service并取getRouteService()。
-<ServicesProvider menu={app.services.getMenuService()} i18n={app.services.getI18nService()}>
-  <RouteProvider service={app.services.getRouteService()}>{/* app UI */}</RouteProvider>
+<ServicesProvider menu={MenuService} i18n={I18nService}>
+  <RouteProvider service={RouteService}>{/* app UI */}</RouteProvider>
 </ServicesProvider>;
 ```
 
@@ -208,6 +213,29 @@ const auth = app.services.getAuthService(); // 仅 auth.enabled=true 时配置
 `RouteService` 用浏览器 History API 维护 `uri/pathname/search/hash`；接受标准 URL，不使用 `#/` 或 `#!/` 哈希路由，不拦截全局锚点，也不发页面请求。`RouteProvider/useRoute/RouteLink` 连接同一 service 并保留普通链接修改键、下载与外链行为。部署在非根 `basePath` 时，宿主服务器仍须将深链路由 fallback 到应用 shell；xui 不配置服务器 rewrite。
 
 `DownloadService` 复用注册表中的同一个 HttpClient；`request` 只取得 Blob 和文件元数据，只有宿主在明确用户动作中调用 `save` 才触发浏览器保存。它不自动保存、不另建 HTTP/auth owner。`getUtilService()` 返回冻结的纯函数 namespace（entityId/date/dateTime/number/download），不创建 registry、订阅、存储、网络或 UI 状态。
+
+### 按模块导入的单例与 4.0 迁移
+
+`bootstrap` 只解析配置、安装应用注册表、建立首绘主题并恢复缩放、初始 document lang/title。HTTP、Auth、Route、I18n、Menu、Clipboard、Download、Upload 的实现随对应模块导入；导入仅注册实现并导出稳定引用，不发请求、不读 DOM、不启动业务查询。首个方法调用从同一 Window 注册表取得唯一实例及已解析配置，避免在 bootstrap 之前捕获默认值。多个导入者调用同一 Service，不持有第二份状态。
+
+| 窄入口 | 稳定单例引用 | 递进依赖 |
+|---|---|---|
+| `/config` | `ConfigService` | 默认 JSON、纯配置解析 |
+| `/theme` | `ThemeService` | 文档主题、配置 |
+| `/http` | `HTTPService` | 配置；启用 Auth 时请求前连接已导入的认证实现 |
+| `/auth` | `AuthService` | 同一 HTTP；access 仅私有内存 |
+| `/route` | `RouteService` | 配置与 History |
+| `/i18n` | `I18nService` | 配置与文案资源 |
+| `/menu-service` | `MenuService` | I18n、配置 |
+| `/clipboard` | `ClipboardService` | 平台 writer |
+| `/download`、`/upload` | `DownloadService`、`UploadService` | 同一 HTTP/Auth 链路 |
+| `/util-service` | `UtilService` | 纯函数；不带 HTTP、注册表或组件状态 |
+
+4.0 不再保证仅导入 `/bootstrap` 就加载所有 feature 实现。普通应用直接导入上述引用；保留的 `get*Service` 与 `app.services.get*Service` 使用同一 owner，但对应模块必须已加载。需要显式全量装配的隔离测试/SSR 可从 `/services` 导入 `XuiServices`；这个汇总入口有意加载全部服务，不能把它当作小体积入口。runtime 根入口同样是汇总。代码分割在宿主路由/feature 的动态 import 边界完成，不能期待单一静态 bundle 在运行时自动下载它已经包含的模块。
+
+启用 `auth.enabled` 时需导入 `/auth`，HTTP 首次请求先连接该 owner，再决定 cookie/Bearer；认证模块缺失时在 fetch 前失败，绝不退回匿名业务请求。显式借用已有 HTTP 并配置 Auth 时，在注入阶段先绑定认证（无 IO），以覆盖宿主仍持有的原始 HTTP 引用。借用的 HTTP 必须是同一 xui transport，认证必须绑定它；销毁自有 Auth 释放自己的 binding，借用实例不由 registry 销毁。失败安装恢复此前配置/owner，允许修正后重试。
+
+服务状态由所属 Service 独占并提供订阅；组件队列、草稿、分页和异步等待由独立 Controller 管理，React View 负责槽位、DOM 和焦点。不新增把这些事实复制一遍的 StateService，也不把每个 Controller 变成全局单例。
 
 ## HTTP 与查询
 
@@ -230,7 +258,7 @@ HTTP状态表达传输/请求事实，AjaxResponse的success表达业务成功�
 
 ### 单一传输与生命周期
 
-浏览器应用通过 `bootstrap({http:...}, {services:{http:{options:...}}})` 配置唯一 HTTP owner，随后从 `application.services.getHttpService()` 取得客户端；SSR/隔离实例用 `new XuiServices({http:{options:...}})`。选项包括 baseURL、fetch、headers/getHeaders、默认 response/adapter、timeoutMs/credentials、onUnauthorized/onError。baseURL 必须无 URL 凭据、为绝对 HTTP(S)；request 必须同源。ESM 导入不发请求、不读 DOM。裸 HTTP transport 不保存 token、storage、cache 或路由；headers/provider 来自宿主。绑定 [Bearer v2认证owner](PUBLIC_API.md#认证会话) 后由该 owner 私有内存持有 session access，显式 protectedPaths 业务请求强制 Bearer/omit/error，固定 cookie 端点无 Bearer/same-origin；禁止手动第二凭据、重试/redirect/credentials 覆盖。应用代码不再调用已移除的 `createHttpClient` 工厂。
+浏览器应用通过 `bootstrap({http:...}, {services:{http:{options:...}}})` 配置唯一 HTTP owner，随后从 `/http` 导入 `HTTPService` 取得同一客户端；SSR/隔离实例用 `new XuiServices({http:{options:...}})`。选项包括 baseURL、fetch、headers/getHeaders、默认 response/adapter、timeoutMs/credentials、onUnauthorized/onError。baseURL 必须无 URL 凭据、为绝对 HTTP(S)；request 必须同源。ESM 导入不发请求、不读 DOM。裸 HTTP transport 不保存 token、storage、cache 或路由；headers/provider 来自宿主。绑定 [Bearer v2认证owner](PUBLIC_API.md#认证会话) 后由该 owner 私有内存持有 session access，显式 protectedPaths 业务请求强制 Bearer/omit/error，固定 cookie 端点无 Bearer/same-origin；禁止手动第二凭据、重试/redirect/credentials 覆盖。应用代码不再调用已移除的 `createHttpClient` 工厂。
 
 request(path,options) 接收 method、headers、body 或 json、signal、timeoutMs、response/adapter/errorAdapter、endpointId、retry、detectAjaxErrors、credentials/cache/redirect。json:null 合法，json/body 不同时指定。默认 GET/same-origin credentials；Ajax/JSON 缺省 Accept: application/json，避免不明确的 protobuf 协商；json 补 Content-Type，FormData 不补 boundary。headers 合并顺序为 client→provider→endpoint。endpointId 是短逻辑标识，只含字母数字/点/下划线/冒号/连字符，不能传 URL。
 
@@ -357,7 +385,7 @@ ACL/权限过滤后的有界扫描可以连续返回空 list 与非空 next_curs
 
 ### 固定 HTTP 合同
 
-`bootstrap` 按配置创建 AuthClient 并绑定注册表中同一 HTTP service；也可在 `environment.services.auth` 中借用完整 AuthClient。一个 HTTP transport 只能有一个认证 owner；不创建并行 fetch、token store 或第二个401拦截器。认证预算默认15秒。地址始终为根路径，不附加 baseURL 的路径、不猜 token/me/state 等旧路由。应用代码不再调用已移除的 `createAuthClient` 工厂。
+`AuthService` 首用按 bootstrap 配置创建 AuthClient 并绑定注册表中同一 HTTP service；也可在 `environment.services.auth` 中借用完整 AuthClient。一个 HTTP transport 只能有一个认证 owner；不创建并行 fetch、token store 或第二个401拦截器。认证预算默认15秒。地址始终为根路径，不附加 baseURL 的路径、不猜 token/me/state 等旧路由。应用代码不再调用已移除的 `createAuthClient` 工厂。
 
 | 操作 | 固定端点 | 请求凭据 | 成功 payload |
 | --- | --- | --- | --- |
@@ -377,15 +405,18 @@ IssuedSessionV2 在上述字段之外恰有 `access_token`、`token_type:"Bearer
 
 ### 一个内存 owner 与显式保护端点
 
-先创建共享HTTP，再创建auth，例如：
+从窄入口引用同一 HTTP/Auth，例如：
 
 ```ts
+import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+import {HTTPService} from '@coffeehc/xui-runtime/http';
+import {AuthService} from '@coffeehc/xui-runtime/auth';
 const app = bootstrap({
   http: {baseURL: location.origin},
   auth: {enabled: true, protectedPaths: ['/api/v1/orders/', '/api/v1/profile']},
 });
-const http = app.services.getHttpService();
-const auth = app.services.getAuthService();
+const http = HTTPService;
+const auth = AuthService;
 await auth.currentUser();
 ```
 
@@ -395,7 +426,7 @@ protectedPaths是精确路径，或以斜杠结尾的子树前缀；只接受规
 
 本owner只持有session access。API Key供Agent/集成使用，不从登录页签发或保存为会话；不要把API Key注入这个session owner。后端session scope是当前用户权限；API Key scope是当前用户权限∩key grants，受固定namespace用途和host资源策略约束。相同Bearer语法不意味着相同scope，session endpoint只接受session credential。
 
-access和expiry只存在闭包内存，public AuthState、login/refresh/currentUser返回值、广播、日志和缓存没有token。禁止localStorage/sessionStorage/URL/共享channel存token。owner销毁后原managed routes继续失败关闭；新owner使用新HTTP实例。销毁auth不等于服务器logout。
+access和expiry只存在闭包内存，public AuthState、login/refresh/currentUser返回值、广播、日志和缓存没有token。禁止localStorage/sessionStorage/URL/共享channel存token。owner销毁后原registry的HTTP继续失败关闭，不自动复活；完整释放容器后，新隔离容器可显式重新绑定尚存活的借用HTTP。销毁auth不等于服务器logout。
 
 ### 会话初始化、401与并发
 
@@ -767,8 +798,9 @@ const selection=createSelectionController<string|null>({defaultValue:null});
 
 ```ts
 import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+import {ClipboardService} from '@coffeehc/xui-runtime/clipboard';
 const app = bootstrap();
-const clipboard = app.services.getClipboardService();
+const clipboard = ClipboardService;
 await clipboard.writeText(text,{signal});
 ```
 
@@ -803,3 +835,30 @@ add 返回稳定字符串 id，同 id 活跃项转为 update；update/close、ge
 Actions独立末行靠右并自然换行，无内容不占位，沿用small公共Button。Title/Description 缺省 children 使用记录内容（h2/p）；render/ref/className(state)/style(state) 保持公开组合，id 与 aria 关联同步。Action 使用 actionProps，不默认关闭；Close 可按普通公开 Button disabled。普通通知 role=status/polite，高优先级 role=alert/assertive；不抢新增焦点。键盘、暂停、手势及默认右上角见 [DESIGN](DESIGN.md#通知队列与视图合同)。Positioner/Arrow 使用 Base UI 公开 Popover 几何能力；`toast.positionerProps` 或部件 props 指定真实anchor。没有第二个通知 store。
 
 **3.0.0迁移**：旧外部 `@base-ui/react/toast` manager/ToastObject/专有内部状态不能注入；改用以上xui入口。`Toast.createToastManager` 名称继续可用，但返回完整xui Controller；旧 Provider/Viewport/Root/Content/Title/Description/Close/Action/Portal/Positioner/Arrow/useToastManager 名称保留。Viewport默认位置变为右上角，timeout旧0常驻需改为-1（不填/0使用默认5秒），默认右滑保留纵向滚动；不保留peer堆叠高度/索引等私有CSS变量。宿主不复制队列或写DOM/CSS适配层。示例 `examples/toast-react/` 仅展示隔离合成动作，不代表业务保存已实现。
+
+## 文件上传
+
+<!-- public-entry: @coffeehc/xui-runtime/upload -->
+<!-- public-entry: @coffeehc/xui-react/upload -->
+
+`UploadService.request<T>(path, file, options?)` 复用同一 `HTTPService`，一次 multipart POST，一次默认 120000ms 预算。默认文件字段 `file`，可显式 `fieldName/fields`；响应模式、adapter、错误、取消和认证遵循 HTTP 合同。不能覆盖 method/body/json/retry；平台生成 Content-Type boundary（共享 HTTP 会移除 FormData 的自定义 Content-Type，包括默认 JSON 头）。不自动重放写入、不创建 storage/key/权限 owner。成功只表示 HTTP 与所选响应合同已确认；业务 payload 仍由宿主处理。
+
+`createUploadController<T>` 每实例管理独立队列，选文件不请求；`start` 仅调度 queued，`retry(id)` 是用户明确的新写入。默认单文件、并发 1；multiple、accept、maxFiles、maxFileSize 显式配置，大小以字节为单位含上限，0 只允许空文件。数量超限整批拒绝并保留旧行，类型/大小无效行保留错误且不能发送。同名文件不推断相同业务对象。`getState/subscribe` 返回稳定冻结快照：files、busy、disabled/readOnly、selectionError；每行有稳定 id、File、status、progress:null、validation/errorKind、resultUnknown 和确认后的 typed response。
+
+取消/超时/失败只证明本地等待结束，不证明服务器回滚；UI 提示先核对服务器再重新上传。`remove/clear` 只移除本地引用，不删除远端文件。迟到结果不能复活已移除或重试后的行。disabled/readOnly 阻止新增/开始/重试/移除，已有请求继续；owner 仍可 cancel/destroy 清理。默认 fetch 没有上传字节进度，因此只有居中的 indeterminate Progress，不能显示猜测百分比。大文件分片、断点续传、预签名、业务提交与远端清理仍由宿主明确协议负责。
+
+```tsx
+import {Upload} from '@coffeehc/xui-react/upload';
+import {UploadService} from '@coffeehc/xui-runtime/upload';
+// 应用入口先 bootstrap；启用认证时同时加载 @coffeehc/xui-runtime/auth。
+<Upload<{id:string}>
+  label="附件"
+  description="最多 4 个 CSV 文件，每个不超过 1 MiB。"
+  options={{path:'/api/files',service:UploadService,multiple:true,accept:'.csv',maxFiles:4,maxFileSize:1048576}}
+  renderResult={file => <span>已确认记录：{file.response.payload.id}</span>}
+/>;
+```
+
+`Upload` 支持默认 options 或完整 controller 注入，二者互斥。View 只订阅借用实例；真实退出/替换终止所属等待，不销毁借用 Service/Controller。完整 labels 可翻译，locale 只格式化确切字节数。label、description、error、required 按 Field 关联；file input 由公共 Button 代理，拖拽区不增加多余 Tab 停靠点。required 表达“当前存在有效文件选择”，不表达远端上传成功；原生文件输入选择后清空以允许重选，此组件通过显式 start 上传，不能把它当成传统 form 的 FileList 自动提交字段。宿主依实际成功记录验证业务提交。
+
+槽位、字体和焦点见 [Upload 组件](COMPONENTS.md#文件上传-upload)；正式独立示例见 [upload-react](../examples/upload-react/app.tsx)。

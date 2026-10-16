@@ -2,6 +2,7 @@ import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
 import {type XuiConfigOverrides} from '@coffeehc/xui-runtime/config';
+import {HTTPService} from '@coffeehc/xui-runtime/http';
 import {MenuLayout} from '@coffeehc/xui-react/menu-layout';
 import {PageHeader,Section,FormGrid} from '@coffeehc/xui-react/layout';
 import {Field,Input} from '@coffeehc/xui-react/forms';
@@ -31,5 +32,5 @@ function App(){
  </MenuLayout>;
 }
 declare global {interface Window {bootstrapDemo:{app:typeof app;repeat:()=>typeof app;conflict:()=>void}}}
-window.bootstrapDemo={app,repeat:()=>bootstrap(projectConfig),conflict:()=>{bootstrap({...projectConfig,theme:{mode:'light'}});}};
+window.bootstrapDemo={app,repeat:()=>{void HTTPService;return bootstrap(projectConfig);},conflict:()=>{bootstrap({...projectConfig,theme:{mode:'light'}});}};
 createRoot(document.getElementById('root')!).render(<React.StrictMode><RouteProvider><App/></RouteProvider></React.StrictMode>);

@@ -6,26 +6,11 @@ import type {RouteService,RouteServiceOptions} from './route-core.js';
 import type {I18nService} from './i18n-core.js';
 import type {MenuService} from './menu-service-core.js';
 import type {DownloadService} from './download-service.js';
+import type {UploadService} from './upload-service.js';
 import type {XuiConfigOverrides,ConfigReadonly,XuiConfig,ConfigService} from './config.js';
 import {states,windows,newRegistryState,browserState,assertLive,disposeState,sameValue,type Entry,type RegistryState} from './service-state.js';
-import {resolveHttpService} from './http-access.js';
-export {getHttpService} from './http-access.js';
-import {resolveAuthService} from './auth-access.js';
-export {getAuthService} from './auth-access.js';
-import {resolveThemeService} from './theme-access.js';
-export {getThemeService} from './theme-access.js';
-import {resolveClipboardService} from './clipboard-access.js';
-export {getClipboardService} from './clipboard-access.js';
-import {resolveConfigService} from './config-access.js';
-export {getConfigService} from './config-access.js';
-import {resolveRouteService} from './route-access.js';
-export {getRouteService} from './route-access.js';
-import {resolveI18nService} from './i18n-access.js';
-export {getI18nService} from './i18n-access.js';
-import {resolveMenuService} from './menu-access.js';
-export {getMenuService} from './menu-access.js';
-import {resolveDownloadService} from './download-access.js';
-export {getDownloadService} from './download-access.js';
+import {resolveService} from './service-resolvers.js';
+import {inspectHttp} from './http-auth-internal.js';
 /** Supply either a borrowed instance or options for one registry-owned service. */
 export type ServiceInput<T,O> = {instance:T;options?:never}|{options:O;instance?:never};
 export type AuthServiceOptions = Omit<AuthClientOptions,'http'>;
@@ -55,22 +40,30 @@ function validateInput(value:unknown,name:string):asserts value is ServiceInput<
   const field=Object.getOwnPropertyDescriptor(value,hasInstance?'instance':'options');if(!field||!('value'in field)||field.value===undefined)throw new TypeError(`Invalid ${name} service input`);
 }
 function stateOf(services:XuiServices){const state=states.get(services);if(!state)throw new TypeError('Invalid XuiServices instance');assertLive(state);return state;}
+/** Explicitly borrowed transports must be bound before their original reference can send.
+ * This creates no IO; an unimported auth module fails configuration rather than leaking a write. */
+function bindBorrowedHttp(state:RegistryState){
+ if(!state.http.value||state.http.owned||!state.auth.input)return;
+ resolveService('auth',state);
+ if(!inspectHttp(state.http.value)?.binding)throw new TypeError('Configured auth must bind the same shared xui HTTP client');
+}
 /** One isolated infrastructure owner; injected instances remain borrowed. */
 export class XuiServices {
  constructor(options:XuiServicesOptions={},environment:XuiServicesEnvironment={}){
   const state=newRegistryState(environment.window,environment.config);
   for(const name of slotNames){const input=options[name];if(input===undefined)continue;validateInput(input,name);const entry=state[name] as Entry<unknown,unknown>;entry.input=input as ServiceInput<unknown,unknown>;if(Object.hasOwn(input,'instance'))entry.value=(input as {instance:unknown}).instance;}
-  states.set(this,state);
+  states.set(this,state);try{bindBorrowedHttp(state);}catch(error){disposeState(state);throw error;}
  }
- getHttpService():HttpClient{return resolveHttpService(stateOf(this));}
- getAuthService():AuthClient{return resolveAuthService(stateOf(this));}
- getThemeService(win?:Window):ThemeController{return resolveThemeService(stateOf(this),win);}
- getClipboardService():SharedClipboardService{return resolveClipboardService(stateOf(this));}
- getConfigService():ConfigService{return resolveConfigService(stateOf(this));}
- getRouteService():RouteService{return resolveRouteService(stateOf(this));}
- getI18nService():I18nService{return resolveI18nService(stateOf(this));}
- getMenuService():MenuService{return resolveMenuService(stateOf(this));}
- getDownloadService():DownloadService{return resolveDownloadService(stateOf(this));}
+ getHttpService():HttpClient{return resolveService<HttpClient>('http',stateOf(this));}
+ getAuthService():AuthClient{return resolveService<AuthClient>('auth',stateOf(this));}
+ getThemeService(win?:Window):ThemeController{return resolveService<ThemeController>('theme',stateOf(this),win);}
+ getClipboardService():SharedClipboardService{return resolveService<SharedClipboardService>('clipboard',stateOf(this));}
+ getConfigService():ConfigService{return resolveService<ConfigService>('config',stateOf(this));}
+ getRouteService():RouteService{return resolveService<RouteService>('route',stateOf(this));}
+ getI18nService():I18nService{return resolveService<I18nService>('i18n',stateOf(this));}
+ getMenuService():MenuService{return resolveService<MenuService>('menu',stateOf(this));}
+ getDownloadService():DownloadService{return resolveService<DownloadService>('download',stateOf(this));}
+ getUploadService():UploadService{return resolveService<UploadService>('upload',stateOf(this));}
  dispose(){const state=states.get(this);if(state)disposeState(state);}
 }
 function applyInput(state:RegistryState,name:typeof slotNames[number],input:ServiceInput<unknown,unknown>,commit=true):void{
@@ -91,8 +84,20 @@ export function installXuiServices(options:XuiServicesOptions={},win:Window|unde
  const state=browserState(win);const context=windows.get(win)!;
  if(config&&!sameValue(config,state.config)&&(state.configExplicit||state.configService||state.route.value||state.i18n.value||state.menu.value))throw new Error('Configuration was already consumed; bootstrap must run before application views');
  for(const name of slotNames){const input=options[name];if(input!==undefined)applyInput(state,name,input as ServiceInput<unknown,unknown>,false);}
- if(config){if(!sameValue(config,state.config))state.config=config;state.configExplicit=true;}
- for(const name of slotNames){const input=options[name];if(input!==undefined)applyInput(state,name,input as ServiceInput<unknown,unknown>);}
+ const previousConfig=state.config,previousExplicit=state.configExplicit,previous=slotNames.map(name=>({...state[name]}));
+ try{
+  if(config){if(!sameValue(config,state.config))state.config=config;state.configExplicit=true;}
+  for(const name of slotNames){const input=options[name];if(input!==undefined)applyInput(state,name,input as ServiceInput<unknown,unknown>);}
+  bindBorrowedHttp(state);
+ }catch(error){
+  // Only undo owners created by this installation; previously running and borrowed services survive.
+  for(let index=0;index<slotNames.length;index++){
+   const entry=state[slotNames[index]] as Entry<unknown,unknown>,before=previous[index];
+   if(entry.owned&&entry.value!==before.value){const owner=entry.value as {destroy?:()=>void;dispose?:()=>void}|undefined;try{owner?.destroy?.();owner?.dispose?.();}catch{}}
+   for(const key of ['input','value','resolvedOptions'] as const)delete entry[key];Object.assign(entry,before);
+  }
+  state.config=previousConfig;state.configExplicit=previousExplicit;throw error;
+ }
  if(!context.owner){const owner=new XuiServices();states.set(owner,state);context.owner=owner;}
  return context.owner;
 }

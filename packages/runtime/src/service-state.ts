@@ -1,4 +1,4 @@
-import {resolveConfig,type XuiConfigOverrides,type ConfigReadonly,type XuiConfig,type ConfigService} from './config.js';
+import {resolveConfig,type XuiConfigOverrides,type ConfigReadonly,type XuiConfig,type ConfigService} from './config-core.js';
 import type {HttpClient,HttpClientOptions} from './http-service.js';
 import type {AuthClient} from './auth-service.js';
 import type {ThemeController,ThemeOptions} from './theme-service.js';
@@ -7,6 +7,7 @@ import type {RouteService,RouteServiceOptions} from './route-core.js';
 import type {I18nService} from './i18n-core.js';
 import type {MenuService} from './menu-service-core.js';
 import type {DownloadService} from './download-service.js';
+import type {UploadService} from './upload-service.js';
 import type {ServiceInput,AuthServiceOptions,XuiServices} from './services-core.js';
 export type Entry<T,O>={input?:ServiceInput<T,O>;value?:T;owned:boolean;resolvedOptions?:O;};
 export interface RegistryState {
@@ -20,6 +21,7 @@ export interface RegistryState {
   menu:Entry<MenuService,never>;
   config:ConfigReadonly<XuiConfig>;configService?:ConfigService;configExplicit:boolean;
   download?:DownloadService;
+  upload?:UploadService;
 }
 
 export const states=new WeakMap<XuiServices,RegistryState>();
@@ -28,7 +30,7 @@ export function newRegistryState(win?:Window,config?:XuiConfigOverrides):Registr
 export function assertLive(state:RegistryState){if(state.disposed)throw new Error('Xui services are disposed');}
 export function browserState(win:Window|undefined=typeof window==='undefined'?undefined:window):RegistryState{if(!win)throw new Error('Use an explicit XuiServices container outside a browser Window');let context=windows.get(win);if(!context){context={state:newRegistryState(win)};windows.set(win,context);}assertLive(context.state);return context.state;}
 export function optionsFor<T,O>(entry:Entry<T,O>):O|undefined{return entry.input&&Object.hasOwn(entry.input,'options')?entry.input.options:undefined;}
-export function disposeState(state:RegistryState){if(state.disposed)return;state.disposed=true;for(const name of ['menu','i18n','route','auth','clipboard','theme','http'] as const){const entry=state[name];if(entry.owned&&entry.value){const owner=entry.value as unknown as {destroy?:()=>void;dispose?:()=>void};try{if(owner.destroy)owner.destroy();else owner.dispose?.();}catch{/* Complete remaining owned cleanup. */}}}const win=state.theme.resolvedOptions?.window??state.window;if(win&&win.xuiTheme===state.theme.value&&state.theme.owned)delete win.xuiTheme;for(const name of ['menu','i18n','route','auth','clipboard','theme','http'] as const)state[name].value=undefined;state.download=undefined;}
+export function disposeState(state:RegistryState){if(state.disposed)return;state.disposed=true;for(const name of ['menu','i18n','route','auth','clipboard','theme','http'] as const){const entry=state[name];if(entry.owned&&entry.value){const owner=entry.value as unknown as {destroy?:()=>void;dispose?:()=>void};try{if(owner.destroy)owner.destroy();else owner.dispose?.();}catch{/* Complete remaining owned cleanup. */}}}const win=state.theme.resolvedOptions?.window??state.window;if(win&&win.xuiTheme===state.theme.value&&state.theme.owned)delete win.xuiTheme;for(const name of ['menu','i18n','route','auth','clipboard','theme','http'] as const)state[name].value=undefined;state.download=undefined;state.upload=undefined;}
 function objectLike(value:unknown):value is Record<string,unknown>{return !!value&&typeof value==='object';}
 export function sameValue(left:unknown,right:unknown,seen=new WeakMap<object,object>()):boolean{
   if(Object.is(left,right))return true;

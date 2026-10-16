@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（3.0.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.0.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -504,3 +504,20 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | LOAD-001 | 详情、卡片或其他局部内容首次等待 | 使用LoadingState block，相对所属可见内容区水平垂直居中，不以页面/窗口为中心；保留外围标题与动作 | 内容区与提示矩形、主题/窄屏/大字截图 | [DESIGN 刷新连续性](DESIGN.md#数据刷新与视图连续性) |
 | LOAD-002 | 已有内容刷新或按钮动作等待 | 内容及节点保留；区域footer/反馈槽使用inline，按钮内Spinner与标签同组，不用居中遮罩替换内容 | 节点/焦点/草稿/滚动、status数量与无Document请求 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) |
 | LOAD-003 | 使用公共Spinner指示忙状态 | 主题色开放弧可辨认；普通动效下实际旋转，reduced-motion静止且仍有忙状态文字/名称；不在宿主重画圆环或增加重复live播报 | light/dark/system的边框与真实帧采样、reduce静止采样、状态可访问名称 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) |
+
+## 按需服务与文件上传专项
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| SERVICE-010 | 只用 bootstrap 或单项 Service | bootstrap 不含 HTTP/Auth/Menu/Upload 实现；窄入口仅包含职责依赖，根入口/全量 services 有意汇总 | 正式 tarball bundle metafile 的贡献文件与 gzip；不能仅看压缩后体积 | [按模块单例](PUBLIC_API.md#按模块导入的单例与-40-迁移) |
+| SERVICE-011 | 多处导入同一 Service | 引用稳定、同一 Window 同一 owner；import 不发 IO，不在启动前捕获默认 config | 导入/首用/重复导入轨迹及配置快照 | [公共合同](PUBLIC_API.md#文件上传) |
+| SERVICE-012 | auth.enabled 或借用已有 HTTP | 首个业务请求前绑定唯一 Auth；缺模块/不匹配在发送前失败；借用原引用也受保护 | 无登录 protected POST 请求次数、凭据策略及借用测试 | [公共合同](PUBLIC_API.md#文件上传) |
+| SERVICE-013 | 安装失败或销毁自有 Auth | 修正配置可重试；此前 owner 不受损；自有 binding 被释放，借用 HTTP 不销毁 | 错误后重试、再次绑定和 dispose spy | [公共合同](PUBLIC_API.md#文件上传) |
+| UPLOAD-001 | 页面添加上传 | 使用公共 Upload/options 或借用完整 Controller；同一 UploadService/HTTP/Auth；不另建 fetch、队列或认证 | 实例身份、调用路径、Network | [上传 API](PUBLIC_API.md#文件上传) |
+| UPLOAD-002 | 选择/拖入/重选文件 | 选择不请求；accept/大小含边界/数量限制生效，超数整批拒绝，错误关联正确 | 文件选择器真实指针/键盘、DataTransfer 与请求次数 | [公共合同](PUBLIC_API.md#文件上传) |
+| UPLOAD-003 | 点击开始或重新上传 | POST multipart，filename/字段正确，平台 boundary，重复动作不并发重发同一行 | 请求方法、头、body 与次数 | [公共合同](PUBLIC_API.md#文件上传) |
+| UPLOAD-004 | 请求等待、部分成功或刷新 | 文件行、已确认结果和外部草稿保留；Progress 在所属区域居中；无假百分比 | DOM身份、几何、进度属性、请求轨迹 | [Upload 槽位](COMPONENTS.md#文件上传-upload) |
+| UPLOAD-005 | 取消/超时/错误/迟到 | 提示结果可能未知；不自动重放，不把移除当远端删除；旧结果不能覆盖重试行 | 受控延迟/失败、重试计数、旧结果释放 | [上传 API](PUBLIC_API.md#文件上传) |
+| UPLOAD-006 | disabled/readOnly/替换/退出 | 锁定不发新动作，已有请求不误取消；真实退出终止所属等待，不销毁借用 owner | 控件状态、Abort/late result、StrictMode | [公共合同](PUBLIC_API.md#文件上传) |
+| UPLOAD-007 | 文件行操作消失或删除 | Cancel/Retry/完成/Remove 均保留合理焦点；外部焦点不被后台结果抢走 | activeElement 与键盘录制 | [Upload 槽位](COMPONENTS.md#文件上传-upload) |
+| UPLOAD-008 | 所有呈现模式 | 字体继承，正文/metadata/status/actions 各归所属 slot；浅深system、窄屏、长中文、两种200%均可读可达 | 正式消费者截图、computed typography、真实浏览器 zoom 几何 | [公共合同](PUBLIC_API.md#文件上传) |

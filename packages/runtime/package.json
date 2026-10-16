@@ -1,13 +1,25 @@
 {
   "name": "@coffeehc/xui-runtime",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "files": [
     "dist"
   ],
   "sideEffects": [
-    "./dist/init.js"
+    "./dist/init.js",
+    "./dist/services.js",
+    "./dist/http.js",
+    "./dist/auth.js",
+    "./dist/theme.js",
+    "./dist/clipboard.js",
+    "./dist/config.js",
+    "./dist/route.js",
+    "./dist/i18n.js",
+    "./dist/menu-service.js",
+    "./dist/download.js",
+    "./dist/upload.js",
+    "./dist/*-access.js"
   ],
   "exports": {
     ".": {
@@ -167,6 +179,10 @@
     "./toast": {
       "types": "./dist/toast.d.ts",
       "import": "./dist/toast.js"
+    },
+    "./upload": {
+      "types": "./dist/upload.d.ts",
+      "import": "./dist/upload.js"
     }
   },
   "types": "./dist/index.d.ts",

@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：3.0.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.0.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1107,7 +1107,9 @@ NavigationMenu的名称槽占满主项剩余宽度。富内容仍由renderLabel�
 
 状态的统一边界：布局组件不请求、不缓存、不猜权限；交互组件拥有局部 focus/open/checked 等公开状态；resource/auth/业务 controller 拥有请求与确认事实。`busy` 不等于 `disabled`，`readOnly` 不等于 `disabled`，错误不等于空数据。正常 React render 是更新，切换 key、清空 DOM 或条件卸载是重建，不能用后者实现同范围刷新。刷新与范围切换、取消、失败恢复按下方连续性合同执行。
 
-应用基础设施按单例 Service 组织，统一在 React 挂载前调用 `bootstrap(overrides)`。唯一默认值来源为 runtime 正式包的 `config.json`；参数只覆盖项目需要变化的字段：对象递归合并、数组整体替换、undefined 保留默认，未知公共键及非法值必须拒绝，`extensions` 留给宿主校验业务配置。JSON 不承载函数、实例、密钥或权限事实；可替换的平台实例在独立 environment 参数声明。ConfigService 提供不可变启动快照，ThemeService 管理文档主题，RouteService 管理 History URI，MenuService 管理菜单内容，I18nService 管理语言和纯文本资源，HTTP/Auth/Clipboard/Download 复用各自唯一基础设施；UtilService 仅组织纯函数。不另设万能事件总线、业务缓存、查询或全局表单状态。
+应用基础设施按单例 Service 组织，统一在 React 挂载前调用 `bootstrap(overrides)`。唯一默认值来源为 runtime 正式包的 `config.json`；参数只覆盖项目需要变化的字段：对象递归合并、数组整体替换、undefined 保留默认，未知公共键及非法值必须拒绝，`extensions` 留给宿主校验业务配置。JSON 不承载函数、实例、密钥或权限事实；可替换的平台实例在独立 environment 参数声明。ConfigService 提供不可变启动快照，ThemeService 管理文档主题，RouteService 管理 History URI，MenuService 管理菜单内容，I18nService 管理语言和纯文本资源，HTTP/Auth/Clipboard/Download/Upload 复用各自唯一基础设施；UtilService 仅组织纯函数。不另设万能事件总线、业务缓存、查询或全局表单状态。
+
+bootstrap 只完成配置注册及首绘主题、缩放、初始语言/标题；其余 Service 实现由对应窄模块导入，并在首用读取同一配置。导入不发请求、不启动查询或会话恢复；不通过全量 service 汇总入口隐式拉入所有功能。依赖按职责单向递进：Menu → I18n → Config，Upload/Download/Auth → 同一 HTTP，组件 View → Controller → Service。基础 Service 使用稳定单例引用；局部队列/草稿/分页仍逐实例，不设复制所有事实的 StateService。启用认证的 HTTP 首次请求必须先绑定唯一认证 owner，缺失模块在发送前明确失败。依赖与迁移的逐项检查见 SERVICE-010～013。
 
 主题、缩放已有 sessionStorage 偏好优先于配置默认值。语言开关关闭时使用配置默认语言且不展示全局切换入口；启用后通过公开语言服务订阅，菜单翻译和页面文案共同更新。已有显式宿主语言 owner 必须通过公开接口借用，不保留第二份语言状态。组件的 labels/locale 扩展继续有效，语言服务不代表已提供所有语言的全组件翻译资源。项目主题 CSS 仍按本规范语义 Token 生成，config 不引入任意控件皮肤或 CSS 覆盖入口。
 
@@ -1115,6 +1117,8 @@ NavigationMenu的名称槽占满主项剩余宽度。富内容仍由renderLabel�
 
 通用语义交互采用可替换 Controller：未注入时 View 创建唯一默认实例，注入同一公开契约时只订阅该实例；初始化、受控确认和意图回调配置与注入互斥。受控事实只由宿主确认，用户请求不能先发布未确认值。切换实例退订旧订阅，View 不销毁注入者实例，不把动态配置覆盖到注入模型。默认实例清理兼容 StrictMode effect replay；真实退出终止所属等待并隔离迟到结果，秘密 DOM 的退出清理始终有效。键盘算法、实际焦点、碰撞、滚动、媒体查询与瞬态渲染由 Base UI/DOM 执行，不建立竞争状态。服务组合的展示 Controller 只持有自身草稿/分页并引用唯一服务；默认服务必须由显式 adapter/loader/AuthClient 配置取得，不能无配置创建认证、查询或业务事实。逐项入口、例外与未满足项以 [组件状态合同](COMPONENTS.md#状态所有权与-controller-模式) 和 [接入检查](ADOPTION_CHECKLIST.md) 为准；Toast 采用 xui 自有唯一队列 Controller；动作入口与 View 订阅同一集合，不借用 peer 私有 store。
 
+
+上传使用现有 Field/Button/Badge/Progress 的字体、色彩和空间 Token，不另造皮肤。文件名称继承正文，元数据/等待继承 help，错误继承 error，状态只在所属 Badge 着色；完整文件行/结果/actions 的槽位见组件手册。首次无队列保持选择入口，上传时保留所有文件行和已有确认结果，等待指示相对所属文件行居中，响应就地更新。取消/失败不宣称回滚，无实际上传字节测量时不显示百分比；移除、取消和完成后的焦点保持连续。宿主不穿透私有 DOM/CSS 补齐这些行为。
 
 ### 表单和响应式
 

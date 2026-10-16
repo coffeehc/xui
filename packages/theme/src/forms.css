@@ -1,5 +1,26 @@
 @layer xui-components {
 
+  .xui-upload { display:grid; gap:var(--space-content-gap); min-inline-size:0; font:inherit; container-type:inline-size; container-name:xui-upload; }
+  .xui-upload-picker { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-control-gap); padding:var(--space-content-gap); border:var(--line-width-surface) solid var(--input-border-color); border-radius:var(--input-radius); background:var(--input-background); transition:background-color var(--motion-duration-fast) var(--motion-easing),border-color var(--motion-duration-fast) var(--motion-easing); }
+  .xui-upload-picker[data-dragging] { background:var(--interaction-selected); border-color:var(--action-primary); }
+  .xui-upload-input { position:absolute; inline-size:var(--a11y-hidden-size); block-size:var(--a11y-hidden-size); min-block-size:0; padding:0; margin:var(--a11y-hidden-offset); overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .xui-upload-list { display:grid; margin:0; padding:0; list-style:none; min-inline-size:0; }
+  .xui-upload-list:empty { display:none; }
+  .xui-upload-file { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:start; gap:var(--space-control-gap); min-inline-size:0; padding-block:var(--space-control-gap); border-block-end:var(--line-width-surface) solid var(--separator-line); }
+  .xui-upload-file:last-child { border-block-end:0; }
+  .xui-upload-info { min-inline-size:0; display:grid; gap:var(--space-text-gap); }
+  .xui-upload-name { overflow-wrap:anywhere; }
+  .xui-upload-info [data-slot='metadata'] { display:flex; flex-wrap:wrap; gap:var(--space-control-gap); }
+  .xui-upload-status { min-inline-size:0; grid-column:2; grid-row:1; }
+  .xui-upload-file-actions,.xui-upload-actions { display:flex; flex-wrap:wrap; gap:var(--space-control-gap); }
+  .xui-upload-file-actions { margin-inline-start:auto; grid-column:3; grid-row:1; }
+  .xui-upload-progress { grid-column:1/-1; display:grid; gap:var(--space-text-gap); justify-items:center; inline-size:100%; min-inline-size:0; }
+  .xui-upload-file>[data-slot='feedback'],.xui-upload-result { grid-column:1/-1; margin:0; min-inline-size:0; overflow-wrap:anywhere; }
+  @container xui-upload (max-width:48rem) {
+    .xui-upload-file { grid-template-columns:minmax(0,1fr); }
+    .xui-upload-status,.xui-upload-file-actions { grid-column:1; grid-row:auto; }
+  }
+
   .xui-field { display: grid; gap: var(--space-text-gap); min-width: 0; align-content: start; }
   /* The field gap plus label margin gives label/control/help/error spacing of 8/4/4. */
   .xui-label { font: var(--font-weight-control) var(--font-size-body-xs) / var(--line-height-body-xs) var(--font-sans); margin-bottom: var(--space-text-gap); }

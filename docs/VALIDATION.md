@@ -4,6 +4,32 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 按需 Service 架构与文件上传（4.0.0，2026-10-16）
+
+本轮仅修改 xui，从 `b9753a4f43967c76f566eefdab38042d0423da18` / 3.0.0 继续。三包/DESIGN 为 **4.0.0**，404 Token、104 公开入口、374 项逐项检查。source generation 为 `3ca598047b7ed7a2d786274741dfe55423f8ceae2b77ecbe1aed3c87b9cda568`；正式独立消费者 `.consumers/run-WY19g0/react` 安装 ESM/CSS/types 与相同 build.json，未使用 src alias/私有 CSS，React/ReactDOM 19.2.8、Base UI 1.7.0 单实例。
+
+`bootstrap` 只解析配置并建立首绘主题/缩放/语言/标题；各窄入口导出稳定 Service 引用，首用才读取同一注册表配置。正式 bundle metafile 验证 bootstrap 不含 HTTP/Auth/Route/Menu/Upload 实现；HTTP 不静态引入 Auth，Upload/Download 逐层依赖 HTTP，Menu 依赖 I18n/Config，Util 保持纯函数。完整 `/services`/runtime 根入口有意汇总。启用认证后请求前先绑定同一 owner；显式借用 HTTP 时注入阶段无 IO 绑定，避免宿主原引用首请求绕行。失败安装回滚；自有 Auth dispose 解除自己的 binding。配置、Service、组件 Controller 与 React View 的职责和 4.0 getter 迁移已在 PUBLIC_API/COMPONENTS/ADOPTION/检查清单逐项对应。
+
+新增 UploadService → 独立 UploadController → React Upload，复用共享 HTTP/Auth，一次 multipart POST、120秒默认预算、无自动重放；选文件不发请求，类型/大小/数量验证、部分成功、取消/迟到/重试隔离、disabled/readOnly 和完整 Controller 注入都有用例。沿用 Field/Button/Badge/Progress 与文字继承，文件行稳定保留，indeterminate 等待居中，无伪造百分比。取消/失败明确结果可能未知，移除不代表远端删除。
+
+| 门禁 | 结果与证据（均在 `.artifacts/upload-validation/`，另注除外） |
+|---|---|
+| 构建 / 类型 / Token / 文档 | 通过；`build-exports.log`、`typecheck.log`、`tokens-final.log`、`docs-release.log`；最终104入口/374检查 |
+| 单元测试 | Upload 8/8、service-modules 6/6；完整首轮504/505，Auth destroy后错误类型回归修复后相关48/48。最终完整 **505/505，0 fail/skip**，见 `unit-final.log`；不以首轮失败计作通过 |
+| 正式包消费者 | `consumer-focus.log` 通过全部exports/types/正负fixture、peer单实例、独立示例、依赖和gzip门禁；初始 peer范围漏改、type-only re-export收集误判均修复后重跑 |
+| Chromium 初轮专项/相关回归 | `browser.json/log` **46/46**，含Upload、bootstrap、HTTP、认证页/Bearer；未跑全仓浏览器套件 |
+| Chromium最终Upload布局/焦点 | `browser-focus.json/log` **21/21**；新Enter/Space原生chooser **1/1**，`browser-keyboard.json` / `browser-keyboard-final.log` |
+| Firefox / WebKit相关回归 | `cross.json/log` **62/62**；最终页面inset/完整焦点环复验 `cross-focus.json/log` 36通过、2个测试定位失败，修正定位后新chooser用例 **2/2**，`cross-keyboard-final.json/log`；没有未关闭失败 |
+| watch / 冷启动 | `watch-final-rerun.log` **1/1**、`cold-start-final.log` **1/1**。watch首轮探针把注释放在layer外、继续到旧theme文件找storage key；只更新测试夹具至真实结构，严格生成器不放宽 |
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`pnpm test:unit`、`pnpm test:consumer`、`pnpm test:watch`、`pnpm test:cold-start`。浏览器命令/配置保存在上述目录：首次 Chromium 运行 upload/bootstrap/http/auth-bearer/auth-page；跨引擎运行 upload/bootstrap/http，排除只能在Chrome设置执行的真缩放项；示例inset修正后仅重验受影响Upload。新键盘测试首轮 `getByLabel('附件')` 同时匹配region/list，改为原生file input并独立断言其可访问名称、required/描述关联；三引擎Enter/Space均真实打开chooser，选择后焦点保留且零请求。
+
+浏览器覆盖三主题及system实时变更、1280/320px、长中文、200%根字号/界面比例；Chrome设置真正200%页面缩放验证DPR×2、CSS视口减半、根字号不变、CSS zoom=1/pinch=1。逐项检查multipart字段/文件名/boundary、响应确认、行DOM与外部草稿保留、取消/重试/完成/删除后的焦点、StrictMode及真实退出；完整焦点环四边都在视口内。已实际查看 `images/` 中浅色桌面、深色窄屏、大字与真实zoom截图。
+
+Stitch仅进行了**文字合同审阅**（`stitch-upload-review.txt/png`）：确认单一语义选择代理、无冗余Tab、Field关联、自然折行、就近回焦点、内容宽度动作和无假进度。其建议映射到现有真实Token，不另造样式；网络结果按对应文件行表达以保留部分成功。右侧画布是旧登录V3，不能称Stitch审过上传实际截图或代码。
+
+未执行：全仓浏览器完整套件、真实OS文件窗口/读屏器/移动键盘、真实后端存储/鉴权/CSRF/事务与产品页面、生产部署。浏览器HTTP为合成route响应，Auth为正式wire夹具；不证明任何消费项目升级或真实文件已持久化。4.0的兼容性变化是服务实现随模块加载，容器getter需先加载对应模块；基础Service工厂不恢复，组件Controller仍逐实例。
+
 ## Toast 完整 Controller、通知布局与时限（3.0.0，2026-10-16）
 
 按用户授权以 xui 自有 Controller 替换 Toast 内核：runtime `/toast` 是唯一队列、进入/关闭阶段、可见上限、时限及 Promise owner；React 负责 DOM、实际焦点、播报、动画回执及手势测量。Provider 可创建唯一默认实例，或完整借用同一 Controller；借用时不创建、配置或销毁第二实例。没有读取 Base UI 私有 store，Button/render 与锚定几何仍复用其公开能力。默认右上角，`timeout` 省略或 `0` 使用配置默认（5000ms），`-1` 保持显示，正数为毫秒；无 View、悬停、焦点、窗口失焦、隐藏文档和手势期间暂停，恢复剩余时限。

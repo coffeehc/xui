@@ -1,4 +1,4 @@
-import {resolveConfig,type ConfigReadonly,type XuiConfig,type ConfigMenuItem} from './config.js';
+import {resolveConfig,type ConfigReadonly,type XuiConfig,type ConfigMenuItem} from './config-core.js';
 import type {I18nService} from './i18n-core.js';
 export interface MenuServiceState {label:string;items:readonly ConfigReadonly<ConfigMenuItem>[]}
 /** Navigation content only. Permissions are projected by the host; view expansion/focus belongs to its controller. */
