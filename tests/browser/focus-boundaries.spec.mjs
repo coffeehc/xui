@@ -112,7 +112,8 @@ test(`React dialog changes scroll owner without remounting fields`,async({page},
 
 test('React dialog remains reachable without ResizeObserver',async({page},info)=>{
  await page.setViewportSize({width:390,height:480});await page.goto('/react/foundation-contract.html');await page.waitForFunction(()=>!!window.renderFocusCase);
- await page.evaluate(()=>{const observer=window.ResizeObserver;window.ResizeObserver=undefined;try{window.renderFocusCase({kind:'dialog',titleText:'很长的标题'.repeat(12)});}finally{window.ResizeObserver=observer;}});
+ // Keep the capability absent through the later popup mount, not only the opener render.
+ await page.evaluate(()=>{window.ResizeObserver=undefined;window.renderFocusCase({kind:'dialog',titleText:'很长的标题'.repeat(12)});});
  await page.getByRole('button',{name:'Open form',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog).not.toHaveAttribute('data-dialog-scroll','body');await expect(dialog.locator('.xui-dialog-body')).toHaveCSS('overflow-y','visible');
  await pointAtScrollOwner(page,dialog);await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const b=await cancel.boundingBox();return b.y>=0&&b.y+b.height<=480;}).toBe(true);await info.attach('no-observer-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Open form',exact:true})).toBeFocused();
 });

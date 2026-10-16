@@ -925,6 +925,12 @@ const navigationTrigger = React.useRef<HTMLButtonElement>(null);
 
 完整受控 guard、取消/放弃示例见 [continuity-react](../examples/continuity-react/app.tsx)。业务继续决定是否离开、何时导航及新页面焦点。默认抽屉 Escape/关闭回焦与显式 finalFocus 合同不变。
 
+### 保留Dialog的阅读位置
+
+在支持布局观察的浏览器中，标准`Dialog.Content keepMounted`与单个直属`Dialog.Body`保留同一个弹窗DOM；受控open临时为false再恢复时，只要内容与滚动容器模式未变，公共布局观察不清除隐藏期间的body/whole模式，不主动把当前阅读位置滚到已聚焦控件；对隐藏后丢失偏移的浏览器，仅还原同一已测DOM滚动容器的最后可见位置（位置因内容缩短可自然夹紧）。仍存在的原生非零偏移优先于旧快照。输入值、选择区和阅读位置仍分别归宿主/DOM，组件不新增读取、核验或草稿owner。真正因窗口、字体或固定区域改变而切换滚动容器时，仍将焦点控件滚入新的可见区域；不承诺内容缩短后保留超出有效范围的offset，也不把卸载视作keepMounted。无Body或无ResizeObserver的CSS降级仍保证内容与动作可滚动到达，不承诺本节的偏移恢复；原生动画中的亚像素取整限制见[验收记录](VALIDATION.md#保留dialog异步恢复的阅读连续性4252026-10-17)。
+
+宿主若临时关闭私有弹窗等待自己的异步核验，可用已有initialFocus回调对仍有效目标执行`focus({preventScroll:true})`并return false；暂停期间的finalFocus由宿主选择，正常关闭仍回真实触发按钮。库不接管核验/权限、document visibility或重放请求。公开[示例](../examples/dialog-resume-react/app.tsx)以合成暂停替代核验，`?whole`展示极端长标题的整体滚动模式；只消费正式Dialog/Field/Textarea/Button/主题，不访问私有DOM或覆盖内部CSS。业务决定是否、何时恢复原详情及焦点。
+
 ### 嵌套弹层与 Tooltip 的 Escape 顺序
 
 Escape只关闭当前最上层的可关闭浮层。受控Sheet内的Button打开条件挂载的Dialog，第一次Escape关闭Dialog并回文件按钮，第二次关闭Sheet并回原开关；无需document监听、私有store、延时focus或重复onKeyDown。

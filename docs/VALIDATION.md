@@ -1,5 +1,30 @@
 # 验证证据与限制
 
+## 保留Dialog异步恢复的阅读连续性（4.2.5，2026-10-17）
+
+仅修改xui，三包/DESIGN为 **4.2.5**，末位递增、单一分发。sourceGeneration为`a9fd920d5fa6326f0b1e9730ff8ee0e579d24cfa23cb071c24c33cbea38ea5af`；独立正式consumer `.consumers/dialog-resume-dvonpu/react`安装三份tarball的ESM/CSS/types，React/ReactDOM19.2.8、Base UI1.7.0单实例，无src alias、宿主私有CSS或原生UI。405 Token、104公开入口、395逐项检查。本轮无新增公开props/exports，既有keepMounted、initialFocus、finalFocus与Dialog.Body组合合同见[保留详情](COMPONENTS.md#保留dialog的阅读位置)，正式样板见[dialog-resume-react](../examples/dialog-resume-react/app.tsx)。
+
+来源xLead固定4.2.3 / `b5c770f`的公开最小复现；本轮用4.2.4 / `f13c386`正式安装产物独立重建，观察器实现与4.2.3一致。输入保持焦点、草稿保留，Body手动滚至93px：同事件中立即关开仍为93px；真实受控关闭后等待350ms再打开，即使宿主initialFocus明确preventScroll，仍跳至10370px。根因为隐藏分支清除模式，恢复时误作滚动容器切换并将旧焦点scrollIntoView；不归因于宿主认证或请求适配。
+
+修复在共享布局观察器中保留隐藏前的body/whole模式；同一已测容器恢复时不主动揭示旧焦点。仅当浏览器隐藏后丢失偏移至零时，以组件自己的最后可见位置补齐该轴，仍存在的非零原生偏移优先；同步记录隐藏边界，覆盖暂停的动画帧，销毁清理滚动监听、观察器和待执行帧。真实布局模式变化仍清理旧容器并揭示当前焦点。没有新增定时恢复内核、全局位置缓存、身份核验、查询/草稿owner或私有CSS。标准单个直属Body与布局观察支持为偏移恢复前提；无Body/无ResizeObserver降级只承诺内容与动作可滚动可达。
+
+| 检查 | 最终实际结果 |
+|---|---|
+| build/typecheck/Token/docs/独立正式定向consumer | 通过；critical CSS gzip18702/19456；未测本轮完整initial JS或Button体积 |
+| 定向unit | 18/18：dialog-layout、contract、docs；含两个滚动模式、隐藏帧暂停、真实容器切换、原生偏移优先及卸载清理 |
+| Chromium恢复专项 | 22/22：18个主题/宽度/容器组合、1个真实容器切换、3个真实Chrome200%复合用例 |
+| Firefox/WebKit恢复专项 | 各19/19，共38/38；不含Chrome专用缩放 |
+| Chromium既有布局/焦点边界回归 | 36/36，含Dialog/Sheet/Card、footer/键盘/滚动、模式切换及无ResizeObserver降级 |
+| Chromium既有Controller回归 | 2/2，默认/注入Dialog及Sheet/AlertDialog/Popover/Tooltip/Menu/ContextMenu组合 |
+
+最终合计 **98项浏览器检查，0失败/跳过/flaky**。覆盖light/dark/system及实时变化、1280/390/320px、长中文、production/开发StrictMode；320px为200%根字号，真实Chrome200%校验DPR加倍、CSS viewport减半、根字号不变及CSS zoom/pinch=1。body/whole各两轮异步关闭/恢复，120个采样保留同一DOM、草稿、选择区2..7和焦点，Escape正常关闭回真实按钮；真实容器切换另验聚焦输入可见。Chrome/WebKit及静态Firefox的恢复偏移与关闭前实际读数严格相等。Firefox开启动画的6组两轮采样均有约0.1500015 CSS px差异；独立纯HTML滚动容器在scale动画下同样发生赋值取整，未调用xui。只对Firefox普通动画场景设置最多1设备像素边界，其他场景维持严格相等，不容许跳到零或焦点底部。已查看最终浅色窄屏、深色320px/200%根字号、system真实Chrome200%与极端长标题whole模式截图。
+
+过程失败保留：最初仅保留模式的候选Chrome22/22、WebKit19/19，Firefox恢复为零；补齐组件内可见位置快照后Firefox剩6组原生动画取整差异，纯HTML对照后采用上述精度边界，未增加补偿动画定时器。首轮旧布局回归35/36，原无ResizeObserver用例在打开弹窗前已恢复该能力，实际走到了观察器路径；仅修正测试使该能力在整个独立页面缺失，原可达性断言不变，最终36/36。初次版本测试漏改转义正则的旧版本号，修正后18/18。最终全部以新正式包重建fixture并重跑，未将中间候选结果冒充最终包验收。
+
+证据在`.artifacts/dialog-resume-validation/`：baseline.json/log及baseline-package.json；consumer.json/peers.json、native-final-{build,typecheck,tokens,unit,docs,consumer}.log；native-{browser,cross,layout,controller}-final.json/log、final-report-summary.json与images-final；过程browser-first、cross-first、layout-regression-first、retention-*-candidate、firefox-diagnostic及firefox-native-rounding保留。三份tarball的SHA256列在consumer.json，随最终源码SHA归档。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/dialog-layout.test.mjs tests/contract.test.mjs tests/docs.test.mjs`、`node scripts/check-docs.mjs`、`node .artifacts/dialog-resume-validation/consumer.mjs`。预览4173；该目录playwright.config.mjs运行dialog-resume.spec.mjs、focus-boundaries.spec.mjs，cross.config.mjs运行前者并排除genuine Chrome；controller-modes.spec.mjs选择owned and injected Dialog与Sheet, AlertDialog两项。并行调用各用独立--output；Controller fixture按最新正式consumer即时bundle并复用同代CSS，全部构建输入核对无源码alias。
+
+未执行全仓unit/browser、完整consumer套件、watch/cold-start、实体设备/读屏器或消费产品页面/API/部署。真实后台tab/visibility尝试在headless、headed及关闭焦点模拟后均未产生document.hidden变化，属于本机自动化环境未跑通（baseline-headed、baseline-native-background记录），未伪造visibility状态；本轮以明确350ms异步边界验证库布局问题，不冒称真实后台身份核验通过。xLead/xAgent等仍须自行升级、按公开slot接线并验收其恢复资格、权限和业务流程。
+
 ## Tabs扁平轨道与长名称阅读（4.2.4，2026-10-17）
 
 仅修改xui，三包/DESIGN为 **4.2.4**，仍只递增末位、无兼容分发。sourceGeneration为`3952ad3c0ef097efacb7c0cfda3f679984e2aaa67463341ba7b6cc1273686ef1`，独立正式consumer `.consumers/tabs-overlay-FDn3x8/react`安装三份tarball内ESM/CSS/types，React/ReactDOM19.2.8与Base UI1.7.0单实例，没有src alias或宿主私有CSS。405 Token、104公开入口；本轮只运行定向consumer，不将其写成全量接入验收。
