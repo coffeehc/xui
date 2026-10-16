@@ -154,3 +154,9 @@ test('DataTable component minimum only permits the exact reviewed measured outpu
       await fixture({[file]:source},async root=>assert.rejects(auditDesignSources({root}),/Unreviewed dynamic/));
   }
 });
+
+test('Toast gesture offsets permit only the exact measured CSS variables in its React view',async()=>{
+ const source='const style={"--toast-swipe-movement-x":`${movement.x}px`,"--toast-swipe-movement-y":`${movement.y}px`}; const A=()=> <div style={style}/>;';
+ await fixture({'packages/ui-react/src/toast.tsx':source},async root=>assert.doesNotReject(auditDesignSources({root})));
+ for(const [name,content] of [['packages/ui-react/src/other.tsx',source],['packages/ui-react/src/toast.tsx',source.replace('movement.x','movement.x+8')],['packages/ui-react/src/toast.tsx',source.replace('--toast-swipe-movement-x','padding')]])await fixture({[name]:content},async root=>assert.rejects(auditDesignSources({root}),/Unreviewed dynamic/));
+});

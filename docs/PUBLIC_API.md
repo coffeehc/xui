@@ -161,7 +161,7 @@ CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` �
 | ApiKeyManager | `pagination` 默认本地 pageSize 10、选项 `[10,25,50]`，只分页完整 `rows`；显式 `false` 关闭分页。切页不发请求、total 仅取完整已确认集合长度；不改变 adapter、后端分页或请求 owner |
 | Dialog/Popover/Menu/Tooltip | 关闭不保存。受控 open 与可取消变化遵循各自 React peer 合同。Content portal/默认定位：Select bottom/start 且 alignItemWithTrigger=false，Combobox/Menu bottom/start，Popover bottom/center，Tooltip top/center；positionerProps 可覆盖。Dialog 为模态，非模态浮层不 trap；Tooltip 只放说明 |
 | Sheet/AlertDialog/ContextMenu | Sheet默认end，确认initialFocus由宿主或安全取消/中性节点；context rightclick/Shift+F10，checked状态宿主拥有；details.cancel/finalFocus/嵌套生命周期见[弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
-| Toast | Provider/manager 使用 React peer 合同；必要错误就地持续可见，不只依赖自动消失通知 |
+| Toast | xui Controller 唯一队列；Provider 可默认或完整注入，默认右上角；必要错误就地持续可见 |
 | Table/layout | 真实标准元素、header cell 默认 scope=col；TableContainer 为可聚焦 region，宿主给名字。SortButton type=button；striped/expandedRow/ExpandedRow/ExpandButton与逻辑stickyOffset公开；排序/选择/查询/虚拟化不由库执行。PageHeader 主标题和 actions，AppShell 默认抽屉关闭 |
 | feedback/resource | Alert 默认 info/status，error 为 alert；DataRegion busy=false；显式传 feedback（含 null）时保留局部反馈槽，使用公开 feedback slot；LoadingState 默认 Loading…，ErrorState 默认 Retry。resource 初始 idle、isEmpty 未声明不猜空、无 timeout/cache/请求或自动 retry；换 key 清旧值、同 key 刷新保留，hooks 只订阅 |
 | MetricCard | label/value 必填且原样显示（保留0）；marker默认无、空内容不占位；section/dl/dt/dd为被动展示，未内置按钮/live角色。复用Surface/stat tokens，排列仍由Grid；[合同](COMPONENTS.md#metriccard) |
@@ -759,7 +759,7 @@ const selection=createSelectionController<string|null>({defaultValue:null});
 
 `createLoginViewController({auth,config,extensions?,onAuthenticated?})` 必须借用实际 AuthClient，View 不创建认证协议/client。绑定的 `readCredentials` 只提供瞬时读取边界，校验/扩展只保留用户名或安全错误，异步扩展完成后才读取用于 auth 的密码。交给 AuthClient 的参数属于其 IO 边界；本模型不在任何快照/缓存/日志保留密码，不破坏自定义 AuthClient 异步读取其参数的合同。实际 DOM 在提交、pagehide、替换和卸载时清理。Secret-safe 子模型与管理员初始化 form 聚合见组件矩阵。
 
-Toast 的队列、超时与关闭阶段仍由 Base UI Provider 内部 ToastStore 持有；公开动作 manager 没有替换该集合。当前 peer 没有保持其焦点/计时并注入外部集合的公开路径，2.0.0 不声称解决此项。不得访问私有订阅/store或再造竞争队列。
+3.0.0 的 Toast 由 xui 公开 Controller 拥有唯一集合/计时/关闭阶段；不再使用 Base UI ToastStore。以下为正式迁移合同。
 
 ## 剪贴板复制服务
 
@@ -775,3 +775,31 @@ await clipboard.writeText(text,{signal});
 默认优先用实际 navigator.clipboard.writeText；仅该能力缺失时使用临时 textarea/execCommand 的平台回退，始终清除临时DOM并恢复原焦点、input选区、文本选区与滚动。权限拒绝/实际写入失败不自动再次写入。无 navigator/document 的环境在调用时拒绝，不在 import 阶段访问 DOM。options 的 navigator/document/execCommand 是显式平台测试/宿主注入边界。
 
 同服务 FIFO 串行执行实际写入；取消队列中尚未开始的任务不会调用 writer，取消正在等待的调用会停止本地等待，但后续写入必须等真实 writer settle 才执行，不能越过未完成的 OS 操作。`disposeXuiServices(window)` 只释放注册表创建并拥有的内部剪贴板服务；经 `services.clipboard.instance` 借用的 `SharedClipboardService` 只有 `writeText` 合同，调用方无须提供 `dispose`，registry 也不会销毁借用实例。注入 `services.clipboard.options` 时，options 中的 `writeText` 是借用的平台 writer seam，内部服务使用但不拥有或 dispose 它。调用方不能据此声称已撤回 OS 剪贴板。`createCopyController` 是组件 Controller factory，保留并默认复用共享剪贴板服务；原显式 writeText 注入仍兼容并保留自身反馈代次隔离。
+
+<!-- public-entry: @coffeehc/xui-runtime/toast -->
+### Toast 完整 Controller
+
+`@coffeehc/xui-runtime/toast` 导出纯 TypeScript `createToastController<T>()`、`ToastController<T>`、`ToastOptions`、`ToastContent`、`ToastRecord<T>`、`ToastState<T>` 与 View 租约/Promise options。runtime 不依赖 React/DOM。React `/toast` 导出 `Toast` 组合、各部件 Props 与 `ToastController<Data>`/`ToastObject<Data>`/`ToastPayload<Data>`；data 保留宿主类型。
+
+```tsx
+import {Toast} from '@coffeehc/xui-react/toast';
+const notifications = Toast.createToastManager({timeout: 5000, limit: 3});
+function Notices() {
+  const {toasts} = Toast.useToastManager();
+  return <Toast.Portal><Toast.Viewport aria-label="通知">{toasts.map(toast =>
+    <Toast.Root key={toast.id} toast={toast}><Toast.Content>
+      <Toast.Title/><Toast.Description/><Toast.Actions><Toast.Close aria-label="关闭通知">关闭</Toast.Close></Toast.Actions>
+    </Toast.Content></Toast.Root>
+  )}</Toast.Viewport></Toast.Portal>;
+}
+const view = <Toast.Provider controller={notifications}><Notices/></Toast.Provider>;
+notifications.add({title: '已保存', description: '更改已保存。'});
+```
+
+省略 controller 的 Provider 拥有唯一默认实例，可配置 timeout（不填/0使用5000ms，-1保持）、limit（3）与 exitTimeout（1000ms关闭兜底）。controller 或兼容拼写 toastManager 注入的是同一个完整 xui 队列，与这些配置互斥；宿主负责销毁借用实例。可在绑定 View 前 add，绑定时投影已有项；无 View 暂停，重新绑定保留队列。配置 timeout 只影响后续新增及Promise完成默认时限，不追改已有项；update 仅更换文案/元数据保留剩余时限，显式 timeout 重启该项时限；同 id add 重新计时。limit控制未展开显示数；Viewport按48rem的实际阅读宽度或放大文字报告环境上限1，模型visibleLimit取配置和有效View报告的最小值，不重写limit；展开呈现全部并在40dvh公共Token上限内滚动，隐藏项暂停时限。
+
+add 返回稳定字符串 id，同 id 活跃项转为 update；update/close、getState/subscribe、promise、bindView/destroy 均为同一 owner。快照/集合/记录浅只读，内容/data由宿主提供。revision 与 transitionStatus 是只读回执信息，宿主不写内部阶段。close 全部或指定项进入 ending、onClose 一次；动画回执或exitTimeout移除、onRemove一次。相同id替换关闭中的旧项会完成旧移除回调，不影响新记录。Promise 返回原结果/拒绝；记录已关闭、被手动更新或实例已销毁时不再执行迟到格式化/写入。
+
+Actions独立末行靠右并自然换行，无内容不占位，沿用small公共Button。Title/Description 缺省 children 使用记录内容（h2/p）；render/ref/className(state)/style(state) 保持公开组合，id 与 aria 关联同步。Action 使用 actionProps，不默认关闭；Close 可按普通公开 Button disabled。普通通知 role=status/polite，高优先级 role=alert/assertive；不抢新增焦点。键盘、暂停、手势及默认右上角见 [DESIGN](DESIGN.md#通知队列与视图合同)。Positioner/Arrow 使用 Base UI 公开 Popover 几何能力；`toast.positionerProps` 或部件 props 指定真实anchor。没有第二个通知 store。
+
+**3.0.0迁移**：旧外部 `@base-ui/react/toast` manager/ToastObject/专有内部状态不能注入；改用以上xui入口。`Toast.createToastManager` 名称继续可用，但返回完整xui Controller；旧 Provider/Viewport/Root/Content/Title/Description/Close/Action/Portal/Positioner/Arrow/useToastManager 名称保留。Viewport默认位置变为右上角，timeout旧0常驻需改为-1（不填/0使用默认5秒），默认右滑保留纵向滚动；不保留peer堆叠高度/索引等私有CSS变量。宿主不复制队列或写DOM/CSS适配层。示例 `examples/toast-react/` 仅展示隔离合成动作，不代表业务保存已实现。

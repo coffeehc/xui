@@ -49,12 +49,12 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 | Tabs | Root/List/Tab/Panel 复用 peer；方向键/Home/End 仅适配跳过 disabled，保留手动/自动激活、loop、RTL/orientation、ref/render/className 函数和 Tab/List capture/bubble。preventBaseUIHandler 取消控件行为，preventDefault 仅取消浏览器默认 |
 | 复合选择 | Select/Combobox 复用 peer generic Root，样式部件、Content portal/positioner/popup；受控、禁用、搜索空结果和取消仍由 peer/宿主负责。Positioner 测量通过 CSS，无 JS 色板 |
 | 弹层 | Dialog、Sheet、AlertDialog、ContextMenu、Menu、Popover、Tooltip。Root/Trigger/Content/部件延续 peer 生命周期。Menu disabled 项可在 peer roving 顺序获得焦点但不能执行；peer roving 顺序仍允许 disabled menu item 获得焦点，但不能执行。Tooltip 增加 role 和描述 id，Root.contentId 可指定关联 id；外部 handle 触发器由宿主显式 aria-describedby 关联 |
-| 通知 | Toast Provider/manager/Root/Content/Viewport/Close 等复用 peer。peer 支持 collapsed/expanded，关闭控件在展开状态可访问，宿主不能将必要错误仅放在消失通知中 |
+| 通知 | Toast Provider/controller/Root/Content/Viewport/Close 使用同一个 xui 语义队列；默认右上角，Content/Actions统一文字/末行动作排版，窄屏或大字收敛最新一项，焦点/悬停展开和暂停，必要错误原位持续。Button/render/锚定几何复用 Base UI 公开入口 |
 | 状态 | Surface/Alert、Badge/Skeleton/Spinner/Progress、Loading/Empty/ErrorState、DataRegion、RenderBoundary、useResource。错误/重试文字由宿主；render exception 重置不重试 Promise |
 
 ### 状态所有权与 Controller 模式
 
-2.0.0 在历史 1.3.0 基线基础上落实下表的语义状态接口。旧 Controller 草稿版本1.4.0不是当前固定产物。源码实现、定向自动测试、正式安装包和浏览器证据分别记录在 [VALIDATION](VALIDATION.md)，不能将其中任何一项替代产品验收。Toast 仍有明确缺口，不能称为全组件完整替换。
+2.0.0 在历史 1.3.0 基线基础上落实下表的语义状态接口。旧 Controller 草稿版本1.4.0不是当前固定产物。源码实现、定向自动测试、正式安装包和浏览器证据分别记录在 [VALIDATION](VALIDATION.md)，不能将其中任何一项替代产品验收。3.0.0 进一步以自有 ToastController 补齐集合/计时/关闭阶段注入；完整语义和迁移限制见 PUBLIC_API。
 
 默认/注入两种模式使用同一公开契约。React 的 `controller` 与其对应初始化、受控值、变更回调互斥，JS 冲突输入也应拒绝。纯展示、业务权限、路由、查询和认证不因此归组件；键盘、实际焦点、定位、DOM 测量仍由原 Base UI/浏览器执行。`getState` 返回稳定只读快照，`subscribe` 返回退订函数；注入实例由宿主销毁。默认实例仅在真正卸载或依赖身份替换时销毁，StrictMode replay 不重复启动请求；注入实例替换后旧实例不再驱动 View。下列模型不支持并发绑定两个独立 View 来争夺同一表单或焦点。
 
@@ -88,7 +88,7 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 | `BusinessLogExplorer`、`StructuredLogExplorer` | 兼容旧 service `controller`；显式 `options` 默认服务；`viewController` 完整替换 | `createBusinessLogViewController` / `createStructuredLogViewController` 持有未提交 draft、filters Controller并引用唯一服务，不复制服务结果/快照/查询。缺失 records 继续不请求、不显示入口 |
 | `ConfigurableLoginPage` | 原 auth/config/extensions/callback 或 `LoginViewController`，工厂 `createLoginViewController` | 错误、extension/登录/导航展示阶段与密码显隐；必须显式借用 AuthClient，绝不创建第二认证 owner。绑定 reader 不缓存秘密；异步扩展之后才重读密码，交给 auth 后立即清理本地引用及 DOM |
 | `ThemeModeButton`、`AppHeader` 的主题区、`useTheme` | 沿用共享文档默认 ThemeController 或 `theme` | prepaint/JSON sessionStorage 与公开缩放合同保持；按钮/头部卸载不 destroy 文档共享实例。locale 事实归宿主，展开采用 SimpleSelect 合同 |
-| `Toast` | **未满足完整集合替换**；现有 createToastManager 只是动作入口 | Base UI 1.7.0 Provider 无条件创建 ToastStore，公开 props 不接受受控集合/store。queue、timeout和关闭阶段属于语义状态，不能归为纯 DOM。保持公共 peer 焦点/计时而完成替换需要上游增加受控集合/store 合同或正式升级支持该合同；当前没有这种公开方案。未读私有 store、不造第二队列、不宣称动作 manager 已满足 |
+| `Toast` | `createToastController`（runtime `/toast`）；`Toast.Provider controller`，旧 `toastManager` 名称接受同一个 xui Controller | 唯一队列、阶段、上限、超时、暂停与Promise由模型持有；React负责DOM焦点/播报/动画回执和指针测量，默认实例拥有生命周期，借用实例不销毁。旧Base UI动作bus不满足此合同，3.0.0需迁移；Provider options 与注入互斥 |
 
 完整服务组合使用 `viewController` 区分旧服务 `controller`，避免把旧的必填服务实例改名后误称完整展示注入。借用服务不被 View 销毁，仍按原关闭/取消合同释放所属瞬态详情/secret；options 创建的服务由默认 view model 销毁。默认服务 options 仅在首次创建时使用；父组件传入新对象不会重建服务或丢失正在编辑的草稿。显式更换借用 service 身份会创建对应新展示实例，保持 React DOM 树；业务范围需要替换默认 owner 时由宿主明确重挂载。配置更新不覆盖注入者模型；注入者调用对应 update/动作。
 

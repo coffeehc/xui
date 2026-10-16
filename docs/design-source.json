@@ -1,15 +1,15 @@
 {
-  "contractVersion": "2.0.1",
+  "contractVersion": "3.0.0",
   "defaultTheme": "Precision Engineering Console",
   "defaultMode": "dark",
-  "defaultTokenCount": 403,
+  "defaultTokenCount": 404,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "78ae9d3622af5dce0baafea9d45ffd20166a26d254bfc74f1e7629ff39c1d53b",
+  "defaultCssSha256": "1fd5bdc2348c2b9a108dae39933f6e7b6d4a7d48bd246a0bf7ccb1a229ccdfc3",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -99,5 +99,8 @@
     "sha256": "5b0c3caa7eaaa1df864b9562fa8d0f21b8d86555d3d396fcd2a7d9a5c989a785",
     "authority": "user-provided-stitch-reference",
     "resolution": "Adopt token tiers and slot/state ownership; retain published names, accessible scales, keyboard and actual host facts. DESIGN documents implementation corrections."
-  }
+  },
+  "implementationChanges": [
+    "3.0.0 replaces the Toast peer action bus with one fully injectable xui queue, retains public rendering and anchor primitives, defaults to top-end and five-second dismissal; -1 pins, zero/omitted uses the configured default. Shared semantic typography and tokens remain unchanged."
+  ]
 }

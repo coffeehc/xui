@@ -53,13 +53,15 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 旧正式包中桌面侧栏没有inline-end边线，独立消费者保存了展开/紧凑、LTR/RTL、100%/200%文字的16组几何，新边界断言在旧包上复现失败。1.3.1仅在已有桌面断点增加line-width-surface / separator-line逻辑边线，并从原末端padding中扣除同样线宽；保持外宽及内容净宽，不增分隔节点或resize handle。窄屏不应用该规则，仅保留既有Dialog外框；AppShell/MenuLayout共用同一CSS，React逻辑/portal/查询和业务owner不变。正式包与浏览器实际结果见[验证记录](VALIDATION.md)；不因此宣称xAgent已升级或现网页面已验收。
 
-### XUI-REQ-20261016-06：公共交互状态的默认与完整Controller替换（2.0.0部分实现，Toast仍开放）
+### XUI-REQ-20261016-06：公共交互状态的默认与完整Controller替换（3.0.0已实现，待宿主验收）
 
 来源：xAgent维护来件，固定消费xui `1a6772e4fcbf7be180c813e560d9d32538dabe20`、DESIGN/三包1.3.0。按公开根入口逐项核对了105个React运行时导出及其组合部件，结果和分阶段建议集中在[状态所有权矩阵](COMPONENTS.md#状态所有权与-controller-模式)。这轮是源码/类型审查，不是所有组件双模式已具备的声明。
 
 历史审查基线中，Menu.View与共享主题已有语义双模式；当时Calendar/DateTimePicker、Copyable、密码展示及多种组合交互仍缺少实例替换。当时ApiKey与两类日志是必填服务Controller注入，不能将其本地分页/未提交筛选草稿也声称为完整替换。Toast已支持公开toastManager动作入口，但peer Provider仍拥有真实toasts/timeout/focus状态，需先解决上游公开替换合同。handle、受控props和DOM ref分别按真实能力登记；宿主领域值/查询、React异常捕获及平台测量/加载不强造Controller。
 
-2.0.0按[当前逐项矩阵](COMPONENTS.md#状态所有权与-controller-模式)落实组件默认/注入与展示/服务边界，正式验证见[记录](VALIDATION.md)。保留消费项目、认证/API协议与业务owner；基础 Service 的创建统一经应用注册表，组件 Controller 工厂仍按组件模型使用。Toast的集合、超时、关闭阶段仍未满足完整外部替换：peer公开Provider不接受集合/store，需要上游公开合同或正式升级，当前未使用私有store或第二队列绕过，因此本请求仍部分开放，不能宣称全组件达标。
+2.0.0按[当前逐项矩阵](COMPONENTS.md#状态所有权与-controller-模式)落实组件默认/注入与展示/服务边界，正式验证见[记录](VALIDATION.md)。保留消费项目、认证/API协议与业务owner；基础 Service 的创建统一经应用注册表，组件 Controller 工厂仍按组件模型使用。Toast的集合、超时、关闭阶段仍未满足完整外部替换：peer公开Provider不接受集合/store，需要上游公开合同或正式升级，当前未使用私有store或第二队列绕过，因此当时本请求仍部分开放，不能宣称全组件达标。
+
+3.0.0在用户明确授权后替换Toast内核：runtime `/toast` 公开唯一队列/时限/关闭阶段Controller，React Provider默认或完整注入，不读peer私有store、不保留竞争队列。新增Content/Actions排版、右上角、窄屏单项/40dvh上限，以及timeout -1保持、0/省略默认5秒。旧Base UI动作manager须迁至xui工厂，原组合名称保留；正式产物与各项验证见[记录](VALIDATION.md)。库能力已补齐，消费项目升级、接线与真实页面验收仍由各宿主负责。
 
 ### XUI-REQ-20261016-03：固定列与全表分割线一致（1.1.2已实现，待宿主验收）
 

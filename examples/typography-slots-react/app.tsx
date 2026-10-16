@@ -47,7 +47,7 @@ function OverlayParts({sheet=false}:{sheet?:boolean}){
 }
 function Notifications(){
  const manager=Toast.useToastManager();
- return <><Button onClick={()=>manager.add({title:'操作已完成',description:'当前合成记录已保存。'})}>显示通知</Button><Toast.Viewport>{manager.toasts.map(toast=><Toast.Root key={toast.id} toast={toast}><Toast.Title data-type-id="toast-title" data-type-role="label">{toast.title}</Toast.Title><Toast.Description data-type-id="toast-description" data-type-role="meta">{toast.description}</Toast.Description><Toast.Close render={<Button size="sm" variant="outline"/>}>关闭通知</Toast.Close></Toast.Root>)}</Toast.Viewport></>;
+ return <><Button onClick={()=>manager.add({title:'操作已完成',description:'当前合成记录已保存。'})}>显示通知</Button><Toast.Viewport>{manager.toasts.map(toast=><Toast.Root key={toast.id} toast={toast}><Toast.Title data-type-id="toast-title" data-type-role="label">{toast.title}</Toast.Title><Toast.Description data-type-id="toast-description" data-type-role="meta">{toast.description}</Toast.Description><Toast.Close aria-label="关闭通知" render={<Button size="sm" variant="outline"/>}>关闭通知</Toast.Close></Toast.Root>)}</Toast.Viewport></>;
 }
 function App(){
  const [count,setCount]=React.useState(0);
@@ -83,7 +83,7 @@ function App(){
    <EmptyState title={<Sample id="empty-title" role="body-heading">尚无记录</Sample>}><Sample id="empty-body">创建后会显示在此区域。</Sample></EmptyState>
    <ErrorState title={<Sample id="error-title" role="body-heading">同步失败</Sample>}><Sample id="error-body">原有内容与筛选保留。</Sample></ErrorState>
    <Typography.Text data-type-id="text" data-type-role="body">普通正文</Typography.Text><Typography.Link href="#details" data-type-id="link" data-type-role="body">阅读详情</Typography.Link><Typography.Code value="record_2026_001" data-type-id="code" data-type-role="code"/>
-   <Toast.Provider timeout={0}><Notifications/></Toast.Provider>
+   <Toast.Provider timeout={-1}><Notifications/></Toast.Provider>
    <Tooltip.Provider><Tooltip.Root><Tooltip.Trigger render={<Button variant="outline"/>}>查看简短说明</Tooltip.Trigger><Tooltip.Content><Sample id="tooltip" role="meta">简短中文说明</Sample></Tooltip.Content></Tooltip.Root></Tooltip.Provider>
    <Image src="" alt="资源缩略图" aspectRatio={2} fallback="缩略图暂不可用"/><Tag label="项目分类"/><Copyable value="record_2026_001" writeText={()=>{}} labels={{copy:'复制标识',copied:'已复制'}}/>
    <Toolbar aria-label="界面比例">{([1,1.25,1.5,2] as const).map(scale=><Button key={scale} onClick={()=>setInterfaceScale(scale)}>{scale*100}%</Button>)}</Toolbar><output aria-label="合成操作次数">{count}</output>

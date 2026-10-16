@@ -4,6 +4,34 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## Toast 完整 Controller、通知布局与时限（3.0.0，2026-10-16）
+
+按用户授权以 xui 自有 Controller 替换 Toast 内核：runtime `/toast` 是唯一队列、进入/关闭阶段、可见上限、时限及 Promise owner；React 负责 DOM、实际焦点、播报、动画回执及手势测量。Provider 可创建唯一默认实例，或完整借用同一 Controller；借用时不创建、配置或销毁第二实例。没有读取 Base UI 私有 store，Button/render 与锚定几何仍复用其公开能力。默认右上角，`timeout` 省略或 `0` 使用配置默认（5000ms），`-1` 保持显示，正数为毫秒；无 View、悬停、焦点、窗口失焦、隐藏文档和手势期间暂停，恢复剩余时限。
+
+三包与 DESIGN 为 **3.0.0**，404 Token、102 公开入口、362 项接入检查。正式 ESM/CSS/types 的 source generation 为 `f29cfd1d5e80159224d521ee3a752a5f22029c05152e3e98721f5d7b7223d666`，独立安装目录 `.consumers/run-M497TD/react`。全部公开 exports/types、正负类型 fixture 与示例均使用正式 tarball，没有源码 alias；React/ReactDOM 19.2.8 与 Base UI 1.7.0 单实例。公开组合和迁移示例见 [Toast 合同](PUBLIC_API.md#toast-完整-controller)。
+
+| 检查 | 最终结果 | 证据（`.artifacts/toast-validation/`，另注路径除外） |
+|---|---|---|
+| build / typecheck / Token / 文档 / diff | 通过；248 文件、2419 条设计声明、404 Token | `.artifacts/toast-work/build-viewport-final.log`、`release-final-{typecheck,tokens,docs,diffcheck}.log` |
+| 完整单测 | **491/491**，无 fail/skip；其中 runtime Toast **18 项**属于该总数 | `release-final-unit.log` |
+| 独立正式包消费者 | 通过，同代 ESM/CSS/types、全部公开入口、示例及体积门禁 | `.artifacts/toast-work/consumer-final.log`、`.artifacts/performance-baseline.json` |
+| Chromium 专项与相关组合回归 | **59/59**，无 skip/flaky；Toast 33 项，其余为 foundation 与 typography slots | `browser-final.json/log` |
+| Firefox / WebKit 定向回归 | 各 **16/16**，合计 **32/32**，无 skip/flaky | `cross-final.json/log` |
+
+浏览器覆盖默认/借用、StrictMode、绑定前入队、同 id 实例替换、真实退出和迟到 Promise/动画；关闭/移除各一次、动作不重复执行、禁用和 preventDefault、显式 Portal 容器与 Positioner。核对 title/description 动态卸载后的 ARIA 清理、render 自带内容及实际 ID；F6/Tab/再次 F6/Escape、外部关闭/destroy，以及焦点仅停在区域尚未 Tab 时退出/替换/清空，均回到正确位置。普通与高优先级 live region 的属性已检查，但不据此宣称真实读屏器播报验收。
+
+视觉覆盖 light/dark/system（含 system 实时变化）、1280/320px、长中文、200% 根字号与界面缩放、forced-colors，及真实 Chrome 200% 页面缩放（DPR 加倍、CSS 视口减半、根字号不变、CSS zoom/pinch 均为 1）。Content/Actions 使用公共文字、间距及 small 32px 按钮；动作独立末行靠右，窄屏/大字收敛为一项，悬停/焦点展开并在 40dvh 公共上限内滚动。新增 scroll-margin 保护控件四边的完整焦点轮廓；最终用例比较 outline 与 offset 后的完整边界，不能仅以按钮中心可见判通过。已查看 `images-final/` 中浅色窄屏、深色桌面、大字、真实缩放和高对比度代表图。
+
+与 Stitch 的本轮交互是**文字合同审阅**：确认独立 Actions 行、沿用公共 32px 按钮、窄屏单项/40dvh 及可翻译关闭名称，不采用负偏移或第二套尺寸。记录在 `stitch-review-state.txt`、`stitch-review.png`；右侧画布仍是此前登录 V3，不能称为 Stitch 审过实际 Toast 截图或代码。实际截图验收由本轮正式包浏览器执行。
+
+过程失败分别保留：`browser-first.json` 首轮 **22/23**，Positioner 缺少公开 Popover.Portal 而报错，修复后通过；旧正式包的更严格焦点边界断言在 `focus-baseline.json/log` 复现底边轮廓裁切，公共 scroll-margin 修复后最终通过。`viewport-focus-recheck.json/log` 的旧候选为 **1/3**，暴露区域焦点在替换空队列/destroy 后未返回；修复 DOM 焦点所有权和空队列回焦后，本次正式包三项及跨引擎全部通过。独立审查另有当前源码内存 bundle **5/5**，只作定向复验证据，不替代上述正式产物结果。
+
+critical CSS 初轮 **18604** 超过旧 **18560** 上限，保留实际失败；此次通知槽和高度 Token 明确增加 **128 bytes** 预算至 **18688**，最终 **18622/18688**。首屏 JS **152123/153600**、Button **6619/16384**，窄 Clipboard/Theme/I18n/Menu Service 分别 **3859/3491/3028/3253**（各不超过4096），未提高这些预算。React Doctor 固定 0.9.18，以 `--verbose --no-score --no-supply-chain` 检查单文件：发现并修复 Hook 名称、依赖和 Context 值问题；最终为 **0 errors、2 warnings**（`react-doctor-final.log`）。一项提示 cleanup 读取变化的 focusedId.current：这里必须读取退出时实际焦点归属，不能捕获绑定初值；相应退出/替换用例已验证。另一项是 Root 复杂度18/最大嵌套2的维护建议，队列模型和独立手势 Hook 已分离，保留集中 DOM 投影；未为消除建议机械拆分。不将建议项或不可用评分算作功能失败/通过。
+
+兼容性：这是主版本升级。旧外部 Base UI Toast manager/对象不能继续注入，须改用 xui `/toast` 工厂；`Toast.createToastManager` 兼容拼写返回同一完整 xui Controller，原组合名称保留。旧 `timeout: 0` 常驻改为 `-1`，默认位置改为右上角；不保留 peer 私有堆叠变量。重要错误仍须在所属内容区域持续可见。未改消费项目、业务 API 或认证逻辑。
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`pnpm test:unit`、`pnpm test:consumer`；Chromium 使用 `playwright.config.mjs` 执行 `toast.spec.mjs foundation.spec.mjs typography-slots.spec.mjs`；跨引擎使用 `cross.config.mjs` 与 `cross-final.log` 中的定向范围。未执行无关浏览器全集、watch/cold-start、独立 SSR hydration、真实读屏器/实体移动设备或消费产品/后端/部署验收，不宣称各产品已升级。
+
 ## 登录 V3 与导航生命周期（2.0.1，2026-10-16）
 
 按用户确认的 Stitch V3 落实公共 `AuthPage`：原宿主 Logo/名称独立居中置于卡片外，卡片使用完整细边线与公共圆角，标题/字段/主操作采用同一认证布局 Token。没有替换 Logo、增加说明噪声或改变认证协议；`ConfigurableLoginPage` 与管理员初始化复用该布局。slot 归属见 [认证布局](COMPONENTS.md#认证布局-slot-归属)。窄屏内距受视口约束，200% 界面缩放仍可到达控件，垂直空间不足时自然滚动；没有缩小文字来掩盖溢出。

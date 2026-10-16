@@ -49,7 +49,10 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // 2.0.1 login V3 adds derived tokens and the external brand layout: after
 // removing its redundant wrapper, CSS was 18,485 bytes (+67 from 2.0.0). Allow
 // a bounded 128-byte increment; JS, Button and narrow-service limits are unchanged.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 18560, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
+// 3.0 Toast adds its public content/actions slots and a viewport-height token.
+// The formal install measured 18,604 vs the prior 18,560 cap; bound this
+// feature to another 128 bytes. JS/Button/narrow service caps remain unchanged.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 18688, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // A fresh directory prevents npm reusing an earlier tarball with the same version.
 const runDirectory = await mkdtemp(resolve('.consumers/run-'));
@@ -68,7 +71,8 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await mkdir(`${cwd}/shared`,{recursive:true});
     await copyFile('examples/shared/bootstrap-browser.ts',`${cwd}/shared/bootstrap-browser.ts`);
     await copyFile('tests/fixtures/controller-modes.tsx',`${cwd}/controller-modes.tsx`);
-    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx'],{cwd,stdio:'inherit'});
+    await copyFile('tests/fixtures/toast-types.tsx',`${cwd}/toast-types.tsx`);
+    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','toast-types.tsx'],{cwd,stdio:'inherit'});
     await copyFile('examples/shared/layout.css', `${cwd}/layout.css`);
     await writeFile(`${cwd}/product.css`, extract(await readFile('docs/DESIGN.md', 'utf8'), 'design-product-css'));
     const require = createRequire(`${cwd}/package.json`);
@@ -243,7 +247,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await writeFile(`${layoutTypographyOutput}/metafile.json`, JSON.stringify(layoutTypographyBuild.metafile, null, 2));
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'layout-typography/app.tsx'], { cwd, stdio: 'inherit' });
     // These fixtures are built only from independently installed formal packages.
-    for(const name of ['typography-slots','action-menu']){
+    for(const name of ['typography-slots','action-menu','toast']){
       const fixture=resolve(cwd,name),output=resolve(`dist/${name}-react`);
       await cp(`examples/${name}-react`,fixture,{recursive:true});
       const options={entryPoints:[`${fixture}/app.tsx`],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}};
@@ -255,8 +259,8 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
       await writeFile(`${output}/metafile.json`,JSON.stringify(result.metafile,null,2));
       if(name==='action-menu')await copyFile('tests/fixtures/public-followup-types.tsx',`${cwd}/public-followup-types.tsx`);
       execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',`${name}/app.tsx`,...(name==='action-menu'?['public-followup-types.tsx']:[])],{cwd,stdio:'inherit'});
-      if(name==='action-menu'){
-        const strictOutput=resolve('dist/action-menu-react-strict');
+      if(name==='action-menu'||name==='toast'){
+        const strictOutput=resolve(`dist/${name}-react-strict`);
         await build({...options,outdir:strictOutput,minify:false,define:{'process.env.NODE_ENV':'"development"'}});
         await copyFile(`${fixture}/index.html`,`${strictOutput}/index.html`);
         await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${strictOutput}/theme-init.js`);

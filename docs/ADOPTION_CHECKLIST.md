@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（2.0.1）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（3.0.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -261,6 +261,10 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CTRL-014 | 页面使用 Image | 帧尺寸由公开尺寸/aspect-ratio 保持；loading/error 文案及 alt 语义真实，资源更新不替换外层布局节点 | naturalWidth、状态、外层节点 identity 与截图 | [COMPONENTS Image](COMPONENTS.md#image) |
 | CTRL-015 | 页面使用 MetricCard | 只呈现回答当前任务的真实指标；loading/unknown/error 与数值0分别表达，不把未知补成零 | 数据来源、状态样本与实际首屏位置 | [COMPONENTS MetricCard](COMPONENTS.md#metriccard) · [DESIGN 指标映射](DESIGN.md#逐组件外观与状态映射) |
 | CTRL-016 | 页面使用 Toast | 仅短暂、非关键反馈进入 Toast；需要持续处理的错误/权限/风险仍在所属内容位置可见 | Provider/调用路径与错误恢复后截图 | [COMPONENTS 通用状态](COMPONENTS.md#基础组件与通用状态) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
+| TOAST-001 | 通知队列与注入 | 默认 Provider 仅建一个队列；controller/toastManager 与 timeout/limit/exitTimeout 互斥，借用实例不销毁 | 双模式、StrictMode、同id实例替换/退出与迟到结果 | [通知合同](DESIGN.md#通知队列与视图合同) |
+| TOAST-002 | 通知位置与文字 | 默认右上角，Title/Description/Actions/Action/Close 使用公共槽，动作末行靠右；窄屏与大字默认最新1项、40dvh内滚动、焦点四边可见，宿主不写定位/字号补丁 | 三主题、长中文、200%文字与真实页面缩放截图 | [通知合同](DESIGN.md#通知队列与视图合同) |
+| TOAST-003 | 计时与关闭 | 悬停/聚焦/文档隐藏/无View/隐藏项暂停；恢复剩余时长，关闭回调各一次，旧Promise不复活关闭项 | 受控时钟、真实指针/键盘、错误与退出用例 | [通知合同](DESIGN.md#通知队列与视图合同) |
+| TOAST-004 | 通知焦点与播报 | 新增不抢焦点；F6/Tab/Escape与关闭后回焦；polite/assertive 按真实优先级，必要错误原位持续 | DOM语义、键盘与动作焦点；读屏器未测须单独注明 | [通知合同](DESIGN.md#通知队列与视图合同) |
 | CTRL-017 | 页面使用 Alert 或 ErrorState | 文案与 severity 来自真实业务结果；重试按钮只在真实可重试时出现，Alert 不吞掉表单错误关联 | HTTP/业务错误夹具、aria-describedby 与回调次数 | [COMPONENTS 局部失败反馈](COMPONENTS.md#局部失败反馈与离线边界) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
 | CTRL-018 | 页面使用 PasswordInput 显隐按钮 | 显隐按钮保留正常 Tab 顺序及可访问名称/`aria-pressed`；不得使用 `tabIndex=-1` 或 `aria-hidden` 隐藏交互 | Tab 录像、DOM 属性与密码输入节点 identity | [COMPONENTS 密码输入](COMPONENTS.md#密码输入) |
 | CTRL-019 | DateTimePicker 使用 required 或清空 | 清空回调为 null；具名输入的 FormData 与浏览器 required validity 一致，不因 required 隐藏清空入口 | React 表单 FormData、validity 与回调计数 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [DESIGN 表单反馈](DESIGN.md#表单搜索与反馈) |
@@ -334,7 +338,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | MENU-SEP-001 | 菜单中需要分隔不同内容组 | 使用 `Menu.Separator` 或 `ContextMenu.Separator`，它不执行动作、不可成为额外键盘停靠点，浅深主题下仍清晰可辨 | role/aria、Tab顺序、主题computed样式与两种菜单组合 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | MENU-VIEW-001 | 使用数据驱动 `Menu.View` | 默认 config 模式只有一个由 View 管理的内部 Controller；注入模式完全替换它，不创建默认实例，且 Controller 生命周期归注入宿主。两种 props 模式互斥 | 正/负类型编译、Controller 创建/订阅/退订/destroy 计数与实例身份 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) · [PUBLIC_API `/menu`](PUBLIC_API.md#全部正式入口) |
 | MENU-VIEW-002 | 菜单动作执行或需自定义焦点行为 | `actionId` 只映射宿主动作；只有同步 `event.preventDefault()` 取消本次默认关闭。异步操作仍归宿主，Base UI 是方向键与实际焦点的唯一 owner | pointer/keyboard 一次动作计数、阻止关闭断言、ARIA/焦点轨迹与迟到业务回调 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) |
-| STATE-OWNER-001 | 采用任一有语义交互状态组件 | 逐项选择默认或同契约注入，完整替换不创建/订阅并行默认；不得把value/onChange、handle或Toast manager算完整注入，Toast仍是明确缺口 | 默认/注入/不适用/未满足逐项证据，不得全量笼统打勾 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-OWNER-001 | 采用任一有语义交互状态组件 | 逐项选择默认或同契约注入，完整替换不创建/订阅并行默认；不得把value/onChange或handle算完整注入；Toast使用正式xui Controller，不传旧peer动作bus | 默认/注入/不适用/未满足逐项证据，不得全量笼统打勾 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | STATE-OWNER-002 | 默认模式使用受控值 | 用户请求不提前发布未确认值；外部确认不触发回调循环，default仅初始化 | 拒绝/接受请求与动态值更新计数 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | STATE-OWNER-003 | 注入或替换Controller | 初始化/受控/callback互斥；实例切换退订旧实例，不destroy注入者、不覆盖其配置；DOM/焦点连续 | 正/负类型、JS冲突、订阅计数、旧实例动作与焦点 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | STATE-OWNER-004 | 默认实例生命周期或异步操作 | StrictMode不重复请求，不在effect replay永久销毁；真实退出取消所属等待并隔离迟到结果 | replay/卸载/切换、请求次数及迟到操作 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |

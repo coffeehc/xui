@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：2.0.1。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：3.0.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -474,6 +474,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     --menu-radius: var(--radius-xl);
     --floating-offset: var(--space-text-gap);
     --popover-width: 18rem;
+    --toast-viewport-max-block-size: 40dvh;
     --popover-padding: var(--space-content-gap);
     --tooltip-max-width: 20rem;
     --table-cell-padding: var(--space-control-gap);
@@ -972,7 +973,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | Popover / Tooltip | Popover.Title/Description → section/body；popup 裸正文 → body；Tooltip → meta | portal 的 xui-layer 与主树采用同一主题与比例 |
 | Surface / Alert / DataRegion | Surface/Alert 裸内容继承所属文字槽（默认 body）；DataRegion 中正文由其内容组件决定 | 状态 tone 改颜色；布局 DataRegion 不覆盖内容文字 |
 | LoadingState / EmptyState / ErrorState | 文案/说明 → 所属正文或元信息（默认 body）；Empty/Error title → 同字号+600（默认 body-heading）；retry → Button | block 文案继承所属内容正文；inline 文案继承所属动作/元信息槽，不另设字号；加载在所属内容区居中 |
-| Toast | Title → label；Description → meta；其余裸文本 → body；Close/action → Button | 使用通知专用标题/说明层级，不把通知再做成页面标题 |
+| Toast | Title → label；Description → meta；其余裸文本 → body；Close/action → Button | 使用通知专用标题/说明层级；默认右上角，内距与间距继承公共 token，窄屏/放大时通知区域内部滚动，焦点四边可见 |
 | Badge / Tag | label → label；删除动作 → Button | 中性分类与语义状态共用字号；不因 tone 改字重 |
 | Icon | 图形，无独立文字角色；颜色经icon-color默认currentColor继承 | 可选color/blink不改变所属Button、Badge或Tab的文字角色；装饰图标不新增键盘/朗读通知 |
 | Typography | Heading → page或section（语义级别单独指定）；Text → body；Link → 所属文字槽；Code → code；Strong → 所属角色+600 | 链接继承段落或元信息角色，Text 明确正文边界；Code 是技术值，不能当全站字体 |
@@ -1112,7 +1113,7 @@ NavigationMenu的名称槽占满主项剩余宽度。富内容仍由renderLabel�
 
 路由统一使用 pathname 与 search，hash 仅用于文内锚点。导航不刷新文档、不以路由变化重建整个页面壳；部署必须为应用 URI 提供 HTML fallback，同时保留资源/API 的真实 404。返回、前进、外链、下载和修饰键遵守浏览器语义。MenuService 不拥有展开/收起、焦点、权限判断或业务请求，这些仍归导航实例 Controller 与宿主。SSR/嵌入隔离通过显式 `new XuiServices` 注入同一公开契约；只销毁容器自身创建的服务，不销毁借用实例。组件 Controller 工厂保持逐实例；基础 Service 的 `create*` 构造入口在 2.0 移除，具体迁移见 PUBLIC_API 与 ADOPTION。
 
-通用语义交互采用可替换 Controller：未注入时 View 创建唯一默认实例，注入同一公开契约时只订阅该实例；初始化、受控确认和意图回调配置与注入互斥。受控事实只由宿主确认，用户请求不能先发布未确认值。切换实例退订旧订阅，View 不销毁注入者实例，不把动态配置覆盖到注入模型。默认实例清理兼容 StrictMode effect replay；真实退出终止所属等待并隔离迟到结果，秘密 DOM 的退出清理始终有效。键盘算法、实际焦点、碰撞、滚动、媒体查询与瞬态渲染由 Base UI/DOM 执行，不建立竞争状态。服务组合的展示 Controller 只持有自身草稿/分页并引用唯一服务；默认服务必须由显式 adapter/loader/AuthClient 配置取得，不能无配置创建认证、查询或业务事实。逐项入口、例外与未满足项以 [组件状态合同](COMPONENTS.md#状态所有权与-controller-模式) 和 [接入检查](ADOPTION_CHECKLIST.md) 为准；Toast 的动作 manager 不构成集合 store 替换，不得宣称全组件已经达标。
+通用语义交互采用可替换 Controller：未注入时 View 创建唯一默认实例，注入同一公开契约时只订阅该实例；初始化、受控确认和意图回调配置与注入互斥。受控事实只由宿主确认，用户请求不能先发布未确认值。切换实例退订旧订阅，View 不销毁注入者实例，不把动态配置覆盖到注入模型。默认实例清理兼容 StrictMode effect replay；真实退出终止所属等待并隔离迟到结果，秘密 DOM 的退出清理始终有效。键盘算法、实际焦点、碰撞、滚动、媒体查询与瞬态渲染由 Base UI/DOM 执行，不建立竞争状态。服务组合的展示 Controller 只持有自身草稿/分页并引用唯一服务；默认服务必须由显式 adapter/loader/AuthClient 配置取得，不能无配置创建认证、查询或业务事实。逐项入口、例外与未满足项以 [组件状态合同](COMPONENTS.md#状态所有权与-controller-模式) 和 [接入检查](ADOPTION_CHECKLIST.md) 为准；Toast 采用 xui 自有唯一队列 Controller；动作入口与 View 订阅同一集合，不借用 peer 私有 store。
 
 
 ### 表单和响应式
@@ -1657,3 +1658,11 @@ CardGroup 是与 DataTable 同层的受控集合组合。rows 是宿主当前确
 集合独占toolbar、body和footer：toolbar与计数/状态/分页均在body外，宿主选择pageToolbar或集合toolbar一处接线。body使用有序DOM阅读顺序的语义列表；按容器净宽自动分列，以card-group-item-min（默认依赖layout-field-long-min，根16px时288px）为期望下限，不足时一列。cardSizing默认natural兼容内容自然高、顶端对齐；资源网格显式equal，通过CSS自动行和Card.stretch由当前完整内容计算共同卡高，content可伸展、存在的footer底部对齐。缺失content/footer仍不生成空slot，长文字或200%放大可增加卡高，不裁内容或固定像素正文高，不等分三段，也不为集合添加第二层卡片皮肤。分组gap、焦点gutter与已有语义Token共用。layout的natural随内容并受有界父容器约束；workspace占满父容器，正常高度只有body滚动；极短父容器保留card-group-body-min的正文轨道（默认依赖feedback-slot-block-size），整个集合可滚动，不能把正文压到仅剩焦点padding；document随文档自然增长。cardSizing只管理卡片几何，不接管查询、分页、草稿或状态；所有资源类型共用这套公共合同。
 
 状态、offset/cursor 分页、真实/未知 total 与同回合请求防重入和 DataTable 使用同一纯 TypeScript 模型及 React footer。首次无记录加载仅在 body 内提示；同范围刷新与刷新失败保留 rows、key、Card/输入节点及焦点，footer 显示局部刷新或错误/显式重试。busy/disabled 阻止集合分页和重试意图，context 提供 busy/disabled 事实，业务控件按动作语义采用；不递归改写 slots 中的业务控件，不把被动卡片变成按钮。集合不请求、不缓存、不排序、不确认写操作，也不复制 query/resource owner。接口及示例见 [CardGroup](COMPONENTS.md#cardgroup)。
+
+### 通知队列与视图合同
+
+Toast 默认固定在右上角（逻辑 block-start / inline-end，RTL 随语言镜像），沿用既有 layer-overlay、surface-line、shadow-overlay 和 label/meta/Button 字体角色。队列最新项在上，默认至多显示三项；视口按实际根字号换算不超过48rem或font-scale大于1时默认仅最新一项。视图报告可见上限，不更改宿主limit配置，退出时释放；悬停或聚焦展开队列，最大高度使用toast-viewport-max-block-size（40dvh）并受视口安全边界封顶，内部滚动。Title、Description、Actions、Action、Close 各有公开部件，Content统一8px纵向间距，Actions独立末行靠右并自然换行，沿用small 32px公共按钮，不用负margin修正基线；空槽不占位。Close具有可翻译的aria-label或可见文字名称，纯图标按公共装饰语义隐藏；不插入页脚/实现说明，不依靠宿主私有 CSS 定位。
+
+runtime ToastController 是集合、进入/关闭阶段、可见上限、超时与暂停原因的唯一 owner。React 只投影 DOM、测量手势、转发动画完成和实际焦点。无 View、隐藏文档、窗口失焦、悬停、焦点及正在手势期间暂停计时，恢复剩余时间；被可见上限隐藏的项暂停。仅更新文案保留剩余时间；显式 timeout 更新或同 id add 重新计算该项时限，-1 表示不自动关闭，省略或0采用配置默认（5秒）；旧动画和旧 Promise 不得修改新实例或复活关闭项。默认右滑关闭，纵向保留浏览器滚动；显式上下滑会接管对应触控手势。手势 CSS 位移是实时指针测量，不是设计尺寸默认值。
+
+新增通知不抢焦点；F6 聚焦通知区域，Tab 进入动作，再次 F6 返回原位置，Escape/关闭把焦点移至其余可见通知或原位置。普通通知 polite，高优先级 assertive；关闭或不可见项退出交互。重要错误持续显示在所属内容区域，不能只放自动消失 Toast。借用 Controller 退出 View 时释放 DOM/暂停租约，不销毁宿主队列；默认实例真实退出时销毁。完整双模式、迁移差异和可执行验证分别见 COMPONENTS、PUBLIC_API 与 VALIDATION。

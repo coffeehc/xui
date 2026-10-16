@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-runtime",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "files": [
@@ -163,7 +163,11 @@
       "types": "./dist/util-service.d.ts",
       "import": "./dist/util-service.js"
     },
-    "./config.json": "./dist/config.json"
+    "./config.json": "./dist/config.json",
+    "./toast": {
+      "types": "./dist/toast.d.ts",
+      "import": "./dist/toast.js"
+    }
   },
   "types": "./dist/index.d.ts",
   "dependencies": {
