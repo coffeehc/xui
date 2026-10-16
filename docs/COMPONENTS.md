@@ -1148,7 +1148,7 @@ React `AdminSetupPage`（`@coffeehc/xui-react/admin-setup`）提供用户名、�
 
 `@coffeehc/xui-react/admin-setup` 公开 `AdminSetupForm`、`AdminSetupFormProps`、`AdminSetupFormHandle`，根入口同步导出。它是包含字段、提交与反馈的唯一真实 form，不生成 AuthPage、品牌、标题或卡片；完整 `AdminSetupPage` 直接组合 AuthPage 与同一个 AdminSetupForm。没有新建 runtime/UI 副本或第二套提交 owner。
 
-Form 接受原有 `state/onSubmit/onCheck` 或互斥的完整 `controller`，并支持原有 `labels/passwordLabels/ref`；不接受页面 `config/brandVisual`。`ref.clear()` 仅清密码及用户名错误，不清用户名、不更改权威状态、不取消或重放写入。每个活动表单只使用自己的 Controller；宿主持有的注入实例不由 Form 销毁。submit、未知结果、手动核对、取消及密码清理完全沿用下文合同。焦点进入控件时，Form按既有scroll-margin就近保持完整焦点边界可见，不重新指定焦点或滚回文档顶部。
+Form 接受 `state/onSubmit/onCheck/validateUsername` 或互斥的完整 `controller`，并支持原有 `labels/passwordLabels/ref`；不接受页面 `config/brandVisual`。`ref.clear()` 仅清密码及用户名错误，不清用户名、不更改权威状态、不取消或重放写入。每个活动表单只使用自己的 Controller；宿主持有的注入实例不由 Form 销毁。submit、未知结果、手动核对、取消及密码清理完全沿用下文合同。焦点进入控件时，Form按既有scroll-margin就近保持完整焦点边界可见，不重新指定焦点或滚回文档顶部。
 
 | 归属 | 内容与视觉角色 | 空槽和状态 |
 |---|---|---|
@@ -1170,11 +1170,28 @@ Form 接受原有 `state/onSubmit/onCheck` 或互斥的完整 `controller`，并
 
 #### 输入和责任
 
-React props 为 `config: AuthPageConfig`、必填 `state: AdminSetupState`、`onSubmit: AdminSetupSubmit`，可覆盖 `labels: Partial<AdminSetupLabels>`、`passwordLabels: Partial<NewPasswordLabels>` 和 brandVisual。brandVisual 接受 ReactNode。用户名只校验非空，不裁剪提交值或杜撰字符/长度政策。新密码固定校验 6–32 个 Unicode 码点，无策略请求或项目配置。
+React props 为 `config: AuthPageConfig`、必填 `state: AdminSetupState`、`onSubmit: AdminSetupSubmit`，可覆盖 `labels: Partial<AdminSetupLabels>`、`passwordLabels: Partial<NewPasswordLabels>` 和 brandVisual。brandVisual 接受 ReactNode。用户名默认只校验非空，可选宿主校验见下节；不裁剪提交值或杜撰字符/长度政策。新密码固定校验 6–32 个 Unicode 码点，无策略请求或项目配置。
 
 `onSubmit({username,password}, {signal})` 只在一次明确提交且字段有效时调用，返回 `complete | unconfirmed | unavailable | rejected`。`rejected` 必须表示宿主权威确认未应用、可重新提交，不能把网络异常/取消/无 receipt 映射成 rejected。throw/reject/运行时不合法结果一律转为 unconfirmed。回调需在开始时构造自己的请求数据；库清理传入对象的 password，不保证已传出的字符串或宿主副本可被擦除。
 
 宿主保留具体初始化 API、权限/租户/数据库条件、权威初始化状态及跨重载的未知结果处理；公共页不要求 receipt、operation ID 或额外恢复协议。公共页既不重放写入，也不自动轮询、登录、导航、保存或记录密码。跨卸载/重载的未知结果保护是宿主责任；新挂载不能无依据传 idle。完成仅显示“管理员已创建，请登录。”。
+
+#### 宿主用户名校验
+
+`AdminSetupForm`、`AdminSetupPage`默认模式与runtime `AdminSetupControllerOptions`一致提供可选`validateUsername: AdminSetupUsernameValidator`。同步纯函数接收原始用户名，返回`null`通过或非空字符串作为本地化字段错误。必填检查先行，空白不会调用宿主规则；xui不内置产品正则、长度上限、trim或大小写转换。宿主若需要规范化，必须由其自身策略及提交合同明确处理，不得假定组件已改写值。
+
+```tsx
+const validateUsername: AdminSetupUsernameValidator = raw =>
+  /^[a-z0-9][a-z0-9_.-]{2,63}$/.test(raw)
+    ? null : '请输入3–64位小写字母、数字、下划线、点或连字符。';
+// 上述规则仅为合成宿主示例，并非xui默认用户名规则。
+<AdminSetupForm state={authority} onSubmit={submit} validateUsername={validateUsername} />
+// 注入模式：规则仅配置在createAdminSetupController的options中，View只传controller。
+```
+
+Form在读取密码前校验用户名，失败保持idle、保留输入、关联公共Field错误并聚焦用户名；输入或`ref.clear()`清除字段错误，不改变权威状态。`controller.form.validateUsername(raw)`供显式校验，返回boolean；快照保留`usernameError`，自定义错误另有`usernameIssue: {message}`，无效回调为`'invalid'`，必填错误不增加issue。快照不保存用户名或密码。
+
+Controller的`submit`也在写入边界执行同一校验；被拒绝时清空传入凭据对象的password，零写入。正常Form提交流程可能多次求值，回调必须纯净，不发请求、不变更状态；SSR、render及options更新不自动调用。`update({validateUsername})`替换未来规则，显式`undefined`移除，不自动清除已有反馈、重校验、解锁未知结果或重试提交。语言变化可替换规则并在下一次显式校验生成新文案。throw、Promise、空字符串或其他非法返回阻止写入，使用可翻译的可选`labels.usernameInvalid`（默认“请检查管理员用户名。”）；不展示异常内容，不等待异步结果或应用迟到结果。已有完整labels对象仍可使用。使用当前factory创建的Controller无需迁移；手写完整Controller必须补齐新增form.validateUsername方法及相同反馈合同，不能注入旧版Controller冒充当前类型。三个正式包必须同版本同代安装。
 
 #### 状态和生命周期
 

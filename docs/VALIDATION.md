@@ -4,6 +4,30 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 管理员用户名校验与单一版本线（4.2.1，2026-10-17）
+
+本轮仅修改xui。正式三包与DESIGN统一 **4.2.1**，后续所有改动仅递增末位（4.2.2、4.2.3…）；不再回补或分发3.x兼容包。版本号不代表语义兼容，实际迁移以公开合同、固定SHA/sourceGeneration为准。React对runtime的peer固定同版4.2.1，防止混用缺少新form方法的旧Controller。四个兼容分发目录3.0.1/3.1.0/3.1.1/3.1.2已删除，3.0.0顶层及历史tarballs共六包已移除，兼容工作树经确认干净后归档退役；保留Git历史与metadata/validation证据，不再保留活动兼容构建。未操作外部Release或消费项目。删除明细见本轮compatibility-cleanup.json。
+
+基线：独立正式4.1.2消费者`.consumers/run-dzjhlT/react`的Controller不识别validateUsername，合成用户名a仍写入一次、规则调用零次。新公开`AdminSetupUsernameValidator=(raw:string)=>string|null`由宿主定义同步纯规则及本地化文案；Form/Page默认模式和Controller options一致接线。必填优先、null通过、非空字符串拒绝；不裁剪、转换大小写或内置xLead正则。错误复用Field关联，显式提交失败聚焦用户名并保留DOM密码；Controller提交边界也复核，拒绝后清理凭据对象密码、零写入。规则更新仅影响后续显式校验；异常/非法/Promise返回安全拒绝，不暴露错误或应用迟到结果。未知结果仍锁定、无自动重试/登录/请求，清密与原AuthPage外壳保持。合同与示例见[用户名校验](COMPONENTS.md#宿主用户名校验)，接入检查AUTH-UI-008。
+
+最终sourceGeneration：`31a7b4da0d9f0ca89e4749bd35ad6bead3c39ef6ca6e0867d2578c865bef2e58`。正式独立consumer为`.consumers/run-SZ1Tps/react`；全部ESM/CSS/types安装，不使用源码alias，单实例React/ReactDOM19.2.8、Base UI1.7.0，三包同版同代；404Token、104公开入口、377逐项检查。该代包含并行文档会话2460b81的草案迁移，新增业务决策仅在独立草案中，未提前进入正式验收门槛。
+
+| 检查 | 结果 |
+|---|---|
+| build/typecheck/Token/docs/正式consumer | 通过；critical CSS gzip19058/19456、首屏JS141916/153600、Button6619/16384 |
+| 全量unit（文档迁移前，UI源码相同） | 513/513 |
+| 冻结后admin-setup/contract/docs定向unit | 26/26 |
+| Chromium新规则与原共享外壳回归 | 28/28，0失败/跳过/flaky |
+| Firefox/WebKit非Chrome缩放用例 | 各22/22，合计44/44，0失败/跳过/flaky |
+
+浏览器覆盖默认/注入、production/StrictMode，输入a被拒绝、零写入、aria-invalid/describedby与用户名聚焦；英文/中文规则、异常fallback、移除规则后a正常提交、单次写入/清密和未知结果锁定。三主题×1280/320、200%根字号、长中文错误、错误修正后提交与system实时切换；原外壳回归覆盖检查/错误/初始化节点连续、密码匹配、手动核对、卸载/借用生命周期和键盘。新增与原有各三项真实Chrome200%页面缩放，DPR加倍、CSS viewport减半、根字号不变、CSS zoom/pinch=1；原生截图避免CSS裁切，焦点四边不超实际可视视口。未触发真实认证或管理员初始化API。
+
+过程记录：首轮build在并行规范编辑期间触发source changed保护，未发布半代；早期单测读到旧dist失败，稳定重建后16项通过。旧779b代Chrome25通过/3失败，Firefox/WebKit44通过；三处失败因innerHeight将406.5CSS可视高度取整为406，误报轮廓越界0.5。focus-probe.json与原生截图确认实际可视边界，测试改用visualViewport高度，仍使用精确不越界断言，未放宽容差或修改组件CSS。随后另一会话按用户要求将规范移为独立草案，最终按新31a7代重建/安装并重新完成矩阵；旧失败日志与诊断保留。
+
+证据在`.artifacts/admin-username-validation/`并随固定产物归档：baseline.json、compatibility-cleanup.json、build/typecheck/tokens/docs/unit/consumer的frozen日志、browser.json/log、cross.json/log、images、首轮报告/trace与focus-probe。复现：`node scripts/build.mjs`、`pnpm typecheck`、`pnpm check:tokens`、`pnpm test:unit`、`pnpm test:consumer`；`pnpm exec playwright test --config=.artifacts/admin-username-validation/playwright.config.mjs admin-username-validation.spec.mjs admin-setup-form.spec.mjs`，跨引擎改用cross.config.mjs并`--grep-invert 'genuine Chrome'`，预览端口4173。报告路径使用相对配置的browser.json/cross.json或绝对路径。
+
+未执行全仓浏览器、watch/cold-start、实体设备/读屏器、消费项目实际页面/认证/初始化后端/部署；不能由公共合成样板替产品宣称升级完成。新规则可选，默认只非空；现有factory调用无需变更，手写完整form Controller需实现新增方法。与旧3.x相比既有4.0服务迁移仍须由产品按当前合同处理，本轮不再提供平行兼容包。
+
 ## 程序错误Explorer列阅读布局（4.1.2 / 3.1.2，2026-10-17）
 
 xQuant固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18` 反馈：展开324px侧栏、1280窗口、长中文摘要时累计/匹配表头逐字竖排。本轮先在正式4.1.1消费者复现“累计观察数”5行，单行断言失败。正式3.0.0、3.1.1、4.1.1的structured-log.js SHA256均为`ff99e2408f405024221aa4f40d3556bda1d3601cff1b26c160dde8a6728adb2b`；当前Props没有列宽配置入口，不是遗漏宿主接线。原xQuant PG/119项HTTP/57页面主题和88.21现场证据仅按来源登记，本轮未在宿主重跑。

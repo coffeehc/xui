@@ -76,7 +76,7 @@
 | `@coffeehc/xui-runtime/calendar` <!-- public-entry: @coffeehc/xui-runtime/calendar --> | [源码](../packages/runtime/src/calendar.ts)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-runtime/date-time` <!-- public-entry: @coffeehc/xui-runtime/date-time --> | [模型与值合同](../packages/runtime/src/date-time.ts) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-react/app.tsx) |
 | `@coffeehc/xui-runtime/display` <!-- public-entry: @coffeehc/xui-runtime/display --> | createCopyController、copyableLabels、validateImageOptions 与文字/复制/图片共享类型。 | [组件合同](COMPONENTS.md) | — |
-| `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup --> | AdminSetupCheck/CheckResult、createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。 | [组件合同](COMPONENTS.md) | — |
+| `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup --> | AdminSetupUsernameValidator、AdminSetupCheck/CheckResult、createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/collection-view` <!-- public-entry: @coffeehc/xui-runtime/collection-view --> | [源码](../packages/runtime/src/collection-view.ts)；CollectionStatus/Layout/RowContext/Pagination/CursorPagination/Count/Labels/ViewOptions、collectionDefaultLabels、getCollectionState、validateCollectionKeys、createCollectionRequestGuard | [集合合同](COMPONENTS.md#cardgroup) | [示例](../examples/card-group-react/app.tsx) |
 | `@coffeehc/xui-runtime/menu` <!-- public-entry: @coffeehc/xui-runtime/menu --> | [序列化配置、Controller 与动作事件](../packages/runtime/src/menu.ts)：MenuConfig/Node/Entry/ActionItem/Group/Heading/Separator、MenuController/State/Options/ActionEvent/ItemTone、createMenuController | [数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与-controller-所有权) | [示例](../examples/action-menu-react/app.tsx) |
 
@@ -381,7 +381,7 @@ ACL/权限过滤后的有界扫描可以连续返回空 list 与非空 next_curs
 
 公共认证视觉由`@coffeehc/xui-react/login`的`AuthPage`统一；2.0.1采用Stitch V3的卡片外品牌与卡片内表单。现有配置、完整登录/初始化回调和Controller接口不变；slot、字体、颜色和空状态逐项见[认证布局](COMPONENTS.md#认证布局-slot-归属)，不要让宿主再造认证布局或改变请求协议。
 
-`/admin-setup` 同时导出不生成页面的 `AdminSetupForm`，支持与完整页相同的默认/注入 Controller 和提交合同。检查→初始化保持一个AuthPage时，将它放入children并从首次挂载省略AuthPage.form；完整页复用同一个表单。slot、清密与组合限制见[初始化组合](COMPONENTS.md#可组合初始化表单)。此项不增加认证/初始化API或自动检查。
+`/admin-setup` 同时导出不生成页面的 `AdminSetupForm`，支持与完整页相同的默认/注入 Controller 和提交合同。检查→初始化保持一个AuthPage时，将它放入children并从首次挂载省略AuthPage.form；完整页复用同一个表单。slot、清密与组合限制见[初始化组合](COMPONENTS.md#可组合初始化表单)。此项不增加认证/初始化API或自动检查。可选同步纯函数 `validateUsername(rawUsername): string | null` 在Form/Page默认模式或Controller options配置，null通过，非空字符串为可翻译字段反馈；必填优先，输入和提交值不变，异常/非法返回使用可选labels.usernameInvalid。注入Controller时不再传该prop，详见[用户名校验](COMPONENTS.md#宿主用户名校验)。
 
 ## 认证会话
 
@@ -790,7 +790,7 @@ const selection=createSelectionController<string|null>({defaultValue:null});
 // <Select.Root<string> controller={selection}>...公共parts...</Select.Root>
 ```
 
-服务组合以 `viewController` 表示完整展示状态，旧 `controller` 继续表示既有服务，不能混称。`ApiKeyManager` 的 `options` 是 `ApiKeyManagerOptions`；日志的 `options` 分别是 `BusinessLogOptions` / `StructuredLogOptions`。显式 options 模式只创建一个所属服务，首挂载显式 start 一次；借用旧 controller 时不擅自开始宿主查询。`createApiKeyManagerViewController({service,pagination})` / `createBusinessLogViewController({service})` / `createStructuredLogViewController({service})` 引用服务，不复制结果和请求 owner；注入各自 viewController 后不可再传 service/options 初始化。API Key 页数来自完整 list，日志仍使用其真实游标/as_of，不虚构 total。`options` 只初始化当前默认服务一次；父组件传入新的等值配置对象不会重建服务、重发查询或丢弃草稿。更换业务数据 owner 时显式传入新的服务 controller/viewController，或按真实业务范围重挂载。AdminSetupController.update 可更新未来的 onSubmit/onCheck；不会重试在途操作，默认 Page 随回调更新核对入口。 PasswordStrengthController.bindReader 租用 View 的 DOM reader，释放或替换时取消旧代评估并恢复宿主原 reader；View 退出不永久保留 DOM 引用。
+服务组合以 `viewController` 表示完整展示状态，旧 `controller` 继续表示既有服务，不能混称。`ApiKeyManager` 的 `options` 是 `ApiKeyManagerOptions`；日志的 `options` 分别是 `BusinessLogOptions` / `StructuredLogOptions`。显式 options 模式只创建一个所属服务，首挂载显式 start 一次；借用旧 controller 时不擅自开始宿主查询。`createApiKeyManagerViewController({service,pagination})` / `createBusinessLogViewController({service})` / `createStructuredLogViewController({service})` 引用服务，不复制结果和请求 owner；注入各自 viewController 后不可再传 service/options 初始化。API Key 页数来自完整 list，日志仍使用其真实游标/as_of，不虚构 total。`options` 只初始化当前默认服务一次；父组件传入新的等值配置对象不会重建服务、重发查询或丢弃草稿。更换业务数据 owner 时显式传入新的服务 controller/viewController，或按真实业务范围重挂载。AdminSetupController.update 可更新未来的 onSubmit/onCheck/validateUsername；不会重试在途操作，默认 Page 随回调更新核对入口。 PasswordStrengthController.bindReader 租用 View 的 DOM reader，释放或替换时取消旧代评估并恢复宿主原 reader；View 退出不永久保留 DOM 引用。
 
 `createLoginViewController({auth,config,extensions?,onAuthenticated?})` 必须借用实际 AuthClient，View 不创建认证协议/client。绑定的 `readCredentials` 只提供瞬时读取边界，校验/扩展只保留用户名或安全错误，异步扩展完成后才读取用于 auth 的密码。交给 AuthClient 的参数属于其 IO 边界；本模型不在任何快照/缓存/日志保留密码，不破坏自定义 AuthClient 异步读取其参数的合同。实际 DOM 在提交、pagehide、替换和卸载时清理。Secret-safe 子模型与管理员初始化 form 聚合见组件矩阵。
 

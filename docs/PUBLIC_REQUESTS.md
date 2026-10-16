@@ -47,6 +47,10 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 ## 后续公开维护项（2026-10-16）
 
+### XUI-REQ-20261017-13：管理员用户名宿主校验（4.2.1，库级已验收、待宿主验收）
+
+来源xLead固定3.1.0 / `31a54e5f2c0aca4552c629e4c7987f1208a97337`：公共Form只校验非空，无法表达宿主字符/长度规则。4.2.1增加可选同步纯函数`validateUsername`，Form/Page与Controller共享字段错误、关联、聚焦与提交边界；不内置xLead正则，不修改值、认证或业务API。缺省仅非空，默认/注入互斥及未知结果锁定保持；合同见[用户名校验](COMPONENTS.md#宿主用户名校验)。正式包Chromium28项、Firefox/WebKit44项及单元/类型通过，详见[本轮记录](VALIDATION.md#管理员用户名校验与单一版本线4212026-10-17)。不提供3.x兼容包，宿主需按单一当前版本升级并独立验收。
+
 ### XUI-REQ-20261017-12：程序错误Explorer的中文表头与三态标签（4.1.2 / 3.1.2已修复，待宿主验收）
 
 来源：xQuant固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18`，1280宽、324侧栏，长中文摘要使累计/匹配表头逐字竖排。最新4.1.1正式消费者同样复现累计表头5行；公开Props没有列宽入口，不是宿主遗漏配置。修复在Explorer表头及records三态标签采用既有完整词组角色；摘要保留主列最小宽度/自然换行，时间计数与操作保留单行，窄屏和大字由公共TableContainer横滚承接。未改Table全局样式、Token、DTO、cursor/as_of、查询/刷新/权限或认证逻辑。正式包结果见[验证记录](VALIDATION.md)，样板`/log-react/?long-labels`演示合成长标签。xQuant既有PG/HTTP/页面证据仅按来源登记，本轮不访问宿主API或替产品宣称验收通过。
