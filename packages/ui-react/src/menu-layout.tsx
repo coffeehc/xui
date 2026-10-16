@@ -20,6 +20,8 @@ export interface NavigationMenuProps extends NavigationMenuOptions {
   renderButton?:(item:NavigationItem)=>React.ReactElement;
   /** One auxiliary button, beside the primary control; never inside its label. */
   renderAction?:(item:NavigationItem)=>React.ReactElement|null;
+  /** Non-interactive rich content in the full remaining primary-control width.
+   * Keep only the name in NavigationMenu.Label; passive status may sit beside it. */
   renderLabel?:(item:NavigationItem)=>React.ReactNode;
 }
 function Icon({name,resolver}:{name?:string;resolver?:NavigationIconResolver}){const icon=resolveNavigationIcon(name,resolver);return <svg aria-hidden="true" viewBox={icon.viewBox??'0 0 20 20'} fill="none" stroke="currentColor" strokeWidth="var(--nav-icon-stroke-width)">{icon.paths.map((d,index)=><path key={index} d={d}/>)}</svg>;}

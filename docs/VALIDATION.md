@@ -4,6 +4,30 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 公共展示与导航布局 1.2.0（2026-10-16）
+
+DESIGN与theme/runtime/react三个私有包均为 **1.2.0**；398 Token、85正式入口、303项逐项接入检查。只修改xui。本批统一Card的header/content/footer三段与默认图标tile、neutral soft标签、Footer分区；CardGroup新增可选cardSizing=equal，以真实内容计算共同卡高、伸展content并让Footer靠底，不固定高度或裁正文。Tabs.List默认内容宽，显式equal占满并等分；Tabs.Icon为装饰性图标，其命名属性在类型中明确禁止。Icon新增color/blink，支持CSS变量，Badge/Text/Avatar支持显式前景，字体角色和样式继承保持。
+
+AppShell/MenuLayout沿用唯一侧栏开关、公开top/bottom及受控状态，只改善默认图形。NavigationMenu名称槽占满主项剩余宽度，renderLabel中的非交互状态可留在行尾；只有NavigationMenu.Label声明的名称独立滚动，分支与配置按钮不移动、不误导航。Spinner改为主题色开放弧，减少动态效果时静止，忙状态文字仍由宿主提供。没有新增业务状态、查询、权限或请求owner，runtime仍为TypeScript模型、服务与工具。
+
+最终source generation：`bbcbff4207e97ea40899f9efd799d956d62a48fbdb6313da6a54af5b5fb9c9de`。独立正式tarball消费者目录为`.consumers/run-yLHns7/react`：通过npm新安装三包并核对正式ESM/CSS/types/init、命名导出、全部入口及React/ReactDOM/Base UI单实例，无packages/src alias或宿主私有CSS。首次npm安装因临时cache缺少@types/react-dom@19.2.3的内容文件失败；从已有全局cache补入同SHA512寻址的该文件后，原样npm安装成功，没有改peer版本、锁规则或依赖范围。
+
+| 检查 | 最终结果 | 证据（仓库内`.artifacts/`） |
+|---|---|---|
+| build / 类型 / Token / 文档 | 通过；12文档、1124链接、85入口、303检查项 | `presentation-1.2/build-budget-adjusted.log`、`presentation-1.2/typecheck-final.log`、`presentation-1.2/tokens-final.log`、`presentation-1.2/docs-final.log` |
+| 定向单测 | **74/74**；另一次已有完整单测运行最终 **438/438**，两者重叠不相加 | `presentation-1.2/targeted-unit-rerun.log`、`unit-full-final.log` |
+| 独立正式包消费者 | 通过；完整ESM/CSS/types及同代产物与peer单实例 | `presentation-1.2/consumer-budget-adjusted.log`、`performance-baseline.json`与各正式metafile |
+| Chromium定向浏览器 | **64/64**：本批展示23、导航状态20、侧栏开关13、富导航5、CardGroup刷新/排序分页/禁用3 | `presentation-1.2/browser.json`、`browser-final.log`、`regression.json`、`regression-final.log` |
+| Firefox / WebKit精选 | 各 **7/7**，共14；浅色桌面、深色窄屏200%文字、状态动效/静止、Card/Avatar与Tabs方向键 | `presentation-1.2/cross.json`、`cross-final.log` |
+
+浏览器使用上述安装包消费者：覆盖light/dark/system及system实时切换、桌面/390px、200%文字与公开200%界面比例、长中文、三主题真实Chrome200%浏览器缩放。真实缩放单独验证DPR加倍、视口减半、根字号不变且CSS zoom/pinch均为1，不拿文字或界面比例替代。逐项读取角色的font-family/font-size/line-height/font-weight；比较名称、尾随状态、分支与动作矩形；采样Spinner实际旋转与reduce静止、Icon脉冲两端可见且不位移；验证Tab键盘/RTL/vertical/disabled及keepMounted草稿，Card等高/自然切换、空区收拢、刷新失败保节点/焦点/草稿/滚动、当前记录及cursor分页。已查看桌面卡片与Tabs、深色窄屏大字、顶部开关、开放弧及真实缩放代表截图，提取图在`presentation-1.2/images/`。
+
+初始JS gzip **133858/135168 bytes**，Button gzip **6619/16384 bytes**；完整关键CSS gzip **18276 bytes**，比1.1.3的17788增加488。本批新增公共视觉状态与布局后，将CSS上限从17792明确调整为 **18432 bytes（18 KiB）**，JS/Button预算不变，没有隐去旧预算失败。初轮设计值检查发现默认Icon颜色放错责任层、SVG尺寸属性不符规则，已分别交回主题CSS与glyph坐标；逻辑圆角被颜色检查器误判的问题补了正向圆角及负向裸颜色回归。类型检查发现装饰性Tabs.Icon仅Omit无法约束JSX命名属性，已显式禁止。旧样式/SSR断言按公开新合同修正，未改Tabs默认挂载行为。5项smoke及重复定向复验不计入64；cross首条命令未匹配测试的执行不计为通过。
+
+兼容性：无新增必填props或公开路由。依赖旧整行Tabs外观的宿主须显式layout=equal；CardGroup默认仍natural，资源集合需显式cardSizing=equal。Card默认图标tile、标签soft和Footer band可分别用plain保留已有组合；照片/自带边框Avatar推荐iconVariant=plain，图形符号直接使用未带外框的图标。显式sidebarTogglePlacement=bottom仍保留，回到顶部需宿主改为top。普通中性Badge默认plain不变；Avatar在着色槽中继承前景，避免宿主另补私有皮肤或字号。
+
+本节只证明xui与独立正式消费者的库级合同。未改xAgent、Argus、XQuant、XLead，未验其真实页面、业务API、认证、权限和部署；宿主收到固定产物后另行统一接入验收。未跑无关全仓浏览器、watch/cold-start、实体触屏、读屏器、forced-colors专项或独立SSR hydration，没有新增实时Stitch评审。既有Select/Dialog缺陷和其余公开请求仍按[公共维护清单](PUBLIC_REQUESTS.md)保留，未声明解决。
+
 ## 公共文字槽与样式继承（2026-10-16）
 
 DESIGN及三个私有包 **1.1.3**，393 Token、85正式入口、275项逐项检查。[公共文字槽验收](DESIGN.md#公共文字槽验收)按组件与slot定义字体族、字号、行高和字重；[接入清单](ADOPTION_CHECKLIST.md) TYPE-001～023逐项检查公共控件、标题、正文、辅助文字、反馈、代码及组合内容，并要求库在发布前提供computed-style证据。消费项目非必要不得自行设置内容字体；确需领域例外时记录所属内容、理由、范围与放大验收，不能用例外重设公共控件。

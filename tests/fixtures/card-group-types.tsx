@@ -8,6 +8,8 @@ const template=(row:Row,context:CardGroupContext):CardGroupCardProps=>({title:ro
 const page:CollectionCursorPagination={mode:'cursor',pageSize:20,total:null,nextCursor:null,hasPrevious:false};
 const props:CardGroupProps<Row>={label:'记录',rows,rowKey:row=>row.id,renderCard:template,pagination:page};
 export const example=<CardGroup {...props}/>;export const root=<RootGroup {...props}/>;
+export const equalCards:CardGroupProps<Row>={...props,cardSizing:'equal'};
+export const equalExample=<CardGroup {...equalCards}/>;
 const view:CollectionViewOptions={label:'记录',status:'refreshing'};getCollectionState(view,rows.length);validateCollectionKeys(rows,row=>row.id);
 // @ts-expect-error templates return Card props, not replacement JSX
 const jsx:CardGroupProps<Row>={...props,renderCard:row=><div>{row.name}</div>};
@@ -15,4 +17,8 @@ const jsx:CardGroupProps<Row>={...props,renderCard:row=><div>{row.name}</div>};
 const wrong:CardGroupProps<Row>={...props,renderCard:(row:{other:number})=>({title:String(row.other)})};
 // @ts-expect-error no query/fetch owner on a view
 const query:CardGroupProps<Row>={...props,loader:async()=>rows};
-void [jsx,wrong,query];
+// @ts-expect-error CardGroup owns stretch so templates cannot override row sizing.
+const stretch:CardGroupCardProps={title:'Owned by group',stretch:true};
+// @ts-expect-error Card sizing is a closed composition choice.
+const invalidSizing:CardGroupProps<Row>={...props,cardSizing:'fixed'};
+void [jsx,wrong,query,stretch,invalidSizing];

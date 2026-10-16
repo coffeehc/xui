@@ -180,6 +180,8 @@
   .xui-card-group-footer {grid-row:3;margin-block-start:var(--space-content-gap);}
   .xui-card-group-items {grid-template-columns:repeat(auto-fit,minmax(min(100%,var(--card-group-item-min)),1fr));list-style:none;margin:0;padding:0;align-items:start;}
   .xui-card-group-item {min-inline-size:0;}
+  .xui-card-group[data-card-sizing='equal'] .xui-card-group-items {align-items:stretch;grid-auto-rows:1fr;}
+  .xui-card-group[data-card-sizing='equal'] .xui-card-group-item {display:flex;}
   .xui-card-group-placeholder {min-block-size:var(--feedback-slot-block-size);}
   .xui-card-group-body:has(>.xui-card-group-placeholder[data-loading='true']) {display:grid;}
   .xui-card-group-placeholder[data-loading='true'] {display:grid;}

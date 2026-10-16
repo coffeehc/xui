@@ -44,6 +44,10 @@
 
 `Badge`、`BadgeProps` 与 `BadgeTone` 从 `@coffeehc/xui-react/feedback` 及根入口导出。`tone` 为 neutral/info/success/warning/error，默认 neutral；例如 `<Badge tone="success">运行正常</Badge>`。neutral、未设置 data-tone 与普通 Tag 保留无边框、无底色的被动文字；显式状态才应用语义前景/soft/line、横向间距和4px圆角。标签文字或图标由宿主表达状态，不自动增加 live region、tab stop 或脉冲。
 
+1.2.0的 `BadgeProps.color` 可显式指定前景，例如 `<Badge color="var(--action-primary)">发现新版本</Badge>`；省略时保持tone/继承规则。它不改字体、背景或增加动效；图标仍由公共Icon组合。错误/风险继续用真实语义tone，不用主题色掩盖状态。执行结果与范围见[验证记录](VALIDATION.md)。
+
+同批新增`BadgeVariant='plain'|'soft'`及`BadgeProps.variant`：省略时neutral仍为plain、显式状态仍为soft；soft可用于中性归属，提供公共底色/间距/边界；plain保留语义前景而去掉底色/边界。Card归属标签默认选择neutral+soft，与业务状态tone分开，字体仍为原label角色。
+
 Popover.Content的positionerProps仍透传peer的align/side/collisionBoundary等选项，align=end是合法组合。正式浮层CSS将Positioner的两侧语义gap计入可用尺寸，长内容在Popup内部滚动且完整border box留在碰撞边界内；不要求宿主添加高度扣减、内部选择器或固定collisionPadding。React Positioner 与公共浮层 CSS 共同负责定位和碰撞尺寸。Escape回触发器；外点已有新的可聚焦目标时保留其焦点，不为“回焦点”抢回宿主新焦点。
 
 Dialog 关闭不会自动保存；移除触发器时指定 finalFocus。浮层非模态时不 trap 焦点，模态与取消/回焦点按 peer。Tooltip.Content 内只有说明，交互内容用 Popover。动画使用统一 motion token；reduced-motion 下状态立即变化。
@@ -313,9 +317,46 @@ React Disclosure 由组件维护装饰性 chevron；自定义 indicator 应自�
 样式复用 theme/style.css（或 base.css、button.css、feedback.css），没有新字号、色板、路由或业务 owner。
 正式独立安装示例：[React](../examples/display-react/app.tsx)。
 
+### Icon 与状态强调
+
+Icon从1.2.0提供，固定1.1.3归档不含此入口。
+
+React `/display` 及根入口公开 `Icon / IconProps`。组件承载已有图标库或SVG，不内置升级图形、版本判断、网络或权限。默认图标采用control-icon-size，SVG描边采用共享icon-stroke-width，xs Button内自动使用control-icon-size-xs；不设置独立字号。图形采用currentColor，保留图标本身的fill/stroke语义，未指定颜色时经icon-color继承所属文字/控件状态。
+
+| 参数 | 合同 |
+|---|---|
+| `color?: React.CSSProperties['color']` | CSS前景值，可直接传`var(--action-primary)`、`var(--status-warning-foreground)`等公共语义变量，变量随主题实时解析；产品扩展变量须已在所属主题层定义，不随页写原始色。优先级为color参数、style.color、闪烁默认强调色、继承；禁用状态仍恢复所属控件颜色 |
+| `blink?: boolean` | 默认false。true且未给color时使用action-primary，以既有motion-duration-pulse、motion-easing和motion-feedback-opacity-start柔和明暗交替；不闪灭、不位移、不改变几何或请求状态 |
+| `aria-label / aria-labelledby` | 不提供时为装饰性隐藏；提供名称时是被动img语义，不新增键盘停靠、按钮或live region。独立动作使用IconButton并将动作名称给按钮，内部Icon保持装饰性 |
+| `children` | 放一个图形，SVG尺寸/描边由库维护；不能放按钮、版本文字或用图标容器截断业务字符串 |
+
+`prefers-reduced-motion: reduce`停止动画并保留静态颜色。disabled/aria-disabled/data-disabled祖先下的Icon恢复颜色继承并停止闪烁；点击、键盘、防重入、busy/disabled和回调仍由所属公共控件及宿主负责。busy本身不推断禁用。color只是绘制前景，不构成可用、成功、升级或权限事实。
+
+中性底的提醒可用主题强调色；有色底按钮内显式使用`color="currentColor"`延续该控件的成对前景。图标与状态文字需要同色时，把同一变量传给Icon和Badge，文字无需跟随闪烁。`Typography.Text`也接受color参数，保留其既有body字体角色；元数据继续按所属slot或Badge呈现，不包一层正文Text再缩字号。
+
+```tsx
+const noticeColor = 'var(--action-primary)';
+// 条件、版本截断和动作仍由宿主提供，xui只呈现。
+<>
+  <SidebarFooterContent>{currentVersionLabel}</SidebarFooterContent>
+  {canUpgrade && <IconButton variant="ghost" aria-label="升级到新版本"
+    disabled={upgradeDisabled} aria-busy={upgrading} onClick={onUpgrade}>
+    <Icon color={noticeColor} blink={attention}>{updateGlyph}</Icon>
+  </IconButton>}
+  {canUpgrade && <Badge color={noticeColor}>
+    <Icon color={noticeColor} blink={attention}>{updateGlyph}</Icon>
+    发现新版本 {latestVersionLabel}
+  </Badge>}
+</>
+```
+
+版本点分字符串保留几段、图标是否显示、管理员权限与升级回调全部留宿主；本库不新增专用升级组件或动画控制器。[React示例](../examples/display-react/app.tsx)的`?icons`用合成状态展示开关、四类语义颜色、独立图标、Badge/文字与xs动作。验收覆盖三主题、变量变化、blink开关、减少动效、disabled/busy、键盘与窄屏/放大，不能把本节或示例存在当作已通过。
+
 ### Typography
 
 字体、字号、行高和字重由 xui 的[公共文字槽映射](DESIGN.md#公共文字槽验收)统一定义，消费项目非必要不得自行设置内容字号。Heading 分开指定 `level` 与 `visualRole`，Text 为正文、Link 继承所属文字槽，Code 为技术值；slot 的裸文本自动继承它的角色，嵌套 Button/Badge/Field 保留自身规则。不要在 meta 里包一层正文 Text 再用 CSS 改小；直接传字符串或无样式 span。
+
+`TypographyTextProps.color`支持直接指定语义颜色变量，只覆盖前景，不改变tone以外的文字角色；省略时保留旧行为。颜色参数优先于style.color与tone的默认前景。
 
 本合同同时是 xui 发布门槛：正式独立消费者的[文字槽示例](../examples/typography-slots-react/app.tsx)不引入私有 CSS；浏览器逐项检查计算后的四项字体属性、父槽与子组件边界、主题、长中文与放大。纯布局/无文字部件按映射记不适用，新增文字 part 必须有角色及对应证据。
 
@@ -359,26 +400,36 @@ onRemove 只发删除意图，不自动删除 React 子树或猜邻居。宿主�
 
 React `/display` 及根入口公开 `Card / CardProps / CardBadge / CardHeadingLevel`；纯 Badge/heading 类型从 runtime `/display` 导出。CSS 使用正式 `base.css` 和已有 Surface/Badge/Toolbar 样式，完整 `style.css` 已包含。
 
+以下图标强调、标签外观、Footer分区与伸展参数从1.2.0提供，执行结果见[验证记录](VALIDATION.md)。
+
 | 区域 | 公开内容 | 合同 |
 | --- | --- | --- |
-| Header | `title`、`headingLevel`、`icon`、`badge`、`actions` | 必填非空标题；headingLevel 2–6，默认3。图标为装饰；归属 Badge 默认 neutral。辅助动作与标题、Badge 分离，窄屏可换行 |
+| Header | `title`、`headingLevel`、`icon`、`iconVariant`、`iconColor`、`badge`、`actions` | 必填非空标题；headingLevel 2–6，默认3。图标为装饰，默认tile+主题强调色，plain适合已有头像/图像表现；badge默认neutral+soft，可显式color/variant。辅助动作与标题、Badge分离，窄屏可换行 |
 | Content | `description` 与 `children` | 唯一内容区 `.xui-card-content`。description 是可选 muted/body-sm 文本，children 是领域正文；两者按顺序放在同一容器，不新增第四块、独立边框或另一套正文布局 |
-| Footer | `footerMeta`、`footerActions` | 次要事实与业务动作属于同一页尾区，分别分组；空间足够同行，窄屏/大字下自然换行。两者都空时页尾不占位 |
+| Footer | `footerMeta`、`footerActions`、`footerVariant` | 次要事实与业务动作属于同一页尾区，分别分组；默认band有公共支持表面和唯一分隔线，plain保留朴素呈现。空间足够同行，窄屏/大字下自然换行；两者都空时整个页尾不占位 |
+
+Card仍只有header/content/footer三个根级区域，自身用Surface.padding=none避免重复内距，各区由公共Token提供边距。默认自然高度；`stretch`显式伸展到所属flex/grid轨道，content可增长、footer靠底，不设置正文像素高度或行数。图标容器、首行偏移与Footer背景由card-icon-size/offset/background和card-footer-background定义，标题仍section字体、正文仍body、底部仍meta，业务动作保留自身控件规则。
+
+`iconColor`与`badge.color`接受公共语义变量；缺省图标为action-primary，中性归属不冒充info/success。Avatar.Root也公开color并默认继承所在角色，适合真实头像/fallback；Icon适合已有SVG图形。宿主通过这些参数组合，不给内部svg补颜色或给卡片改字号。摘要由宿主从真实来源提供，完整说明留原详情；库不截断业务字符串、不伪造版本/指标/运行状态。辅助卡尾动作推荐显式Button size="xs"，不通过Card后代规则强改按钮尺寸。
+
+默认tile已经拥有唯一身份图标容器，icon槽推荐传裸图形节点（如现有Brain图标）、裸emoji/文字，或无背景的公共Icon；不要直接复用列表中带Avatar外框的辅助组件再嵌套一层。列表头像继续使用Avatar；卡片确实展示真实头像时明确iconVariant="plain"，使用Avatar.Root/Image/Fallback与公开color。默认继承必须在正式消费者中验证，不能用宿主样式覆盖来补齐。
 
 `Card` 自身是 section，不添加 role=button、tabIndex、路由、请求、选中或 disabled owner。交互在已有 Button/Link 中，busy/disabled 按它们的公共合同显式传入。标题 hover/focus 展示按 [OverflowText](#通用长标题)执行；卡内没有键盘动作或 reduced-motion/触屏时完整静态换行。组件只负责一层 Surface 与默认间距，宿主不复制 header/content/footer 布局。React 保持正常 key/type 协调；移除内容会按 React 生命周期卸载对应子树。
 
 ```tsx
-import {Card} from '@coffeehc/xui-react/display';
+import {Card,Icon} from '@coffeehc/xui-react/display';
 import {Button} from '@coffeehc/xui-react/button';
-<Card title={resource.name} badge={{label:'公共'}} description={resource.summary}
+<Card title={resource.name} icon={<Icon>{resourceGlyph}</Icon>}
+  iconColor="var(--action-primary)"
+  badge={{label:'公共', color:'var(--action-primary)'}} description={resource.summary}
   actions={<Button variant="ghost" size="xs" onClick={openMenu}>更多</Button>}
   footerMeta={resource.updatedLabel}
-  footerActions={<Button variant="ghost" onClick={openResource}>查看资源</Button>}>
+  footerActions={<Button variant="ghost" size="xs" onClick={openResource}>查看资源</Button>}>
   {content}
 </Card>
 ```
 
-正式 React 消费者：[display](../examples/display-react/app.tsx) 的 `?card`；完整页面继续使用 [页面/表单/刷新](../examples/page-composition-react/app.tsx)。两者是组件与页面样本，不代表产品迁移验收。
+正式React消费者：[display](../examples/display-react/app.tsx)的`?card`；追加`avatar`、`icon=plain`、`badge=plain`或`footer=plain`比较公开参数。完整页面继续使用[页面/表单/刷新](../examples/page-composition-react/app.tsx)。库级示例与产品迁移分别验收，结果见[验证记录](VALIDATION.md)。
 
 ### CardGroup
 
@@ -388,8 +439,9 @@ import {Button} from '@coffeehc/xui-react/button';
 |---|---|
 | 当前记录和稳定身份 | `rows:readonly T[]`、`rowKey(row):string|number`；禁止索引/随机/时间戳身份，数字与等价字符串不能重复 |
 | 每条记录的卡片模板 | `renderCard(row, context):CardGroupCardProps`；返回公开 Card props，集合拥有实际 Card 实例与 key，不返回 JSX、不复制卡片 DOM/CSS |
+| 同组卡高 | `cardSizing='natural'|'equal'`默认natural兼容独立高度；资源网格显式equal，由当前网格最大内容确定共同高度，集合统一传Card.stretch，模板不再拥有stretch |
 | 当前上下文 | `rowIndex`为当前可见页基数0位置，`rowKey`为真实身份，`busy/disabled`为当前集合事实；回调中使用当前 row，不缓存旧索引 |
-| 头部、正文、卡尾 | 模板返回 Card 的 title/icon/badge/actions、description/children、footerMeta/footerActions；三段自然高度、分类 Badge 默认 neutral |
+| 头部、正文、卡尾 | 模板返回Card的title/icon/iconColor/badge/actions、description/children、footerMeta/footerActions/footerVariant；分类Badge默认neutral+soft，三段按Card公共合同呈现，不按资源领域内置不同布局 |
 | 工具栏 | `toolbar`或宿主`pageToolbar`二选一，始终在 body 外；填公共 SearchToolbar/控件，不重复同一查询动作 |
 | 状态与空/错反馈 | `status`、`filtered`、`disabled`、`emptyState/errorState/feedback`、`onRetry`、`labels`；首次无数据在 body，已有卡片刷新/失败在集合 footer 保留当前内容 |
 | 计数和翻页 | `pagination`复用 `CollectionPagination`或`CollectionCursorPagination`，与DataTable相同受控事实；`footer`仅补充内容，不再复制计数/翻页 |
@@ -397,9 +449,12 @@ import {Button} from '@coffeehc/xui-react/button';
 
 `renderCard` 的业务控件按权限与操作语义采用 context.disabled（含 busy），集合不会递归克隆/禁用任意 slot 内容。被动卡片不增加 Tab stop、整卡 click 或 selection owner；业务主动作使用正常 Button/link，输入草稿由业务稳定组件保存。空工具槽、空反馈与空附加footer不留占位；计数可通过`labels.count`明确返回空字符串。长中文完整保留，尺寸放大后按净宽自动退列；`--card-group-item-min`默认依赖`--layout-field-long-min`，仅在产品根Token层覆盖。
 
+equal使用CSS网格等分自动行和Card伸展，不新增测量器或高度状态owner。所有可见行依据当前完整内容取得共同卡高，content承接多余空间，存在的footer靠底；缺少footer不会生成空footer。单列/长中文/200%文字或界面缩放继续增加所需高度，不裁正文或动作，不固定像素高度。切换natural/equal只改布局与属性，原Card/字段/焦点身份不变；busy/empty/error、排序及offset/cursor合同保持。
+
 ```tsx
 <CardGroup
   label="研究任务"
+  cardSizing="equal"
   rows={rows}
   rowKey={row => row.id}
   status={status}
@@ -407,7 +462,7 @@ import {Button} from '@coffeehc/xui-react/button';
     title: row.name,
     description: row.summary,
     footerMeta: row.ownerName,
-    footerActions: <Button disabled={context.disabled} onClick={() => open(row.id)}>查看</Button>,
+    footerActions: <Button size="xs" disabled={context.disabled} onClick={() => open(row.id)}>查看</Button>,
   })}
   onRetry={retry}
   pagination={pagination}
@@ -415,6 +470,8 @@ import {Button} from '@coffeehc/xui-react/button';
 ```
 
 与DataTable共用同一状态和footer实现。offset需要pageIndexOffset、真实total或null；cursor需要nextCursor/hasPrevious，不推导游标/总数、自动钳位页码或自己发请求。onRetry、翻页和修改每页大小只发意图，同回合防重入，宿主确认后回传事实。刷新时宿主保留同范围rows；集合不会暗存旧记录，也不会把另一查询范围的旧数据冒充当前结果。排序/更新沿相同key协调，保留仍存在的Card与草稿；被移除或翻出页的对象按正常React生命周期卸载，不承诺跨页草稿缓存。完整[正式示例](../examples/card-group-react/app.tsx)覆盖两种工具栏归属、三种layout、offset/cursor和局部失败恢复。
+
+本批示例默认采用equal，`?sizing=equal&varied&accent`提供不同长度摘要、图标与归属强调以及公开等高切换；`sizing=natural`可对照，`footer=plain`比较卡尾。库级默认仍natural，消费项目应在所有采用同一资源列表规范的CardGroup实例显式选择equal，不按智能体/技能/工具分支设尺寸。执行结果见[验证记录](VALIDATION.md)，库级验证不代表消费项目已升级。
 
 ### MetricCard
 
@@ -439,6 +496,9 @@ React 正式入口为 `@coffeehc/xui-react/metric-card`，根入口同时导出 
 
 ### Avatar
 
+React `/avatar`及根入口提供Avatar.Root/Image/Fallback与AvatarRootProps，图像与fallback生命周期继续由同一peer管理。Root的size保持sm/default/lg；同批新增color用于前景，可直接传公共CSS变量，省略时继承所属角色，背景及形状保留公共默认。Fallback仍采用control字体，不要求宿主自设字号。Root原有className/style函数、ref、render和状态参数保留，color只覆盖前景，不替换图像或重挂fallback。
+
+Card的icon槽可放Avatar或Icon：已有完整头像表现时选择Card.iconVariant="plain"；需要统一身份图标容器时用默认tile。业务名称、图片alt、真实src及fallback文字由宿主提供，不借头像伪造身份、运行状态或权限。1.2.0的默认Avatar前景由固定foreground改为继承；真实执行范围见[验证记录](VALIDATION.md)。
 
 
 ## 布局与顶栏
@@ -583,6 +643,8 @@ FormGrid `columns?:1|2` 默认2（可用空间不足仍一列）；Item `span?:'
 
 `@coffeehc/xui-react/feedback` 的 LoadingState/LoadingStateProps 新增 `layout?:'block'|'inline'`（默认block）；DataRegion/DataRegionProps 新增 `feedbackLayout?:'reserved'|'flow'`（默认reserved）。block相对所属内容区水平、垂直居中；DataRegion只有一个直接LoadingState时自动分配内容区，无children且busy时将feedback里的首次加载置于区域中心，保留既有最小高度；有明确高度时填充该内容区，无明确高度时使用现有反馈Token的最小高度。加载图标与长文本整体居中，窄屏或大字自然增长。inline留在所属动作/计数旁，不接管正文；原有Skeleton仍可按明确的内容骨架需求单独采用。DataTable与CardGroup首次无记录使用一个居中status，分别以可见表体（表头之外）和body为中心，工具栏/footer不计入；已有记录刷新仅显示footer的inline反馈。公共主题定义反馈样式；Spinner aria-hidden，加载文本用一个 role=status，错误摘要使用已有 ErrorState/role=alert。DataTable 已统一有行刷新的行内反馈，调用者不要再包第二个计数/分页/反馈或横滚 owner。
 
+Spinner从1.2.0使用主题色开放弧：三边复用action-primary，一边透明，尺寸、线宽和旋转时长沿用既有公共Token。普通动效下持续旋转，reduced-motion下静止保留开放形状；不会生成百分比、请求或额外live区域。直接组合Spinner时，宿主应提供忙状态文字或可访问名称，不能仅用一个圆环表达状态，也不在宿主另画旋转皮肤。light/dark/system切换通过同一语义变量更新。
+
 普通详情内容可直接使用公共区域；已有内容刷新时保持原来的详情组件身份，反馈改为inline。DataRegion不请求、不缓存，实际读取仍由宿主拥有。
 
 ```tsx
@@ -675,7 +737,7 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 }>{children}</MenuLayout>
 ```
 
-上述内容、图标、回调与状态均由宿主提供。两个正式示例增加 `?toggle=bottom&row`，可用 `composition=shell` 验证直接 React AppShell、`longFooter` 验证长版本，未加参数仍呈现旧默认。HTML `layout.update({sidebarTogglePlacement:'bottom'})` 与 React props 更新复用按钮、侧栏、业务节点和焦点，不通过重挂布局改位置。
+上述内容、图标、回调与状态均由宿主提供。正式React示例增加 `?toggle=bottom&row`，可用 `composition=shell` 验证直接 AppShell、`longFooter` 验证长版本，未加参数使用默认top。React props更新复用按钮、侧栏、业务节点和焦点，不通过重挂布局改位置；runtime不再提供原生UI update入口。
 
 图标/短表示为装饰，完整名称留在label。图标可为任意React内容；直接SVG采用公共control-icon-size。名称长时展开/窄屏换行；紧凑栏只对有icon的部件视觉隐藏label。没有icon时仍显示文字，不要求消费者自写隐藏CSS；需要更具体紧凑表示时提供icon。真实交互语义、tooltip/解释入口及权限由内容所属组件决定。
 
@@ -688,12 +750,18 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 
 
 
-采用 AppShell/MenuLayout 时由公共组件拥有唯一侧栏开关。宿主传入 collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange 与标签配置；不得在同一 shell 再实现按钮、媒体监听或抽屉。
+采用 AppShell/MenuLayout 时由公共组件拥有唯一侧栏开关。宿主传入 collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange 与标签配置；不得在同一 shell 再实现按钮、媒体监听或抽屉。已有 `sidebarTogglePlacement="top"`（默认）将它放在侧栏顶部靠末端、品牌区下方；显式bottom仍兼容。已选择bottom的宿主需要改这个公开prop才能回到顶部，单独升级包不会覆盖宿主选择。
+
+默认图标由库维护：桌面以侧栏分栏轮廓和清晰箭头表达收起/展开动作，窄屏改用菜单图标打开已有导航抽屉；复用control-icon-size、icon-stroke-width、Button命中区和焦点，不缩小按钮或另加字号。图标装饰性隐藏，完整可访问名称与title来自当前动作标签。`?brand=long&row`展示长中文品牌，顶部/底部切换、窄屏和紧凑仍复用同一个控件。本段图标调整从1.2.0提供，top/bottom位置合同保持。
 
 
 ### 富条目、独立行尾动作与上下文菜单
 
 React `NavigationMenu` 支持 `children`、`resolveIcon`、`renderLabel`、`renderLink`、`renderButton` 和 `renderAction`。`renderLabel` 只能提供非交互描述内容；主项保持真实 link/button 语义。`renderAction` 为主项旁的独立 button，提供配置、收藏等辅助动作，不触发导航；无需 stopPropagation 或访问私有 DOM。权限、请求、busy 与动作执行仍归宿主。
+
+从1.2.0起，公共名称槽伸展到主项扣除图标及内边距后的剩余宽度；独立分支与配置按钮继续在主项外留宽。富标签可在自己的非交互 flex/grid 中将名称设为可收缩轨道、状态设为不收缩的行尾轨道。仅把真实名称放入 `NavigationMenu.Label`，让名称独立滚动；Spinner、状态文字与独立动作都不进入滚动轨道。状态位于主项内容的逻辑末端，名称变长时不能挤掉它；多行名称的状态与首行对齐。触控和 reduced-motion 仍显示可换行的完整名称。被动状态不要送入只接受 button 的 `renderAction`，也不要为了对齐修改库内部包装。
+
+完整接线见 [rich-navigation-react](../examples/rich-navigation-react/app.tsx) 的 `?status`：使用公开 renderLabel/Label/Spinner、宿主自有内容布局和真实状态回调，不添加私有选择器或字号覆盖。忙状态有文字解释，图标本身装饰性隐藏；状态变更保留原名称、主链接、分支、配置按钮和草稿节点。紧凑rail继续视觉隐藏整个名称槽，不在60px栏里额外塞入隐藏名称中的状态。
 
 `expandBranchLabel(item)` 与 `collapseBranchLabel(item)` 可本地化带 href 分支的独立展开按钮名称，默认文案包含真实条目名；语言或条目更新不会替换当前焦点按钮。`labelOverflow` 默认 wrap，可按合同选择 marquee；`actionAlignment` 默认 center，可选择 start 对齐名称首行。两个配置只影响名称和同行控件排版，不改变动作或路由。
 
@@ -1030,3 +1098,26 @@ const cardRef = React.useRef<HTMLElement>(null);
 ### 侧栏快捷操作组合
 
 `AppShell.sidebarHeader` / `MenuLayout.sidebarHeader` 的裸说明为次要文字；不约束直属或嵌套 Button 的宽度/字体；默认按内容宽度，宿主需要全宽时明确使用公开 style/className；Toolbar/业务布局管理动作组合，空间不足时由公开布局自然换行。页头仍最多占侧栏合同上限，独立滚动且至少保留一项导航高度；footer 与菜单保留自己的滚动和焦点。Header 分隔两侧采用 space-text-gap，sidebar 中的 Tabs.Panel 不再叠加通用内容 padding；普通页面 Tabs 不变。无需宿主 wrapper 或内部 CSS。[正式示例](../examples/sidebar-footer-react/app.tsx)的 `?header=actions&row` 复现两项文字动作和一个图标动作，`header=long` 验证长中文，`header=direct|full|content|business` 验证宽度归属；`header=tabs` 展示一个 Tabs.Root 覆盖 sidebarHeader 内的 Toolbar/Input/Tabs.List 与 sidebar 内的 keepMounted Tabs.Panel/NavigationMenu。
+
+## Tabs
+
+Tabs布局与图标部件从1.2.0提供，执行结果见[验证记录](VALIDATION.md)；固定1.1.3不包含新增能力。
+
+React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Icon/Panel` 和 `TabsListProps`。Root拥有受控value/defaultValue，List只管理轨道编排与键盘焦点；Tab的children承载名称，Icon只放装饰性图标，Panel承载对应内容。字体由Tab的control角色统一提供；图标与名称继承Tab的状态色，Panel内公共组件保留自身文字角色。Icon不承载独立按钮、提示或业务状态，真实label不能只放在装饰槽。
+
+`Tabs.List.layout` 默认 `content`：轨道贴合标签组，不自动铺满父容器；最大宽度为可用空间，长中文或窄屏自然换行。显式 `equal` 才填满轨道并等分各项，适合确有完整行切换需求的容器。依赖旧满宽轨道的采用方应明确选择equal，不通过宿主内部CSS或缩字号修补。普通Tab可自然增高，图标保持公共尺寸与非收缩；纯文字不留图标空位。
+
+选中项用独立的内嵌底色与强调色名称/图标；未选项为次要文字，hover与键盘focus各有状态。沿用peer的controlled、activateOnFocus、loop、RTL/orientation与panel关联；xui的键盘适配仍只负责跳过disabled。刷新、busy/error及草稿属于宿主或对应Panel，不因切换轨道布局而重挂Root或业务内容。
+
+```tsx
+<Tabs.Root value={view} onValueChange={setView}>
+  <Tabs.List aria-label="任务视图" layout="content">
+    <Tabs.Tab value="grid"><Tabs.Icon>{gridIcon}</Tabs.Icon>运行网格</Tabs.Tab>
+    <Tabs.Tab value="logs"><Tabs.Icon>{logsIcon}</Tabs.Icon>运行日志</Tabs.Tab>
+  </Tabs.List>
+  <Tabs.Panel value="grid" keepMounted>{grid}</Tabs.Panel>
+  <Tabs.Panel value="logs" keepMounted>{logs}</Tabs.Panel>
+</Tabs.Root>
+```
+
+[字体样板](../examples/typography-slots-react/app.tsx)使用公共Icon部件；[侧栏样板](../examples/sidebar-footer-react/app.tsx)的 `?header=tabs&row` 展示内容宽轨道，追加 `tabLayout=equal` 比较显式等宽排列。验收须分别记录布局、三主题、长中文、放大、图标状态色、键盘、disabled、关联panel和草稿连续性，不以静态截图代替交互结果。

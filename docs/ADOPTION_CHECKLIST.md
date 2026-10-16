@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（本轮为 1.1.3）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（本轮为 1.2.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -87,6 +87,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | SHELL-020 | sidebarHeader 放直属Button、Toolbar或业务布局 | slot不强改按钮宽度/字号/折叠态padding；默认内容宽，宿主显式公开style/className的全宽或内容宽均保留 | 直属/Toolbar/业务布局、width=100%/max-content的几何与字体计算值 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
 | SHELL-021 | sidebarHeader内Tabs.List控制sidebar内Tabs.Panel | 一个Tabs.Root与受控值；侧栏Panel不叠内容padding，Header分隔紧凑，普通页面Tabs保持原Token间距 | 切换前后间距、首项位置、search草稿与普通Tabs对照 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
 | SHELL-022 | 侧栏Header/列表/Footer有可聚焦控件 | Header保留限高/独立滚动、菜单最小高度和Footer；各控件inset焦点可绘制，invalid边界仍可读 | 324px/窄屏/200%文字与真实zoom、键盘焦点和滚动记录 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
+| SHELL-023 | 需要调整公共收起/展开入口 | 使用既有sidebarTogglePlacement选择top或bottom；桌面图标方向与动作一致，窄屏为打开抽屉，不替换私有SVG或另造按钮 | placement接线、唯一按钮、图标/命中区、Enter/Space及Escape回焦点 | [COMPONENTS 唯一开关](COMPONENTS.md#导航内部唯一收起展开控件) |
 
 ## 每个页面和组件的 slot 矩阵
 
@@ -132,6 +133,37 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | TYPE-022 | xui自身发布或新增文字part | 公共映射、CSS、正式示例与computed断言同步；逐项报告通过/失败/未跑，不以宿主修补验收 | 正式tarball、角色矩阵与执行报告 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-023 | 任何文字slot主题/放大验收 | light/dark/system、桌面/窄屏、长中文、200%文字与真实zoom分别验证，无截断动作/焦点丢失 | 各环境computed、截图及键盘轨迹 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 
+## Tabs 编排与状态
+
+以下检查用于库发布及项目接入，按真实执行证据逐项记录，不将规范存在当作已通过。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| TABS-001 | 使用Tabs切换相关内容 | Root/Tab/Panel对应真实受控或非受控值，Tab名称与Panel内容归属明确，不用路由链接伪装内容切换 | props、role、labelledby/controls及当前值 | [COMPONENTS Tabs](COMPONENTS.md#tabs) |
+| TABS-002 | 默认内容宽轨道 | List按标签组自然宽度，最大不越过所属容器，不留被动满宽空轨道 | List与各项实际矩形、长中文/窄屏换行 | [COMPONENTS Tabs](COMPONENTS.md#tabs) |
+| TABS-003 | 设计确需整行等分切换 | 显式List.layout=equal，轨道填满且各项等分，不穿透内部class补flex | 公开prop与各项宽度、放大后完整名称 | [COMPONENTS Tabs](COMPONENTS.md#tabs) |
+| TABS-004 | Tab带图标或只有文字 | 图标进入Icon装饰槽，统一尺寸/非收缩/图文间距/继承状态色；纯文字不留空图标位，label不隐藏在Icon中 | slot接线、计算样式与可访问名称 | [COMPONENTS Tabs](COMPONENTS.md#tabs) |
+| TABS-005 | Tab呈现普通/选中/hover/focus/disabled | 轨道与内嵌选中层明确，文字/图标共同表达选中，focus独立可见，disabled不执行 | 三主题状态截图、颜色/焦点计算值与零执行记录 | [DESIGN 原子状态](DESIGN.md) · [COMPONENTS Tabs](COMPONENTS.md#tabs) |
+| TABS-006 | 键盘操作Tabs | 方向键/Home/End跳过disabled；手动/自动激活、loop、RTL/orientation遵循公开peer配置 | 实际键盘顺序、value通知与panel关联 | [COMPONENTS Tabs](COMPONENTS.md#tabs) |
+| TABS-007 | Panel含草稿或正在刷新 | 状态归所属内容，必要时keepMounted保留输入；同范围刷新/轨道布局切换不重挂Root或正文 | 节点identity、草稿、焦点与请求owner记录 | [COMPONENTS Tabs](COMPONENTS.md#tabs) |
+| TABS-008 | Tabs发布或采用验收 | light/dark/system、长中文、桌面/窄屏、200%文字与真实zoom分别核对，不用缩字号或隐藏Tab过验收 | 正式包、截图/几何/键盘与实际未跑项 | [COMPONENTS Tabs](COMPONENTS.md#tabs) |
+
+## 图标与状态提醒
+
+Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验收。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| ICON-001 | 使用公共图标 | 图形由Icon承载，统一尺寸/描边；xs动作随所属Button，图标不承载版本字符串或交互owner | 正式types、slot接线与尺寸/描边计算值 | [COMPONENTS Icon](COMPONENTS.md#icon-与状态强调) |
+| ICON-002 | 默认图标或状态文字 | 不指定color时继承所属角色，不额外设置字号或颜色皮肤 | 父槽及Icon/Badge/Text前景与字体计算值 | [COMPONENTS Icon](COMPONENTS.md#icon-与状态强调) |
+| ICON-003 | 需要主题强调色或其他合法变量 | 通过color传公共语义var，变量随light/dark/system实时变化；明确颜色优先级，不穿透SVG/Badge补CSS | color接线、变量切换、计算前景及主题截图 | [COMPONENTS Icon](COMPONENTS.md#icon-与状态强调) |
+| ICON-004 | 图标需要引起关注 | 显式blink；开启默认主题强调，关闭恢复默认或指定颜色；不闪灭、位移或影响周围几何 | 开关前后动画/颜色、矩形及节点identity | [COMPONENTS Icon](COMPONENTS.md#icon-与状态强调) |
+| ICON-005 | 用户启用减少动态效果 | 停止blink动画，保留静态语义色和完整状态文字 | 真实媒体设置下animation与截图 | [COMPONENTS Icon](COMPONENTS.md#icon-与状态强调) |
+| ICON-006 | 图标位于动作内或祖先禁用 | Icon不执行动作；所属Button维护disabled/busy/键盘，禁用时停止闪烁并继承控件颜色 | Enter/Space、busy事实、disabled零调用及前景/动画记录 | [COMPONENTS Icon](COMPONENTS.md#icon-与状态强调) |
+| ICON-007 | 装饰图标或独立含义图标 | 装饰性默认隐藏；需要独立含义时给名称成为被动img；不增加Tab停靠或随动画重复播报 | accessibility tree、Tab顺序、无自动live region | [COMPONENTS Icon](COMPONENTS.md#icon-与状态强调) |
+| ICON-008 | 呈现版本或类似状态提醒 | 是否显示、授权、版本截断、当前/最新值及升级回调归宿主；公共组件只表达已确认事实 | 条件与数据owner、版本示例、唯一业务回调 | [COMPONENTS Icon](COMPONENTS.md#icon-与状态强调) |
+| ICON-009 | Icon/颜色能力发布或采用 | 三主题、blink开关、合法变量、窄屏、长中文、200%文字与真实zoom分别验收，不隐藏文字/缩小命中区 | 正式包、类型、截图/几何/键盘及实际未跑项 | [COMPONENTS Icon](COMPONENTS.md#icon-与状态强调) |
+
 ## 页面标题、工具栏与卡片
 
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
@@ -157,6 +189,10 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | CARD-011 | 卡片标题超过可用宽度 | 只滚动标题文本；Badge、摘要、元数据和动作保持原位；不溢出时不动画 | 长中文/英文矩形录像与 node identity | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
 | CARD-012 | Card 内现有键盘交互触发标题全文展示 | 仅沿 Card 已有键盘动作显示完整标题，不新增标题或根节点 Tab 停靠点；减少动效遵循固定组件合同 | Tab 序列、现有按键轨迹与 reduced-motion 样式 | [COMPONENTS Card](COMPONENTS.md#card) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
 | CARD-013 | 卡片在窄屏或放大文字下空间不足 | header/footer 按公共规则换行，完整文本与右侧动作可达 | 390px、200%文字及真实 zoom 截图 | [COMPONENTS Card](COMPONENTS.md#card) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) · [DESIGN 槽位架构](DESIGN.md#页面与组件的槽位架构) |
+| CARD-014 | Card有身份图标或头像 | 使用icon/iconVariant/iconColor及公共Icon/Avatar.Root.color；默认tile强调，不写内部SVG颜色/字号，plain适配已有头像表现 | 公开props、首行对齐、三主题计算前景/尺寸 | [COMPONENTS Card](COMPONENTS.md#card) · [COMPONENTS Avatar](COMPONENTS.md#avatar) |
+| CARD-015 | Card有公共/个人等归属标签 | tone维持真实neutral，默认soft区分普通正文；需要强调时显式badge.color，朴素时显式variant=plain，不伪造状态tone | CardBadge及BadgeVariant接线、文字角色/背景与颜色 | [COMPONENTS Card](COMPONENTS.md#card) |
+| CARD-016 | Card有卡尾事实或动作 | 默认band统一背景/唯一分隔，plain公开可选；卡尾动作显式选标准size，不由父级改后代字体/命中区 | 分区/边界矩形、Footer为空及两种variant对照 | [COMPONENTS Card](COMPONENTS.md#card) |
+| CARD-017 | Card展示领域摘要 | description为真实来源短摘要，完整说明仍有详情入口；公共层不固定正文高度/行数，不为参考图虚构版本、状态或指标 | 数据来源、摘要/详情映射与放大可达 | [COMPONENTS Card](COMPONENTS.md#card) |
 
 ## 小控件与复合控件
 
@@ -246,6 +282,8 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | NAV-005 | 桌面默认展开或收起 | 展开使用公共min/max与25vw动态宽度（默认324–432px）、50vw封顶；收起使用60px compact rail，不写内部宽度覆盖 | computed width 与正式默认值 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-006 | 用户键盘操作菜单 | 方向键、Home/End、Enter/Space 按公开导航合同工作 | 自动化按键轨迹与 active/expanded 状态 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-007 | 菜单处于窄屏 Drawer | 只有一个可见打开入口；关闭回到原触发按钮 | 窄屏 DOM 计数、焦点前后 activeElement | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-008 | 名称旁有非交互运行/等待状态 | renderLabel使用主项剩余宽度；名称可收缩、尾随状态不收缩并位于逻辑末端；有独立分支/配置时保留各自轨道，不将状态伪装成action按钮 | 短/长名称、324/60、窄屏与200%矩形，状态出现/消失前后节点与焦点 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
+| NAV-009 | 富标签开启名称滚动 | 只有NavigationMenu.Label内的名称移动；尾随状态和分支/配置不动，触控/reduced-motion完整换行且与名称首行对齐 | 悬停/键盘录像、动态偏好切换、RTL及名称/状态更新记录 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-003 | 展示警告/等待/人工介入状态 | tone 与真实状态分类逐条映射，不只用颜色传达状态 | 领域状态映射表和可访问文本 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
@@ -384,7 +422,10 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | CGROUP-003 | 初始/空/筛选空/刷新/失败 | 首次无数据加载相对body水平垂直居中；各状态真实；同范围刷新/失败保留记录和节点，局部反馈与显式重试，不加载整个页面 | Network、节点身份、录像 | [DESIGN 卡片集合](DESIGN.md#卡片集合布局与状态) |
 | CGROUP-004 | 排序、数据更新或翻页 | 当前记录与context一致，稳定key；仍存在记录的草稿/焦点保留，不承诺跨页缓存 | 事件、记录及mount日志 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
 | CGROUP-005 | 集合busy/disabled或有业务动作 | 集合分页/重试阻止重复意图，业务动作按context及自身权限禁用；卡片不变伪按钮 | Enter/Space、禁用与回调次数 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
-| CGROUP-006 | 窄屏/长中文/界面或浏览器放大 | 按容器净宽退列，卡片自然高度，三段和工具/页尾完整可达，无私有CSS或尺寸补丁 | 主题/宽度/倍率矩阵截图与焦点 | [DESIGN 卡片集合](DESIGN.md#卡片集合布局与状态) |
+| CGROUP-006 | 窄屏/长中文/界面或浏览器放大 | 按容器净宽退列，卡高由完整内容决定；equal不得裁内容/动作，三段与工具/页尾完整可达，无私有尺寸补丁 | 主题/宽度/倍率矩阵截图与焦点 | [DESIGN 卡片集合](DESIGN.md#卡片集合布局与状态) |
+| CGROUP-007 | 同一资源网格要求卡片整齐 | 显式cardSizing=equal，网格按最大内容计算共同卡高，content伸展、存在的footer靠底；无固定像素正文高 | 不同摘要/正文/空槽下各卡高度和Footer位置 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
+| CGROUP-008 | 切换等高、刷新、排序或内容更新 | 不重挂Card/字段/业务树，不丢草稿、焦点；卡高可随新内容和放大增长 | identity/输入/选区/焦点及高度变化记录 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
+| CGROUP-009 | 多资源类型或多个页面使用CardGroup | 逐调用点检查同一Card三段/图标/标签/Footer与cardSizing接线，不在库中按领域写专属布局 | 全部调用点清单、各模板props、逐页实际结果 | [COMPONENTS CardGroup](COMPONENTS.md#cardgroup) |
 
 ### 组件内容加载位置
 
@@ -392,3 +433,4 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 |---|---|---|---|---|
 | LOAD-001 | 详情、卡片或其他局部内容首次等待 | 使用LoadingState block，相对所属可见内容区水平垂直居中，不以页面/窗口为中心；保留外围标题与动作 | 内容区与提示矩形、主题/窄屏/大字截图 | [DESIGN 刷新连续性](DESIGN.md#数据刷新与视图连续性) |
 | LOAD-002 | 已有内容刷新或按钮动作等待 | 内容及节点保留；区域footer/反馈槽使用inline，按钮内Spinner与标签同组，不用居中遮罩替换内容 | 节点/焦点/草稿/滚动、status数量与无Document请求 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) |
+| LOAD-003 | 使用公共Spinner指示忙状态 | 主题色开放弧可辨认；普通动效下实际旋转，reduced-motion静止且仍有忙状态文字/名称；不在宿主重画圆环或增加重复live播报 | light/dark/system的边框与真实帧采样、reduce静止采样、状态可访问名称 | [COMPONENTS 表单与页面编排](COMPONENTS.md#表单与页面编排) |

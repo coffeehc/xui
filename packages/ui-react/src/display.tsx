@@ -8,14 +8,34 @@ import type {CardHeadingLevel,CardBadge} from '@coffeehc/xui-runtime/display';
 export type {CardHeadingLevel,CardBadge} from '@coffeehc/xui-runtime/display';
 export type {HeadingLevel,HeadingRole,TextTone,CopyStatus,CopyableLabels,ClipboardWriter,ImageOptions,ImageSize,ImageStatus} from '@coffeehc/xui-runtime/display';
 export type TypographyHeadingProps = React.ComponentProps<'h2'> & {level:HeadingLevel;visualRole?:HeadingRole};
-export type TypographyTextProps = ((React.ComponentProps<'span'> & {as?:'span'}) | (React.ComponentProps<'p'> & {as:'p'})) & {tone?:TextTone};
+export type TypographyTextProps = ((Omit<React.ComponentProps<'span'>,'color'> & {as?:'span'}) | (Omit<React.ComponentProps<'p'>,'color'> & {as:'p'})) & {
+ tone?:TextTone;
+ /** Explicit foreground only; use a public semantic CSS variable, without changing the text role. */
+ color?:React.CSSProperties['color'];
+};
 export type TypographyLinkProps = React.ComponentProps<'a'>;
 export type TypographyCodeProps = Omit<React.ComponentProps<'code'>,'children'|'dangerouslySetInnerHTML'> & {value:string;block?:boolean};
 function Heading({level,visualRole='section',className,...props}:TypographyHeadingProps){if(!Number.isInteger(level)||level<1||level>6)throw new TypeError('Heading level must be 1–6');const Tag=`h${level}` as 'h2';return <Tag {...props} className={cx('xui-heading',className)} data-visual-role={visualRole}/>;}
-function Text({as:Tag='span',tone='default',className,...props}:TypographyTextProps){return React.createElement(Tag,{...props,className:cx('xui-text',className),'data-tone':tone});}
+function Text({as:Tag='span',tone='default',color,style,className,...props}:TypographyTextProps){return React.createElement(Tag,{...props,className:cx('xui-text',className),'data-tone':tone,style:color===undefined?style:{...style,color}});}
 function Link({className,...props}:TypographyLinkProps){return <a {...props} className={cx('xui-link',className)}/>;}
 function Code({value,block=false,className,...props}:TypographyCodeProps){const code=<code {...props} className={cx('xui-code',className)}>{value}</code>;return block?<pre className="xui-code-block">{code}</pre>:code;}
 export const Typography={Heading,Text,Link,Code};
+/** Passive glyph presentation. Put actions in Button/IconButton, not on the icon. */
+export type IconProps=Omit<React.ComponentProps<'span'>,'color'|'role'>&{
+ /** Omitted colors inherit. CSS variables remain live across theme changes. */
+ color?:React.CSSProperties['color'];
+ /** Soft opacity pulse, off by default; without color it uses action-primary. */
+ blink?:boolean;
+};
+/** Decorative by default; an explicit aria-label/labelledby exposes a named image. */
+export function Icon({color,blink=false,className,style,'aria-label':label,'aria-labelledby':labelledby,'aria-hidden':hidden,...props}:IconProps){
+ const named=!!(label||labelledby);
+ // Route even native style.color through the token so disabled CSS can still
+ // inherit the owning control's foreground without an !important override.
+ const {color:styleColor,...layoutStyle}=style??{},foreground=color??styleColor;
+ const appearance=foreground===undefined?layoutStyle:{...layoutStyle,'--icon-color':foreground} as React.CSSProperties;
+ return <span {...props} className={cx('xui-icon',className)} data-blink={blink} data-colored={foreground!==undefined} style={appearance} aria-label={label} aria-labelledby={labelledby} role={named?'img':undefined} aria-hidden={hidden??(!named||undefined)}/>;
+}
 export type SeparatorProps=Omit<React.ComponentProps<'div'>,'children'> & {orientation?:'horizontal'|'vertical';decorative?:boolean};
 export function Separator({orientation='horizontal',decorative=false,className,...props}:SeparatorProps){return <div {...props} className={cx('xui-separator',className)} role={decorative?'none':'separator'} aria-hidden={decorative||undefined} aria-orientation={decorative?undefined:orientation} data-orientation={orientation}/>;}
 export type TagProps=Omit<React.ComponentProps<'span'>,'children'> & {label:string;disabled?:boolean} & ({onRemove?:never;removeLabel?:never;onRemoveFocus?:never}|{onRemove:()=>void;removeLabel:string;onRemoveFocus?:(trigger:HTMLButtonElement)=>void});
@@ -60,16 +80,24 @@ export function OverflowText({text,interactionRef,ref,className,...props}:Overfl
 /** Public card composition. Slots define geometry; data, permissions and actions stay with the host. */
 export type CardProps=Omit<React.ComponentProps<'section'>,'title'|'children'>&{
  title:string;headingLevel?:CardHeadingLevel;icon?:React.ReactNode;badge?:CardBadge;
+ /** Identity glyphs use a themed tile by default; plain supports already-framed images/avatars. */
+ iconVariant?:'tile'|'plain';
+ /** Decorative header foreground only; defaults to the theme accent. */
+ iconColor?:React.CSSProperties['color'];
  /** Auxiliary header actions, such as an existing Menu trigger. */
  actions?:React.ReactNode;
  /** Description and business content share the single natural-height content region. */
  description?:string;children?:React.ReactNode;
  /** Read-only facts and business actions occupy separate footer groups. */
  footerMeta?:React.ReactNode;footerActions?:React.ReactNode;
+ /** Band (default) separates the footer surface; plain keeps the unframed composition. */
+ footerVariant?:'band'|'plain';
+ /** Fill an available flex/grid track; content can grow and the footer stays at its end. */
+ stretch?:boolean;
 };
-export function Card({title,headingLevel=3,icon,badge,actions,description,children,footerMeta,footerActions,ref,className,...props}:CardProps){
+export function Card({title,headingLevel=3,icon,iconVariant='tile',iconColor,badge,actions,description,children,footerMeta,footerActions,footerVariant='band',stretch=false,ref,className,...props}:CardProps){
  if(typeof title!=='string'||!title.trim()||!Number.isInteger(headingLevel)||headingLevel<2||headingLevel>6)throw new TypeError('Card requires a nonempty title and heading level 2–6');
- if(badge&&(typeof badge.label!=='string'||!badge.label.trim()||badge.tone&&!['neutral','info','success','warning','error'].includes(badge.tone)))throw new TypeError('Invalid Card badge');
+ if(badge&&(typeof badge.label!=='string'||!badge.label.trim()||badge.tone&&!['neutral','info','success','warning','error'].includes(badge.tone)||badge.variant&&!['plain','soft'].includes(badge.variant)))throw new TypeError('Invalid Card badge');
  const root=React.useRef<HTMLElement>(null);React.useImperativeHandle(ref,()=>root.current!,[]);
- return <Surface {...props} ref={root} className={cx('xui-card',className)}><header className="xui-toolbar xui-card-header"><div className="xui-toolbar xui-card-heading">{hasContent(icon)&&<span className="xui-card-icon" aria-hidden="true">{icon}</span>}<Typography.Heading level={headingLevel} className="xui-card-title"><OverflowText text={title} interactionRef={root}/></Typography.Heading></div>{(badge||hasContent(actions))&&<div className="xui-toolbar xui-card-trailing">{badge&&<Badge tone={badge.tone??'neutral'}>{badge.label}</Badge>}{hasContent(actions)&&<div className="xui-toolbar xui-card-actions">{actions}</div>}</div>}</header>{(description||hasContent(children))&&<div className="xui-card-content">{description&&<Typography.Text as="p" tone="muted" className="xui-card-description">{description}</Typography.Text>}{hasContent(children)&&<div className="xui-card-body">{children}</div>}</div>}{(hasContent(footerMeta)||hasContent(footerActions))&&<footer className="xui-toolbar xui-card-footer">{hasContent(footerMeta)&&<div className="xui-text xui-card-meta" data-tone="muted">{footerMeta}</div>}{hasContent(footerActions)&&<div className="xui-toolbar xui-card-actions">{footerActions}</div>}</footer>}</Surface>;
+ return <Surface {...props} padding="none" data-stretch={stretch} ref={root} className={cx('xui-card',className)}><header className="xui-toolbar xui-card-header"><div className="xui-toolbar xui-card-heading">{hasContent(icon)&&<span className="xui-card-icon" data-variant={iconVariant} style={iconColor===undefined?undefined:{color:iconColor}} aria-hidden="true">{icon}</span>}<Typography.Heading level={headingLevel} className="xui-card-title"><OverflowText text={title} interactionRef={root}/></Typography.Heading></div>{(badge||hasContent(actions))&&<div className="xui-toolbar xui-card-trailing">{badge&&<Badge tone={badge.tone??'neutral'} variant={badge.variant??'soft'} color={badge.color}>{badge.label}</Badge>}{hasContent(actions)&&<div className="xui-toolbar xui-card-actions">{actions}</div>}</div>}</header>{(description||hasContent(children))&&<div className="xui-card-content">{description&&<Typography.Text as="p" tone="muted" className="xui-card-description">{description}</Typography.Text>}{hasContent(children)&&<div className="xui-card-body">{children}</div>}</div>}{(hasContent(footerMeta)||hasContent(footerActions))&&<footer className="xui-toolbar xui-card-footer" data-variant={footerVariant}>{hasContent(footerMeta)&&<div className="xui-text xui-card-meta" data-tone="muted">{footerMeta}</div>}{hasContent(footerActions)&&<div className="xui-toolbar xui-card-actions">{footerActions}</div>}</footer>}</Surface>;
 }

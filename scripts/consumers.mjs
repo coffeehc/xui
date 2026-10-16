@@ -39,7 +39,10 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // Allow 256 additional gzip bytes for this feature; keep JS/button budgets unchanged.
 // React 1.0 replaces the native Select controller with the public Base UI Select.
 // Raise the previous 128 KiB cap by 4 KiB to 132 KiB; the measured total remains gated.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 17792, reactInitialJsGzip: 135168 }, button: [], consumers: [] };
+// 1.2 adds public Card regions/equal tracks, content-width Tabs and Icon states.
+// The formal consumer measured 18,276 gzip bytes (+488 from 1.1.3); bound this
+// compatible presentation release to 18 KiB, without changing JS/Button limits.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 18432, reactInitialJsGzip: 135168 }, button: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // A fresh directory prevents npm reusing an earlier tarball with the same version.
 const runDirectory = await mkdtemp(resolve('.consumers/run-'));

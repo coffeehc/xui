@@ -17,12 +17,12 @@ test('media foundations preserve root/subentry identity and Badge native passive
 });
 test('Badge has a closed five-tone public vocabulary while neutral stays passive',()=>{
  for(const tone of ['neutral','info','success','warning','error']){const badge=Badge({tone,children:`${tone} message`});assert.equal(badge.type,'span');assert.equal(badge.props['data-tone'],tone);assert.equal(badge.props.children,`${tone} message`);for(const name of ['role','tabIndex','aria-live','disabled'])assert.equal(badge.props[name],undefined);}
- mapping('.xui-badge:is([data-tone="info"],[data-tone="success"],[data-tone="warning"],[data-tone="error"])',{'padding-inline':'var(--space-text-gap)','border-width':'var(--line-width-surface)','border-style':'solid','border-radius':'var(--radius-md)'});
+ mapping('.xui-badge:is([data-variant="soft"],[data-tone="info"],[data-tone="success"],[data-tone="warning"],[data-tone="error"])',{'padding-inline':'var(--space-text-gap)','border':'var(--line-width-surface) solid transparent','border-radius':'var(--radius-md)'});
  for(const tone of ['info','success','warning','error'])mapping(`.xui-badge[data-tone="${tone}"]`,{color:`var(--status-${tone}-foreground)`,background:`var(--status-${tone}-soft)`,'border-color':`var(--status-${tone}-line)`});
  const base=mapping('.xui-badge',{'font-size':'var(--font-size-body-xs)','line-height':'var(--line-height-body-xs)',gap:'var(--space-text-gap)'});assert.equal(base.background,undefined);assert.equal(base.border,undefined);
 });
 test('Avatar consumes existing size, shape, surface and content fitting roles',()=>{
- mapping('.xui-avatar',{'inline-size':'var(--control-height)','block-size':'var(--control-height)','border-radius':'var(--radius-full)',background:'var(--layer-support)',color:'var(--foreground)',overflow:'hidden'});
+ mapping('.xui-avatar',{'inline-size':'var(--control-height)','block-size':'var(--control-height)','border-radius':'var(--radius-full)',background:'var(--layer-support)',color:'inherit',overflow:'hidden'});
  for(const [size,token]of [['sm','control-height-sm'],['lg','avatar-size-lg']])mapping(`.xui-avatar[data-size='${size}']`,{'inline-size':`var(--${token})`,'block-size':`var(--${token})`});
  mapping('.xui-avatar-image',{'inline-size':'100%','block-size':'100%','object-fit':'cover'});mapping('.xui-avatar-fallback',{font:'var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans)'});
 });

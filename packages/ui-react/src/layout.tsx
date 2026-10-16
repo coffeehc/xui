@@ -2,6 +2,7 @@ import * as React from 'react';
 import {createPortal} from 'react-dom';
 import { Dialog } from './dialog.js';
 import { Button } from './button.js';
+import {Icon} from './display.js';
 import {SimpleSelect} from './forms.js';
 import { cx,hasContent } from './shared.js';
 import {ThemeModeButton} from './theme.js';
@@ -87,10 +88,16 @@ export function SidebarFooterContent({icon,children,className,...props}:SidebarF
 export function SidebarFooterRow({className,...props}:React.ComponentProps<'div'>){
   return <div {...props} className={cx('xui-sidebar-footer-row',className)}/>;
 }
+/** The action glyph changes without replacing the shell's owned trigger. */
+function ShellNavigationIcon({drawer}:{drawer:boolean}){
+  return <Icon><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)" strokeLinecap="round" strokeLinejoin="round">
+    {drawer?<path d="M3 5h14M3 10h14M3 15h14"/>:<><path d="M4 2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM7 2v16"/><path className="xui-shell-toggle-arrow" d="m14 7-4 3 4 3"/></>}
+  </svg></Icon>;
+}
 export interface AppShellProps extends Omit<React.ComponentProps<'div'>,'children'> {
   /** Workspace content spacing; defaults to standard and is retained in other scroll modes. */
   contentInset?:ShellContentInset;
-  /** Desktop only, defaults to top. Bottom follows the menu and optional sidebarFooter. */
+  /** Desktop only: top (default) is the sidebar's first row, aligned to its end; bottom follows the menu and optional sidebarFooter. */
   sidebarTogglePlacement?:SidebarTogglePlacement;
   theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:ShellScrollMode;sidebar:React.ReactNode;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;header?:React.ReactNode;headerSlots?:AppHeaderSlots;children:React.ReactNode;
   collapsed?:boolean;defaultCollapsed?:boolean;onCollapsedChange?:(collapsed:boolean)=>void;compactLabel?:string;expandLabel?:string;
@@ -119,7 +126,8 @@ export function AppShell({theme,themeLabels,locale,restoreSidebarFocus=true,scro
   React.useLayoutEffect(()=>{sidebarElement?.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});},[hasSections,sidebarElement,navigationControl,narrow,navigationLabel,scrollMode]);
   const open=sidebarOpen??internal;const trigger=React.useRef<HTMLButtonElement>(null),main=React.useRef<HTMLElement>(null),drawer=React.useRef<HTMLDivElement>(null);const id=React.useId();
   const request=React.useCallback((next:boolean)=>{if(sidebarOpen===undefined)setInternal(next);onSidebarOpenChange?.(next);},[sidebarOpen,onSidebarOpenChange]);
-  const navigationToggle=<Dialog.Trigger ref={trigger} render={<Button className="xui-shell-toggle" variant="ghost" data-icon="true" data-xui-menu-toggle=""/>} aria-label={narrow?navigationLabel:collapsed?expandLabel:compactLabel} aria-expanded={narrow?open:!collapsed} aria-haspopup={narrow?'dialog':undefined} aria-controls={narrow?drawerId:sidebarId} data-collapsed={!narrow&&collapsed} onFocus={()=>{controlHadFocus.current=true;}} onClick={event=>{if(!narrow){event.preventBaseUIHandler();requestCollapsed(!collapsed);}}}><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--nav-icon-stroke-width)"><path d="M3 4h14v12H3zM7 4v12"/><path className="xui-shell-toggle-arrow" d="m13 8-2 2 2 2"/></svg></Dialog.Trigger>;
+  const toggleLabel=narrow?navigationLabel:collapsed?expandLabel:compactLabel;
+  const navigationToggle=<Dialog.Trigger ref={trigger} render={<Button className="xui-shell-toggle" variant="ghost" data-icon="true" data-xui-menu-toggle=""/>} aria-label={toggleLabel} title={toggleLabel} aria-expanded={narrow?open:!collapsed} aria-haspopup={narrow?'dialog':undefined} aria-controls={narrow?drawerId:sidebarId} data-collapsed={!narrow&&collapsed} onFocus={()=>{controlHadFocus.current=true;}} onClick={event=>{if(!narrow){event.preventBaseUIHandler();requestCollapsed(!collapsed);}}}><ShellNavigationIcon drawer={narrow}/></Dialog.Trigger>;
   React.useEffect(()=>{const media=window.matchMedia('(max-width: 47.999rem)');let wasNarrow=media.matches;setNarrow(wasNarrow);const update=()=>{setNarrow(media.matches);if(wasNarrow&&!media.matches)request(false);wasNarrow=media.matches;};media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[request]);
   const navigationSidebar=<ShellNavigationContext.Provider value={{collapsed,onCollapsedChange:requestCollapsed,fallbackFocus:()=>drawer.current?.hasAttribute('data-open')?drawer.current.querySelector<HTMLElement>('.xui-dialog-footer button')??drawer.current:trigger.current}}>{sidebar}</ShellNavigationContext.Provider>;
   return <Dialog.Root open={narrow&&open} onOpenChange={next=>request(next)}><div {...props} data-collapsed={collapsed} data-scroll-mode={scrollMode} data-content-inset={contentInset} data-sidebar-toggle-placement={sidebarTogglePlacement} className={cx('xui-shell',className)}>

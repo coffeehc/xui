@@ -36,6 +36,8 @@ test('source guard rejects raw/named colors, palette backflow and missing refs, 
   const {light}=checkContract(doc);
   for(const sample of ['.a{color:#fff}', '.a{background:red}', '.a{color:var(--palette-primary)}', '.a{color:var(--absent)}', '.a{--action-primary:#fff}']) assert.throws(()=>checkStyles(sample,light));
   checkStyles('.a{color:var(--foreground);background:var(--interaction-selected);gap:var(--space-control-gap);width:100%;outline-offset:calc(-1 * var(--focus-width))}',light);
+  checkStyles('.a{border-end-start-radius:calc(var(--card-radius) - var(--line-width-surface));border-end-end-radius:calc(var(--card-radius) - var(--line-width-surface))}',light);
+  assert.throws(()=>checkStyles('.a{border-inline-end-color:red}',light));
 });
 
 test('Precision default, uploaded source and semantic CSS fingerprint are versioned',async()=>{
@@ -44,8 +46,8 @@ test('Precision default, uploaded source and semantic CSS fingerprint are versio
   const source=await readFile(metadata.source.path,'utf8');
   assert.equal(createHash('sha256').update(source).digest('hex'),metadata.source.sha256);
   assert.equal(createHash('sha256').update(css).digest('hex'),metadata.defaultCssSha256);
-  assert.equal(metadata.contractVersion,'1.1.3');
-  assert.match(doc,/规范版本：1\.1\.3。/);
+  assert.equal(metadata.contractVersion,'1.2.0');
+  assert.match(doc,/规范版本：1\.2\.0。/);
   assert.equal(metadata.defaultMode,'dark');
   assert.equal(Object.keys(dark).length,metadata.defaultTokenCount);
   assert.equal(dark['--palette-canvas'],'#090b0e');

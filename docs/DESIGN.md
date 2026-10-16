@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：1.1.3。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：1.2.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -461,6 +461,10 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     --card-border-color: var(--surface-line);
     --card-radius: var(--radius-lg);
     --card-padding: calc(var(--spacing) * 3.5);
+    --card-icon-size: var(--control-height-sm);
+    --card-icon-offset: max(0px, calc((var(--line-height-section-title) - var(--card-icon-size)) / 2));
+    --card-icon-background: var(--muted);
+    --card-footer-background: var(--muted);
     --card-group-body-min: var(--feedback-slot-block-size);
     --card-group-item-min: var(--layout-field-long-min);
     --card-padding-small: calc(var(--spacing) * 2.5);
@@ -532,6 +536,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     --line-height-scale: var(--font-scale);
     --radius-full: 50%;
     --icon-stroke-width: 2;
+    --icon-color: currentColor;
     --nav-icon-stroke-width: 1.5;
     --illustration-icon-size: 1.5rem;
     --nav-sidebar-header-max: 50%;
@@ -937,7 +942,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | PageHeader | title → page；description → body/muted；meta → meta/muted；actions → 所用控件 | 不用 Typography.Text 将 meta 升为正文；普通字符串或无样式 span 自动继承该槽 |
 | Section | title → section；children 裸文本 → body；actions → 所用控件 | 章节标题不替代页面 h1；富内容使用适合其语义的公共子组件 |
 | Toolbar / SearchToolbar | 裸文字继承所属正文或元信息槽；search/actions/advanced → Field/输入/按钮/Disclosure 各自角色 | Toolbar 是布局，不为其所有后代统一字号 |
-| Card | title/OverflowText → section；description → body/muted；children 裸文本 → body；footerMeta → meta/muted | header/footer actions 使用 Button/Menu；badge 使用 Badge；不改后代控件字体 |
+| Card | title/OverflowText → section；description → body/muted；children裸文本 → body；footerMeta → meta/muted | 图标区与Footer分区不改字体；header/footer actions使用Button/Menu，badge仍label，不改后代控件字体 |
 | CardGroup | renderCard → Card 的各槽；footer/count/page-size label/分页说明 → meta | 卡片与反馈、页码控件保留各自角色 |
 | MetricCard | label → label/muted；value → metric；marker → 所用 Badge 或正文 | value 内的完整数值保留 Mono/tabular，不把正文全设 Mono |
 | Field / Fieldset | label/legend → label；help/error → meta/muted或error | 控件、错误关联与字重独立；不从父标题/按钮继承字号 |
@@ -948,7 +953,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | PasswordStrength | 输入 → control；可见说明 → Field help/error 的 meta；meter 无文字 | 隐藏播报不为视觉另造字号 |
 | Button / IconButton | 文字 → control，所有既有 size 一致；纯图标无文字角色 | 按钮尺寸改变可用空间，不由侧栏或 footer 降字号；可访问名称仍必填 |
 | Toggle / ToggleGroup | trigger → Button 的 control | pressed 只改语义状态与着色 |
-| Tabs | Tab → control；Panel 裸文本 → body | Panel 内组件保留自身角色 |
+| Tabs | Tab → control；Icon继承Tab状态色、无独立文字角色；Panel裸文本 → body | Panel内组件保留自身角色 |
 | Nav / NavItem / NavigationMenu | 可操作主 label/renderLabel → control；group title → meta-heading/muted；emptyLabel → body/muted | renderLabel 现为主名称，尚无副说明 slot；branch/action 用 Button。缺副说明时提交公共缺口，不自写小字号 |
 | Breadcrumbs / Pagination | 路径 → body；页码/总页数说明 → meta；前后按钮 → control | 路径中的链接保留语义；页码不降按钮字号 |
 | Menu / ContextMenu | Item/LinkItem/CheckboxItem/RadioItem/SubmenuTrigger → label；GroupLabel → meta/muted | danger/disabled/highlight 改状态色，不另设字号；Icon 无文字角色 |
@@ -962,6 +967,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | LoadingState / EmptyState / ErrorState | 文案/说明 → 所属正文或元信息（默认 body）；Empty/Error title → 同字号+600（默认 body-heading）；retry → Button | block 文案继承所属内容正文；inline 文案继承所属动作/元信息槽，不另设字号；加载在所属内容区居中 |
 | Toast | Title → label；Description → meta；其余裸文本 → body；Close/action → Button | 使用通知专用标题/说明层级，不把通知再做成页面标题 |
 | Badge / Tag | label → label；删除动作 → Button | 中性分类与语义状态共用字号；不因 tone 改字重 |
+| Icon | 图形，无独立文字角色；颜色经icon-color默认currentColor继承 | 可选color/blink不改变所属Button、Badge或Tab的文字角色；装饰图标不新增键盘/朗读通知 |
 | Typography | Heading → page或section（语义级别单独指定）；Text → body；Link → 所属文字槽；Code → code；Strong → 所属角色+600 | 链接继承段落或元信息角色，Text 明确正文边界；Code 是技术值，不能当全站字体 |
 | Copyable | value → code；status → meta；copy → Button | 复制状态不抢技术值与动作 |
 | Avatar / Image | Avatar fallback → control；Image 加载/失败文案继承所属文字槽（默认 body） | 图片/图标本身无字体；alt 与可访问名称仍由宿主提供 |
@@ -1001,7 +1007,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | 普通控件 | 36px |
 | 表格 cell padding | block 8px、inline 12px；header至少36px、row至少40px |
 
-按钮标准高度 xs24、sm32、default36、lg40px；对应横 padding8/10/12/16px、gap4/6/6/8px。普通图标16px，最小行操作12px；复用同一套图标尺寸和线宽，保留现有库，不混用装饰画布。默认 Checkbox为16×16px、radius-sm；Switch为28×16.6px、拇指14.4px；Tabs 高32px、内部 padding3px；紧凑切换项高28px、gap4px。适配项目可保留语义明确的既有变体，不能每页发明尺寸。
+按钮标准高度 xs24、sm32、default36、lg40px；对应横 padding8/10/12/16px、gap4/6/6/8px。普通图标16px，最小行操作12px；复用同一套图标尺寸和线宽，保留现有库，不混用装饰画布。默认 Checkbox为16×16px、radius-sm；Switch为28×16.6px、拇指14.4px；Tabs 项至少32px、轨道内部 padding3px，长文字自然增高；紧凑切换项高28px、gap4px。适配项目可保留语义明确的既有变体，不能每页发明尺寸。
 
 ### 首屏信息架构与信息密度
 
@@ -1074,17 +1080,20 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 | 页面标题 | PageHeader.title/description/meta/actions | title 唯一 h1/page-title；description 为 muted/body-sm；meta 为 muted/body-xs；actions 中 primary 为任务主操作 | 描述/meta/动作空则无包装；长标题换行，动作整组换行，不把刷新状态写进标题 |
 | 页面工具 | pageToolbar 或 DataTable.toolbar 中的 SearchToolbar.search/actions/advanced | 搜索与常用筛选、动作、展开筛选各居其槽；默认中性，真实异常另用反馈 | 每组工具只有一个位置；高级筛选按需打开，焦点/草稿保持 |
 | 内容章节 | Section.title/actions/children | 章节 h2/section-title，局部动作 ghost/outline，内容不额外加卡片边框 | 没有标题/动作时不生成空头部；正文自然延展 |
-| 资源卡片 | Card的header/content/footer三段；title/icon/badge/actions归header，description/children归content，footerMeta/footerActions归footer | title 语义 h2–h6、section-title；icon 装饰；归属 badge 默认 neutral；description muted/body-sm；footerMeta muted/body-xs；更多动作在头部、对象动作在页尾 | 一层Surface，仅header/content/footer为根级区域；内容自然撑开，不固定高度或等分三段；标题用OverflowText，空content/footer不占位，header/footer不足时换行；卡片不成为伪按钮 |
+| 资源卡片 | Card的header/content/footer三段；title/icon/iconColor/badge/actions归header，description/children归content，footerMeta/footerActions/footerVariant归footer | title语义h2–h6、section-title；图标默认强调色tile，badge默认neutral+soft，可显式前景；description muted/body，footerMeta muted/meta；默认Footer有支持表面/唯一分隔，可选plain | 一层Surface，仅三段根级区域；默认自然高度，公开stretch让content伸展/Footer靠底，不固定正文高或等分三段；标题用OverflowText，空content/footer不占位，空间不足换行；不变伪按钮 |
 | 指标与详情 | MetricCard.label/value/marker；详情用 dl 或公开展示组件 | 名称 muted/body-xs、值 metric/mono/tabular；marker 只承载真实状态。普通详情不每字段套 Card | 未知用明确占位而非 0；数值完整，标记不挤压主值 |
 | 表单组 | Fieldset.legend、FormGrid.Item、FormActions.secondary/children | 语义分组、最多两列；长内容跨列；主次动作按所属表单排列 | 净宽决定列数；草稿独立于查询；提交错误在所属反馈区 |
 | 字段 | Field.label/children/help/error；InputGroup.Addon/控件/动作 | label 为字段名，help 为 muted，error 为 error 文本；单层输入边界；单位就近展示 | required/invalid/describedby 真实关联；长错误自然换行，焦点和输入节点保持 |
-| 卡片集合 | CardGroup.rows/rowKey/renderCard、toolbar、emptyState/errorState/feedback/footer 与受控 pagination | renderCard 返回 Card 的公开配置，集合创建实例；状态与计数/分页同属集合 | 单一 body 滚动，toolbar/footer 在外；稳定 key 保草稿/焦点，卡片自然高度 |
+| 卡片集合 | CardGroup.rows/rowKey/renderCard、cardSizing、toolbar、emptyState/errorState/feedback/footer与受控pagination | renderCard返回Card公开配置，集合创建实例；所有资源类型共用同一呈现。默认natural兼容；资源列表显式equal，由当前网格完整内容计算共同卡高 | 单一body滚动，toolbar/footer在外；稳定key保草稿/焦点；equal伸展content、卡尾靠底，不固定像素高度，不裁正文/动作 |
 | 表格 | DataTable.toolbar/columns、emptyState/errorState/feedback/footer、受控 pagination | 对象主列、技术值、状态 Badge 与行操作按各自语义；唯一计数/分页 | 首次加载在数据区；刷新保留行；表内横滚和既有 sticky，不用外框遮罩 |
 | 弹层 | Dialog/Sheet.Header/Title/Description、Body、Footer | 标题与说明分开，body 负责长内容，footer 放所属 FormActions | 开关只改可见性；正常 body 滚动、极端高度公共回退；关闭返回真实触发入口 |
 | 导航/菜单 | NavigationMenu 的 items[].label/icon、renderLabel/renderAction 与公开渲染/事件扩展；Menu/ContextMenu 的 Item/Icon/Separator | 选中由真实 active/expanded，危险项使用 danger，图标继承语义色 | 独立分支和动作不导航；disabled 不执行；键盘及长名称由公共组件管理 |
 | 原子控件 | Button/Link/IconButton 的内容与事件；Checkbox/Switch/Toggle/Radio 的标签与状态；Select/Combobox/Command 的公开 parts | 动作、选中、禁用、只读、错误分别映射已有语义，不依靠颜色推断业务 | 不给所有控件添加同一套 slot；保留原生/peer 表单与键盘语义 |
-| 披露与时间 | Tabs/Disclosure/Accordion 的 trigger/content；Calendar 和 DateTimePicker 的已选值、查看月份及受控事件 | 当前选项与展开状态明确；时间按分钟墙上时间/ISO 日期合同，时区归宿主 | 焦点连续，日期/月份事件独立；不隐式截断精度或转换时区 |
+| 内容Tabs | Root=value，List=轨道布局，Tab.children=名称，Icon=可选装饰图标，Panel=对应内容 | 内容宽为默认，equal为显式整行等分；未选次要文字，选中内嵌底色与强调色，图标继承Tab状态色 | 纯文字无空图标位；长中文/放大不截断名称；键盘、disabled与panel关联见组件合同，刷新不重挂Root |
+| 披露与时间 | Disclosure/Accordion的trigger/content；Calendar和DateTimePicker的已选值、查看月份及受控事件 | 当前选项与展开状态明确；时间按分钟墙上时间/ISO日期合同，时区归宿主 | 焦点连续，日期/月份事件独立；不隐式截断精度或转换时区 |
 | 反馈/媒体 | DataRegion.children/feedback；Alert/Toast；Typography/Copyable/Tag/Image | 临近相关操作的状态、错误、一次性反馈；文案/图像来源真实，复制/删除有明确入口 | 状态不重挂 children；图片预留真实比例；被动文本不增 Tab stop；通知只有一个 owner |
+
+NavigationMenu的名称槽占满主项剩余宽度。富内容仍由renderLabel组合：名称可收缩，尾随被动状态不收缩并靠逻辑末端、与名称首行对齐；分支和配置按钮保留独立轨道。仅真实名称进入NavigationMenu.Label的滚动区域，状态不随名称移动，也不伪装为renderAction按钮。紧凑rail隐藏整个名称槽，窄屏/触控/减少动态效果时完整换行，保留同一导航节点与键盘停靠。Spinner复用既有control-icon-size、line-width-emphasis、action-primary和旋转时长，以主题色开放弧表达等待；减少动态效果时静止，宿主仍提供真实忙状态文字或名称，不仅靠运动或颜色传达事实。
 
 组件的详细 part 名称、React 组合与替换生命周期以 [COMPONENTS](COMPONENTS.md) 为准，公开入口以 [PUBLIC_API](PUBLIC_API.md) 为准；上表不发明所有控件共有的万能 renderSlot。完整判定按 [逐项清单](ADOPTION_CHECKLIST.md) 每个对象逐条记录，通过、不适用、失败、未跑分别报告。宿主填错 slot、私自着色或重复 owner 属于接入失败；公共类型和合法内容仍无法满足矩阵时属于 xui 缺口。
 
@@ -1204,9 +1213,9 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 | InputGroup D/H/F/X/E；S/B按内部控件 | 同输入，一层边界和焦点，addon/清除与内容gap8 | 外层映射内部真实focus/invalid，内部不重复border/ring；帮助和错误不撑偏相邻控件，不制造第二层皮肤 |
 | Combobox/自定义选择 D/H/S/F/X/B/E | 搜索复用输入、选项复用menu-item-*；弹层popover-width288、padding12 | 持续S与键盘活动项分开，活动项F只在键盘阶段存在。搜索输入保留焦点，方向键/Enter选择；无结果与错误不同，不自动选首项、不改查询防抖；NativeSelect由平台负责面板 |
 | Checkbox/Switch/Toggle D/H/S/F/X/E；B仅业务已有 | Checkbox默认16×16px（control-icon-size）、radius-sm、1px input-border-color；Switch宽28/高16.6px、拇指14.4px，圆形轨道；Toggle使用toggle-height默认28px、gap4，放大文字可自然增高 | S用action-primary及成对前景或interaction-selected-*，必须有真实checked；H不盖S，F独立，E相关错误可见，X不可切换。Space/方向键遵循角色；不得仅换颜色模拟checked |
-| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 高control-height-sm32、内padding3、项radius-md；label body-sm | 默认透明/中性，H用interaction-hover，S用interaction-selected-*，F用focus-*；无四周选中框，不要求左侧竖线。方向键及panel关联完整，禁用项跳过，不能把panel加载当作tab被禁用 |
+| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 项至少control-height-sm32、轨道内padding3、项radius-md；label body-sm/control；可选装饰图标16px、图文间距space-icon-gap，文字与图标颜色继承所属Tab | 轨道layer-support，默认按内容宽度且不越过容器；显式equal填满并等分。未选文字muted-foreground，H用interaction-hover，S用layer-canvas与action-primary形成内嵌选中层，F使用内部focus环。无四周选中框或左竖线；方向键及panel关联完整，禁用项跳过，panel加载不禁用Tab |
 | 表格/列表 D/H/S/F/B/E；X属于行控件 | cell padding8、动作gap4，表头body-xs/500、正文body-sm，分隔separator-line；opaque条纹 | H用interaction-hover，S/expanded用interaction-selected背景；sticky与整行不透明底一致。F只归焦点控件/确有键盘行，不给被动行造焦点。B/空/E保留所属状态和恢复入口，排序/分页真实禁用 |
-| Card/Section/连续Item | card-background=raised、border-color=surface-line、radius6、padding14/小10，shadow-flat | 被动仅D/B/E，H/P/S/F/X不适用；交互卡才用H/S/F/X。H轻底不浮起，S浅底无额外框，F独立。内部组无重复框，连续Item仅末端分隔 |
+| Card/Section/连续Item | Card单层raised+surface-line、radius6、按三段消费card-padding14；图标tile的size/offset/background及Footer背景由组件Token定义，Footer仅一条separator-line；Section/连续Item不复制卡片分区 | Card可选plain图标/Footer，Badge有中性soft标签；默认自然高，公开stretch/equal让正文增长/Footer靠底。被动仅D/B/E，交互仍归内部控件；不加被动hover/伪按钮、不固定摘要行数或编造指标 |
 | 统计/指标 D/B/E；H/S仅已有tooltip或范围控件 | metric-padding12/gap4，label13/muted，主值24/600/tabular、单位13 | 0/未知/无数据/B/E分开，核心统计才进首屏；不以disabled表达缺数据。范围S沿选择器，tooltip H/F使用overlay；指标本体无按钮hover、焦点或选中 |
 | Dialog/Drawer/Sheet D/F/X/B/E；容器H/P/S不适用 | overlay+surface-line+shadow-overlay，radius-2xl默认8px（贴边Sheet按其边缘合同）；宽layout-dialog/confirm/drawer-width按40%/30%/60%与各自min/max合成；Dialog/Confirm边距16，侧向Sheet封顶视口 | header/body/footer归属明确，body滚动footer可达；F限制/恢复按模态语义，X/B/E属于内部控件/反馈。取消不自动保存，危险确认保留，不普通嵌套同类模态 |
 | Tooltip/Popover/Calendar D/F；H/S/X/B/E按角色 | Tooltip最大320、body-xs；Popover宽288/padding12/gap16；floating-offset4 | 辅助Tooltip不可承载唯一重要错误或必要动作；按需帮助须键盘/触屏可打开关闭。Calendar真实日期S/disabled与方向键/locale保留，定位和回焦点见下文；不要求所有浮层本体有hover |
@@ -1298,6 +1307,8 @@ hover-only不出现指示；selected+hover仍保持指示与选中浅底；keybo
 
 
 ### 每次操作的动效反馈
+
+Icon的可选blink只表达宿主提供的关注事实：默认关闭；开启且未指定color时使用action-primary，通过motion-duration-pulse、motion-easing与motion-feedback-opacity-start进行不闪灭的明暗交替。color可直接引用公共语义变量，经icon-color实例范围应用；默认currentColor继承所在文字/控件状态，不另造色板。减少动效时停止动画并保留颜色；禁用祖先下恢复继承、停止闪烁。没有几何位移、JS动画owner或自动live region；版本、权限、显示条件、字符串截断与动作归宿主。Badge与Typography.Text的显式color只影响前景，不改变字体角色或暗示业务状态。
 
 所有实际用户操作必须有可感知且与真实状态匹配的动效反馈，不能只给少数组件加装饰。鼠标、键盘Enter/Space/方向键和触屏都应得到对应反馈。立即开始本地反馈，业务请求/导航/保存不等待动画完成；异步结果未知时只表达等待，不预演成功。保持焦点、滚动锚点和区域尺寸稳定，不重复抢焦点、不布局抖动、不全页遮罩拖慢刷新。
 
@@ -1623,6 +1634,6 @@ OverflowText仅承载名称字符串，不拥有h3、图标、归属Badge、摘�
 
 CardGroup 是与 DataTable 同层的受控集合组合。rows 是宿主当前确认的记录，rowKey 是稳定身份，renderCard(row, context) 返回 Card 的 title/icon/badge/actions/description/children/footerMeta/footerActions 等公开配置；由集合创建 Card 实例，不接收替换整个卡片的 JSX。业务输入、权限、草稿和动作由宿主负责；模板内的组件类型保持稳定。
 
-集合独占 toolbar、body 和 footer：toolbar 与计数/状态/分页均在 body 外，宿主选择 pageToolbar 或集合 toolbar 一处接线。body 使用有序 DOM 阅读顺序的语义列表；按容器净宽自动分列，以 card-group-item-min（默认依赖 layout-field-long-min，根16px时288px）为期望下限，不足时一列。卡片按内容自然高度、顶端对齐，不等高、不固定三段高度、不为整组添加第二层卡片皮肤。分组 gap、焦点 gutter 与已有语义 Token 共用。natural 随内容并受有界父容器约束；workspace 占满父容器，正常高度只有 body 滚动；极短父容器保留 card-group-body-min 的正文轨道（默认依赖 feedback-slot-block-size），整个集合可滚动，不能把正文压到仅剩焦点padding；document 随文档自然增长。
+集合独占toolbar、body和footer：toolbar与计数/状态/分页均在body外，宿主选择pageToolbar或集合toolbar一处接线。body使用有序DOM阅读顺序的语义列表；按容器净宽自动分列，以card-group-item-min（默认依赖layout-field-long-min，根16px时288px）为期望下限，不足时一列。cardSizing默认natural兼容内容自然高、顶端对齐；资源网格显式equal，通过CSS自动行和Card.stretch由当前完整内容计算共同卡高，content可伸展、存在的footer底部对齐。缺失content/footer仍不生成空slot，长文字或200%放大可增加卡高，不裁内容或固定像素正文高，不等分三段，也不为集合添加第二层卡片皮肤。分组gap、焦点gutter与已有语义Token共用。layout的natural随内容并受有界父容器约束；workspace占满父容器，正常高度只有body滚动；极短父容器保留card-group-body-min的正文轨道（默认依赖feedback-slot-block-size），整个集合可滚动，不能把正文压到仅剩焦点padding；document随文档自然增长。cardSizing只管理卡片几何，不接管查询、分页、草稿或状态；所有资源类型共用这套公共合同。
 
 状态、offset/cursor 分页、真实/未知 total 与同回合请求防重入和 DataTable 使用同一纯 TypeScript 模型及 React footer。首次无记录加载仅在 body 内提示；同范围刷新与刷新失败保留 rows、key、Card/输入节点及焦点，footer 显示局部刷新或错误/显式重试。busy/disabled 阻止集合分页和重试意图，context 提供 busy/disabled 事实，业务控件按动作语义采用；不递归改写 slots 中的业务控件，不把被动卡片变成按钮。集合不请求、不缓存、不排序、不确认写操作，也不复制 query/resource owner。接口及示例见 [CardGroup](COMPONENTS.md#cardgroup)。

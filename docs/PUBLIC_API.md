@@ -87,7 +87,7 @@
 | `@coffeehc/xui-react/forms` <!-- public-entry: @coffeehc/xui-react/forms --> | [源码](../packages/ui-react/src/forms.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/navigation` <!-- public-entry: @coffeehc/xui-react/navigation --> | [源码](../packages/ui-react/src/navigation.tsx) | [合同](COMPONENTS.md#导航与菜单) | [示例](../examples/menu-react/app.tsx) |
 | `@coffeehc/xui-react/menu-layout` <!-- public-entry: @coffeehc/xui-react/menu-layout --> | [源码](../packages/ui-react/src/menu-layout.tsx) | [合同](COMPONENTS.md#导航与菜单) | [示例](../examples/menu-react/app.tsx) |
-| `@coffeehc/xui-react/tabs` <!-- public-entry: @coffeehc/xui-react/tabs --> | [源码](../packages/ui-react/src/tabs.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-react/tabs` <!-- public-entry: @coffeehc/xui-react/tabs --> | [源码](../packages/ui-react/src/tabs.tsx) | [合同](COMPONENTS.md#tabs) | [示例](../examples/typography-slots-react/app.tsx) |
 | `@coffeehc/xui-react/dialog` <!-- public-entry: @coffeehc/xui-react/dialog --> | [源码](../packages/ui-react/src/dialog.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/feedback` <!-- public-entry: @coffeehc/xui-react/feedback --> | [源码](../packages/ui-react/src/feedback.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/metric-card` <!-- public-entry: @coffeehc/xui-react/metric-card --> | [源码](../packages/ui-react/src/metric-card.tsx) | [指标卡组合](COMPONENTS.md#metriccard) | [示例](../examples/metric-card-react/app.tsx) |
@@ -136,7 +136,7 @@
 | MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留 HTML link 导航，菜单键盘/drawer owner 由 React 组件提供 |
 | GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](COMPONENTS.md#groupedcombobox-与-disclosure) |
 | Pagination/Disclosure | Pagination 默认第 1 页，pageCount 由宿主；受控 page 只请求确认。Disclosure 默认关闭，装饰性 chevron 与公开 DisclosureIndicator 复用相同 tokens。两者不发请求、不自动路由 |
-| Tabs | Root/List props 保留固定 peer 行为，xui 只补跳过 disabled 的方向键；手动/自动激活、loop、RTL 与方向遵循 React peer 合同 |
+| Tabs | Root/List props 保留固定peer行为，方向键跳过disabled；1.2.0新增List.layout='content'（默认）/'equal'、TabsListProps及装饰性Tabs.Icon，见[布局与图标合同](COMPONENTS.md#tabs)。手动/自动激活、loop、RTL与方向不变；固定1.1.3尚不包含新增部分 |
 | Dialog/Popover/Menu/Tooltip | 关闭不保存。受控 open 与可取消变化遵循各自 React peer 合同。Content portal/默认定位：Select bottom/start 且 alignItemWithTrigger=false，Combobox/Menu bottom/start，Popover bottom/center，Tooltip top/center；positionerProps 可覆盖。Dialog 为模态，非模态浮层不 trap；Tooltip 只放说明 |
 | Sheet/AlertDialog/ContextMenu | Sheet默认end，确认initialFocus由宿主或安全取消/中性节点；context rightclick/Shift+F10，checked状态宿主拥有；details.cancel/finalFocus/嵌套生命周期见[弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | Toast | Provider/manager 使用 React peer 合同；必要错误就地持续可见，不只依赖自动消失通知 |
@@ -614,6 +614,8 @@ useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/�
 
 React `/menu-layout` 的 `NavigationMenuProps`/`MenuLayoutProps` 继承 runtime `/navigation` 的纯数据 `NavigationMenuOptions`。`expandBranchLabel` 与 `collapseBranchLabel` 可为每个真实分支名称生成可访问名称；runtime 只提供 navigation 数据、类型与 helper。当前显示、首行对齐、菜单开关和独立行尾动作由 React `/menu-layout` 拥有，详见[导航富条目合同](COMPONENTS.md#富条目独立行尾动作与上下文菜单)与[导航内部唯一收起/展开控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 
+1.2.0的名称槽默认伸展，既有renderLabel内的尾随非交互状态可使用完整剩余宽度；名称独立滚动仍通过NavigationMenu.Label声明，renderAction继续只接辅助button。React `/feedback` 的既有Spinner入口及span属性保持，正式CSS改为主题色开放弧，reduced-motion静止。没有新增runtime DOM入口、业务状态或请求owner。接线见[富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单)与[表单与页面编排](COMPONENTS.md#表单与页面编排)。
+
 AppShell/MenuLayout 的唯一侧栏开关由 React 公共组件定位：桌面位于侧栏内部，`sidebarTogglePlacement` 支持公开位置配置；窄屏将同一公共控件用于现有导航抽屉。宿主继续用受控 props/callback 管理状态，不移动私有 DOM。`SidebarTogglePlacement` 与 `SidebarFooterRow` 从 React `/layout`、`/menu-layout` 及根入口导出。详见 [导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 
 Calendar 的 `CalendarProps` 公开受控 `month`/`onMonthChange`；runtime `/calendar` 提供 `CalendarOptions` 与共享纯模型。月份状态与所选日期分开，外部更新不触发用户回调。严格年月、值、焦点合同见[Calendar](COMPONENTS.md#选择与复合控件)，正式 React 消费者见[示例](../examples/calendar-month-react/app.tsx)。
@@ -638,9 +640,15 @@ React `/date-time` 与根入口导出 `DateTimePicker`/`DateTimePickerProps`；r
 
 React `/display` 与根入口公开 `OverflowText` / `OverflowTextProps`。runtime `/display` 只提供共享类型和纯 helper。仅字符串 text，现有 React 交互表面使用 `interactionRef`，不新增 Tab/role/点击语义。触屏/减少动效/无键盘入口完整静态换行；消费组合见[长标题合同](COMPONENTS.md#通用长标题)。
 
+## 通用图标与颜色参数
+
+1.2.0新增React `/display`及根入口的`Icon / IconProps`：color采用`React.CSSProperties['color']`，可直接消费公共CSS变量；blink默认false，显式开启使用既有透明度动效和主题强调色，reduced-motion保留静态颜色。BadgeProps（`/feedback`）与TypographyTextProps（`/display`）增加显式color，只改变前景，不改变字体/背景或业务事实。runtime不增加原生UI或动画控制器，版本判断、权限、可见性和动作继续归宿主；完整用法与禁用/语义边界见[Icon合同](COMPONENTS.md#icon-与状态强调)。固定1.1.3不含这些新增能力；本轮执行范围见[验证记录](VALIDATION.md)。
+
 ## 布局与槽位架构
 
 `layout` 的 PageHeader 保留 title/description/meta/actions；空槽不占位，meta 统一次要文字。React `/display` 新增 Card；runtime `/display` 只导出共享 Card 类型。Card 固定 header/content/footer 三段，description 与 children 同属唯一 `.xui-card-content`，完整字段见 [Card](COMPONENTS.md#card)。页面、组件、原子控件共用 [槽位架构](DESIGN.md#页面与组件的槽位架构)，各操作按 [逐项清单](ADOPTION_CHECKLIST.md)验收。
+
+1.2.0新增CardProps的iconVariant='tile'（默认）/'plain'、iconColor、footerVariant='band'（默认）/'plain'与stretch；CardBadge纯类型新增color/variant，BadgeProps及BadgeVariant提供plain/soft（独立Badge默认行为保持）；AvatarRootProps新增color并保留peer函数式style/className。字体角色、三段结构和空槽规则保持，业务摘要仍归宿主。CardGroupProps<T>.cardSizing='natural'（默认）/'equal'统一控制伸展，CardGroupCardProps排除stretch，由集合按稳定key创建同一Card实例；所有资源类型使用相同模板能力，没有领域专属布局或新runtime UI。详见[Card](COMPONENTS.md#card)、[CardGroup](COMPONENTS.md#cardgroup)、[Avatar](COMPONENTS.md#avatar)。这些修改从1.2.0提供，实际通过/未跑范围见[验证记录](VALIDATION.md)。
 
 ### 集合视图纯模型
 

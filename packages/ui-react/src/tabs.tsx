@@ -2,9 +2,14 @@ import * as React from 'react';
 import { cx, branded } from './shared.js';
 import { Tabs as BaseTabs } from '@base-ui/react/tabs';
 import { DirectionContext } from '@base-ui/react/internals/direction-context';
-function TabsList({className,onKeyDown,loopFocus=true,...props}: React.ComponentProps<typeof BaseTabs.List>) {
+import {Icon as DisplayIcon,type IconProps} from './display.js';
+export type TabsListProps=React.ComponentProps<typeof BaseTabs.List>&{
+  /** Content follows its labels; equal fills the available width with equal tab tracks. */
+  layout?:'content'|'equal';
+};
+function TabsList({className,onKeyDown,loopFocus=true,layout='content',...props}:TabsListProps) {
   const direction=React.useContext(DirectionContext)?.direction;
-  return <BaseTabs.List {...props} loopFocus={loopFocus} className={branded('xui-tabs-list',className)} onKeyDown={event => {
+  return <BaseTabs.List {...props} data-layout={layout} loopFocus={loopFocus} className={branded('xui-tabs-list',className)} onKeyDown={event => {
     onKeyDown?.(event);
     // Base UI separates browser preventDefault from preventBaseUIHandler.
     if (event.baseUIHandlerPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
@@ -39,5 +44,7 @@ export const Tabs = {
   Root: BaseTabs.Root,
   List: TabsList,
   Tab: function Tab({className,...props}: React.ComponentProps<typeof BaseTabs.Tab>) { return <BaseTabs.Tab {...props} className={branded('xui-tab',className)} />; },
+  /** Decorative only: the surrounding Tab's text supplies its accessible name. */
+  Icon: function Icon({className,...props}:Omit<IconProps,'aria-label'|'aria-labelledby'|'aria-hidden'>&{'aria-label'?:never;'aria-labelledby'?:never;'aria-hidden'?:never}) {return <DisplayIcon {...props} aria-hidden="true" className={cx('xui-tab-icon',className)}/>;},
   Panel: function Panel({className,...props}: React.ComponentProps<typeof BaseTabs.Panel>) { return <BaseTabs.Panel {...props} className={branded('xui-tab-panel',className)} />; },
 };

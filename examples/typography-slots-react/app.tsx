@@ -27,6 +27,16 @@ import '@coffeehc/xui-theme/style.css';
 function Sample({id,role='body',children}:{id:string;role?:string;children:React.ReactNode}){
  return <span data-type-id={id} data-type-role={role}>{children}</span>;
 }
+function RecordViews(){
+ const [view,setView]=React.useState('all');
+ const params=new URLSearchParams(location.search),[layout,setLayout]=React.useState<'content'|'equal'>(params.get('tabs')==='equal'?'equal':'content'),[disabled,setDisabled]=React.useState(false),changes=React.useRef(0);
+ Object.assign(window,{typographyTabsDemo:{setLayout,setDisabled,setView,snapshot:()=>({view,changes:changes.current})}});
+ return <Tabs.Root value={view} onValueChange={value=>{changes.current++;setView(String(value));}} orientation={params.get('orientation')==='vertical'?'vertical':'horizontal'} dir={params.has('rtl')?'rtl':undefined}><Tabs.List layout={layout} activateOnFocus={params.has('activateOnFocus')} aria-label="记录视图">
+  <Tabs.Tab value="all" data-type-id="tab" data-type-role="control"><Tabs.Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></Tabs.Icon>运行网格（Grid）</Tabs.Tab>
+  <Tabs.Tab value="logs"><Tabs.Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)"><path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="m7 8 4 4-4 4m6 0h4"/></svg></Tabs.Icon>遥测日志（Logs）</Tabs.Tab>
+  <Tabs.Tab value="pipelines" disabled={disabled}><Tabs.Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)"><path d="M3 3h6v6H3zM15 15h6v6h-6zM6 9v9h9M15 3h6v6h-6zM18 9v6"/></svg></Tabs.Icon>拓扑管道（Pipelines）</Tabs.Tab>
+ </Tabs.List><Tabs.Panel value="all" keepMounted><Sample id="tab-content">当前记录内容</Sample></Tabs.Panel><Tabs.Panel value="logs" keepMounted><Field label="日志视图草稿" controlId="tab-log-draft"><Input defaultValue="切换视图后继续保留"/></Field></Tabs.Panel><Tabs.Panel value="pipelines" keepMounted>合成管道视图内容</Tabs.Panel></Tabs.Root>;
+}
 function OverlayParts({sheet=false}:{sheet?:boolean}){
  const Layer=sheet?Sheet:Dialog;
  return <Layer.Root><Layer.Trigger render={<Button variant="outline"/>}>{sheet?'打开抽屉':'打开对话框'}</Layer.Trigger><Layer.Content>
@@ -60,7 +70,7 @@ function App(){
    <DataTable label="合成记录" rows={[{id:'one',name:'记录一'}]} rowKey={row=>row.id} columns={[{id:'name',header:<Sample id="table-head" role="label">记录名称</Sample>,cell:row=><Sample id="table-cell">{row.name}</Sample>},{id:'action',header:'操作',cell:()=> <Button size="sm" data-type-id="cell-button" data-type-role="control">查看</Button>}]} footer={<Sample id="table-footer" role="meta">数据来自合成样板</Sample>}/>
    <Pagination pageCount={3}/>
    <NavigationMenu label="样板导航" items={[{id:'group',label:'团队',group:true,children:[{id:'tasks',label:'研究任务与很长的中文工作空间名称',href:'#tasks'}]}]}/>
-   <Tabs.Root defaultValue="all"><Tabs.List><Tabs.Tab value="all" data-type-id="tab" data-type-role="control">全部记录</Tabs.Tab></Tabs.List><Tabs.Panel value="all"><Sample id="tab-content">当前记录内容</Sample></Tabs.Panel></Tabs.Root>
+   <RecordViews/>
    <Disclosure title={<Sample id="disclosure" role="control">高级筛选与详细中文说明</Sample>} defaultOpen><Sample id="disclosure-body">折叠内容使用正文角色。</Sample></Disclosure>
    <Avatar.Root><Avatar.Fallback data-type-id="avatar" data-type-role="control">研</Avatar.Fallback></Avatar.Root>
    <Accordion.Root defaultValue={['advanced']}><Accordion.Item value="advanced"><Accordion.Header><Accordion.Trigger data-type-id="accordion-trigger" data-type-role="control">相关资料</Accordion.Trigger></Accordion.Header><Accordion.Panel><Sample id="accordion-content">相关资料正文</Sample></Accordion.Panel></Accordion.Item></Accordion.Root>

@@ -55,5 +55,8 @@ export interface FixtureOwner {
   setHostFocus:(target:HostFocus)=>void;
   setOpen:(open:boolean)=>void;
   setPlacement:(placement:SidebarTogglePlacement)=>void;
+  setCollapsed:(collapsed:boolean)=>void;
+  setCollapseBlocked:(blocked:boolean)=>void;
+  getCollapseRequests:()=>number;
   getVersionNode:()=>HTMLElement|null;
 }

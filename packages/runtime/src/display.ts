@@ -39,4 +39,10 @@ export function validateImageOptions(options:ImageOptions):void {
 /** Content cards are nested sections, never a second page-level heading. */
 export type CardHeadingLevel=2|3|4|5|6;
 /** Passive ownership is neutral; explicit semantic statuses use the existing Badge tones. */
-export interface CardBadge {label:string;tone?:'neutral'|'info'|'success'|'warning'|'error'}
+export interface CardBadge {
+ label:string;tone?:'neutral'|'info'|'success'|'warning'|'error';
+ /** Card defaults to a soft neutral label; plain preserves an unframed label. */
+ variant?:'plain'|'soft';
+ /** Explicit CSS foreground, preferably a public semantic variable. */
+ color?:string;
+}

@@ -42,7 +42,7 @@ test('Alert tones map foreground, soft surface and line to the corresponding DES
 
 test('decorative geometry and animations consume the existing feedback tokens with reduced-motion shutdown',()=>{
  mapping('.xui-skeleton',{'min-block-size':'var(--control-height)','inline-size':'100%',background:'var(--muted)','border-radius':'var(--radius-md)',animation:'xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate'});
- mapping('.xui-spinner',{'inline-size':'var(--control-icon-size)','block-size':'var(--control-icon-size)',border:'var(--line-width-emphasis) solid var(--surface-line-strong)','border-inline-end-color':'var(--action-primary)','border-radius':'var(--radius-full)',animation:'xui-spin var(--motion-duration-spin) linear infinite'});
+ mapping('.xui-spinner',{'inline-size':'var(--control-icon-size)','block-size':'var(--control-icon-size)',border:'var(--line-width-emphasis) solid var(--action-primary)','border-inline-end-color':'transparent','border-radius':'var(--radius-full)',animation:'xui-spin var(--motion-duration-spin) linear infinite'});
  assert.equal(rule('.xui-skeleton,.xui-spinner','(prefers-reduced-motion:reduce)').animation,'none');
 });
 

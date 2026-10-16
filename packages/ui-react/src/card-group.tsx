@@ -10,8 +10,10 @@ export type {CollectionStatus,CollectionLayout,CollectionPagination,CollectionCu
 /** Current published record identity and view facts; never a cached record/index. */
 export type CardGroupContext=CollectionRowContext;
 /** Public Card slots/attributes. CardGroup owns Card instances and their keys. */
-export type CardGroupCardProps=Omit<CardProps,'ref'>;
+export type CardGroupCardProps=Omit<CardProps,'ref'|'stretch'>;
 export interface CardGroupProps<T> extends CollectionViewOptions {
+  /** Natural preserves independent heights; equal derives a shared grid height from the largest card. */
+  cardSizing?:'natural'|'equal';
   /** Host-confirmed records. Keep the same-scope records during refresh/error. */
   rows:readonly T[];
   /** Stable business identity, with the same key rules as DataTable. */
@@ -28,16 +30,16 @@ export interface CardGroupProps<T> extends CollectionViewOptions {
 }
 /** Controlled collection composition. Owns layout/slots and Card reconciliation;
  * never fetches, sorts, caches, selects, confirms writes or changes page facts. */
-export function CardGroup<T>({rows,rowKey,renderCard,toolbar,emptyState,errorState,feedback,footer,className,id,...options}:CardGroupProps<T>){
+export function CardGroup<T>({rows,rowKey,renderCard,cardSizing='natural',toolbar,emptyState,errorState,feedback,footer,className,id,...options}:CardGroupProps<T>){
   const keys=validateCollectionKeys(rows,rowKey),view=useCollectionView(options,rows.length),{state}=view;
   const error=errorState??view.error,empty=emptyState??view.empty;
-  return <DataRegion id={id} className={cx('xui-card-group',className)} data-layout={state.layout} aria-label={options.label} busy={state.busy}>
+  return <DataRegion id={id} className={cx('xui-card-group',className)} data-layout={state.layout} data-card-sizing={cardSizing} aria-label={options.label} busy={state.busy}>
     {hasContent(toolbar)&&<div className="xui-card-group-tools">{toolbar}</div>}
     <ScrollArea.Viewport className="xui-card-group-body" aria-label={options.label+' — '+state.labels.count({rowCount:rows.length,total:state.total})} tabIndex={state.layout==='document'?-1:0} focusMode="gutter">
       {rows.length>0?<ul className="xui-grid xui-card-group-items">{rows.map((row,rowIndex)=>{
         const props=renderCard(row,{rowIndex,rowKey:keys[rowIndex],busy:state.busy,disabled:state.blocked});
         if(!props||typeof props!=='object'||React.isValidElement(props))throw new TypeError('CardGroup renderCard must return public Card props');
-        return <li className="xui-card-group-item" key={keys[rowIndex]}><Card {...props} key={keys[rowIndex]}/></li>;
+        return <li className="xui-card-group-item" key={keys[rowIndex]}><Card {...props} stretch={cardSizing==='equal'} key={keys[rowIndex]}/></li>;
       })}</ul>:<div className="xui-card-group-placeholder" data-loading={state.busy}>{state.busy?<LoadingState>{state.labels.loading}</LoadingState>:state.status==='error'?error:state.status==='idle'?<div className="xui-state" role="status">{state.labels.idle}</div>:empty}</div>}
     </ScrollArea.Viewport>
     <CollectionFooter prefix="xui-card-group" view={view} pagination={options.pagination} rowCount={rows.length} error={error} feedback={feedback} footer={footer}/>

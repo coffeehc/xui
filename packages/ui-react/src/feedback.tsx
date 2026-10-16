@@ -10,11 +10,19 @@ export function Alert({tone='info',className,...props}: AlertProps) { return <di
 
 /** Passive metadata or an explicit semantic status; neutral keeps plain text styling. */
 export type BadgeTone = 'neutral'|'info'|'success'|'warning'|'error';
+export type BadgeVariant='plain'|'soft';
 /** Standard span attributes plus a status tone; no live region or focus behavior is added. */
-export type BadgeProps = React.ComponentProps<'span'> & {tone?:BadgeTone};
+export type BadgeProps = Omit<React.ComponentProps<'span'>,'color'> & {
+ tone?:BadgeTone;
+ /** Omitted keeps the tone's existing presentation: neutral/plain, status/soft. */
+ variant?:BadgeVariant;
+ /** Explicit foreground, e.g. var(--action-primary) for a neutral update notice; no background or font change. */
+ color?:React.CSSProperties['color'];
+};
 /** Render passive status text; the host supplies its label and any status icon. */
-export function Badge({tone='neutral',className,...props}:BadgeProps){return <span {...props} className={cx('xui-badge',className)} data-tone={tone}/>;}
+export function Badge({tone='neutral',variant=tone==='neutral'?'plain':'soft',color,style,className,...props}:BadgeProps){return <span {...props} className={cx('xui-badge',className)} data-tone={tone} data-variant={variant} style={color===undefined?style:{...style,color}}/>;}
 export function Skeleton({className,...props}:React.ComponentProps<'div'>){return <div aria-hidden="true" {...props} className={cx('xui-skeleton',className)}/>;}
+/** Decorative theme-colored open arc. Supply busy text outside it; reduced motion keeps the arc still. */
 export function Spinner({className,...props}:React.ComponentProps<'span'>){return <span aria-hidden="true" {...props} className={cx('xui-spinner',className)}/>;}
 export function Progress({className,...props}:React.ComponentProps<'progress'>){return <progress {...props} className={cx('xui-progress',className)}/>;}
 /** Block feedback centers in its allocated content region (not the window).
