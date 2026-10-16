@@ -4,6 +4,12 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 导航当前项的完整强调前景（2.0.0，2026-10-16）
+
+`NavItem`和`NavigationMenu`的当前项主名称、富标签说明、公共Typography/Code/Icon槽统一继承既有selected前景（action-primary），muted说明不再脱离所属选中色。保留原选中背景/竖线、禁用优先和独立focus；hover/pressed不改成普通项颜色。只修改公共导航CSS，无新增Token、API、DOM补丁或`!important`，宿主不自行加颜色覆盖。
+
+正式安装包Chromium专项 **10/10**：light/dark/system × 1280/390px与200%根字号，及真实Chrome200%页面缩放；逐槽比较computed color、hover/pressed/focus、system实时切换、普通项对照和页面横向边界。证据为`.artifacts/controller-modes-validation/browser-final4.json`中`navigation-selected.spec.mjs`及其附件，不能把整份168项报告称为全绿。后续Clipboard补丁的147份正式JS/CSS哈希比对确认导航代码和样式字节不变，因此复用本项证据。已查看浅色桌面、深色窄屏200%文字和真实页面缩放截图，提取图在`images-final4/4-navigation-selected.png`～`6-navigation-selected.png`。既有富导航、分支名称和presentation回归另有35项通过，分别保留在同一报告，不与10项混算。
+
 ## 统一启动、基础Service与组件Controller（2.0.0，2026-10-16）
 
 DESIGN与三个包为 **2.0.0**，398 Token、101公开入口、352项接入检查。基础Service统一由浏览器Window注册表获取；`bootstrap(overrides, environment)`同步合并正式包内的默认`config.json`，项目参数仅覆盖需要改变的字段。HTTP/Auth/Theme/Clipboard/Route/I18n/Menu/Download共享所属依赖，Util为纯函数namespace；SSR/测试使用独立`XuiServices`。JSON不放实例/函数，借用实例不会被View或注册表销毁；启动不发请求、不登录、不恢复会话。主题和缩放的有效sessionStorage偏好优先于配置默认。

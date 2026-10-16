@@ -761,6 +761,7 @@ SimpleSelect 的展开浮层在自己的事件区域消费 Escape，先请求关
 
 `NavigationMenu` 可使用 children、`resolveIcon`、`renderLabel`、`renderLink`、`renderButton` 与 `renderAction`。renderer 只通过公开 props/ref 扩展；`renderLabel` 提供非交互描述内容，主项仍为 link/button，独立行尾 action 是自己的 button，不触发主项导航。
 
+当前项使用主题强调色：主名称、富标签说明及公共 Typography/Icon 文字槽共同继承 selected 前景，选中时 muted 说明也随当前项着色。hover/按下/键盘焦点保留选中色，竖线与浅底仅辅助识别；禁用时仍使用公共禁用前景。消费者不添加文字颜色覆盖。
 
 ### 数据菜单与 Controller 所有权
 

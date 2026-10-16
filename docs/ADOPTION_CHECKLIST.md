@@ -330,6 +330,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | NAV-007 | 菜单处于窄屏 Drawer | 只有一个可见打开入口；关闭回到原触发按钮 | 窄屏 DOM 计数、焦点前后 activeElement | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-008 | 名称旁有非交互运行/等待状态 | renderLabel使用主项剩余宽度；名称可收缩、尾随状态不收缩并位于逻辑末端；有独立分支/配置时保留各自轨道，不将状态伪装成action按钮 | 短/长名称、324/60、窄屏与200%矩形，状态出现/消失前后节点与焦点 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
 | NAV-009 | 富标签开启名称滚动 | 只有NavigationMenu.Label内的名称移动；尾随状态和分支/配置不动，触控/reduced-motion完整换行且与名称首行对齐 | 悬停/键盘录像、动态偏好切换、RTL及名称/状态更新记录 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
+| NAV-010 | 导航项处于当前选中状态 | 主名称、富标签说明与公共文字/图标槽共同继承主题 selected 前景，muted 不覆盖选中色；hover、pressed、focus 保持该色，禁用前景优先，竖线仅辅助 | 三主题、普通/富标签与200%文字/浏览器zoom的computed color及截图 | [DESIGN 状态前景](DESIGN.md#逐组件外观与状态映射) · [COMPONENTS 导航](COMPONENTS.md#导航与菜单) |
 | MENU-SEP-001 | 菜单中需要分隔不同内容组 | 使用 `Menu.Separator` 或 `ContextMenu.Separator`，它不执行动作、不可成为额外键盘停靠点，浅深主题下仍清晰可辨 | role/aria、Tab顺序、主题computed样式与两种菜单组合 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | MENU-VIEW-001 | 使用数据驱动 `Menu.View` | 默认 config 模式只有一个由 View 管理的内部 Controller；注入模式完全替换它，不创建默认实例，且 Controller 生命周期归注入宿主。两种 props 模式互斥 | 正/负类型编译、Controller 创建/订阅/退订/destroy 计数与实例身份 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) · [PUBLIC_API `/menu`](PUBLIC_API.md#全部正式入口) |
 | MENU-VIEW-002 | 菜单动作执行或需自定义焦点行为 | `actionId` 只映射宿主动作；只有同步 `event.preventDefault()` 取消本次默认关闭。异步操作仍归宿主，Base UI 是方向键与实际焦点的唯一 owner | pointer/keyboard 一次动作计数、阻止关闭断言、ARIA/焦点轨迹与迟到业务回调 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) |
