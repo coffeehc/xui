@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.1）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.2）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -94,7 +94,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | FRAME-001 | 新建或改造产品 UI | 产品 UI 由 React/ReactDOM 挂载并使用正式 `@coffeehc/xui-react`，React/ReactDOM/Base UI peers 保持单实例 | package manifests、实际入口与 bundler module graph | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [PUBLIC_API](PUBLIC_API.md) |
 | FRAME-002 | React 页面渲染 xui 组件 | 页面 UI 从正式 `@coffeehc/xui-react/*` 导入；不存在 `packages/src` alias 或复制组件内部 DOM/CSS | 源码 import graph、resolved module path、bundle manifest | [PUBLIC_API 全部入口](PUBLIC_API.md#全部正式入口) · [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) |
 | FRAME-003 | React 页面导入 `@coffeehc/xui-runtime` | 每个 runtime import 都用于现存 TypeScript service/model/parser/tool/theme 等非 UI 职责；bundle 不引用已移除的 runtime UI factory/controller | 按 import 路径、调用点和 owner 分类的源码表；React bundle module graph | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [PUBLIC_API Runtime](PUBLIC_API.md#全部正式入口) |
-| FRAME-004 | 构建或发布消费项目 | theme、runtime、React 三个包来自同一固定 1.0.0 源码版本；React 声明与宿主 peer 实例匹配公开 exports | manifests、lockfile、正式 tarball SHA-256、types 检查与 module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
+| FRAME-004 | 构建或发布消费项目 | theme、runtime、React 三个包来自同一固定源码版本与sourceGeneration；React 声明与宿主 peer 实例匹配公开 exports | manifests、lockfile、正式 tarball SHA-256、types 检查与 module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
 | MIG-001 | 迁移 XQuant 页面 | 按活动页面和路由逐项盘点其旧非 React UI 调用；每个尚未切换的页面如实记失败/未跑，不能将 xui 1.0 发布等同迁移完成 | `xquant/web` 源码、构建入口、调用点到页面矩阵 | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [逐项浏览器矩阵](#逐项浏览器验收矩阵) |
 | MIG-002 | XQuant 页面引入 React UI | 正式产品入口创建 React root，并接入唯一 React/ReactDOM peers 与 xui React 包 | package/lockfile、实际入口、production module graph | [ADOPTION 固定产物](ADOPTION.md#固定产物与可运行示例) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
 | MIG-003 | XQuant 页面替换旧 UI factory | 每个旧 UI factory 调用映射到已有 React 公共组件或列为 `owner=xui` 的公共缺口 | 逐调用源码映射、React 页面 props/slot、旧调用清零扫描 | [COMPONENTS](COMPONENTS.md) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
@@ -105,6 +105,25 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | MIG-008 | UI 迁移使用 runtime | 删除 UI factory 调用后仍保留业务实际使用的 HTTP/auth/query/theme/resource 服务、模型、解析器和工具 | runtime import 分类、编译结果与请求 owner 检查 | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
 | MIG-009 | 迁移页面使用公共业务 API | 迁移前后适用 API 的 method/path/query/body/凭据/DTO/权限及成功失败语义不变；不得新增前后端双层协议转换 | 前后 Network HAR、typed wire 断言与后端合同测试 | [PUBLIC_API 默认适配器的服务前置](PUBLIC_API.md#默认适配器的服务前置) · [16个公共API](#16-个公共-api-操作逐项检查) |
 | MIG-010 | 声明产品迁移完成 | 每个目标页面、正式构建和浏览器操作均有当前固定版本证据；未验环境、页面或状态明确列为未跑，不用 xui 示例或包升级代替 | 逐页报告矩阵、生产 SHA、路由和浏览器证据 | [ADOPTION 验收](ADOPTION.md#按授权范围迁移与验收) · [逐项浏览器矩阵](#逐项浏览器验收矩阵) |
+
+## 业务界面信息与交互决策
+
+组件和slot接线前，逐项核对[信息与交互决策](DESIGN.md#业务界面信息与交互决策)及[场景推导](DESIGN.md#高信噪比页面组合)。此表只定义检查结果和所需证据，规则仅在DESIGN维护。设计依据可以先评审；涉及真实行为的项目只有在运行证据充分时才记通过，图稿、草案认可和库级示例不能代替产品验收。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| IA-001 | 新建或调整业务页面/区域 | 声明用户任务、对象范围和关键判断，区域、信息、动作能对应这些任务 | 页面约定、实际默认内容与任务路径 | [DESIGN 页面方法](DESIGN.md#首屏信息架构与信息密度) |
+| IA-002 | 安排信息位置及披露 | 信息属于正确范围；必要事实/风险/阻断摘要在决策位置可见，次要内容有明确触发与返回 | 信息到区域/slot映射、默认/展开状态及键盘触屏步骤 | [DESIGN 归属与时机](DESIGN.md#信息归属与出现时机) |
+| IA-003 | 选择 List/Table/Card/详情/时间线/图表 | 形态与阅读、辨识、跨记录比较、属性查验、事件顺序或趋势任务相符；未将模式名当公共API | 代表性真实数据、选型理由与场景对照 | [DESIGN 呈现形态](DESIGN.md#集合与详情的呈现形态) |
+| IA-004 | 使用导航/Tab/筛选/视图切换/折叠/步骤 | 改变的业务范围与控件语义一致；需同时比较的关键值可同屏读取，折叠后有效条件/异常可辨识 | 切换前后内容、查询/路由/受控值与可访问语义 | [DESIGN 内容组织](DESIGN.md#导航内容切换与筛选) |
+| IA-005 | 采用内联/Popover/Dialog/Sheet/分栏/页面 | 说明任务与上下文依据；背景交互、焦点和模态语义一致，不用时间/字段数/URL单项定容器 | 正式API、容器理由、背景点击与焦点/关闭/返回记录 | [DESIGN 任务容器](DESIGN.md#任务容器与上下文) |
+| IA-006 | 页面有主动作/行操作/批量/提交 | 动作跟随真实作用范围；批量显示实际选择范围，主动作强调与任务一致 | 动作位置与实际对象、选择范围、请求和部分结果记录 | [DESIGN 动作归属](DESIGN.md#动作归属与确认) |
+| IA-007 | 操作需要确认或提供撤销 | 确认显示真实对象/范围/后果，额外输入与风险相称；撤销由真实能力支持 | 确认内容、影响事实来源、取消/执行/适用撤销结果 | [DESIGN 确认规则](DESIGN.md#动作归属与确认) |
+| IA-008 | 出现校验、读取、提交或刷新失败 | 反馈就近、错误可修正；首次/刷新/空/权限/未知分别表达，范围不被无故扩大 | 逐状态触发、保留内容/输入、恢复入口与焦点记录 | [DESIGN 反馈](DESIGN.md#反馈位置与保留时间) |
+| IA-009 | 操作有进度、关键结果或仅Toast反馈 | 真实进度/未知状态分开；关键结果有所属入口，临时凭证按授权期清理，不以Toast代替 | 等待/成功/未知状态、结果进入与关闭/卸载后的清理 | [DESIGN 反馈生命周期](DESIGN.md#反馈位置与保留时间) |
+| IA-010 | 选择输入方式、内联编辑或自动提交 | 控件语义与数据/设置一致；入口键盘触屏可达，失焦/Enter/IME按声明合同执行 | 控件类型、草稿/确认值、键盘/IME与真实写入记录 | [DESIGN 输入与编辑](DESIGN.md#输入编辑与离开) |
+| IA-011 | Tab/对象/路由切换或关闭编辑 | 有意义修改会丢失时有明确处理，无损切换不滥确认；草稿/敏感值沿宿主生命周期 | 改动/未改动、切回、离开/返回及适用存储清理记录 | [DESIGN 离开保护](DESIGN.md#输入编辑与离开) |
+| IA-012 | 窄屏/长值/放大导致布局变化 | 核心信息与动作可达，集合/分栏调整保留必要语义与返回位置，全文入口可用 | 支持视口、两种200%、键盘触屏、切换前后选择/草稿/滚动 | [DESIGN 窄屏连续性](DESIGN.md#窄屏与交互连续性) |
 
 ## 页面框架与具名 slot
 

@@ -17,7 +17,7 @@ theme 提供预构建 CSS/tokens；runtime 只提供无框架 TypeScript 服务�
 
 runtime 原生 DOM UI exports 已从当前公开入口移除，原生 UI 示例也不再作为接入路径。该 breaking change 不代表 XQuant、XLead 或其他消费项目已完成 React 迁移或通过验收；消费项目须按自己的授权核实固定包版本、调用点和实际页面。HTTP/auth/query/theme/resource 等 TypeScript 服务、模型、解析器与工具继续公开，React 宿主可直接复用。
 
-当前只维护 **4.2.1** 一条版本线，后续所有变更只递增末位，不再维护3.x兼容包或其他平行版本。历史验证记录保留用于溯源，不是当前可用的兼容分发。三个包必须同版本、同sourceGeneration安装；版本递增不代表语义兼容，升级前核对实际迁移合同。当前 DESIGN 与三个私有包均为 4.2.1，runtime 基础 Service 不再导出 `create*` 工厂；消费者需在入口 bootstrap 后按窄模块导入稳定 Service 引用；4.0 的 bootstrap 不再加载所有实现，容器 getter 需先加载对应模块，`/services` 仅用于明确需要全量的隔离装配。须复核固定 ESM/CSS/types 与打包依赖。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。2.0.1的公共认证页采用Stitch V3：品牌居于卡片外部，宿主只使用已有配置和slot，不补私有CSS。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
+以4.2.1为基准只维护一条版本线，当前正式版本为 **4.2.2**，后续所有变更只递增末位，不再维护3.x兼容包或其他平行版本。历史验证记录保留用于溯源，不是当前可用的兼容分发。三个包必须同版本、同sourceGeneration安装；版本递增不代表语义兼容，升级前核对实际迁移合同。当前 DESIGN 与三个私有包均为 4.2.2，runtime 基础 Service 不再导出 `create*` 工厂；消费者需在入口 bootstrap 后按窄模块导入稳定 Service 引用；4.0 的 bootstrap 不再加载所有实现，容器 getter 需先加载对应模块，`/services` 仅用于明确需要全量的隔离装配。须复核固定 ESM/CSS/types 与打包依赖。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。2.0.1的公共认证页采用Stitch V3：品牌居于卡片外部，宿主只使用已有配置和slot，不补私有CSS。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
 
 HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方 client，并从 bootstrap 共享 service 获取依赖；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 
@@ -132,11 +132,13 @@ Dialog/Sheet 内需要指定 Popover 的挂载目标时，使用 `Popover.Conten
 
 采用项目在自己的 `docs/DESIGN.md` 引用实际采用的 xui 版本/SHA，仅记录品牌差异、业务术语、信息优先级、私有组合及页面约定。公共基线与项目文件由开发者或技能显式读取，不存在 Markdown 自动继承；`theme.css` 只落实视觉变量覆盖，其余沿用默认值。完整关系见 [项目设计文件与主题](DESIGN.md#项目设计文件与主题的关系)。
 
-设计或改造页面时，先按 [页面信息呈现方法](DESIGN.md#首屏信息架构与信息密度) 确定用户任务、关键事实、动作和披露顺序，再按 [私有组合组件方法](DESIGN.md#项目私有组合组件的设计方法) 确定职责、状态所有者、输入/回调与容器边界。用 [组件手册](COMPONENTS.md) 和实际消费版本核对可复用能力，避免先堆组件再补信息层级。
+设计或改造页面时，先按 [页面信息呈现方法](DESIGN.md#首屏信息架构与信息密度) 确定用户任务、关键事实、动作和披露顺序，按 [信息与交互决策](DESIGN.md#业务界面信息与交互决策) 判断信息位置、呈现时机、形态和任务容器，再按 [私有组合组件方法](DESIGN.md#项目私有组合组件的设计方法) 确定职责、状态所有者、输入/回调与容器边界。用 [组件手册](COMPONENTS.md) 和实际消费版本核对可复用能力，避免先堆组件再补信息层级。
 
 项目可以组合 xui 控件并编写自身布局样式；公共控件的语义、状态、焦点与内部皮肤继续由 xui 负责。将公共基础缺口与宿主领域需求分开，保留已有业务能力及单一状态 owner。仅要求设计/评审时交付相应结论，不顺带实施页面、升级依赖或迁移后端；实施时按真实使用场景验证布局、异常、可达性和生命周期，不把主题生成当作页面设计完成。
 
 可以直接请求：**使用 adopt-xui，按照项目 `docs/DESIGN.md` 和 xui 设计方法，设计当前任务的私有组合组件与页面信息呈现。** 稳定约定更新已有项目设计章节，不复制整份公共规范或另建组件设计文档。
+
+业务界面设计规则已融合到唯一正式DESIGN，无需再同时阅读独立草案。逐项采用检查见[IA-001～012](ADOPTION_CHECKLIST.md#业务界面信息与交互决策)，之后继续各组件/slot/API检查；项目自己的DESIGN只记录业务差异和实际采用版本。未满足的公共能力明确列为owner=xui请求，宿主不复制组件或私有DOM/CSS，也不能据规范更新宣称页面已经通过。
 
 ## 主题单一所有者
 
@@ -206,7 +208,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 4.2.1；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认主题为 Precision Engineering Console，规范版本 4.2.2；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 

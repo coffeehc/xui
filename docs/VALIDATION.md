@@ -4,6 +4,29 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 业务界面决策标准融合（4.2.2，2026-10-17）
+
+用户在独立规范会话审阅Stitch三轮讨论稿后，明确要求由本主会话融合。原草案固定在2460b81；本轮以其全文及当前公开API/slot为依据，将八类决策并入唯一[DESIGN](DESIGN.md#业务界面信息与交互决策)：信息归属与披露、集合/详情形态、导航/Tab/筛选、任务容器、动作与确认、反馈、输入与离开、窄屏连续性。四类场景替换既有粗略组合表，IA-001～012进入既有接入清单，ADOPTION明确“任务→信息/交互→真实组件/slot→状态证据”的顺序。独立草案退出活动文档树，项目无需同时采用两份规范，Git保留来源。
+
+融合时保持Token、尺寸、字体、组件状态和刷新合同的原有owner；模式名不宣称新API，不增加路由、查询、草稿、重试或业务owner。纠正旧首屏条款与长表单/放大自然滚动的冲突：常规查询处理页以首屏核心任务为目标，长内容、窄屏与放大保留任务顺序和完整可达性，禁止缩字、裁切或固定栏遮挡。FRAME-004不再锁死历史1.0.0，统一核对三包同源码/同generation。新增规则的认可与正式文档完成，不代表各公共组件和消费项目已经逐项验收。
+
+三包/DESIGN为 **4.2.2**，仍只递增末位；不恢复兼容版本线。最终sourceGeneration为`1b82310248cb7e041271b1eadb140e2ab5db771e1e71a25d2173e65eb463bc60`；正式独立consumer为`.consumers/run-5Ga5AX/react`，ESM/CSS/types与单实例React/ReactDOM19.2.8、Base UI1.7.0通过。无runtime/React库源码、CSS或Token实现改动；基础示例改用公开FormGrid/FormActions，form页只保留所属表单的一个保存submit，去掉页头重复保存和DOM转发；放大按自然文档滚动验证动作完整可达。正式ESM/CSS/types应与4.2.1逐文件一致，仅build.json、包版本及React精确peer更新。404Token、104公开入口、389逐项检查。完整用户名验证仍保留，见下节。
+
+| 检查 | 实际结果 |
+|---|---|
+| build/typecheck/Token/docs/正式consumer | 通过，104公开入口、389逐项检查 |
+| contract/docs定向unit | 10/10；库源码未改，未重复全量513项 |
+| Chromium共享外壳/用户名及三个基础页面场景 | 31/31，0失败/跳过/flaky |
+| Firefox/WebKit同组非Chrome缩放场景 | 各25/25，合计50/50，0失败/跳过/flaky |
+| 与4.2.1正式dist逐文件对比 | 298文件中仅三份build.json变化；295份ESM/CSS/types等字节相同 |
+| 原有预算 | 首屏JS gzip141912/153600、critical CSS19058/19456、Button6619/16384 |
+
+浏览器在最终正式包验证原有用户名和共享外壳的28项，再补三种基础场景：受控主题/sessionStorage/system跟随；列表→表单→详情、错误聚焦、窄屏导航与唯一保存submit；动态加载失败重试及刷新失败保留数据/草稿。包括light/dark/system、1280/390/320、200%根字号、六项真实Chrome200%缩放及原生截图。新表单用例以真实Tab（WebKit按平台Alt+Tab）从名称字段到唯一保存动作，检查焦点及整个按钮在视口内；长表单可以自然滚动。已查看基础列表浅色、390px深色错误与320px/system/200%表单最终截图，页头不再有重复保存动作。它们是公共组合的合成演示，不是业务产品验收。
+
+过程保留首轮规范代build/consumer和首屏句修订后的最终代。示例修改后的初轮30/31及48/50，其失败是测试在放大前后对同一个已聚焦按钮重复调用focus，原生浏览器不会因此再次滚动；改为真实键盘逐控件进入提交按钮，仍要求完整在视口内，未放宽比例或加私有CSS，随后完成上述最终矩阵。证据见`.artifacts/business-design-validation/`的build-final、consumer-example-final、typecheck/tokens/unit/docs日志，contract-review.json、consumer-dist-compare.json、browser.json/log、cross.json/log、images与focus-first报告/trace。复现使用同目录配置，选择admin-username-validation.spec.mjs、admin-setup-form.spec.mjs、foundation.spec.mjs，并grep `shared|form handle|username|public list/form/detail|controlled host theme|failed dynamic import retries`；cross再排除genuine Chrome。规范决策/接线审阅与实际浏览器行为分别记录。
+
+未执行全仓浏览器、watch/cold-start、物理设备/读屏器及消费项目页面/真实API/后端/部署。来源新增的抽屉确认回焦、刷新几何反馈仅登记在PUBLIC_REQUESTS 14/15，未在最新库独立复现或修复，未因本轮普通导航/刷新保值用例通过而关闭；Tabs变体等既有待办也不因此宣布完成。
+
 ## 管理员用户名校验与单一版本线（4.2.1，2026-10-17）
 
 本轮仅修改xui。正式三包与DESIGN统一 **4.2.1**，后续所有改动仅递增末位（4.2.2、4.2.3…）；不再回补或分发3.x兼容包。版本号不代表语义兼容，实际迁移以公开合同、固定SHA/sourceGeneration为准。React对runtime的peer固定同版4.2.1，防止混用缺少新form方法的旧Controller。四个兼容分发目录3.0.1/3.1.0/3.1.1/3.1.2已删除，3.0.0顶层及历史tarballs共六包已移除，兼容工作树经确认干净后归档退役；保留Git历史与metadata/validation证据，不再保留活动兼容构建。未操作外部Release或消费项目。删除明细见本轮compatibility-cleanup.json。
