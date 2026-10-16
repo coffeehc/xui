@@ -1098,7 +1098,7 @@ DataTable正式示例可使用 `?sticky=none`、`?sticky=start`、`?sticky=end` 
 
 ### 完整页面与扩展
 
-配置产品名称、标题、说明、可选logo、文案、safe returnTo；默认card采用居中、自然高度的单列登录框。显式fullscreen保留相同窄框，只省略外框表面与边框；两者均无左右品牌面板或分割线，尺寸统一来自[DESIGN](DESIGN.md)。主题复用已有owner，登录页不增主题选择器或持久化副本。React 页面在窄屏/短视口/200%文字下自然文档滚动，字段和动作可达。主动作后的反馈与辅助动作为空或隐藏时不占位；实际消息自然增长并完整可读，不保留固定或最小反馈轨道。字段与主动作保持 DOM、尺寸和相对顺序，居中卡片可随消息增高调整位置；公共尺寸与品牌组合见 [DESIGN](DESIGN.md#公共登录页布局与主题)，实际验收见 [VALIDATION](VALIDATION.md#认证页验收)。brandVisual仍是可选inert装饰内容，放在框内顶部品牌组、默认最大80px高，窄屏隐藏；不应嵌入完整登录卡片或重复登录任务标题，公共库不识别图片文字。原checkSession文案键仍可配置，默认文字为“Retry connection”，仅在安全的session读取网络/超时/服务端失败时作为局部次动作出现；凭据401/403/429无此入口。自动session/refresh检查只显示局部状态；共享读取的等待者取消不等于取消底层owner，因此页面不提供该阶段的取消按钮。公共登录页已删除取消按钮及专属文案/事件，扩展等待也不自动生成取消动作。卸载、pagehide 与 auth owner 的 Abort 能力仍会终止所属等待并拒绝迟到结果，保留迟到结果隔离。页面不再承担登出管理；应用内仍可通过同一auth owner显式logout。
+配置产品名称、标题、说明、可选logo、文案、safe returnTo；默认card采用Stitch V3的居中品牌＋自然高度单列表单，品牌位于卡片外部。显式fullscreen保留相同窄框，只省略外框表面与边框；两者均无左右品牌面板或分割线，尺寸统一来自[DESIGN](DESIGN.md)。主题复用已有owner，登录页不增主题选择器或持久化副本。React 页面在窄屏/短视口/200%文字下自然文档滚动，字段和动作可达。主动作后的反馈与辅助动作为空或隐藏时不占位；实际消息自然增长并完整可读，不保留固定或最小反馈轨道。字段与主动作保持 DOM、尺寸和相对顺序，居中卡片可随消息增高调整位置；公共尺寸与品牌组合见 [DESIGN](DESIGN.md#公共登录页布局与主题)，实际验收见 [VALIDATION](VALIDATION.md#认证页验收)。brandVisual仍是可选inert装饰内容，放在卡片外部的居中品牌组、默认最大80px高，窄屏隐藏；不应嵌入完整登录卡片或重复登录任务标题，公共库不识别图片文字。原checkSession文案键仍可配置，默认文字为“Retry connection”，仅在安全的session读取网络/超时/服务端失败时作为局部次动作出现；凭据401/403/429无此入口。自动session/refresh检查只显示局部状态；共享读取的等待者取消不等于取消底层owner，因此页面不提供该阶段的取消按钮。公共登录页已删除取消按钮及专属文案/事件，扩展等待也不自动生成取消动作。卸载、pagehide 与 auth owner 的 Abort 能力仍会终止所属等待并拒绝迟到结果，保留迟到结果隔离。页面不再承担登出管理；应用内仍可通过同一auth owner显式logout。
 
 导航就绪要求owner为authenticated且busy为空，并且本节等待的认证/读取已成功结算。currentUser恢复access期间的refresh结果保持busy=session，最终session核对完成才发布空闲；宿主先启动读取再挂登录页与页面自行检查使用同一个flight，StrictMode重放不会增加HTTP请求。单独refresh仍按原合同完成。旧session因新access generation而失效时，页面只提供局部读取重试，不因owner保留另一份有效access而提前导航。
 
@@ -1110,9 +1110,23 @@ owner确认有效authenticated后，无论来自初始session检查还是主动l
 
 `extensions.beforeSubmit/actions/errorLabel` 和beforeFields/afterFields仍只接收username与AbortSignal，不接收密码/token/原始响应。宿主标准SSO、服务地址与账户来源保留同一认证owner。重复提交、扩展卸载中止、迟到导航和密码节点清空仍受页面generation控制；修改真实服务由产品安全策略决定。
 
+### 认证布局 slot 归属
+
+| 真实入口 | 内容与位置 | 文字/着色 | 空内容与状态 |
+|---|---|---|---|
+| config.productName / logo | 卡片外居中品牌；宿主资产原样显示，Logo在名称上方 | section-title、foreground；图像不套主题滤镜、不替换SVG | Logo可省略，长名称自然换行；更新不重挂form |
+| config.title / description | 卡片内首部标题/说明，左对齐字段 | login-title 26/32、600；description body-sm、muted | title必填；description省略无占位 |
+| children；完整页beforeFields / afterFields | 标题组后的单列Field/公开控件；扩展在凭据前/后 | label/input body-sm；help/error为meta，错误用公共语义 | 空扩展不占位；不得嵌套form或复制凭据字段 |
+| actions | 字段后的唯一主提交，与控件同宽 | 复用Button主色、login-control高度和body-sm角色 | 权限/busy/回调由宿主或完整页Controller负责，只有真实动作才渲染 |
+| alternatives；完整页extensions.actions | 主提交后独立的真实次级认证入口 | 公共outline Button，沿用控件文字 | 不配置不生成SSO/注册/忘记密码 |
+| feedback / feedbackActions | 主动作及次级认证后的结果与局部恢复 | 公共Alert语义色，meta；恢复使用ghost Button | 两槽空/hidden不占轨道；长消息自然增高、必要结果不折叠 |
+| brandVisual | 品牌身份下的显式非交互装饰 | inert、aria-hidden；不替代真实Logo | 可选、窄屏隐藏；不承载任务标题或必要说明 |
+
+V3只调整公共布局与派生Token，不改props、请求、认证或密码清理。默认卡片无顶部强调线，使用layer-surface与统一边界，精确尺度见[认证设计](DESIGN.md#公共登录页布局与主题)。消费项目按[AUTH-UI-001～006](ADOPTION_CHECKLIST.md)逐项检查入口及真实页面，不能等待部署后再补私有样式。
+
 ### 纯认证布局 AuthPage
 
-首次管理员设置、启动错误和其他认证入口使用 React `AuthPage`（`@coffeehc/xui-react/login`），由xui统一品牌组、横纵定位、由DESIGN定义的窄表单、任务标题/说明层级、内距、全宽主动作、反馈与滚动/focus。feedback槽可组合现有Disclosure承载独立长详情，必要摘要和未知后果始终在折叠区外完整显示，不截断宿主消息。不得拼 `xui-login-*` 私有结构、给产品补定位CSS或局部修改control-height等公共尺度。既有完整登录内部复用此组合；认证client和业务API不属于布局。
+首次管理员设置、启动错误和其他认证入口使用 React `AuthPage`（`@coffeehc/xui-react/login`），由xui统一卡片外部居中品牌组、横纵定位、由DESIGN定义的窄表单、任务标题/说明层级、内距、全宽主动作、反馈与滚动/focus。feedback槽可组合现有Disclosure承载独立长详情，必要摘要和未知后果始终在折叠区外完整显示，不截断宿主消息。不得拼 `xui-login-*` 私有结构、给产品补定位CSS或局部修改control-height等公共尺度。既有完整登录内部复用此组合；认证client和业务API不属于布局。
 
 - `config: AuthPageConfig`：productName、必填title、可选description/logo/layout，沿用登录品牌校验与fullscreen/card含义。主题继承文档根，不接第二theme owner。
 - React `children`：宿主公开Field/Input等组成的内容，不传另一整个页面或嵌套form。

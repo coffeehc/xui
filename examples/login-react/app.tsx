@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 import {ConfigurableLoginPage} from '@coffeehc/xui-react/login';
+import {setInterfaceScale} from '@coffeehc/xui-runtime/theme';
 import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import {createLoginExample} from '../shared/login-model';
 import {Button} from '@coffeehc/xui-react/button';
@@ -14,4 +15,4 @@ function App({authOwner=owner}:{authOwner?:ReturnType<typeof createLoginExample>
 if(new URL(location.href).searchParams.has('prechecking'))void owner.auth.currentUser().catch(()=>{});
 if(new URL(location.href).searchParams.has('preconfirmed'))await owner.auth.currentUser();
 root.render(<React.StrictMode><App/></React.StrictMode>);
-Object.assign(window,{loginDemo:{...owner,theme,replaceAuthOwner(){replacement=createLoginExample(location.href);root.render(<React.StrictMode><App authOwner={replacement}/></React.StrictMode>);return replacement;},getExtensionCalls:()=>extensionOwner!.getExtensionCalls(),setExtensionMode:(value:string)=>extensionOwner!.setExtensionMode(value),releaseExtension:()=>extensionOwner!.releaseExtension(),destroy(){hostActive=false;root.unmount();owner.destroy();replacement?.destroy();}}});window.addEventListener('pagehide',event=>{hostActive=false;if(!event.persisted){root.unmount();owner.destroy();replacement?.destroy();}});window.addEventListener('pageshow',event=>{if(event.persisted)hostActive=true;});
+Object.assign(window,{loginDemo:{...owner,theme,setScale:setInterfaceScale,replaceAuthOwner(){replacement=createLoginExample(location.href);root.render(<React.StrictMode><App authOwner={replacement}/></React.StrictMode>);return replacement;},getExtensionCalls:()=>extensionOwner!.getExtensionCalls(),setExtensionMode:(value:string)=>extensionOwner!.setExtensionMode(value),releaseExtension:()=>extensionOwner!.releaseExtension(),destroy(){hostActive=false;root.unmount();owner.destroy();replacement?.destroy();}}});window.addEventListener('pagehide',event=>{hostActive=false;if(!event.persisted){root.unmount();owner.destroy();replacement?.destroy();}});window.addEventListener('pageshow',event=>{if(event.persisted)hostActive=true;});

@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（2.0.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（2.0.1）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -341,6 +341,12 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | STATE-OWNER-005 | 登录、密码、初始化、一次性Key | 秘密只在DOM/瞬时提交边界，安全快照无密码/匹配词/secret，退出清理；现有AuthClient与权限owner不替换 | 快照检查、扩展await前后读取及退出DOM/worker清理 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | STATE-OWNER-006 | ApiKey/业务日志/结构化日志View | 旧controller仅service；完整注入使用viewController且与service/options初始化互斥。默认依赖显式adapter/loader；展示草稿/客户端页不复制服务查询 | 三模式、请求次数、借用/所属销毁、取消/快照/刷新保行 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | STATE-OWNER-007 | 导航、选择与Overlay组合 | 父子共享所属语义实例，Base UI执行实际键盘/焦点/portal；路由、分组页、active事实归宿主 | 组合实例/受控拒绝、disabled、Escape和同树焦点 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| AUTH-UI-001 | 采用完整登录、初始化或纯认证布局 | 统一使用AuthPage及其组合；品牌位于卡片外，title/description属于卡片内标题组，不用宿主DOM/CSS复刻 | 实际props/组件映射与三主题桌面/窄屏截图 | [认证布局](COMPONENTS.md#认证布局-slot-归属) |
+| AUTH-UI-002 | 提供品牌/Logo | config.productName/logo原样显示；Logo保留src/alt/referrerPolicy与比例；无Logo无占位，长名称自然换行 | 首次/更新/移除Logo、长中文及computed字形/几何 | [认证布局](COMPONENTS.md#认证布局-slot-归属) |
+| AUTH-UI-003 | 填写字段或扩展认证内容 | children或beforeFields/afterFields只放真实Field/控件组；空扩展不占位，不嵌套form、不增加虚构入口 | label关联、Tab顺序、空槽/长中文与宿主输入节点身份 | [认证布局](COMPONENTS.md#认证布局-slot-归属) |
+| AUTH-UI-004 | 主动作、次级动作与反馈 | actions只放主提交；alternatives只放真实SSO等次级入口；feedback/feedbackActions在主动作后自然增高，空槽无轨道 | busy/error/unknown、请求次数、DOM身份及必要结果全文可读 | [认证布局](COMPONENTS.md#认证布局-slot-归属) |
+| AUTH-UI-005 | 字体与界面放大 | 采用login-title、section-title、body-sm/meta角色与公共缩放；宿主不设内容字号/控件皮肤，不缩字或裁字段维持构图 | light/dark/system、320/390px、125/150/200%界面、200%文字及真实浏览器缩放 | [认证设计](DESIGN.md#公共登录页布局与主题) |
+| AUTH-UI-006 | 登录视觉升级 | AuthClient、导航、密码清理和扩展回调归属不变；提交无取消、无重复写，切主题/缩放不重挂表单 | Network顺序、受控/注入、焦点/选区、pagehide及迟到结果 | [认证会话](PUBLIC_API.md#认证会话) |
 | STATE-COPY-001 | 复制文本或显式writer | 使用runtime剪贴板服务或既有平台writer，写入串行、取消/迟到隔离；失败就地反馈，不读剪贴板/持久化/自动重试 | 真实指针、fallback焦点/选区/scroll、队列/失败/取消计数 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |

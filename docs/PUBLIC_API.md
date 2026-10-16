@@ -349,6 +349,8 @@ ACL/权限过滤后的有界扫描可以连续返回空 list 与非空 next_curs
 
 [共享身份矩阵](../tests/fixtures/contracts/identity-encodings.v1.json)、[hex 认证 fixture](../tests/fixtures/contracts/auth.v2.hex.json) 与 [hex Key v2 fixture](../tests/fixtures/api-key-contracts.v2.hex.json) 验证明确编码；Cookie/Bearer 隔离、内存凭据、取消/迟到和不重放规则不变。响应格式失败不暗中回退另一编码，也不能把后端已提交但投影失败称作回滚。
 
+公共认证视觉由`@coffeehc/xui-react/login`的`AuthPage`统一；2.0.1采用Stitch V3的卡片外品牌与卡片内表单。现有配置、完整登录/初始化回调和Controller接口不变；slot、字体、颜色和空状态逐项见[认证布局](COMPONENTS.md#认证布局-slot-归属)，不要让宿主再造认证布局或改变请求协议。
+
 ## 认证会话
 
 `ConfigurableLoginPage` 使用由 bootstrap 注册的同一 `getAuthService()` owner，保持现有默认主题、布局、扩展、密码清理和安全回跳。这个自有应用合同配套 baseservice authenticationservice/webfacade；不是 OAuth/OIDC token endpoint，不替换第三方标准协议，不表示任何业务项目、生产登录链或部署已迁移。

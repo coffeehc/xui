@@ -16,7 +16,7 @@ function stable(before,after,{allowSupportReflow=false}={}){for(const key of sta
 async function evidence(page,info,name,data){
   const image=info.outputPath(name+'.png'),json=info.outputPath(name+'.json');
   await page.screenshot({path:image,animations:'disabled'});
-  await writeFile(json,JSON.stringify({standard:'docs/VALIDATION.md#认证页验收',expected:{title:'20/28px',brand:'13/20px',label:'13/20px',controls:'14/22px',logo:32,maxCardWidth:434,maxContentWidth:384,controlHeight:44,passwordToPrimaryGap:16,stableAcrossFeedback:['DOM identity','horizontal position','width','height','relative vertical gaps; card may recenter']},measured:data},null,2));
+  await writeFile(json,JSON.stringify({standard:'docs/VALIDATION.md#认证页验收',expected:{title:'26/32px',brand:'16/26px',label:'14/22px',controls:'14/22px',logo:48,maxCardWidth:418,maxContentWidth:360,controlHeight:46,passwordToPrimaryGap:20,stableAcrossFeedback:['DOM identity','horizontal position','width','height','relative vertical gaps; card may recenter']},measured:data},null,2));
   await info.attach(name,{path:image,contentType:'image/png'});await info.attach(name+'-geometry',{path:json,contentType:'application/json'});
 }
 for(const kind of ['react'])for(const appearance of ['light','dark','system'])for(const width of [1280,1600,390]){
@@ -26,13 +26,13 @@ for(const kind of ['react'])for(const appearance of ['light','dark','system'])fo
     const submit=page.getByRole('button',{name:'登录',exact:true}),username=page.getByRole('textbox',{name:'用户名',exact:true}),password=page.getByLabel(/^密码(?:\s*\*)?$/);
     await expect(submit).toBeEnabled();await settle(page);
     const idle=await measurements(page),e=idle.elements;
-    expect(e.card.width).toBeLessThanOrEqual(Math.min(width,434));expect(Math.abs((e.card.x+e.card.width/2)-width/2)).toBeLessThanOrEqual(1);
-    expect(e.content.width).toBeLessThanOrEqual(384);expect(e.form.width).toBeLessThanOrEqual(384);expect(e.brand.bottom).toBeLessThanOrEqual(e.form.y);
-    expect(e.title.fontSize).toBe('20px');expect(e.title.lineHeight).toBe('28px');expect(e.product.fontSize).toBe('13px');expect(e.product.lineHeight).toBe('20px');expect(e.label.fontSize).toBe('13px');expect(e.username.fontSize).toBe('14px');
-    expect(e.username.height).toBeCloseTo(44,0);expect(e.passwordGroup.height).toBeCloseTo(44,0);expect(e.submit.height).toBeGreaterThanOrEqual(44);
-    expect(e.logo.width).toBeCloseTo(32,0);expect(e.submit.width).toBeCloseTo(e.passwordGroup.width,0);expect(e.username.width).toBeCloseTo(e.passwordGroup.width,0);
-    expect(e.username.y-e.usernameLabel.bottom).toBeCloseTo(8,0);expect(e.passwordLabel.y-e.username.bottom).toBeCloseTo(16,0);expect(e.passwordGroup.y-e.passwordLabel.bottom).toBeCloseTo(8,0);expect(e.submit.y-e.passwordGroup.bottom).toBeCloseTo(16,0);expect(e.label.y-e.description.bottom).toBeCloseTo(16,0);
-    expect(e.identity.bottom).toBeLessThan(e.title.y);expect(e.description.y-e.title.bottom).toBeCloseTo(8,0);expect(e.card.bottom-e.submit.bottom).toBeLessThan(30);if(e.feedback)expect(e.feedback.height).toBe(0);
+    expect(e.card.width).toBeLessThanOrEqual(Math.min(width,418));expect(Math.abs((e.card.x+e.card.width/2)-width/2)).toBeLessThanOrEqual(1);
+    expect(e.content.width).toBeLessThanOrEqual(360);expect(e.form.width).toBeLessThanOrEqual(360);expect(e.brand.bottom).toBeLessThanOrEqual(e.form.y);
+    expect(e.title.fontSize).toBe('26px');expect(e.title.lineHeight).toBe('32px');expect(e.product.fontSize).toBe('16px');expect(e.product.lineHeight).toBe('26px');expect(e.label.fontSize).toBe('14px');expect(e.username.fontSize).toBe('14px');
+    expect(e.username.height).toBeCloseTo(46,0);expect(e.passwordGroup.height).toBeCloseTo(46,0);expect(e.submit.height).toBeGreaterThanOrEqual(46);
+    expect(e.logo.width).toBeCloseTo(48,0);expect(e.submit.width).toBeCloseTo(e.passwordGroup.width,0);expect(e.username.width).toBeCloseTo(e.passwordGroup.width,0);
+    expect(e.username.y-e.usernameLabel.bottom).toBeCloseTo(8,0);expect(e.passwordLabel.y-e.username.bottom).toBeCloseTo(16,0);expect(e.passwordGroup.y-e.passwordLabel.bottom).toBeCloseTo(8,0);expect(e.submit.y-e.passwordGroup.bottom).toBeCloseTo(20,0);expect(e.label.y-e.description.bottom).toBeCloseTo(20,0);
+    expect(e.identity.bottom).toBeLessThan(e.title.y);expect(e.description.y-e.title.bottom).toBeCloseTo(8,0);expect(e.card.bottom-e.submit.bottom).toBeCloseTo(33,0);if(e.feedback)expect(e.feedback.height).toBe(0);
     await expect(password).toHaveAttribute('autocomplete','current-password');await expect(password).toHaveAttribute('maxlength','4096');const reveal=page.getByRole('button',{name:'显示密码',exact:true});await expect(reveal).toHaveCount(1);await password.fill('FAKE_VISUAL_PASSWORD');await password.evaluate(element=>{window.passwordElement=element;element.setSelectionRange(2,9);});await reveal.click();await expect(password).toHaveAttribute('type','text');expect(await password.evaluate(element=>({same:element===window.passwordElement,value:element.value,selection:[element.selectionStart,element.selectionEnd]}))).toEqual({same:true,value:'FAKE_VISUAL_PASSWORD',selection:[2,9]});await page.getByRole('button',{name:'隐藏密码',exact:true}).click();await expect(password).toHaveAttribute('type','password');expect(await password.evaluate(element=>({same:element===window.passwordElement,value:element.value,selection:[element.selectionStart,element.selectionEnd]}))).toEqual({same:true,value:'FAKE_VISUAL_PASSWORD',selection:[2,9]});
     await expect(page.locator('.xui-login-visual')).toBeHidden();await expect(page.locator('.xui-login-visual img')).toHaveCount(0);
     await expect(page.locator('.xui-login-actions button:visible')).toHaveCount(1);await expect(page.getByRole('button',{name:'重试连接',exact:true})).toHaveCount(0);await expect(page.locator('.xui-login-form .xui-reserved-action')).toHaveCount(0);
@@ -49,7 +49,7 @@ for(const kind of ['react']){
   test(`${kind} login title respects independent font and line-height preferences`,async({page})=>{
     await page.goto(`/login-${kind}/`);await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();
     const title=page.locator('.xui-login-body h1');
-    for(const [font,line,height,size] of [['1','2','56px','20px'],['2','1','56px','40px'],['.5','.5','16.8px','12px']]){
+    for(const [font,line,height,size] of [['1','2','64px','26px'],['2','1','64px','52px'],['.5','.5','19.2px','15.6px']]){
       await page.evaluate(({font,line})=>{document.documentElement.style.setProperty('--font-scale',font);document.documentElement.style.setProperty('--line-height-scale',line);},{font,line});
       expect(await title.evaluate(element=>({size:getComputedStyle(element).fontSize,height:getComputedStyle(element).lineHeight}))).toEqual({size,height});
     }

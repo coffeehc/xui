@@ -1,15 +1,15 @@
 {
-  "contractVersion": "2.0.0",
+  "contractVersion": "2.0.1",
   "defaultTheme": "Precision Engineering Console",
   "defaultMode": "dark",
-  "defaultTokenCount": 398,
+  "defaultTokenCount": 403,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "c27bacc1032ab719c903ec1892283061d40c94b7498aa52f96d8ed3e68a19e0c",
+  "defaultCssSha256": "78ae9d3622af5dce0baafea9d45ffd20166a26d254bfc74f1e7629ff39c1d53b",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -33,7 +33,8 @@
       "Rework public AuthPage hierarchy after screenshot and reference review: task description follows 28/36 title, brand/labels use existing 14/22 role, input/primary reuse existing 16/26 role with derived 44px minimum, 384px content and 434px card, 40px feedback and 12px bottom padding. Add six semantic layout/control aliases in the removable component token block; global colors and typography roots unchanged.",
       "Add derived button-padding-block-xs in the removable centralized component token block, using existing xs height, body-sm line height and the actual surface border width; no original token default changed.",
       "Add three matching system-color Progress roles and one pending-border-style role in the removable centralized component block, with separately marked forced-colors accessibility bindings. Preserve ordinary-mode tokens and native value/max semantics; use forced-color-adjust:auto and an unfilled pending track.",
-      "Add derived dialog-body-min-block-size in the removable centralized block; existing control height and focus reach define the single-owner whole-dialog fallback threshold without fixed content heights."
+      "Add derived dialog-body-min-block-size in the removable centralized block; existing control height and focus reach define the single-owner whole-dialog fallback threshold without fixed content heights.",
+      "Apply user-approved Stitch login V3: centered external host brand, shared natural-flow card, derived authentication title/radius tokens and accessible fields/actions; preserve authentication/secret/slot ownership."
     ],
     "protocolBoundarySha256": "b4cdac2b00638046c4f76d2a303c9095de6cef969eb1cfc133b3c750dc3ac4de",
     "typographyOriginalCss": "    --font-size-caption: .75rem;\n    --line-height-caption: 1.125rem;\n    --font-size-body-xs: .8125rem;\n    --line-height-body-xs: 1.25rem;\n    --font-size-body-sm: .875rem;\n    --line-height-body-sm: 1.375rem;\n    --font-size-section-title: 1rem;\n    --line-height-section-title: 1.625rem;\n    --font-size-secondary-value: 1.125rem;\n    --line-height-secondary-value: 1.75rem;\n    --font-size-page-title: 1.25rem;\n    --line-height-page-title: 1.75rem;\n    --font-size-metric: 1.5rem;\n    --line-height-metric: 1.75rem;\n",

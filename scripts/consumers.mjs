@@ -46,7 +46,10 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // infrastructure and uses the new semantic Controllers: 152,143 gzip bytes vs the
 // previous 133,849. Bound that expanded entry to 150 KiB (+18 KiB), while keeping
 // CSS/Button budgets and independently gating narrow service imports below.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 18432, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
+// 2.0.1 login V3 adds derived tokens and the external brand layout: after
+// removing its redundant wrapper, CSS was 18,485 bytes (+67 from 2.0.0). Allow
+// a bounded 128-byte increment; JS, Button and narrow-service limits are unchanged.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 18560, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // A fresh directory prevents npm reusing an earlier tarball with the same version.
 const runDirectory = await mkdtemp(resolve('.consumers/run-'));

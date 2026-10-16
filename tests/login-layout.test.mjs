@@ -18,11 +18,12 @@ function section(markup,className,tag='div'){
 }
 test('public login separates configured brand from credentials without owning theme controls',()=>{
   const markup=render();
-  const brand=section(markup,'xui-login-brand','header'),content=section(brand,'xui-login-brand-content');
+  const brand=section(markup,'xui-login-brand','header'),content=brand;
   assert.match(content,/<div class="xui-login-identity"><strong>产品名称<\/strong><\/div>/);
   assert.doesNotMatch(content,/xui-login-description/);
   assert.match(section(markup,'xui-login-heading'),/<h1[^>]*>登录产品<\/h1><p class="xui-login-description">品牌说明<\/p>/);
-  assert.ok(markup.indexOf(brand)<markup.indexOf('class="xui-login-form"'));
+  assert.ok(markup.indexOf(brand)<markup.indexOf('class="xui-login-card'));
+  assert.doesNotMatch(section(markup,'xui-login-card xui-surface','section'),/xui-login-brand/);
   assert.match(markup,/<h1[^>]*>登录产品<\/h1>/);
   assert.match(markup,/autoComplete="username"/);assert.match(markup,/autoComplete="current-password"/);
   assert.doesNotMatch(markup,/xui-login-theme|<select|Appearance|data-theme/);
@@ -41,7 +42,7 @@ test('login defaults to a card and keeps any optional visual decorative',()=>{
   const markup=render(undefined,{}, {brandVisual:React.createElement('img',{src:'/illustration.svg',alt:''})});
   assert.match(markup,/data-layout="card"/);
   assert.match(markup,/<div class="xui-login-visual" aria-hidden="true" inert=""><img[^>]*src="\/illustration.svg"/);
-  const brand=section(markup,'xui-login-brand-content');
+  const brand=section(markup,'xui-login-brand','header');
   assert.ok(brand.indexOf('xui-login-identity')<brand.indexOf('xui-login-visual'));
   assert.doesNotMatch(brand,/xui-login-description/);
   assert.match(render(undefined,{layout:'fullscreen'}),/data-layout="fullscreen"/);

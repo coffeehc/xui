@@ -10,7 +10,7 @@ import {Alert} from './feedback.js';
 export type {AuthPageConfig,LoginPageConfig,LoginPageLayout,LoginPageLabels,AuthClient,AuthUser} from '@coffeehc/xui-runtime/auth';
 export interface AuthPageProps {
   config:AuthPageConfig;
-  /** Optional compact decoration in the identity header; inert and hidden on narrow screens. */
+  /** Optional compact decoration below the external brand identity; inert and hidden on narrow screens. */
   brandVisual?:React.ReactNode;children?:React.ReactNode;
   actions?:React.ReactNode;alternatives?:React.ReactNode;feedback?:React.ReactNode;feedbackActions?:React.ReactNode;
   form?:{noValidate?:boolean;onSubmit?:React.FormEventHandler<HTMLFormElement>};
@@ -33,13 +33,14 @@ export function AuthPage({config:input,brandVisual,children,actions,alternatives
     {hasAuthPageContent(actions)&&<footer className="xui-login-actions">{actions}</footer>}
     {hasAuthPageContent(alternatives)&&<div className="xui-login-options">{alternatives}</div>}
   </div>{(hasAuthPageContent(feedback)||hasAuthPageContent(feedbackActions))&&<div className="xui-login-support"><div className="xui-login-feedback">{feedback}{feedbackActions}</div></div>}</>;
-  return <main className="xui xui-login-page" data-layout={config.layout}><section className={`xui-login-card${config.layout==='card'?' xui-surface':''}`} aria-labelledby={titleId}>
-    <header className="xui-login-brand"><div className="xui-login-brand-content">
+  return <main className="xui xui-login-page" data-layout={config.layout}><div className="xui-login-layout">
+    <header className="xui-login-brand">
       <div className="xui-login-identity">{config.logo&&<img className="xui-login-logo" src={config.logo.src} alt={config.logo.alt} referrerPolicy="no-referrer"/>}<strong>{config.productName}</strong></div>
       {brandVisual!=null&&<div className="xui-login-visual" aria-hidden="true" inert>{brandVisual}</div>}
-    </div></header>
+    </header>
+    <section className={`xui-login-card${config.layout==='card'?' xui-surface':''}`} aria-labelledby={titleId}>
     {form?<form className="xui-login-form" noValidate={form.noValidate} onSubmit={event=>{event.preventDefault();form.onSubmit?.(event);}}>{content}</form>:<section className="xui-login-form">{content}</section>}
-  </section></main>;
+  </section></div></main>;
 }
 export type ConfigurableLoginPageProps={theme:ThemeController;brandVisual?:React.ReactNode;beforeFields?:React.ReactNode;afterFields?:React.ReactNode}&ControllerProps<LoginViewController,LoginViewOptions>;
 export function ConfigurableLoginPage({controller:injected,auth:borrowed,config:input,onAuthenticated,extensions:defaultExtensions,beforeFields,afterFields,brandVisual}:ConfigurableLoginPageProps){

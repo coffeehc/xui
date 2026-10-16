@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：2.0.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：2.0.1。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -584,19 +584,24 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
     --nav-sidebar-min-height: calc(var(--nav-item-height) * 4);
     --nav-drawer-max-inline-size: calc(var(--nav-item-height) * 8);
     --nav-toggle-transform-origin: 60% 50%;
-    --login-card-padding: calc(var(--space-section-gap) * 1.5);
-    --login-form-inline-size: 24rem;
-    --login-card-padding-end: var(--space-content-gap);
+    --login-card-padding: calc(var(--space-section-gap) * 1.75);
+    --login-card-inline-padding: min(var(--login-card-padding), 8vw);
+    --login-form-inline-size: 22.5rem;
+    --login-card-padding-end: var(--login-card-padding);
+    --login-brand-gap: calc(var(--space-section-gap) * 1.5);
+    --login-card-radius: calc(var(--radius-xl) * 2);
+    --login-title-font-size: calc(var(--font-size-page-title) * 1.3);
+    --login-title-line-height: max(calc(var(--login-title-font-size) * 16 / 13), calc(var(--line-height-page-title) * 8 / 7));
     --login-heading-gap: var(--space-control-gap);
-    --login-heading-fields-gap: var(--space-section-gap);
-    --login-control-height: calc(var(--control-height-lg) + var(--space-text-gap));
+    --login-heading-fields-gap: calc(var(--space-section-gap) + var(--space-text-gap));
+    --login-control-height: calc(var(--control-height-lg) + var(--space-text-gap) + var(--line-width-surface) * 2);
     --login-group-input-height: calc(var(--login-control-height) - var(--line-width-surface) * 2);
     --login-control-font-size: var(--font-size-body-sm);
     --login-control-line-height: var(--line-height-body-sm);
     --login-card-inline-size: calc(var(--login-form-inline-size) + var(--login-card-padding) * 2 + var(--line-width-surface) * 2);
     --login-visual-max-block-size: calc(var(--control-height-lg) * 2);
     --login-action-max-block-size: max(var(--login-control-height), 20dvh);
-    --login-logo-size: var(--control-height-sm);
+    --login-logo-size: calc(var(--control-height-lg) + var(--space-control-gap));
     --sheet-max-block-size: 80dvh;
     --tabs-padding: calc(var(--spacing) * .75);
     --layout-workspace-content-min-block-size: 0px;
@@ -974,7 +979,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | Copyable | value → code；status → meta；copy → Button | 复制状态不抢技术值与动作 |
 | Avatar / Image | Avatar fallback → control；Image 加载/失败文案继承所属文字槽（默认 body） | 图片/图标本身无字体；alt 与可访问名称仍由宿主提供 |
 | Table / DataTable | caption → control；th/sort → label；td/expanded 裸内容 → body；footer/count/page-size label/分页说明 → meta | 行内技术值用 Code、状态用 Badge、动作用 Button；cell 内控件不继承 th/footer 字号 |
-| APIKeyManager / BusinessLogExplorer / StructuredLogExplorer / LoginPanel及登录表单 | 使用上述 PageHeader、Field、DataTable、Dialog、状态与 Button 的文字角色；登录标题 → page、品牌 → label/Heading，描述 → body；登录控件/主动作采用既有 login-control-font-size/line-height，反馈 → meta | 这些已定义的登录专用尺寸由 xui 维护；采用者不另写登录字体或数据表皮肤 |
+| APIKeyManager / BusinessLogExplorer / StructuredLogExplorer / LoginPanel及登录表单 | 使用上述 PageHeader、Field、DataTable、Dialog、状态与 Button 的文字角色；登录标题 → login-title、品牌 → section-title，描述 → body；登录控件/主动作采用既有 login-control-font-size/line-height，反馈 → meta | 这些已定义的登录专用尺寸由 xui 维护；采用者不另写登录字体或数据表皮肤 |
 | Container / Stack / Grid / FormGrid / FormActions / ScrollArea / Separator / Spinner / Skeleton / Progress / 图标 | 无独立文字角色；仅布局、装饰、进度或媒体，无文字 part 记不适用 | 有可见内容时放入拥有文字角色的公共组件；OverflowText 仅继承其标题或名称槽，不擅自更改角色 |
 
 新增或调整公共可见文字 part，必须同步本表、正式 CSS、示例和逐项字体验收。**xui 发布验收**逐个读取真实组件的 `font-family/font-size/line-height/font-weight`，对照角色与 Token；检查嵌套控件不被父槽覆盖。浅/深/system、长中文、桌面/窄屏、200%文字及真实浏览器缩放分别记录，不以源码出现变量或一张截图代替 computed style。原生表单平台差异要明确报告，不伪称所有浏览器都能锁定内部绘制。
@@ -1452,15 +1457,17 @@ UI是人类观察系统状态和数据、直接操作并介入Agent操作的入�
 
 ### 公共登录页布局与主题
 
-公共登录/初始化页复用一个AuthPage布局owner，默认layout=card：动态视口居中、自然高度的单列框，既有Surface边框、radius-lg和raised表面，无投影；顶部边线复用line-width-emphasis与action-primary，默认2px青色细边。框默认434px：384px内容轨道（含四边focus余量）+两侧24px内边距+边框；≤40rem时两侧16px，外侧保留layout-viewport-inset。底部padding使用space-content-gap（12px），不为视觉撑高卡片。fullscreen同布局只省略Surface皮肤。禁止左右品牌面板、背景大图、渐变或装饰分割线。显式brandVisual仍为inert可选装饰，最大80px、窄屏隐藏。
+公共登录/初始化页复用一个AuthPage布局owner，采用用户确认的 [Stitch V3](https://stitch.withgoogle.com/projects/13033986353155220257) 品牌与表单编排。整个品牌＋表单组在动态视口居中，自然高度、单列；品牌位于卡片外部上方、居中排列，宿主Logo与产品名保持原始内容，库不生成、着色或更换资产。Logo默认48px、object-fit:contain；产品名使用section-title 16/26px、500与foreground，长名称自然换行。品牌与卡片间隔24px。没有Logo时只保留产品名，不制造空Logo盒或替代标识。显式brandVisual仍在品牌组下方、inert，最大80px且窄屏隐藏，不自动增加装饰内容。
 
-层级顺序为紧凑品牌身份→任务标题→可选任务说明→常显标签/字段→唯一主动作→局部反馈。品牌名采用body-xs 13/20px、500与muted-foreground，logo32px；品牌到标题8px。任务标题复用page-title 20/28px、600，随font-scale/line-height-scale与根字号缩放。description属于标题说明而非品牌口号，使用body-sm 14/22px，标题到说明8px；整个标题组到首字段16px。宿主标题建议使用“登录”或“创建管理员”等任务名，不重复品牌全称；显式配置仍原样保留，不猜测删词。字段label采用body-xs 13/20px、500，输入和主动作采用body-sm 14/22px。login-control-height默认44px由control-height-lg+space-text-gap派生，InputGroup包含外边框也为44px；字号增大时控件自然增高。label到input8px、字段间16px、最后字段到主动作16px；字段和主动作同宽（默认376px可操作区）。帮助与错误仍body-xs 13/20px，沿用通用颜色与间距，不增加仅登录使用的调色板、字体栈或焦点规则。
+默认layout=card采用layer-surface、surface-line的1px完整边界和login-card-radius（默认16px），无顶部青线、投影、渐变或光晕；主动作是页面唯一的大面积强调色。卡片默认418px：360px内容轨道（含四边focus余量）+两侧28px内距+边框；横向内距由login-card-inline-padding限制在28px派生值与8vw的较小值，文字/界面放大时不让内距挤占字段；纵向仍按缩放派生。窄屏收缩至可用宽度，390px视口默认外侧各16px、卡片358px。内容增加或视口变矮时整个组随文档自然滚动，不限制表单高度。fullscreen保留相同品牌/表单结构、尺度与顺序，只省略卡片表面和边框。禁止左右宣传面板、背景大图、虚构环境/安全状态、页脚及额外入口。
+
+卡片内层级顺序为任务标题→可选任务说明→常显标签/字段→唯一主动作→真实次级认证→局部反馈。标题使用login-title-font-size/line-height，默认26/32px、600，由page-title角色派生并分别尊重font-scale与line-height-scale；不改变普通页面标题。description使用body-sm 14/22px与muted-foreground，标题到说明8px、标题组到首字段20px。宿主标题建议“登录”或“创建管理员”，显式配置原样保留，不猜测删词。字段label、输入和主动作统一body-sm 14/22px、控件字重继承已有角色；label到input8px、字段间16px、末字段到主动作20px，字段和主动作同宽。login-control-height默认46px，由control-height-lg、space-text-gap及两条surface线派生；InputGroup外框也为46px，文字增大时自然增高。帮助、错误仍body-xs 13/20px；不新建认证调色板、字体栈或焦点规则。
 
 反馈仍在主按钮之后。feedback与feedbackActions均为空或隐藏时不占位；React识别空Fragment与条件空值，空反馈槽不生成占位。没有固定或最小反馈轨道高度，form到support不额外叠加间隔。checking、错误、未知后果与实际恢复动作按内容自然增高；字段和主动作的尺寸、相对顺序与DOM保持，整体居中卡片可因此调整位置。不得为零位移设置大块空白、固定反馈高度、裁切或要求用户在单行消息窗口内滚动。长页使用文档自然滚动；验收须区分必要内容增长与控件重建/尺寸跳变。
 
 必要结果摘要必须完整显示，未知结果及实际可用的后续操作不可隐藏在详情中。登录和 Key 管理按各自公开合同通过普通会话或列表单次核验，不增加持久写入门禁或自动重发写请求。宿主有独立冗长说明时，可在现有feedback slot中组合公共Disclosure；默认摘要仍在外部，展开有明确名称、支持Enter/Space、全文随文档滚动，收起与回焦点保留输入。公共布局不能猜截断宿主文案、另造摘要或改变业务语义；仅给了一个长消息时显示全文。不新增详情API或业务动作。反馈动作在同一反馈区域自然换行，不与长消息争夺窄小横向空间。
 
-提交忙态仅在主按钮原位显示一次状态文案并以单一live/status语义发布，配合aria-busy和既有禁重入。与按钮不同的session核对、未知、错误与恢复信息仍在反馈区域；不能为去重隐藏重要事实。React/native必填字段按已有Field惯例显示aria-hidden星号，真实required与准确可访问名称保持。普通密码登录不显示新密码规则或强度；管理员初始化采用NewPasswordFields。没有虚构的注册、找回密码、SSO或验证码入口。安全可重试读取使用公共ghost动作；未知写入不自动refresh/logout/重放。
+提交忙态仅在主按钮原位显示一次状态文案并以单一live/status语义发布，配合aria-busy和既有禁重入。与按钮不同的session核对、未知、错误与恢复信息仍在反馈区域；不能为去重隐藏重要事实。React必填字段按已有Field惯例显示aria-hidden星号，真实required与准确可访问名称保持。普通密码登录不显示新密码规则或强度；管理员初始化采用NewPasswordFields。没有虚构的注册、找回密码、SSO或验证码入口。安全可重试读取使用公共ghost动作；未知写入不自动refresh/logout/重放。
 
 SSO显式配置时作为主动作后的次级组。极端长主动作保留完整可访问名称，login-action-max-block-size（20dvh且至少login-control-height）限制单按钮高度并可内部滚动，保留safe center与四边focus。状态标签原位切换并滚动归零；普通通知不重挂输入或按钮。登录、初始化和纯AuthPage消费同一结构和token，不允许产品私有CSS补丁。
 

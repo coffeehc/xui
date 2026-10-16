@@ -38,7 +38,8 @@ test('Precision migration preserves the published type scales and control/focus 
   for(const role of Object.keys(roles))for(const prefix of ['font-size-','line-height-']){
     const name='--'+prefix+role;assert.equal(light[name],prior[name],name);
   }
-  for(const name of ['--base-spacing','--base-font-sans','--base-font-mono','--control-height','--control-height-sm','--control-height-lg','--focus-width','--focus-offset','--login-card-inline-size','--login-control-height','--layout-dialog-width','--layout-drawer-width'])
+  // Login V3 deliberately changes its component geometry; the shared type/control roles remain stable.
+  for(const name of ['--base-spacing','--base-font-sans','--base-font-mono','--control-height','--control-height-sm','--control-height-lg','--focus-width','--focus-offset','--layout-dialog-width','--layout-drawer-width'])
     assert.equal(expand(light[name],light),expand(prior[name],prior),name);
 });
 test('font scaling cannot alter geometry roots or replace host reading defaults',async()=>{

@@ -4,6 +4,27 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 登录 V3 与导航生命周期（2.0.1，2026-10-16）
+
+按用户确认的 Stitch V3 落实公共 `AuthPage`：原宿主 Logo/名称独立居中置于卡片外，卡片使用完整细边线与公共圆角，标题/字段/主操作采用同一认证布局 Token。没有替换 Logo、增加说明噪声或改变认证协议；`ConfigurableLoginPage` 与管理员初始化复用该布局。slot 归属见 [认证布局](COMPONENTS.md#认证布局-slot-归属)。窄屏内距受视口约束，200% 界面缩放仍可到达控件，垂直空间不足时自然滚动；没有缩小文字来掩盖溢出。
+
+另行修复两个 LoginView 生命周期缺陷：StrictMode 释放并立即重新绑定同一 View 不再重复导航；会话刷新暂时进入 unknown 时，先前导航 Promise 的拒绝仍保留为可重试错误。真实退出或用户变化继续撤销旧导航；secret reader 在解绑时立即移除，不延迟秘密清理。两个运行时回归用例分别覆盖这些边界，不修改 AuthClient 或宿主导航实现。
+
+正式 ESM/CSS/types 的 source generation 为 `a76f34adacfab4674e091a910749f967be17246b5fe1ad7e83e1a87cf482a8e0`，独立安装目录 `.consumers/run-GGJull/react`。三包与 DESIGN 为 **2.0.1**，403 Token、101 公开入口、358 项接入检查；React/ReactDOM 19.2.8 与 Base UI 1.7.0 单实例，没有源码 alias。新增五个认证 Token（内侧自适应 padding、品牌间距、卡片圆角、标题字号/行高）；共享正文字号与控件角色未改变。
+
+| 检查 | 结果 | 证据（`.artifacts/login-v3-validation/`） |
+|---|---|---|
+| build / typecheck / Token / 文档 / 正式消费者 | 通过 | `responsive-final-*.log` |
+| 完整单测 / 定向回归 | **472/472**；登录相关另 **32/32**、生命周期文件 **12/12** 是重叠定向范围，不相加 | `unit-current.log`、`responsive-final-unit-targeted.log`、`navigation-fix-unit.log` |
+| 完整 Chromium 登录回归 | 首轮 **140/144**，暴露上述两个实际缺陷；修复后单次 **144/144**，无 skip/flaky | `browser-initial.json`、`browser-final.json`、`navigation-fix-browser.json` |
+| 最终窄屏内距复验 | 最终正式产物 **76/76**，无 skip/flaky；涉及 V3 / LoginLayout / AuthPage，其他路径复用前次相同代码的回归 | `browser-responsive.json/log` |
+
+浏览器覆盖浅/深/system、1440/390/320px、长中文、125%/150%/200% 界面缩放、200% 根字号，以及真实 Chrome 200% 页面缩放（DPR 加倍、CSS 视口减半、CSS zoom/pinch 保持 1）。验证原 Logo URL/alt、Logo 缺省/动态变化、输入节点与选区连续性、busy/错误、密码清理、键盘焦点、会话恢复与导航重试。已查看浅色桌面、深色390px、深色320px/200%及真实浏览器缩放截图；最终窄屏代表图为 `images/dark-scale200-v3-responsive.png`，Stitch 设计参考为 `.artifacts/stitch-login-redesign/v3-login-design.png`。
+
+critical CSS gzip 初轮 **18503**、去除冗余布局后 **18485**，均超过原 **18432** 上限，保留原失败日志。本次公开 V3 布局明确增加 **128 bytes** 预算至 **18560**；最终响应式版本 **18511/18560**。首屏 JS **152144/153600**、Button **6619/16384**，未提高这些上限。登录布局 API/认证 wire 保持兼容，外观按 V3 更新。
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`pnpm test:unit`、`pnpm test:consumer`；浏览器配置 `.artifacts/login-v3-validation/playwright.config.mjs`，完整范围与最终受影响复验分别见 `browser-final.log` 和 `browser-responsive.log`。本批未执行无关浏览器全集、Firefox/WebKit、真实读屏器/实体移动设备、独立 SSR hydration 或消费项目/后端/部署验收；不宣称消费项目已升级。
+
 ## 导航当前项的完整强调前景（2.0.0，2026-10-16）
 
 `NavItem`和`NavigationMenu`的当前项主名称、富标签说明、公共Typography/Code/Icon槽统一继承既有selected前景（action-primary），muted说明不再脱离所属选中色。保留原选中背景/竖线、禁用优先和独立focus；hover/pressed不改成普通项颜色。只修改公共导航CSS，无新增Token、API、DOM补丁或`!important`，宿主不自行加颜色覆盖。
