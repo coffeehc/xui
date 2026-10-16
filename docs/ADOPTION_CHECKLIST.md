@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（本轮为 1.2.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（本轮候选为 1.3.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -87,7 +87,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | SHELL-020 | sidebarHeader 放直属Button、Toolbar或业务布局 | slot不强改按钮宽度/字号/折叠态padding；默认内容宽，宿主显式公开style/className的全宽或内容宽均保留 | 直属/Toolbar/业务布局、width=100%/max-content的几何与字体计算值 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
 | SHELL-021 | sidebarHeader内Tabs.List控制sidebar内Tabs.Panel | 一个Tabs.Root与受控值；侧栏Panel不叠内容padding，Header分隔紧凑，普通页面Tabs保持原Token间距 | 切换前后间距、首项位置、search草稿与普通Tabs对照 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
 | SHELL-022 | 侧栏Header/列表/Footer有可聚焦控件 | Header保留限高/独立滚动、菜单最小高度和Footer；各控件inset焦点可绘制，invalid边界仍可读 | 324px/窄屏/200%文字与真实zoom、键盘焦点和滚动记录 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
-| SHELL-023 | 需要调整公共收起/展开入口 | 使用既有sidebarTogglePlacement选择top或bottom；桌面图标方向与动作一致，窄屏为打开抽屉，不替换私有SVG或另造按钮 | placement接线、唯一按钮、图标/命中区、Enter/Space及Escape回焦点 | [COMPONENTS 唯一开关](COMPONENTS.md#导航内部唯一收起展开控件) |
+| SHELL-023 | 需要调整公共收起/展开入口 | `top` 时桌面唯一控件位于全局品牌单元行尾；显式 `bottom` 保持侧栏菜单/页尾后；窄屏复用同一抽屉入口，不替换私有SVG或另造按钮 | placement接线、唯一节点、实际位置/命中区、Enter/Space及Escape回焦点 | [COMPONENTS 唯一开关](COMPONENTS.md#导航内部唯一收起展开控件) |
 
 ## 每个页面和组件的 slot 矩阵
 
@@ -119,7 +119,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | TYPE-008 | Input/Textarea/Password/Select/Combobox | 输入值与trigger使用control，option/group使用label/meta；报告原生select平台行高差异 | 正式控件四项computed及原生高度/编辑验证 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-009 | InputGroup | Addon单位为meta，内部Input与Button仍为control，不能从小字号单位继承动作字重 | Addon/输入/嵌套动作四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-010 | Button/IconButton/Toggle | 文字为control，既有size只按公开几何；放入sidebar/meta/footer不变成小字 | 跨slot及size的computed比较与键盘操作 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
-| TYPE-011 | Tabs/Disclosure/Accordion | trigger为control，panel/body为body，父标题或meta不改变trigger字体 | trigger与content四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-011 | Tabs/Disclosure/Accordion | Disclosure/Accordion trigger为control；Tab为body-sm，常规body400/选中heading600；panel/body为body，父标题或meta不改变trigger字体 | trigger与content四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-012 | NavigationMenu/Nav/Breadcrumbs/Pagination | 主label为control、组标题为meta-heading、路径body、页码meta；主名称无自造副描述小字 | 主项、组、路径、页码、动作逐项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-013 | Menu/ContextMenu/Command | item/submenu等为label，group为meta；tone和键盘状态不改文字尺寸 | 两类菜单各item和group四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-014 | Calendar/DateTimePicker | 月标题、weekday、day、时间输入/清空分别匹配映射；保留日期值与键盘语义 | 各文字part四项computed与键盘选日/焦点 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
@@ -265,6 +265,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | OVERLAY-004 | 打开 Sheet | 标题和说明进入公开 `Sheet.Header`，不另造私有抽屉头 | 组件组合、标题可访问性 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | OVERLAY-005 | Sheet 内容较长 | 表单/列表进入 `Sheet.Body`，不扩大整页或裁切 footer | Sheet/body scroll 及窄屏录像 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | OVERLAY-006 | Sheet 有提交/取消动作 | 操作进入 `Sheet.Footer`，可达且不会被正文遮挡 | DOM slot、滚动到底及键盘录像 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
+| OVERLAY-007 | Dialog/Sheet 中打开 Select 或 Combobox | 实际指针命中可见选项；不能被 footer/其他层截获，也不能以 force click 代替。键盘选择、Escape关闭与回焦点仍按公开 peer 合同 | elementFromPoint、真实指针操作、键盘轨迹与 activeElement | [COMPONENTS 选择与复合控件](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 样式入口](PUBLIC_API.md#全部正式入口) |
 | INPUT-001 | 输入需上下工具/附件区 | 使用 `InputGroup.Addon`，不以绝对定位覆盖 control | 正式组合 DOM 与碰撞几何 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
 | INPUT-002 | 多行输入在纵向工具布局中 | 使用 `InputGroup.Root layout="stacked"` 和 `InputGroup.Textarea` | props/Options 与垂直顺序 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
 | INPUT-003 | 多行输入需要自动增高 | 明确选择 React `TextareaProps.autoResize`；未启用者保留浏览器原生行高/滚动 | props、初始高度与输入录像 | [COMPONENTS InputGroup](COMPONENTS.md#多行输入与上下工具区域) |
@@ -284,6 +285,9 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | NAV-007 | 菜单处于窄屏 Drawer | 只有一个可见打开入口；关闭回到原触发按钮 | 窄屏 DOM 计数、焦点前后 activeElement | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-008 | 名称旁有非交互运行/等待状态 | renderLabel使用主项剩余宽度；名称可收缩、尾随状态不收缩并位于逻辑末端；有独立分支/配置时保留各自轨道，不将状态伪装成action按钮 | 短/长名称、324/60、窄屏与200%矩形，状态出现/消失前后节点与焦点 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
 | NAV-009 | 富标签开启名称滚动 | 只有NavigationMenu.Label内的名称移动；尾随状态和分支/配置不动，触控/reduced-motion完整换行且与名称首行对齐 | 悬停/键盘录像、动态偏好切换、RTL及名称/状态更新记录 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
+| MENU-SEP-001 | 菜单中需要分隔不同内容组 | 使用 `Menu.Separator` 或 `ContextMenu.Separator`，它不执行动作、不可成为额外键盘停靠点，浅深主题下仍清晰可辨 | role/aria、Tab顺序、主题computed样式与两种菜单组合 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
+| MENU-VIEW-001 | 使用数据驱动 `Menu.View` | 默认 config 模式只有一个由 View 管理的内部 Controller；注入模式完全替换它，不创建默认实例，且 Controller 生命周期归注入宿主。两种 props 模式互斥 | 正/负类型编译、Controller 创建/订阅/退订/destroy 计数与实例身份 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) · [PUBLIC_API `/menu`](PUBLIC_API.md#全部正式入口) |
+| MENU-VIEW-002 | 菜单动作执行或需自定义焦点行为 | `actionId` 只映射宿主动作；只有同步 `event.preventDefault()` 取消本次默认关闭。异步操作仍归宿主，Base UI 是方向键与实际焦点的唯一 owner | pointer/keyboard 一次动作计数、阻止关闭断言、ARIA/焦点轨迹与迟到业务回调 | [COMPONENTS 数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与controller所有权) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-003 | 展示警告/等待/人工介入状态 | tone 与真实状态分类逐条映射，不只用颜色传达状态 | 领域状态映射表和可访问文本 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
@@ -353,6 +357,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | KEY-LIST-REQ | API Key 列表初读或刷新 | 官方 adapter 发 `GET /api/v1/api-keys`，`page_index` 基数0、`page_size` 按配置、`return_total=true`、`sort=id&sort_id=asc` 并按 total 完整取页 | Network query 与 pages 请求序列 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-LIST-OK | API Key 列表成功 | 解析严格 v2 ListData；ID/total准确、跨页稳定；metadata 不含 secret | response fixture、全页计数与行ID比对 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-LIST-ERR | 列表缺 total、重复ID、total变动、越预算或 HTTP/业务拒绝（含403） | 该轮读取失败，保留最近已确认列表并提示真实错误；不伪造总数/末页 | 故障响应、旧行 identity 与错误状态 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
+| KEY-LIST-001 | API Key Manager 使用本地分页 | 只对完整已确认rows分页；默认pageSize/options按公开合同，翻页或改页长不发请求；总数等于完整集合长度；显式false关闭分页 | rows/page状态、控制器请求计数、翻页前后行ID与total | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [COMPONENTS](COMPONENTS.md) |
 | KEY-CREATE-REQ | 用户确认并提交 API Key 创建 | `POST /api/v1/api-keys` 精确发送 name/permission_ids/expiry_id/confirmed；required/disabled/confirmed 按能力控制请求 | Network body 与表单确认事实 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-CREATE-OK | 创建返回成功 metadata 与 secret | 一次性 secret 只可经 controller 的私有结果视图读取；不进入公开状态、列表缓存、URL、storage、日志或业务 payload；关闭/pagehide/卸载清 DOM 值 | response、状态/list cache/storage/log scan 与关闭后 DOM | [PUBLIC_API 一次性值与验证边界](PUBLIC_API.md#一次性值与验证边界) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-CREATE-ERR | 创建拒绝、超时、断网或写结果未知 | 不重发创建；未知结果仅普通 list 核验一次，普通读失败保留错误；不能以同名记录证明本次提交 | 写/读请求次数与实际页面状态 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
@@ -374,9 +379,10 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | LOG-GROUPS-REQ | 错误观察页查询分组 | POST 到宿主明确配置的 groups endpoint；请求仅按 schema_version/filter/page 合同构造，不能猜固定产品路由 | endpoint配置、请求 body 抓包 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
 | LOG-GROUPS-OK | groups 返回 success | 校验 schema_version/list/group/count/page；matched_* 是服务结果，不由当前页长度推导 | 响应 fixture、计数和 UI facts | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
 | LOG-GROUPS-ERR | groups 返回 403/404、合同错误或 transport error | StructuredLog 按 403 forbidden、404 not_found、parser contract、其它读取错误表达；失败不伪装空列表 | 四类故障注入与 controller state | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
-| LOG-RECORDS-REQ | 用户查看所有错误观察记录 | POST 到配置的 records endpoint，body 为公开 filter/page；不把详情字段置入查询 | endpoint 与实际 request JSON | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
-| LOG-RECORDS-OK | records 返回 success | 只投影公共摘要字段；校验 list/page/as_of/next_cursor；无 total，后端网络列表不能携带 Detail/Stack/Related/Attributes | raw response、parser result、后端脱敏样本与 DOM | [PUBLIC_API 明确 DTO 投影](PUBLIC_API.md#明确-dto-投影) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
-| LOG-RECORDS-ERR | records 返回 forbidden/not_found/contract/transport error | 保留此前确认页并报告读取失败；不能造 cursor、末页、total 或 snapshot，retry 必须用户明确触发 | 注入错误、cursor history 和请求次数 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORDS-001 | 服务或 adapter 未提供 records 能力 | 不显示跨组全量入口，不请求records；groups、groupRecords、record继续工作，公开setView('records')为no-op | adapter keys、页面入口、请求计数与分组/详情操作 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORDS-REQ | 服务明确提供 records 且用户查看全量观察记录 | POST 到配置的 records endpoint，body 为公开 filter/page；不把详情字段置入查询 | endpoint、真实能力配置与 request JSON | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORDS-OK | 可选 records 返回 success | 只投影公共摘要字段；校验 list/page/as_of/next_cursor；无 total，后端网络列表不能携带 Detail/Stack/Related/Attributes | raw response、parser result、后端脱敏样本与 DOM | [PUBLIC_API 明确 DTO 投影](PUBLIC_API.md#明确-dto-投影) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-RECORDS-ERR | 已提供的 records 返回 forbidden/not_found/contract/transport error | 保留此前确认页并报告读取失败；不能造 cursor、末页、total 或 snapshot，retry 必须用户明确触发 | 注入错误、cursor history 和请求次数 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
 | LOG-GROUP-RECORDS-REQ | 用户打开某个错误组的观察记录 | POST 到配置的 groupRecords endpoint；请求包含一致 filter/page 和明确 group_id | Network JSON 与当前选中组ID | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
 | LOG-GROUP-RECORDS-OK | groupRecords 返回 success | 响应 group ID 与所查目标相同；matched_entry_count 与 group.entry_count 保持不同事实 | 响应 fixture、组ID与两个计数 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
 | LOG-GROUP-RECORDS-ERR | 组记录无权/未找到/合同错误/读取错误 | 保留当前组范围并就地显示相应失败；不把其他组数据作 fallback | 错误注入、group state 与当前 rows | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |

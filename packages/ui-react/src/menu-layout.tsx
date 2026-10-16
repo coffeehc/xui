@@ -74,7 +74,7 @@ export const NavigationMenu=Object.assign(NavigationMenuRoot,{Label:NavigationMe
 export interface MenuLayoutProps extends NavigationMenuProps {
   /** Workspace content spacing; defaults to standard and is retained in other scroll modes. */
   contentInset?:ShellContentInset;
-  /** Desktop control order; top (default) or bottom after the menu/footer. */
+  /** Desktop control: top (default) in the global brand row, or bottom after the sidebar menu/footer. */
   sidebarTogglePlacement?:SidebarTogglePlacement;
   theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;restoreSidebarFocus?:boolean;style?:React.CSSProperties;scrollMode?:ShellScrollMode;children:React.ReactNode;title?:string;header?:React.ReactNode;headerSlots?:AppHeaderSlots;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;
   sidebarOpen?:boolean;defaultSidebarOpen?:boolean;onSidebarOpenChange?:(open:boolean)=>void;

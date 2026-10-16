@@ -17,12 +17,13 @@ async function fontRole(node,{size='body-sm',weight='body',family='sans'}={}){
 async function tabsContract(page){
  const list=page.getByRole('tablist',{name:'记录视图'}),tabs=list.getByRole('tab');await expect(tabs).toHaveCount(3);
  await list.scrollIntoViewIfNeeded();
- const geometry=await list.evaluate(node=>{const s=getComputedStyle(node),boxes=[...node.children].map(tab=>tab.getBoundingClientRect());return {width:node.getBoundingClientRect().width,parent:node.parentElement.getBoundingClientRect().width,content:boxes.reduce((sum,b)=>sum+b.width,0)+parseFloat(s.columnGap)*(boxes.length-1)+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight),oneRow:boxes.every(b=>Math.abs(b.y-boxes[0].y)<1)};});
+ const geometry=await list.evaluate(node=>{const s=getComputedStyle(node),boxes=[...node.children].map(tab=>tab.getBoundingClientRect());return {width:node.getBoundingClientRect().width,parent:node.parentElement.getBoundingClientRect().width,content:boxes.reduce((sum,b)=>sum+b.width,0)+parseFloat(s.columnGap)*(boxes.length-1)+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)+parseFloat(s.borderLeftWidth)+parseFloat(s.borderRightWidth),oneRow:boxes.every(b=>Math.abs(b.y-boxes[0].y)<1)};});
  if(geometry.oneRow){expect(Math.abs(geometry.width-geometry.content)).toBeLessThan(2);if(geometry.parent>800)expect(geometry.width).toBeLessThan(geometry.parent-30);}
  await expect(tabs.first()).toHaveCSS('color',await color(list,'--action-primary'));
  await expect(tabs.first().locator('.xui-tab-icon')).toHaveCSS('color',await tabs.first().evaluate(node=>getComputedStyle(node).color));
  await expect(tabs.first().locator('.xui-tab-icon')).toHaveAttribute('aria-hidden','true');
- await fontRole(tabs.first(),{weight:'control'});
+ await fontRole(tabs.first(),{weight:'heading'});
+ await fontRole(tabs.nth(1));
  await tabs.first().focus();await page.keyboard.press('ArrowRight');await expect(tabs.nth(1)).toBeFocused();await expect(tabs.first()).toHaveAttribute('aria-selected','true');
  await page.keyboard.press('Enter');await expect(tabs.nth(1)).toHaveAttribute('aria-selected','true');
  const draft=page.getByRole('textbox',{name:'日志视图草稿'});await draft.fill('切换与布局更新保留草稿');
@@ -102,7 +103,7 @@ for(const composition of ['shell','layout'])for(const width of [1280,390])test(`
  await page.evaluate(()=>window.presentationShellNodes=[document.querySelector('[data-xui-menu-toggle]'),document.querySelector('aside'),document.querySelector('#footer-draft')]);
  await toggle.focus();
  if(width===1280){
-  expect(await toggle.evaluate(node=>node.closest('aside')!==null)).toBe(true);await expect(toggle).toHaveAccessibleName('紧凑导航');
+  expect(await toggle.evaluate(node=>node.closest('.xui-app-header-identity')!==null)).toBe(true);await expect(toggle).toHaveAccessibleName('紧凑导航');
   const expanded=await toggle.locator('.xui-shell-toggle-arrow').evaluate(node=>getComputedStyle(node).transform);
   await page.keyboard.press('Space');await expect(toggle).toHaveAccessibleName('展开导航');await expect(toggle).toHaveAttribute('aria-expanded','false');await expect(toggle).toBeFocused();expect(await toggle.locator('.xui-shell-toggle-arrow').evaluate(node=>getComputedStyle(node).transform)).not.toBe(expanded);
   expect(await page.evaluate(()=>window.sidebarFooterDemo.getCollapseRequests())).toBe(1);await page.keyboard.press('Enter');await expect(toggle).toHaveAttribute('aria-expanded','true');expect(await page.evaluate(()=>window.sidebarFooterDemo.getCollapseRequests())).toBe(2);

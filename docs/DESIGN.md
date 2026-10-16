@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：1.2.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：1.3.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -953,7 +953,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | PasswordStrength | 输入 → control；可见说明 → Field help/error 的 meta；meter 无文字 | 隐藏播报不为视觉另造字号 |
 | Button / IconButton | 文字 → control，所有既有 size 一致；纯图标无文字角色 | 按钮尺寸改变可用空间，不由侧栏或 footer 降字号；可访问名称仍必填 |
 | Toggle / ToggleGroup | trigger → Button 的 control | pressed 只改语义状态与着色 |
-| Tabs | Tab → control；Icon继承Tab状态色、无独立文字角色；Panel裸文本 → body | Panel内组件保留自身角色 |
+| Tabs | Tab → body-sm，常规body字重400、选中heading字重600；Icon继承Tab状态色、无独立文字角色；Panel裸文本 → body | Panel内组件保留自身角色 |
 | Nav / NavItem / NavigationMenu | 可操作主 label/renderLabel → control；group title → meta-heading/muted；emptyLabel → body/muted | renderLabel 现为主名称，尚无副说明 slot；branch/action 用 Button。缺副说明时提交公共缺口，不自写小字号 |
 | Breadcrumbs / Pagination | 路径 → body；页码/总页数说明 → meta；前后按钮 → control | 路径中的链接保留语义；页码不降按钮字号 |
 | Menu / ContextMenu | Item/LinkItem/CheckboxItem/RadioItem/SubmenuTrigger → label；GroupLabel → meta/muted | danger/disabled/highlight 改状态色，不另设字号；Icon 无文字角色 |
@@ -1213,7 +1213,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 | InputGroup D/H/F/X/E；S/B按内部控件 | 同输入，一层边界和焦点，addon/清除与内容gap8 | 外层映射内部真实focus/invalid，内部不重复border/ring；帮助和错误不撑偏相邻控件，不制造第二层皮肤 |
 | Combobox/自定义选择 D/H/S/F/X/B/E | 搜索复用输入、选项复用menu-item-*；弹层popover-width288、padding12 | 持续S与键盘活动项分开，活动项F只在键盘阶段存在。搜索输入保留焦点，方向键/Enter选择；无结果与错误不同，不自动选首项、不改查询防抖；NativeSelect由平台负责面板 |
 | Checkbox/Switch/Toggle D/H/S/F/X/E；B仅业务已有 | Checkbox默认16×16px（control-icon-size）、radius-sm、1px input-border-color；Switch宽28/高16.6px、拇指14.4px，圆形轨道；Toggle使用toggle-height默认28px、gap4，放大文字可自然增高 | S用action-primary及成对前景或interaction-selected-*，必须有真实checked；H不盖S，F独立，E相关错误可见，X不可切换。Space/方向键遵循角色；不得仅换颜色模拟checked |
-| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 项至少control-height-sm32、轨道内padding3、项radius-md；label body-sm/control；可选装饰图标16px、图文间距space-icon-gap，文字与图标颜色继承所属Tab | 轨道layer-support，默认按内容宽度且不越过容器；显式equal填满并等分。未选文字muted-foreground，H用interaction-hover，S用layer-canvas与action-primary形成内嵌选中层，F使用内部focus环。无四周选中框或左竖线；方向键及panel关联完整，禁用项跳过，panel加载不禁用Tab |
+| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 项至少control-height-sm32、轨道内padding3、项radius-md；label body-sm，常规body400、选中heading600；可选装饰图标16px、图文间距space-icon-gap，文字与图标颜色继承所属Tab | 轨道layer-support与一层surface-line，项间space-text-gap，默认按内容宽度且不越过容器；显式equal填满并等分。未选文字muted-foreground，H用interaction-hover，S用layer-raised、surface-line细边界与action-primary形成内嵌选中层，非选中项预留同宽透明边界，F使用独立内部focus环。没有额外selected外圈或左竖线；方向键及panel关联完整，禁用项跳过，panel加载不禁用Tab |
 | 表格/列表 D/H/S/F/B/E；X属于行控件 | cell padding8、动作gap4，表头body-xs/500、正文body-sm，分隔separator-line；opaque条纹 | H用interaction-hover，S/expanded用interaction-selected背景；sticky与整行不透明底一致。F只归焦点控件/确有键盘行，不给被动行造焦点。B/空/E保留所属状态和恢复入口，排序/分页真实禁用 |
 | Card/Section/连续Item | Card单层raised+surface-line、radius6、按三段消费card-padding14；图标tile的size/offset/background及Footer背景由组件Token定义，Footer仅一条separator-line；Section/连续Item不复制卡片分区 | Card可选plain图标/Footer，Badge有中性soft标签；默认自然高，公开stretch/equal让正文增长/Footer靠底。被动仅D/B/E，交互仍归内部控件；不加被动hover/伪按钮、不固定摘要行数或编造指标 |
 | 统计/指标 D/B/E；H/S仅已有tooltip或范围控件 | metric-padding12/gap4，label13/muted，主值24/600/tabular、单位13 | 0/未知/无数据/B/E分开，核心统计才进首屏；不以disabled表达缺数据。范围S沿选择器，tooltip H/F使用overlay；指标本体无按钮hover、焦点或选中 |
@@ -1411,7 +1411,7 @@ SSR/预渲染和客户端首次hydration必须给出相同文本与结构；轻�
 <!-- foundation-lifecycle:start -->
 ### 公共应用头部与紧凑导航
 
-应用头部按brand、breadcrumb、status、actions角色组合。桌面收起/展开入口归导航侧栏内部，由公共组件管理位置：sidebarTogglePlacement默认top保持原顶部独立辅助行；显式bottom将同一个控件放在菜单与可选业务sidebarFooter之后，菜单独立滚动，顶部不留占位。业务sidebarFooter需要同行时用公开SidebarFooterRow，自然宽度并按空间换行，长事实不截断；默认非Row组合保持全宽，紧凑rail按组纵排。展开时沿侧栏内距靠末端，紧凑rail中居中。窄屏侧栏不可见时，同一入口移至顶栏以打开已有导航抽屉；不在两处复制按钮或另建抽屉。公共层统一其按钮尺寸、位置、动效、键盘焦点、可访问名称和aria-expanded/controls，跨断点复用同一个控件节点，宿主仅传状态与事件，受控请求不能冒充已确认状态。导航入口和品牌/路径为左侧主组，状态和动作在右侧；采用方提供内容、名称、链接语义及实际动作，不在公共库写入产品权限或版本规则。主组保留layout-header-primary-min的合理宽度，窄屏优先完整保留导航入口，品牌与路径各在所属空间省略长文字；链接可聚焦，完整名称保留可访问语义，宿主可提供title或明确详情入口。状态/动作空间不足时整组换到下一行，动作组内部按需换行，不能盖住品牌、互相重叠或令整页横向溢出。不静默隐藏状态或重要动作，不用缩小字体解决空间问题；没有动作时不预留空白占位。旧任意header内容继续支持，迁移后通用排列由公共组合负责。
+应用头部按brand、breadcrumb、status、actions角色组合。收起/展开入口由公共AppShell/MenuLayout持有并管理位置：sidebarTogglePlacement默认top位于全局Header品牌单元行尾，与Logo/品牌名称保持同一行，不占侧栏顶部独立辅助行；显式bottom将同一个控件放在侧栏菜单与可选业务sidebarFooter之后，菜单独立滚动，顶部不留占位。业务sidebarFooter需要同行时用公开SidebarFooterRow，自然宽度并按空间换行，长事实不截断；默认非Row组合保持全宽，紧凑rail按组纵排。bottom展开时沿侧栏内距靠末端，紧凑rail中居中；top紧凑时保持品牌Logo与开关相邻，不把全局Header压成一个60px图标槽。窄屏两种配置均将同一入口置于顶栏品牌行尾以打开已有导航抽屉；不在两处复制按钮或另建抽屉。公共层统一其按钮尺寸、位置、动效、键盘焦点、可访问名称和aria-expanded/controls，跨断点复用同一个控件节点，宿主仅传状态与事件，受控请求不能冒充已确认状态。导航入口和品牌/路径为左侧主组，状态和动作在右侧；采用方提供内容、名称、链接语义及实际动作，不在公共库写入产品权限或版本规则。主组保留layout-header-primary-min的合理宽度，窄屏优先完整保留导航入口，品牌与路径各在所属空间省略长文字；链接可聚焦，完整名称保留可访问语义，宿主可提供title或明确详情入口。状态/动作空间不足时整组换到下一行，动作组内部按需换行，不能盖住品牌、互相重叠或令整页横向溢出。不静默隐藏状态或重要动作，不用缩小字体解决空间问题；没有动作时不预留空白占位。旧任意header内容继续支持，迁移后通用排列由公共组合负责。
 
 展开侧栏用nav-sidebar-width，按视口25%动态计算，在nav-sidebar-min-width与nav-sidebar-max-width之间夹取，默认根16px下324–432px，再以50vw封顶（视口约束优先于最小宽度）；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。焦点环和短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
 

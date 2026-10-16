@@ -40,7 +40,8 @@ test('footer content supports iconless static state and a zero-valued label with
 
 test('AppShell without a footer keeps its original sidebar and does not expose the slot as a DOM attribute',()=>{
   const markup=renderToStaticMarkup(React.createElement(AppShell,{sidebar:React.createElement('nav',null,'Primary navigation'),sidebarFooter:null},'Main content'));
-  assert.match(markup,/<aside[^>]+class="xui-shell-sidebar"[^>]*><div class="xui-shell-navigation-control">[\s\S]*?<\/div><nav>Primary navigation<\/nav><\/aside>/);
+  assert.match(markup,/<aside[^>]+class="xui-shell-sidebar"[^>]*><nav>Primary navigation<\/nav><\/aside>/);
+  assert.match(markup,/<header[\s\S]*xui-shell-toggle-slot[\s\S]*xui-shell-toggle"/);
   assert.doesNotMatch(markup,/xui-shell-sidebar-menu|xui-shell-sidebar-footer|sidebarFooter=/);
 });
 

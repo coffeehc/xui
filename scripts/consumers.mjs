@@ -222,17 +222,25 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'), `${layoutTypographyOutput}/theme-init.js`);
     await writeFile(`${layoutTypographyOutput}/metafile.json`, JSON.stringify(layoutTypographyBuild.metafile, null, 2));
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'layout-typography/app.tsx'], { cwd, stdio: 'inherit' });
-    // Typography acceptance is built only from the independently installed packages.
-    {
-      const fixture=resolve(cwd,'typography-slots'),output=resolve('dist/typography-slots-react');
-      await cp('examples/typography-slots-react',fixture,{recursive:true});
-      const result=await build({entryPoints:[`${fixture}/app.tsx`],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
-      assert(Object.keys(result.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Typography slots escaped standalone install');
-      assert(!Object.keys(result.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Typography slots require private CSS');
+    // These fixtures are built only from independently installed formal packages.
+    for(const name of ['typography-slots','action-menu']){
+      const fixture=resolve(cwd,name),output=resolve(`dist/${name}-react`);
+      await cp(`examples/${name}-react`,fixture,{recursive:true});
+      const options={entryPoints:[`${fixture}/app.tsx`],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}};
+      const result=await build(options);
+      assert(Object.keys(result.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),`${name} escaped standalone install`);
+      assert(!Object.keys(result.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),`${name} requires private CSS`);
       await copyFile(`${fixture}/index.html`,`${output}/index.html`);
       await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${output}/theme-init.js`);
       await writeFile(`${output}/metafile.json`,JSON.stringify(result.metafile,null,2));
-      execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','typography-slots/app.tsx'],{cwd,stdio:'inherit'});
+      if(name==='action-menu')await copyFile('tests/fixtures/public-followup-types.tsx',`${cwd}/public-followup-types.tsx`);
+      execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',`${name}/app.tsx`,...(name==='action-menu'?['public-followup-types.tsx']:[])],{cwd,stdio:'inherit'});
+      if(name==='action-menu'){
+        const strictOutput=resolve('dist/action-menu-react-strict');
+        await build({...options,outdir:strictOutput,minify:false,define:{'process.env.NODE_ENV':'"development"'}});
+        await copyFile(`${fixture}/index.html`,`${strictOutput}/index.html`);
+        await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${strictOutput}/theme-init.js`);
+      }
     }
     const searchToolbar = resolve(cwd, 'search-toolbar'), searchToolbarOutput = resolve(`dist/search-toolbar-${kind}`);
     await cp(`examples/search-toolbar-${kind}`, searchToolbar, { recursive: true });

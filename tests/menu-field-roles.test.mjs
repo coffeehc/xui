@@ -37,6 +37,11 @@ test('all menu item variants preserve Base UI props, stateful className, render 
     assert.equal(element.props.className({disabled:true}),'xui-menu-item host-disabled');
   }
 });
+test('both menu separators preserve peer props and refs through one shared styled part',()=>{
+ assert.equal(ContextMenu.Separator,Menu.Separator);
+ const ref=React.createRef(),render=React.createElement('hr'),element=Menu.Separator({ref,render,orientation:'horizontal',className:()=> 'host-separator','data-group':'settings'});
+ assert.equal(element.type,BaseMenu.Separator);assert.equal(element.props.ref,ref);assert.equal(element.props.render,render);assert.equal(element.props.orientation,'horizontal');assert.equal(element.props['data-group'],'settings');assert.equal(element.props.className({}),'xui-menu-separator host-separator');
+});
 
 test('Menu.Icon and ContextMenu.Icon expose one decorative, ref-preserving semantic slot',async()=>{
   assert.equal(ContextMenu.Icon,Menu.Icon);

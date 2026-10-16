@@ -16,7 +16,7 @@ test('workspace is opt-in for both React shell compositions; old defaults remain
 test('leading is optional and precedes navigation without forwarding a synthetic DOM attribute',()=>{
   for(const Component of [AppHeader,AppShell,MenuLayout]){
     const common={sidebar:'Navigation',items:[],children:'Content'},leading=React.createElement('button',null,'Platform');
-    const props=Component===AppHeader?{leading,navigation:'Navigation'}:{...common,headerSlots:{leading}};
+    const props=Component===AppHeader?{leading,navigation:'Navigation'}:{...common,headerSlots:{leading,navigation:'Header navigation'}};
     const markup=renderToStaticMarkup(React.createElement(Component,props));
     assert.ok(markup.indexOf('xui-app-header-leading')<markup.indexOf('xui-app-header-navigation'));
     assert.doesNotMatch(markup,/ leading=/);

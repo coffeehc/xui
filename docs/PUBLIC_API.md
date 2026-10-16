@@ -60,7 +60,7 @@
 | `@coffeehc/xui-runtime/http` <!-- public-entry: @coffeehc/xui-runtime/http --> | [源码](../packages/runtime/src/http.ts) | [合同](PUBLIC_API.md#http-与查询) | [示例](../examples/http-react/app.tsx) |
 | `@coffeehc/xui-runtime/query` <!-- public-entry: @coffeehc/xui-runtime/query --> | [源码](../packages/runtime/src/query.ts) | [合同](PUBLIC_API.md#http-与查询) | [示例](../examples/http-react/app.tsx) |
 | `@coffeehc/xui-runtime/api-key` <!-- public-entry: @coffeehc/xui-runtime/api-key --> | [源码](../packages/runtime/src/api-key.ts) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-react/app.tsx) |
-| `@coffeehc/xui-runtime/structured-log` <!-- public-entry: @coffeehc/xui-runtime/structured-log --> | [源码](../packages/runtime/src/structured-log.ts) | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-react/app.tsx) |
+| `@coffeehc/xui-runtime/structured-log` <!-- public-entry: @coffeehc/xui-runtime/structured-log --> | [源码](../packages/runtime/src/structured-log.ts)：GroupedStructuredLogAdapter（records可选）、兼容完整StructuredLogAdapter、Controller及HTTP工厂重载 | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-react/app.tsx) |
 | `@coffeehc/xui-runtime/data-table` <!-- public-entry: @coffeehc/xui-runtime/data-table --> | [共享事实/类型](../packages/runtime/src/data-table.ts) | [完整组合](COMPONENTS.md#数据表格) | [模型](../examples/shared/data-table-model.ts) |
 | `@coffeehc/xui-runtime/grouped-combobox` <!-- public-entry: @coffeehc/xui-runtime/grouped-combobox --> | [源码](../packages/runtime/src/grouped-combobox.ts) | [合同](COMPONENTS.md#groupedcombobox-与-disclosure) | [示例](../examples/shared/grouped-search-model.ts) |
 | `@coffeehc/xui-runtime/business-log` <!-- public-entry: @coffeehc/xui-runtime/business-log --> | [源码](../packages/runtime/src/business-log.ts) | [合同](PUBLIC_API.md#业务日志) | [示例](../examples/business-log-react/app.tsx) |
@@ -77,6 +77,7 @@
 | `@coffeehc/xui-runtime/display` <!-- public-entry: @coffeehc/xui-runtime/display --> | createCopyController、copyableLabels、validateImageOptions 与文字/复制/图片共享类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/admin-setup` <!-- public-entry: @coffeehc/xui-runtime/admin-setup --> | AdminSetupCheck/CheckResult、createAdminSetupController、adminSetupLabels、getAdminSetupMessage 和 AdminSetupStatus/State/Result/Credentials/Submit/Labels/Controller/ControllerOptions。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-runtime/collection-view` <!-- public-entry: @coffeehc/xui-runtime/collection-view --> | [源码](../packages/runtime/src/collection-view.ts)；CollectionStatus/Layout/RowContext/Pagination/CursorPagination/Count/Labels/ViewOptions、collectionDefaultLabels、getCollectionState、validateCollectionKeys、createCollectionRequestGuard | [集合合同](COMPONENTS.md#cardgroup) | [示例](../examples/card-group-react/app.tsx) |
+| `@coffeehc/xui-runtime/menu` <!-- public-entry: @coffeehc/xui-runtime/menu --> | [序列化配置、Controller 与动作事件](../packages/runtime/src/menu.ts)：MenuConfig/Node/Entry/ActionItem/Group/Heading/Separator、MenuController/State/Options/ActionEvent/ItemTone、createMenuController | [数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与-controller-所有权) | [示例](../examples/action-menu-react/app.tsx) |
 
 ### @coffeehc/xui-react
 
@@ -97,13 +98,13 @@
 | `@coffeehc/xui-react/select` <!-- public-entry: @coffeehc/xui-react/select --> | [源码](../packages/ui-react/src/select.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/combobox` <!-- public-entry: @coffeehc/xui-react/combobox --> | [源码](../packages/ui-react/src/combobox.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/grouped-combobox` <!-- public-entry: @coffeehc/xui-react/grouped-combobox --> | [源码](../packages/ui-react/src/grouped-combobox.tsx) | [合同](COMPONENTS.md#groupedcombobox-与-disclosure) | [示例](../examples/grouped-search-react/app.tsx) |
-| `@coffeehc/xui-react/menu` <!-- public-entry: @coffeehc/xui-react/menu --> | [源码](../packages/ui-react/src/menu.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-react/menu` <!-- public-entry: @coffeehc/xui-react/menu --> | [Menu.View 与 Menu parts](../packages/ui-react/src/menu.tsx)：默认 config 模式或完整 controller 注入；`Menu.Separator` / `MenuSeparatorProps` | [数据菜单与 Controller 所有权](COMPONENTS.md#数据菜单与-controller-所有权) | [示例](../examples/action-menu-react/app.tsx) |
 | `@coffeehc/xui-react/popover` <!-- public-entry: @coffeehc/xui-react/popover --> | [源码](../packages/ui-react/src/popover.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/tooltip` <!-- public-entry: @coffeehc/xui-react/tooltip --> | [源码](../packages/ui-react/src/tooltip.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/toast` <!-- public-entry: @coffeehc/xui-react/toast --> | [源码](../packages/ui-react/src/toast.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/theme` <!-- public-entry: @coffeehc/xui-react/theme --> | [源码](../packages/ui-react/src/theme.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/api-key` <!-- public-entry: @coffeehc/xui-react/api-key --> | [源码](../packages/ui-react/src/api-key.tsx) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-react/app.tsx) |
-| `@coffeehc/xui-react/structured-log` <!-- public-entry: @coffeehc/xui-react/structured-log --> | [源码](../packages/ui-react/src/structured-log.tsx) | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-react/app.tsx) |
+| `@coffeehc/xui-react/structured-log` <!-- public-entry: @coffeehc/xui-react/structured-log --> | [源码](../packages/ui-react/src/structured-log.tsx)：重导出GroupedStructuredLogAdapter与完整StructuredLogAdapter | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-react/app.tsx) |
 | `@coffeehc/xui-react/business-log` <!-- public-entry: @coffeehc/xui-react/business-log --> | [源码](../packages/ui-react/src/business-log.tsx) | [合同](PUBLIC_API.md#业务日志) | [示例](../examples/business-log-react/app.tsx) |
 | `@coffeehc/xui-react/login` <!-- public-entry: @coffeehc/xui-react/login --> | [源码](../packages/ui-react/src/login.tsx) | [合同](PUBLIC_API.md#认证会话) | [示例](../examples/login-react/app.tsx) |
 | `@coffeehc/xui-react/password` <!-- public-entry: @coffeehc/xui-react/password --> | [源码](../packages/ui-react/src/password.tsx) | [合同](COMPONENTS.md#密码输入) | [验证](../tests/browser/password-fields.spec.mjs) |
@@ -111,7 +112,7 @@
 | `@coffeehc/xui-react/text-inputs` <!-- public-entry: @coffeehc/xui-react/text-inputs --> | [源码](../packages/ui-react/src/text-inputs.tsx) | [专用输入](COMPONENTS.md#文本输入) | [示例](../examples/text-inputs-react/app.tsx) |
 | `@coffeehc/xui-react/sheet` <!-- public-entry: @coffeehc/xui-react/sheet --> | [Sheet](../packages/ui-react/src/sheet.tsx)，复用Dialog lifecycle | — | — |
 | `@coffeehc/xui-react/alert-dialog` <!-- public-entry: @coffeehc/xui-react/alert-dialog --> | [AlertDialog](../packages/ui-react/src/alert-dialog.tsx)，显式确认/取消 | — | — |
-| `@coffeehc/xui-react/context-menu` <!-- public-entry: @coffeehc/xui-react/context-menu --> | [ContextMenu](../packages/ui-react/src/context-menu.tsx)，复用Menu部件 | — | — |
+| `@coffeehc/xui-react/context-menu` <!-- public-entry: @coffeehc/xui-react/context-menu --> | [ContextMenu](../packages/ui-react/src/context-menu.tsx)，复用Menu部件；`ContextMenu.Separator` 共用 `MenuSeparatorProps` | [合同](COMPONENTS.md#弹层与工具栏) | — |
 | `@coffeehc/xui-react/toggle-group` <!-- public-entry: @coffeehc/xui-react/toggle-group --> | [源码](../packages/ui-react/src/toggle-group.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-react/avatar` <!-- public-entry: @coffeehc/xui-react/avatar --> | [源码](../packages/ui-react/src/avatar.tsx)，[合同](COMPONENTS.md#avatar) | — | — |
 | `@coffeehc/xui-react/accordion` <!-- public-entry: @coffeehc/xui-react/accordion --> | [源码](../packages/ui-react/src/accordion.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
@@ -123,6 +124,8 @@
 | `@coffeehc/xui-react/display` <!-- public-entry: @coffeehc/xui-react/display --> | Typography.Heading/Text/Link/Code、Copyable、Separator、Tag、Image，及同名 props/共享类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/admin-setup` <!-- public-entry: @coffeehc/xui-react/admin-setup --> | AdminSetupPage、AdminSetupPageProps、AdminSetupPageHandle 与共享状态类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/card-group` <!-- public-entry: @coffeehc/xui-react/card-group --> | [源码](../packages/ui-react/src/card-group.tsx)；CardGroup、CardGroupProps、CardGroupContext、CardGroupCardProps及共用Collection类型 | [CardGroup](COMPONENTS.md#cardgroup) | [示例](../examples/card-group-react/app.tsx) |
+
+CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` 和 `forms.css` 包含基础 Select 定位/菜单项样式，`floating.css` 保留完整的 selection + floating 兼容组合。`forms.css` 是 forms + selection 组合入口；使用这些公开分片时不直接导入内部源码文件。
 
 ## 默认行为
 
@@ -136,7 +139,8 @@
 | MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留 HTML link 导航，菜单键盘/drawer owner 由 React 组件提供 |
 | GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](COMPONENTS.md#groupedcombobox-与-disclosure) |
 | Pagination/Disclosure | Pagination 默认第 1 页，pageCount 由宿主；受控 page 只请求确认。Disclosure 默认关闭，装饰性 chevron 与公开 DisclosureIndicator 复用相同 tokens。两者不发请求、不自动路由 |
-| Tabs | Root/List props 保留固定peer行为，方向键跳过disabled；1.2.0新增List.layout='content'（默认）/'equal'、TabsListProps及装饰性Tabs.Icon，见[布局与图标合同](COMPONENTS.md#tabs)。手动/自动激活、loop、RTL与方向不变；固定1.1.3尚不包含新增部分 |
+| Tabs | Root/List props 保留固定peer行为，方向键跳过disabled；1.2.0新增List.layout='content'（默认）/'equal'、TabsListProps及装饰性Tabs.Icon，见[布局与图标合同](COMPONENTS.md#tabs)。1.3.0明确普通项400与选中项600字重和raised/强调状态对比；手动/自动激活、loop、RTL与方向不变；固定1.1.3尚不包含新增部分 |
+| ApiKeyManager | `pagination` 默认本地 pageSize 10、选项 `[10,25,50]`，只分页完整 `rows`；显式 `false` 关闭分页。切页不发请求、total 仅取完整已确认集合长度；不改变 adapter、后端分页或请求 owner |
 | Dialog/Popover/Menu/Tooltip | 关闭不保存。受控 open 与可取消变化遵循各自 React peer 合同。Content portal/默认定位：Select bottom/start 且 alignItemWithTrigger=false，Combobox/Menu bottom/start，Popover bottom/center，Tooltip top/center；positionerProps 可覆盖。Dialog 为模态，非模态浮层不 trap；Tooltip 只放说明 |
 | Sheet/AlertDialog/ContextMenu | Sheet默认end，确认initialFocus由宿主或安全取消/中性节点；context rightclick/Shift+F10，checked状态宿主拥有；details.cancel/finalFocus/嵌套生命周期见[弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
 | Toast | Provider/manager 使用 React peer 合同；必要错误就地持续可见，不只依赖自动消失通知 |
@@ -392,7 +396,19 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 - revoke：使凭据失效；过期但未撤销的密钥仍按实际 capability 授权撤销。
 - deleteRecord：仅删除已经 revoked 的管理记录，独立确认及 capability；不撤销活动凭据、不删除业务记录。
 
-`ApiKeyAdapter.update` 返回真实公共 metadata；revoke/deleteRecord 成功返回 void。通用 custom adapter 的 update、metadata.version/enabled/capabilities.update 均可选，供独立展示、领域/第三方边界与测试；第一方公共Key接入按服务前置直接使用官方HTTP adapter。React/React 页面等价，使用统一表单、选择器、弹窗、错误和焦点生命周期。
+`ApiKeyAdapter.update` 返回真实公共 metadata；revoke/deleteRecord 成功返回 void。通用 custom adapter 的 update、metadata.version/enabled/capabilities.update 均可选，供独立展示、领域/第三方边界与测试；第一方公共Key接入按服务前置直接使用官方HTTP adapter。唯一公共页面由React实现，使用统一表单、选择器、弹窗、错误和焦点生命周期。
+
+### 页面内客户端分页
+
+`ApiKeyManagerProps.pagination` 可省略、设为 `false` 或配置 `ApiKeyManagerPagination`。默认对 `controller.getState().rows` 的完整已载入集合使用 `pageSize=10` 和 `[10,25,50]` 选项；可通过 `defaultPageSize`、`pageSizeOptions` 覆盖。传 `false` 时显示完整集合并隐藏分页。`tableLabels?: Partial<DataTableLabels>` 只覆盖公共 DataTable 文案。
+
+这是客户端展示分页：adapter.list 仍按其既有完整读取合同请求服务，页面翻页和改页长不发新请求；显示的 total 仅为当前完整已确认 `rows.length`。它不会把后端服务分页误报成页面分页，也不会改变 CRUD、请求参数、授权、controller 或列表刷新 owner。初次列表未完成前不显示分页；刷新后保留当前页范围并对缩短后的集合夹紧到有效页。
+
+```tsx
+<ApiKeyManager controller={controller} />
+<ApiKeyManager controller={controller} pagination={{defaultPageSize:20,pageSizeOptions:[20,50,100]}} />
+<ApiKeyManager controller={controller} pagination={false} />
+```
 
 ### 默认 HTTP adapter：严格 v2
 
@@ -517,18 +533,20 @@ createBusinessLogHttpLoader({http,timeoutMs?}) 固定 GET /api/v1/business-logs 
 
 上述固定基线的 Go 包没有 JSON tags，也没有上述页面所需的 HTTP facade。下方 snake_case、schema_version=1 的协议是 **xui 拟议接入合同，必须由宿主后端明确实现**；不能把 Go 默认字段编码、旧产品 offset/limit/newest-first 接口当成此协议。公开类型与默认行为以 [structured-log.ts](../packages/runtime/src/structured-log.ts) 和正式构建声明为准。
 
-### 四个显式只读操作
+### 三个必需及一个可选只读操作
 
-createStructuredLogHttpAdapter(client,endpoints) 接收宿主给定的 groups、records、groupRecords、record 四个路径，向同源 HTTP client 发送 POST JSON，使用 [HTTP 与查询](PUBLIC_API.md#http-与查询) 的 Go AjaxResponse envelope；默认以 success=true 判定业务成功，code 保留为必填安全整数元数据，不要求固定值或额外 adapter。POST 在这里是明确定义的查询，客户端不自动重试；页面上的重试由用户触发。独立展示/测试可直接提供符合 StructuredLogAdapter 的四个回调；公共服务接入采用官方HTTP adapter与后端wire。
+`createStructuredLogHttpAdapter(client,endpoints)` 接收宿主提供的 groups、groupRecords、record 三个必需路径，以及可选的 records 路径，向同源 HTTP client 发送 POST JSON，使用 [HTTP 与查询](PUBLIC_API.md#http-与查询) 的 Go AjaxResponse envelope；默认以 success=true 判定业务成功，code 保留为必填安全整数元数据，不要求固定值或额外 adapter。POST 在这里是明确定义的查询，客户端不自动重试；页面上的重试由用户触发。独立分组展示/测试可提供符合 `GroupedStructuredLogAdapter` 的三个必需回调与可选 records 回调；兼有全量记录能力时，`StructuredLogAdapter` 仍要求完整的四个回调。公共服务接入采用官方 HTTP adapter 与后端 wire。
 
 | adapter | Go Reader | 请求 JSON | envelope.payload |
 | --- | --- | --- | --- |
 | groups | Query | schema_version、filter、page | LogGroupsPage |
-| records | QueryRecords | 同上 | LogRecordsPage |
+| records（可选） | QueryRecords | 同上 | LogRecordsPage |
 | groupRecords | Detail | 同上，加 group_id | LogGroupRecordsPage |
 | record | GetRecord | schema_version、record_id | LogDetailResponse |
 
 page 为 `{size:50,cursor:null}` 或上一响应给出的不透明 cursor；50 是源码默认值，范围 1–200。本例显示 size=2 只为演示多段，不更改库默认值。filter 的未指定 scalar 为 null、facet 为 []。Scope 的 application/environment/tenant 只由服务端可信装配和认证上下文绑定，绝不接收公共 query/body 字段。host 必须分别验证列表权限与详情权限，清理未知请求字段并按配置限制 body。
+
+`GroupedStructuredLogAdapter.records` 与 `StructuredLogHttpEndpoints.records` 可省略；`StructuredLogAdapter` 继承分组接口并继续要求 `records`，因此旧的完整 adapter 结构类型和直接 `adapter.records(...)` 调用保持兼容。HTTP 工厂在 `endpoints.records` 为 `string` 时返回完整的 `StructuredLogAdapter`，省略或使用不能证明该字段存在的动态 endpoint 类型时返回 `GroupedStructuredLogAdapter`；Controller 接受基础分组接口。省略时 HTTP adapter 不创建 records 方法，Explorer 隐藏跨组全量记录入口，不发送 records 请求；分组、组内记录和单条详情仍工作。调用 `controller.setView('records')` 是安全 no-op；选中组后的“返回”按钮回到分组视图。提供 records 时原全量视图和默认行为保持不变。
 
 ### 明确 DTO 投影
 
@@ -583,7 +601,7 @@ cursor 最多 4096 UTF-8 字节，作为不透明值透传，绑定服务端 sco
 
 ## 默认适配器的服务前置
 
-本节约束已采用的16项公共服务操作：认证 login/refresh/session/logout；平台Key capabilities/list/create/update/revoke/deleteRecord；业务日志 list/detail；程序错误 groups/records/groupRecords/record。采用BaseService时直接使用对应已有facade与xui官方client/HTTP adapter；未用BaseService时后端在单一facade实现同一wire，前端仍使用官方client。不得在前端再改字段、成功/错误、认证或分页语义，也不另建重试/通知owner。每项请求、成功事实和异常检查见 [接入检查清单](ADOPTION_CHECKLIST.md#16-个公共-api-操作逐项检查)。这是所选公共模块的验收前置，不要求不存在业务的模块全部接入；后端缺失须报告。普通领域/第三方接口和独立展示继续使用明确typed扩展，公开扩展类型不代表可绕开公共16项合同。唯一职责规则见 [DESIGN](DESIGN.md#规范强度与职责)。
+本节约束已采用的16项公共服务操作：认证 login/refresh/session/logout；平台Key capabilities/list/create/update/revoke/deleteRecord；业务日志 list/detail；程序错误 groups/records/groupRecords/record。StructuredLog `records` 是可选能力：服务不提供时，适用检查记录为不适用，分组、组记录与详情仍须满足各自合同。采用BaseService时直接使用对应已有facade与xui官方client/HTTP adapter；未用BaseService时后端在单一facade实现同一wire，前端仍使用官方client。不得在前端再改字段、成功/错误、认证或分页语义，也不另建重试/通知owner。每项请求、成功事实和异常检查见 [接入检查清单](ADOPTION_CHECKLIST.md#16-个公共-api-操作逐项检查)。这是所选公共模块的验收前置，不要求不存在业务的模块全部接入；后端缺失须报告。普通领域/第三方接口和独立展示继续使用明确typed扩展，公开扩展类型不代表可绕开公共16项合同。唯一职责规则见 [DESIGN](DESIGN.md#规范强度与职责)。
 
 | 选用能力 | 默认连接 | 服务前置与合同 owner |
 | --- | --- | --- |
@@ -591,7 +609,7 @@ cursor 最多 4096 UTF-8 字节，作为不透明值透传，绑定服务端 sco
 | ConfigurableLoginPage | createAuthClient；POST `/api/v1/auth/login`、`refresh`、`logout`，GET `/api/v1/auth/session` | 固定 Bearer v2 DTO；access 仅内存，同源恢复 Cookie 与 session Bearer 分离。宿主注册 route、CSRF 和资源策略；不猜旧路由或仅改 baseURL。见 [登录与会话](PUBLIC_API.md#认证会话) |
 | ApiKeyManager 的默认 HTTP adapter | createApiKeyHttpAdapter；`/api/v1/api-keys` 及 capabilities/update/revoke/record 路径 | 严格 DTO v2、AjaxResponse/ListData，服务提供权限、期限、独立确认、expected_version CAS 与一次性 secret。未知结果普通列表核验一次，不重发写请求。完整路径、能力和 fixture 见 [API Key 管理](PUBLIC_API.md#api-key-管理) |
 | BusinessLogExplorer 的默认 HTTP loader | createBusinessLogHttpLoader；GET `/api/v1/business-logs` 与 `/{id}` | 明确 offset query/ListData 与必需 total，公共记录字段、版本化授权 payload；服务负责身份/tenant、权限和脱敏。领域 cursor loader 依自己的明确合同，不伪造 snapshot。见 [业务日志](PUBLIC_API.md#业务日志) |
-| StructuredLogExplorer | 宿主声明 endpoints 的四操作 facade | 独立程序错误观察；服务实现明确 DTO、过滤、cursor、详情授权与保留期，不推断已有后端。见 [程序错误观察](PUBLIC_API.md#程序错误观察) |
+| StructuredLogExplorer | 宿主声明三个必需 endpoints 与可选 records endpoint | 独立程序错误观察；服务实现明确 DTO、过滤、cursor、详情授权与保留期，不推断已有后端。缺失 records 时仅关闭跨组全量视图，不影响组/详情接口。见 [程序错误观察](PUBLIC_API.md#程序错误观察) |
 | AuthPage/AdminSetupPage、MenuLayout、布局、表格、字段与弹层 | 公开数据、props/parts/slots/controllers 与 callbacks | 业务 API、权威状态、路由、权限、查询范围和执行归宿主；无通用后端路由要求。管理员初始化见 [登录与会话](COMPONENTS.md#管理员初始化页) |
 
 选用默认 adapter 时严格满足其准确合同，不猜 data/token/items 或自动尝试路由；标准 OAuth2/OIDC/SAML 与第三方接口继续遵循各自标准，在宿主明确边界转换。平台 API Key 是自身签发凭据，业务日志是自身业务记录，不能由 provider key、第三方响应或程序故障记录改名替代。
@@ -614,13 +632,13 @@ useResource 只订阅；owner 放在宿主稳定生命周期，卸载时取消/�
 
 React `/menu-layout` 的 `NavigationMenuProps`/`MenuLayoutProps` 继承 runtime `/navigation` 的纯数据 `NavigationMenuOptions`。`expandBranchLabel` 与 `collapseBranchLabel` 可为每个真实分支名称生成可访问名称；runtime 只提供 navigation 数据、类型与 helper。当前显示、首行对齐、菜单开关和独立行尾动作由 React `/menu-layout` 拥有，详见[导航富条目合同](COMPONENTS.md#富条目独立行尾动作与上下文菜单)与[导航内部唯一收起/展开控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 
-1.2.0的名称槽默认伸展，既有renderLabel内的尾随非交互状态可使用完整剩余宽度；名称独立滚动仍通过NavigationMenu.Label声明，renderAction继续只接辅助button。React `/feedback` 的既有Spinner入口及span属性保持，正式CSS改为主题色开放弧，reduced-motion静止。没有新增runtime DOM入口、业务状态或请求owner。接线见[富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单)与[表单与页面编排](COMPONENTS.md#表单与页面编排)。
+1.2.0的名称槽默认伸展，既有renderLabel内的尾随非交互状态可使用完整剩余宽度；名称独立滚动仍通过NavigationMenu.Label声明，renderAction继续只接辅助button。React `/feedback` 的既有Spinner入口及span属性保持，正式CSS改为主题色开放弧，reduced-motion静止。1.3.0将top侧栏开关放入全局品牌行尾，不改变显式bottom选择。没有新增runtime DOM入口、业务状态或请求owner。接线见[富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单)与[表单与页面编排](COMPONENTS.md#表单与页面编排)。
 
-AppShell/MenuLayout 的唯一侧栏开关由 React 公共组件定位：桌面位于侧栏内部，`sidebarTogglePlacement` 支持公开位置配置；窄屏将同一公共控件用于现有导航抽屉。宿主继续用受控 props/callback 管理状态，不移动私有 DOM。`SidebarTogglePlacement` 与 `SidebarFooterRow` 从 React `/layout`、`/menu-layout` 及根入口导出。详见 [导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
+AppShell/MenuLayout 的唯一侧栏开关由 React 公共组件定位：`sidebarTogglePlacement="top"`（默认）时桌面在全局品牌单元行尾，`bottom` 时在侧栏菜单/页尾后；窄屏两种设置都将同一个公共控件用于现有导航抽屉。宿主继续用受控 props/callback 管理状态，不移动私有 DOM。已设置bottom的消费方须显式改prop回top，单独升级包不会覆盖它。`SidebarTogglePlacement` 与 `SidebarFooterRow` 从 React `/layout`、`/menu-layout` 及根入口导出。详见 [导航控件](COMPONENTS.md#导航内部唯一收起展开控件)。
 
 Calendar 的 `CalendarProps` 公开受控 `month`/`onMonthChange`；runtime `/calendar` 提供 `CalendarOptions` 与共享纯模型。月份状态与所选日期分开，外部更新不触发用户回调。严格年月、值、焦点合同见[Calendar](COMPONENTS.md#选择与复合控件)，正式 React 消费者见[示例](../examples/calendar-month-react/app.tsx)。
 
-`MenuItemTone`/`MenuItemProps` 从 React `/menu`、`/context-menu` 与根入口导出；Menu.Item 和 ContextMenu.Item 接受 `tone="danger"`，正式主题 CSS 维护危险语义。授权、确认、回调与结果归宿主，详见[菜单危险操作语义](COMPONENTS.md#菜单危险操作语义)。
+`MenuItemTone`/`MenuItemProps` 与 `MenuSeparatorProps` 从 React `/menu`、`/context-menu` 与根入口导出；Menu.Item 和 ContextMenu.Item 接受 `tone="danger"`，正式主题 CSS 维护危险语义。`Menu.Separator` 和 `ContextMenu.Separator` 使用同一 typed peer wrapper 与公共语义分隔线。授权、确认、回调与结果归宿主，详见[菜单危险操作语义](COMPONENTS.md#菜单危险操作语义)。
 
 `DataTableRowContext`/`DataTableRowEvents` 是 React `/data-table` 的 typed 行事件合同，`DataTableProps<T>` 接受 row events；事件来源边界由 React 组件内部维护，runtime 不导出 DOM 行事件处理器。键盘可达性、独立 cell action 与分页行为见[数据表格](COMPONENTS.md#数据表格)。
 

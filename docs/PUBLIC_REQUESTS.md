@@ -6,18 +6,20 @@
 
 来源记录：Argus `d3cc589fd803e20d0640321437ed280a2a4036dc` 的 `docs/xui-public-requests.md`。其消费基线为 xui `595380a6d2467d56623a0df0dedc026e0331a4ff`、DESIGN `0.13.1`、三个包 `0.1.0`。来源中的产品调用点和现场现象按反馈登记，本轮没有读取或修改 Argus，也没有重跑其页面。
 
-核对版本：xui main `b700606624ae1453ce2796afdad2882dd938d9ee`，DESIGN 与三个包均为 `1.1.0`。本轮仅核对源码、正式声明和既有验证记录，不修改公共实现。
+本轮公共库核查基线为 xui 源码 `cdeefa7193f8ae100f72e225befde36a79ee596a`（DESIGN及三个包为 `1.2.0`）；本工作树的 DESIGN 与三个包为 `1.3.0`。02/04/05对应的xui能力已进入1.3.0正式构建、独立tarball及浏览器验证，已关闭为库级请求；Argus仍须自行升级并验收真实页面、GET接口和wire，不能将库级结果写成产品已完成。
 
 | ID | 请求 | xui 状态 | 消费项目后续 |
 |---|---|---|---|
 | XUI-REQ-20261016-01 | 完整登录/初始化页密码显隐名称本地化 | 已由既有公开能力解决 | 按固定产物配置并复验，不能把旧基线缺口继续记为当前 xui 阻塞 |
-| XUI-REQ-20261016-02 | StructuredLogExplorer 不提供跨组全量 records 的模式 | 待实现，当前仍要求四操作 | 保留真实分组流程，不能伪造 records adapter 或分页；本次未要求更改业务 API |
+| XUI-REQ-20261016-02 | StructuredLogExplorer 不提供跨组全量 records 的模式 | xui库级已验收：1.3.0提供分组型adapter，旧完整adapter保持兼容 | Argus 可省略records入口，但仍须单独适配其真实GET接口和wire |
+| XUI-REQ-20261016-04 | Dialog内Select选项被底栏遮挡 | xui库级已验收：1.3.0基础Select浮层样式通过正式包指针验收 | 消费项目需升级固定包并在自己的Dialog结构复验 |
+| XUI-REQ-20261016-05 | API Key管理页的公开客户端分页 | xui库级已验收：1.3.0提供完整列表客户端分页及状态/metadata呈现 | 消费项目需升级固定包并复验实际API Key页面与服务 |
 
 ### XUI-REQ-20261016-01：完整认证页显隐文案（已解决）
 
 Argus 调用点：`frontend/src/workspace/identity-boundary.tsx`、`frontend/src/features/identity/setup-page.tsx`。反馈是在中文完整认证页中，独立 PasswordInput 可本地化，但页内按钮仍显示英文。
 
-该能力已经由 [57f4e8c](https://github.com/coffeehc/xui/commit/57f4e8c0f8c7c640b4f8b1faa1fbf7438581d27f) 提供，当前 `1.1.0` 保留：
+该能力已经由 [57f4e8c](https://github.com/coffeehc/xui/commit/57f4e8c0f8c7c640b4f8b1faa1fbf7438581d27f) 提供，自 `1.1.0` 起保留于后续版本：
 
 - `ConfigurableLoginPage` 使用 `config.labels.showPassword` / `hidePassword`。
 - `AdminSetupPage` 使用 `passwordLabels.showPassword` / `hidePassword`，新密码及确认两个输入均转交相同文案。
@@ -27,23 +29,15 @@ Argus 调用点：`frontend/src/workspace/identity-boundary.tsx`、`frontend/src
 
 消费项目升级后仍需复验鼠标、Enter/Space、按钮焦点、状态对应的 accessible name、密码值和清理行为。本次没有将历史库级验证写成 Argus 当前页面已通过，也不自动升级其依赖或认证协议。`0.1.0` 曾对应多个固定源码版本，不能只比较包版本字符串判断能力。
 
-### XUI-REQ-20261016-02：分组模式不依赖全量 records（待实现）
+### XUI-REQ-20261016-02：分组模式不依赖全量 records（xui 1.3.0已解决）
 
 Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend/src/domain/read-api.ts`。反馈的真实读取能力为组列表、指定组记录、指定记录详情及投递列表，路径分别是 `GET /api/ops/error-logs/groups`、`/groups/:id`、`/records/:id`、`/deliveries`；没有跨组全量记录查询。投递列表、组内记录和单条详情都不能冒充全量 records。
 
-当前缺口已经从 xui 源码确认：[StructuredLogAdapter](../packages/runtime/src/structured-log.ts) 的 `records` 必填，controller 的全量视图直接调用它；[StructuredLogExplorer](../packages/ui-react/src/structured-log.tsx) 仍提供 records 模式和“全部观察”入口。当前没有可公开配置的分组专用模式，不能只省略字段后声称已支持。
-
-期望合同与验收要求（尚未实现）：
-
-1. 支持不提供全量 records 能力；公开 React 入口、runtime 类型、controller 与 HTTP adapter 的能力声明一致，不增加原生 UI 副本。
-2. 未提供时不呈现不可履行的全量模式或“全部观察”入口，也不发起全量请求；公开 controller 不能进入随后调用缺失方法的状态，具体类型与安全处理由实现合同明确。
-3. 组列表、指定组记录与详情保持可用；提供 records 时保留现有全量模式和默认行为。
-4. 筛选、范围切换、游标/快照、上一页/下一页、取消、迟到响应、读取错误及详情关闭继续采用既有 owner，不制造游标、总数或 as_of。
-5. 以独立正式 ESM/CSS/types 消费者验证有/无 records 两种组合，覆盖键盘、入口可见性、请求次数、取消与错误恢复，并区分库级结果和产品验收。
+1.3.0新增 [GroupedStructuredLogAdapter](../packages/runtime/src/structured-log.ts) 并允许省略 `records`；既有 `StructuredLogAdapter` 仍继承该接口且要求完整的 `records` 方法，保留完整adapter变量的直接调用类型合同。`StructuredLogHttpEndpoints.records` 可省略；factory在records路径为字符串时返回完整类型，不能证明其存在时返回分组类型。缺省时HTTP adapter不创建此方法，React [StructuredLogExplorer](../packages/ui-react/src/structured-log.tsx) 不显示跨组全量入口、不发records请求；组列表、指定组记录和详情保持可用，`setView('records')`为安全no-op。提供records时保留原有全量模式。库级验证见本轮[验证记录](VALIDATION.md)；Argus仍须在其授权边界内适配真实GET DTO/wire并升级验收。
 
 现有替代是保留 Argus 已使用的公共 DataTable、Field、Disclosure 与反馈组件，呈现真实的“分组 → 组内记录 → 详情”流程；不要求消费项目复制 Explorer 或自行增强公共组件。
 
-接口适配边界仍遵守 [程序错误观察合同](PUBLIC_API.md#程序错误观察)：当前默认 HTTP adapter 是宿主提供路径的四个 POST 查询 facade，并不等同于上述 Argus GET 领域接口。将来支持省略 records 也不自动证明其余 DTO、筛选、分页和权限合同已匹配，不能据此新增前端兼容层或未经授权改动后端。本项本次只登记，尚无实现、正式产物或新增浏览器验收。
+接口适配边界仍遵守 [程序错误观察合同](PUBLIC_API.md#程序错误观察)：xui HTTP adapter 使用宿主提供的三个必需加一个可选 POST 查询 endpoint，并不等同于上述 Argus GET 领域接口。支持分组模式省略 records 不证明其余 DTO、筛选、分页和权限合同已匹配；Argus 仍须在其授权范围内适配 wire/服务。此项不授权改动 Argus API 或后端。
 
 ## 后续公开维护项（2026-10-16）
 
@@ -53,8 +47,14 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 登记时的 [公共table CSS](../packages/theme/src/table.css) 对固定列单独增加起止侧边框，其余列没有纵线，源码核对属实。原请求合同：全表采用一致的分割线策略，不能仅因sticky增加一条纵线；由公共默认或正式全表设置表达，保留固定列与横向滚动，不能靠取消sticky或消费方私有CSS掩盖。验收应覆盖普通/左/右/双侧固定、适用的统一行列线模式、三主题、长中文/窄屏/200%、横滚及空/加载/刷新，固定背景、焦点和分隔仍可辨，无重复边框。1.1.2已将公共默认统一为全表仅行线，移除sticky专属侧边框；保留原有位置、底色、交互及焦点合同，没有新增网格模式/开关，不要求取消sticky或添加宿主CSS。源码、正式包与浏览器验证见[分割线验收](VALIDATION.md#统一表格行分割线2026-10-16)。消费项目的升级、真实页面与部署仍待宿主自行验收。
 
-### XUI-REQ-20261016-04：Dialog内Select选项被底栏遮挡（待修复）
+### XUI-REQ-20261016-04：Dialog内Select选项被底栏遮挡（xui 1.3.0已解决，宿主仍待升级）
 
-来源：本轮组件加载居中扩大回归。API Key创建页公开有效期SimpleSelect选择 `demo.never` 时，选项中心被 `.xui-dialog-footer` 截获，鼠标无法完成选择并超时。在未修改的前一轮1.1.0正式独立安装重建同一公开示例，也复现同样的底栏拦截；1.1.1加载改动下三次隔离复验均失败。记录见 [加载验收](VALIDATION.md#组件内容加载居中2026-10-16)，原始失败trace保存在固定产物验证目录。
+来源：本轮组件加载居中扩大回归。API Key创建页公开有效期SimpleSelect选择 `demo.never` 时，选项中心被 `.xui-dialog-footer` 截获，鼠标无法完成选择并超时。旧1.2.0正式独立包复现证据保存在 `.artifacts/public-followup/baseline/`。
 
-此项属于公共弹层叠放/操作可达性问题，待由xui修复；不能改成强制点击、只换键盘路径、隐藏Footer或要求宿主覆盖私有z-index。后续验收须同时保留指针、键盘、Escape回焦、滚动、嵌套弹层和大字窄屏可达。本轮不混入Select/Dialog实现变更。
+1.3.0将同一 `selection.css` 源规则组合进 `critical.css` 与 `forms.css`；`floating.css` 保留 `selection + floating` 完整兼容分片。SimpleSelect定位、选项和指针命中不依赖消费方额外导入内部CSS，也不通过z-index补丁或强制点击规避。旧1.2.0的真实footer遮挡复现与1.3.0正式tarball的指针、键盘/Escape及嵌套浮层验收见[验证记录](VALIDATION.md)。消费项目需自行升级固定包并复验自己的Dialog组合；旧截图不是其页面已修复的证据。
+
+### XUI-REQ-20261016-05：API Key 管理页的公开客户端分页（xui 1.3.0已实现）
+
+请求是保留完整权威列表读取，同时让较长的 Key 列表在公共 DataTable 内分页。1.3.0的 `ApiKeyManagerProps.pagination` 接受 `false` 或 `{defaultPageSize?, pageSizeOptions?}`；默认页长10、选项10/25/50。分页只切分当前完整已确认的 `rows`，改变页或页长不触发adapter请求，显示的total只使用完整集合长度；刷新保留当前页范围并夹紧到有效页。`pagination={false}`保留全量表格显示。
+
+该能力不创建服务端分页、查询、CRUD/controller或业务提交owner，不改变 `adapter.list` 的完整读取与HTTP合同；`tableLabels`仅覆盖公共DataTable标签。库级types、正式tarball与最终metadata范围浏览器结果见本轮[验证记录](VALIDATION.md)。API Key产品升级和真实密钥服务验收仍归消费项目；不要据此标记任何产品已完成迁移。

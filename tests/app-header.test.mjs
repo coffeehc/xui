@@ -46,9 +46,9 @@ test('AppShell owns one sidebar toggle and limits collapsed state to its sidebar
   const items=[{id:'one',label:'First',href:'/one'}];
   const markup=renderToStaticMarkup(React.createElement(AppShell,{collapsed:true,compactLabel:'收起侧栏',expandLabel:'展开侧栏',sidebar:React.createElement(NavigationMenu,{items,label:'Sidebar menu'})},React.createElement(NavigationMenu,{items,label:'Independent menu',defaultCollapsed:false})));
   assert.equal((markup.match(/class="xui-button xui-shell-toggle"/g)??[]).length,1);
-  const header=/<header[\s\S]*?<\/header>/.exec(markup)[0];assert.doesNotMatch(header,/xui-shell-toggle"/);
+  const header=/<header[\s\S]*?<\/header>/.exec(markup)[0];assert.match(header,/xui-app-header-identity[\s\S]*xui-shell-toggle-slot[\s\S]*xui-shell-toggle"/);
   const sidebar=/<aside[\s\S]*?<\/aside>/.exec(markup)[0],main=/<main[\s\S]*?<\/main>/.exec(markup)[0];
-  assert.match(sidebar,/xui-shell-navigation-control/);assert.match(sidebar,/aria-label="展开侧栏"/);assert.match(sidebar,/aria-expanded="false"/);
+  assert.doesNotMatch(sidebar,/xui-shell-navigation-control/);assert.match(header,/aria-label="展开侧栏"/);assert.match(header,/aria-expanded="false"/);
   assert.doesNotMatch(sidebar,/xui-menu-compact-toggle/);
   assert.match(sidebar,/aria-label="Sidebar menu" data-collapsed="true"/);
   assert.match(main,/xui-menu-compact-toggle/);

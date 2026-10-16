@@ -6,7 +6,7 @@ import {ApiKeyManager} from '@coffeehc/xui-react/api-key';
 import {createApiKeyExample} from '../shared/api-key-model';
 import '@coffeehc/xui-theme/critical.css';
 const example=createApiKeyExample(),root=createRoot(document.getElementById('root')!);
-const render=()=>root.render(<React.StrictMode><MenuLayout title="xui" label="管理导航" items={[{id:'keys',label:'API Key',icon:'folder',href:location.pathname}]} activeId="keys"><Container><ApiKeyManager controller={example.controller} writeClipboard={example.writeClipboard}/></Container></MenuLayout></React.StrictMode>);render();
+const render=()=>root.render(<React.StrictMode><MenuLayout title="xui" label="管理导航" items={[{id:'keys',label:'API Key',icon:'folder',href:location.pathname}]} activeId="keys"><Container><ApiKeyManager controller={example.controller} pagination={new URLSearchParams(location.search).has('all')?false:undefined} tableLabels={{pageSize:'每页条数',pagination:'密钥分页',previous:'上一页',next:'下一页',count:({rowCount,total})=>total===null?`已读取 ${rowCount} 条`:`本页 ${rowCount} 条，共 ${total} 条`}} writeClipboard={example.writeClipboard}/></Container></MenuLayout></React.StrictMode>);render();
 void example.controller.refresh();
 Object.assign(window,{apiKeyDemo:{...example,unmountView(){root.render(null);},remountView:render,destroy(){root.unmount();example.destroy();}}});
 window.addEventListener('pagehide',()=>example.destroy(),{once:true});

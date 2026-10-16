@@ -42,6 +42,20 @@
 | 通知 | Toast Provider/manager/Root/Content/Viewport/Close 等复用 peer。peer 支持 collapsed/expanded，关闭控件在展开状态可访问，宿主不能将必要错误仅放在消失通知中 |
 | 状态 | Surface/Alert、Badge/Skeleton/Spinner/Progress、Loading/Empty/ErrorState、DataRegion、RenderBoundary、useResource。错误/重试文字由宿主；render exception 重置不重试 Promise |
 
+### 状态所有权与 Controller 模式
+
+Controller 是逐组件公开合同，不是所有受控 props 的统一包装。不同能力按已公开的模型、注入和 peer 所有权接线：
+
+| 模式 | 现有接口 | 状态与生命周期归属 |
+| --- | --- | --- |
+| 可复用 TypeScript model | Calendar、DateTimePicker 的 runtime `createCalendarModel` / `createDateTimeModel` | runtime 只提供纯日期状态模型；React 组件内部创建自己的模型实例，月份/日期/日期时间仍按各自 props 与回调受控。React wrapper 没有公开 `model` 注入 prop，也不因此创建查询或业务 owner |
+| 宿主注入 Controller | `ApiKeyManager`、`BusinessLogExplorer`、`StructuredLogExplorer` | runtime factory 创建 controller，React view 接收必需的 `controller` 并订阅它；adapter、请求、写操作和 destroy 生命周期归宿主，不能再由 view 创建重复 controller |
+| React 组件内部 Controller | `AdminSetupPage`、`PasswordStrengthInput`、`Copyable` | React 组件从公开 props/DOM 事实创建并销毁内部辅助 controller；消费者继续使用组件 props/callback，不另传同类 controller |
+| peer 受控 props | Select/Combobox、Dialog/Sheet/Popover、Tabs、ToggleGroup 等 | `value`、`open` 等受控事实由组件 props 回传；Base UI 继续拥有实际弹层键盘、roving focus 与关闭/回焦点行为。xui 的局部适配不替 peer 复制完整交互算法 |
+| 纯受控数据视图 | `DataTable<T>` | 宿主每次传入确认后的 rows、columns、status、page/cursor facts 与回调；组件不拥有请求、查询或分页 controller。共享 `collection-view` helper 只校验/投影输入事实，不替宿主推进页码或发请求 |
+
+选择一个形态要依据该组件已有公开接口与事实 owner。没有 `controller` prop 的受控组件不需要为外观相似而新增 Controller；共享 runtime model 也不自动意味着 React view 可注入或共享同一实例。
+
 `Badge`、`BadgeProps` 与 `BadgeTone` 从 `@coffeehc/xui-react/feedback` 及根入口导出。`tone` 为 neutral/info/success/warning/error，默认 neutral；例如 `<Badge tone="success">运行正常</Badge>`。neutral、未设置 data-tone 与普通 Tag 保留无边框、无底色的被动文字；显式状态才应用语义前景/soft/line、横向间距和4px圆角。标签文字或图标由宿主表达状态，不自动增加 live region、tab stop 或脉冲。
 
 1.2.0的 `BadgeProps.color` 可显式指定前景，例如 `<Badge color="var(--action-primary)">发现新版本</Badge>`；省略时保持tone/继承规则。它不改字体、背景或增加动效；图标仍由公共Icon组合。错误/风险继续用真实语义tone，不用主题色掩盖状态。执行结果与范围见[验证记录](VALIDATION.md)。
@@ -671,6 +685,17 @@ SimpleSelect 的展开浮层在自己的事件区域消费 Escape，先请求关
 
 `NavigationMenu` 可使用 children、`resolveIcon`、`renderLabel`、`renderLink`、`renderButton` 与 `renderAction`。renderer 只通过公开 props/ref 扩展；`renderLabel` 提供非交互描述内容，主项仍为 link/button，独立行尾 action 是自己的 button，不触发主项导航。
 
+### 数据菜单与 Controller 所有权
+
+React `/menu` 的 `Menu.View` 把可序列化 `MenuConfig` 渲染为公开 Menu 部件。config 是顶层条目/组的数据树；组内可含条目、heading和separator，不再嵌套group；子菜单仍使用公开JSX组合。数据不含 React 节点、DOM、回调或业务权限；全树 node id 必须唯一，item 的 `actionId` 指向宿主动作，`icon` 是由公开 resolver 解释的标识。Heading 是非交互标题，group 的 label 属于该组，separator 仅分隔内容。隐藏状态由宿主配置，不从权限、路由或当前文案推导。
+
+View 有互斥的两种模式：
+
+- 使用 `config`、可选 `onAction` / `defaultOpen` 时，View 按需创建一个内部 Controller，订阅并连接同一个 Base UI Menu。View 负责该默认实例的生命周期；StrictMode 检查性重挂不会产生第二个有效 owner。
+- 传入 `controller` 时，它完整替换默认 Controller；`config`、`onAction` 与 `defaultOpen` 不可同时传入，首次渲染不会先创建或订阅另一个默认实例。该 Controller 的销毁由注入者负责；View 只订阅、桥接状态并退订。自定义实现的 getState 须在状态未变时返回同一快照，变更后发布新只读快照并通知 subscribe；不得每次读取都创建对象。
+
+Controller 管理 config/open/activeId 与 focus request 等模型事实，并按 `actionId` 发出一次动作事件。同步调用 `event.preventDefault()` 只阻止本次 activation 的默认关闭；异步导航、权限、确认、请求、忙状态与成功/失败仍由宿主完成。Base UI 继续执行实际方向键、roving focus、触发器与关闭焦点行为；View 把 peer 观察到的焦点记入 Controller，并执行它公开发出的 focus request，不新增第二套键盘算法。Menu 不代替 NavigationMenu、业务授权或通用命令路由。 `activeId` 记录 peer 实际聚焦的可见项，包括按 peer 合同可取焦但不可执行的 disabled 项；`focusItem` 的显式命令只接受可见可用动作。隐藏/移除活动项时才回退可用项，全局 disabled 则关闭菜单。
+
 ### 当前项与一次导航适配
 
 `activeId` 显式给出时优先；未给时可以传 location/baseURL 与可选 matchLocation。null、无匹配、禁用或非链接项都不强制选择首项。宿主更新同一位置的受控状态，不逐项重复维护 selected。非受控展开会按需要打开当前项祖先。
@@ -750,9 +775,9 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 
 
 
-采用 AppShell/MenuLayout 时由公共组件拥有唯一侧栏开关。宿主传入 collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange 与标签配置；不得在同一 shell 再实现按钮、媒体监听或抽屉。已有 `sidebarTogglePlacement="top"`（默认）将它放在侧栏顶部靠末端、品牌区下方；显式bottom仍兼容。已选择bottom的宿主需要改这个公开prop才能回到顶部，单独升级包不会覆盖宿主选择。
+采用 AppShell/MenuLayout 时由公共组件拥有唯一侧栏开关。宿主传入 collapsed/onCollapsedChange、sidebarOpen/onSidebarOpenChange 与标签配置；不得在同一 shell 再实现按钮、媒体监听或抽屉。`sidebarTogglePlacement="top"`（默认）时桌面控件位于全局 Header 品牌单元行尾，与品牌同一行；显式 `bottom` 时留在侧栏菜单/页尾之后。窄屏两种设置都复用同一按钮作为现有导航抽屉入口，不复制 DOM。已选择bottom的宿主需要改这个公开prop才能回到顶部，单独升级包不会覆盖宿主选择。
 
-默认图标由库维护：桌面以侧栏分栏轮廓和清晰箭头表达收起/展开动作，窄屏改用菜单图标打开已有导航抽屉；复用control-icon-size、icon-stroke-width、Button命中区和焦点，不缩小按钮或另加字号。图标装饰性隐藏，完整可访问名称与title来自当前动作标签。`?brand=long&row`展示长中文品牌，顶部/底部切换、窄屏和紧凑仍复用同一个控件。本段图标调整从1.2.0提供，top/bottom位置合同保持。
+默认图标由库维护：桌面以大圆角侧栏面板和清晰箭头表达收起/展开动作，箭头沿既有180度状态变化；窄屏改用菜单图标打开已有导航抽屉。复用control-icon-size、通用icon-stroke-width和Button命中区/焦点，不缩小按钮或另加字号。图标装饰性隐藏，完整可访问名称与title来自当前动作标签。`?brand=long&row`展示长中文品牌，顶部/底部切换、窄屏和紧凑仍复用同一个控件。本段图标视觉更新不改变top/bottom API或状态owner。
 
 
 ### 富条目、独立行尾动作与上下文菜单
@@ -794,6 +819,7 @@ NavigationMenu 提供 children/resolveIcon/renderLabel/renderLink、单 button �
 | Sheet | `/sheet` 的 `Sheet.Root/Content/Title/Description/Body/Footer/Close`；`Content side=start/end/top/bottom` | 复用 Dialog 生命周期；标题/描述/关闭部件复用同一组件，正文滚动与 footer 动作保持可达 |
 | AlertDialog | `/alert-dialog` 的 `AlertDialog` 和 peer parts | 使用 alertdialog 角色及明确的初始/最终焦点；确认与取消由宿主决定 |
 | ContextMenu | `/context-menu` 的 Root/Trigger/Content/Item/CheckboxItem/RadioItem 等公开 peer parts | 键盘、右键、外点与回焦点由公开 React 组件管理 |
+| Menu/ContextMenu Separator | 两者均提供 `Separator` 与 `MenuSeparatorProps` | 复用 peer separator 语义与公共行分隔线；无动作、无额外键盘停靠 |
 | Table | `Table/TableRow/TableCell` 等原语 | 语义 table、sticky/selected/expanded 状态与列布局由公开 props 管理 |
 | MetricCard | `/metric-card` 的 `MetricCard` | 复用 Surface；必填 label/value，可选 marker；不格式化值或创建数据 owner |
 
@@ -821,6 +847,8 @@ React Menu.LinkItem透传固定peer的closeOnClick合同，默认false；需要�
 Menu / ContextMenu 的 Item、LinkItem、CheckboxItem、RadioItem、SubmenuTrigger 统一使用显式菜单角色 body-xs/line-height-body-xs/font-weight-control（默认13px/20px/500）。该规则位于 `.xui-menu-item`，不改变 Portal 的 `.xui-layer` body-sm正文；Select/Combobox/Command 中共用该菜单项角色的选项同时得到相同文字合同。
 
 `Menu.Icon` 与 `ContextMenu.Icon` 是同一公开装饰性 span slot，透传 span props/ref，默认 `aria-hidden=true`。示例 `<Menu.Item><Menu.Icon><Settings /></Menu.Icon>设置</Menu.Item>`。slot 与它的直接 SVG 子元素由库绑定 control-icon-size（默认16px）、不收缩；图文间距继续采用 menu-item-gap（默认8px）。SVG 自身24px属性不再改变菜单图标布局；未声明slot的普通嵌套插图不受此规则强制缩放。不要再全局覆写菜单中所有svg。
+
+菜单分组间的语义分隔使用 `<Menu.Separator />` 或 `<ContextMenu.Separator />`，两者共用 `MenuSeparatorProps`、separator-line 与统一行间距；不使用带交互的 Item 假装分隔线，也无需宿主添加私有 CSS。
 
 `.xui-label` 与 `.xui-choice-label` 显式绑定标签字号、行高与字重；Field 仍是 label→control→help→error 的8/4/4px间距，控件 id/htmlFor/aria-describedby/aria-invalid 规则不变。choice-label 的默认36px点击区保留，不因13px文字机械缩为20px。React 组件使用显式 label/error 关联；没有为这次修复新增密度或small/large开关。
 
@@ -1101,13 +1129,13 @@ const cardRef = React.useRef<HTMLElement>(null);
 
 ## Tabs
 
-Tabs布局与图标部件从1.2.0提供，执行结果见[验证记录](VALIDATION.md)；固定1.1.3不包含新增能力。
+Tabs布局与图标部件从1.2.0提供；本版增强默认/选中对比，执行结果见[验证记录](VALIDATION.md)。固定1.1.3不包含新增部件。
 
-React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Icon/Panel` 和 `TabsListProps`。Root拥有受控value/defaultValue，List只管理轨道编排与键盘焦点；Tab的children承载名称，Icon只放装饰性图标，Panel承载对应内容。字体由Tab的control角色统一提供；图标与名称继承Tab的状态色，Panel内公共组件保留自身文字角色。Icon不承载独立按钮、提示或业务状态，真实label不能只放在装饰槽。
+React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Icon/Panel` 和 `TabsListProps`。Root拥有受控value/defaultValue，List只管理轨道编排与键盘焦点；Tab的children承载名称，Icon只放装饰性图标，Panel承载对应内容。Tab拥有 body-sm 字号与行高，普通项字重400、选中项字重600；图标继承文字和状态色，Panel内公共组件保留自身文字角色。Icon不承载独立按钮、提示或业务状态，真实label不能只放在装饰槽。
 
 `Tabs.List.layout` 默认 `content`：轨道贴合标签组，不自动铺满父容器；最大宽度为可用空间，长中文或窄屏自然换行。显式 `equal` 才填满轨道并等分各项，适合确有完整行切换需求的容器。依赖旧满宽轨道的采用方应明确选择equal，不通过宿主内部CSS或缩字号修补。普通Tab可自然增高，图标保持公共尺寸与非收缩；纯文字不留图标空位。
 
-选中项用独立的内嵌底色与强调色名称/图标；未选项为次要文字，hover与键盘focus各有状态。沿用peer的controlled、activateOnFocus、loop、RTL/orientation与panel关联；xui的键盘适配仍只负责跳过disabled。刷新、busy/error及草稿属于宿主或对应Panel，不因切换轨道布局而重挂Root或业务内容。
+普通项使用body 400文字；选中项使用raised底色、强调色文字/图标、heading 600和细边界，透明边框预留的线宽不会改变未选项几何。普通、选中、hover、键盘focus都清晰可辨。沿用peer的controlled、activateOnFocus、loop、RTL/orientation与panel关联；xui的键盘适配仍只负责跳过disabled。刷新、busy/error及草稿属于宿主或对应Panel，不因切换轨道布局而重挂Root或业务内容。
 
 ```tsx
 <Tabs.Root value={view} onValueChange={setView}>

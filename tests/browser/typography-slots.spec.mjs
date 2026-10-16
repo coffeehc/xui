@@ -2,12 +2,12 @@ import {test,expect,chromium} from '@playwright/test';
 import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 
 // The expected roles come from DESIGN, not from the selector declarations.
-const roles={body:[14,22,400,'sans'],control:[14,22,500,'sans'],meta:[13,20,400,'sans'],label:[13,20,500,'sans'],page:[20,28,600,'heading'],section:[16,26,600,'heading'],'body-heading':[14,22,600,'sans'],'meta-heading':[13,20,600,'heading'],metric:[24,28,600,'mono'],code:[14,22,400,'mono']};
+const roles={tab:[14,22,400,'sans'],body:[14,22,400,'sans'],control:[14,22,500,'sans'],meta:[13,20,400,'sans'],label:[13,20,500,'sans'],page:[20,28,600,'heading'],section:[16,26,600,'heading'],'body-heading':[14,22,600,'sans'],'meta-heading':[13,20,600,'heading'],metric:[24,28,600,'mono'],code:[14,22,400,'mono']};
 const normalize=value=>value.replace(/["'\s]/g,'').toLowerCase();
 async function inspect(page,info,label,{controlWeight=500}={}){
  const records=await page.evaluate(()=>{
   const root=getComputedStyle(document.documentElement),fonts=Object.fromEntries(['sans','mono','heading'].map(name=>[name,root.getPropertyValue(`--font-${name}`)]));
-  const read=(node,id,role)=>{const s=getComputedStyle(node);return {id,role,tag:node.tagName,family:s.fontFamily,size:s.fontSize,line:s.lineHeight,weight:s.fontWeight};};
+  const read=(node,id,role)=>{const s=getComputedStyle(node);return {id,role,selected:node.getAttribute('aria-selected')==='true',tag:node.tagName,family:s.fontFamily,size:s.fontSize,line:s.lineHeight,weight:s.fontWeight};};
   const items=[...document.querySelectorAll('[data-type-role]')].filter(n=>n.getClientRects().length).map(n=>read(n,n.dataset.typeId,n.dataset.typeRole));
   // Include library-generated parts; consumers do not need to label or style these.
   for(const [selector,role] of Object.entries({'.xui-card-title':'section','.xui-card-description':'body','.xui-card-meta':'meta','.xui-badge':'label','.xui-calendar-header>strong':'body-heading','.xui-calendar-day':'control','.xui-calendar-weekday':'meta','.xui-menu-group-title':'meta-heading','.xui-nav-item':'control','.xui-pagination>span':'meta','.xui-data-table-count':'meta','.xui-copyable-status':'meta','.xui-image-placeholder':'body'})){
@@ -20,7 +20,7 @@ async function inspect(page,info,label,{controlWeight=500}={}){
   const [size,line,weight,font]=roles[item.role],factor=records.root/16*records.text;
   expect(parseFloat(item.size),`${item.id} size`).toBeCloseTo(size*factor,1);
   expect(item.line,`${item.id} line`).toBe(item.tag==='SELECT'?'normal':`${line*factor}px`);
-  expect(Number(item.weight),`${item.id} weight`).toBe(weight===500?controlWeight:weight);
+  expect(Number(item.weight),`${item.id} weight`).toBe(item.role==='tab'&&item.selected?600:weight===500?controlWeight:weight);
   expect(normalize(item.family),`${item.id} family`).toBe(normalize(records.fonts[font]));
  }
  expect(records.documentWidth).toBeLessThanOrEqual(records.width+1);expect(records.zoom).toBe('1');

@@ -138,7 +138,7 @@ function composeComponentStyles(styles) {
   }
   return layer.toString()+'\n';
 }
-export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','floating','table','auth','sheet','widgets','search-toolbar'];
+export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','selection','floating','table','auth','sheet','widgets','search-toolbar'];
 export async function generate(check = false, outputDirectory='packages/theme/dist') {
   const audit = await auditDesignSources();
   console.log(`Design values: ${audit.files} files, ${audit.declarations} declarations and explicit structural/runtime exceptions checked.`);
@@ -152,10 +152,10 @@ export async function generate(check = false, outputDirectory='packages/theme/di
   const source = await readFile('packages/theme/src/components.css','utf8');
   assert.equal(source,styleParts.map(name=>`@import './${name}.css';`).join('\n')+'\n','Component source must contain the declared local parts only');
   const parts={};
-  for(const name of styleParts){parts[name]=await readFile(`packages/theme/src/${name}.css`,'utf8');checkStyles(parts[name],light,name==='floating'?['--available-height','--available-width','--anchor-width','--toast-swipe-movement-x','--toast-swipe-movement-y']:[]);}
+  for(const name of styleParts){parts[name]=await readFile(`packages/theme/src/${name}.css`,'utf8');checkStyles(parts[name],light,['floating','selection'].includes(name)?['--available-height','--available-width','--anchor-width','--toast-swipe-movement-x','--toast-swipe-movement-y']:[]);}
   const component=composeComponentStyles(styleParts.map(name=>parts[name]).join('\n'));
   checkStyles(await readFile('examples/shared/layout.css','utf8'),light);
-  const files = { 'tokens.css':css, 'components.css':component, 'style.css':css+'\n'+component,'critical.css':css+'\n'+composeComponentStyles(styleParts.filter(name=>name!=='floating').map(name=>parts[name]).join('\n')),...Object.fromEntries(styleParts.map(name=>[`${name}.css`,parts[name]])) };
+  const files = { 'tokens.css':css, 'components.css':component, 'style.css':css+'\n'+component,'critical.css':css+'\n'+composeComponentStyles(styleParts.filter(name=>name!=='floating').map(name=>parts[name]).join('\n')),...Object.fromEntries(styleParts.map(name=>[`${name}.css`,parts[name]])),'floating.css':composeComponentStyles(parts.selection+'\n'+parts.floating),'forms.css':composeComponentStyles(parts.forms+'\n'+parts.selection) };
   await mkdir(outputDirectory,{recursive:true});
   for (const [name,value] of Object.entries(files)) {
     const path = `${outputDirectory}/${name}`;

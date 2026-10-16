@@ -10,7 +10,7 @@ test('aggregate styles preserve the complete ordered cascade of independently ex
  const shape=node=>node.type==='decl'?[node.prop,node.value,node.important??false]:node.type==='rule'?[node.selector,node.nodes.filter(n=>n.type!=='comment').map(shape)]:[node.name,node.params,node.nodes?.filter(n=>n.type!=='comment').map(shape)];
  for(const [file,names] of [['components',styleParts],['critical',styleParts.filter(name=>name!=='floating')]]){
   const expected=[];
-  for(const name of names){const source=postcss.parse(await readFile(`packages/theme/dist/${name}.css`,'utf8'));for(const layer of source.nodes)expected.push(...layer.nodes.filter(n=>n.type!=='comment').map(shape));}
+  for(const name of names){const source=postcss.parse(await readFile(`packages/theme/src/${name}.css`,'utf8'));for(const layer of source.nodes)expected.push(...layer.nodes.filter(n=>n.type!=='comment').map(shape));}
   const aggregate=postcss.parse(await readFile(`packages/theme/dist/${file}.css`,'utf8')),layers=aggregate.nodes.filter(n=>n.type==='atrule'&&n.name==='layer'&&n.params==='xui-components');
   assert.equal(layers.length,1,'Only aggregate layer envelopes are deduplicated');
   assert.deepEqual(layers[0].nodes.filter(n=>n.type!=='comment').map(shape),expected,'Selector/declaration/media/scope order must remain unchanged');
@@ -46,8 +46,8 @@ test('Precision default, uploaded source and semantic CSS fingerprint are versio
   const source=await readFile(metadata.source.path,'utf8');
   assert.equal(createHash('sha256').update(source).digest('hex'),metadata.source.sha256);
   assert.equal(createHash('sha256').update(css).digest('hex'),metadata.defaultCssSha256);
-  assert.equal(metadata.contractVersion,'1.2.0');
-  assert.match(doc,/规范版本：1\.2\.0。/);
+  assert.equal(metadata.contractVersion,'1.3.0');
+  assert.match(doc,/规范版本：1\.3\.0。/);
   assert.equal(metadata.defaultMode,'dark');
   assert.equal(Object.keys(dark).length,metadata.defaultTokenCount);
   assert.equal(dark['--palette-canvas'],'#090b0e');

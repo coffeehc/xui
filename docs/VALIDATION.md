@@ -4,6 +4,36 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## Select浮层、API Key分页、分组日志与Menu Controller（1.3.0，2026-10-16）
+
+DESIGN与`@coffeehc/xui-theme`、`@coffeehc/xui-runtime`、`@coffeehc/xui-react`均为 **1.3.0**；398 Token、86个公开入口、309项逐项接入检查。本节验收xui公共库及独立正式tarball消费者，不表示Argus或其他宿主已升级。
+
+旧1.2.0固定包在API Key创建Dialog中通过公开SimpleSelect选择`demo.never`时，弹层选项中心落在Dialog footer上，真实指针被footer截获。`elementFromPoint`、祖先层叠上下文和失败截图保存在`.artifacts/public-followup/baseline/`。1.3.0把唯一的`selection.css`规则组装进`critical.css`与`forms.css`，`floating.css`仍保留完整`selection + floating`组合；没有用z-index补丁、强制点击或业务DOM处理规避。
+
+本批公开能力与兼容边界：
+
+- `ApiKeyManagerProps.pagination`提供对当前完整、已确认列表的客户端分页，默认10行、可选10/25/50，`false`关闭分页。翻页不再请求adapter，total只来自完整列表长度，刷新继续保留并夹紧当前页；没有增加服务端分页或查询owner。名称主列复用公开的`xui-table-primary`自然宽度策略，metadata/header使用已有`xui-table-label`不换行类，不设单列宽度，不修改DataTable通用合同。
+- `GroupedStructuredLogAdapter.records`可选，完整`StructuredLogAdapter.records`继续必填；HTTP工厂在静态`records: string`时返回兼容完整类型，省略或动态路径返回分组能力类型。没有records时不创建该方法、不显示跨组全量入口，`setView('records')`为no-op。Argus真实GET DTO、权限和wire仍须宿主适配。
+- runtime `/menu`公开可序列化MenuConfig/Node与MenuController；React `Menu.View`可使用自有默认Controller，也可由注入实例完整替换，前者由View清理，后者生命周期归注入者。ActionEvent的同步`preventDefault()`只控制菜单关闭；业务回调和异步动作由宿主负责。Base UI继续拥有键盘和焦点算法，控制器观察所有可见菜单项的真实焦点（包括peer允许聚焦的disabled项），显式`focusItem`与`activate`仍只操作可用项。
+- 顶部导航开关使用唯一节点置于品牌行末端，bottom仍受支持；Tabs普通/选中项采用既有层级与边界合同；Menu/ContextMenu Separator复用typed peer分隔线且不参与roving焦点。Stitch合同审阅见`.artifacts/public-followup/stitch-review.md`。
+
+最终构建generation为`4c42920abfff14f9ee10d4d569d40c392f93e7df7164ff7d76589f3b977fe9b0`，runtime/theme/ui-react的`dist/build.json`同代。正式独立消费者`.consumers/run-8uOPd6/react`使用npm安装三个本地正式tarball并核对86个公开入口、ESM/CSS/types、Menu与Grouped日志类型fixture；没有`packages/src` alias。React/ReactDOM 19.2.8与Base UI 1.7.0均deduped单实例。gzip实测CSS **18360/18432 bytes**、初始JS **133849/135168 bytes**、Button **6619/16384 bytes**。与d5正式包比较110项运行时JS/CSS哈希，仅`packages/runtime/dist/menu.js`与`packages/ui-react/dist/api-key.js`变化，其他108项相同；明细见`release-metadata-js-css-compare.json`。
+
+| 检查 | 结果 | 证据（`.artifacts/public-followup/`） |
+|---|---|---|
+| build / types / Token / 完整单测 | 通过；**446/446** | `release-metadata-build.log`、`release-metadata-typecheck.log`、`release-metadata-tokens.log`、`release-metadata-unit.log` |
+| 正式tarball consumer | 通过；ESM/CSS/types/入口和gzip门禁，React peer单实例 | `release-metadata-consumer.log`、`.consumers/run-8uOPd6/react`、`performance-baseline.json` |
+| d5 Chromium既有矩阵；569ab951 Firefox/WebKit精选矩阵 | **141/141 Chromium**（d5）；另有 **56/56 Firefox+WebKit**（569ab951）。两份报告均保留，不重复计入本代新测试；110项JS/CSS哈希比较相同 | `final-browser.json`、`cross-browser.json`、`release-compatible-build.log`、`release-compatible-consumer.log`、`release-compatible-js-css-compare.log`及各浏览器`.log` |
+| 4c最终正式包浏览器矩阵 | Chromium **47/47**；Firefox/WebKit精选 **56/56**（各28项）；另有真实指针打开/选择/回焦点 **12/12**。覆盖P1指针命中、API Key metadata/headers Range边界及Menu键盘前置 | `release-final-browser.json`、`release-final-browser.log`、`release-final-cross.json`、`release-final-cross.log`、`select-popup-final.json`、`select-popup-final.log` |
+
+旧1.2.0的P1失败按上文保留。期间发现并修正的测试/实现问题完整保留：初次完整单测的3项SSR断言仍假定开关在aside，按已公开Header归属更新后最终446/446通过；Menu宿主示例曾在modal关闭提交前将焦点移至背景，改为关闭后转焦点，库未改该owner。之后定位真实`MenuController.recordFocus`缺陷：Base UI允许disabled项取焦而model拒绝记录，导致activeId滞后；修复状态观察，保留peer行为并继续断言disabled零执行。手动复验Menu键盘时曾在真实item focus未就绪时发送End/ArrowUp，焦点还在popup；增加触发器focus、Enter打开及首项焦点就绪断言后，隔离重复3/3通过，不改运行时键盘算法。API Key最初给名称列固定width后，正式截图发现metadata列仅约98px且时间范围溢入相邻列；删除该width并复用自然列布局，新增metadata/header Range边界检查。之后截图发现状态Badge与部分短表头换行，改为复用既有label类并增加断言；最终4c正式包Chromium47/47、Firefox/WebKit精选56/56通过。测试曾只按`td`查找表头Range，导致空引用；改为同时覆盖`th`和`td`后复验通过，没有改生产代码。最终Tab选中边界采用token化border；早期预检报错保留在`precheck.log`，没有放宽design guard。
+
+Stitch确认了品牌行内开关、Tabs层级、typed Separator的合同，并审阅API Key完整集合客户端分页方案；这不是消费端浏览器验收。尝试通过嵌入式Stitch的选择文件、Upload Files和file input上传合成截图时，filechooser未返回；没有宣称截图已上传。本地正式消费者截图保存在`screenshots/`；主线程已查看表格元数据/表头与深色窄屏弹层命中截图，逐项记录在`stitch-review.md`。
+
+复现门禁：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`、`pnpm test:unit`、`pnpm test:consumer`。Menu定向命令为`pnpm exec playwright test tests/browser/action-menu.spec.mjs --config=.artifacts/public-followup/menu-final.config.mjs`；Firefox/WebKit用同一spec及`menu-cross-final.config.mjs`。早期d5矩阵用`final.config.mjs`与`cross.config.mjs`，本代最终矩阵用`release-final.config.mjs`与`release-final-cross.config.mjs`。保留各轮原始报告和可用的截图/trace，没有拿JSON收集报告替代执行结果。
+
+未跑全仓浏览器全集、watch/cold-start、消费产品真实页面或后端/API/权限/部署、独立SSR hydration、实体移动设备和读屏器。Argus升级、真实API wire适配与业务owner验收仍归宿主；库级验证不能替代这些步骤。
+
 ## 公共展示与导航布局 1.2.0（2026-10-16）
 
 DESIGN与theme/runtime/react三个私有包均为 **1.2.0**；398 Token、85正式入口、303项逐项接入检查。只修改xui。本批统一Card的header/content/footer三段与默认图标tile、neutral soft标签、Footer分区；CardGroup新增可选cardSizing=equal，以真实内容计算共同卡高、伸展content并让Footer靠底，不固定高度或裁正文。Tabs.List默认内容宽，显式equal占满并等分；Tabs.Icon为装饰性图标，其命名属性在类型中明确禁止。Icon新增color/blink，支持CSS变量，Badge/Text/Avatar支持显式前景，字体角色和样式继承保持。

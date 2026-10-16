@@ -24,13 +24,13 @@
   .xui-nav-item[data-collapsed="true"]::before { inset-inline-start: var(--nav-selected-indicator-inset-collapsed); }
   .xui-nav-item:disabled, .xui-nav-item[aria-disabled="true"] { color: var(--menu-item-disabled-foreground); cursor: not-allowed; }
   .xui-nav-item svg { width: var(--control-icon-size); height: var(--control-icon-size); flex-shrink: 0; }
-  .xui-tabs-list { display:flex; flex-wrap:wrap; inline-size:fit-content; max-inline-size:100%; min-inline-size:0; gap:var(--space-text-gap); padding:var(--tabs-padding); background:var(--layer-support); border-radius:var(--radius-lg); }
+  .xui-tabs-list { display:flex; flex-wrap:wrap; inline-size:fit-content; max-inline-size:100%; min-inline-size:0; gap:var(--space-text-gap); padding:var(--tabs-padding); background:var(--layer-support); border:var(--line-width-surface) solid var(--surface-line); border-radius:var(--radius-lg); }
   .xui-tabs-list[data-layout="equal"] {inline-size:100%;}
   .xui-tabs-list[data-layout="equal"]>.xui-tab {flex:1 1 0;}
   .xui-tabs-list[data-orientation="vertical"] {flex-direction:column;align-items:stretch;}
-  .xui-tab { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-icon-gap); min-inline-size:0; max-inline-size:100%; background:transparent; color:var(--muted-foreground); min-height:var(--control-height-sm); padding:var(--space-text-gap) var(--space-control-gap); border:0; border-radius:var(--radius-md); cursor:pointer; overflow-wrap:anywhere; font:var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans); transition:background-color var(--motion-duration) var(--motion-easing),color var(--motion-duration) var(--motion-easing); }
+  .xui-tab { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-icon-gap); min-inline-size:0; max-inline-size:100%; background:transparent; color:var(--muted-foreground); min-height:var(--control-height-sm); padding:var(--space-text-gap) var(--space-control-gap); border:var(--line-width-surface) solid transparent; border-radius:var(--radius-md); cursor:pointer; overflow-wrap:anywhere; font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans); transition:background-color var(--motion-duration) var(--motion-easing),color var(--motion-duration) var(--motion-easing); }
   .xui-tab:where(:hover):not(:disabled, [aria-disabled="true"]) { background: var(--interaction-hover); }
-  .xui-tab[aria-selected="true"] {background:var(--layer-canvas);color:var(--action-primary);}
+  .xui-tab[aria-selected="true"] {background:var(--layer-raised);color:var(--action-primary);font-weight:var(--font-weight-heading);border-color:var(--surface-line);}
   .xui-tab:focus-visible {outline-offset:calc(-1 * var(--focus-width));}
   .xui-tab:disabled, .xui-tab[aria-disabled="true"] { color: var(--muted-foreground); cursor: not-allowed; }
   .xui-tab-panel { padding-block: var(--space-content-gap); animation: xui-feedback var(--motion-duration-enter) var(--motion-easing); }

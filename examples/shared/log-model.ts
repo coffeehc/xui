@@ -26,7 +26,7 @@ export function createStructuredLogExample(baseURL:string){
     return new Response(JSON.stringify({success:status===200,message:status===200?'':'FAKE_PRIVATE_LOG_ERROR',payload,code:status===200?1:-1,request_id:'demo-log-request'}),{status,headers:{'Content-Type':'application/json','X-Request-ID':'demo-log-header'}});};
     if(modes[name]==='hold')return new Promise(resolve=>pending[name].push(()=>resolve(reply())));return reply();};
   const client:HttpClient=createHttpClient({baseURL:new URL('./fake-log-api/',baseURL).href,fetch});
-  const adapter=createStructuredLogHttpAdapter(client,{groups:'groups',records:'records',groupRecords:'groupRecords',record:'record'});
+  const adapter=createStructuredLogHttpAdapter(client,{groups:'groups',...(new URL(baseURL).searchParams.has('grouped')?{}:{records:'records'}),groupRecords:'groupRecords',record:'record'});
   const controller=createStructuredLogController({adapter,pageSize:2,labels,sources:['collector','validation','billing'],categories:['network','input','capacity'],baseURL,resolveRef:ref=>ref.kind==='source'?`./reference.html?id=${encodeURIComponent(ref.id)}`:null});
   return {controller,getRequests:()=>requests,setMode:(kind:Kind,mode:Mode)=>{modes[kind]=mode;},release:(kind:Kind)=>pending[kind].shift()?.(),setRows:(value:LogRecordDetail[])=>{rows=value;},getRows:()=>rows,setGroupCount:(id:string,count:string)=>countOverrides.set(id,count),destroy(){controller.destroy();client.destroy();}};
 }
