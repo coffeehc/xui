@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import * as React from 'react';
 import {renderToString} from 'react-dom/server';
 import {createAdminSetupController,adminSetupLabels,getAdminSetupMessage} from '../packages/runtime/dist/admin-setup.js';
-import {AdminSetupPage} from '../packages/ui-react/dist/admin-setup.js';
+import {AdminSetupPage,AdminSetupForm} from '../packages/ui-react/dist/admin-setup.js';
+import {AuthPage} from '../packages/ui-react/dist/login.js';
 const credentials=()=>({username:'admin',password:'sample-password'}),deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
 test('administrator setup serializes writes and clears the provided secret without putting it in state',async()=>{
  const wait=deferred();let calls=0;const owner=createAdminSetupController({state:{status:'idle'},onSubmit:()=>{calls++;return wait.promise;}}),input=credentials();const pending=owner.submit(input);assert.equal(owner.getState().status,'submitting');assert.doesNotMatch(JSON.stringify(owner.getState()),/sample-password|admin"/);const duplicate=credentials();await owner.submit(duplicate);assert.equal(calls,1);assert.equal(duplicate.password,'');wait.resolve('complete');await pending;assert.equal(input.password,'');assert.equal(owner.getState().status,'complete');await owner.submit(credentials());assert.equal(calls,1);
@@ -37,3 +38,13 @@ test('administrator controller form aggregate owns all local errors and password
  form.clear();assert.deepEqual(form.getState(),{usernameError:false});assert.deepEqual(form.passwordFields.getState(),{error:null,tipOpen:false,strength:{status:'idle'}});assert.equal(form.passwordFields.password.inputController.getState().visible,false);assert.equal(form.passwordFields.confirmation.getState().visible,false);
  controller.destroy();form.setUsernameError(true);assert.equal(form.getState().usernameError,false);
 });
+
+ test('standalone setup form and page share the same model contract without nesting page shells',()=>{
+ const props={state:{status:'idle'},onSubmit(){throw new Error('SSR must not submit');}};
+ const form=renderToString(React.createElement(AdminSetupForm,props));
+ assert.equal((form.match(/<form\b/g)||[]).length,1);assert.equal((form.match(/type="password"/g)||[]).length,2);assert.doesNotMatch(form,/<main|<h1|xui-login-(?:page|card|brand)/);
+ const shell=renderToString(React.createElement(AuthPage,{config:{productName:'Example',title:'Setup'}},React.createElement(AdminSetupForm,props)));
+ assert.equal((shell.match(/<main\b/g)||[]).length,1);assert.equal((shell.match(/<form\b/g)||[]).length,1);assert.equal((shell.match(/xui-login-card/g)||[]).length,1);
+ const owner=createAdminSetupController(props);assert.doesNotMatch(JSON.stringify(owner.getState()),/password/);
+ assert.throws(()=>renderToString(React.createElement(AdminSetupForm,{controller:owner,...props})),/controller cannot/);owner.destroy();
+ });

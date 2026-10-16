@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.0.1）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.1.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -351,6 +351,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | AUTH-UI-004 | 主动作、次级动作与反馈 | actions只放主提交；alternatives只放真实SSO等次级入口；feedback/feedbackActions在主动作后自然增高，空槽无轨道 | busy/error/unknown、请求次数、DOM身份及必要结果全文可读 | [认证布局](COMPONENTS.md#认证布局-slot-归属) |
 | AUTH-UI-005 | 字体与界面放大 | 采用login-title、section-title、body-sm/meta角色与公共缩放；宿主不设内容字号/控件皮肤，不缩字或裁字段维持构图 | light/dark/system、320/390px、125/150/200%界面、200%文字及真实浏览器缩放 | [认证设计](DESIGN.md#公共登录页布局与主题) |
 | AUTH-UI-006 | 登录视觉升级 | AuthClient、导航、密码清理和扩展回调归属不变；提交无取消、无重复写，切主题/缩放不重挂表单 | Network顺序、受控/注入、焦点/选区、pagehide及迟到结果 | [认证会话](PUBLIC_API.md#认证会话) |
+| AUTH-UI-007 | 检查/错误切换到管理员初始化 | 保留同一AuthPage与品牌/卡片节点；children使用AdminSetupForm，AuthPage从首次挂载省略form；检查阶段零form、初始化阶段唯一form，不复制校验/提交或嵌套完整页面；busy/清密/未知结果仍按原合同 | 阶段切换前后node identity、form计数、请求与密码清理轨迹 | [初始化组合](COMPONENTS.md#可组合初始化表单) |
 | STATE-COPY-001 | 复制文本或显式writer | 使用runtime剪贴板服务或既有平台writer，写入串行、取消/迟到隔离；失败就地反馈，不读剪贴板/持久化/自动重试 | 真实指针、fallback焦点/选区/scroll、队列/失败/取消计数 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |

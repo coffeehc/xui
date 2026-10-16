@@ -11,6 +11,12 @@
   .xui-login-visual {display:grid;place-items:center;min-inline-size:0;max-block-size:var(--login-visual-max-block-size);overflow:hidden;}
   .xui-login-visual :is(img,svg,picture) {display:block;max-inline-size:100%;max-block-size:var(--login-visual-max-block-size);object-fit:contain;}
   .xui-login-form {display:flex;flex-direction:column;align-items:center;inline-size:100%;min-inline-size:0;min-block-size:0;}
+  /* A complete setup form can live in an existing AuthPage body or another
+     public container. The enclosing body supplies focus clearance when present. */
+  .xui-admin-setup-fields {padding-block-end:calc(var(--focus-width) + var(--focus-offset));}
+  .xui-admin-setup-form {padding:calc(var(--focus-width) + var(--focus-offset));}
+  .xui-login-body>.xui-admin-setup-form {padding:0;}
+  .xui-admin-setup-form>.xui-login-content>.xui-login-actions,.xui-admin-setup-form>.xui-login-support>.xui-login-feedback {padding-inline:0;}
   .xui-login-content {display:flex;flex-direction:column;gap:var(--space-content-gap);inline-size:min(100%,var(--login-form-inline-size));min-inline-size:0;min-block-size:0;}
   /* The feedback track owns four-sided focus clearance. The form itself grows
      naturally so short viewports and enlarged text use document scrolling. */
@@ -20,9 +26,9 @@
   .xui-login-heading {display:grid;gap:var(--login-heading-gap);}
   .xui-login-body h1 {margin:0;font:var(--font-weight-heading) var(--login-title-font-size)/var(--login-title-line-height) var(--font-heading);}
   .xui-login-body p {margin:0;}
-  .xui-login-body .xui-label {font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);}
-  .xui-login-body .xui-input {min-block-size:var(--login-control-height);font-size:var(--login-control-font-size);line-height:var(--login-control-line-height);}
-  .xui-login-body .xui-input-group>.xui-input {min-block-size:var(--login-group-input-height);scroll-margin:calc(var(--focus-width) + var(--focus-offset) + var(--line-width-surface));}
+  :is(.xui-login-body,.xui-admin-setup-form) .xui-label {font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);}
+  :is(.xui-login-body,.xui-admin-setup-form) .xui-input {min-block-size:var(--login-control-height);font-size:var(--login-control-font-size);line-height:var(--login-control-line-height);}
+  :is(.xui-login-body,.xui-admin-setup-form) .xui-input-group>.xui-input {min-block-size:var(--login-group-input-height);scroll-margin:calc(var(--focus-width) + var(--focus-offset) + var(--line-width-surface));}
   .xui-login-actions {display:grid;gap:var(--space-control-gap);flex-shrink:0;min-inline-size:0;}
   /* Keep one extreme configured label within a usable control. The surrounding
      brand, fields and action group still use natural document scrolling. */

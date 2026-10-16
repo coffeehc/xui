@@ -47,6 +47,12 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 ## 后续公开维护项（2026-10-16）
 
+### XUI-REQ-20261017-09：检查到初始化的共享认证外壳（4.1.0 / 3.1.0已实现，待宿主验收）
+
+来源：xLead固定3.0.1 / `7722d385270426824e13ef1a47d85b7c6903fa31`；其startup的`auth(setup=true)`显式destroy检查AuthPage，再挂完整AdminSetupPage。旧公开声明没有可脱离外壳复用的初始化表单；这是公共组合缺口，产品节点连续性失败不等同于此前Disclosure受控时序缺陷。
+
+现新增 `@coffeehc/xui-react/admin-setup` 与根入口的AdminSetupForm、Props和Handle；完整Page直接复用它。宿主保留同一个AuthPage，首次即省略form，在children切换检查/错误和Form；不套两层AuthPage或嵌套form，不复制密码/提交逻辑。既有AdminSetupController仍是唯一提交/结果owner，业务初始化API、权威状态、未知结果恢复及后续登录/导航归宿主。接口、slot与可运行示例见[组件合同](COMPONENTS.md#可组合初始化表单)，具体结果及限制见[验证记录](VALIDATION.md#可组合管理员初始化表单410--3102026-10-17)。本轮仅修改xui，不据库级样板宣称xLead或其他产品已升级验收。
+
 ### XUI-REQ-20261016-08：受控 Disclosure 展开后的即时内容聚焦（4.0.1 / 3.0.1已解决，待宿主验收）
 
 来源：xLead固定 `b9753a4f43967c76f566eefdab38042d0423da18` / 3.0.0，公开 `Disclosure open/onOpenChange` 在父 effect 内仍隐藏，导致来源记录 `article tabIndex=-1` 立即focus失败。独立正式3.0.0消费者复现；主线4.0.1及兼容3.0.1将共享受控overlay/value/selection在当前render投影，提交后同步内部Controller，不引入定时器、DOM补丁或用户回调循环。默认/注入、取消、SSR和实际浏览器结果见[本轮验证](VALIDATION.md#受控交互的当前提交一致性401兼容回补3012026-10-16)。Select派生标签仍遵循peer生命周期；不能把此修复推广为所有Portal或动画都在父effect前完成。3.0.1不包含4.0迁移，不要求宿主跨主版本升级。本轮只修改xui，宿主安装、接线和实际来源跳转仍待其验证。

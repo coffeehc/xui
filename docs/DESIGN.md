@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.0.1。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.1.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1467,6 +1467,8 @@ UI是人类观察系统状态和数据、直接操作并介入Agent操作的入�
 默认layout=card采用layer-surface、surface-line的1px完整边界和login-card-radius（默认16px），无顶部青线、投影、渐变或光晕；主动作是页面唯一的大面积强调色。卡片默认418px：360px内容轨道（含四边focus余量）+两侧28px内距+边框；横向内距由login-card-inline-padding限制在28px派生值与8vw的较小值，文字/界面放大时不让内距挤占字段；纵向仍按缩放派生。窄屏收缩至可用宽度，390px视口默认外侧各16px、卡片358px。内容增加或视口变矮时整个组随文档自然滚动，不限制表单高度。fullscreen保留相同品牌/表单结构、尺度与顺序，只省略卡片表面和边框。禁止左右宣传面板、背景大图、虚构环境/安全状态、页脚及额外入口。
 
 卡片内层级顺序为任务标题→可选任务说明→常显标签/字段→唯一主动作→真实次级认证→局部反馈。标题使用login-title-font-size/line-height，默认26/32px、600，由page-title角色派生并分别尊重font-scale与line-height-scale；不改变普通页面标题。description使用body-sm 14/22px与muted-foreground，标题到说明8px、标题组到首字段20px。宿主标题建议“登录”或“创建管理员”，显式配置原样保留，不猜测删词。字段label、输入和主动作统一body-sm 14/22px、控件字重继承已有角色；label到input8px、字段间16px、末字段到主动作20px，字段和主动作同宽。login-control-height默认46px，由control-height-lg、space-text-gap及两条surface线派生；InputGroup外框也为46px，文字增大时自然增高。帮助、错误仍body-xs 13/20px；不新建认证调色板、字体栈或焦点规则。
+
+完整初始化页复用公共AdminSetupForm。检查到初始化阶段需要连续外壳时，宿主保留同一AuthPage，将检查内容切换为AdminSetupForm；外层省略form，表单自行拥有唯一语义form及字段/动作/反馈。Form沿用既有认证文字、控件、焦点和间距Token，不增加品牌/标题/卡片或另一套认证样式。
 
 反馈仍在主按钮之后。feedback与feedbackActions均为空或隐藏时不占位；React识别空Fragment与条件空值，空反馈槽不生成占位。没有固定或最小反馈轨道高度，form到support不额外叠加间隔。checking、错误、未知后果与实际恢复动作按内容自然增高；字段和主动作的尺寸、相对顺序与DOM保持，整体居中卡片可因此调整位置。不得为零位移设置大块空白、固定反馈高度、裁切或要求用户在单行消息窗口内滚动。长页使用文档自然滚动；验收须区分必要内容增长与控件重建/尺寸跳变。
 

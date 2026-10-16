@@ -4,6 +4,33 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 可组合管理员初始化表单（4.1.0 / 3.1.0，2026-10-17）
+
+新增 `/admin-setup` 与根入口的 `AdminSetupForm / AdminSetupFormProps / AdminSetupFormHandle`，完整 `AdminSetupPage` 直接复用同一个 Form。宿主保留一个不传form的AuthPage，在children切换检查/错误内容与Form；检查期间零form，初始化期间唯一form。没有修改AuthPage的form模式约束，没有复制密码/提交逻辑，也没有修改runtime认证、初始化协议或消费项目。
+
+库源码基线为主线 `35fc181e852112f7c56338a858261b5ef740e932` / 4.0.1 与兼容线 `7722d385270426824e13ef1a47d85b7c6903fa31` / 3.0.1。正式三包与DESIGN分别为 **4.1.0 / 3.1.0**，404 Token、104 / 102正式入口、375 / 363逐项接入检查。最终source generation：主线 `86580e148a182f65c36260f548d600a4337a6a30a3660b5090dd9f7bc9f407f7`，兼容线 `acda2c6837ce088d6729623360c13c4213beaf0cf75d90308f65daa6af3bd253`。3.1.0只扩展原3.x公共表单，不要求服务/Upload迁移；新增示例按各版本既有入口激活唯一Theme owner，不创建第二主题状态。
+
+| 检查 | 主线4.1.0 | 兼容3.1.0 |
+|---|---|---|
+| build / typecheck / Token / 正式包与类型 / diff | 通过 | 通过 |
+| 完整unit | 506/506 | 492/492 |
+| Chromium专项与相关回归 | 45/45 | 45/45 |
+| Firefox / WebKit Form专项 | 各12/12，共24/24 | 各12/12，共24/24 |
+| critical CSS gzip / 上限 | 19053 / 19456 | 18680 / 18688 |
+| 首屏JS gzip / 上限 | 141914 / 153600 | 152195 / 153600 |
+
+正式消费者安装同代ESM/CSS/types与React/ReactDOM 19.2.8、Base UI 1.7.0，逐输入排除packages/src alias。正负类型fixture覆盖子入口/根导出、ref和默认/注入互斥；示例对checking状态执行真实SSR后hydrate，production与开发StrictMode均无hydration/page error。没有真实初始化、登录或后台请求。
+
+新增15项Chromium专项覆盖默认/借用 × production/StrictMode、检查→错误→重试→初始化的main/brand/logo/card节点identity、0→1 form、校验错误关联及焦点、同tick双提交仅一次、用户名保留、busy和即时清密、未知结果锁定、手动核对失败/完成，以及ref.clear与退出清密、借用实例继续可用和显式停止后迟到结果隔离。旧完整Page、纯AuthPage及相关密码/反馈回归包含于45项，不另相加。三主题、1280/320px、长中文、200%根字号和system实时变化均验证；真Chrome200%页面缩放确认DPR×2、CSS视口减半、根字号不变、CSS zoom/pinch=1，且完成键盘提交。已查看最终浅色宽屏、深色窄屏大字、真实zoom和WebKit窄屏代表图；沿用Stitch V3既有视觉合同，本轮未另请Stitch审图或改Token值。
+
+WebKit在窄屏大字时原生focus仅滚动到caret，初轮跨引擎21/24，三项完整输入组焦点环被裁切。定向诊断在2/10帧后仍测得bottom828.97 > viewport800，证明并非未等待绘制。Form现在在下一布局帧仅对仍连接且仍为activeElement的控件调用标准nearest滚动，遵循现有scroll-margin，不改焦点、Controller或回调；正式包保留严格四边断言并增加真实键盘顺序。绘制测量等待两帧；WebKit使用该平台完整键盘导航Alt+Tab，与仓库既有用例一致。修复后曾因新增测试误用默认Tab而出现三项button未聚焦，随后仅修正平台按键，未放宽边界或强制focus。过程诊断与失败记录均保留。
+
+主线最初57项中49通过、8失败：4项来自新测试在busy后仍用旧按钮名称定位，改为唯一原生submit并保留文案/disabled验证；另4项是无关旧text-inputs示例system有效属性未实时更新。后者已用固定4.0.1正式消费者复现（`baseline-theme.json/log/mjs`），其示例只启用预绘制init，没有激活实时Theme owner，未在本次修改。最终定向运行排除该12项Textarea矩阵；其余45项完整通过，不宣称最初57项或全仓浏览器全绿。
+
+证据在两工作树各自 `.artifacts/admin-setup-form-validation/` 并随固定产物归档：主线 `build-main-focus.log`、`typecheck-main-focus.log`、`unit-main-focus.log`、`consumer-main-focus.log`、`browser-main-focus-final.json/log`、`cross-main-final.json/log`；兼容线构建/类型/unit/consumer见 `*-final.log`，Chromium为 `browser-focus-final.log`，跨引擎为 `cross-evidence-final.json/log`；Chromium最终45项仅保留通过日志，不宣称另有最终JSON。初轮日志、WebKit诊断JSON及images保留。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`pnpm test:unit`、`pnpm test:consumer`；Chromium运行 `admin-setup-form.spec.mjs admin-setup.spec.mjs auth-page.spec.mjs public-feedback.spec.mjs --grep-invert 'textarea bounded'`；跨引擎只运行新Form文件并排除`genuine Chrome`。配置、独立端口及正式消费者路径见归档。
+
+兼容性：新增接口为可选采用的组合能力，原Page props/handle、Controller、labels、提交结果与密码清理合同保持。Page内私有DOM改由Form组合；消费方不得依赖私有结构。未执行无关浏览器全集、watch/cold-start、真实读屏器/实体移动设备、消费产品初始化/认证API、持久化或部署验收，不替宿主豁免自己的门禁。
+
 ## 受控交互的当前提交一致性（4.0.1，兼容回补3.0.1，2026-10-16）
 
 xLead 在固定 `b9753a4f43967c76f566eefdab38042d0423da18` / 3.0.0 上反馈：父组件确认 Disclosure `open=true` 后，其 effect 仍读取到隐藏内容，立即 focus 失败。独立正式3.0.0消费者复现了该问题；同源的 Tabs / Combobox 受控值也在父 effect 中滞后一轮。证据为 `.artifacts/controlled-render-validation/baseline-3.0.0.{json,log}` 与 `baseline-values-3.0.0.{json,log}`。本轮没有修改或验收 xLead。

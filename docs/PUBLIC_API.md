@@ -136,7 +136,7 @@
 | `@coffeehc/xui-react/command` <!-- public-entry: @coffeehc/xui-react/command --> | [源码](../packages/ui-react/src/command.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-react/search-toolbar` <!-- public-entry: @coffeehc/xui-react/search-toolbar --> | 及根入口：`SearchToolbar` / `SearchToolbarProps`，search/actions/advanced 三内容槽；defaultExpanded=false，支持 expanded/onExpandedChange，advancedLabel 与 div props/ref。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/display` <!-- public-entry: @coffeehc/xui-react/display --> | Typography.Heading/Text/Link/Code、Copyable、Separator、Tag、Image，及同名 props/共享类型。 | [组件合同](COMPONENTS.md) | — |
-| `@coffeehc/xui-react/admin-setup` <!-- public-entry: @coffeehc/xui-react/admin-setup --> | AdminSetupPage、AdminSetupPageProps、AdminSetupPageHandle 与共享状态类型。 | [组件合同](COMPONENTS.md) | — |
+| `@coffeehc/xui-react/admin-setup` <!-- public-entry: @coffeehc/xui-react/admin-setup --> | AdminSetupPage / AdminSetupForm、各自Props/Handle与共享状态类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/card-group` <!-- public-entry: @coffeehc/xui-react/card-group --> | [源码](../packages/ui-react/src/card-group.tsx)；CardGroup、CardGroupProps、CardGroupContext、CardGroupCardProps及共用Collection类型 | [CardGroup](COMPONENTS.md#cardgroup) | [示例](../examples/card-group-react/app.tsx) |
 
 CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` 和 `forms.css` 包含基础 Select 定位/菜单项样式，`floating.css` 保留完整的 selection + floating 兼容组合。`forms.css` 是 forms + selection 组合入口；使用这些公开分片时不直接导入内部源码文件。
@@ -380,6 +380,8 @@ ACL/权限过滤后的有界扫描可以连续返回空 list 与非空 next_curs
 [共享身份矩阵](../tests/fixtures/contracts/identity-encodings.v1.json)、[hex 认证 fixture](../tests/fixtures/contracts/auth.v2.hex.json) 与 [hex Key v2 fixture](../tests/fixtures/api-key-contracts.v2.hex.json) 验证明确编码；Cookie/Bearer 隔离、内存凭据、取消/迟到和不重放规则不变。响应格式失败不暗中回退另一编码，也不能把后端已提交但投影失败称作回滚。
 
 公共认证视觉由`@coffeehc/xui-react/login`的`AuthPage`统一；2.0.1采用Stitch V3的卡片外品牌与卡片内表单。现有配置、完整登录/初始化回调和Controller接口不变；slot、字体、颜色和空状态逐项见[认证布局](COMPONENTS.md#认证布局-slot-归属)，不要让宿主再造认证布局或改变请求协议。
+
+`/admin-setup` 同时导出不生成页面的 `AdminSetupForm`，支持与完整页相同的默认/注入 Controller 和提交合同。检查→初始化保持一个AuthPage时，将它放入children并从首次挂载省略AuthPage.form；完整页复用同一个表单。slot、清密与组合限制见[初始化组合](COMPONENTS.md#可组合初始化表单)。此项不增加认证/初始化API或自动检查。
 
 ## 认证会话
 

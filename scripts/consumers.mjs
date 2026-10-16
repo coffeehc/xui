@@ -75,9 +75,10 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile('examples/shared/bootstrap-browser.ts',`${cwd}/shared/bootstrap-browser.ts`);
     await copyFile('tests/fixtures/controller-modes.tsx',`${cwd}/controller-modes.tsx`);
     await copyFile('tests/fixtures/controlled-render.tsx',`${cwd}/controlled-render.tsx`);
+    await copyFile('tests/fixtures/admin-setup-form-types.tsx',`${cwd}/admin-setup-form-types.tsx`);
     await copyFile('tests/fixtures/toast-types.tsx',`${cwd}/toast-types.tsx`);
     await copyFile('tests/fixtures/upload-types.tsx',`${cwd}/upload-types.tsx`);
-    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','controlled-render.tsx','toast-types.tsx','upload-types.tsx'],{cwd,stdio:'inherit'});
+    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','controlled-render.tsx','admin-setup-form-types.tsx','toast-types.tsx','upload-types.tsx'],{cwd,stdio:'inherit'});
     await copyFile('examples/shared/layout.css', `${cwd}/layout.css`);
     await writeFile(`${cwd}/product.css`, extract(await readFile('docs/DESIGN.md', 'utf8'), 'design-product-css'));
     const require = createRequire(`${cwd}/package.json`);
@@ -505,6 +506,24 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     }
     await writeFile(`${adminSetupOutput}/index.html`, adminHtml);
     await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'), `${adminSetupOutput}/theme-init.js`);
+    const setupForm = resolve(cwd, 'admin-setup-form'), setupFormOutput = resolve('dist/admin-setup-form-react');
+    await cp('examples/admin-setup-form-react',setupForm,{recursive:true});
+    const setupFormBuild=await build({entryPoints:[`${setupForm}/app.tsx`],outdir:setupFormOutput,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+    assert(Object.keys(setupFormBuild.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Setup form escaped its standalone install');
+    assert(!Object.keys(setupFormBuild.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'Setup form depends on private CSS');
+    await writeFile(`${setupForm}/server.tsx`,"import * as React from 'react';import {renderToString} from 'react-dom/server';import {StartupSetupExample} from './view.js';console.log(renderToString(<React.StrictMode><StartupSetupExample/></React.StrictMode>));");
+    await build({entryPoints:[`${setupForm}/server.tsx`],outfile:`${setupForm}/server.mjs`,bundle:true,platform:'node',format:'esm',jsx:'automatic',packages:'external'});
+    const setupFormMarkup=execFileSync('node',[`${setupForm}/server.mjs`],{cwd,encoding:'utf8'}).trim();
+    const setupFormHtml=(await readFile(`${setupForm}/index.html`,'utf8')).replace('<!--ssr-->',setupFormMarkup);
+    for(const [directory,development] of [[setupFormOutput,false],[resolve('dist/admin-setup-form-react-strict'),true]]){
+      await mkdir(directory,{recursive:true});
+      if(development)await build({entryPoints:[`${setupForm}/app.tsx`],outdir:directory,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"development"'}});
+      await writeFile(`${directory}/index.html`,setupFormHtml);
+      await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${directory}/theme-init.js`);
+      await copyFile('examples/shared/login-mark.svg',`${directory}/mark.svg`);
+    }
+    await writeFile(`${setupFormOutput}/metafile.json`,JSON.stringify(setupFormBuild.metafile,null,2));
+    execFileSync('node',[require.resolve('typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','admin-setup-form/app.tsx'],{cwd,stdio:'inherit'});
     const authPage = resolve(cwd, 'auth-page'), authPageOutput = resolve(`dist/auth-page-${kind}`);
     await cp(`examples/auth-page-${kind}`, authPage, { recursive: true });
     const authPageBuild = await build({ entryPoints: [`${authPage}/app.${'tsx'}`], outdir: authPageOutput, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '"production"' } });

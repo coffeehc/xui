@@ -78,7 +78,7 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 | `PasswordInput` | 默认安全显隐模型或 `PasswordInputController` | 仅 visible/cleared，不含秘密值；DOM/reset/pagehide/退出清理不可禁用，宿主受控密码仍由宿主持有 |
 | `PasswordStrengthInput` | 默认强度模型或 `PasswordStrengthController` | 无秘密强度摘要及其密码显隐子模型；DOM reader 在绑定期有效，worker/迟到结果按代次隔离 |
 | `NewPasswordFields` | 默认或 `NewPasswordFieldsController` | 安全错误码、提示开合、两个显隐/强度子实例；只在提交边界瞬时读取密码，快照不含密码或匹配词 |
-| `AdminSetupPage` | 原 state/onSubmit/onCheck 或 `AdminSetupController` | 旧权威初始化状态与提交/核对合同保留，新增 form 聚合含用户名错误与密码字段展示子模型；不新建 auth/API |
+| `AdminSetupPage / AdminSetupForm` | 原 state/onSubmit/onCheck 或 `AdminSetupController` | 旧权威初始化状态与提交/核对合同保留，新增 form 聚合含用户名错误与密码字段展示子模型；不新建 auth/API |
 | `AppShell`、`MenuLayout`、`NavigationMenu` | 原 props 或 `NavigationPresentationController`，工厂 `createNavigationPresentationController` | collapsed/sidebarOpen/expandedIds；MenuLayout 父子共用一实例，AppShell 内导航沿用共享上下文。activeId/路由/数据分页不迁入。环境宽度、同一树 Portal、实际 roving 焦点仍由 View 执行 |
 | `Pagination` | 原 props 或 `PaginationController`，工厂 `createPaginationController` | page/pageCount/disabled；受控页只发请求，不能建立服务器页历史/query/cache |
 | `Disclosure`、`SearchToolbar` | 原开合 props 或 `OverlayController` | 仅所属开合；查询/表单值归宿主，关闭前后实际焦点仍由 View 合法恢复 |
@@ -1143,6 +1143,30 @@ V3只调整公共布局与派生Token，不改props、请求、认证或密码�
 ### 管理员初始化页
 
 React `AdminSetupPage`（`@coffeehc/xui-react/admin-setup`）提供用户名、新密码/确认、提交、忙状态和安全反馈，内部复用 React AuthPage 与 NewPasswordFields，不新增 AuthClient。空反馈不占位，实际消息自然增长，沿用同一主题与自然文档滚动。
+
+#### 可组合初始化表单
+
+`@coffeehc/xui-react/admin-setup` 公开 `AdminSetupForm`、`AdminSetupFormProps`、`AdminSetupFormHandle`，根入口同步导出。它是包含字段、提交与反馈的唯一真实 form，不生成 AuthPage、品牌、标题或卡片；完整 `AdminSetupPage` 直接组合 AuthPage 与同一个 AdminSetupForm。没有新建 runtime/UI 副本或第二套提交 owner。
+
+Form 接受原有 `state/onSubmit/onCheck` 或互斥的完整 `controller`，并支持原有 `labels/passwordLabels/ref`；不接受页面 `config/brandVisual`。`ref.clear()` 仅清密码及用户名错误，不清用户名、不更改权威状态、不取消或重放写入。每个活动表单只使用自己的 Controller；宿主持有的注入实例不由 Form 销毁。submit、未知结果、手动核对、取消及密码清理完全沿用下文合同。焦点进入控件时，Form按既有scroll-margin就近保持完整焦点边界可见，不重新指定焦点或滚回文档顶部。
+
+| 归属 | 内容与视觉角色 | 空槽和状态 |
+|---|---|---|
+| AuthPage config / 品牌 / 标题 | 原宿主Logo与名称、任务标题；V3既有Token | 检查/错误/初始化期间保持同一个AuthPage实例，不换key、不调用root.unmount |
+| AuthPage children | 检查提示，或完整AdminSetupForm | AuthPage省略form；检查时不提前显示可提交初始化字段 |
+| AdminSetupForm 字段 | 用户名、NewPasswordFields；继承body-sm、login-control与公共错误关联 | 锁定、校验、密码显隐和清密由同一实现维护 |
+| AdminSetupForm 动作 / 反馈 | 唯一submit、busy播报、Alert与显式核对；沿用公共actions/feedback角色 | 空反馈无轨道；错误自然增长；宿主不再另外拼字段/提交/反馈 |
+
+```tsx
+// Shell stays mounted while host-owned checks change phase.
+<AuthPage config={config}>
+  {phase === 'setup'
+    ? <AdminSetupForm controller={setupController} />
+    : <StartupStatus status={phase} />}
+</AuthPage>
+```
+
+这里的StartupStatus是宿主内容示意，不是新增公共组件。AuthPage从首次挂载就省略`form`，不可在其内再套完整AdminSetupPage，也不可给AuthPage传form后嵌套AdminSetupForm。AuthPage已有form模式不可挂载后切换的合同保持不变。宿主核对完成后才提供允许初始化的state；错误/检查恢复不自动重试写入，不把未知结果重新解释为idle。示例见[共享认证外壳](../examples/admin-setup-form-react/view.tsx)，只含明确标注的合成回调，不调用真实初始化/认证API。
 
 #### 输入和责任
 
