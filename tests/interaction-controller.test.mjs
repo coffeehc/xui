@@ -307,6 +307,23 @@ function fakeAuth(login=async()=>({id:'user:1',username:'alice',display_name:'Al
   };
 }
 
+test('login binding effect replay preserves one verified navigation and its rejection',async()=>{
+ const auth=fakeAuth(),navigation=deferred(),user={id:'user:1',username:'alice',display_name:'Alice'};auth.setState({status:'authenticated',user,busy:null,error:null});let calls=0;
+ const controller=createLoginViewController({auth,config:{productName:'Test'},onAuthenticated:()=>{calls++;return navigation.promise;}}),binding=()=>({readCredentials:()=>({username:'',password:''}),clearPassword(){},focus(){},navigate(){}});
+ const release=controller.bind(binding());release();const next=controller.bind(binding());await Promise.resolve();assert.equal(calls,1);
+ navigation.reject(new Error('host rejection'));await Promise.resolve();await Promise.resolve();assert.equal(controller.getState().navigationPhase,'failed');assert.equal(calls,1);
+ next();await Promise.resolve();controller.destroy();
+});
+
+test('login navigation rejection survives a temporary refresh state but cannot affect a new identity',async()=>{
+ const auth=fakeAuth(),navigation=deferred(),user={id:'user:1',username:'alice',display_name:'Alice'};auth.setState({status:'authenticated',user,busy:null,error:null});let calls=0;
+ const controller=createLoginViewController({auth,config:{productName:'Test'},onAuthenticated:()=>{calls++;return navigation.promise;}});
+ const release=controller.bind({readCredentials:()=>({username:'',password:''}),clearPassword(){},focus(){},navigate(){}});
+ auth.setState({status:'unknown',user:null,busy:'refresh',error:null});navigation.reject(new Error('host rejection'));await Promise.resolve();await Promise.resolve();assert.equal(controller.getState().navigationPhase,'failed');
+ auth.setState({status:'authenticated',user:{...user},busy:null,error:null});assert.equal(calls,1);assert.equal(controller.getState().navigationPhase,'failed');
+ auth.setState({status:'anonymous',user:null,busy:null,error:null});assert.equal(controller.getState().navigationPhase,'idle');release();controller.destroy();
+});
+
 test('login view replacement aborts late extension work and keeps the latest credential reader bound', async () => {
   const late=deferred(),entered=deferred(),loginCalls=[];
   const auth=fakeAuth(async credentials=>{loginCalls.push(credentials.username);return {id:'user:1',username:credentials.username,display_name:null};});

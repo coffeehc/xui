@@ -14,12 +14,12 @@ export interface LoginViewController {
 }
 /** Login presentation orchestrates the existing AuthClient. It never creates or destroys auth. */
 export function createLoginViewController(initial:LoginViewOptions):LoginViewController {
- const auth=initial.auth,password=createPasswordInputController(),listeners=new Set<()=>void>();let options={...initial},binding:LoginViewBinding|undefined,off:(()=>void)|undefined,dead=false,active=false,revision=0,navigationRevision=0,pending:AbortController|undefined,navigatedId:string|null=null;
+ const auth=initial.auth,password=createPasswordInputController(),listeners=new Set<()=>void>();let options={...initial},binding:LoginViewBinding|undefined,off:(()=>void)|undefined,dead=false,active=false,revision=0,bindingRevision=0,navigationRevision=0,pending:AbortController|undefined,navigatedId:string|null=null;
  let state:Readonly<LoginViewState>=Object.freeze({config:resolveLoginPageConfig(options.config),errors:Object.freeze({}),operation:null,extensionBusy:null,extensionError:false,navigationPhase:'idle',sessionFailed:false});
  const emit=(patch:Partial<LoginViewState>)=>{if(dead)return;state=Object.freeze({...state,...patch});for(const listener of [...listeners])if(listeners.has(listener))listener();};
  const clear=()=>{password.markCleared();binding?.clearPassword();};
  const focus=(target:'username'|'password'|'feedback',epoch=revision)=>queueMicrotask(()=>{if(!dead&&active&&epoch===revision)binding?.focus(target);});
- const navigate=async(retry=false)=>{const current=auth.getState(),user=current.user;if(dead||!active||!binding||current.status!=='authenticated'||!user||current.busy||pending||state.sessionFailed||navigatedId===user.id&&(!retry||state.navigationPhase!=='failed'))return;navigatedId=user.id;const epoch=++navigationRevision;emit({navigationPhase:'opening'});clear();try{if(options.onAuthenticated)await options.onAuthenticated(user,state.config.returnTo);else binding.navigate(state.config.returnTo);}catch{if(!dead&&active&&epoch===navigationRevision&&auth.getState().status==='authenticated'&&auth.getState().user?.id===user.id){emit({navigationPhase:'failed'});focus('feedback');}}};
+ const navigate=async(retry=false)=>{const current=auth.getState(),user=current.user;if(dead||!active||!binding||current.status!=='authenticated'||!user||current.busy||pending||state.sessionFailed||navigatedId===user.id&&(!retry||state.navigationPhase!=='failed'))return;navigatedId=user.id;const epoch=++navigationRevision;emit({navigationPhase:'opening'});clear();try{if(options.onAuthenticated)await options.onAuthenticated(user,state.config.returnTo);else binding.navigate(state.config.returnTo);}catch{const latest=auth.getState();if(!dead&&active&&epoch===navigationRevision&&navigatedId===user.id&&(!latest.user||latest.user.id===user.id)){emit({navigationPhase:'failed'});focus('feedback');}}};
  const run=async(operation:'session'|'login'|'extension',action?:LoginPageAction)=>{
   if(dead||!active||!binding||pending)return;const current=auth.getState();if(operation!=='session'&&(current.busy||current.status==='authenticated'))return;
   const epoch=++revision,abort=new AbortController();pending=abort;emit({operation,extensionError:false,sessionFailed:false});let extension=false;
@@ -41,7 +41,13 @@ export function createLoginViewController(initial:LoginViewOptions):LoginViewCon
  const pause=()=>{active=false;revision++;navigationRevision++;pending?.abort();pending=undefined;emit({operation:null,extensionBusy:null});clear();};
  const resume=()=>{if(dead||!binding)return;active=true;navigatedId=null;emit({navigationPhase:'idle'});const current=auth.getState();if(current.busy==='session'||current.busy==='refresh'||current.status==='unknown'&&!current.busy&&!current.error)void run('session');else observe();};
  return {auth,password,getState:()=>state,getExtensions:()=>options.extensions,subscribe(listener){if(dead)return()=>{};listeners.add(listener);return()=>{listeners.delete(listener);};},
-  bind(next){if(dead)return()=>{};if(binding)pause();off?.();binding=next;off=auth.subscribe(observe);resume();return()=>{if(binding!==next)return;pause();off?.();off=undefined;binding=undefined;};},
+  bind(next){
+   if(dead)return()=>{};bindingRevision++;if(binding)pause();off?.();binding=next;off=auth.subscribe(observe);
+   // StrictMode's synchronous release/rebind keeps the verified navigation and
+   // its Promise. A genuine exit loses the DOM reader immediately, then pauses.
+   if(active)observe();else resume();
+   return()=>{if(binding!==next)return;clear();off?.();off=undefined;binding=undefined;const token=++bindingRevision;queueMicrotask(()=>{if(!dead&&!binding&&token===bindingRevision)pause();});};
+  },
   async submit(){if(dead||!active||!binding||pending||auth.getState().busy||auth.getState().status==='authenticated')return;const credentials=binding.readCredentials(),errors={username:credentials.username.trim()?undefined:state.config.labels.usernameRequired,password:credentials.password?undefined:state.config.labels.passwordRequired};credentials.password='';emit({errors:Object.freeze(errors)});if(errors.username||errors.password){focus(errors.username?'username':'password');return;}await run('login');},
   checkSession:()=>run('session'),runAction:async(id)=>{const action=options.extensions?.actions?.find(action=>action.id===id);if(!action||action.disabled)return;clear();await run('extension',action);},retryNavigation:()=>navigate(true),
   clearFieldError(field){if(state.errors[field])emit({errors:Object.freeze({...state.errors,[field]:undefined})});},pause,resume,
