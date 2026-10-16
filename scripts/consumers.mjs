@@ -259,7 +259,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await writeFile(`${layoutTypographyOutput}/metafile.json`, JSON.stringify(layoutTypographyBuild.metafile, null, 2));
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'layout-typography/app.tsx'], { cwd, stdio: 'inherit' });
     // These fixtures are built only from independently installed formal packages.
-    for(const name of ['typography-slots','action-menu','toast','upload','continuity']){
+    for(const name of ['typography-slots','action-menu','toast','upload','continuity','collection-refresh']){
       const fixture=resolve(cwd,name),output=resolve(`dist/${name}-react`);
       await cp(`examples/${name}-react`,fixture,{recursive:true});
       const options={entryPoints:[`${fixture}/app.tsx`],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}};

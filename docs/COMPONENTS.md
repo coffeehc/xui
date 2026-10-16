@@ -1093,14 +1093,15 @@ busy/disabled 阻止重复分页、条数和默认重试，另有同步单事件
 ### 状态、焦点与生命周期
 
 - 首次 loading 始终保留列头并在 tbody 显示稳定骨架及 loading 状态，footer 不把加载中的未知计数当 0 条成功结果。
-- refreshing 传入既有 rows；表体、底栏和搜索身份保持，反馈置于同一外框内 footer 的计数区域，不另加外部反馈层；常规短状态优先复用 footer 既有高度；长内容或窄屏需要时自然调整高度，达到真实父级上限后再压缩表体。error 仍保留既有行并提供 `onRetry`；首屏 error 位于 tbody，不能伪装成 empty。
+- [collection-refresh-react](../examples/collection-refresh-react/app.tsx) 演示同范围集合刷新。refreshing 传入既有 rows（包括已确认的空数组）；表体、空态、底栏和搜索身份保持。默认不在正常流插入临时 LoadingState/提示，不挤动内容；集合的 `aria-busy` 与分页禁用继续生效，宿主在固定刷新按钮的预留图标位显示进度。ApiKeyManager 和两类日志 Explorer 已采用此组合，取消按钮从首次即占固定动作位，空闲禁用。
+- `hasValue?: boolean` 是宿主已确认过当前范围结果的事实，不是缓存开关。省略时由非空 rows 或 ready/refreshing 推得；首次 loading/error 无结果。已确认空结果刷新失败须传 `hasValue={true}`，保留 emptyState，错误/重试放在 footer；首次 error 仍位于内容区。切换查询范围或身份时宿主重置该事实，库不代持旧快照或发请求。error 保留既有行并提供 `onRetry`。
 - ready 且 rows=[] 保留全部列头，默认空态在跨全列 tbody 单元格内。`filtered` 区分初始无记录与筛选无匹配；自定义 emptyState 可放已有新增/清空回调，库不会凭空创建记录。
 - 关闭、切页、查询变化、取消和迟到响应由现有 resource/query owner 处理。示例使用 `createResource` 与显式已确认快照，不添加 HTTP owner。业务查询改变时保留旧 rows 的策略明确由宿主选择，不能把它们误标为新查询结果。
 - React 行/单元使用稳定 key。不要在 footer 更新时改变 columns renderer 的组件类型、重新生成行键或用整个查询给 DataTable 设 key。
 
 ### 请求失败时的可读性与布局
 
-无反馈时，toolbar 之后直接进入列头，不保留常驻状态空行。已有行刷新或失败的反馈，以及自定义 feedback，使用已有 footer 中计数旁的正常流区域；保留真实计数、每页条数及分页 owner。常规短状态在空间足够时复用底栏高度并保持表体边缘；窄屏、200% 或长文案以完整可读、键盘可达为更高优先级，允许 footer 必要增长，由既有布局观察器维持 frame 包含与祖先滚动。无 count（labels.count 返回空字符串）且无 pagination、footer、反馈时，不显示空 footer；必要反馈出现时仍有完整区域。
+无反馈时，toolbar 之后直接进入列头，不保留常驻状态空行。已有行或已确认空结果的失败反馈，以及显式自定义 feedback，使用已有 footer 中计数旁的正常流区域；默认 refreshing 不新增该反馈。保留真实计数、每页条数及分页 owner。常规短状态在空间足够时复用底栏高度并保持表体边缘；窄屏、200% 或长文案以完整可读、键盘可达为更高优先级，允许 footer 必要增长，由既有布局观察器维持 frame 包含与祖先滚动。无 count（labels.count 返回空字符串）且无 pagination、footer、反馈时，不显示空 footer；必要反馈出现时仍有完整区域。
 
 
 零行的 idle/empty/error 仍在保留列头的 tbody 内；loading 保留该结构的占位行（aria-hidden），唯一 status 在可见表体轨道中居中，避开真实表头高度与横向超宽列，有 token 最小高度而无固定内容高度上限。首次加载/长错误可以自然增长；多行仍仅由表体独立滚动，分页留在 frame 内。没有新增自动重试、请求或缓存 owner。React正式消费者可用 `?internal&no-count&no-pagination` 和 `?internal&disclosure-feedback` 验证可选信息与长详情。

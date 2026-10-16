@@ -4,6 +4,28 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 集合刷新布局连续性（4.2.3，2026-10-17）
+
+与下节焦点补丁共享同一次正式4.2.3构建/consumer及sourceGeneration。旧4.2.2最新基线分别记录了空态替换、CardGroup高度+2px和320px日志区域下移44px/增高8.5px；API Key三宽及日志1280/390没有几何变化。基线通过旧安装包独立重建与输入路径核对，未使用packages/src alias。来源旧版本现象与本轮复现区分记录。
+
+默认refreshing保留已确认空态和原行/控件，不在footer或数据区新增短暂LoadingState。ApiKeyManager、StructuredLogExplorer、BusinessLogExplorer复用同一个内部RefreshAction，以现有Button/Spinner和预留位CSS保持标签及尺寸；日志取消按钮始终占固定动作位，空闲禁用。新增可选`hasValue`表达当前范围已确认过结果（含空），空结果刷新失败时传true，错误/重试位于footer；非空行保持原错误路径，首次加载和首次错误不冒充空集合。未新增查询、缓存、分页、鉴权或业务owner，CSS/Token值未变。`labels.refreshing`仍保留兼容类型，默认不再渲染其临时文案；宿主自行配置feedback仍承担其内容带来的自然高度变化。详见[集合生命周期](COMPONENTS.md#状态焦点与生命周期)。
+
+| 检查 | 最终结果 |
+|---|---|
+| build/typecheck/Token/docs/正式consumer | 通过；404Token、104入口、391逐项检查；initial JS gzip141997/153600、critical CSS19058/19456、Button6619/16384 |
+| 全量unit | 520/520，0失败/跳过 |
+| Chromium新增刷新矩阵 | 40/40，含三主题各一项真实Chrome200% |
+| Firefox/WebKit新增刷新矩阵 | 各37/37，合计74/74；与焦点合计96/96 |
+| Chromium全部选定回归 | 首轮131项中126通过、5失败；修正旧断言/示例接线后仅复验这5项，5/5通过，无剩余失败；不是一次全绿131项报告 |
+
+新增39组几何附件的ready/refreshing最大差为0px，覆盖桌面/390/320、三主题、320px的200%根字号、空/非空DataTable/CardGroup及ApiKeyManager/StructuredLogExplorer held读。验证旧行/按钮身份、焦点、未应用筛选草稿、双次刷新、受控cursor禁重复、空结果刷新错误与首次加载/错误区别。已有API Key CRUD/secret清理、两类日志快照/游标/取消/迟到/失败重试、菜单抽屉与布局、Card/input选择/滚动、首次加载居中及长错误/横滚页脚回归均纳入上述131项。已查看窄屏大字空态和浅色日志held刷新截图。示例`/collection-refresh-react/`。
+
+过程保留：旧基线自动采样wrapper曾因错误等待API Key的busy而超时，主线程改用真实listBusy和独立旧包脚本，补齐baseline-managed.json；不能把该脚本失败当组件故障。首轮unit517/520的3项是旧刷新文案/版本断言，按新合同更新后全量520通过。浏览器5项分别是CardGroup仍断言短暂刷新文案，以及feedback-foundation示例仅预绘制主题、未显式使用按需ThemeService而导致4个system实时切换失败；更新断言并在示例调用公开ThemeService.getState后，用同一正式安装包重建该示例、检查types并复验5/5。没有删除失败用例、放宽几何/焦点断言或改库主题实现；生产包字节与generation均未改变。
+
+证据：`.artifacts/continuity-validation/`的build-final、typecheck-final、tokens-final、unit-final、docs-final、consumer-final日志；baseline-managed.json、baseline.json、geometry-summary.json、report-summary.json、browser-final/cross-final/browser-recheck的JSON/log/trace及images。复现为`node scripts/build.mjs`、`pnpm typecheck`、`pnpm check:tokens`、`pnpm test:unit`、`pnpm test:consumer`，浏览器用该目录配置，选择continuity、collection-refresh、menu-layout、api-key、api-key-v2、structured-log、business-log、card-group、data-table-feedback、loading-centering的spec文件；cross仅新两套且排除`genuine Chrome`。预览4173，报告文件名相对配置或使用绝对路径。feedback示例最后一次重建/类型日志分别为feedback-fixture-final.log与feedback-fixture-types-final.log。
+
+未执行全仓browser、watch/cold-start、真实后端/账户、物理设备/读屏器或消费项目页面/部署。固定产物供宿主升级和接线，不能据此宣布xLead/xQuant/xAgent验收完成；其他维护项不在本次两项修复范围。
+
 ## 导航抽屉确认回焦（4.2.3，2026-10-17）
 
 仅修改xui，三包/DESIGN版本4.2.3，末位递增；不提供旧版兼容分发。正式sourceGeneration为`e7926e03fee210b029b2dea95f4d8569c8f1716490f3a051f61b2e3c174d1c60`，独立consumer `.consumers/run-5shx7O/react`使用tarball内ESM/CSS/types，React/ReactDOM19.2.8及Base UI1.7.0单实例，无源码alias。

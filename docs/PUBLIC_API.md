@@ -145,6 +145,8 @@ CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` �
 | `@coffeehc/xui-react/services` <!-- public-entry: @coffeehc/xui-react/services --> | [React服务上下文](../packages/ui-react/src/services.tsx)：ServicesProvider、useI18n、useMenu 与公共类型 | [启动、配置与应用服务](#启动配置与应用服务) | — |
 | `@coffeehc/xui-react/route` <!-- public-entry: @coffeehc/xui-react/route --> | [History路由React绑定](../packages/ui-react/src/route.tsx)：RouteProvider、useRoute、RouteLink | [启动、配置与应用服务](#启动配置与应用服务) | — |
 
+集合 `CollectionViewOptions.hasValue?: boolean` 显式表达当前范围已确认结果（含空）；ready/refreshing或非空行默认推得。DataTable/CardGroup继承此字段，空结果刷新失败时传true以保留空态；首次读取/新范围由宿主重置，runtime不保留数据或创建查询owner。默认refreshing仅aria-busy/分页禁用，固定按钮显示指示，不插入临时反馈行；合同见[状态与生命周期](COMPONENTS.md#状态焦点与生命周期)。
+
 ## 默认行为
 
 这些默认值来自上表源码；品牌原始值与 motion 参数仍只由 DESIGN 的受控 token 块定义，不在此复制色板。未改写的复合控件 props/parts 使用当前 Base UI peer 的声明与行为，不能根据另一个版本猜默认值。

@@ -50,12 +50,12 @@ for(const theme of ['light','dark','system'])for(const width of [1280,390])for(c
  if(theme==='system'){await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');await allRegions(page,info);}
  expect(errors).toEqual([]);
 });
-test('loading resolves to records; same-scope refresh retains nodes and focus with only inline local feedback',async({page})=>{
+test('loading resolves to records; same-scope refresh retains nodes and focus without transient flow feedback',async({page})=>{
  await open(page,{width:390});await page.evaluate(()=>window.setLoadingDemo('ready',true));
  const table=page.getByRole('region',{name:'加载位置表格',exact:true}),cards=page.getByRole('region',{name:'加载位置卡片集合',exact:true});
  const action=table.getByRole('button',{name:'保留的研究任务',exact:true});await action.focus();
  await page.evaluate(()=>{window.keptLoadingNodes={row:document.querySelector('.xui-data-table tbody tr'),card:document.querySelector('.xui-card-group .xui-card'),active:document.activeElement};window.setLoadingDemo('refreshing',true);});
- for(const region of [table,cards]){await expect(region).toHaveAttribute('aria-busy','true');await expect(region.locator('.xui-loading-state')).toHaveAttribute('data-layout','inline');await expect(region.getByRole('status')).toHaveCount(1);}
+ for(const region of [table,cards]){await expect(region).toHaveAttribute('aria-busy','true');await expect(region.locator('.xui-loading-state')).toHaveCount(0);await expect(region.getByRole('status')).toHaveCount(0);}
  await expect(table.locator('.xui-data-table-loading')).toHaveCount(0);await expect(cards.locator('.xui-card-group-placeholder')).toHaveCount(0);await expect(action).toBeFocused();
  expect(await page.evaluate(()=>window.keptLoadingNodes.row===document.querySelector('.xui-data-table tbody tr')&&window.keptLoadingNodes.card===document.querySelector('.xui-card-group .xui-card')&&window.keptLoadingNodes.active===document.activeElement)).toBe(true);
  await page.evaluate(()=>window.setLoadingDemo('ready',true));await expect(action).toBeFocused();await expect(table.getByRole('status')).toHaveCount(0);

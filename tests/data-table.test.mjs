@@ -29,7 +29,7 @@ test('React empty, loading and error bodies always retain semantic headers',()=>
   assert.match(render({rows:[],filtered:true}),/No matching records/);assert.match(render({rows:[]}),/No records yet/);
 });
 test('React refresh and failure preserve rows; numbered controls never guess unknown totals',()=>{
-  for(const status of ['refreshing','error']){const markup=render({status,onRetry:()=>{}});assert.match(markup,/First record/);assert.match(markup,status==='error'?/Retry/:/Refreshing/);assert.ok(markup.indexOf('class="xui-data-table-feedback"')>markup.indexOf('<footer '));}
+  for(const status of ['refreshing','error']){const markup=render({status,onRetry:()=>{}});assert.match(markup,/First record/);if(status==='error')assert.match(markup,/Retry/);else{assert.match(markup,/aria-busy="true"/);assert.doesNotMatch(markup,/Refreshing/);}assert.ok(markup.indexOf('class="xui-data-table-feedback"')>markup.indexOf('<footer '));}
   const unknown=render({pagination:{...pagination,total:null}});assert.doesNotMatch(unknown,/class="xui-pagination"/);assert.match(unknown,/1 loaded/);
   assert.doesNotMatch(render({pagination:{...pagination,pageIndex:9,total:1}}),/class="xui-pagination"/);
 });

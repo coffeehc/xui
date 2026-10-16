@@ -386,7 +386,8 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
 | LIFE-001 | 页面第一次加载资源 | shell/header/标题稳定存在；loading 位于数据所属区域 | DOM 时间线与首个请求 waterfall | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
-| LIFE-002 | 已有数据同范围刷新 | 旧确认数据持续可见，局部显示 refreshing，不卸载整页/组件 | 节点 identity、快照、录屏与 Network | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-002 | 已有数据同范围刷新 | 旧确认数据（含空态）持续可见；固定刷新按钮指示，不临时插入反馈/取消动作挤动布局，不卸载整页/组件 | 节点 identity、ready/refreshing 几何差分、快照与 Network | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-EMPTY-001 | 已确认空结果刷新失败 | DataTable/CardGroup传入当前范围hasValue=true，保留emptyState并显示错误/重试；首次读取或换范围重置，不伪造空结果 | 成功空→刷新→错误与首次错误对比 | [集合生命周期](COMPONENTS.md#状态焦点与生命周期) |
 | LIFE-FOCUS-001 | 移动导航关闭并打开未保存确认 | 确认期间焦点留在AlertDialog；保留草稿后通过navigationTriggerRef/finalFocus回到可见开关，放弃则回宿主目的操作；不访问私有DOM | 指针/Enter/Space/Escape、焦点及ref生命周期 | [抽屉确认回焦](COMPONENTS.md#导航抽屉与未保存确认的最终焦点) |
 | LIFE-003 | 查询范围发生变化 | 旧数据清除或明确标为旧范围；不得把旧事实冒充新查询结果 | query key、范围标签和 rows 数据来源 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-004 | 刷新请求失败 | 保留上一份已确认数据、筛选草稿和局部错误/恢复入口 | 断网/HTTP错误注入及前后快照 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |

@@ -67,7 +67,7 @@ export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,emp
     return()=>{owner.destroy();layoutOwner.current=null;};
   },[]);
   React.useLayoutEffect(()=>{layoutOwner.current?.update();});
-  const hasRows=rows.length>0,showError=state.status==='error';
+  const hasRows=rows.length>0,loading=state.status==='loading'&&!state.hasValue,showError=state.status==='error';
   const error=errorState??view.error,empty=emptyState??view.empty;
   return <DataRegion id={id} className={cx('xui-data-table',className)} data-layout={state.layout} aria-label={options.label} busy={state.busy}>
     <div ref={layoutFrame} className="xui-data-table-frame">
@@ -82,12 +82,12 @@ export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,emp
             onDoubleClick={rowEvents?.onDoubleClick?event=>rowEvent(row,index,event,rowEvents.onDoubleClick):undefined}
             onContextMenu={rowEvents?.onContextMenu?event=>rowEvent(row,index,event,rowEvents.onContextMenu):undefined}
             onKeyDown={rowEvents?.onKeyDown?event=>rowEvent(row,index,event,rowEvents.onKeyDown):undefined}
-          >{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow aria-hidden={state.busy||undefined}><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{state.busy?null:showError?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
+          >{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow aria-hidden={loading||undefined}><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{loading?null:showError&&!state.hasValue?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
         </Table>
       </TableContainer>
       {/* Share the visible body track, not the horizontally overflowing table.
           This layer exists only without records; refresh never covers rows. */}
-      {!hasRows&&state.busy&&<LoadingState className="xui-data-table-loading">{labels.loading}</LoadingState>}
+      {!hasRows&&loading&&<LoadingState className="xui-data-table-loading">{labels.loading}</LoadingState>}
       <CollectionFooter prefix="xui-data-table" view={view} pagination={options.pagination} rowCount={rows.length} error={error} feedback={feedback} footer={footer}/>
     </div>
   </DataRegion>;

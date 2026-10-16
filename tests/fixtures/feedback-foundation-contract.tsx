@@ -5,7 +5,9 @@ import {Skeleton,Spinner,Progress,LoadingState,DataRegion,type AlertProps} from 
 import {DataTable} from '@coffeehc/xui-react/data-table';
 import {CardGroup} from '@coffeehc/xui-react/card-group';
 import {Button} from '@coffeehc/xui-react/button';
+import {ThemeService} from '@coffeehc/xui-runtime/theme';
 import '@coffeehc/xui-theme/style.css';
+ThemeService.getState();
 
 // Only the public feedback exports and ordinary host markup are used here.
 const tones=['info','success','warning','error'] as const satisfies readonly NonNullable<AlertProps['tone']>[];

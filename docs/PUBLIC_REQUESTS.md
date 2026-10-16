@@ -53,9 +53,11 @@ xLead原反馈固定3.1.0 / `31a54e5f2c0aca4552c629e4c7987f1208a97337`的390px�
 
 4.2.3公开AppShell/MenuLayout的`navigationTriggerRef?: React.Ref<HTMLButtonElement>`，宿主以既有AlertDialog.Content.finalFocus接到该稳定按钮；保留草稿回开关，放弃并继续可选择真实目的操作。支持对象/callback ref、React19 cleanup及响应式重排，不新增导航/草稿owner或私有DOM查询。**这是公开接线能力，宿主必须配置finalFocus；仅升级不会自动更改宿主确认框的恢复目标。** 三主题、窄屏、长中文、200%字号/真实Chrome缩放、取消/放弃、Escape与StrictMode库级通过；合同见[抽屉确认回焦](COMPONENTS.md#导航抽屉与未保存确认的最终焦点)，证据见[4.2.3记录](VALIDATION.md#导航抽屉确认回焦4232026-10-17)。本轮只修改xui，不回补3.x，不宣布xLead或其他产品已通过。
 
-### XUI-REQ-20261017-15：同范围刷新不挤动内容（来源登记，待最新库复现）
+### XUI-REQ-20261017-15：同范围刷新不挤动内容（4.2.3，库级已验收、待宿主验收）
 
-xQuant反馈固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18`的正式独立组合：已确认空DataTable在ready→refreshing被LoadingState替换，高度188→180；320px非空表与ApiKeyManager底栏新增提示导致增高28px；StructuredLogExplorer新增取消按钮及提示在320px挤动过滤和数据区域。来源证据位于其refresh-layout.json；1280/390日志几何未失败。本轮未在最新4.2.2独立复现或修改实现，规范中的连续性目标不等于这些组合已经满足。待核对默认刷新呈现与公开扩展，保留首次读取、已确认空态、旧行/焦点、busy/取消、失败重试及分页，不以ready伪装refreshing或要求消费方私有CSS隐藏状态。
+xQuant原反馈固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18`。最新4.2.2独立正式基线确认：空CardGroup刷新时空态消失、高度增加2px；320px StructuredLogExplorer筛选/数据区下移44px，数据区增高8.5px；本轮DataTable空态同样被加载态替换，但该样例高度不变。1280/390日志及API Key三宽几何无差，不能把来源3.0.0底栏28px反馈泛化为最新版本全部失败。
+
+4.2.3默认refreshing保留已确认空态/旧行，不在footer新增临时加载文案；ApiKeyManager及两类日志Explorer用固定刷新按钮预留指示位，取消动作始终在固定位置、空闲禁用。新增可选`CollectionViewOptions.hasValue`供DataTable/CardGroup在空结果刷新失败时保持已确认空态及重试；首次加载/首次错误仍单独呈现，查询与范围重置归宿主。正式包新增39组刷新几何记录最大差0px，旧行/焦点、分页、错误/取消/迟到回归通过，完整范围和过程失败见[刷新记录](VALIDATION.md#集合刷新布局连续性4232026-10-17)。反馈/错误为可读性自然增高仍属明确合同，不通过ready伪装busy，也不要求宿主CSS隐藏状态。未修改xQuant或其他消费项目。
 
 ### XUI-REQ-20261017-13：管理员用户名宿主校验（4.2.1，库级已验收、待宿主验收）
 

@@ -21,7 +21,7 @@ test('first loading, idle, empty, filtered empty and first error have distinct p
  assert.match(render({rows:[],emptyState:'独立空态'}),/独立空态/);
 });
 test('refresh and refresh failure keep the same Card tree and put feedback in the footer',()=>{
- for(const status of ['refreshing','error']){const html=render({status,onRetry(){}});assert.equal((html.match(/xui-card-group-item"/g)||[]).length,2);assert.match(html,/<footer.*xui-card-group-footer/);assert.match(html,new RegExp(status==='error'?'Could not load records':'Refreshing…'));assert.doesNotMatch(html,/xui-card-group-placeholder/);}
+ for(const status of ['refreshing','error']){const html=render({status,onRetry(){}});assert.equal((html.match(/xui-card-group-item"/g)||[]).length,2);assert.match(html,/<footer.*xui-card-group-footer/);if(status==='error')assert.match(html,/Could not load records/);else{assert.match(html,/aria-busy="true"/);assert.doesNotMatch(html,/Refreshing…/);}assert.doesNotMatch(html,/xui-card-group-placeholder/);}
  assert.doesNotMatch(render({toolbar:React.createElement(React.Fragment),footer:React.createElement(React.Fragment),labels:{count:()=>''}}),/xui-card-group-tools|xui-card-group-footer-extra/);
 });
 test('table and cards share exactly one state/default labels/request guard implementation',()=>{

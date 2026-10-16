@@ -76,3 +76,7 @@ const missingNextCursor:DataTableCursorPagination={mode:'cursor',pageSize:20,tot
 // @ts-expect-error cursor controls never accept numbered-page callbacks
 const cursorWithPages:DataTableCursorPagination={...cursorPagination,onPageChange:()=>{}};
 export const cursorExample=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Cursor records" pagination={rootCursor}/>;
+
+export const confirmedEmptyRefreshError=<DataTable rows={[]} columns={columns} rowKey={(row:Row)=>row.id} label="Known empty" status="error" hasValue/>;
+// @ts-expect-error Confirmed data is a boolean fact, not an inferred count.
+export const invalidConfirmedResult=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Invalid fact" hasValue={0}/>;

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {createCollectionRequestGuard,getCollectionState,type CollectionViewOptions} from '@coffeehc/xui-runtime/collection-view';
 import {SimpleSelect} from './forms.js';
-import {LoadingState,EmptyState,ErrorState} from './feedback.js';
+import {EmptyState,ErrorState} from './feedback.js';
 import {Pagination} from './navigation.js';
 import {Button} from './button.js';
 import {hasContent} from './shared.js';
@@ -24,15 +24,15 @@ export function CollectionFooter({prefix,view,pagination,rowCount,error,feedback
   pagination:CollectionViewOptions['pagination'];rowCount:number;
   error:React.ReactNode;feedback?:React.ReactNode;footer?:React.ReactNode;
 }){
-  const {state,request}=view,{labels}=state,hasRows=rowCount>0;
+  const {state,request}=view,{labels}=state,hasValue=rowCount>0||state.hasValue;
   const countLabel=labels.count({rowCount,total:state.total});
-  const hasSummary=!!countLabel||hasRows&&(state.status==='error'||state.busy)||hasContent(feedback);
+  const hasSummary=!!countLabel||hasValue&&state.status==='error'||hasContent(feedback);
   const hasFooter=hasSummary||!!pagination||hasContent(footer);
   const part=(name:string)=>`${prefix}-${name}`;
   return <footer className={part('footer')} hidden={!hasFooter}>
     <div className={part('summary')} hidden={!hasSummary}>
       <span className={part('count')} aria-live="polite">{countLabel}</span>
-      <div className={part('feedback')}>{hasRows&&(state.status==='error'?error:state.busy?<LoadingState layout="inline">{labels.refreshing}</LoadingState>:null)}{feedback}</div>
+      <div className={part('feedback')}>{hasValue&&state.status==='error'?error:null}{feedback}</div>
     </div>
     {pagination&&<label className={part('page-size')}><span>{labels.pageSize}</span><SimpleSelect aria-label={labels.pageSize} value={pagination.pageSize} disabled={state.blocked||!pagination.onPageSizeChange} onChange={event=>{const size=Number(event.currentTarget.value);event.currentTarget.value=String(pagination.pageSize);if(size!==pagination.pageSize&&state.sizes.includes(size))request(()=>pagination.onPageSizeChange?.(size));}}>{state.sizes.map(size=><option value={size} key={size}>{size}</option>)}</SimpleSelect></label>}
     {pagination&&pagination.mode!=='cursor'&&state.pageCount!==null&&!state.outOfRange&&<Pagination aria-label={labels.pagination} page={state.page} pageCount={state.pageCount} disabled={state.blocked||!pagination.onPageChange} previousLabel={labels.previous} nextLabel={labels.next} onPageChange={page=>request(()=>pagination.onPageChange?.(page-1+pagination.pageIndexOffset))}/>}

@@ -7,6 +7,7 @@ import * as React from 'react';
 import {dataTableDefaultLabels} from '@coffeehc/xui-runtime/data-table';
 import type {ApiKeyMetadata,ApiKeyManagerController} from '@coffeehc/xui-runtime/api-key';
 import {Button} from './button.js';
+import {RefreshAction} from './refresh-action.js';
 import {Field,Input,Textarea,SimpleSelect,Fieldset,Checkbox} from './forms.js';
 import {PageHeader,Stack} from './layout.js';
 import {ErrorState,EmptyState,Alert,Badge} from './feedback.js';
@@ -66,8 +67,8 @@ export function ApiKeyManager({viewController:injected,controller:borrowed,optio
     {id:'actions',header:metadataHeader(labels.actions),cell:key=><TableActions>{options.adapter.update&&<Button variant="ghost" size="xs" disabled={!controller.canUpdate(key)} aria-label={`${labels.edit} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openUpdate(key.id);}}>{labels.edit}</Button>}<Button variant="ghost" size="xs" disabled={!controller.canRevoke(key)} aria-label={`${labels.revoke} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openRevoke(key.id);}}>{labels.revoke}</Button>{controller.canDeleteRecord(key)&&<Button variant="ghost" size="xs" aria-label={`${labels.deleteRecord} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openDeleteRecord(key.id);}}>{labels.deleteRecord}</Button>}</TableActions>},
   ],[controller,options,labels]);
   return <section className={cx('xui-stack',className)}>
-    <PageHeader title={labels.title} actions={<><Button ref={refreshRef} variant="outline" disabled={state.listBusy} aria-busy={state.listBusy} onClick={()=>controller.refresh()}>{labels.refresh}</Button><Button ref={createRef} disabled={state.actionBusy} hidden={options.canCreate!==true} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openCreate();}}>{labels.create}</Button>{headerActions}</>}/>
-    <DataTable className="xui-record-table" rows={visibleRows} columns={columns} rowKey={key=>key.id} label={labels.title} status={state.listBusy?(state.hasLoaded?'refreshing':'loading'):state.listError?'error':state.hasLoaded?'ready':'idle'} disabled={state.actionBusy}
+    <PageHeader title={labels.title} actions={<><RefreshAction ref={refreshRef} variant="outline" disabled={state.listBusy} busy={state.listBusy} onClick={()=>controller.refresh()}>{labels.refresh}</RefreshAction><Button ref={createRef} disabled={state.actionBusy} hidden={options.canCreate!==true} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openCreate();}}>{labels.create}</Button>{headerActions}</>}/>
+    <DataTable className="xui-record-table" rows={visibleRows} columns={columns} rowKey={key=>key.id} label={labels.title} status={state.listBusy?(state.hasLoaded?'refreshing':'loading'):state.listError?'error':state.hasLoaded?'ready':'idle'} disabled={state.actionBusy} hasValue={state.hasLoaded}
       pagination={!viewState.pagination||!state.hasLoaded?undefined:{pageIndex,pageIndexOffset:0,pageSize,total:state.rows.length,pageSizeOptions:pageSizes,onPageChange:viewController.setPage,onPageSizeChange:viewController.setPageSize}}
       labels={{empty:labels.empty,idle:labels.loading,loading:labels.loading,refreshing:labels.loading,error:labels.listError,retry:labels.retry,...tableLabels,count:facts=>state.hasLoaded?(tableLabels?.count??dataTableDefaultLabels.count)(facts):''}}
       emptyState={<EmptyState title={labels.empty}/>} errorState={<ErrorState title={state.listError??labels.listError} retryLabel={labels.retry} onRetry={()=>controller.refresh()}/>}/>

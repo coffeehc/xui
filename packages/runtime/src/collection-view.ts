@@ -43,6 +43,10 @@ export const collectionDefaultLabels: Readonly<CollectionLabels> = Object.freeze
 });
 export interface CollectionViewOptions {
   label: string; status?: CollectionStatus; disabled?: boolean; filtered?: boolean;
+  /** Host-confirmed data exists, including an empty result. Defaults to true
+   * for ready/refreshing or nonempty rows. Pass true for an empty refresh error;
+   * scope/identity changes must reset this fact with the host's data. */
+  hasValue?: boolean;
   /** Defaults to natural. Explicit workspace preserves the former fill behavior. */
   layout?: CollectionLayout;
   pagination?: CollectionPagination | CollectionCursorPagination; labels?: Partial<CollectionLabels>; onRetry?: () => void;
@@ -72,9 +76,11 @@ export function getCollectionState(options: CollectionViewOptions, rowCount: num
     sizes = pagination.pageSizeOptions ?? [pageSize];
     if (!sizes.length || new Set(sizes).size !== sizes.length || sizes.some(size => !Number.isSafeInteger(size) || size < 1) || !sizes.includes(pageSize)) throw new TypeError('Collection page sizes must be positive, unique and contain the confirmed size');
   }
+  if(options.hasValue!==undefined&&typeof options.hasValue!=='boolean')throw new TypeError('Collection hasValue must be a boolean');
+  const hasValue=options.hasValue??(rowCount>0||status==='ready'||status==='refreshing');
   const busy = status === 'loading' || status === 'refreshing';
   const outOfRange = pageCount !== null && page > pageCount;
-  return {layout,status,busy,blocked: !!options.disabled || busy,outOfRange,page,pageCount,sizes,total:pagination?.total ?? null,labels:{...collectionDefaultLabels,...options.labels}};
+  return {layout,status,hasValue,busy,blocked: !!options.disabled || busy,outOfRange,page,pageCount,sizes,total:pagination?.total ?? null,labels:{...collectionDefaultLabels,...options.labels}};
 }
 /** Prevent same-turn reentrant requests before a controlled host can publish busy. */
 export function createCollectionRequestGuard() {

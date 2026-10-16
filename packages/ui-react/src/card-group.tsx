@@ -40,7 +40,7 @@ export function CardGroup<T>({rows,rowKey,renderCard,cardSizing='natural',toolba
         const props=renderCard(row,{rowIndex,rowKey:keys[rowIndex],busy:state.busy,disabled:state.blocked});
         if(!props||typeof props!=='object'||React.isValidElement(props))throw new TypeError('CardGroup renderCard must return public Card props');
         return <li className="xui-card-group-item" key={keys[rowIndex]}><Card {...props} stretch={cardSizing==='equal'} key={keys[rowIndex]}/></li>;
-      })}</ul>:<div className="xui-card-group-placeholder" data-loading={state.busy}>{state.busy?<LoadingState>{state.labels.loading}</LoadingState>:state.status==='error'?error:state.status==='idle'?<div className="xui-state" role="status">{state.labels.idle}</div>:empty}</div>}
+      })}</ul>:<div className="xui-card-group-placeholder" data-loading={state.status==='loading'&&!state.hasValue}>{state.status==='loading'&&!state.hasValue?<LoadingState>{state.labels.loading}</LoadingState>:state.status==='error'&&!state.hasValue?error:state.status==='idle'?<div className="xui-state" role="status">{state.labels.idle}</div>:empty}</div>}
     </ScrollArea.Viewport>
     <CollectionFooter prefix="xui-card-group" view={view} pagination={options.pagination} rowCount={rows.length} error={error} feedback={feedback} footer={footer}/>
   </DataRegion>;
