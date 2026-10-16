@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：1.3.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：1.3.1。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1410,6 +1410,8 @@ SSR/预渲染和客户端首次hydration必须给出相同文本与结构；轻�
 
 <!-- foundation-lifecycle:start -->
 ### 公共应用头部与紧凑导航
+
+桌面AppShell/MenuLayout侧栏在逻辑inline-end绘制唯一的line-width-surface / separator-line低对比分隔，沿整个侧栏高度保持，不充当resize handle。分隔占用已有末端padding，保留展开/60px紧凑轨道的外宽与内容净宽；RTL自动换到左侧。窄屏导航只保留Dialog抽屉自身外框，不叠侧栏边线；断点、滚动区域、portal身份和焦点合同不变。
 
 应用头部按brand、breadcrumb、status、actions角色组合。收起/展开入口由公共AppShell/MenuLayout持有并管理位置：sidebarTogglePlacement默认top位于全局Header品牌单元行尾，与Logo/品牌名称保持同一行，不占侧栏顶部独立辅助行；显式bottom将同一个控件放在侧栏菜单与可选业务sidebarFooter之后，菜单独立滚动，顶部不留占位。业务sidebarFooter需要同行时用公开SidebarFooterRow，自然宽度并按空间换行，长事实不截断；默认非Row组合保持全宽，紧凑rail按组纵排。bottom展开时沿侧栏内距靠末端，紧凑rail中居中；top紧凑时保持品牌Logo与开关相邻，不把全局Header压成一个60px图标槽。窄屏两种配置均将同一入口置于顶栏品牌行尾以打开已有导航抽屉；不在两处复制按钮或另建抽屉。公共层统一其按钮尺寸、位置、动效、键盘焦点、可访问名称和aria-expanded/controls，跨断点复用同一个控件节点，宿主仅传状态与事件，受控请求不能冒充已确认状态。导航入口和品牌/路径为左侧主组，状态和动作在右侧；采用方提供内容、名称、链接语义及实际动作，不在公共库写入产品权限或版本规则。主组保留layout-header-primary-min的合理宽度，窄屏优先完整保留导航入口，品牌与路径各在所属空间省略长文字；链接可聚焦，完整名称保留可访问语义，宿主可提供title或明确详情入口。状态/动作空间不足时整组换到下一行，动作组内部按需换行，不能盖住品牌、互相重叠或令整页横向溢出。不静默隐藏状态或重要动作，不用缩小字体解决空间问题；没有动作时不预留空白占位。旧任意header内容继续支持，迁移后通用排列由公共组合负责。
 

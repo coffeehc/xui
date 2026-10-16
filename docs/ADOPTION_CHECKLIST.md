@@ -88,6 +88,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | SHELL-021 | sidebarHeader内Tabs.List控制sidebar内Tabs.Panel | 一个Tabs.Root与受控值；侧栏Panel不叠内容padding，Header分隔紧凑，普通页面Tabs保持原Token间距 | 切换前后间距、首项位置、search草稿与普通Tabs对照 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
 | SHELL-022 | 侧栏Header/列表/Footer有可聚焦控件 | Header保留限高/独立滚动、菜单最小高度和Footer；各控件inset焦点可绘制，invalid边界仍可读 | 324px/窄屏/200%文字与真实zoom、键盘焦点和滚动记录 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
 | SHELL-023 | 需要调整公共收起/展开入口 | `top` 时桌面唯一控件位于全局品牌单元行尾；显式 `bottom` 保持侧栏菜单/页尾后；窄屏复用同一抽屉入口，不替换私有SVG或另造按钮 | placement接线、唯一节点、实际位置/命中区、Enter/Space及Escape回焦点 | [COMPONENTS 唯一开关](COMPONENTS.md#导航内部唯一收起展开控件) |
+| SHELL-024 | AppShell/MenuLayout侧栏与正文相邻 | 桌面使用公共inline-end低对比分隔，展开/紧凑外宽与内容净宽不变，RTL换侧；窄屏抽屉不叠内侧边线，不增加resize handle或宿主私有CSS | 与固定旧包几何对照、三主题/RTL/窄屏/两种200%、滚动和同一portal/焦点/草稿证据 | [COMPONENTS 公共侧栏边界](COMPONENTS.md#公共侧栏与正文边界) |
 
 ## 每个页面和组件的 slot 矩阵
 

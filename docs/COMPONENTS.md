@@ -84,6 +84,8 @@
 | 组件 | 当前公开扩展与owner | 判定与建议范围 | 证据 |
 |---|---|---|---|
 | `Menu`的JSX parts | Root open/defaultOpen、onOpenChange；透传createHandle/handle/actionsRef；peer拥有store | **未双模式**；仅`Menu.View`具备。JSX Root应可接同一语义Controller，handle只关联trigger/发命令 | [Menu](../packages/ui-react/src/menu.tsx) |
+| `Menu.CheckboxItem`、`ContextMenu.CheckboxItem` | 各项另有checked/defaultChecked/onCheckedChange，peer拥有默认checked，不由菜单Root的open状态决定 | **选择交互待补**；当前Menu.View数据节点不含checkbox，不能声称已被其Controller覆盖。业务checked可由宿主确认，默认交互替换不得另造业务值owner | [Menu items](../packages/ui-react/src/menu.tsx)、[Context items](../packages/ui-react/src/context-menu.tsx) |
+| `Menu.RadioGroup` / `RadioItem`、`ContextMenu.RadioGroup` / `RadioItem` | RadioGroup另有value/defaultValue/onValueChange，RadioItem投影组值；不是菜单Root的开合状态 | **组选择交互待补**；当前Menu.View不含radio数据节点。公开替换要明确组语义范围，不能把Root的开合Controller算作所有菜单部件已覆盖 | [Menu groups](../packages/ui-react/src/menu.tsx)、[Context groups](../packages/ui-react/src/context-menu.tsx) |
 | `Select` | 透传peer Root的value/open/defaults/callbacks，peer拥有选择/弹层/高亮store | **待补**：语义选择/开合Controller桥接；高亮和focus执行保留peer。受控value不等于完整实例替换 | [Select](../packages/ui-react/src/select.tsx) |
 | `Combobox` | 同样有value/inputValue/open受控；xui另有键盘高亮外观phase，peer维护活动项 | **待补**：明确选择/输入/开合及phase范围，保留peer高亮算法；不可只注入value而漏掉输入和关闭状态 | [Combobox](../packages/ui-react/src/combobox.tsx) |
 | `Tabs` | Root受控/默认value，List局部适配disabled跳过，peer维护焦点/面板关系 | **待补**：页签选择意图Controller；键盘算法/DOM焦点留peer，业务面板数据继续归宿主 | [Tabs](../packages/ui-react/src/tabs.tsx) |
@@ -95,13 +97,14 @@
 | `ContextMenu` | open/defaultOpen/onOpenChange与Trigger公开contextmenu路径；peer拥有虚拟anchor/菜单状态 | **待补**：菜单开合/动作意图的公开桥接，anchor为平台指针事实。没有与Menu.View等价的数据Controller入口 | [ContextMenu](../packages/ui-react/src/context-menu.tsx) |
 | `Accordion` | peer Root value/defaultValue/onValueChange、multiple等配置，peer拥有展开/焦点 | **待补**：展开集合Controller；header关系、方向键与面板挂载继续由peer维护 | [Accordion](../packages/ui-react/src/accordion.tsx) |
 | `ToggleGroup` | value/defaultValue/onValueChange；xui本地默认数组与allowEmpty取消策略；peer roving | **待补**：选择意图及allowEmpty的同一状态合同；受控业务值仍需宿主确认 | [ToggleGroup](../packages/ui-react/src/toggle-group.tsx) |
+| `ToggleGroup.Item` | 组内pressed由组值派生；脱离Group使用时Base Toggle仍支持pressed/defaultPressed/onPressedChange并拥有默认按下状态 | **独立切换语义待补**；不能以普通Button的瞬时按压投影归类，也不能宣称组Controller已覆盖脱组Item | [Toggle item](../packages/ui-react/src/toggle-group.tsx) |
 | `Toast` | 已透传`createToastManager`与Provider的`toastManager`，可发add/update/close/promise；Provider仍无条件创建ToastStore持有toasts/timeout/focus等 | **已有manager扩展，但非完整替换**。当前公开peer没有完整store注入，需先解决上游公开可控集合/实例合同；不读私有`' subscribe'`、不造第二toasts owner，不把新事件包装宣称为Controller完成 | [Toast](../packages/ui-react/src/toast.tsx) |
 
 peer证据按锁定的`@base-ui/react@1.7.0`核对：`toast/provider/ToastProvider.js`无条件初始化`ToastStore`，`toast/createToastManager.js`只向Provider发送动作；`menu/root/MenuRoot.js`明确由Root创建store、handle只attach。Dialog/Sheet/AlertDialog/Popover/Tooltip的handle是detached trigger、payload与开关命令入口，不能因它内部关联store就称为可替换该store的公开Controller。没有在本轮修改peer或访问它的私有store。
 
 #### 宿主事实、平台投影与无语义状态组件
 
-这里的“不适用”是对**新增通用Controller**的判断，不是把它们伪记为已经支持完整注入。组合部件继承所属Root的状态合同，不各自创建Controller。
+这里的“不适用”是对**新增通用Controller**的判断，不是把它们伪记为已经支持完整注入。仅样式/布局部件沿用所属Root的状态合同；具有独立语义状态的parts已单列，不能因为挂在同一组件命名空间就漏报。
 
 | 组件/公开组合 | 当前真实状态及边界 | 判定依据 | 证据 |
 |---|---|---|---|
@@ -860,6 +863,10 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 有footer时，短菜单通过flex可用空间将footer置底，长菜单只在公共menu区域滚动，不覆盖末项；footer自身超出侧栏一半时独立滚动保留全部内容。document模式正文仍文档滚动，侧栏由库测量实际头高后有界sticky；viewport模式包括公开Root blockSize固定窗口。无footer时保留已有侧栏滚动区域。紧凑默认宽度不变，窄屏复用原抽屉；React portal 保持同一侧栏树，开关抽屉不重复挂载footer业务状态。此布局不新增 SSR/hydration 支持承诺。
 
 迁移：固定包含本节的已验证提交并重新构建正式包（具体SHA见对应提交/交付记录）；将原本位于侧栏尾部的内容送入sidebarFooter，顶栏内容继续headerSlots；删除消费方底部absolute/fixed/margin-top、侧栏height/overflow与compact宽度补丁，保留业务回调/权限/状态。不要以route key重挂MenuLayout或添加第二个drawer。完整无私有CSS例子见[React](../examples/sidebar-footer-react/app.tsx)，正式构建、watch和独立tarball类型检查都包含它们；真实产品迁移另按产品授权实施。
+
+### 公共侧栏与正文边界
+
+1.3.1的桌面侧栏在inline-end使用既有separator-line与line-width-surface提供低对比分隔；AppShell/MenuLayout共用，展开/紧凑外宽与内容净宽不变，RTL使用逻辑方向。窄屏抽屉仅保留自己的外框，没有重复内侧边线或resize handle。无需宿主覆盖私有CSS或增加分隔节点。
 
 ### 导航内部唯一收起/展开控件
 

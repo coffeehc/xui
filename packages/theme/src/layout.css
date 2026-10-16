@@ -69,6 +69,8 @@
   .xui-shell-drawer .xui-shell-sidebar-body {display:flex;flex-direction:column;flex:1 1 0;min-block-size:0;overflow:hidden;}
   .xui-shell-drawer .xui-shell-sidebar-body>.xui-shell-sidebar-with-footer {position:static;align-self:stretch;flex:1 1 0;min-inline-size:0;inline-size:100%;}
   @media(min-width:48rem) {
+    /* Keep the existing content width: the separator occupies the end padding. */
+    .xui-shell-sidebar {border-inline-end:var(--line-width-surface) solid var(--separator-line);padding-inline-end:calc(var(--nav-sidebar-padding) - var(--line-width-surface));}
     .xui-shell[data-collapsed='true']>.xui-shell-header .xui-app-header-identity:has(>.xui-shell-toggle-slot) {min-inline-size:calc(var(--nav-collapsed-width) + var(--control-height) + var(--layout-content-inset) + var(--nav-sidebar-padding));}
     .xui-shell[data-collapsed='true'] .xui-sidebar-footer-row>* {flex-basis:100%;}
     .xui-shell[data-collapsed='true']>.xui-shell-header .xui-header-brand:has(.xui-header-brand-logo) {justify-content:center;gap:0;}

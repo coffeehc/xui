@@ -41,6 +41,12 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 ## 后续公开维护项（2026-10-16）
 
+### XUI-REQ-20261016-07：侧栏与正文的逻辑方向分隔（1.3.1，验收记录见下）
+
+来源：xAgent维护来件，宿主部署提交`b1f45be625e8b023d95f99cce9130b9009994f54`、固定xui `1a6772e4fcbf7be180c813e560d9d32538dabe20`/1.3.0，使用公共AppShell；其他区域使用MenuLayout。截图仅按来件登记，本轮没有访问或修改宿主页面。
+
+旧正式包中桌面侧栏没有inline-end边线，独立消费者保存了展开/紧凑、LTR/RTL、100%/200%文字的16组几何，新边界断言在旧包上复现失败。1.3.1仅在已有桌面断点增加line-width-surface / separator-line逻辑边线，并从原末端padding中扣除同样线宽；保持外宽及内容净宽，不增分隔节点或resize handle。窄屏不应用该规则，仅保留既有Dialog外框；AppShell/MenuLayout共用同一CSS，React逻辑/portal/查询和业务owner不变。正式包与浏览器实际结果见[验证记录](VALIDATION.md)；不因此宣称xAgent已升级或现网页面已验收。
+
 ### XUI-REQ-20261016-06：公共交互状态的默认与完整Controller替换（已审查，未整体实现）
 
 来源：xAgent维护来件，固定消费xui `1a6772e4fcbf7be180c813e560d9d32538dabe20`、DESIGN/三包1.3.0。按公开根入口逐项核对了105个React运行时导出及其组合部件，结果和分阶段建议集中在[状态所有权矩阵](COMPONENTS.md#状态所有权与-controller-模式)。这轮是源码/类型审查，不是所有组件双模式已具备的声明。

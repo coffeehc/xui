@@ -4,6 +4,30 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## Controller逐项审查与公共侧栏分隔（1.3.1，2026-10-16）
+
+本轮先独立提交Controller审查文档`8104fbd5461f1b4cad1cb6cf4d72f03b88c16b6c`，再实现独立侧栏补丁。审查基于1a6772e4/1.3.0源码与正式types，逐项覆盖React根入口105个运行时导出及组合部件；覆盖记录为`.artifacts/controller-audit/coverage.json`，完整矩阵见[状态所有权](COMPONENTS.md#状态所有权与-controller-模式)。明确区分完整语义替换、服务仅注入、受控props、handle/manager、DOM投影及无自有状态；Toast的manager不替换Provider状态store。Controller缺口仍开放，**本轮没有重写或新增这些组件的Controller入口**，也未把105项源码审查当作105项行为测试。
+
+DESIGN与三包为 **1.3.1**，398 Token、86公开入口、311项接入检查。仅在已有桌面断点添加inline-end的公共separator-line / line-width-surface边线，原末端padding扣除相同线宽，RTL换侧；窄屏不加内侧边线，保留Dialog外框。React逻辑、portal、键盘和业务owner不变，没有新增分隔节点、resize handle、默认请求或消费方补丁。
+
+正式构建source generation：`b22e62fcfce25da2031f6477613af32d39712b9072953f801ea3b708da5526d7`。独立消费者`.consumers/run-93dseh/react`使用npm安装三个本地正式tarball，核对ESM/CSS/types与React/ReactDOM19.2.8、Base UI1.7.0单实例，无源码alias。critical CSS gzip **18386/18432 bytes**，初始JS **133849/135168 bytes**，Button **6619/16384 bytes**；预算未提高。相对1.3.0逐文件比较202项ESM/CSS/types，仅theme的layout/critical/components/style四份CSS变化，全部JavaScript和声明字节相同；没有新增Controller接口。产物差异与源码hash核对见`package-diff.json`。
+
+| 检查 | 结果 | 证据（`.artifacts/sidebar-boundary/`） |
+|---|---|---|
+| build / types / Token / 定向单测 / 正式consumer | 通过；相关7文件单测 **50/50** | `build.log`、`typecheck.log`、`tokens.log`、`unit-targeted-final.log`、`consumer.log` |
+| 旧1.3.0基线 | 新边界用例真实失败：预期1px、实际0；16组外宽/净宽记录保留 | `baseline-browser.log/json`、`baseline-output/`、`baseline-geometry.json` |
+| 最终Chromium | **40/40**，含既有13项导航控制与新增27项；无skip/flaky | `browser-final.log/json`、`browser-output/` |
+| 最终Firefox / WebKit | 各 **24/24**，共48；三主题、LTR/RTL、两个组合、100%/200%文字 | `cross-final.log/json`、`cross-output/` |
+| 旧包到新包几何对照 | **16/16**外宽和内容净宽相同；默认324/60px，根字号200%时640/120px | `geometry-comparison.json`、`final-geometry.json` |
+
+浏览器通过公共AppShell/MenuLayout正式示例核对逻辑边线方向与共享separator颜色，长中文导航滚动后边线持续可见；桌面/390px往返复用同一aside portal节点，保留草稿、键盘焦点、Space/Enter与Escape回焦。窄屏sidebar自身无边线，Dialog只有自身外框。三主题真实Chrome200%缩放分别核对DPR加倍、CSS视口减半、根字号不变、CSS zoom与pinch均为1。已查看浅色桌面、深色窄屏200%文字与system真实浏览器200%代表截图，提取图在`screenshots/`。
+
+初轮相关单测49/50，唯一失败为旧contractVersion字面值1.3.0，按实际1.3.1同步后50/50。浏览器首轮Chromium36/40、跨引擎47/48；5项均在resize后的React媒体状态尚未切换前发送Enter，仍执行桌面折叠。用例增加`aria-haspopup=dialog`与关闭状态就绪断言后最终40/40、48/48通过，没有修改React键盘或焦点算法；初轮报告/trace分别保存在`browser-first*`、`cross-first*`。首次cross命令的grep未收集测试，不计通过，记录在`cross-collection-first.log`。
+
+复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`、`pnpm test:consumer`；相关单测为`node --test tests/contract.test.mjs tests/workspace-layout.test.mjs tests/sidebar-footer.test.mjs tests/app-header.test.mjs tests/menu-design-contract.test.mjs tests/design-value-guard.test.mjs tests/docs.test.mjs`。浏览器为`pnpm exec playwright test tests/browser/sidebar-control.spec.mjs --config=.artifacts/sidebar-boundary/browser.config.mjs`；跨引擎使用同一spec、`--grep 'sidebar boundary (shell|layout)'`及`cross.config.mjs`。
+
+未跑无关全仓单测/浏览器、watch/cold-start、消费项目真实页面或后端、部署、实体移动设备/读屏器或独立SSR hydration；没有新增实时Stitch评审。xAgent截图及消费版本按来件登记，不作为本轮宿主运行证据；1.3.1不代表Controller缺口或消费项目升级已经完成。
+
 ## Select浮层、API Key分页、分组日志与Menu Controller（1.3.0，2026-10-16）
 
 DESIGN与`@coffeehc/xui-theme`、`@coffeehc/xui-runtime`、`@coffeehc/xui-react`均为 **1.3.0**；398 Token、86个公开入口、309项逐项接入检查。本节验收xui公共库及独立正式tarball消费者，不表示Argus或其他宿主已升级。
