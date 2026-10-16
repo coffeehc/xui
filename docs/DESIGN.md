@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.1.0。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.1.1。新增兼容语义升次版本，澄清升修订号；删除或改变公共语义须主版本与兼容迁移。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -206,6 +206,8 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
 默认值只有本文件一份，生成 CSS 后由 React 公共组件消费。`scripts/tokens.mjs` 在生成和检查时验证依赖方向、完整图、浅深/system 配方与来源指纹；设计值守卫检查组件、示例中的原始色值和私造尺度。新增 token 必须说明角色、依赖、覆盖范围及两主题行为，不按每个页面/slot 再造变量。主题 owner 仍负责 sessionStorage 与首屏；组件不各自读 storage 或判断主题。
 
 [Stitch 架构参考](design-sources/stitch-token-architecture.v1.txt)提供三层 Token、自包含组件与视图连续性的方向；实际合同采用本文件已公开名称、尺度、三模式和无障碍规则。参考中的原始色值不替换现有品牌；普通正文不统一 mono，不新增 10/11px 提示角色；密码显隐保留键盘入口、label/错误关联，密码评分沿用公开建议而非安全熵事实。错误可自然增高或使用已有反馈槽，不能绝对定位遮住字段；管理员创建后的认证与导航由真实宿主事实决定，不内置自动登录承诺。
+
+Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停期间pressed使用成对的interaction-hover / interaction-hover-foreground，图标继承currentColor。普通字号文字按实际合成背景达到4.5:1，不能只验证静态主色对白底；disabled仍只采用禁用配方，busy不改变交互权限。
 
 ### 默认 CSS 变量（可直接提取）
 

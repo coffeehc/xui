@@ -47,6 +47,14 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 ## 后续公开维护项（2026-10-16）
 
+### XUI-REQ-20261017-10：链接按钮hover文字对比度（4.1.1 / 3.1.1已修复，待宿主验收）
+
+来源：xAgent固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18`，宿主报告浅色link Button在hover的普通文字对比度4.3460703117:1。本轮在独立正式4.1.0与3.1.0消费者复现4.346070311712855；3.0.0/3.1.0/4.1.0的正式button.css相同。修复只让link hover使用既有interaction-hover-foreground配对背景，保留默认主色、字体/尺寸、disabled/busy和button/link键盘语义；不改Token值、业务/认证或宿主CSS。具体范围见[验证记录](VALIDATION.md)。
+
+### XUI-REQ-20261017-11：扁平Tabs变体（待设计与实现）
+
+来源：xAgent请求无外胶囊底槽、文字及单底部选中指示的公开Tabs样式，保持默认/完整注入Controller、键盘与Panel节点连续。当前4.1.1/3.1.1的Tabs.List仅提供layout=content/equal，没有此公开视觉变体；拟议variant=line不是现有接口。本项单独登记，本次不修改Tabs或阻塞链接对比度补丁，不要求宿主私有CSS重画。
+
 ### XUI-REQ-20261017-09：检查到初始化的共享认证外壳（4.1.0 / 3.1.0已实现，待宿主验收）
 
 来源：xLead固定3.0.1 / `7722d385270426824e13ef1a47d85b7c6903fa31`；其startup的`auth(setup=true)`显式destroy检查AuthPage，再挂完整AdminSetupPage。旧公开声明没有可脱离外壳复用的初始化表单；这是公共组合缺口，产品节点连续性失败不等同于此前Disclosure受控时序缺陷。

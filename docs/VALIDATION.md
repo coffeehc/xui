@@ -4,6 +4,29 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 链接按钮hover对比度（4.1.1 / 3.1.1，2026-10-17）
+
+来源为xAgent固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18` 的默认浅色Button variant=link反馈。本轮先用正式4.1.0（`ae426453c7eec3c7f1ffc018976ea1ffa1fe860e`）和3.1.0（`31a54e5f2c0aca4552c629e4c7987f1208a97337`）独立消费者真实hover复现 **4.346070311712855:1**，严格4.5断言均失败。3.0.0/3.1.0/4.1.0正式button.css的SHA256相同；没有把CSS一致性当作已跑过3.0.0产品浏览器。
+
+修复仅在link:hover复用已有 `interaction-hover-foreground` 与 `interaction-hover` 配对，图标通过currentColor继承；默认主色、字体、尺寸、全局Token值及数量404均不变，disabled不进入hover规则。React/runtime实现、API、权限、HTTP/认证和宿主未修改。浅色hover及指针按下最终 **14.481508292066573:1**；实际浏览器按合成祖先背景和解析后的颜色空间计算，不以固定HEX或静态主色对白底替代。
+
+正式三包/DESIGN分别 **4.1.1 / 3.1.1**；sourceGeneration分别 `5e0730fccfe2047daad03f1f07e9ef451b3205e935559f8e55c267d9c7d51780` / `9732ecadea835ec53db7b660d88c3d0ea1cd56fccd7df9819bdc429c94c7c58a`。3.1.1保留3.x服务和peer范围，不要求4.x迁移。独立安装路径分别 `.consumers/run-4ZfY2s/react` / `.consumers/run-2M6bNm/react`，ESM/CSS/types公开入口、正负类型与单实例React/ReactDOM 19.2.8、Base UI 1.7.0通过，无源码alias。
+
+| 检查 | main 4.1.1 | 兼容3.1.1 |
+|---|---|---|
+| build/typecheck/Token/正式consumer/文档/diff | 通过 | 通过 |
+| Button disabled/xs与主题合同定向unit | 12/12 | 12/12 |
+| Chromium | 13/13 | 13/13 |
+| Firefox/WebKit 新增link专项 | 各8/8，合计16/16 | 各8/8，合计16/16 |
+| critical CSS gzip / 原预算 | 19058/19456 | 18685/18688 |
+| 首屏JS gzip / 原预算 | 141915/153600 | 152196/153600 |
+
+新增8项为light/dark/system-light/system-dark ×1280/320，窄屏使用200%根字号；真实hover、指针按下、键盘Space按下与focus均检查普通文字≥4.5、图标同色和无横向溢出，验证button Enter/Space各一次、真实anchor Space零动作/Enter导航一次、busy独立可操作、禁用button/anchor零动作。Chromium另含3项主色覆盖D/H/P回归和2项forced-colors禁用回归，Firefox/WebKit仅新8项；WebKit使用平台完整键盘Alt+Tab。已查看正式包浅色宽屏与深色窄屏大字截图，两线均未失败/跳过/flaky；旧基线的预期失败单独保留。
+
+证据位于各自 `.artifacts/button-link-validation/` 并随固定产物归档：`baseline-main.json/log`或`baseline-3.json/log`、`baseline-css.json`、`build-main.log`或`build-3.log`、`typecheck.log`、`tokens.log`、`targeted-unit.log`、`consumer.log`、`browser-main.json/log`或`browser-3.json/log`、`cross-main.json/log`或`cross-3.json/log`、`computed-states.json`与`images/`。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/button-disabled-contract.test.mjs tests/button-xs-contract.test.mjs tests/contract.test.mjs`、`pnpm test:consumer`；Chromium运行`button-link-contrast.spec.mjs button-brand-inheritance.spec.mjs button-state-contract.spec.mjs --grep 'link |primary Button|disabled Button variants preserve'`，跨引擎仅`button-link-contrast.spec.mjs`，均使用证据目录中的config与对应端口4173/4174。
+
+未运行完整unit/全仓浏览器、真实浏览器200%页面缩放、watch/cold-start、读屏器/实体设备、宿主页面/认证或部署；本次仅样式修订，不复用之前的全量/真缩放结论。扁平Tabs没有现成公开变体，单独列为待设计实现，本补丁不新增或冒称该接口。
+
 ## 可组合管理员初始化表单（4.1.0 / 3.1.0，2026-10-17）
 
 新增 `/admin-setup` 与根入口的 `AdminSetupForm / AdminSetupFormProps / AdminSetupFormHandle`，完整 `AdminSetupPage` 直接复用同一个 Form。宿主保留一个不传form的AuthPage，在children切换检查/错误内容与Form；检查期间零form，初始化期间唯一form。没有修改AuthPage的form模式约束，没有复制密码/提交逻辑，也没有修改runtime认证、初始化协议或消费项目。

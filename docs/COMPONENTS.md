@@ -326,7 +326,7 @@ Textarea 位于 `.xui-input-group[data-layout='stacked']` 中时，label/help/er
 
 ### Button与选择控件补齐
 
-Button variant=link提供文字链接外观，默认type=button。button继续Enter/Space执行；真正导航需renderHTML a、nativeButton=false和role=link（或直接HTML a.xui-button[data-variant=link]）。链接保留Enter、Space不模拟点击、修改键/中键/target/download；外观不改变导航所有权。aria-busy仍不自动disabled，焦点独立可见。
+Button variant=link提供文字链接外观，默认type=button。button继续Enter/Space执行；真正导航需renderHTML a、nativeButton=false和role=link（或直接HTML a.xui-button[data-variant=link]）。链接保留Enter、Space不模拟点击、修改键/中键/target/download；外观不改变导航所有权。aria-busy仍不自动disabled，焦点独立可见。 link默认文字使用action-primary；hover（含指针按下）使用interaction-hover及其成对interaction-hover-foreground，图标继承currentColor；disabled不应用hover配方。宿主不为修复默认对比度穿透私有CSS。
 
 SimpleSelect/Checkbox/Radio/Switch的controlSize=sm/default/lg是视觉尺寸，默认default；SimpleSelect的size:number只作为隐藏表单桥事实。显式NativeSelect平台API保留原生size:number，默认采用政策见[DESIGN](DESIGN.md#公共复用与状态矩阵)，不增全局密度模式。React 使用data-control-size对应。选择控件的 readOnly 由 React 公共层阻止 click 与 Space（radio 也阻止改变选择的箭头），保留 Tab/指针焦点与 aria-readonly；不等于 disabled。受控 checked 和非受控 defaultChecked 均支持，readOnly 不触发 onChange。disabled 走真实 HTML disabled，表单提交语义不改。
 

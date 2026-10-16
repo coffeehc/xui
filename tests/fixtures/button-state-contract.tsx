@@ -16,6 +16,7 @@ createRoot(document.getElementById('root')!).render(<main className="xui-stack">
  {variants.map(variant=><section key={variant} className="xui-surface"><h2>{variant}</h2><div className="xui-toolbar">{states.map(state=>{const id=`${variant}-${state}`;return <Button key={state} data-testid={id} variant={variant} disabled={state.startsWith('disabled')} aria-busy={state.includes('busy')||undefined} onClick={()=>record(id)}><Icon/>{id}</Button>;})}</div></section>)}
  <ToggleGroup.Root defaultValue={['selected']} disabled aria-label="Disabled selected group"><ToggleGroup.Item value="selected" data-testid="disabled-selected-toggle">Selected disabled toggle</ToggleGroup.Item></ToggleGroup.Root>
  <Button variant="link" nativeButton={false} disabled render={<a href="#disabled-destination"/>} data-testid="disabled-link-element" onClick={()=>record('disabled-link-element')}>Disabled anchor</Button>
+ <Button variant="link" nativeButton={false} role="link" render={<a href="#link-destination"/>} data-testid="enabled-link-element" onClick={()=>record('enabled-link-element')}>查看链接操作与长中文名称</Button>
  <section className="xui-surface"><h2>Button sizes</h2>
   <div className="xui-toolbar">{(['xs','sm','default','lg'] as const).map(size=><Button key={size} size={size} data-testid={`size-${size}-text`}><Icon/>Save</Button>)}</div>
   <div className="xui-toolbar">{(['xs','sm','default','lg'] as const).map(size=><IconButton key={size} size={size} data-testid={`size-${size}-icon`} aria-label={`${size} save`}><Icon/></IconButton>)}</div>

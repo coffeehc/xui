@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.1.0）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.1.1）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -245,7 +245,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
-| CTRL-001 | 页面有普通 Button 操作 | 使用公共 Button 变体表达主次/危险语义；保留默认 `type="button"`，提交动作显式为 submit | 正式 props、DOM type 与操作计数 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-001 | 页面有普通 Button 操作 | 使用公共 Button 变体表达主次/危险语义；保留默认 `type="button"`，提交动作显式为 submit | 正式 props、DOM type 与操作计数；link变体在default/hover/pressed/focus按实际背景检查普通文字≥4.5:1，图标继承文字色 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-002 | 页面用 Link/NavItem 跳转 | 保留浏览器链接 href、修改键、中键、target/download 和可访问名称；不把普通链接伪装成按钮 | DOM role/href 与鼠标键盘导航记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-003 | 页面使用 IconButton | 图标动作有稳定可访问名称；busy/disabled 只按真实操作状态表达，不借图形颜色传达唯一含义 | accessibility tree 与键盘/disabled 记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-004 | 页面使用 Checkbox 或 Switch | checked 来自真实布尔事实，Space 操作一次；readOnly 不发值变化，disabled 不进入操作 | 受控前后值、change 计数及浏览器键盘记录 | [COMPONENTS 选择与复合控件](COMPONENTS.md#成组选项) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
