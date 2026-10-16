@@ -1,8 +1,8 @@
 # 公共能力维护清单
 
-本页登记消费项目提交的公共能力缺口及核对结果，不定义另一份接口合同。下文是各条目原提交时的固定版本、现象与历史验证，不代表 2.0.0 产品已迁移或其最新状态。当前公开服务/配置/React入口以 [PUBLIC_API](PUBLIC_API.md) 与 [COMPONENTS](COMPONENTS.md) 为准；消费项目升级和逐页验收仍由各自仓库完成。待实现条目的建议字段不是现有 API。请求登记不代表已排期、实现或通过消费项目验收。
+本页登记消费项目提交的公共能力缺口及核对结果，不定义另一份接口合同。当前仅维护4.2.1起的单一版本线，后续递增末位；3.x兼容分发已退役，以下双版本记录只代表历史证据，不再回补或提供兼容包。下文是各条目原提交时的固定版本、现象与历史验证，不代表 2.0.0 产品已迁移或其最新状态。当前公开服务/配置/React入口以 [PUBLIC_API](PUBLIC_API.md) 与 [COMPONENTS](COMPONENTS.md) 为准；消费项目升级和逐页验收仍由各自仓库完成。待实现条目的建议字段不是现有 API。请求登记不代表已排期、实现或通过消费项目验收。
 
-## 当前 2.0.0 公共架构说明
+## 历史 2.0.0 公共架构说明
 
 2.0.0 的 runtime 基础 HTTP/Auth/Theme/Clipboard Service 统一由 `bootstrap` 与每个 Window 的服务注册表创建或借用；基础 `create*Service/Client` factories 已从公开 exports 移除。新应用使用包内默认 config.json 与部分覆盖，运行实例通过第二参数注入；SSR按请求持有独立 `XuiServices`。`init.js` 仅首绘前预绘制主题/缩放，不拥有主题 controller。新增 config、services、bootstrap、route、i18n、menu-service、util-service 与 React services/route 入口，逐项合同见 [PUBLIC_API 启动配置与应用服务](PUBLIC_API.md#启动配置与应用服务)。
 
