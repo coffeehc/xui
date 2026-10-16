@@ -28,6 +28,6 @@ export function createStructuredLogExample(baseURL:string){
     if(modes[name]==='hold')return new Promise(resolve=>pending[name].push(()=>resolve(reply())));return reply();};
   const services=new XuiServices({http:{options:{baseURL:new URL('./fake-log-api/',baseURL).href,fetch}}}),client:HttpClient=services.getHttpService();
   const adapter=createStructuredLogHttpAdapter(client,{groups:'groups',...(new URL(baseURL).searchParams.has('grouped')?{}:{records:'records'}),groupRecords:'groupRecords',record:'record'});
-  const controller=createStructuredLogController({adapter,pageSize:2,labels,sources:['collector','validation','billing'],categories:['network','input','capacity'],baseURL,resolveRef:ref=>ref.kind==='source'?`./reference.html?id=${encodeURIComponent(ref.id)}`:null});
+  const controller=createStructuredLogController({adapter,pageSize:2,labels:{...labels,...(new URL(baseURL).searchParams.has('long-labels')?{entryCount:'累计记录',matchedCount:'匹配记录',unknown:'尚未确认需要更多事实后判定',yes:'已确认支持此操作',no:'已确认不支持此操作'}:{})},sources:['collector','validation','billing'],categories:['network','input','capacity'],baseURL,resolveRef:ref=>ref.kind==='source'?`./reference.html?id=${encodeURIComponent(ref.id)}`:null});
   return {controller,services,getRequests:()=>requests,setMode:(kind:Kind,mode:Mode)=>{modes[kind]=mode;},release:(kind:Kind)=>pending[kind].shift()?.(),setRows:(value:LogRecordDetail[])=>{rows=value;},getRows:()=>rows,setGroupCount:(id:string,count:string)=>countOverrides.set(id,count),destroy(){controller.destroy();services.dispose();}};
 }

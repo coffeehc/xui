@@ -47,6 +47,10 @@ Argus 调用点：`frontend/src/features/error-observation/page.tsx`、`frontend
 
 ## 后续公开维护项（2026-10-16）
 
+### XUI-REQ-20261017-12：程序错误Explorer的中文表头与三态标签（4.1.2 / 3.1.2已修复，待宿主验收）
+
+来源：xQuant固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18`，1280宽、324侧栏，长中文摘要使累计/匹配表头逐字竖排。最新4.1.1正式消费者同样复现累计表头5行；公开Props没有列宽入口，不是宿主遗漏配置。修复在Explorer表头及records三态标签采用既有完整词组角色；摘要保留主列最小宽度/自然换行，时间计数与操作保留单行，窄屏和大字由公共TableContainer横滚承接。未改Table全局样式、Token、DTO、cursor/as_of、查询/刷新/权限或认证逻辑。正式包结果见[验证记录](VALIDATION.md)，样板`/log-react/?long-labels`演示合成长标签。xQuant既有PG/HTTP/页面证据仅按来源登记，本轮不访问宿主API或替产品宣称验收通过。
+
 ### XUI-REQ-20261017-10：链接按钮hover文字对比度（4.1.1 / 3.1.1已修复，待宿主验收）
 
 来源：xAgent固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18`，宿主报告浅色link Button在hover的普通文字对比度4.3460703117:1。本轮在独立正式4.1.0与3.1.0消费者复现4.346070311712855；3.0.0/3.1.0/4.1.0的正式button.css相同。修复只让link hover使用既有interaction-hover-foreground配对背景，保留默认主色、字体/尺寸、disabled/busy和button/link键盘语义；不改Token值、业务/认证或宿主CSS。具体范围见[验证记录](VALIDATION.md)。

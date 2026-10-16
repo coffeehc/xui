@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.1.1）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.1.2）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -444,6 +444,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | LOG-GROUPS-REQ | 错误观察页查询分组 | POST 到宿主明确配置的 groups endpoint；请求仅按 schema_version/filter/page 合同构造，不能猜固定产品路由 | endpoint配置、请求 body 抓包 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
 | LOG-GROUPS-OK | groups 返回 success | 校验 schema_version/list/group/count/page；matched_* 是服务结果，不由当前页长度推导 | 响应 fixture、计数和 UI facts | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
 | LOG-GROUPS-ERR | groups 返回 403/404、合同错误或 transport error | StructuredLog 按 403 forbidden、404 not_found、parser contract、其它读取错误表达；失败不伪装空列表 | 四类故障注入与 controller state | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
+| LOG-LAYOUT-001 | 使用完整StructuredLogExplorer | 表头与三态/分类标签保留完整词组，计数/时间单行；摘要自然换行保留主列下限；空间不足只在表内横滚，不缩字号或覆盖私有CSS | 正式包长中文、1280/390/320、200%文字/真zoom与键盘滚动/行操作 | [COMPONENTS 记录页布局](COMPONENTS.md#数据表格) |
 | LOG-RECORDS-001 | 服务或 adapter 未提供 records 能力 | 不显示跨组全量入口，不请求records；groups、groupRecords、record继续工作，公开setView('records')为no-op | adapter keys、页面入口、请求计数与分组/详情操作 | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
 | LOG-RECORDS-REQ | 服务明确提供 records 且用户查看全量观察记录 | POST 到配置的 records endpoint，body 为公开 filter/page；不把详情字段置入查询 | endpoint、真实能力配置与 request JSON | [PUBLIC_API 程序错误观察](PUBLIC_API.md#程序错误观察) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |
 | LOG-RECORDS-OK | 可选 records 返回 success | 只投影公共摘要字段；校验 list/page/as_of/next_cursor；无 total，后端网络列表不能携带 Detail/Stack/Related/Attributes | raw response、parser result、后端脱敏样本与 DOM | [PUBLIC_API 明确 DTO 投影](PUBLIC_API.md#明确-dto-投影) · [runtime/structured-log.ts](../packages/runtime/src/structured-log.ts) |

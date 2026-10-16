@@ -4,6 +4,31 @@
 
 以下历史记录保留当时的版本、双端范围及结果。1.0.0移除了原生DOM UI；其中标为“历史路径”的文件需从对应固定提交查看，不是当前公开接口。
 
+## 程序错误Explorer列阅读布局（4.1.2 / 3.1.2，2026-10-17）
+
+xQuant固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18` 反馈：展开324px侧栏、1280窗口、长中文摘要时累计/匹配表头逐字竖排。本轮先在正式4.1.1消费者复现“累计观察数”5行，单行断言失败。正式3.0.0、3.1.1、4.1.1的structured-log.js SHA256均为`ff99e2408f405024221aa4f40d3556bda1d3601cff1b26c160dde8a6728adb2b`；当前Props没有列宽配置入口，不是遗漏宿主接线。原xQuant PG/119项HTTP/57页面主题和88.21现场证据仅按来源登记，本轮未在宿主重跑。
+
+修复仅在React Explorer所有表头和records三态/分类标签采用已有xui-table-label角色。摘要继续主列下限与自然换行，计数/时间单行，长标签或窄屏按TableContainer横滚；未修改通用Table、CSS、Token值/数量404、DTO/API、runtime、cursor/as_of、刷新/权限或认证代码。不新增列宽API、业务owner或宿主私有CSS。接入清单新增LOG-LAYOUT-001，样板`/log-react/?long-labels`使用合成文案覆盖累计/匹配与三态长标签。
+
+正式三包/DESIGN为 **4.1.2 / 3.1.2**；sourceGeneration分别`2564dcad1079d06dc4bf4374f9af16049347d7778e117d9c00646d5956d4e9bd` / `e37a501e6d251a2576929eef51b870bb057418a3cde3c8b0594b8eb56a369dc6`。独立消费者分别`.consumers/run-dzjhlT/react` / `.consumers/run-cAVWp9/react`；公开ESM/CSS/types和单实例React/ReactDOM19.2.8、Base UI1.7.0通过，无源码alias。3.1.2保持3.x服务与peer合同，不要求升级4.x。
+
+| 检查 | main4.1.2 | 兼容3.1.2 |
+|---|---|---|
+| build/typecheck/Token/正式consumer/文档/diff | 通过 | 通过 |
+| structured-log及主题合同定向unit | 24/24 | 24/24 |
+| Chromium新布局及原日志回归 | 18/18 | 18/18 |
+| Firefox/WebKit新布局 | 各9/9，合计18/18 | 各9/9，合计18/18 |
+| critical CSS gzip / 原预算 | 19058/19456 | 18685/18688 |
+| 首屏JS gzip / 原预算 | 141915/153600 | 152195/153600 |
+
+新增12项Chromium为light/dark/system ×1280/390/320（窄屏200%根字号）9项，加三主题真实Chrome200%页面缩放3项；确认DPR加倍、CSS viewport减半、根字号不变、CSS zoom/pinch=1。保留完整表头单行与三态词组断言，14/28px公共字体不缩小，摘要全文可读/自然换行，document无横溢出。键盘从表格region进入组/记录行操作，浏览器自动滚动使按钮可达；记录详情动作焦点在视口内。WebKit使用平台Alt+Tab。刷新hold/release保持同一行节点，原6项回归覆盖计数/uint64、cursor/as_of、过滤、详情权限/清理、错误/取消/迟到、窄屏和退出；HTTP为合成fetch，不冒称真实鉴权验收。Firefox/WebKit只跑新增9项，两线均0失败/跳过/flaky。
+
+已查看两线浅色1280分组截图：累计/匹配表头保持单行；另查看窄屏大字、记录与真实zoom代表图。`groups-geometry.json`与`computed-columns.json`记录实际字体/表头/表内滚动几何。初轮新测试误用旧计数label，另一次probe因DataRegion与滚动region同名而严格定位失败；只修正为示例实际label和可聚焦region，未放宽布局或键盘断言。原6项首轮已通过，后与最终新增12项同次18/18；后续补充记录首个详情动作的焦点视口断言，再次完成上述最终矩阵。过程失败/中断日志和probe保留，不当作最终成功。真缩放的最终截图使用仓库captureZoomViewport原生方法并验证PNG覆盖物理viewport，避免Playwright默认CSS裁切；兼容预览提前关闭造成的采样连接中断另存preview-restart-3.log，重启后以同代正式包完成最终矩阵。
+
+证据各自`.artifacts/log-columns-validation/`随固定产物归档：`baseline.json/log`（主线）、`baseline-esm.json`、`build-main.log`或`build-3.log`、`{typecheck,tokens,targeted-unit,consumer,docs}.log`、`browser-main.json/log`或`browser-3.json/log`、`cross-main.json/log`或`cross-3.json/log`、`images/`与几何JSON。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/structured-log.test.mjs tests/contract.test.mjs`、`pnpm test:consumer`；Chromium运行`structured-log-columns.spec.mjs structured-log.spec.mjs`，跨引擎运行新增文件并`--grep-invert 'genuine Chrome'`，配置/端口4173和4174见证据目录。
+
+未执行全量unit/全仓浏览器、watch/cold-start、读屏器/实体移动设备、xQuant生产页面/API/PG/鉴权或部署。补丁不证明消费项目已升级，也不改变其GET/POST或BaseService合同。
+
 ## 链接按钮hover对比度（4.1.1 / 3.1.1，2026-10-17）
 
 来源为xAgent固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18` 的默认浅色Button variant=link反馈。本轮先用正式4.1.0（`ae426453c7eec3c7f1ffc018976ea1ffa1fe860e`）和3.1.0（`31a54e5f2c0aca4552c629e4c7987f1208a97337`）独立消费者真实hover复现 **4.346070311712855:1**，严格4.5断言均失败。3.0.0/3.1.0/4.1.0正式button.css的SHA256相同；没有把CSS一致性当作已跑过3.0.0产品浏览器。

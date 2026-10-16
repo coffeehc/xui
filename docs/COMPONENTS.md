@@ -983,7 +983,7 @@ React 推荐组合：`<Dialog.Header closeButtonProps={{'aria-label':'关闭设�
 
 ## 数据表格
 
-通用记录页复用 Table 原语与公共 `xui-record-table` 排版：`xui-table-primary` 显式标识任务主列，使用 `--table-primary-min-inline-size`；`xui-table-label` 保留完整元数据词组，`xui-code xui-table-value` 组合采用 mono/tabular 与单行时间/计数。次要列在表内横滚，不压成逐字竖排。行操作复用 ghost/xs Button，真正危险确认仍在 Dialog 中；不新增请求、排序或权限 owner。表格通过准确的可访问名称识别，不重复可见页标题。这些角色只在有阅读需要的列显式采用，不为普通 Table 强制列宽。一次性 Key 的读取区域消费既有 mono/tabular 文字角色，保留 Textarea 的尺寸、焦点与选择复制语义。
+通用记录页复用 Table 原语与公共 `xui-record-table` 排版：`xui-table-primary` 显式标识任务主列，使用 `--table-primary-min-inline-size`；`xui-table-label` 保留完整元数据词组，`xui-code xui-table-value` 组合采用 mono/tabular 与单行时间/计数。次要列在表内横滚，不压成逐字竖排。StructuredLogExplorer所有表头及records的三态标签复用完整词组角色，计数/时间仍用单行数值角色；不向宿主新增列宽或私有CSS配置。行操作复用 ghost/xs Button，真正危险确认仍在 Dialog 中；不新增请求、排序或权限 owner。表格通过准确的可访问名称识别，不重复可见页标题。这些角色只在有阅读需要的列显式采用，不为普通 Table 强制列宽。一次性 Key 的读取区域消费既有 mono/tabular 文字角色，保留 Textarea 的尺寸、焦点与选择复制语义。
 
 正式 UI 入口为 React `@coffeehc/xui-react/data-table`；纯分页事实与类型由 `@coffeehc/xui-runtime/data-table` 共享。默认皮肤属于公共 `@coffeehc/xui-theme/table.css`，完整 `style.css` 已包含它。原有 Table/TableContainer、Toolbar/Field、Pagination、DataRegion/反馈原语保持原语合同，不会自动升级所有旧表格。
 
