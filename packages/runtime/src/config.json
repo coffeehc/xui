@@ -4,7 +4,7 @@
   "http": {"baseURL": "/", "timeoutMs": 15000},
   "auth": {"enabled": false, "timeoutMs": 15000, "protectedPaths": [], "idEncoding": "decimal"},
   "router": {"basePath": "/"},
-  "theme": {"mode": "dark", "scale": 1, "persist": true},
+  "theme": {"preset": "violet", "mode": "dark", "scale": 1, "persist": true},
   "i18n": {
     "enabled": false,
     "defaultLocale": "zh-CN",

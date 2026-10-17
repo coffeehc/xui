@@ -33,6 +33,8 @@
 registry只销毁自己由 options 构造的实例，`{instance}` 注入的是借用服务；React View/provider卸载只退订，不销毁共享应用owner。默认HTTP/Auth在配置允许时复用同一个HTTP实例；没有配置HTTP/Auth时getter显式失败，auth未启用不创建认证owner。剪贴板注入使用窄类型 `SharedClipboardService`，只需实现 `writeText`；借用实例不要求也不会调用 `dispose`，注册表只释放自己创建的内部服务。组件 `create*Controller` 是语义组件模型工厂，仍由创建者按[Controller矩阵](#状态所有权与-controller-模式)管理；它与已移除的基础 Service factories不同。
 
 `init.js` 只做首绘前主题/缩放属性恢复；应用 Controller由bootstrap/getThemeService提供。config中的theme mode/scale是默认，sessionStorage有效偏好优先。`ServicesProvider` 可把已创建的menu/i18n owner传给React树，`RouteProvider` 可传同一个RouteService；它们不创建业务API、翻译词典或第二份服务。
+公共组件不各自选择色板：MenuLayout、DataTable、Field、Card、Sheet、Menu 与 Toast 都继承同一文档的语义色。项目用 `theme.preset` 选官方配色或在 product-overrides 定义品牌，不给每个组件额外传颜色来拼整套主题。`ThemeService.setPreset` 与 `useTheme` 保持同一 owner；切换时保留打开的弹层、输入、焦点和滚动，见[配色示例](../examples/theme-presets-react/app.tsx)与[首绘合同](PUBLIC_API.md#项目配色与首绘)。
+
 
 
 受控 React props 是本次 render 已确认的事实：Disclosure 的 open、Tabs/Accordion 的 value、Select/Combobox 的 value/open/inputValue 在当前提交反映，不等待外部 store 的 layout 同步后二次渲染。宿主的 layout/passive effect 因此可读取确认后的 Disclosure 可见性、Tabs 当前项、Combobox 输入和 Select 原生 form value；Disclosure 展开后可直接把焦点交给内容，无需定时器。Select.Value 的派生标签、Portal 挂载和动画仍遵循 peer 生命周期，不承诺父 effect 内所有派生文本均已完成。Controller 的提交后同步不产生用户回调；注入完整 Controller 时仍只订阅该实例，不应用另一份 props 状态。

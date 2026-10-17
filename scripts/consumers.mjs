@@ -63,7 +63,9 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // 4.0 Upload composes existing tokens into picker/file/progress/actions regions.
 // The same minified CSS probe measures 19,295 gzip bytes (+691 vs 3.0's 18,604).
 // Bound this feature to +768 bytes; retain the JS/Button/narrow-service caps.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 19456, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
+// 4.2.13 ships six paired palette recipes in the shared CSS. Bound the new
+// CSS-only choice to another 1536 bytes; do not loosen JS/Button/service caps.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 20992, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // A fresh directory prevents npm reusing an earlier tarball with the same version.
 const runDirectory = await mkdtemp(resolve('.consumers/run-'));
@@ -591,18 +593,23 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile('tests/fixtures/navigation-slots-types.tsx', `${cwd}/navigation-slots-types.tsx`);
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', ...(['rich-navigation/app.tsx', 'navigation-slots-types.tsx'])], { cwd, stdio: 'inherit' });
     await copyFile('examples/shared/page-composition-model.ts', `${cwd}/shared/page-composition-model.ts`);
-    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition', 'bootstrap']) {
+    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition', 'bootstrap', 'theme-presets']) {
         const directory = resolve(cwd, name), output = resolve('dist/' + name + '-' + kind);
         await cp('examples/' + name + '-' + kind, directory, { recursive: true });
         const result = await build({ entryPoints: [directory + '/app.' + ('tsx')], outdir: output, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '"production"' } });
         assert(Object.keys(result.metafile.inputs).every(file => resolve(file).startsWith(cwd + '/')), 'Interaction consumer escaped standalone install');
-        assert(!Object.keys(result.metafile.inputs).some(file => file.endsWith('.css') && !file.includes('/@coffeehc/xui-theme/')), 'Interaction consumer requires private CSS');
+        assert(!Object.keys(result.metafile.inputs).some(file => file.endsWith('.css') && !file.includes('/@coffeehc/xui-theme/') && !(name==='theme-presets'&&resolve(file)===directory+'/layout.css')), 'Interaction consumer requires private CSS');
+        if(name==='theme-presets'){
+          const early=await build({entryPoints:[directory+'/prepaint.ts'],outfile:output+'/config-init.js',bundle:true,format:'iife',platform:'browser',target:'es2022',minify:true,metafile:true});
+          assert(Object.keys(early.metafile.inputs).every(file=>resolve(file).startsWith(cwd+'/')),'Pre-paint config escaped standalone install');
+          assert(!Object.keys(early.metafile.inputs).some(file=>file.includes('/node_modules/')),'Pre-paint config pulled application dependencies');
+        }
         await copyFile(directory + '/index.html', output + '/index.html');
         await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'), output + '/theme-init.js');
         await writeFile(output + '/metafile.json', JSON.stringify(result.metafile, null, 2));
         {
             await copyFile('tests/fixtures/' + name + '-types.tsx', cwd + '/' + name + '-types.tsx');
-            execFileSync('node', [root + '/node_modules/typescript/bin/tsc', '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', name + '/app.tsx', name + '-types.tsx'], { cwd, stdio: 'inherit' });
+            execFileSync('node', [root + '/node_modules/typescript/bin/tsc', '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', '--resolveJsonModule', name + '/app.tsx', name + '-types.tsx'], { cwd, stdio: 'inherit' });
         }
     }
     const widgets = resolve(cwd, 'widgets'), widgetsOutput = resolve(`dist/widgets-${kind}`);

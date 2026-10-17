@@ -1,5 +1,34 @@
 # 验证证据与限制
 
+## 六套项目配色与归属边界（4.2.13，2026-10-17）
+
+仅修改 xui。与 Stitch 在既有设计会话对齐 Violet/Ember，并根据用户决定将 Violet 作为默认，增加 Forest/Crimson/Cobalt，保留 Precision；具体色值由浏览器合成测量校正，不将设计稿标称比值当作验收。主题讨论和实际截图位于 `.artifacts/theme-comparison/`；正式回归、对比值、功能文件哈希和消费者 receipt 位于 `.artifacts/ownership-contract-4.2.13/`。
+
+公开新增 `config.theme.preset`、`ThemeOptions.preset`、`ThemeState.preset` 与 `ThemeService.setPreset`，类型 `ThemePreset` 从既有 theme/根入口导出。六套配方随正式 tokens/style/critical CSS 交付；没有新的运行时颜色注入、额外配置请求或组件皮肤。明暗仍为独立 light/dark/system，默认 dark，sessionStorage 明暗偏好优先；配色由项目配置初始化，运行期 setPreset 不写 storage、不改变 mode/缩放/输入状态。自定义 product-overrides 继续优先。升级未显式选配色会采用紫色；保留青色显式 precision；自定义完整 ThemeController 须补齐 preset/setPreset，不把末位版本递增当作语义兼容承诺。
+
+同时补齐多 NavigationMenu 范围 Controller 归属、受控 collapsed 同源接线、keepMounted 隐藏树隔离、真实退出销毁；未知 logout 的一次内部核验、同 owner 普通登录、新 Document 正常恢复与 bfcache 原 owner 的边界。未新增持久退出门禁或恢复按钮。ADOPTION_CHECKLIST 增加 NAV-OWNER、AUTH-LOGOUT/RELOAD 和 COLOR 逐项检查，当前 421 项。
+
+正式包构建、typecheck、Token/文档守卫、92 项定向 unit，以及完整独立 tarball consumer 的 105 个公开 ESM/CSS/types 入口通过；React/ReactDOM/Base UI 单实例，无 packages/src alias。关键 CSS（含 floating）gzip 20,770 bytes，六套配方将预算由 19,456 增至 20,992；JS/Button/窄服务预算未放宽。具体 commit/sourceGeneration/tarball SHA 以自动归档的 manifest、metadata/source-generation.json、public-api.json 和 SHA256SUMS 为准，不手工补齐元数据。
+
+实测普通文字（含链接、选中、品牌 Badge、主按钮与状态文字）最低值和必要输入内外边界/焦点最低值如下。浏览器解析 OKLab/color-mix 后测量，system 同时检查系统浅深切换；不是只比较静态 HEX。
+
+| 配色 | 文字最低对比 | 边界/焦点最低对比 |
+| --- | --- | --- |
+| Violet | 5.57:1 | 3.21:1 |
+| Ember | 4.53:1 | 3.10:1 |
+| Forest | 4.82:1 | 3.06:1 |
+| Crimson | 5.15:1 | 3.27:1 |
+| Cobalt | 4.72:1 | 3.01:1 |
+| Precision | 4.55:1 | 3.14:1 |
+
+浏览器覆盖六套主题的 light/dark/system、1600px 桌面、390px/200% 根字号、长中文、预绘脚本先于应用、项目配置重载、自定义公开 Token 覆盖、Sheet 的草稿/焦点/所有祖先滚动位置保持和关闭回焦；另有每套浅深各一次真实 Chrome 200% 浏览器缩放，验证 viewport/DPR 变化且 CSS zoom=1、pinch=1。相关默认页面、菜单危险语义、导航选中、按钮品牌继承、表单和刷新连续性也执行定向回归。截图在 `images/theme-presets`、`images/default-theme` 和 `images/precision-theme-evidence`。
+
+首轮122项中114通过、8失败：两个管理员焦点 fixture 仍找英文 Show password；菜单示例只有 prepaint，缺少共享主题 owner；刷新 fixture 仍期待已移除的临时状态栏；另四项暴露主题选择器名称长短使窄屏顶栏换行并移动文档滚动。已修正公开 bootstrap 示例接线、固定示例自身选择区的布局宽度，并更新旧测试定位/现行刷新合同断言。保留严格滚动、焦点、节点身份与页脚不跳动断言，未修改颜色阈值或通过私有 CSS 修组件；管理员6项及关键39项复验通过。最终各批原始 JSON/log 保留首轮失败与后续复验，不把候选的失败结果冒充最终通过。 最终正式包更新示例55/55、系统菜单与刷新连续性2/2、Toast/品牌覆盖/固定表格合成20/20；示例选择区最后调整为明确宽度上限后，主题全49项再次通过，新增桌面两选择器同行断言与严格窄屏滚动保持。其后只修DESIGN中的旧默认主题叙述，310项CSS/ESM/types等功能产物逐文件SHA一致，重建并重新验证完整consumer以生成最终元数据，不把旧sourceGeneration手工改成新值。
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/contract.test.mjs tests/docs.test.mjs tests/runtime.test.mjs tests/theme-session.test.mjs tests/theme-control.test.mjs tests/theme-presets.test.mjs tests/config-services.test.mjs tests/interaction-controller.test.mjs tests/auth.test.mjs tests/page-composition.test.mjs tests/design-state-contract.test.mjs tests/menu-design-contract.test.mjs`、`pnpm test:consumer`，然后对 `tests/browser/theme-presets.spec.mjs`、`default-theme.spec.mjs`、`page-composition*.spec.mjs`、`button-link-contrast.spec.mjs`、`button-brand-inheritance.spec.mjs`、`navigation-selected.spec.mjs`、`menu-danger.spec.mjs`、`theme-session.spec.mjs`、`precision-theme-evidence.spec.mjs` 运行 Playwright。Toast/coverage/widgets 只选择颜色、长内容、缩放及背景合成相关场景，不扩展到无关计时回归。
+
+未运行全仓 unit/browser、watch/cold-start、实体设备或读屏器；本轮浏览器为 Chrome，不声称 Firefox/WebKit 或各消费项目的页面、后端、升级、部署已验收。消费项目保留自定义配色后仍须按自己的实际组合验证。
+
 ## 自助改密与原认证owner（4.2.12，2026-10-17）
 
 复核4.2.11没有公开改密命令后实现，不重复改造已闭环的组件。仅修改xui；只读核对BaseService `5e2c906bcb19913bbbd1959bf06d7463f486edb4`官方fixture。`AuthClient/AuthService.changePassword`固定官方PUT、唯一Bearer、omit/no-store/error redirect，严格确认schema1三字段；成功清凭据并要求重新登录，不添加备用URL、通用auth白名单、第二owner或写入重放。公共PasswordChangeForm复用原Field/PasswordInput/NewPasswordFields/FormActions/Alert，支持默认及完整Controller注入、keepMounted的active、清密和关闭回焦。

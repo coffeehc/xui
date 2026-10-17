@@ -1,5 +1,6 @@
 import defaults from './config-defaults.js';
 import type {ThemeMode,InterfaceScale} from './theme.js';
+import {isThemePreset,type ThemePreset} from './theme-preset.js';
 import type {NavigationItem} from './navigation.js';
 import {indexNavigation} from './navigation.js';
 export type ConfigValue=null|boolean|number|string|readonly ConfigValue[]|{readonly [key:string]:ConfigValue};
@@ -16,7 +17,7 @@ export interface XuiConfig {
   http:{baseURL:string;timeoutMs:number};
   auth:{enabled:boolean;timeoutMs:number;protectedPaths:readonly string[];idEncoding:'decimal'|'hex'};
   router:{basePath:string};
-  theme:{mode:ThemeMode;scale:InterfaceScale;persist:boolean};
+  theme:{preset:ThemePreset;mode:ThemeMode;scale:InterfaceScale;persist:boolean};
   i18n:{enabled:boolean;defaultLocale:string;fallbackLocale:string;locales:readonly {value:string;label:string}[];messages:Readonly<Record<string,Readonly<Record<string,string>>>>};
   menu:{label:string;labelKey:string|null;items:readonly ConfigMenuItem[]};
   /** Project-owned JSON. Projects validate their own business schema before use. Never store secrets here. */
@@ -55,7 +56,7 @@ function validate(value:unknown):asserts value is XuiConfig {
   try{const url=new URL(http.baseURL,'https://xui.invalid/');if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.search||url.hash)fail('http.baseURL');}catch{fail('http.baseURL');}
   keys(auth,['enabled','timeoutMs','protectedPaths','idEncoding'],'auth');bool(auth.enabled,'auth.enabled');deadline(auth.timeoutMs,'auth.timeoutMs');if(!['decimal','hex'].includes(auth.idEncoding as string))fail('auth.idEncoding');if(!Array.isArray(auth.protectedPaths)||auth.protectedPaths.some(path=>typeof path!=='string'||!path.startsWith('/')||path.startsWith('//')||/[\\?#%\u0000-\u0020\u007f]/.test(path)||new URL(path,'https://xui.invalid').pathname!==path))fail('auth.protectedPaths');
   keys(router,['basePath'],'router');text(router.basePath,'router.basePath');if(!router.basePath.startsWith('/')||router.basePath.startsWith('//')||/[?#\\]|(?:^|\/)\.\.?(?:\/|$)/.test(router.basePath))fail('router.basePath');
-  keys(theme,['mode','scale','persist'],'theme');if(!['light','dark','system'].includes(theme.mode as string))fail('theme.mode');if(![1,1.25,1.5,2].includes(theme.scale as number))fail('theme.scale');bool(theme.persist,'theme.persist');
+  keys(theme,['preset','mode','scale','persist'],'theme');if(!isThemePreset(theme.preset))fail('theme.preset');if(!['light','dark','system'].includes(theme.mode as string))fail('theme.mode');if(![1,1.25,1.5,2].includes(theme.scale as number))fail('theme.scale');bool(theme.persist,'theme.persist');
   keys(i18n,['enabled','defaultLocale','fallbackLocale','locales','messages'],'i18n');bool(i18n.enabled,'i18n.enabled');text(i18n.defaultLocale,'i18n.defaultLocale');text(i18n.fallbackLocale,'i18n.fallbackLocale');
   if(!Array.isArray(i18n.locales)||!i18n.locales.length)fail('i18n.locales');const locales=new Set<string>();
   for(const locale of i18n.locales){keys(locale,['value','label'],'i18n.locales');text(locale.value,'i18n.locales.value');text(locale.label,'i18n.locales.label');try{if(Intl.getCanonicalLocales(locale.value)[0]!==locale.value)fail('i18n.locales.value');}catch{fail('i18n.locales.value');}if(locales.has(locale.value))fail('i18n.locales.value');locales.add(locale.value);}

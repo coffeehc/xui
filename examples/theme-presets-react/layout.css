@@ -1,0 +1,11 @@
+.comparison-columns {display:grid;grid-template-columns:minmax(0,1fr) var(--layout-field-long-min);gap:var(--space-section-gap);align-items:start;}
+.comparison-columns>* {min-inline-size:0;}
+.comparison-agents {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-section-gap);}
+.comparison-chat {max-inline-size:var(--layout-content-max);margin-inline:auto;display:grid;gap:var(--space-section-gap);}
+@media (max-width:48rem) {.comparison-columns {grid-template-columns:minmax(0,1fr);}}
+@media (max-width:40rem) {.comparison-agents {grid-template-columns:minmax(0,1fr);}}
+
+
+/* Reserve the theme-control slot: changing its label must not reflow the page. */
+.comparison-preset {inline-size:var(--layout-field-min);max-inline-size:100%;min-inline-size:0;}
+.comparison-preset>* {inline-size:100%;}

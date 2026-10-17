@@ -15,7 +15,7 @@ export function resolveThemeService(state:RegistryState,win:Window|undefined=sta
       return existing;
     }
     const inherited=target?.xuiThemeOptions;
-    const merged={defaultMode:state.config.theme.mode,persist:state.config.theme.persist,...(inherited??{}),...(inputOptions??{}),window:target??null};
+    const merged={preset:state.config.theme.preset,defaultMode:state.config.theme.mode,persist:state.config.theme.persist,...(inherited??{}),...(inputOptions??{}),window:target??null};
     if(merged.defaultMode!==undefined&&!validThemeMode(merged.defaultMode))throw new TypeError('Invalid theme defaultMode');
     const theme=buildThemeController(merged);entry.value=theme;entry.owned=true;entry.resolvedOptions=inputOptions??inherited;
     if(target)attachTheme(target,theme);

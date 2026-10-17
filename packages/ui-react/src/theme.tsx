@@ -6,7 +6,7 @@ export function useTheme(controller:ThemeController,serverState?:Readonly<ThemeS
 import {getThemeModePresentation,type ThemeModeLabels} from '@coffeehc/xui-runtime/theme-control';
 import {Button,type IconButtonProps} from './button.js';
 import {branded} from './shared.js';
-const initialState:Readonly<ThemeState>=Object.freeze({mode:'dark',effective:'dark'});
+const initialState:Readonly<ThemeState>=Object.freeze({mode:'dark',effective:'dark',preset:'violet'});
 const noSubscription=()=>()=>{};
 const initialSnapshot=()=>initialState;
 export type ThemeModeButtonProps=Omit<IconButtonProps,'aria-label'|'children'|'ref'> & {theme?:ThemeController;labels?:Partial<ThemeModeLabels>};

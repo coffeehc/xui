@@ -58,7 +58,7 @@
 | --- | --- | --- | --- |
 | `@coffeehc/xui-runtime` <!-- public-entry: @coffeehc/xui-runtime --> | [源码](../packages/runtime/src/index.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-runtime/init.js` <!-- public-entry: @coffeehc/xui-runtime/init.js --> | [源码](../packages/runtime/src/init.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
-| `@coffeehc/xui-runtime/theme` <!-- public-entry: @coffeehc/xui-runtime/theme --> | [源码](../packages/runtime/src/theme.ts)；`setInterfaceScale`、`InterfaceScale`、`InterfaceScaleOptions`，与根入口一致 | [主题与界面缩放](DESIGN.md#公共界面缩放) | [示例](../examples/page-composition-react/app.tsx) |
+| `@coffeehc/xui-runtime/theme` <!-- public-entry: @coffeehc/xui-runtime/theme --> | [源码](../packages/runtime/src/theme.ts)；`ThemePreset`、`ThemeState.preset`、`ThemeService.setPreset`；`setInterfaceScale`、`InterfaceScale`、`InterfaceScaleOptions`，与根入口一致 | [主题与界面缩放](DESIGN.md#公共界面缩放) | [示例](../examples/page-composition-react/app.tsx) |
 | `@coffeehc/xui-runtime/theme-control` <!-- public-entry: @coffeehc/xui-runtime/theme-control --> | [源码](../packages/runtime/src/theme-control.ts) | [顶栏合同](COMPONENTS.md#布局与顶栏) | [示例](../examples/header-controls-react/app.tsx) |
 | `@coffeehc/xui-runtime/header-controls` <!-- public-entry: @coffeehc/xui-runtime/header-controls --> | [源码](../packages/runtime/src/header-controls.ts) | [语言合同](COMPONENTS.md#布局与顶栏) | [示例](../examples/header-controls-react/app.tsx) |
 | `@coffeehc/xui-runtime/loading` <!-- public-entry: @coffeehc/xui-runtime/loading --> | [源码](../packages/runtime/src/loading.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
@@ -214,6 +214,29 @@ const auth = AuthService; // 仅 auth.enabled=true 时使用
 `bootstrap` 返回冻结的 `XuiApplication`（resolved config 与 services）。同一个 Window 上重复使用相同配置/绑定会复用既有 owner；冲突配置或重复绑定不同 service 会明确失败，不能借重复启动换 owner。`getHttpService()` 与 `getAuthService()` 在未配置时抛错；未启用 auth 时不创建认证 owner。`disposeXuiServices(window)` 释放该 Window 的应用注册表及其所属服务。服务以 `{options}` 交由注册表创建，或以 `{instance}` 借用已有实例；借用实例不由 registry/React View 销毁。剪贴板借用实例的类型为 `SharedClipboardService`，只要求 `writeText`，不要求也不会调用 `dispose`；注册表只 dispose 自己创建的内部剪贴板服务。`getThemeService`、`getClipboardService` 等浏览器 getter 使用同一个 Window owner。组件级 `create*Controller` 是不同合同，仍按组件 Controller 生命周期使用。
 
 主题配置的 `theme.mode` 是默认选择而非受控值；有效的 `ui.theme.mode` sessionStorage 用户选择优先于 config 默认。有效的 `ui.interface.scale` 同样优先于 `theme.scale` 默认。显式注入 `ThemeOptions.mode` 才是受控主题模式。公开 `init.js` 只负责首绘前恢复主题/缩放属性，不创建、订阅或拥有 ThemeController；正式文档主题 owner 由 `bootstrap`/`getThemeService` 提供。`useTheme` 订阅共享 owner，组件卸载不销毁它。
+
+### 项目配色与首绘
+
+`ThemePreset = 'violet' | 'ember' | 'forest' | 'crimson' | 'cobalt' | 'precision'` 从 `@coffeehc/xui-runtime/theme` 导出。默认 `config.json` 的 `theme.preset="violet"`；`theme.mode="dark"` 与配色独立。配置解析拒绝未知 preset。配方与 CSS 的唯一源在 [DESIGN](DESIGN.md#官方配色与项目品牌)。
+
+```json
+{"theme":{"preset":"forest","mode":"system"}}
+```
+
+```ts
+import projectConfig from './config.json';
+import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+import {ThemeService} from '@coffeehc/xui-runtime/theme';
+bootstrap(projectConfig);
+ThemeService.setPreset('ember'); // 可选运行期切换；同一 document owner，无网络/存储写入
+ThemeService.setMode('light');  // 沿用明暗偏好的 sessionStorage 合同
+```
+
+`ThemeOptions.preset` 是初始化配色，`ThemeState.preset` 是当前配色，`setPreset` 只更新此事实及公开根属性 `data-theme-preset`，不请求 `onModeChange`、不修改 mode、缩放或草稿。相同值不重复通知；销毁后不再写 DOM；无效 JavaScript 值安全回到 violet。配色不隐式写入 sessionStorage/localStorage，重载按项目配置初始化。`ThemeOptions.mode` 的受控行为保持原样。不要通过再次 bootstrap 更换 owner；运行期切换调用已有 `ThemeService.setPreset`。自行注入完整 ThemeController 的宿主需实现新增 setPreset 与 state.preset；普通配置调用无需实现 Controller。
+
+首绘前项目应由**同一份项目配置**生成轻量 `window.xuiThemeOptions={preset,defaultMode}`，放在公开 `init.js` 和 CSS 前执行，再以同一配置调用 bootstrap。init 不会读取宿主 config.json URL，不创建 owner，也不请求网络；不要用另一个硬编码色板与 bootstrap 竞争。实际例子见 [主题示例的项目配置](../examples/theme-presets-react/config.json)、[首绘脚本](../examples/theme-presets-react/prepaint.ts)及[React 页面](../examples/theme-presets-react/app.tsx)。仅使用默认值时不需此项目脚本。已存在有效 owner 时，init 保留它当前的 mode/preset。
+
+项目的 `theme.css` 仍用既有 `product-overrides` 层覆盖公开变量；其优先级高于六套默认配方，弹层与正文继承同一根主题。不重新导出 CSS 皮肤，不要求复制内部 DOM。保留旧青色请配置 `theme.preset="precision"`，而非恢复旧包或添加私有选择器。
 
 默认 `i18n.enabled=false`，默认 `locales` 只有语言选项元数据，默认 `messages` 为空；xui 不随包承诺完整翻译词典。启用后 `defaultLocale` 是初始语言，`locales` 提供受支持语言；`t` 依次查当前语言、fallbackLocale、调用时的 fallback，仍未命中则返回 key。宿主可在 config 提供 messages，或对已声明 locale 调用 `registerMessages`。React `useI18n` 订阅 locale 并提供 `t/setLocale/locales`；禁用切换或未知 locale 返回 false。locale 更新同步 document lang，并使使用 `labelKey` 的 MenuService 文本随当前语言更新。`ServicesProvider` 可在 SSR 或隔离应用中显式借用 i18n/menu 实例；它不拥有销毁权。
 

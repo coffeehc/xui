@@ -76,6 +76,18 @@ export function checkContract(document) {
   const systemRule = rules.find(rule => rule.selector === ':root[data-theme="system"]');
   assert.equal(systemRule?.parent.params, '(prefers-color-scheme: light)', 'System light media recipe');
   assert.deepEqual(declarations(systemRule), declarations(lightRule), 'Explicit/system light recipes differ');
+  for(const preset of ['violet','ember','forest','crimson','cobalt','precision']){
+    const selector=`:root[data-theme-preset="${preset}"]`;
+    const darkRule=rules.find(rule=>rule.selector===selector),presetLight=rules.find(rule=>rule.selector===selector+'[data-theme="light"]'),presetSystem=rules.find(rule=>rule.selector===selector+'[data-theme="system"]');
+    assert(darkRule&&presetLight&&presetSystem,`Missing ${preset} theme recipes`);
+    assert.equal(presetSystem.parent.params,'(prefers-color-scheme: light)');
+    assert.deepEqual(declarations(presetLight),declarations(presetSystem),`${preset} explicit/system light recipes differ`);
+    for(const rule of [darkRule,presetLight]){
+      const values={...defaults,...(rule===presetLight?declarations(lightRule):{}),...declarations(rule)};
+      checkGraph(values);checkTokenLayers(values);
+      for(const name of Object.keys(declarations(rule)))assert(name in defaults,`${preset} invented ${name}`);
+    }
+  }
   const productTree = postcss.parse(extract(document,'design-product-css'));
   const products = [];
   productTree.walkRules(rule => products.push(declarations(rule)));
@@ -155,6 +167,7 @@ export async function generate(check = false, outputDirectory='packages/theme/di
   for(const name of styleParts){parts[name]=await readFile(`packages/theme/src/${name}.css`,'utf8');checkStyles(parts[name],light,['floating','selection'].includes(name)?['--available-height','--available-width','--anchor-width','--toast-swipe-movement-x','--toast-swipe-movement-y']:[]);}
   const component=composeComponentStyles(styleParts.map(name=>parts[name]).join('\n'));
   checkStyles(await readFile('examples/shared/layout.css','utf8'),light);
+  checkStyles(await readFile('examples/theme-presets-react/layout.css','utf8'),light);
   const files = { 'tokens.css':css, 'components.css':component, 'style.css':css+'\n'+component,'critical.css':css+'\n'+composeComponentStyles(styleParts.filter(name=>!['floating','table-resize'].includes(name)).map(name=>parts[name]).join('\n')),...Object.fromEntries(styleParts.map(name=>[`${name}.css`,parts[name]])),'floating.css':composeComponentStyles(parts.selection+'\n'+parts.floating),'forms.css':composeComponentStyles(parts.forms+'\n'+parts.selection) };
   await mkdir(outputDirectory,{recursive:true});
   for (const [name,value] of Object.entries(files)) {

@@ -10,7 +10,7 @@ function browser({stored, dark=false, storageFail=false, mediaFail=false, legacy
   return {window,listeners,get stored() {return storedMode;},setDark(dark) {media.matches=dark;listeners.forEach(fn=>fn());}};
 }
 test('import and controller are safe without browser globals',() => {
-  const theme = isolatedTheme();assert.deepEqual(theme.getState(),{mode:'dark',effective:'dark'});theme.setMode('light');assert.equal(theme.getState().effective,'light');disposeServices(theme);
+  const theme = isolatedTheme();assert.deepEqual(theme.getState(),{mode:'dark',effective:'dark',preset:'violet'});theme.setMode('light');assert.equal(theme.getState().effective,'light');disposeServices(theme);
 });
 for (const mode of ['light','dark','system']) test(`persisted ${mode}, OS change and explicit preference`,() => {
   const mock = browser({stored:mode});const theme = isolatedTheme({window:mock.window});const states=[];const off=theme.subscribe(state=>states.push(state));
@@ -20,18 +20,18 @@ for (const mode of ['light','dark','system']) test(`persisted ${mode}, OS change
   assert(Object.isFrozen(theme.getState()));off();const count=states.length;theme.setMode('dark');assert.equal(states.length,count);disposeServices(theme);assert.equal(mock.listeners.size,0);theme.setMode('light');assert.equal(theme.getState().mode,'dark');
 });
 test('invalid input/stored values fall back to dark without overwriting on initialization',() => {
-  const mock=browser({stored:'invalid',dark:false});const theme=isolatedTheme({window:mock.window});assert.deepEqual(theme.getState(),{mode:'dark',effective:'dark'});assert.equal(mock.stored,'invalid');theme.setMode('wrong');assert.equal(mock.stored,'dark');disposeServices(theme);
+  const mock=browser({stored:'invalid',dark:false});const theme=isolatedTheme({window:mock.window});assert.deepEqual(theme.getState(),{mode:'dark',effective:'dark',preset:'violet'});assert.equal(mock.stored,'invalid');theme.setMode('wrong');assert.equal(mock.stored,'dark');disposeServices(theme);
 });
 test('storage rejection retains choice in memory; refresh defaults to dark',() => {
   const mock=browser({storageFail:true});const theme=isolatedTheme({window:mock.window});theme.setMode('light');assert.equal(theme.getState().mode,'light');assert.equal(mock.window.document.documentElement.dataset.theme,'light');disposeServices(theme);const fresh=isolatedTheme({window:mock.window});assert.equal(fresh.getState().mode,'dark');disposeServices(fresh);
 });
 test('matchMedia failure forces safe light when explicitly following system',() => {
-  const mock=browser({mediaFail:true});const theme=isolatedTheme({window:mock.window});assert.deepEqual(theme.getState(),{mode:'dark',effective:'dark'});theme.setMode('system');assert.equal(theme.getState().mode,'system');assert.equal(mock.window.document.documentElement.dataset.theme,'light');assert.equal(theme.getState().effective,'light');theme.setMode('dark');assert.equal(theme.getState().effective,'dark');theme.setMode('system');assert.equal(theme.getState().effective,'light');disposeServices(theme);
+  const mock=browser({mediaFail:true});const theme=isolatedTheme({window:mock.window});assert.deepEqual(theme.getState(),{mode:'dark',effective:'dark',preset:'violet'});theme.setMode('system');assert.equal(theme.getState().mode,'system');assert.equal(mock.window.document.documentElement.dataset.theme,'light');assert.equal(theme.getState().effective,'light');theme.setMode('dark');assert.equal(theme.getState().effective,'dark');theme.setMode('system');assert.equal(theme.getState().effective,'light');disposeServices(theme);
 });
 test('custom storage key, legacy media listener and unsubscribe',() => {
   const mock=browser({legacy:true});const keys=[];mock.window.sessionStorage={getItem:key=>{keys.push(key);return 'system';},setItem:key=>keys.push(key)};
   const theme=isolatedTheme({window:mock.window,storageKey:'product.preference'});mock.setDark(true);assert.equal(theme.getState().effective,'dark');theme.setMode('light');assert.deepEqual(keys,['product.preference','product.preference']);disposeServices(theme);assert.equal(mock.listeners.size,0);
 });
 test('listener registration failure retains initial dark theme and usable explicit modes',() => {
-  const mock=browser({listenerFail:true,dark:false});const theme=isolatedTheme({window:mock.window});assert.deepEqual(theme.getState(),{mode:'dark',effective:'dark'});theme.setMode('light');assert.equal(theme.getState().effective,'light');disposeServices(theme);
+  const mock=browser({listenerFail:true,dark:false});const theme=isolatedTheme({window:mock.window});assert.deepEqual(theme.getState(),{mode:'dark',effective:'dark',preset:'violet'});theme.setMode('light');assert.equal(theme.getState().effective,'light');disposeServices(theme);
 });

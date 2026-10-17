@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.12）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.13）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -385,6 +385,15 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | COLOR-005 | 出现删除/撤销等危险操作 | 使用公开 danger 语义；确认、权限和实际 mutation 仍归业务 owner | Item tone、公共 CSS 与确认回调 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-006 | 页面存在标题/摘要/meta/disabled/help 文本 | 分别使用 DESIGN 规定文字角色和对比，不手写每页字号/颜色 | computed tokens 与角色映射 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-007 | 展示数值、ID、时间或代码 | 按 DESIGN 对应文本角色呈现；不把任意正文改成 mono 或截断事实 | computed font family 与完整值 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
+| COLOR-008 | 验收默认主题或集中品牌覆盖 | 先用无产品覆盖的固定正式包核对 canvas/shell/content/overlay，再验证品牌覆盖；默认主题缺陷交 xui，不要求产品逐页补皮肤 | 正式包来源、CSS 加载链、四类表面计算值与同视口截图 | [DESIGN 默认主题层级](DESIGN.md#默认主题层级与动作强调) |
+| COLOR-009 | 表格包含多行重复操作 | 日常动作采用已有 ghost/link/必要 outline；危险菜单用 danger，最终危险决策用 destructive；不把所有行操作做成实心主色/红色，不新增行按钮字号 | Table.Actions/columns 接线、实际变体与整表截图 | [DESIGN 默认主题层级](DESIGN.md#默认主题层级与动作强调) |
+| COLOR-010 | 输入、选中、hover/pressed、焦点及状态反馈 | 按实际合成背景验算文字4.5:1、必要控件/焦点3:1；输入内外背景均测，设计稿的标称比值不算证据 | 浏览器计算颜色、合成算法、各状态比值与焦点截图 | [DESIGN 默认主题层级](DESIGN.md#默认主题层级与动作强调) |
+| COLOR-011 | 选择项目品牌 | 六套preset或自定义品牌明确；未配置violet，保留青色显式precision；未知配置失败 | config.json、resolveConfig与固定版本 | [项目配色与首绘](PUBLIC_API.md#项目配色与首绘) |
+| COLOR-012 | 首绘与启动 | 项目首绘脚本与bootstrap来自同一配置；init在CSS/应用前，不创建第二owner | 阻止应用JS时根preset/mode及首帧截图 | [项目配色与首绘](PUBLIC_API.md#项目配色与首绘) |
+| COLOR-013 | 运行期切换配色 | 同一ThemeService.setPreset；不改变mode/缩放、不写storage；弹层/草稿/焦点/滚动保留；自定义Controller补齐preset | 同页切换、storage写入、刷新回项目配置 | [项目配色与首绘](PUBLIC_API.md#项目配色与首绘) |
+| COLOR-014 | 保留自定义品牌 | product-overrides优先；浅深/system检查全部交互状态的文字/输入内外边界/焦点对比度 | 产品正式包实测与截图，不以库示例替代 | [项目配色与首绘](PUBLIC_API.md#项目配色与首绘) |
+| COLOR-015 | 红绿品牌与状态 | 状态使用独立status-*和明确文案，危险操作依tone/确认，不将status别名到primary | 红绿品牌下成功/失败/普通/危险动作对照 | [项目配色与首绘](PUBLIC_API.md#项目配色与首绘) |
+
 
 ## 刷新、身份与生命周期
 

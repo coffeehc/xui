@@ -5,6 +5,8 @@ import {ContextMenu} from '@coffeehc/xui-react/context-menu';
 import {Button} from '@coffeehc/xui-react/button';
 import {Stack,Toolbar} from '@coffeehc/xui-react/layout';
 import '@coffeehc/xui-theme/style.css';
+import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+bootstrap();
 const long=new URLSearchParams(location.search).has('long');
 const icon=<Menu.Icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7"/></svg></Menu.Icon>;
 function App(){

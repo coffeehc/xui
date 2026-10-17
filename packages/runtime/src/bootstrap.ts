@@ -21,7 +21,7 @@ export function bootstrap(overrides:XuiConfigOverrides={},environment:BootstrapE
   const options:XuiServicesOptions={
     ...(!injected.http?{http:{options:{baseURL:new URL(config.http.baseURL,win.location.href).href,timeoutMs:config.http.timeoutMs}}}:{}),
     ...(config.auth.enabled?{auth:{options:{timeoutMs:config.auth.timeoutMs,protectedPaths:config.auth.protectedPaths,idEncoding:config.auth.idEncoding}}}:{}),
-    theme:{options:{defaultMode:config.theme.mode,persist:config.theme.persist}},
+    theme:{options:{preset:config.theme.preset,defaultMode:config.theme.mode,persist:config.theme.persist}},
     route:{options:{basePath:config.router.basePath,window:win}},
     ...injected,
   };

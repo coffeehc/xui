@@ -1,41 +1,41 @@
 ---
-name: Precision Engineering Console
-description: High-signal graphite and cyan engineering console with paired light/dark semantic themes.
+name: XUI Electric Violet
+description: High-signal AI workbench with six official paired light/dark palette families.
 colors:
-  primary: "#0e7490"
+  primary: "#6d28d9"
   on-primary: "#ffffff"
-  primary-dark: "#06b6d4"
-  on-primary-dark: "#090b0e"
-  foreground: "#0f172a"
-  foreground-dark: "#f1f5f9"
-  muted-foreground: "#475569"
-  muted-foreground-dark: "#94a3b8"
-  background: "#f1f5f9"
-  background-dark: "#090b0e"
-  canvas: "#f1f5f9"
-  canvas-dark: "#090b0e"
-  shell: "#e8eef5"
-  shell-dark: "#11151c"
-  surface: "#f8fafc"
-  surface-dark: "#11151c"
-  support: "#e2e8f0"
-  support-dark: "#0d1016"
+  primary-dark: "#a78bfa"
+  on-primary-dark: "#0c0717"
+  foreground: "#191424"
+  foreground-dark: "#f5f3ff"
+  muted-foreground: "#5b536b"
+  muted-foreground-dark: "#9b93b0"
+  background: "#f8f7fc"
+  background-dark: "#09070f"
+  canvas: "#f8f7fc"
+  canvas-dark: "#09070f"
+  shell: "#f1eff8"
+  shell-dark: "#0f0b1a"
+  surface: "#ffffff"
+  surface-dark: "#141024"
+  support: "#f1eff8"
+  support-dark: "#0f0b1a"
   raised: "#ffffff"
-  raised-dark: "#11151c"
+  raised-dark: "#1a152e"
   overlay: "#ffffff"
-  overlay-dark: "#1a2230"
-  muted: "#e2e8f0"
-  muted-dark: "#161e28"
-  separator: "#cbd5e1"
-  separator-dark: "#1e2633"
-  surface-line: "#cbd5e1"
-  surface-line-dark: "#1e2633"
-  surface-line-strong: "#64748b"
-  surface-line-strong-dark: "#52657e"
-  input-line: "#64748b"
-  input-line-dark: "#5b708b"
-  selected: "color-mix(in oklab, #0e7490 9%, #ffffff)"
-  selected-dark: "color-mix(in oklab, #06b6d4 13%, #11151c)"
+  overlay-dark: "#211b3b"
+  muted: "color-mix(in oklab, #191424 7%, #ffffff)"
+  muted-dark: "color-mix(in oklab, #f5f3ff 7%, #1a152e)"
+  separator: "#e5e1f0"
+  separator-dark: "#29213d"
+  surface-line: "#e5e1f0"
+  surface-line-dark: "#29213d"
+  surface-line-strong: "#8b819f"
+  surface-line-strong-dark: "#817397"
+  input-line: "#8b819f"
+  input-line-dark: "#817397"
+  selected: "color-mix(in oklab, #6d28d9 11%, #ffffff)"
+  selected-dark: "color-mix(in oklab, #a78bfa 16%, #141024)"
 typography:
   caption:
     fontFamily: Inter Variable
@@ -117,11 +117,11 @@ components:
 
 这是产品界面的完整通用设计契约，供开发者和编码 Agent 直接执行。执行本规范不依赖某个前端框架或业务路由。本文件是 xui 公共设计原则、默认主题与控件规则的唯一来源；采用项目在自己的 `docs/DESIGN.md` 中引用所采用的版本，记录品牌差异、业务信息和组合设计，不复制另一份公共基线。
 
-当前默认品牌为 Precision Engineering Console：以深石墨背景、冷灰分层表面、青蓝主操作、翠绿成功、琥珀人工介入和红色错误提高信噪比。深色为首次使用基准；浅色是同一色相与语义的冷灰白配对，已有用户的显式偏好继续生效。Inter 负责界面文字，JetBrains Mono 负责代码、技术标识与表格数字；细边界和4px基础控件圆角表达工程精度。颜色、字体、间距、布局、状态及可访问性均由本文件统一定义，更换主题集中调整变量和前言，不逐页换色。
+当前默认配色为 Violet 电光紫：以紫墨分层表面、紫色主操作与青柠身份强调构成 AI 工作台。深色为首次使用基准，浅色采用微紫壳层与白色内容面；翠绿成功、琥珀人工介入和红色错误保留独立状态语义，已有用户的明暗偏好继续生效。项目还可选 Ember、Forest、Crimson、Cobalt 或 Precision，亦可保留自己的品牌覆盖。Inter 负责界面文字，JetBrains Mono 负责代码、技术标识与表格数字；细边界和4px基础控件圆角表达工程精度。颜色、字体、间距、布局、状态及可访问性均由本文件统一定义，更换主题集中调整变量和前言，不逐页换色。
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.12。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.9、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.13。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.14、4.2.15…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -166,6 +166,25 @@ xui公共服务操作按正式wire统一接入：使用BaseService时直接接�
 | 项目的 `theme.css` | 将产品视觉选择映射为当前版本可识别的变量 | 在规定层覆盖需要调整的值，其余继承公共默认值；不承担信息架构、业务流程或交互状态设计 |
 
 Markdown 没有自动继承或合并机制。采用者和接入技能显式读取公共基线与项目约定，再核对实际组件版本；CSS 变量的默认值与覆盖才由浏览器实际继承。产品可以按公开变量与变体调整品牌、尺度和密度，不能用覆盖移除必要对比、键盘焦点、字段关联、状态语义或 reduced-motion/forced-colors 支持。项目领域约定归项目所有，不反向成为 xui 的全局默认。
+
+### 官方配色与项目品牌
+
+4.2.13 默认配色为 **Violet 电光紫**，默认明暗偏好仍为 dark。配色、明暗、阅读缩放是三个独立维度；升级后未声明配色的项目会采用紫色，需延续青色的项目显式选择 `precision`。已有 `theme.css` 的 `product-overrides` 继续优先，不强迫品牌迁移。
+
+| `theme.preset` | 配色与身份强调 | 项目选择 |
+| --- | --- | --- |
+| `violet` | 电光紫 / 酸性青柠 | 默认 AI 工作台 |
+| `ember` | 熔岩橙 / 午夜蓝 | 冷暖对照 |
+| `forest` | 森林绿 / 铜金 | 绿色品牌 |
+| `crimson` | 绯红 / 靛蓝 | 红色品牌 |
+| `cobalt` | 钴蓝 / 冰青 | 蓝色品牌 |
+| `precision` | 中性石墨 / 青色 | 保留此前配色方向 |
+
+每套具备 light / dark / system 配方；system 跟随操作系统明暗，不是第三种色板。所有配方随正式 `tokens.css`、`style.css`、`critical.css` 生成，不依赖 JS 注入颜色、额外网络请求或组件皮肤副本。配色只改变语义色，不改变 layout、slot、字号、尺寸和交互。具体配置、首绘与服务入口见 [项目配色与首绘](PUBLIC_API.md#项目配色与首绘)。
+
+品牌的红色或绿色不代表成功、失败或危险。状态继续使用独立 `status-*` 变量，并有明确文字；必要时配合语义图标。不得让 `status-success` 或 `status-error` 引用 `action-primary`，不得仅以红绿点表示结果。危险菜单使用公开 `tone="danger"`，确认与实际写入仍归宿主；同一列表中的常规动作优先 ghost / link / outline，不因品牌鲜明而堆满实心主色按钮。
+
+项目仍可在 `product-overrides` 覆盖公开语义 Token，或以官方配方为基底只覆盖品牌差异。使用颜色必须成对考虑前景/背景，并覆盖 light / dark / system；自定义配色由项目重新验收普通文字和链接 ≥4.5:1、必要控件边界与焦点 ≥3:1、持久选中、错误和禁用状态。不能通过私有组件选择器、字号覆盖或 `!important` 修主题。
 
 ## Colors
 
@@ -227,24 +246,24 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
   :root {
     color-scheme: dark;
     /* Base: theme swatches and shared scales. Components do not consume these directly. */
-    --palette-primary: #06b6d4;
-    --palette-on-primary: #090b0e;
-    --palette-secondary: #10b981;
-    --palette-on-secondary: #090b0e;
-    --palette-foreground: #f1f5f9;
-    --palette-muted-foreground: #94a3b8;
-    --palette-background: #090b0e;
-    --palette-canvas: #090b0e;
-    --palette-shell: #11151c;
-    --palette-surface: #11151c;
-    --palette-support: #0d1016;
-    --palette-raised: #11151c;
-    --palette-overlay: #1a2230;
-    --palette-muted: #161e28;
-    --palette-separator: #1e2633;
-    --palette-surface-line: #1e2633;
-    --palette-surface-line-strong: #52657e;
-    --palette-input-line: #5b708b;
+    --palette-primary: #a78bfa;
+    --palette-on-primary: #0c0717;
+    --palette-secondary: #bef264;
+    --palette-on-secondary: #132205;
+    --palette-foreground: #f5f3ff;
+    --palette-muted-foreground: #9b93b0;
+    --palette-background: var(--palette-canvas);
+    --palette-canvas: #09070f;
+    --palette-shell: #0f0b1a;
+    --palette-surface: #141024;
+    --palette-support: var(--palette-shell);
+    --palette-raised: #1a152e;
+    --palette-overlay: #211b3b;
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-separator: #29213d;
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --palette-input-line: #817397;
     --palette-info: #06b6d4;
     --palette-info-foreground: #22d3ee;
     --palette-warning: #f59e0b;
@@ -254,7 +273,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --palette-error: #ef4444;
     --palette-error-foreground: #f87171;
     --palette-error-surface: var(--palette-error);
-    --palette-state-base: #11151c;
+    --palette-state-base: var(--palette-surface);
     --palette-shadow-ink: #000000;
     --palette-input-surface: #0c0f14;
     --palette-on-danger: #090b0e;
@@ -287,7 +306,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --palette-document-series-5: #a696e9;
     --palette-document-series-6: #00a14c;
     /* Semantic: meaning stays stable when the theme changes. */
-    --selected-weight: 13%;
+    --selected-weight: 16%;
     --selected-base: var(--layer-surface);
     --info-soft-weight: 10%;
     --info-line-weight: 30%;
@@ -315,13 +334,13 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --layer-support: var(--palette-support);
     --layer-raised: var(--palette-raised);
     --layer-overlay: var(--palette-overlay);
-    --input-surface: var(--palette-input-surface);
+    --input-surface: var(--palette-surface);
     --interaction-focus: var(--action-primary);
     --interaction-selected: color-mix(in oklab, var(--action-primary) var(--selected-weight), var(--selected-base));
     --interaction-selected-foreground: var(--action-primary);
     --interaction-hover: var(--muted);
     --interaction-hover-foreground: var(--foreground);
-    --interaction-pressed: color-mix(in oklab, var(--action-primary) 16%, var(--layer-raised));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
     --focus-width: var(--base-line-emphasis);
     --focus-offset: 2px;
     --status-info: var(--palette-info);
@@ -485,7 +504,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --table-action-gap: var(--space-text-gap);
     --metric-padding: var(--space-content-gap);
     --metric-gap: var(--space-text-gap);
-    --button-hover-background: color-mix(in oklab, var(--action-primary) 92%, var(--layer-raised));
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
     --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
     --button-disabled-background: var(--muted);
     --button-disabled-foreground: var(--muted-foreground);
@@ -637,7 +656,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --table-header-background: var(--layer-support);
     --table-header-foreground: var(--muted-foreground);
     --table-row-background: var(--layer-raised);
-    --table-row-stripe-background: var(--palette-table-stripe);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
     --table-row-expanded-background: var(--interaction-hover);
     --data-table-column-resize-min: calc(var(--control-height-lg) + var(--table-cell-padding-inline) * 2);
     --data-table-column-resize-max: calc(var(--layout-field-min) * 8);
@@ -648,24 +667,24 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
   }
   :root[data-theme="light"] {
     color-scheme: light;
-    --palette-primary: #0e7490;
+    --palette-primary: #6d28d9;
     --palette-on-primary: #ffffff;
-    --palette-secondary: #047857;
+    --palette-secondary: #42690c;
     --palette-on-secondary: #ffffff;
-    --palette-foreground: #0f172a;
-    --palette-muted-foreground: #475569;
-    --palette-background: #f1f5f9;
-    --palette-canvas: #f1f5f9;
-    --palette-shell: #e8eef5;
-    --palette-surface: #f8fafc;
-    --palette-support: #e2e8f0;
+    --palette-foreground: #191424;
+    --palette-muted-foreground: #5b536b;
+    --palette-background: var(--palette-canvas);
+    --palette-canvas: #f8f7fc;
+    --palette-shell: #f1eff8;
+    --palette-surface: #ffffff;
+    --palette-support: var(--palette-shell);
     --palette-raised: #ffffff;
     --palette-overlay: #ffffff;
-    --palette-muted: #e2e8f0;
-    --palette-separator: #cbd5e1;
-    --palette-surface-line: #cbd5e1;
-    --palette-surface-line-strong: #64748b;
-    --palette-input-line: #64748b;
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-separator: #e5e1f0;
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --palette-input-line: #8b819f;
     --palette-info: #0891b2;
     --palette-info-foreground: #155e75;
     --palette-warning: #d97706;
@@ -674,7 +693,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --palette-success-foreground: #065f46;
     --palette-error: #dc2626;
     --palette-error-foreground: #b91c1c;
-    --palette-state-base: #ffffff;
+    --palette-state-base: var(--palette-surface);
     --palette-shadow-ink: #0f172a;
     --palette-series-1: #0891b2;
     --palette-series-2: #d97706;
@@ -682,8 +701,8 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --palette-series-4: #0284c7;
     --palette-series-5: #7c3aed;
     --palette-series-6: #059669;
-    --selected-weight: 9%;
-    --selected-base: var(--layer-raised);
+    --selected-weight: 11%;
+    --selected-base: var(--layer-surface);
     --info-soft-weight: 12%;
     --info-line-weight: 36%;
     --warning-soft-weight: 13%;
@@ -695,29 +714,34 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --shadow-overlay: 0 8px 24px -4px color-mix(in oklab, var(--palette-shadow-ink) 18%, transparent), 0 0 0 1px var(--surface-line);
     --palette-input-surface: #ffffff;
     --palette-on-danger: #ffffff;
-    --palette-table-stripe: #f8fafc;
+    --palette-table-stripe: #fafbfc;
+    --input-surface: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
   }
   @media (prefers-color-scheme: light) {
     :root[data-theme="system"] {
       color-scheme: light;
-      --palette-primary: #0e7490;
+      --palette-primary: #6d28d9;
       --palette-on-primary: #ffffff;
-      --palette-secondary: #047857;
+      --palette-secondary: #42690c;
       --palette-on-secondary: #ffffff;
-      --palette-foreground: #0f172a;
-      --palette-muted-foreground: #475569;
-      --palette-background: #f1f5f9;
-      --palette-canvas: #f1f5f9;
-      --palette-shell: #e8eef5;
-      --palette-surface: #f8fafc;
-      --palette-support: #e2e8f0;
+      --palette-foreground: #191424;
+      --palette-muted-foreground: #5b536b;
+      --palette-background: var(--palette-canvas);
+      --palette-canvas: #f8f7fc;
+      --palette-shell: #f1eff8;
+      --palette-surface: #ffffff;
+      --palette-support: var(--palette-shell);
       --palette-raised: #ffffff;
       --palette-overlay: #ffffff;
-      --palette-muted: #e2e8f0;
-      --palette-separator: #cbd5e1;
-      --palette-surface-line: #cbd5e1;
-      --palette-surface-line-strong: #64748b;
-      --palette-input-line: #64748b;
+      --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+      --palette-separator: #e5e1f0;
+      --palette-surface-line: var(--palette-separator);
+      --palette-surface-line-strong: var(--palette-input-line);
+      --palette-input-line: #8b819f;
       --palette-info: #0891b2;
       --palette-info-foreground: #155e75;
       --palette-warning: #d97706;
@@ -726,7 +750,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
       --palette-success-foreground: #065f46;
       --palette-error: #dc2626;
       --palette-error-foreground: #b91c1c;
-      --palette-state-base: #ffffff;
+      --palette-state-base: var(--palette-surface);
       --palette-shadow-ink: #0f172a;
       --palette-series-1: #0891b2;
       --palette-series-2: #d97706;
@@ -734,8 +758,8 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
       --palette-series-4: #0284c7;
       --palette-series-5: #7c3aed;
       --palette-series-6: #059669;
-      --selected-weight: 9%;
-      --selected-base: var(--layer-raised);
+      --selected-weight: 11%;
+      --selected-base: var(--layer-surface);
       --info-soft-weight: 12%;
       --info-line-weight: 36%;
       --warning-soft-weight: 13%;
@@ -747,10 +771,535 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
       --shadow-overlay: 0 8px 24px -4px color-mix(in oklab, var(--palette-shadow-ink) 18%, transparent), 0 0 0 1px var(--surface-line);
       --palette-input-surface: #ffffff;
       --palette-on-danger: #ffffff;
-      --palette-table-stripe: #f8fafc;
+      --palette-table-stripe: #fafbfc;
+      --input-surface: var(--palette-surface);
+      --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+      --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+      --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+      --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
     }
   }
 }
+/* project-theme-presets:start */
+@layer design-defaults {
+  :root[data-theme-preset="violet"] {
+    --palette-primary: #a78bfa;
+    --palette-on-primary: #0c0717;
+    --palette-secondary: #bef264;
+    --palette-on-secondary: #132205;
+    --palette-foreground: #f5f3ff;
+    --palette-muted-foreground: #9b93b0;
+    --palette-canvas: #09070f;
+    --palette-shell: #0f0b1a;
+    --palette-surface: #141024;
+    --palette-raised: #1a152e;
+    --palette-overlay: #211b3b;
+    --palette-input-line: #817397;
+    --palette-separator: #29213d;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 16%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  :root[data-theme-preset="violet"][data-theme="light"] {
+    --palette-primary: #6d28d9;
+    --palette-on-primary: #ffffff;
+    --palette-secondary: #42690c;
+    --palette-on-secondary: #ffffff;
+    --palette-foreground: #191424;
+    --palette-muted-foreground: #5b536b;
+    --palette-canvas: #f8f7fc;
+    --palette-shell: #f1eff8;
+    --palette-surface: #ffffff;
+    --palette-raised: #ffffff;
+    --palette-overlay: #ffffff;
+    --palette-input-line: #8b819f;
+    --palette-separator: #e5e1f0;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 11%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme-preset="violet"][data-theme="system"] {
+      --palette-primary: #6d28d9;
+      --palette-on-primary: #ffffff;
+      --palette-secondary: #42690c;
+      --palette-on-secondary: #ffffff;
+      --palette-foreground: #191424;
+      --palette-muted-foreground: #5b536b;
+      --palette-canvas: #f8f7fc;
+      --palette-shell: #f1eff8;
+      --palette-surface: #ffffff;
+      --palette-raised: #ffffff;
+      --palette-overlay: #ffffff;
+      --palette-input-line: #8b819f;
+      --palette-separator: #e5e1f0;
+      --palette-background: var(--palette-canvas);
+      --palette-support: var(--palette-shell);
+      --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+      --palette-surface-line: var(--palette-separator);
+      --palette-surface-line-strong: var(--palette-input-line);
+      --input-surface: var(--palette-surface);
+      --palette-state-base: var(--palette-surface);
+      --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+      --selected-weight: 11%;
+      --selected-base: var(--layer-surface);
+      --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+      --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+      --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+    }
+  }
+  :root[data-theme-preset="ember"] {
+    --palette-primary: #fb923c;
+    --palette-on-primary: #1c0a02;
+    --palette-secondary: #60a5fa;
+    --palette-on-secondary: #051329;
+    --palette-foreground: #f8fafc;
+    --palette-muted-foreground: #a1b2ca;
+    --palette-canvas: #070a10;
+    --palette-shell: #0b111c;
+    --palette-surface: #101929;
+    --palette-raised: #152238;
+    --palette-overlay: #1b2c47;
+    --palette-input-line: #7d92ae;
+    --palette-separator: #1f314d;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 15%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  :root[data-theme-preset="ember"][data-theme="light"] {
+    --palette-primary: #c2410c;
+    --palette-on-primary: #ffffff;
+    --palette-secondary: #1e3a8a;
+    --palette-on-secondary: #ffffff;
+    --palette-foreground: #111827;
+    --palette-muted-foreground: #4b5565;
+    --palette-canvas: #f7f8fa;
+    --palette-shell: #eef2f7;
+    --palette-surface: #ffffff;
+    --palette-raised: #ffffff;
+    --palette-overlay: #ffffff;
+    --palette-input-line: #7f8a9c;
+    --palette-separator: #e2e7ef;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 10%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme-preset="ember"][data-theme="system"] {
+      --palette-primary: #c2410c;
+      --palette-on-primary: #ffffff;
+      --palette-secondary: #1e3a8a;
+      --palette-on-secondary: #ffffff;
+      --palette-foreground: #111827;
+      --palette-muted-foreground: #4b5565;
+      --palette-canvas: #f7f8fa;
+      --palette-shell: #eef2f7;
+      --palette-surface: #ffffff;
+      --palette-raised: #ffffff;
+      --palette-overlay: #ffffff;
+      --palette-input-line: #7f8a9c;
+      --palette-separator: #e2e7ef;
+      --palette-background: var(--palette-canvas);
+      --palette-support: var(--palette-shell);
+      --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+      --palette-surface-line: var(--palette-separator);
+      --palette-surface-line-strong: var(--palette-input-line);
+      --input-surface: var(--palette-surface);
+      --palette-state-base: var(--palette-surface);
+      --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+      --selected-weight: 10%;
+      --selected-base: var(--layer-surface);
+      --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+      --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+      --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+    }
+  }
+  :root[data-theme-preset="forest"] {
+    --palette-primary: #34d399;
+    --palette-on-primary: #021a10;
+    --palette-secondary: #facc15;
+    --palette-on-secondary: #201702;
+    --palette-foreground: #f0fdf4;
+    --palette-muted-foreground: #86a193;
+    --palette-canvas: #060b08;
+    --palette-shell: #0a120e;
+    --palette-surface: #101c16;
+    --palette-raised: #15261e;
+    --palette-overlay: #1b3026;
+    --palette-input-line: #87998e;
+    --palette-separator: #1b2e23;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 15%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  :root[data-theme-preset="forest"][data-theme="light"] {
+    --palette-primary: #047857;
+    --palette-on-primary: #ffffff;
+    --palette-secondary: #854d0e;
+    --palette-on-secondary: #ffffff;
+    --palette-foreground: #111c16;
+    --palette-muted-foreground: #4d5d54;
+    --palette-canvas: #f6f8f6;
+    --palette-shell: #eef2ef;
+    --palette-surface: #ffffff;
+    --palette-raised: #ffffff;
+    --palette-overlay: #ffffff;
+    --palette-input-line: #7c8e84;
+    --palette-separator: #dfe5e1;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 9%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme-preset="forest"][data-theme="system"] {
+      --palette-primary: #047857;
+      --palette-on-primary: #ffffff;
+      --palette-secondary: #854d0e;
+      --palette-on-secondary: #ffffff;
+      --palette-foreground: #111c16;
+      --palette-muted-foreground: #4d5d54;
+      --palette-canvas: #f6f8f6;
+      --palette-shell: #eef2ef;
+      --palette-surface: #ffffff;
+      --palette-raised: #ffffff;
+      --palette-overlay: #ffffff;
+      --palette-input-line: #7c8e84;
+      --palette-separator: #dfe5e1;
+      --palette-background: var(--palette-canvas);
+      --palette-support: var(--palette-shell);
+      --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+      --palette-surface-line: var(--palette-separator);
+      --palette-surface-line-strong: var(--palette-input-line);
+      --input-surface: var(--palette-surface);
+      --palette-state-base: var(--palette-surface);
+      --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+      --selected-weight: 9%;
+      --selected-base: var(--layer-surface);
+      --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+      --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+      --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+    }
+  }
+  :root[data-theme-preset="crimson"] {
+    --palette-primary: #fb7185;
+    --palette-on-primary: #1f040a;
+    --palette-secondary: #818cf8;
+    --palette-on-secondary: #0b0d26;
+    --palette-foreground: #fff1f2;
+    --palette-muted-foreground: #a88d94;
+    --palette-canvas: #0d0608;
+    --palette-shell: #140a0e;
+    --palette-surface: #1f1016;
+    --palette-raised: #29151e;
+    --palette-overlay: #341c26;
+    --palette-input-line: #a1838d;
+    --palette-separator: #3a1e27;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 14%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  :root[data-theme-preset="crimson"][data-theme="light"] {
+    --palette-primary: #be123c;
+    --palette-on-primary: #ffffff;
+    --palette-secondary: #3730a3;
+    --palette-on-secondary: #ffffff;
+    --palette-foreground: #1f1215;
+    --palette-muted-foreground: #614e53;
+    --palette-canvas: #fbf6f7;
+    --palette-shell: #f5edef;
+    --palette-surface: #ffffff;
+    --palette-raised: #ffffff;
+    --palette-overlay: #ffffff;
+    --palette-input-line: #947e83;
+    --palette-separator: #eadddf;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 8%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme-preset="crimson"][data-theme="system"] {
+      --palette-primary: #be123c;
+      --palette-on-primary: #ffffff;
+      --palette-secondary: #3730a3;
+      --palette-on-secondary: #ffffff;
+      --palette-foreground: #1f1215;
+      --palette-muted-foreground: #614e53;
+      --palette-canvas: #fbf6f7;
+      --palette-shell: #f5edef;
+      --palette-surface: #ffffff;
+      --palette-raised: #ffffff;
+      --palette-overlay: #ffffff;
+      --palette-input-line: #947e83;
+      --palette-separator: #eadddf;
+      --palette-background: var(--palette-canvas);
+      --palette-support: var(--palette-shell);
+      --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+      --palette-surface-line: var(--palette-separator);
+      --palette-surface-line-strong: var(--palette-input-line);
+      --input-surface: var(--palette-surface);
+      --palette-state-base: var(--palette-surface);
+      --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+      --selected-weight: 8%;
+      --selected-base: var(--layer-surface);
+      --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+      --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+      --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+    }
+  }
+  :root[data-theme-preset="cobalt"] {
+    --palette-primary: #60a5fa;
+    --palette-on-primary: #051329;
+    --palette-secondary: #22d3ee;
+    --palette-on-secondary: #04191f;
+    --palette-foreground: #f8fafc;
+    --palette-muted-foreground: #8899b5;
+    --palette-canvas: #060910;
+    --palette-shell: #090e18;
+    --palette-surface: #0f1726;
+    --palette-raised: #141f33;
+    --palette-overlay: #1a2842;
+    --palette-input-line: #7f91b2;
+    --palette-separator: #1c2b45;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 15%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  :root[data-theme-preset="cobalt"][data-theme="light"] {
+    --palette-primary: #1d4ed8;
+    --palette-on-primary: #ffffff;
+    --palette-secondary: #0e7490;
+    --palette-on-secondary: #ffffff;
+    --palette-foreground: #0d1527;
+    --palette-muted-foreground: #4e576d;
+    --palette-canvas: #f6f8fb;
+    --palette-shell: #edf1f7;
+    --palette-surface: #ffffff;
+    --palette-raised: #ffffff;
+    --palette-overlay: #ffffff;
+    --palette-input-line: #818ba2;
+    --palette-separator: #e0e5ee;
+    --palette-background: var(--palette-canvas);
+    --palette-support: var(--palette-shell);
+    --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+    --palette-surface-line: var(--palette-separator);
+    --palette-surface-line-strong: var(--palette-input-line);
+    --input-surface: var(--palette-surface);
+    --palette-state-base: var(--palette-surface);
+    --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+    --selected-weight: 9%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+  }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme-preset="cobalt"][data-theme="system"] {
+      --palette-primary: #1d4ed8;
+      --palette-on-primary: #ffffff;
+      --palette-secondary: #0e7490;
+      --palette-on-secondary: #ffffff;
+      --palette-foreground: #0d1527;
+      --palette-muted-foreground: #4e576d;
+      --palette-canvas: #f6f8fb;
+      --palette-shell: #edf1f7;
+      --palette-surface: #ffffff;
+      --palette-raised: #ffffff;
+      --palette-overlay: #ffffff;
+      --palette-input-line: #818ba2;
+      --palette-separator: #e0e5ee;
+      --palette-background: var(--palette-canvas);
+      --palette-support: var(--palette-shell);
+      --palette-muted: color-mix(in oklab, var(--palette-foreground) 7%, var(--palette-raised));
+      --palette-surface-line: var(--palette-separator);
+      --palette-surface-line-strong: var(--palette-input-line);
+      --input-surface: var(--palette-surface);
+      --palette-state-base: var(--palette-surface);
+      --table-row-stripe-background: color-mix(in oklab, var(--palette-shell) 25%, var(--palette-raised));
+      --selected-weight: 9%;
+      --selected-base: var(--layer-surface);
+      --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
+      --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+      --interaction-pressed: color-mix(in oklab, var(--action-primary) 18%, var(--layer-raised));
+    }
+  }
+  :root[data-theme-preset="precision"] {
+    --palette-primary: #06b6d4;
+    --palette-on-primary: #090b0e;
+    --palette-secondary: #10b981;
+    --palette-on-secondary: #090b0e;
+    --palette-foreground: #f1f5f9;
+    --palette-muted-foreground: #94a3b8;
+    --palette-canvas: #090b0e;
+    --palette-shell: #0d1016;
+    --palette-surface: #11151c;
+    --palette-raised: #141a24;
+    --palette-overlay: #1a2230;
+    --palette-input-line: #5b708b;
+    --palette-separator: #1e2633;
+    --palette-background: #090b0e;
+    --palette-support: #0d1016;
+    --palette-muted: #161e28;
+    --palette-surface-line: #1e2633;
+    --palette-surface-line-strong: #52657e;
+    --input-surface: var(--palette-input-surface);
+    --palette-state-base: #11151c;
+    --table-row-stripe-background: var(--palette-table-stripe);
+    --selected-weight: 13%;
+    --selected-base: var(--layer-surface);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 92%, var(--layer-raised));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 16%, var(--layer-raised));
+  }
+  :root[data-theme-preset="precision"][data-theme="light"] {
+    --palette-primary: #0e7490;
+    --palette-on-primary: #ffffff;
+    --palette-secondary: #047857;
+    --palette-on-secondary: #ffffff;
+    --palette-foreground: #17202e;
+    --palette-muted-foreground: #525e70;
+    --palette-canvas: #f7f8fa;
+    --palette-shell: #f0f2f5;
+    --palette-surface: #ffffff;
+    --palette-raised: #ffffff;
+    --palette-overlay: #ffffff;
+    --palette-input-line: #808793;
+    --palette-separator: #e4e7ec;
+    --palette-background: #f7f8fa;
+    --palette-support: #f7f8fa;
+    --palette-muted: #eceef2;
+    --palette-surface-line: #dfe3e8;
+    --palette-surface-line-strong: #808793;
+    --input-surface: var(--palette-input-surface);
+    --palette-state-base: #ffffff;
+    --table-row-stripe-background: var(--palette-table-stripe);
+    --selected-weight: 9%;
+    --selected-base: var(--layer-raised);
+    --button-hover-background: color-mix(in oklab, var(--action-primary) 92%, var(--layer-raised));
+    --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+    --interaction-pressed: color-mix(in oklab, var(--action-primary) 16%, var(--layer-raised));
+  }
+  @media (prefers-color-scheme: light) {
+    :root[data-theme-preset="precision"][data-theme="system"] {
+      --palette-primary: #0e7490;
+      --palette-on-primary: #ffffff;
+      --palette-secondary: #047857;
+      --palette-on-secondary: #ffffff;
+      --palette-foreground: #17202e;
+      --palette-muted-foreground: #525e70;
+      --palette-canvas: #f7f8fa;
+      --palette-shell: #f0f2f5;
+      --palette-surface: #ffffff;
+      --palette-raised: #ffffff;
+      --palette-overlay: #ffffff;
+      --palette-input-line: #808793;
+      --palette-separator: #e4e7ec;
+      --palette-background: #f7f8fa;
+      --palette-support: #f7f8fa;
+      --palette-muted: #eceef2;
+      --palette-surface-line: #dfe3e8;
+      --palette-surface-line-strong: #808793;
+      --input-surface: var(--palette-input-surface);
+      --palette-state-base: #ffffff;
+      --table-row-stripe-background: var(--palette-table-stripe);
+      --selected-weight: 9%;
+      --selected-base: var(--layer-raised);
+      --button-hover-background: color-mix(in oklab, var(--action-primary) 92%, var(--layer-raised));
+      --button-pressed-background: color-mix(in oklab, var(--action-primary) 88%, var(--foreground));
+      --interaction-pressed: color-mix(in oklab, var(--action-primary) 16%, var(--layer-raised));
+    }
+  }
+}
+/* project-theme-presets:end */
 @layer design-accessibility {
   /* progress-forced-colors:start */
   @media (forced-colors: active) {
@@ -824,25 +1373,40 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
 | input-surface、shadow 角色 | 输入表面与各层级阴影的集中定义 |
 | chart、领域扩展、document | 数据序列、领域表现和独立导出，不能反向成为基础依赖 |
 
-当前主题主要操作浅色为 #0e7490/白字，深色为 #06b6d4/#090b0e 字；canvas 为浅色 #f1f5f9、深色 #090b0e。主操作 hover/pressed 从 action-primary 和中性表面/前景派生；结构面/卡片 #11151c、active/hover #161e28、overlay #1a2230。状态信号保留翠绿 #10b981、琥珀 #f59e0b、红 #ef4444；浅色配对使用同色相的深色前景。普通区域使用中性表面，不把所有卡染成主色。
+Precision 预设保留的主要操作浅色为 #0e7490/白字，深色为 #06b6d4/#090b0e 字；canvas 为浅色 #f7f8fa、深色 #090b0e。主操作 hover/pressed 从 action-primary 和中性表面/前景派生；壳层 #0d1016、内容 #11151c、卡片 #141a24、active/hover #161e28、overlay #1a2230。状态信号保留翠绿 #10b981、琥珀 #f59e0b、红 #ef4444；浅色配对使用同色相的深色前景。普通区域使用中性表面，不把所有卡染成主色。
 
-默认 input-border-color 使用独立 input 角色，浅色 #64748b、深色 #5b708b；输入表面浅色 #ffffff、深色 #0c0f14，必要边界达到3:1。轻结构线 #1e2633 只用于区域分隔，不作为输入可识别边界。hover 不降低必要对比，产品覆盖按实际输入内外相邻表面核验。
+所有配色的 input-border-color 使用独立 input 角色，与所选配方的输入表面成对定义，必要边界达到3:1。轻结构线只用于区域分隔，不作为输入可识别边界。hover 不降低必要对比，产品覆盖按实际输入内外相邻表面核验。
 
+
+### 默认主题层级与动作强调
+
+默认主题本身必须形成完整页面，不能把辨认框架、内容和操作的工作留给产品私有皮肤。4.2.13 与 [Stitch 配色评审](https://stitch.withgoogle.com/projects/13033986353155220257)对齐六套官方配色，并按用户决定默认采用 Violet。浅色为带微弱品牌色相的框架、白色内容面、轻表头与细分隔，深色保留各自分层；实际色值以本文件前言和默认 CSS 为准。设计候选的主色、辅助色和输入边界均须按真实合成背景校正；设计建议不代替浏览器实测。
+
+| 区域 | 默认表面与强调归属 | 验收重点 |
+|---|---|---|
+| 页面、顶栏与侧栏 | canvas 承接底层，shell 承接持久框架；surface/raised 承接阅读和独立内容 | 阅读面不整页染主色，导航当前项的文字、图标和指示清楚 |
+| 表格 | header 使用 support，正文使用 row，条纹只作轻微区分；sticky 同步不透明行表面 | 表头/条纹/分隔不压过正文，selected/hover 与横滚固定列连续 |
+| 表单 | input-surface 与必要 input 边界；label/help/error 分别继承已有文字角色 | 边界按内部和外部相邻背景核对；不以重灰填充代替识别，不加粗整组外框 |
+| Dialog、Sheet、菜单、Toast | overlay 与既有浮层边界/阴影；内容、操作和反馈进入原公开 slot | 浮层清晰，键盘焦点独立；不增加装饰条或第二层卡片 |
+
+日常重复行操作优先使用已有 `Button` 的 `ghost`、`link` 或必要 `outline` 变体，危险入口可收纳进公开 `Menu.Item tone="danger"`。实心 primary 留给当前任务的主要动作，实心 destructive 用于明确危险决策；不能让每行重复彩色按钮盖过数据。此规则约束组合选择，不根据 DOM 祖先自动更改 Button 的变体、权限或确认行为，不新增另一套行按钮字号。
+
+库验收先使用无 product-overrides 的正式包示例，分别核对框架、导航、表格、表单、弹层和反馈，再核对品牌覆盖继承。浅/深/system、窄屏、长中文、200%文字和真实浏览器缩放均保留清楚的层次、必要边界和焦点；默认主题失败不能要求每个消费项目自行补皮肤。
 
 ### Precision 输入与适配边界
 
-本次默认主题来自用户提供的 Precision Engineering Console。输入 YAML 的 surface #0f141a / primary #4cd7f6 与正文的 Elevation/组件值近似但不相同；此版本采用更具体的正文层级和交互状态，前言与 CSS 已同步，上传原文保存在设计来源快照中。浅色配对为本库推导：slate-white 表面、深青蓝操作及更深的同色相状态文字，不声称由原文件直接给出。
+Precision 预设最初来自用户提供的 Precision Engineering Console；它是六套配色之一，当前默认已由上述 Violet 合同替代。输入 YAML 的 surface #0f141a / primary #4cd7f6 与正文的 Elevation/组件值近似但不相同；最初适配采用更具体的正文层级和交互状态，上传原文保存在设计来源快照中。浅色配对为本库推导：slate-white 表面、深青蓝操作及更深的同色相状态文字，不声称由原文件直接给出。下表记录初始适配脉络，不作为当前值表；当前值只以规范 CSS 和所选 preset 为准。
 
 | 设计项 | 公共映射与生效位置 | 模式与必要适配 |
 | --- | --- | --- |
-| Canvas / structural / active / overlay | layer-canvas / layer-shell,surface,raised / interaction-hover / layer-overlay；页面、导航、Card、菜单和Dialog | dark正文四级层次；light冷灰白配对 |
+| Canvas / structural / active / overlay | layer-canvas / layer-shell,surface,raised / interaction-hover / layer-overlay；页面、导航、Card、菜单和Dialog | dark石墨层级；light中性灰白框架与白色内容面 |
 | Primary Cyan | action-primary/foreground、button-hover/pressed-background；按钮、链接、选择、焦点 | dark #06b6d4/#090b0e；light #0e7490/white；hover/pressed 继承品牌语义派生 |
 | Emerald / Amber / Crimson | status-success/warning/error 的 signal、foreground、soft、line；Badge、Alert和真实状态 | 信号保留正文色；错误正文改 #f87171、表头/placeholder 改 #94a3b8 以满足可读性 |
 | Input / audit grid | input-surface/input-border-color；table-header/row/stripe/expanded-* | dark输入 #0c0f14、表头 #0d1016、条纹 #131922；必要输入边界提高至 #5b708b |
 | Inter / JetBrains Mono | font-sans/font-mono；普通文字/代码与技术标识 | 保留七个已公开的rem文字角色、中文回退和缩放下限，不采用输入的11px普通文字 |
 | 4px基础、6–8px容器 | button/input-radius、card-radius、menu-radius、radius-2xl | 三模式一致；保持36px普通输入与自然长文可达 |
 
-正文给出的固定 hover #22d3ee 调整为既有公共语义配方：hover 混合 action-primary 92% 与 layer-raised，pressed 混合 action-primary 88% 与 foreground。这样已采用系统只覆盖 action-primary 与 action-primary-foreground 时，按钮各状态仍继承产品品牌并保留可读性，不在悬停时回到默认青色。产品如需独立状态配方，仍可显式覆盖 button-hover/pressed-background；上传原文保持原始字节。
+Precision 保留的公共 hover 配方由正文固定色 #22d3ee 改为 action-primary 92% 与 layer-raised 混合；其余五套采用 action-primary 94% 与 foreground。pressed 均混合 action-primary 88% 与 foreground。这样已采用系统只覆盖 action-primary 与 action-primary-foreground 时，按钮各状态仍继承产品品牌并保留可读性，不在悬停时回到默认青色。产品如需独立状态配方，仍可显式覆盖 button-hover/pressed-background；上传原文保持原始字节。
 
 多pane布局只在产品工作台需要时组合；公共登录仍为居中单框。光晕或脉冲只能映射真实运行/等待状态，不为品牌添加虚构遥测、日志或循环活动。reduced-motion、forced-colors、键盘焦点及显式 light/dark/system 选择继续保留。
 
@@ -1288,7 +1852,7 @@ bootstrap 只完成配置注册及首绘主题、缩放、初始语言/标题；
 
 Table与DataTable全表默认仅使用行分割线，所有th/td均无列分割线；sticky只固定位置，不额外增加竖线、阴影或伪元素分隔。表头底线、行线、整体外框及footer分隔各有归属，不叠加重复边框；最后数据行与footer交界由footer维护。当前不提供行列网格模式或分割线开关。表格由表头、行线和不透明条纹组织；条纹与默认底先完成不透明合成，sticky 同步该行 default/偶数/hover/selected/expanded 背景。透明条纹或透明固定列不得让横滚底层文字穿透。普通 hover 不浮起、缩放或平移。
 
-菜单、Popover、Dialog、Drawer 使用不透明 overlay、明确边界和一套浮层阴影：0 8px 24px -4px（浅色ink18%、深色black60%），辅以1px边界。深色四级层次为 canvas #090b0e → structural #11151c → active #161e28 → overlay #1a2230。实际阴影色仍来自集中变量。普通 flat/subtle/surface/raised 无投影；不把浮层配方复制到每张卡。
+菜单、Popover、Dialog、Drawer 使用不透明 overlay、明确边界和一套浮层阴影：0 8px 24px -4px（浅色ink18%、深色black60%），辅以1px边界。深色层次为 canvas #090b0e → shell #0d1016 → surface #11151c → raised #141a24 → overlay #1a2230；active/hover 使用独立交互配方。实际阴影色仍来自集中变量。普通 flat/subtle/surface/raised 无投影；不把浮层配方复制到每张卡。
 
 Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index 掩盖遮挡，不以高阴影代替真实区域边界。无法交互的背景保持模态语义。React Popover.Content 可通过公开 portalProps 指定所属 Dialog/Sheet 的实际容器，保留同一 Root、定位器与焦点生命周期；省略时仍使用默认 body。扩展不新增 overlay 或打开状态 owner，不要求采用项目复制 Content 部件接线。
 

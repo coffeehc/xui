@@ -1,6 +1,6 @@
 {
-  "contractVersion": "4.2.12",
-  "defaultTheme": "Precision Engineering Console",
+  "contractVersion": "4.2.13",
+  "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
   "defaultTokenCount": 408,
   "source": {
@@ -9,7 +9,7 @@
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "30dae750869b1a1efed3aaef1084e290af175ccc9d8e12350ac1119419016e27",
+  "defaultCssSha256": "397def2935195bf8f939bfeb76312101d1f43b6d8c0b664fe0eb829fb6ae5d40",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -102,6 +102,18 @@
   },
   "implementationChanges": [
     "3.0.0 replaces the Toast peer action bus with one fully injectable xui queue, retains public rendering and anchor primitives, defaults to top-end and five-second dismissal; -1 pins, zero/omitted uses the configured default. Shared semantic typography and tokens remain unchanged.",
-    "4.2.9 narrows the shared expanded sidebar to an 18vw preference bounded by six row heights plus padding and eight row heights, retaining the viewport safety cap; short sidebar Tabs keep intrinsic item widths and distribute across the track."
+    "4.2.9 narrows the shared expanded sidebar to an 18vw preference bounded by six row heights plus padding and eight row heights, retaining the viewport safety cap; short sidebar Tabs keep intrinsic item widths and distribute across the track.",
+    "4.2.13 follows the Stitch neutral-white/cyan review with neutral light shell/canvas, white content, lighter table surfaces and lines, and distinct dark shell/raised layers. Correct candidate contrast errors, preserve accessible primary/input pairs, state derivation, typography and public slots.",
+    "4.2.13 retains the approved violet/lime and ember/midnight families as optional document-level CSS presets. Project config selects preset independently of sessionStorage light/dark/system; omitted preset retains precision. All presets use the same component slots, geometry and semantic graph.",
+    "Make Violet the authorized default; retain Precision and Ember and add Forest, Crimson and Cobalt as project-selected CSS-only palette families. Brightness, status roles and layout remain independent."
+  ],
+  "defaultPreset": "violet",
+  "themePresets": [
+    "violet",
+    "ember",
+    "forest",
+    "crimson",
+    "cobalt",
+    "precision"
   ]
 }

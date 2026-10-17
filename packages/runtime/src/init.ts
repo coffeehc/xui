@@ -1,6 +1,7 @@
 import {DEFAULT_STORAGE_KEY,type ThemeMode} from './theme-service.js';
 import {restoreInterfaceScale} from './interface-scale.js';
 import defaults from './config-defaults.js';
+import {isThemePreset} from './theme-preset.js';
 
 function validMode(value:unknown):value is ThemeMode{return value==='light'||value==='dark'||value==='system';}
 
@@ -11,6 +12,8 @@ if(typeof window!=='undefined'){
   const options=win.xuiThemeOptions;
   const storageKey=win.document.currentScript?.getAttribute('data-storage-key')||options?.storageKey||DEFAULT_STORAGE_KEY;
   const existing=win.xuiTheme;
+  const selectedPreset=existing&&!existing.isDestroyed()?existing.getState().preset:options?.preset;
+  root.dataset.themePreset=isThemePreset(selectedPreset)?selectedPreset:defaults.theme.preset;
   let mode:ThemeMode=existing&&!existing.isDestroyed()?existing.getState().mode:validMode(options?.mode)?options.mode:validMode(options?.defaultMode)?options.defaultMode:defaults.theme.mode as ThemeMode;
   if((!existing||existing.isDestroyed())&&options?.mode===undefined&&options?.persist!==false){
     try{const saved=win.sessionStorage.getItem(storageKey);if(validMode(saved))mode=saved;}catch{/* Keep pre-paint usable when storage is unavailable. */}

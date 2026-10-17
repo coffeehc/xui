@@ -19,9 +19,9 @@ test('aggregate styles preserve the complete ordered cascade of independently ex
 test('checker rejects cycles, missing vars, drifted front matter and system recipes',()=>{
   assert.throws(()=>checkGraph({'--a':'var(--b)','--b':'var(--a)'}),/cycle/);
   assert.throws(()=>checkGraph({'--a':'var(--absent)'}),/Undefined/);
-  assert.throws(()=>checkContract(doc.replace('primary: "#0e7490"','primary: "#123456"')),/Front matter/);
+  assert.throws(()=>checkContract(doc.replace('primary: "#6d28d9"','primary: "#123456"')),/Front matter/);
   const marker=':root[data-theme="system"]';
-  const at=doc.indexOf(marker);assert.throws(()=>checkContract(doc.slice(0,at)+doc.slice(at).replace('--palette-primary: #0e7490','--palette-primary: #123456')),/recipes differ/);
+  const at=doc.indexOf(marker);assert.throws(()=>checkContract(doc.slice(0,at)+doc.slice(at).replace('--palette-primary: #6d28d9','--palette-primary: #123456')),/recipes differ/);
 });
 test('historical contract still reconstructs the original source SHA256',async()=>{
   const current=JSON.parse(await readFile('docs/design-source.json','utf8'));
@@ -40,26 +40,26 @@ test('source guard rejects raw/named colors, palette backflow and missing refs, 
   assert.throws(()=>checkStyles('.a{border-inline-end-color:red}',light));
 });
 
-test('Precision default, uploaded source and semantic CSS fingerprint are versioned',async()=>{
+test('Violet default, uploaded source and semantic CSS fingerprint are versioned',async()=>{
   const metadata=JSON.parse(await readFile('docs/design-source.json','utf8'));
   const {css,light,dark}=checkContract(doc);
   const source=await readFile(metadata.source.path,'utf8');
   assert.equal(createHash('sha256').update(source).digest('hex'),metadata.source.sha256);
   assert.equal(createHash('sha256').update(css).digest('hex'),metadata.defaultCssSha256);
-  assert.equal(metadata.contractVersion,'4.2.12');
-  assert.match(doc,/规范版本：4\.2\.12。/);
+  assert.equal(metadata.contractVersion,'4.2.13');
+  assert.match(doc,/规范版本：4\.2\.13。/);
   assert.equal(metadata.defaultMode,'dark');
   assert.equal(Object.keys(dark).length,metadata.defaultTokenCount);
-  assert.equal(dark['--palette-canvas'],'#090b0e');
-  assert.equal(dark['--palette-raised'],'#11151c');
-  assert.equal(dark['--palette-overlay'],'#1a2230');
-  assert.equal(dark['--palette-primary'],'#06b6d4');
-  assert.equal(dark['--button-hover-background'],'color-mix(in oklab, var(--action-primary) 92%, var(--layer-raised))');
+  assert.equal(dark['--palette-canvas'],'#09070f');
+  assert.equal(dark['--palette-raised'],'#1a152e');
+  assert.equal(dark['--palette-overlay'],'#211b3b');
+  assert.equal(dark['--palette-primary'],'#a78bfa');
+  assert.equal(dark['--button-hover-background'],'color-mix(in oklab, var(--action-primary) 94%, var(--foreground))');
   assert.equal(dark['--button-pressed-background'],'color-mix(in oklab, var(--action-primary) 88%, var(--foreground))');
   assert.equal('--palette-primary-hover' in dark,false);
   assert.equal('--palette-primary-pressed' in dark,false);
-  assert.equal(light['--palette-canvas'],'#f1f5f9');
-  assert.equal(light['--palette-primary'],'#0e7490');
+  assert.equal(light['--palette-canvas'],'#f8f7fc');
+  assert.equal(light['--palette-primary'],'#6d28d9');
   const boundary=/<!-- external-protocol-boundary:start -->\n([^\n]+)\n<!-- external-protocol-boundary:end -->/.exec(doc);
   assert.equal(createHash('sha256').update(boundary[1]).digest('hex'),metadata.protocolBoundarySha256);
 });
@@ -87,4 +87,15 @@ test('runtime 1.0 contains shared TypeScript models but no native UI entry point
   for(const name of ['createCalendarModel','createDateTimeModel','getNavigationActiveId'])assert.equal(typeof runtime[name],'function',`${name} remains a pure runtime model/helper`);
   assert.equal('isDataTableRowEvent' in runtime,false,'DOM-backed row event filtering belongs to the React package');
   for(const name of ['Button','Card','Dialog','Field','Input','Textarea','SimpleSelect','Calendar','DateTimePicker','NavigationMenu','MenuLayout','OverflowText'])assert.equal(name in runtime,false,`${name} belongs to the React package`);
+});
+
+test('every official palette rejects a missing recipe, a broken dependency and mismatched system colors',()=>{
+ for(const preset of ['violet','ember','forest','crimson','cobalt','precision']){
+  const selector=`:root[data-theme-preset="${preset}"]`;
+  assert.throws(()=>checkContract(doc.replace(selector+'[data-theme="light"]',selector+'[data-theme="absent"]')),/Missing .* theme recipes/);
+  const start=doc.indexOf(selector+'[data-theme="system"]');
+  assert.throws(()=>checkContract(doc.slice(0,start)+doc.slice(start).replace('--palette-primary:', '--absent:')),/recipes differ/);
+ }
+ const start=doc.indexOf(':root[data-theme-preset="forest"]');
+ assert.throws(()=>checkContract(doc.slice(0,start)+doc.slice(start).replace('--palette-primary: #34d399','--palette-primary: var(--missing)')),/Undefined/);
 });
