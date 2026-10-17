@@ -13,7 +13,7 @@ globalThis.window={location:new URL('https://fixture.example/console'),document:
 
 test('bootstrap and narrow modules contain only their progressive implementation dependencies',async()=>{
  for(const [entry,symbol,allowed] of [
-  ['bootstrap','bootstrap',['theme-service']],['http','HTTPService',['http-service']],
+  ['bootstrap','bootstrap',['theme-service']],['bootstrap','disposeXuiServices',['theme-service']],['http','HTTPService',['http-service']],
   ['upload','UploadService',['upload-service','http-service']],['menu-service','MenuService',['menu-service-core','i18n-core']],
   ['util-service','UtilService',[]],
  ]){
@@ -98,5 +98,23 @@ test('a failed auth installation rolls back config and allows a corrected bootst
  assert.throws(()=>bootstrap(config,{services:{http:{instance:http},auth:{options:{timeoutMs:0,protectedPaths:['/private/']}}}}),/Invalid auth timeout/);
  const app=bootstrap(config,{services:{http:{instance:http},auth:{options:{timeoutMs:1000,protectedPaths:['/private/']}}}});
  assert.equal(app.services.getHttpService(),http);assert.equal(calls,0);app.services.dispose();transport.dispose();console.log('passed');
+ `),/passed/);
+});
+
+
+test('narrow bootstrap disposer removes the Window registry and preserves borrowed owners',async()=>{
+ assert.match(await isolated(`
+ import assert from 'node:assert/strict';
+ import {bootstrap,disposeXuiServices} from '@coffeehc/xui-runtime/bootstrap';
+ import {getThemeService} from '@coffeehc/xui-runtime/theme';
+ ${windowFixture}
+ let destroyed=0,requests=0;globalThis.fetch=async()=>{requests++;throw new Error('Unexpected IO');};
+ const owner={getState:()=>({mode:'dark',effective:'dark',preset:'violet'}),setMode(){},syncMode(){},setPreset(){},isDestroyed:()=>false,subscribe:()=>()=>{},destroy:()=>{destroyed++;}};
+ const first=bootstrap({}, {services:{theme:{instance:owner}}});
+ disposeXuiServices(window);disposeXuiServices(window);assert.equal(destroyed,0);assert.equal(owner.isDestroyed(),false);
+ const next=bootstrap();assert.notEqual(next.services,first.services);assert.notEqual(getThemeService(window),owner);
+ assert.throws(()=>first.services.getThemeService(),/disposed/);
+ const nextTheme=getThemeService(window);disposeXuiServices(window);assert.equal(nextTheme.isDestroyed(),true);
+ assert.notEqual(bootstrap().services,next.services);disposeXuiServices(window);assert.equal(requests,0);owner.destroy();console.log('passed');
  `),/passed/);
 });

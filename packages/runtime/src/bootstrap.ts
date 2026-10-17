@@ -2,6 +2,10 @@ import {getThemeService} from './theme.js';
 import {resolveConfig,type XuiConfigOverrides,type XuiConfig,type ConfigReadonly} from './config.js';
 import {installXuiServices,disposeXuiServices,type XuiServices,type XuiServicesOptions} from './services-core.js';
 import {restoreInterfaceScale} from './interface-scale.js';
+/** Release the Window registry and its owned services; safe to call repeatedly.
+ * Borrowed services survive. A later bootstrap on this Window creates a fresh owner.
+ * This narrow lifecycle export does not load feature service implementations. */
+export {disposeXuiServices} from './services-core.js';
 /** Runtime dependencies are separate from the JSON-only configuration overrides. */
 export interface BootstrapEnvironment {window?:Window;services?:XuiServicesOptions}
 export interface XuiApplication {readonly config:ConfigReadonly<XuiConfig>;readonly services:XuiServices}

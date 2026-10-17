@@ -211,7 +211,7 @@ const auth = AuthService; // 仅 auth.enabled=true 时使用
 </ServicesProvider>;
 ```
 
-`bootstrap` 返回冻结的 `XuiApplication`（resolved config 与 services）。同一个 Window 上重复使用相同配置/绑定会复用既有 owner；冲突配置或重复绑定不同 service 会明确失败，不能借重复启动换 owner。`getHttpService()` 与 `getAuthService()` 在未配置时抛错；未启用 auth 时不创建认证 owner。`disposeXuiServices(window)` 释放该 Window 的应用注册表及其所属服务。服务以 `{options}` 交由注册表创建，或以 `{instance}` 借用已有实例；借用实例不由 registry/React View 销毁。剪贴板借用实例的类型为 `SharedClipboardService`，只要求 `writeText`，不要求也不会调用 `dispose`；注册表只 dispose 自己创建的内部剪贴板服务。`getThemeService`、`getClipboardService` 等浏览器 getter 使用同一个 Window owner。组件级 `create*Controller` 是不同合同，仍按组件 Controller 生命周期使用。
+`bootstrap` 返回冻结的 `XuiApplication`（resolved config 与 services）。同一个 Window 上重复使用相同配置/绑定会复用既有 owner；冲突配置或重复绑定不同 service 会明确失败，不能借重复启动换 owner。`getHttpService()` 与 `getAuthService()` 在未配置时抛错；未启用 auth 时不创建认证 owner。`disposeXuiServices(window)` 从 `/bootstrap` 窄入口导出，释放该 Window 的应用注册表及其所属服务；原 `/services` 与根入口仍导出同一函数。重复释放安全，之后同 Window 再 bootstrap 建立新 owner，借用实例不被销毁。`app.services.dispose()` 用于结束容器自身，不能替代移除 Window 注册表。服务以 `{options}` 交由注册表创建，或以 `{instance}` 借用已有实例；借用实例不由 registry/React View 销毁。剪贴板借用实例的类型为 `SharedClipboardService`，只要求 `writeText`，不要求也不会调用 `dispose`；注册表只 dispose 自己创建的内部剪贴板服务。`getThemeService`、`getClipboardService` 等浏览器 getter 使用同一个 Window owner。组件级 `create*Controller` 是不同合同，仍按组件 Controller 生命周期使用。
 
 主题配置的 `theme.mode` 是默认选择而非受控值；有效的 `ui.theme.mode` sessionStorage 用户选择优先于 config 默认。有效的 `ui.interface.scale` 同样优先于 `theme.scale` 默认。显式注入 `ThemeOptions.mode` 才是受控主题模式。公开 `init.js` 只负责首绘前恢复主题/缩放属性，不创建、订阅或拥有 ThemeController；正式文档主题 owner 由 `bootstrap`/`getThemeService` 提供。`useTheme` 订阅共享 owner，组件卸载不销毁它。
 

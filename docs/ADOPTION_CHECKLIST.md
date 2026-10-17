@@ -65,7 +65,7 @@
 | SERVICE-006 | bootstrap/XuiServices收到 `{instance}` 借用服务 | registry可提供该实例但dispose不调用其destroy/dispose | 借用实例析构spy和registry释放轨迹 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
 | SERVICE-007 | registry以 `{options}` 创建所属服务 | 所属服务由同一个registry生命周期释放；视图卸载不能提前dispose | 服务资源计数与应用关闭前后状态 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
 | SERVICE-008 | SSR并发处理多个请求 | 每请求创建隔离 `XuiServices`；Auth/HTTP/config/route/i18n状态不跨请求共享 | 并发请求使用的实例ID和secret隔离记录 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
-| SERVICE-009 | 应用退出或文档owner结束 | 通过 `disposeXuiServices(window)` 释放该Window registry，不让组件卸载销毁共享服务 | owner destroy计数与多个view卸载对照 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| SERVICE-009 | 应用退出或文档owner结束 | 从 `/bootstrap` 窄入口导入 `disposeXuiServices(window)` 释放该Window registry；同Window可重新启动、重复释放安全、借用实例保留，不让组件卸载销毁共享服务 | owner destroy计数与多个view卸载对照 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
 | THEME-009 | 有有效 sessionStorage 主题且 config 默认值不同 | 恢复存储偏好，config只作为无效/缺失偏好时的默认；显式受控 `ThemeOptions.mode` 单独按受控合同测试 | init前后root属性、bootstrap ThemeState、storage值 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
 | THEME-010 | 加载 `@coffeehc/xui-runtime/init.js` | 首绘脚本不创建 `window.xuiTheme`/ThemeController；正式owner由bootstrap/getThemeService建立 | 运行脚本后、bootstrap前后owner实例与ThemeState | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
 | SCALE-007 | 有效 sessionStorage scale 与 config `theme.scale` 不同 | 首绘与bootstrap都采用已保存scale；config仅提供无有效存储值时的默认 | init前后document scale属性、bootstrap后值和storage | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
@@ -554,7 +554,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
-| SERVICE-010 | 只用 bootstrap 或单项 Service | bootstrap 不含 HTTP/Auth/Menu/Upload 实现；窄入口仅包含职责依赖，根入口/全量 services 有意汇总 | 正式 tarball bundle metafile 的贡献文件与 gzip；不能仅看压缩后体积 | [按模块单例](PUBLIC_API.md#按模块导入的单例与-40-迁移) |
+| SERVICE-010 | 只用 bootstrap 或单项 Service | bootstrap 与其 disposer 不含 HTTP/Auth/Menu/Upload 实现；释放不要求导入全量 services；窄入口仅包含职责依赖，根入口/全量 services 有意汇总 | 正式 tarball bundle metafile 的贡献文件与 gzip；不能仅看压缩后体积 | [按模块单例](PUBLIC_API.md#按模块导入的单例与-40-迁移) |
 | SERVICE-011 | 多处导入同一 Service | 引用稳定、同一 Window 同一 owner；import 不发 IO，不在启动前捕获默认 config | 导入/首用/重复导入轨迹及配置快照 | [公共合同](PUBLIC_API.md#文件上传) |
 | SERVICE-012 | auth.enabled 或借用已有 HTTP | 首个业务请求前绑定唯一 Auth；缺模块/不匹配在发送前失败；借用原引用也受保护 | 无登录 protected POST 请求次数、凭据策略及借用测试 | [公共合同](PUBLIC_API.md#文件上传) |
 | SERVICE-013 | 安装失败或销毁自有 Auth | 修正配置可重试；此前 owner 不受损；自有 binding 被释放，借用 HTTP 不销毁 | 错误后重试、再次绑定和 dispose spy | [公共合同](PUBLIC_API.md#文件上传) |
