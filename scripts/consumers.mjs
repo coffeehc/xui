@@ -1,20 +1,28 @@
-import { mkdir, mkdtemp, readFile, writeFile, cp, copyFile, realpath, readdir } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile, cp, copyFile, realpath, readdir, rm, rename } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { build } from 'esbuild';
 import assert from 'node:assert/strict';
 import { extract } from './tokens.mjs';
 import { gzipSync } from 'node:zlib';
 import { collectPublicAPI } from './public-api.mjs';
+import { sourceGeneration } from './source-generation.mjs';
 const root = process.cwd(), archives = resolve('.artifacts');
 await mkdir(archives, { recursive: true });
+await rm(`${archives}/consumer-validation.json`,{force:true});
+const generation=(await sourceGeneration(root)).sourceSha256;
+for(const directory of ['theme','runtime','ui-react'])assert.equal(JSON.parse(await readFile(`packages/${directory}/dist/build.json`)).sourceSha256,generation,'Run pnpm build before validating consumers');
+const sha256=file=>readFile(file).then(bytes=>createHash('sha256').update(bytes).digest('hex'));
 const tarballs = [];
+const packedPackages=[];
 for (const pkg of ['theme', 'runtime', 'ui-react']) {
     const output = execFileSync('npm', ['pack', '--json', '--pack-destination', archives], { cwd: `packages/${pkg}`, encoding: 'utf8', env: { ...process.env, npm_config_cache: '/tmp/xui-npm-cache' } });
     const info = JSON.parse(output)[0];
     assert(info.files.every(file => !file.path.startsWith('src/')), 'Packed source unexpectedly');
     tarballs.push(resolve(archives, info.filename));
+    packedPackages.push({name:info.name,version:info.version,path:info.filename,sha256:await sha256(resolve(archives,info.filename))});
 }
 const config = JSON.parse(await readFile('package.json', 'utf8'));
 const publicAPI = await collectPublicAPI();
@@ -657,4 +665,18 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     console.log(`${kind}: tarballs installed, built exports and types consumed; no source aliases.`);
 }
 await writeFile('.artifacts/performance-baseline.json', JSON.stringify(performance, null, 2) + '\n');
+assert.equal((await sourceGeneration(root)).sourceSha256,generation,'Source changed during consumer validation');
+for(const item of packedPackages)assert.equal(await sha256(resolve(archives,item.path)),item.sha256,'Tarball changed during consumer validation');
+const consumer=resolve(runDirectory,'react'),peerNames=['react','react-dom','@base-ui/react'];
+const peerPaths=execFileSync('npm',['ls','--all','--parseable',...peerNames],{cwd:consumer,encoding:'utf8'}).trim().split('\n');
+const peers={};
+for(const name of peerNames){
+    const matches=[...new Set(peerPaths.filter(file=>file.endsWith(`/node_modules/${name}`)))];
+    assert.equal(matches.length,1,`${name} must have one installed instance`);
+    peers[name]=JSON.parse(await readFile(`${matches[0]}/package.json`)).version;
+    assert.equal(peers[name],config.devDependencies[name],`${name} version drift`);
+}
+const receipt={schemaVersion:1,sourceGeneration:generation,packages:packedPackages,publicApiSha256:await sha256(`${archives}/public-api.json`),performanceSha256:await sha256(`${archives}/performance-baseline.json`),consumer:relative(root,consumer),packageJsonSha256:await sha256(`${consumer}/package.json`),packageLockSha256:await sha256(`${consumer}/package-lock.json`),peers};
+await writeFile(`${archives}/consumer-validation.json.tmp`,JSON.stringify(receipt,null,2)+'\n');
+await rename(`${archives}/consumer-validation.json.tmp`,`${archives}/consumer-validation.json`);
 console.log('Public layouts, dynamic panel entries, Button-only contribution and gzip gates passed.');

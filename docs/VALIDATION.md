@@ -1,5 +1,28 @@
 # 验证证据与限制
 
+## 正式产物统一归档与独立校验（4.2.6，2026-10-17）
+
+仅修改xui的交付工具链、文档、版本与回归。三包/DESIGN为 **4.2.6**，末位递增，单一分发。最终sourceGeneration为`f861e4149344cb3e538b3c35d3fae0f6f8851ff637b5a181f306e2a827194c0f`；完整正式consumer为`.consumers/run-qTW68P/react`，React/ReactDOM19.2.8、Base UI1.7.0单实例。405 Token、104公开入口、396逐项检查。与4.2.5三包的300份dist文件逐一比较，仅三个build.json因generation变化，其余ESM/CSS/types字节完全相同；没有UI/运行时业务行为变更或新增公开包入口。
+
+此前build只写generation，consumer另写API，正式目录依赖临时拼装，4.2.5交付曾漏public-api.json并手工补齐。本轮由[统一归档入口](../scripts/archive.mjs)生成schemaVersion=1目录：[归档合同](ADOPTION.md#正式归档的唯一入口)是目录、命令和摘要计算的唯一说明，旧历史目录保持原样。build与归档/校验共用[源码generation算法](../scripts/source-generation.mjs)，API从精确打包声明生成，consumer成功回执绑定实际三包和锁文件；CI既有验证成功后调用同一archive命令。正式命令要求提交完成且跟踪工作区干净，先暂存并完全校验，最后原子发布，拒绝覆盖已有目录；提交后最终目录的commit/摘要由命令与根manifest生成，不再手工追记或补文件。
+
+| 检查 | 实际结果 |
+|---|---|
+| build、typecheck、Token、docs、diff | 通过；104入口、396检查；构建输入未漂移 |
+| 定向unit | 22/22：归档12项（含负例子项）、contract8项、docs2项；未跑全量unit |
+| 完整正式consumer | 通过；精确tarball的ESM/CSS/types、所有导出与类型、示例打包、无源码alias和单实例peer验证；成功后原子写consumer-validation.json |
+| 正式consumer体积 | critical CSS gzip19155/19456、initial JS gzip142164/153600，未改预算 |
+| 真实三包的归档生成与复制后校验 | 通过：隔离Git快照使用上述真实同代三包和consumer回执；移除原快照/消费者后仍能验证复制件，重建104入口与generation；该快照commit仅为测试，不冒充最终main提交 |
+| 与4.2.5正式dist差分 | 300文件清单相同，297份非stamp文件字节相同，三份stamp更新；API清单SHA256仍为`7c4744683b5eac87f206fbb280dd693375c42052281f795bc4c08e72529eb14a` |
+
+归档回归实际覆盖：大源码tar、自动重建而非复制过时全局API、干净提交/成功consumer前置、重复目录不覆盖、复制件独立验证、缺API、额外文件、坏tar、缺摘要行、重算摘要后仍不允许的API/generation/已测包错配、路径穿越、符号链接、过期dist、失败清理与重试。manifest、generation、API清单、精确包与source tar之间均做语义交叉检查，不只验证单文件摘要。独立复制校验仍需要已安装的xui工具依赖及Git/tar，未声称是无工具运行或签名认证。
+
+过程限制与修正：初轮夹具暴露macOS `/var`与`/private/var`同一仓库路径比较失败，改用realpath；另修正测试将public-api.json误识为正式目录的前缀断言。第一代build/22项unit/完整consumer通过，但真实较大源码tar的`git get-tar-commit-id`提前关管道导致Node EPIPE，未发布该候选归档；改用文件描述符输入并给原关键测试增加2MB源码快照。随后重建最终generation，完整重跑上表门禁与真实三包归档验证通过。没有吞掉EPIPE、降低摘要/API一致性检查或手工补档。
+
+证据在`.artifacts/archive-validation/`：`{build,typecheck,tokens,unit,docs,consumer}-final.log`、`real-snapshot-final.json/log`、`real-snapshot.mjs`、`dist-diff-final.json`；首代日志为`*-first-generation.log`和consumer-first-generation.json，EPIPE在real-snapshot-first-generation.log，大快照回归另见unit-large-snapshot.log。完整成功回执是`.artifacts/consumer-validation.json`，三包摘要与当前generation由该回执给出。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/archive.test.mjs tests/contract.test.mjs tests/docs.test.mjs`、`node scripts/check-docs.mjs`、`pnpm test:consumer`；提交后执行`pnpm archive --evidence .artifacts/archive-validation`，再以输出路径执行`pnpm archive:verify <目录>`。日志输出置于传入证据目录之外，避免归档命令采到自身尚未写完的日志。
+
+未执行全仓unit、watch/cold-start或浏览器/产品/API/部署验收；本轮UI与CSS字节未变，不复用旧98/151项作为本轮新跑结果。CI工作流已接入同一命令，本机未触发或宣称远端CI已通过。归档通过证明所列包、输入与元数据一致，不代替消费项目升级和真实页面验收，也不自动发布npm。
+
 ## 保留Dialog异步恢复的阅读连续性（4.2.5，2026-10-17）
 
 仅修改xui，三包/DESIGN为 **4.2.5**，末位递增、单一分发。sourceGeneration为`a9fd920d5fa6326f0b1e9730ff8ee0e579d24cfa23cb071c24c33cbea38ea5af`；独立正式consumer `.consumers/dialog-resume-dvonpu/react`安装三份tarball的ESM/CSS/types，React/ReactDOM19.2.8、Base UI1.7.0单实例，无src alias、宿主私有CSS或原生UI。405 Token、104公开入口、395逐项检查。本轮无新增公开props/exports，既有keepMounted、initialFocus、finalFocus与Dialog.Body组合合同见[保留详情](COMPONENTS.md#保留dialog的阅读位置)，正式样板见[dialog-resume-react](../examples/dialog-resume-react/app.tsx)。

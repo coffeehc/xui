@@ -3,17 +3,14 @@ import {execFileSync} from 'node:child_process';
 import {mkdir,mkdtemp,readdir,rename,rm,readFile,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {createHash} from 'node:crypto';
 import {generate} from './tokens.mjs';
+import {sourceGeneration} from './source-generation.mjs';
 
 /** Validate all outputs before publishing dist. A failed watch never claims a fresh generation. */
 export async function buildPackages(){
   await mkdir('.artifacts',{recursive:true});const stage=await mkdtemp(resolve('.artifacts/build-'));
   try{
-    const sourceFiles=['docs/DESIGN.md','package.json','tsconfig.json',...(await readdir('scripts')).filter(name=>name.endsWith('.mjs')).map(name=>`scripts/${name}`),...(await readdir('packages/theme/src')).map(name=>`packages/theme/src/${name}`),'packages/theme/package.json'];
-    for(const name of ['runtime','ui-react'])sourceFiles.push(...(await readdir(`packages/${name}/src`)).filter(file=>/\.(?:tsx?|json)$/.test(file)).map(file=>`packages/${name}/src/${file}`),`packages/${name}/package.json`);
-    const sourceHash=async()=>{const hash=createHash('sha256');for(const file of sourceFiles.sort())hash.update(file).update(await readFile(file));return hash.digest('hex');};
-    const sourceSha256=await sourceHash();
+    const {sourceSha256,sourceFiles}=await sourceGeneration();
     await generate(false,`${stage}/theme`);
     for(const name of ['runtime','ui-react']){
       const files=(await readdir(`packages/${name}/src`)).filter(file=>/\.tsx?$/.test(file)).map(file=>`packages/${name}/src/${file}`);
@@ -30,7 +27,7 @@ export async function buildPackages(){
     const strengthWorker=await build({entryPoints:['packages/runtime/src/password-strength-worker-entry.ts'],bundle:true,write:false,format:'iife',platform:'browser',target:'es2022',minify:true});
     await writeFile(`${stage}/runtime/password-strength-worker-source.js`,`export const passwordStrengthWorkerSource=${JSON.stringify(strengthWorker.outputFiles[0].text)};\n`);
     await build({entryPoints:['packages/runtime/src/init.ts'],outfile:`${stage}/runtime/init.js`,format:'iife',bundle:true,minify:true,target:'es2022'});
-    if(await sourceHash()!==sourceSha256)throw new Error('Source changed during build; retry the complete generation');
+    if((await sourceGeneration()).sourceSha256!==sourceSha256)throw new Error('Source changed during build; retry the complete generation');
     const published=[],previous=[];
     try{
     for(const name of ['theme','runtime','ui-react']){

@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.5）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.6）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -554,3 +554,4 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | OVERLAY-ORDER-001 | Dialog关闭回到Sheet内带Tooltip/ContextMenu按钮 | 记录每层open与escape-key；只关闭顶层；不要仅以Sheet仍可见判父监听故障；重复名称省略Tooltip，必要补充说明保留独立层级 | 两层/三层、回焦点、条件卸载和重复循环 | [Escape顺序](COMPONENTS.md#嵌套弹层与-tooltip-的-escape-顺序) |
 | TABS-OVERFLOW-001 | Tabs长名称与尺寸 | 单项使用tabs-item-max-inline-size；名称进自动文本/Label槽，Icon/计数独立；精细鼠标hover及键盘焦点揭示全文，离开复位，不增加停靠点 | 三主题、短/长中文、RTL、窄屏、两种200%、减少动效/触屏/disabled完整静态阅读；节点/焦点与选中归属不变 | [Tabs](COMPONENTS.md#tabs) |
 | OVERLAY-RESUME-001 | keepMounted详情临时关闭后恢复 | 标准Body及布局观察支持下，同节点/内容/滚动模式保留阅读位置与草稿，不因重开自动滚向旧焦点；真实容器切换仍保证焦点可见；核验与恢复资格归宿主；CSS降级只保证可达 | body/whole、异步边界、两轮、DOM/选择区/焦点/offset、三主题/窄屏/两种200%，对照原生动画精度 | [保留详情](COMPONENTS.md#保留dialog的阅读位置) |
+| ARTIFACT-001 | 固定正式产物接入或交付 | 使用统一archive入口；manifest、API清单、generation、三包、源码和SHA256SUMS相符，复制后独立验证；不手动补档或用一份版本的测试冒充另一份 | archive:verify成功输出、完整SHA/版本/generation/API摘要/入口数；范围另查真实验证记录 | [正式归档](ADOPTION.md#正式归档的唯一入口) |

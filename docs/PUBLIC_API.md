@@ -8,6 +8,8 @@
 
 [scripts/public-api.mjs](../scripts/public-api.mjs) 从实际 manifests/构建声明取全部名字；[文档守卫](../scripts/check-docs.mjs) 检查本表入口与 manifests 完全一致。[正式消费](../scripts/consumers.mjs) 在独立 tarball 安装中读取 ESM/CSS/init、编译命名导出的 type import、核对运行时导出并打包全部 ESM/CSS。下面的完整页面与 fixture 再证明实际组装行为，入口通过不代表未跑的产品集成通过。
 
+正式交付统一使用`pnpm archive`：固定清单路径为`metadata/public-api.json`，由准确tarball的manifests/声明生成，并通过根manifest中的SHA256、entries及sourceGeneration建立对应；`pnpm archive:verify <目录>`独立重算和交叉校验。目录、摘要计算和失败规则见[正式归档合同](ADOPTION.md#正式归档的唯一入口)，不再以手工补齐的清单作为正式交付流程。
+
 按章节查阅：
 
 - [全部正式入口](#全部正式入口)

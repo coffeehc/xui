@@ -52,6 +52,14 @@ jobs:
           path: test-results
       - name: Watch, cold start and complete browser suite
         run: pnpm test:watch && pnpm test:cold-start && pnpm test:browser
+      - name: Archive verified formal artifacts
+        run: pnpm archive --evidence test-results
+      - name: Preserve verified formal archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: xui-formal-${{ github.sha }}
+          path: .artifacts/public-*/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:

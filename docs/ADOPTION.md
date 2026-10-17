@@ -17,7 +17,7 @@ theme 提供预构建 CSS/tokens；runtime 只提供无框架 TypeScript 服务�
 
 runtime 原生 DOM UI exports 已从当前公开入口移除，原生 UI 示例也不再作为接入路径。该 breaking change 不代表 XQuant、XLead 或其他消费项目已完成 React 迁移或通过验收；消费项目须按自己的授权核实固定包版本、调用点和实际页面。HTTP/auth/query/theme/resource 等 TypeScript 服务、模型、解析器与工具继续公开，React 宿主可直接复用。
 
-以4.2.1为基准只维护一条版本线，当前正式版本为 **4.2.5**，后续所有变更只递增末位，不再维护3.x兼容包或其他平行版本。历史验证记录保留用于溯源，不是当前可用的兼容分发。三个包必须同版本、同sourceGeneration安装；版本递增不代表语义兼容，升级前核对实际迁移合同。当前 DESIGN 与三个私有包均为 4.2.5，runtime 基础 Service 不再导出 `create*` 工厂；消费者需在入口 bootstrap 后按窄模块导入稳定 Service 引用；4.0 的 bootstrap 不再加载所有实现，容器 getter 需先加载对应模块，`/services` 仅用于明确需要全量的隔离装配。须复核固定 ESM/CSS/types 与打包依赖。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。2.0.1的公共认证页采用Stitch V3：品牌居于卡片外部，宿主只使用已有配置和slot，不补私有CSS。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
+以4.2.1为基准只维护一条版本线，当前正式版本为 **4.2.6**，后续所有变更只递增末位，不再维护3.x兼容包或其他平行版本。历史验证记录保留用于溯源，不是当前可用的兼容分发。三个包必须同版本、同sourceGeneration安装；版本递增不代表语义兼容，升级前核对实际迁移合同。当前 DESIGN 与三个私有包均为 4.2.6，runtime 基础 Service 不再导出 `create*` 工厂；消费者需在入口 bootstrap 后按窄模块导入稳定 Service 引用；4.0 的 bootstrap 不再加载所有实现，容器 getter 需先加载对应模块，`/services` 仅用于明确需要全量的隔离装配。须复核固定 ESM/CSS/types 与打包依赖。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。2.0.1的公共认证页采用Stitch V3：品牌居于卡片外部，宿主只使用已有配置和slot，不补私有CSS。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
 
 HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方 client，并从 bootstrap 共享 service 获取依赖；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 
@@ -32,7 +32,34 @@ pnpm test:consumer
 pnpm preview
 ```
 
-`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目应固定同一源码构建出的 DESIGN 与三个包 3.0.0，或固定完整 SHA，并使用正式产物。React、ReactDOM、Base UI 与 runtime peer 保持单实例；不使用 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
+`test:consumer` 将包打成 tarball，在新目录安装并从正式 ESM/CSS/types 编译、打包。采用项目应固定同一源码构建出的 DESIGN 与三个包，或固定完整 SHA，并使用正式产物。React、ReactDOM、Base UI 与 runtime peer 保持单实例；不使用 `packages/src` alias 或下游 Tailwind 扫描依赖源码。
+
+### 正式归档的唯一入口
+
+维护者完成本轮必要测试并提交后执行`pnpm archive`，可重复传`--evidence <本仓库文件或目录>`保存明确的验收证据；CI在既有验证成功后自动调用同一命令。不再手写manifest、复制旧API清单或临时拼装正式目录。命令要求跟踪工作区干净、三包与DESIGN同版本、当前源码与构建stamp及成功的`test:consumer`回执同generation，并逐字节核对已测tarball与当前dist；不重新打包或改变已测文件。消费者验证开始时撤销旧回执，仅全部检查成功后原子写入`.artifacts/consumer-validation.json`，绑定三包摘要、API、性能记录、独立消费者锁文件和peer单实例版本。归档不代替本轮必要的浏览器/产品验证，也不发布npm。
+
+固定结构（归档schemaVersion=1；历史目录保持原样）：
+
+```text
+.artifacts/public-<完整提交SHA>/
+  manifest.json
+  README.md
+  SHA256SUMS
+  source/xui-source.tar
+  tarballs/coffeehc-xui-{theme,runtime,react}-<版本>.tgz
+  metadata/source-generation.json
+  metadata/public-api.json
+  metadata/consumer-validation.json
+  metadata/performance-baseline.json
+  metadata/consumer/{package.json,package-lock.json}
+  validation/<显式传入的证据，保留原目录内部结构>
+```
+
+`manifest.json`是根索引，记录完整commit、version、sourceGeneration、三个包、源码及generation/API/consumer/性能元数据的相对路径和SHA256、publicApi.entries与证据文件清单；消费者package.json和锁文件摘要由consumer回执绑定。`metadata/public-api.json`保留既有`{entries}`格式，直接从归档三包的manifests和真实声明重新生成，包含ESM值与type名字，不复用可能过时的全局便利文件。`metadata/source-generation.json`记录sourceGeneration与有序sourceFiles；与构建共用同一算法：按路径排序，依次向SHA-256写入UTF-8相对路径及该文件原始字节，不加分隔符，等于包内build.json的sourceSha256。generation是构建输入身份，完整提交SHA另外固定全部文档、测试和示例。
+
+所有文件摘要均为完整原始字节的SHA-256（JSON含结尾换行）。`SHA256SUMS`按相对路径排序，每行`<64位小写摘要><两个空格><相对路径>`，完整覆盖除自身外的全部文件，不允许遗漏、重复、额外文件、路径穿越或符号链接；其自身摘要由命令输出，避免循环自引用。
+
+`pnpm archive:verify <归档目录>`可检查复制后的目录，不依赖当前checkout的源码、dist或消费者目录；需要已安装xui工具依赖及Git/tar。除逐文件摘要外，还重算归档源码的generation、检查source tar的commit、三包版本/stamp/精确runtime peer、真实公开声明、消费者回执/锁文件和peer单实例。手动重新计算摘要也不能掩盖API或generation错配。生成先在临时目录完成全部校验，最后原子发布；失败清理暂存目录，已有正式目录拒绝覆盖，交付后不再手动补文件。工具实现见[归档入口](../scripts/archive.mjs)，回归见[归档测试](../tests/archive.test.mjs)。
 
 当前可运行参考只展示 React UI；纯 TypeScript runtime 模型和服务可在 React 页面中复用。它们使用合成数据，不证明采用项目的真实后端、业务权限或页面已集成。
 
