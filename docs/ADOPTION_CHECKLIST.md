@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.15）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.16）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -348,7 +348,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | NAV-002 | 菜单项有独立配置/更多动作 | 动作进入公开 action slot/callback，不冒泡触发行导航 | 点击动作计数与 location/history | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-003 | 菜单项配置右键菜单 | 右键菜单动作不触发主链接导航 | contextmenu 和导航事件日志 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-004 | 分支名长于菜单宽度 | 仅名称按 OverflowText 合同展示；折叠/展开按钮和行尾动作不被挤出 | 最小/中间/最大宽度矩形、悬停录像与焦点录像 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
-| NAV-005 | 桌面默认展开或收起 | 展开使用公共min/max与18vw动态宽度（默认240–288px）、50vw封顶；收起使用60px compact rail，不写内部宽度覆盖 | computed width 与正式默认值 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-005 | 桌面默认展开或收起 | 展开使用公共min/max与16vw动态宽度（默认192–224px）、50vw封顶；收起使用60px compact rail，不写内部宽度覆盖 | computed width 与正式默认值 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-006 | 用户键盘操作菜单 | 方向键、Home/End、Enter/Space 按公开导航合同工作 | 自动化按键轨迹与 active/expanded 状态 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-007 | 菜单处于窄屏 Drawer | 只有一个可见打开入口；关闭回到原触发按钮 | 窄屏 DOM 计数、焦点前后 activeElement | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-008 | 名称旁有非交互运行/等待状态 | renderLabel使用主项剩余宽度；名称可收缩、尾随状态不收缩并位于逻辑末端；有独立分支/配置时保留各自轨道，不将状态伪装成action按钮 | 短/长名称、默认展开/60、窄屏与200%矩形，状态出现/消失前后节点与焦点 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
@@ -612,3 +612,17 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CAP-007 | 绘图消费主题颜色 | 用当前上下文token、同一ThemeService；sRGB归一化/8位/alpha/null明确，WebGL线性转换自有 | computed样式、Canvas读回与真实renderer输入 | [PUBLIC_API 颜色](PUBLIC_API.md#绘图主题颜色) |
 | CAP-008 | 主题/样式/renderer生命周期 | light/dark/system/配色/祖先覆盖更新；stylesheet变化refresh，dispose/abort后无通知/残留probe，不销毁借用theme | 切换、计数、监听清理和目标上下文 | [PUBLIC_API 颜色](PUBLIC_API.md#绘图主题颜色) |
 | CAP-009 | 上述能力实际呈现 | 桌面/窄屏、长中文、200%文字和真实200%浏览器zoom，焦点四边、通知滚动和链接无页面溢出 | 每主题实测与缩放事实 | [DESIGN 公共能力](DESIGN.md#正文链接通知范围与可选绘图资源4215) |
+
+## 导航临时显示逐项检查（4.2.16）
+
+| 编号 | 场景 | 必须检查 | 证据 | 合同 |
+|---|---|---|---|---|
+| NAV-REVEAL-001 | 桌面紧凑 fine pointer | 默认 hover 揭示完整标签；关闭选项 false 不揭示；正文 x/width 不变 | 前后几何与公开配置  | [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216) |
+| NAV-REVEAL-002 | 临时揭示往返 | 同一 DOM/Controller、collapsed/expandedIds/选中/草稿/滚动保留；折叠回调和偏好写次数为零 | 节点身份、状态与写入计数  | [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216) |
+| NAV-REVEAL-003 | 指针、键盘与公共 portal | 侧栏/footer/派生菜单或 Dialog 有焦点时不收起；跨间隙后仍可达 | 实际 hover/focus/指针路径与命中  | [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216) |
+| NAV-REVEAL-004 | 分层 Escape 与卸载 | 先关闭最上层弹层，再收起预览回唯一开关；移除焦点节点及 Shell 无残留 | 焦点轨迹、卸载后计时/监听结果  | [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216) |
+| NAV-REVEAL-005 | 粗指针与窄屏 | 不依赖 hover，已有显式开关/抽屉和回焦正常 | touch 与窄屏键盘路径  | [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216) |
+| NAV-REVEAL-006 | 页脚合法嵌套 | 直接 SVG、Icon 包装、Toolbar 版本 Button/passive span、更新 Button/status 同中心线；图标16px、按钮最小36px；passive 不执行动作 | computed 几何、语义、真实点击计数  | [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216) |
+| NAV-REVEAL-007 | 宽度与可读性 | 192–224/16vw、50vw上限、60 compact、12px内距与公开覆盖；长中文/RTL不截内容、不缩字 | 800/1280/1600/1920、三模式、根字号与浏览器200%分别实测  | [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216) |
+
+上述尺寸以根16px为基准，字体放大后按 Token 派生并以视口上限保护正文；正式包结果不代替产品页面验收。本轮无强制消费方升级或自动通知。

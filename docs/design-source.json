@@ -1,15 +1,15 @@
 {
-  "contractVersion": "4.2.15",
+  "contractVersion": "4.2.16",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
-  "defaultTokenCount": 413,
+  "defaultTokenCount": 414,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "0521e301af998d4b5788d2a41f1ec2d782de09828ed9520bf8be250d31c06559",
+  "defaultCssSha256": "2fdcacdf8bf2b10e97d617e979d59ac0eaea42805c420e417469d9d886ded495",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -94,7 +94,8 @@
     "Remove native DOM UI exports and implementations in the authorized 1.0.0 breaking release. React owns UI; runtime retains services, models and utilities.",
     "Render Card as header/content/footer only; description and children share content, with natural height and no empty content track.",
     "4.2.14 Stitch layout review: control-bottom aligned multirow SearchToolbar; full navigation drawer, single inset, independent Tabs, bounded indentation and content-budget whole-scroll fallback. Existing desktop widths, fonts, palettes and state owners retained.",
-    "4.2.15 adds safe prose links, the standard Toast.View and immediate scope clearing, Resource-owned module/CSS leases, and existing-ThemeService sRGB readback. No new palette, UI skin, authentication or business loading owner."
+    "4.2.15 adds safe prose links, the standard Toast.View and immediate scope clearing, Resource-owned module/CSS leases, and existing-ThemeService sRGB readback. No new palette, UI skin, authentication or business loading owner.",
+    "4.2.16 adds optional desktop compact-sidebar hover/focus reveal without Controller writes or main reflow, aligns compact footer compositions, and narrows expanded width to 16vw bounded by derived 192/224px with the existing viewport cap."
   ],
   "architectureReference": {
     "path": "docs/design-sources/stitch-token-architecture.v1.txt",

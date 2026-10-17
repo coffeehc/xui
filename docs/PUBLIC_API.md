@@ -999,3 +999,14 @@ const colors = observeThemeColors({edge:'--diagram-edge',text:'--foreground'}, n
 }, {theme: app.services.getThemeService(), element: canvas.parentElement!});
 // 卸载：colors.dispose()；stylesheet 替换后：colors.refresh()
 ```
+
+### 侧栏临时显示扩展（4.2.16）
+
+React `/layout` 的 AppShellProps 与 `/menu-layout` 的 MenuLayoutProps 新增可选 `sidebarRevealOnHover?: boolean`（默认 true）。桌面紧凑侧栏 hover/focus 临时显示完整宽度；不修改 Controller.collapsed、不发折叠请求、不创建新导航 Controller。设置 false 保留显式切换。窄屏/粗指针沿用原 drawer；导航范围与多 Controller 注入规则不变。独立 NavigationMenu 没有该属性，宽度仍由外层布局负责。
+
+```tsx
+<MenuLayout items={items} defaultCollapsed sidebarRevealOnHover>{content}</MenuLayout>
+// 禁用临时揭示：<AppShell sidebar={navigation} sidebarRevealOnHover={false}>…</AppShell>
+```
+
+正式 CSS 的 nav-sidebar-width 默认16vw夹取192–224px（根16px）并50vw封顶，compact仍60px；nav-reveal-close-delay默认150ms是离开且失焦的宽限。完整键盘/portal/页脚规则见 [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216)。runtime 继续只提供原 TypeScript Controller，不恢复原生 UI，不引入持久显示态。

@@ -857,7 +857,7 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 
 公开 CSS 结构为 `xui-app-header`、`xui-app-header-primary/secondary` 和 `xui-app-header-navigation/brand/breadcrumb/status/actions/legacy`。React 使用正式 `theme/layout.css`；普通采用应使用 props/Node，不穿透结构改排列。`AppHeader` 是 div 组合，独立使用时由宿主提供所属语义 header。breadcrumb 内容可以使用公开 `Breadcrumbs` / `.xui-breadcrumbs` 的 nav/ol/li/a 结构；链接的焦点轮廓保持在截断边界内。
 
-展开侧栏按视口18%响应，在公开 `--nav-sidebar-min-width` / `--nav-sidebar-max-width`（默认240/288px）之间夹取，再以视口50%封顶；普通1280px桌面为240px，1600px及1920px桌面为288px。收起仍为60px；这些默认数值是根16px下的 CSS 像素，非设备像素。产品若确需统一调整上下限，只在product-overrides的根Token层声明，不能穿透侧栏DOM；视口上限优先，200%界面缩放时不挤掉正文。公开token `--nav-sidebar-width`、`--nav-sidebar-padding`、`--nav-collapsed-width` 与 `--nav-collapsed-item-size` 在 DESIGN 中定义，默认36px项+左右各12px；图标仍16px，选中短竖线/hover/独立focus不改变宽度。独立支路开关收起时移到所属链接下一行，窄屏抽屉恢复完整标签与既有键盘/路由合同。独立使用 NavigationMenu 的外层宽度由宿主布局决定，MenuLayout 才拥有完整侧栏宽度。
+展开侧栏按视口16%响应，在公开 `--nav-sidebar-min-width` / `--nav-sidebar-max-width`（默认192/224px）之间夹取，再以视口50%封顶；普通1280px桌面为204.8px，1600px及1920px桌面为224px。收起仍为60px；这些默认数值是根16px下的 CSS 像素，非设备像素。产品若确需统一调整上下限，只在product-overrides的根Token层声明，不能穿透侧栏DOM；视口上限优先，200%界面缩放时不挤掉正文。公开token `--nav-sidebar-width`、`--nav-sidebar-padding`、`--nav-collapsed-width` 与 `--nav-collapsed-item-size` 在 DESIGN 中定义，默认36px项+左右各12px；图标仍16px，选中短竖线/hover/独立focus不改变宽度。独立支路开关收起时移到所属链接下一行，窄屏抽屉恢复完整标签与既有键盘/路由合同。独立使用 NavigationMenu 的外层宽度由宿主布局决定，MenuLayout 才拥有完整侧栏宽度。
 
 迁移顺序：先固定新SHA并重新构建正式包；把原 header 中品牌/路径/状态/动作内容分别送入公开角色；删除消费方仅用于通用 header flex/grid/gap、长中文截断、紧凑栏宽度和图标对齐的 CSS。保留领域内容布局、授权判断、事件、路由和有明确理由的产品token覆盖。不要删除业务规则来套入公共布局，不再叠加第二条rail。实际执行范围与限制见 [VALIDATION.md](VALIDATION.md)。
 
@@ -1357,7 +1357,7 @@ const cardRef = React.useRef<HTMLElement>(null);
 
 表面宽度和内容排列继续采用公开布局；此部件服务标题文字，不代替 Card 的 header/content/footer 三段槽位。正式 [React](../examples/display-react/app.tsx)增加 `?overflow`，h3名称和右侧中性“公共”Badge分离，下方摘要/草稿/既有动作不移动。合成样例不是产品业务或完整卡片框架验收。
 
-从4.2.9起，AppShell/MenuLayout共享更紧凑的默认展开宽度：18vw在公开nav-sidebar-min-width/max-width间夹取，100%时240–288px，仍以50vw封顶。两种Shell、品牌列与侧栏使用同一个已解析长度，compact和窄屏不变；公共min/max/width覆盖继续有效。sidebarTabs的默认content排列让短项保持自然宽度并分布两端，四个短中文项在默认桌面宽度内自然排满；无需选择equal或缩字。任意长名仍可折行，侧栏不随选中字重来回伸缩，也不按业务标题另建尺寸owner。
+从4.2.16起，AppShell/MenuLayout共享更紧凑的默认展开宽度：16vw在公开nav-sidebar-min-width/max-width间夹取，100%时192–224px，仍以50vw封顶。两种Shell、品牌列与侧栏使用同一个已解析长度，compact和窄屏不变；公共min/max/width覆盖继续有效。sidebarTabs的默认content排列让短项保持自然宽度并分布两端，四个短中文项按当前净宽自然分布，4.2.16较窄的下限允许换到下一行；无需选择equal或缩字。任意长名仍可折行，侧栏不随选中字重来回伸缩，也不按业务标题另建尺寸owner。
 
 从4.2.8起，NavigationMenu有链接的独立分支按钮与无链接主分支按钮复用DisclosureIndicator：16px公共control-icon-size、currentColor、共享矢量线宽与开合旋转；独立按钮与配置动作统一36px方形命中区，指示器居中。紧凑rail和放大继续派生同一尺度，翻译名称、aria-expanded/controls、roving与动作归属不变；SVG装饰不增加键盘入口。
 
@@ -1469,3 +1469,11 @@ AppShell/MenuLayout 在既有窄屏断点使用同一侧栏、同一导航 Contr
 - 绘图从 `/theme-colors` 读取当前语义 token，复用 ThemeService，Canvas/WebGL 的业务状态与绘制循环保留原 owner，不增加原生 UI 版本。上述纯工具、资源与颜色接口完整边界见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)。
 
 [正式包示例](../examples/public-capabilities-react/app.tsx)组合四项能力，不使用源码 alias、产品数据或私有 CSS；不代表任一产品已接入。
+
+### 紧凑导航的临时揭示（4.2.16）
+
+AppShell 与 MenuLayout 公开可选 `sidebarRevealOnHover?: boolean`，默认 true。紧凑桌面在 fine pointer hover 或键盘进入导航时以同一侧栏树临时覆盖正文，显示完整标签与页脚；正文轨道和 Controller 的 collapsed、expandedIds、选中、滚动与草稿不变，不调用折叠回调或写偏好。收起/展开按钮仍修改原 Controller；临时显示时 aria-expanded=true，显式点击“展开导航”才确认永久展开。传 false 可保留仅显式切换。
+
+侧栏 slot 及其公共 React portal 的指针/焦点共同维持显示；离开且失焦后150ms宽限收拢。公共菜单或 Dialog 优先关闭/回焦，再次 Escape 收起预览并回唯一导航开关。消失的焦点节点与 Shell 卸载会清理占用及资源。窄屏、触屏不依赖 hover，仍用已有显式抽屉；不为独立 NavigationMenu 添加第二套宽度 owner。
+
+`SidebarFooterRow` 中的 ghost Button → SidebarFooterContent（直接 SVG）、Toolbar → ghost Button 或 passive span → SidebarFooterContent（Icon 包 SVG），以及更新 Button 或 role=status 均居于 compact 的同一中心线。默认按钮保留36px最小点击区，图标16px；passive 不成为按钮，无 icon 的事实仍完整换行。展开与预览时恢复完整文字并按自然宽度换行，使用继承字体，无逐项目宽度表。正式示例：[sidebar-reveal-react](../examples/sidebar-reveal-react/app.tsx)。

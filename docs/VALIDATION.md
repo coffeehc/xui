@@ -1,5 +1,23 @@
 # 验证证据与限制
 
+## 紧凑导航临时揭示、页脚中心与默认宽度（4.2.16，2026-10-17）
+
+仅修改 xui，不要求或通知其他项目必须升级。xAgent 固定4.2.14/bbe98dd的反馈只用于公共复现；本轮不改任何消费项目、认证、HTTP或业务 owner。Stitch 纯文字审查确认192–224px/16vw方向、150ms交互宽限、无正文backdrop、自然换行与页脚中轴；已纠正其固定两行高度、passive事实缩写及错误规范版本建议。记录为 `.artifacts/navigation-preview-4.2.16/stitch-{review,final}.txt`；不声称 Stitch 查看了最终截图。
+
+AppShell/MenuLayout 新增默认 true 的可选 `sidebarRevealOnHover`。桌面 fine pointer hover/键盘焦点临时揭示同一侧栏，正文轨道不重排；collapsed/expandedIds、选中、草稿、滚动、回调与storage不被改写。侧栏/footer派生的公共React portal共同维持指针/焦点归属；Escape先关popup，再收预览回唯一开关；卸载清理。粗指针/窄屏仍显式操作，false退出。页脚合法Button/passive/Toolbar/Icon嵌套恢复同一中轴，按钮默认最小36px、图标16px；默认展开宽度有意改变，旧宽度可按公开min/max/width根Token保留。
+
+旧正式4.2.14独立安装 `.consumers/run-VbJaAA/react` 用同一组合单独复现1/1通过：1280/1920宽分别240/288px、compact60px不揭示，license图标偏离return/update中轴。`baseline.json` 绑定对应安装的metafile与实际几何，不作新版本通过数。
+
+最终包 sourceGeneration `63b98b0e606bc2a0c07fe6e5faad39880cbd5a21e51a458c620a1877e24f93da`，三包均4.2.16，正式安装 `.consumers/run-YMye1b/react`。build/typecheck、414 Token、文档441检查、定向unit21/21及107个正式ESM/CSS/types入口、React/ReactDOM/Base UI单实例/零源码alias均通过。日志/receipt在 `.artifacts/navigation-public-4.2.16/`；示例自身只用公开组件与正式CSS，正文辅助动作放Toolbar，不拉成满宽主操作。
+
+最终定向浏览器26/26通过（sidebar-reveal 17项、sidebar-width 9项），无未解决失败/跳过。原始 `accepted-final.json` 的24项通过，加 `accepted-final2.json` 的两种Shell真实Tab修正后2/2，按file/title逐case覆盖汇总为 `.artifacts/navigation-preview-4.2.16/browser-accepted-summary.json`，保留原始报告和SHA；最终示例已将辅助动作移入Toolbar。覆盖两种Shell组合、hover、真实Tab、键盘聚焦/Escape、受控拒绝/确认、独立Footer动作一次执行及passive零动作、同节点/Controller/草稿/滚动/storage、portal焦点与Dialog层叠命中、移除焦点节点/卸载、禁用预览、触屏、RTL、light/dark/system、800/1280/1600/1920宽、390窄屏与200%根字号。默认展开几何192/204.8/224/224px，800/根200%时384px且正文416px；compact60px，footer SVG中心30px。light/dark/system三种真实Chrome设置200%缩放单独校验DPR×2、CSS viewport减半、根字号不变、CSS zoom=1、pinch=1，并检查抽屉末端操作与回焦。实际查看浅色hover/compact、200%长中文、深色RTL窄屏和真实zoom截图，PNG/JSON见proof。
+
+过程失败保留：contract仍期待旧版本、清单新行列数错误已修；初版touch测试写后立刻读几何，改为等待真实呈现后通过；新增真实Tab测试最初漏算开关之后的全局主题按钮，纠正为按真实DOM顺序经过主题按钮再进入侧栏，未修改生产焦点行为；原宽度测试把4.2.9较宽栏的“四短Tab单行”当永久合同，新较窄下限允许自然两行，最终仍严格检查全文可读、边界、状态和键盘。未为通过测试缩字号、加宽新下限或裁标签。初次CSS超旧20992预算39bytes，去除多余几何后为21026；新增预览层/宽限Token相对旧cap仅34bytes，给本功能有界+64cap21056。初始JS143778/153600，Button/service预算不变。
+
+复现：`pnpm build && pnpm check:tokens && pnpm typecheck && node --test tests/contract.test.mjs tests/navigation.test.mjs tests/navigation-labels.test.mjs tests/navigation-slots.test.mjs && node scripts/check-docs.mjs && pnpm test:consumer`；`pnpm exec playwright test tests/browser/sidebar-reveal.spec.mjs tests/browser/sidebar-width.spec.mjs`。归档复用既有自动manifest/public-api/sourceGeneration/SHA256SUMS流程。
+
+未跑：全套unit/browser、watch/cold-start、Firefox/WebKit、真实设备/读屏器、xAgent及其他产品实际业务页面/后端/部署。合成公共组合不能代替产品验收；runtime只有既有TypeScript Controller，不恢复原生UI。正式版本仅末位递增，不维护兼容分支。
+
 ## 四项按需公共能力（4.2.15，2026-10-17）
 
 仅修改 xui，保留已有 API 与默认行为，不通知或要求其他项目必须升级。新增安全正文链接（纯解析、UtilService、LinkedText）、同队列的 Toast.View 与 scopeKey/clear、单 Resource 的模块/CSS lease、同 ThemeService 的绘图颜色适配。没有新增默认配色、CSS皮肤、认证/查询/通知/主题 owner。四项接口、单位、清理与限制见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)，逐项接入对应 CAP-001～009。

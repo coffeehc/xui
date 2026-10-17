@@ -6,7 +6,7 @@ xui 为新产品 UI 统一采用 React：公共组件从 `@coffeehc/xui-react` �
 
 4.2.7起Tabs.List默认line，原内嵌底槽须显式variant="segmented"；侧栏末位水平Tabs移入AppShell/MenuLayout.sidebarTabs，与原Tabs.Root/Panel共用状态，避免Shell header重复分隔。
 
-4.2.9默认展开侧栏改为240–288px（100%基准、18vw偏好与50vw封顶），sidebarTabs短项自然分布填满；原默认324–432px需保留的宿主可使用公开宽度Token。compact rail和窄屏抽屉不变。
+4.2.16默认展开侧栏为192–224px（100%基准、16vw偏好与50vw封顶），sidebarTabs短项自然分布填满；原默认324–432px需保留的宿主可使用公开宽度Token。compact rail和窄屏抽屉不变。
 
 4.2.13 起默认配色为 Violet 电光紫；项目可在 `config.json` 中选择 violet / ember / forest / crimson / cobalt / precision 六套配色，明暗偏好仍独立为 light / dark / system。保留青色方向显式选 precision；已有 product-overrides 自定义品牌继续生效。配置、首绘一致性和运行期 setPreset 见 [项目配色与首绘](PUBLIC_API.md#项目配色与首绘)，正式包示例见 [theme-presets-react](../examples/theme-presets-react/app.tsx)。
 
@@ -282,3 +282,7 @@ Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖
 四项为按需新增入口，保留既有调用，不要求其他项目立即升级。本轮不会通知消费项目必须升级，也不修改其页面。需要自动正文链接时用 `/display` LinkedText 或纯 `/text-links`（也在 UtilService）；需要标准通知组合时在既有 Provider 下放 Toast.View，按真实身份 generation 接 scopeKey，并先取消旧生产者、clear、再发布新身份。模块按 trusted build map 使用 `/loading` createModuleResource 和既有 useResource，在实际页面生命周期中销毁；绘图用 `/theme-colors` 借用现有 ThemeService，取消订阅及显式刷新样式表变化。
 
 接口、scopeKey/clear 的先后顺序、CSS lease 与 ESM 不可撤销边界、sRGB/alpha/null 均见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)。逐项检查 `CAP-*`，正式组合示例见 [public-capabilities-react](../examples/public-capabilities-react/app.tsx)。不为接入新增认证、HTTP/Resource/Toast/Theme 的竞争 owner，也不能用库的合成示例代替产品真实业务验收。
+
+### 可选升级：导航揭示与宽度（4.2.16）
+
+AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退出。它仅管理临时显示，不能据此写入 collapsed 或展开集合；原 Controller 仍唯一。宿主无需 DOM/CSS hover 补丁。阅读 [临时揭示合同](COMPONENTS.md#紧凑导航的临时揭示4216)，检查同一节点、草稿/滚动、弹层 Escape、页脚指针与键盘，窄屏仍用原抽屉。默认展开宽度改变，需保留旧宽度的项目可继续在根 Token 层覆盖公开 min/max/width。此发行不要求任何其他项目立即升级；库的正式包验证不替代项目实际页面验收。
