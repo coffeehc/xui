@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-runtime",
-  "version": "4.2.14",
+  "version": "4.2.15",
   "private": true,
   "type": "module",
   "files": [
@@ -183,6 +183,14 @@
     "./upload": {
       "types": "./dist/upload.d.ts",
       "import": "./dist/upload.js"
+    },
+    "./text-links": {
+      "types": "./dist/text-links.d.ts",
+      "import": "./dist/text-links.js"
+    },
+    "./theme-colors": {
+      "types": "./dist/theme-colors.d.ts",
+      "import": "./dist/theme-colors.js"
     }
   },
   "types": "./dist/index.d.ts",

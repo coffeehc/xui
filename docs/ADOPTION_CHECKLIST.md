@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.13）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.15）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -596,3 +596,19 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | NAV-SPACE-001 | 窄屏导航抽屉 | 默认贴边全宽，一层内距；320/390px与scale=2名称保持可辨、四字常规名称不逐字纵排 | computed内距、名称净宽/行高及截图 | [阅读空间](COMPONENTS.md#导航抽屉的阅读空间4214) |
 | NAV-SPACE-002 | Header/Tabs/Menu/Footer | Tabs独立；菜单有主要空间；头尾超预算/短屏自动整体纵滚，全部动作/账号/搜索可达 | 两种flow、滚动owner、键盘和短屏截图 | [阅读空间](COMPONENTS.md#导航抽屉的阅读空间4214) |
 | NAV-SPACE-003 | 分区切换与宽窄往返 | 保留节点/草稿/展开/选择；独立动作不误导航；Escape回真实触发器 | 节点身份、请求/动作次数、焦点 | [阅读空间](COMPONENTS.md#导航抽屉的阅读空间4214) |
+
+## 可选公共能力逐项检查（4.2.15）
+
+未使用的能力按真实 import graph 记不适用，不强制项目升级；每个实际使用实例分别核对。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| CAP-001 | 正文自动生成链接 | 只链接显式安全 HTTP(S)，拒绝凭据/控制/隐藏字符/修复 host；原文标点、括号、emoji、数值完整 | 正式包解析结果与真实 DOM textContent | [PUBLIC_API 链接](PUBLIC_API.md#安全正文链接) |
+| CAP-002 | 富文本或行中使用 LinkedText | React 元素保持；链接继承原槽；按需止冒泡，保留修饰键/默认导航，rel安全 | 元素identity、click事件与键盘 | [PUBLIC_API 链接](PUBLIC_API.md#安全正文链接) |
+| CAP-003 | 使用标准 Toast.View | 复用一个 Provider/队列，标题/描述/动作/关闭各回所属槽，名称可翻译且焦点可达 | Controller引用、DOM、键盘与长文滚动 | [PUBLIC_API Toast](PUBLIC_API.md#标准通知视图与范围清空) |
+| CAP-004 | 身份或租户切换且有旧通知 | 先取消旧生产者并clear再启新工作；scopeKey变更立即去除含ending文案，无动画残留/旧回调/迟到promise复活 | 同步切换DOM、队列和旧任务交错证据 | [PUBLIC_API Toast](PUBLIC_API.md#标准通知视图与范围清空) |
+| CAP-005 | 动态模块和CSS加载 | 地址来自trusted build map；只有一个Resource与端到端有限预算，显式retry，无第二HTTP/认证owner | resolved地址、Network次数、状态时序 | [PUBLIC_API 模块](PUBLIC_API.md#模块与-css-的同一资源生命周期) |
+| CAP-006 | 模块刷新/取消/超时/销毁 | 同key保留旧内容/CSS，换key清旧范围；CSS共享到最后lease才释放，迟到无发布，宿主卸载副作用 | 节点identity、link计数、Abort/teardown与重试 | [PUBLIC_API 模块](PUBLIC_API.md#模块与-css-的同一资源生命周期) |
+| CAP-007 | 绘图消费主题颜色 | 用当前上下文token、同一ThemeService；sRGB归一化/8位/alpha/null明确，WebGL线性转换自有 | computed样式、Canvas读回与真实renderer输入 | [PUBLIC_API 颜色](PUBLIC_API.md#绘图主题颜色) |
+| CAP-008 | 主题/样式/renderer生命周期 | light/dark/system/配色/祖先覆盖更新；stylesheet变化refresh，dispose/abort后无通知/残留probe，不销毁借用theme | 切换、计数、监听清理和目标上下文 | [PUBLIC_API 颜色](PUBLIC_API.md#绘图主题颜色) |
+| CAP-009 | 上述能力实际呈现 | 桌面/窄屏、长中文、200%文字和真实200%浏览器zoom，焦点四边、通知滚动和链接无页面溢出 | 每主题实测与缩放事实 | [DESIGN 公共能力](DESIGN.md#正文链接通知范围与可选绘图资源4215) |

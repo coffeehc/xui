@@ -4,7 +4,7 @@ import { useRender } from '@base-ui/react/use-render';
 import { mergeProps } from '@base-ui/react/merge-props';
 import { Button as BaseButton } from '@base-ui/react/button';
 import { Popover as BasePopover } from '@base-ui/react/popover';
-import { createToastController, type ToastContent, type ToastController as RuntimeToastController, type ToastOptions, type ToastRecord, type ToastViewBinding } from '@coffeehc/xui-runtime/toast';
+import { createToastController, type ToastContent, type ToastController as RuntimeToastController, type ClearableToastController as RuntimeClearableToastController, type ToastOptions, type ToastRecord, type ToastViewBinding } from '@coffeehc/xui-runtime/toast';
 import { useOwnedController, assertControllerProps } from './controller.js';
 import { cx, branded, hasContent } from './shared.js';
 export interface ToastPayload<Data extends object = Record<string, unknown>> extends ToastContent {
@@ -17,6 +17,7 @@ export interface ToastPayload<Data extends object = Record<string, unknown>> ext
 }
 export type ToastObject<Data extends object = Record<string, unknown>> = ToastRecord<ToastPayload<Data>>;
 export type ToastController<Data extends object = Record<string, unknown>> = RuntimeToastController<ToastPayload<Data>>;
+export type ClearableToastController<Data extends object = Record<string, unknown>> = RuntimeClearableToastController<ToastPayload<Data>>;
 type AnyController = ToastController<any>;
 type Context = {
     controller: AnyController;
@@ -58,15 +59,25 @@ export type ToastProviderProps = ({
     toastManager?: undefined;
 } & ToastOptions)) & {
     children?: React.ReactNode;
+    /** Host identity/scope, not credentials. Changed scope removes old content before paint. */
+    scopeKey?: string|number|null;
 };
 /** One semantic queue, either owned by this Provider or wholly supplied by its host. */
-function Provider({ controller: provided, toastManager, children, ...options }: ToastProviderProps) {
+function Provider({ controller: provided, toastManager, children, scopeKey, ...options }: ToastProviderProps) {
     if (provided && toastManager)
         throw new TypeError('Toast controller and toastManager are mutually exclusive');
     const injected = provided ?? toastManager;
     assertControllerProps(injected, options, ['timeout', 'limit', 'exitTimeout']);
     const controller = useOwnedController(injected, () => createToastController<ToastPayload<any>>(options));
-    const state = React.useSyncExternalStore(controller.subscribe, controller.getState, controller.getState), binding = React.useRef<ToastViewBinding | null>(null), nodes = React.useRef(new Map<string, HTMLElement>()), returnFocus = React.useRef<HTMLElement | null>(null), focusedId = React.useRef<string | null>(null);
+    if(scopeKey!==undefined&&typeof controller.clear!=='function')throw new TypeError('Toast scopeKey requires a controller with clear()');
+    const snapshot = React.useSyncExternalStore(controller.subscribe, controller.getState, controller.getState), scope=React.useRef({key:scopeKey,controller});
+    const changed=!Object.is(scope.current.key,scopeKey),hideOld=changed&&scope.current.controller===controller;
+    const state=React.useMemo(()=>hideOld?Object.freeze({...snapshot,toasts:Object.freeze([])}):snapshot,[snapshot,hideOld]);
+    const binding = React.useRef<ToastViewBinding | null>(null), nodes = React.useRef(new Map<string, HTMLElement>()), returnFocus = React.useRef<HTMLElement | null>(null), focusedId = React.useRef<string | null>(null);
+    React.useLayoutEffect(()=>{
+        const previous=scope.current;scope.current={key:scopeKey,controller};
+        if(!Object.is(previous.key,scopeKey))previous.controller.clear?.();
+    },[controller,scopeKey]);
     React.useLayoutEffect(() => {
         const lease = controller.bindView();
         binding.current = lease;
@@ -96,7 +107,7 @@ function Provider({ controller: provided, toastManager, children, ...options }: 
 }
 function useToastManager<Data extends object = Record<string, unknown>>() {const {controller: untyped, state} = useToastContext(), controller = untyped as ToastController<Data>; return React.useMemo(() => ({...controller, toasts: state.toasts as readonly ToastObject<Data>[]}), [controller, state]);}
 /** Compatibility spelling now creates the same xui queue that Provider can fully replace. */
-function createToastManager<Data extends object = Record<string, unknown>>(options: ToastOptions = {}): ToastController<Data> { return createToastController<ToastPayload<Data>>(options); }
+function createToastManager<Data extends object = Record<string, unknown>>(options: ToastOptions = {}): ClearableToastController<Data> { return createToastController<ToastPayload<Data>>(options); }
 type PartProps<Tag extends React.ElementType, State extends object> = Omit<useRender.ComponentProps<Tag, State>, 'className' | 'style'> & {
     className?: string | ((state: State) => string | undefined);
     style?: React.CSSProperties | ((state: State) => React.CSSProperties | undefined);
@@ -384,5 +395,18 @@ export type ToastPositionerProps = React.ComponentProps<typeof BasePopover.Posit
     toast: ToastObject<any>;
 };
 function Positioner({ toast, children, ...props }: ToastPositionerProps) { const value = useToastContext(), target = React.useContext(PortalTargetContext), present = value.state.toasts.some(item => item.id === toast.id && item.revision === toast.revision); return <BasePopover.Root open={present} modal={false}><BasePopover.Portal container={target}><BasePopover.Positioner side="top" {...toast.positionerProps} {...props}>{children}</BasePopover.Positioner></BasePopover.Portal></BasePopover.Root>; }
+export interface ToastViewLabels {region:string;close:string}
+export const toastViewLabels:Readonly<ToastViewLabels>=Object.freeze({region:'通知',close:'关闭通知'});
+export interface ToastViewProps<Data extends object=Record<string,unknown>> {
+    labels?:Partial<ToastViewLabels>;
+    container?:ToastPortalProps['container'];
+    viewportProps?:Omit<ToastViewportProps,'children'>;
+    renderActions?:(toast:ToastObject<Data>,controller:ToastController<Data>)=>React.ReactNode;
+}
+/** Complete standard queue View. Provider remains the sole owner; advanced parts stay available. */
+function View<Data extends object=Record<string,unknown>>({labels:overrides,container,viewportProps,renderActions}:ToastViewProps<Data>){
+    const controller=useToastManager<Data>(),labels={...toastViewLabels,...overrides};
+    return <Portal container={container}><Viewport aria-label={labels.region} {...viewportProps}>{controller.toasts.map(toast=><Root key={toast.id} toast={toast}><Content><Title/><Description/><Actions>{renderActions?renderActions(toast,controller):<Action/>}<Close aria-label={labels.close}>{labels.close}</Close></Actions></Content></Root>)}</Viewport></Portal>;
+}
 /** Public parts share one queue. Base UI is used only for buttons/rendering/anchor geometry. */
-export const Toast = { Provider, Viewport, Root, Content, Title, Description, Close, Action, Actions, Portal, Positioner, Arrow: BasePopover.Arrow, useToastManager, createToastManager };
+export const Toast = { Provider, View, Viewport, Root, Content, Title, Description, Close, Action, Actions, Portal, Positioner, Arrow: BasePopover.Arrow, useToastManager, createToastManager };

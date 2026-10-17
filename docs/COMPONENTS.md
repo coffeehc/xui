@@ -1460,3 +1460,12 @@ Progress保留语义progress、真实value/max与无value的未知状态；轨�
 AppShell/MenuLayout 在既有窄屏断点使用同一侧栏、同一导航 Controller 和模态焦点。默认贴边全宽全高；标题/关闭区与 Sidebar 各处只保留一层集中内距，Body 无重复 padding。sidebarTabs 与 sidebarHeader 分开布局，四个长中文 Tab 可以在 sidebarTabs 横向轨道中滚动，List 保留单一分隔基线，不能被 Header 的纵向裁切吞掉。窄屏公共槽将获得焦点的项按最近边界滚入可见区域，宿主不必补滚动事件；普通内容重渲染不先重置区域布局投影。
 
 正常分区按 Body 可用高度和集中比例分配 Header/Footer/Menu；头尾自然内容超预算，或 Tabs 等占用导致菜单目标空间不足时，公共层自动改为 Body 整体纵滚。Header→Tabs→Menu→Footer 顺序与内容不变，不重挂组件，不销毁草稿/选中/展开事实。短屏、长账户与200%阅读不通过缩字或隐藏动作解决。独立分支与行尾操作空间不足换行，深层缩进最多累计一层；触屏长名称仍完整静态换行。实际公开组合见 [多行工具与导航](../examples/public-layout-react/app.tsx)。
+
+### LinkedText、Toast.View 与绘图资源（4.2.15）
+
+- `LinkedText` / `Typography.LinkedText` 归属正文或元信息的原文字槽，继承字体，包含未链接的长文本也安全换行，不增加新皮肤；字符串/数字只将安全绝对 HTTP(S) 片段呈现为现有 Link，其他文字与 React 元素保持原样。普通 Link 不变。嵌套行操作时显式 stopPropagation，不重写浏览器链接默认行为。
+- `Toast.View` 是已有部件的标准全量组合：Title=label、Description=meta、Actions=已有小按钮、Close=具名关闭；空标题/描述/动作不占位。labels 提供区域/关闭名称，renderActions 只填动作槽，不能创建第二队列。scopeKey 和 clear 的隐私边界不保留退出动画文案；旧异步 add 的取消由宿主负责。
+- `useResource(createModuleResource(...))` 沿用 DataRegion/LoadingState/ErrorState：首次等待在所属内容区居中，同 key 刷新保留已挂载内容/焦点，失败仅显示局部恢复动作。模块的 React mount/teardown 和 trusted assets map 仍由宿主提供，库只管理一次资源等待和 CSS lease。
+- 绘图从 `/theme-colors` 读取当前语义 token，复用 ThemeService，Canvas/WebGL 的业务状态与绘制循环保留原 owner，不增加原生 UI 版本。上述纯工具、资源与颜色接口完整边界见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)。
+
+[正式包示例](../examples/public-capabilities-react/app.tsx)组合四项能力，不使用源码 alias、产品数据或私有 CSS；不代表任一产品已接入。

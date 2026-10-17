@@ -1,4 +1,5 @@
 import {bindOverflowTextPresentation} from './overflow-text.js';
+import {linkifyText} from '@coffeehc/xui-runtime/text-links';
 import * as React from 'react';
 import {createCopyController,copyableLabels,validateImageOptions,type HeadingLevel,type HeadingRole,type TextTone,type CopyStatus,type CopyableLabels,type ClipboardWriter,type ImageOptions,type ImageStatus} from '@coffeehc/xui-runtime/display';
 import {Button} from './button.js';
@@ -20,7 +21,22 @@ function Heading({level,visualRole='section',className,...props}:TypographyHeadi
 function Text({as:Tag='span',tone='default',color,style,className,...props}:TypographyTextProps){return React.createElement(Tag,{...props,className:cx('xui-text',className),'data-tone':tone,style:color===undefined?style:{...style,color}});}
 function Link({className,...props}:TypographyLinkProps){return <a {...props} className={cx('xui-link',className)}/>;}
 function Code({value,block=false,className,...props}:TypographyCodeProps){const code=<code {...props} className={cx('xui-code',className)}>{value}</code>;return block?<pre className="xui-code-block">{code}</pre>:code;}
-export const Typography={Heading,Text,Link,Code};
+export type LinkedTextProps=Omit<React.ComponentProps<'span'>,'children'|'dangerouslySetInnerHTML'>&{
+ value?:string|number|null;children?:React.ReactNode;
+ /** Native link props; href and content always come from the safe text parser. */
+ linkProps?:Omit<TypographyLinkProps,'href'|'children'|'dangerouslySetInnerHTML'|'ref'>;
+ /** Explicit opt-in for links inside independently interactive rows/cards. */
+ stopPropagation?:boolean;
+};
+export function LinkedText({value,children,linkProps,stopPropagation=false,className,...props}:LinkedTextProps){
+ const render=(node:React.ReactNode,path:string):React.ReactNode=>{
+  if(typeof node==='string'||typeof node==='number')return linkifyText(String(node)).map((part,index)=>part.type==='text'?part.text:<Link {...linkProps} key={`${path}-${index}`} href={part.href} target={linkProps?.target??'_blank'} rel={[...new Set([...(linkProps?.rel??'').split(/\s+/).filter(token=>token&&token!=='opener'),'noopener','noreferrer'])].join(' ')} onClick={event=>{linkProps?.onClick?.(event);if(stopPropagation)event.stopPropagation();}}>{part.text}</Link>);
+  if(Array.isArray(node))return node.map((child,index)=><React.Fragment key={`${path}-${index}`}>{render(child,`${path}-${index}`)}</React.Fragment>);
+  return node;
+ };
+ return <span {...props} className={cx('xui-linked-text',className)}>{render(value??children,'text')}</span>;
+}
+export const Typography={Heading,Text,Link,Code,LinkedText};
 /** Passive glyph presentation. Put actions in Button/IconButton, not on the icon. */
 export type IconProps=Omit<React.ComponentProps<'span'>,'color'|'role'>&{
  /** Omitted colors inherit. CSS variables remain live across theme changes. */

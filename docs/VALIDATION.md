@@ -1,5 +1,19 @@
 # 验证证据与限制
 
+## 四项按需公共能力（4.2.15，2026-10-17）
+
+仅修改 xui，保留已有 API 与默认行为，不通知或要求其他项目必须升级。新增安全正文链接（纯解析、UtilService、LinkedText）、同队列的 Toast.View 与 scopeKey/clear、单 Resource 的模块/CSS lease、同 ThemeService 的绘图颜色适配。没有新增默认配色、CSS皮肤、认证/查询/通知/主题 owner。四项接口、单位、清理与限制见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)，逐项接入对应 CAP-001～009。
+
+最终 sourceGeneration 为 `c6d1384cea8ae297bd8a3035b3420e2c0a6105a22bab933353fb065281cea800`，正式独立安装目录 `.consumers/run-CUTgfs/react`。源码/类型、413 Token、文档与434条接入检查均通过；unit 598/598，包括新增URL/原文保留、大文本、通知clear/迟到Promise、CSS共享lease/跨Document/取消/超时/重试/刷新/销毁、SSR与原Link兼容。正式107个ESM/CSS/types入口及React/ReactDOM/Base UI单实例、零源码alias、bundle门禁通过；关键CSS gzip20,992/20,992、初始JS142,815/153,600 bytes，未放宽预算。最终日志为 `.artifacts/public-capabilities-4.2.15/*-final2.log`，正式receipt为 `consumer-final2.json`。manifest、metadata/public-api.json、sourceGeneration 和 SHA256SUMS 由既有 archive 命令自动生成及校验，不手工补元数据。
+
+正式包浏览器 `browser-final2.log` 113/113通过，无失败或跳过：新增public-capabilities 13项与既有Toast/Display/Foundation/Theme presets/Theme session 100项回归。同一批覆盖light/dark/system、桌面1280/1600及320/390窄屏、长中文、200%根字号、三主题真实Chrome设置200%缩放；新能力缩放事实为DPR加倍、CSS viewport减半、根字号不变、CSS zoom=1、pinch=1。新场景实测链接原文/数值/React元素/默认新标签与opener隔离、键盘Enter和行click隔离，中文/英文通知动作与F6/Escape回焦，scopeKey同步去除active/ending文案且Promise不复活，CSS失败重试/取消/1000ms端到端timeout及迟到不发布，Color4/P3/color-mix/alpha/invalid/null、目标上下文、同ThemeService的system/配色/祖先覆盖、CSSOM显式refresh、unsubscribe/dispose。通知长文内部滚动，关闭操作与四边focus可见；已查看浅色窄屏200%文字和深色真实200%zoom截图。`browser-proof` 保存PNG/JSON，另通过IAB实际查看最终标准通知组合。fixture采用静态合成内容，不涉及真实身份、密钥、业务请求或产品部署。
+
+首轮13项9过4失败单独留证：三个矩阵失败定位为LinkedText的未链接长文本撑宽，已在公共外框补安全换行、继承原文字槽，不要求宿主CSS；另一个取消用例错误假定浏览器必定重新派发第二次同URL CSS请求，已先等真实请求启动，并按浏览器可能合并同URL在途请求核对1～2次，仍严格断言取消/timeout本地结束、link释放及迟到无值。早期fixture的字体/固有尺寸字面量被设计守卫拒绝，已移除字体覆盖、Canvas展示尺寸改用公共token；真实文字放大由测试设置。过程失败在 `process-failures` 或首轮日志，不计入最终通过。
+
+复现：`pnpm build && pnpm typecheck && pnpm check:tokens && node scripts/check-docs.mjs && pnpm test:unit && pnpm test:consumer`；`pnpm exec playwright test tests/browser/public-capabilities.spec.mjs tests/browser/toast.spec.mjs tests/browser/display.spec.mjs tests/browser/foundation.spec.mjs tests/browser/theme-presets.spec.mjs tests/browser/theme-session.spec.mjs`。最终receipt/日志/截图按归档命令绑定当前提交，早期候选不作正式元数据。
+
+未跑：全仓browser、watch/cold-start、Firefox/WebKit、实体设备、读屏器及各消费项目真实页面/后端。保留旧非scoped自定义ToastController，使用scopeKey才要求clear；旧异步直接add必须由宿主取消/隔离。模块release不撤销ESM执行，CSSOM变更需颜色observer.refresh，WebGL线性空间转换仍归renderer。未把这些边界冒称自动覆盖。
+
 ## 启动释放、多行工具栏与窄屏阅读空间（4.2.14，2026-10-17）
 
 仅修改 xui。与 Stitch 在既有设计会话审查 SearchToolbar 的跨行拉伸抑制、控件底边、单一抽屉内距、名称净宽与低高度退路。采用既有 48rem 断点（默认 768px），不采用设计回复中把 48rem 写成 640px 的笔误；区域预算按标题/关闭区之外的 Body 实际可用高度计算，不把 30%/20%/50% 当作整个视口可同时保证的比例。原始讨论与最终文字核准位于 `.artifacts/public-fixes-4.2.14/stitch-layout-review*`。Stitch 的附件通道未返回文件选择事件，本轮为文字/真实几何合同复核；实际截图由本地浏览器独立检查，不声称 Stitch 已查看最终截图。

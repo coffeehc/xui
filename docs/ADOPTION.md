@@ -276,3 +276,9 @@ Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖
 只在实际后端支持官方PUT /api/v1/auth/password时使用同一个AuthService.changePassword或公共PasswordChangeForm；禁止前后端各加一层翻译、备用URL、手写token读取或自动重试。复用现有NewPasswordFields；Dialog/Sheet保留挂载时传active=open，默认卸载与pagehide清密；业务回焦和重新登录目的地仍由宿主使用公开容器/RouteService接线。已提交与结果未知都不能再次写入来“核验”，后端全部会话撤销须在产品自己的真实链路验证。逐项按[AUTH-PASSWORD检查](ADOPTION_CHECKLIST.md)与[公共合同](PUBLIC_API.md#自助改密)，库级示例不等于产品升级完成。
 
 4.2.14 应用结束从 `@coffeehc/xui-runtime/bootstrap` 导入 `disposeXuiServices(window)`，不为 teardown 导入全量 `/services`。窄屏导航和多行查询工具的实际验收按 TOOLBAR-005、NAV-SPACE-001～003 执行；升级不代表消费项目已通过这些页面检查。
+
+### 可选公共能力接入（4.2.15）
+
+四项为按需新增入口，保留既有调用，不要求其他项目立即升级。本轮不会通知消费项目必须升级，也不修改其页面。需要自动正文链接时用 `/display` LinkedText 或纯 `/text-links`（也在 UtilService）；需要标准通知组合时在既有 Provider 下放 Toast.View，按真实身份 generation 接 scopeKey，并先取消旧生产者、clear、再发布新身份。模块按 trusted build map 使用 `/loading` createModuleResource 和既有 useResource，在实际页面生命周期中销毁；绘图用 `/theme-colors` 借用现有 ThemeService，取消订阅及显式刷新样式表变化。
+
+接口、scopeKey/clear 的先后顺序、CSS lease 与 ESM 不可撤销边界、sRGB/alpha/null 均见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)。逐项检查 `CAP-*`，正式组合示例见 [public-capabilities-react](../examples/public-capabilities-react/app.tsx)。不为接入新增认证、HTTP/Resource/Toast/Theme 的竞争 owner，也不能用库的合成示例代替产品真实业务验收。

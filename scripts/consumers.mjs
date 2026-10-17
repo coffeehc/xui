@@ -593,7 +593,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile('tests/fixtures/navigation-slots-types.tsx', `${cwd}/navigation-slots-types.tsx`);
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', ...(['rich-navigation/app.tsx', 'navigation-slots-types.tsx'])], { cwd, stdio: 'inherit' });
     await copyFile('examples/shared/page-composition-model.ts', `${cwd}/shared/page-composition-model.ts`);
-    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition', 'bootstrap', 'theme-presets']) {
+    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition', 'bootstrap', 'theme-presets', 'public-capabilities']) {
         const directory = resolve(cwd, name), output = resolve('dist/' + name + '-' + kind);
         await cp('examples/' + name + '-' + kind, directory, { recursive: true });
         const result = await build({ entryPoints: [directory + '/app.' + ('tsx')], outdir: output, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '"production"' } });
@@ -603,6 +603,10 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
           const early=await build({entryPoints:[directory+'/prepaint.ts'],outfile:output+'/config-init.js',bundle:true,format:'iife',platform:'browser',target:'es2022',minify:true,metafile:true});
           assert(Object.keys(early.metafile.inputs).every(file=>resolve(file).startsWith(cwd+'/')),'Pre-paint config escaped standalone install');
           assert(!Object.keys(early.metafile.inputs).some(file=>file.includes('/node_modules/')),'Pre-paint config pulled application dependencies');
+        }
+        if(name==='public-capabilities'){
+          await build({entryPoints:[directory+'/feature.ts'],outfile:output+'/feature.js',bundle:true,format:'esm',platform:'browser',target:'es2022'});
+          await copyFile(require.resolve('@coffeehc/xui-theme/floating.css'),output+'/optional.css');
         }
         await copyFile(directory + '/index.html', output + '/index.html');
         await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'), output + '/theme-init.js');

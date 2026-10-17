@@ -55,11 +55,14 @@ export interface ToastController<T extends ToastContent = ToastContent> {
     add(options: T): string;
     update(id: string, options: Partial<T>): void;
     close(id?: string): void;
+    /** Optional for legacy custom controllers. Privacy reset, without exit animation or callbacks. */
+    clear?(): void;
     /** Returns the supplied promise's result; dismissal/update/destroy invalidates late presentation. */
     promise<Value>(promise: PromiseLike<Value>, options: ToastPromiseOptions<Value, T>): Promise<Value>;
     bindView(): ToastViewBinding;
     destroy(): void;
 }
+export interface ClearableToastController<T extends ToastContent=ToastContent> extends ToastController<T>{clear():void}
 type Entry<T extends ToastContent> = {
     record: ToastRecord<T>;
     remaining: number;
@@ -102,7 +105,7 @@ function callbacks(values: (() => void)[]) { const errors: unknown[] = []; for (
     } if (errors.length)
     throw new AggregateError(errors, 'Toast callbacks failed'); }
 /** Allocate an inert queue. Timers run only while at least one View is bound and unpaused. */
-export function createToastController<T extends ToastContent = ToastContent>(input: ToastOptions = {}): ToastController<T> {
+export function createToastController<T extends ToastContent = ToastContent>(input: ToastOptions = {}): ClearableToastController<T> {
     let settings = optionsOf(input), entries: Entry<T>[] = [], revision = 0, disposed = false;
     const listeners = new Set<() => void>(), views = new Set<{
         pauses: Set<string>;
@@ -115,7 +118,7 @@ export function createToastController<T extends ToastContent = ToastContent>(inp
         entry.timer = undefined;
         entry.remaining = Math.max(0, entry.deadline - Date.now());
     } };
-    function publish() {
+    function publish(isolateObservers=false) {
         if (disposed)
             return;
         const paused = views.size === 0 || [...views].some(view => view.pauses.size > 0), expanded = [...views].some(view => view.expanded), visibleLimit = Math.min(settings.limit, ...[...views].flatMap(view => view.visibleLimit === undefined ? [] : [view.visibleLimit]));
@@ -134,8 +137,10 @@ export function createToastController<T extends ToastContent = ToastContent>(inp
             }
         }
         state = Object.freeze({ toasts: Object.freeze(entries.map(entry => entry.record)), paused, expanded, timeout: settings.timeout, limit: settings.limit, visibleLimit });
-        for (const listener of [...listeners])
-            listener();
+        for (const listener of [...listeners]) {
+            if(isolateObservers){try{listener();}catch{/* Identity cleanup must reach every View. */}}
+            else listener();
+        }
     }
     const find = (id: string) => entries.find(entry => entry.record.id === id);
     function remove(entry: Entry<T>) {
@@ -149,7 +154,7 @@ export function createToastController<T extends ToastContent = ToastContent>(inp
         publish();
         entry.record.onRemove?.();
     }
-    const controller: ToastController<T> = {
+    const controller: ClearableToastController<T> = {
         getState: () => state,
         subscribe(listener) { if (disposed)
             return () => { }; listeners.add(listener); return () => { listeners.delete(listener); }; },
@@ -210,6 +215,11 @@ export function createToastController<T extends ToastContent = ToastContent>(inp
             if (views.size === 0)
                 publish();
             callbacks(runs);
+        },
+        clear() {
+            if(disposed||!entries.length)return;
+            for(const entry of entries){cancelTimer(entry);clearTimeout(entry.exitTimer);}
+            entries=[];revision++;publish(true);
         },
         async promise(promise, options) {
             const content = (value: string | Partial<T>) => typeof value === 'string' ? { title: value } as Partial<T> : value;

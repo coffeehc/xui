@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.14。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.14、4.2.15…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.15。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.15、4.2.16…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -2390,3 +2390,9 @@ runtime ToastController 是集合、进入/关闭阶段、可见上限、超时�
 sidebarHeader 放操作/搜索，sidebarTabs 是独立、不被 Header 裁切的水平 List 轨道，sidebar 是主要菜单，sidebarFooter 是账号/环境。正常 split 模式以 Body 可用高度为预算：Header 最多 nav-drawer-header-ratio=.3，Footer 最多 nav-drawer-footer-ratio=.2，菜单目标至少 nav-drawer-menu-ratio=.5。标题、关闭动作和 Tabs 的实际占用也计入预算，不能把这些比例误认为整个视口的同时保证。任一区域自然高度超预算，或头/尾/Tabs 总占用超过剩余菜单预算时，公共 ResizeObserver 只切换布局投影为 whole：Header→Tabs→Menu→Footer 在 Body 同一自然流纵滚，不各自裁切成多个小窗口。无固定总行数假设，不缩字、不隐藏入口；焦点、草稿、展开状态与节点保持。
 
 窄屏导航层级只累计一层 nav-drawer-indent=min(space-control-gap,3vw)，更深层保留语义层级，不继续蚕食宽度。主项以 nav-row-primary-min-width 优先分配，独立分支/行尾动作作为一组，空间不足时整组换行；名称部件消费剩余宽度。390px 与公共 scale=2 时以“团队经理”四字完整横排验收，并测有图标、状态、独立动作及长账号。触屏/减少动效继续完整静态换行；不把 marquee 当作修复净宽的手段。富标签中宿主自有组合仍须允许自身内容换行，公共库不推断任意后代结构。
+
+### 正文链接、通知范围与可选绘图资源（4.2.15）
+
+LinkedText 使用正文/元信息所属文字角色与既有 Link 颜色，不增加字号、卡片或装饰说明。安全正文 URL 的展示文本与原文字序完整保留；已有 React 内容不得由组件擅自拆解。Toast.View 复用通知部件、同一个 Controller 和既有 Title/Description/Actions/Close 槽；中文默认名称可翻译，关闭操作具名可达。身份切换的旧文案立即清空，不保留动画残影或旧回调；业务生产者仍由宿主按作用域取消。
+
+可选模块的 loading/error/refreshing 继续由单个 Resource 发布，首次反馈相对所属内容区居中，同范围刷新保留正文与焦点，不把请求当作整页重挂。CSS 引用租约和模块的业务挂载生命周期分别明确，释放样式不能冒称卸载已执行 ESM。绘图颜色使用目标上下文的当前语义 token 与同一 ThemeService，保留 alpha，明确 sRGB 通道、null 和订阅清理；不以另一份 palette 或渲染状态替换公共主题。具体公开格式、限制和迁移见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)。本次不增加视觉皮肤或默认 token，不要求消费项目必须升级。

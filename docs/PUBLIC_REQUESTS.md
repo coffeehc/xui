@@ -162,3 +162,7 @@ xQuant原反馈固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18`。最新
 - AppShell/MenuLayout：导航 Drawer 默认贴边全宽全高、集中单层内距；sidebarTabs 独立轨道，List 仍拥有单一分隔基线；头尾/Tabs超预算时 Body 整体自然纵滚，主导航文字优先，辅助操作整组换行并限制累计缩进。保留四slot、同一树/Controller、字号/主题和焦点合同。
 
 与 Stitch 对齐的文字契约、4.2.13同组合复现和正式包浏览器证据见 [VALIDATION](VALIDATION.md)。这是库级修复，三个消费项目仍须独立升级和实际页面复验，不能自动宣布其完成。
+
+### XUI-REQ-20261017-23～26：链接、标准通知、模块资源与绘图颜色（4.2.15）
+
+按本会话明确授权补齐四项按需公共能力：`/text-links` + UtilService + React LinkedText；同一 Controller 的 Toast.View/clear/scopeKey；既有 Resource 上的模块/CSS lease；同一 ThemeService 的 `/theme-colors` sRGB 读回/订阅。保留既有 API 与默认行为，无第二套皮肤、认证/查询/通知/主题 owner；没有修改 xLead 或其他消费项目。逐项边界、样例与采用检查见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)、[COMPONENTS](COMPONENTS.md#linkedtexttoastview-与绘图资源4215)、[CAP清单](ADOPTION_CHECKLIST.md#可选公共能力逐项检查4215)。本轮不通知或要求其他项目必须升级，产品按需要独立采用并验收；库级结果见 [VALIDATION](VALIDATION.md)。

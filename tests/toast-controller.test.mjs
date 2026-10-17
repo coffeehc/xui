@@ -70,3 +70,28 @@ for(const options of [{},{timeout:0}])test(`zero and omitted timeout use five-se
 test('View presentation caps release without mutating the host configured limit',()=>{
  const controller=createToastController({timeout:-1,limit:3}),a=controller.bindView(),b=controller.bindView();for(let i=0;i<4;i++)controller.add({title:String(i)});a.setVisibleLimit(1);assert.equal(controller.getState().limit,3);assert.equal(controller.getState().visibleLimit,1);assert.equal(controller.getState().toasts.filter(item=>!item.limited).length,1);b.setVisibleLimit(2);a.release();assert.equal(controller.getState().visibleLimit,2);a.setVisibleLimit(1);assert.equal(controller.getState().visibleLimit,2);assert.throws(()=>b.setVisibleLimit(0),TypeError);b.release();assert.equal(controller.getState().visibleLimit,3);controller.destroy();
 });
+
+test('clear removes active and ending records now, cancels timers and ignores stale View receipts',t=>{
+ clock(t);const controller=createToastController({timeout:25,exitTimeout:40}),binding=controller.bindView(),calls={activeClose:0,activeRemove:0,endingClose:0,endingRemove:0,replacementClose:0,replacementRemove:0};t.after(()=>controller.destroy());
+ const active='clear-active',ending='clear-ending',activeRevision=shown(controller,binding,controller.add({id:active,onClose:()=>calls.activeClose++,onRemove:()=>calls.activeRemove++})).revision;
+ shown(controller,binding,controller.add({id:ending,timeout:-1,onClose:()=>calls.endingClose++,onRemove:()=>calls.endingRemove++}));controller.close(ending);
+ const endingRevision=controller.getState().toasts.find(item=>item.id===ending).revision;
+ assert.equal(controller.getState().toasts.find(item=>item.id===ending).transitionStatus,'ending');assert.equal(calls.endingClose,1);
+ let laterListener=0;const removeThrowing=controller.subscribe(()=>{throw Error('disposed view');}),removeLater=controller.subscribe(()=>laterListener++);
+ assert.doesNotThrow(()=>controller.clear());assert.equal(controller.getState().toasts.length,0);assert.equal(laterListener,1);
+ t.mock.timers.tick(1000);binding.entered(active,activeRevision);binding.exited(ending,endingRevision);
+ assert.deepEqual(calls,{activeClose:0,activeRemove:0,endingClose:1,endingRemove:0,replacementClose:0,replacementRemove:0});assert.equal(controller.getState().toasts.length,0);
+ removeThrowing();removeLater();
+ shown(controller,binding,controller.add({id:ending,title:'replacement',timeout:-1,onClose:()=>calls.replacementClose++,onRemove:()=>calls.replacementRemove++}));
+ binding.exited(ending,endingRevision);assert.equal(controller.getState().toasts.length,1);assert.equal(controller.getState().toasts[0].title,'replacement');
+ controller.clear();assert.equal(controller.getState().toasts.length,0);const empty=controller.getState();controller.clear();assert.equal(controller.getState(),empty);
+ controller.destroy();const destroyed=controller.getState();controller.clear();controller.destroy();binding.release();assert.equal(controller.getState(),destroyed);assert.deepEqual(calls,{activeClose:0,activeRemove:0,endingClose:1,endingRemove:0,replacementClose:0,replacementRemove:0});
+});
+
+for(const outcome of ['resolve','reject'])test(`clear prevents a pending promise from reviving its ${outcome} presentation`,async t=>{
+ const controller=createToastController();t.after(()=>controller.destroy());let settle,formatted=0;const work=new Promise((resolve,reject)=>settle={resolve,reject}),pending=controller.promise(work,{loading:'working',success:()=>{formatted++;return 'done';},error:()=>{formatted++;return 'failed';}});
+ assert.equal(controller.getState().toasts[0].title,'working');controller.clear();assert.equal(controller.getState().toasts.length,0);
+ if(outcome==='resolve'){settle.resolve('value');assert.equal(await pending,'value');}
+ else{const failure=Error('rejected');settle.reject(failure);await assert.rejects(pending,error=>error===failure);}
+ assert.equal(formatted,0);assert.equal(controller.getState().toasts.length,0);controller.destroy();
+});

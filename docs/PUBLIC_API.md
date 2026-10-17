@@ -62,6 +62,8 @@
 | `@coffeehc/xui-runtime/theme-control` <!-- public-entry: @coffeehc/xui-runtime/theme-control --> | [源码](../packages/runtime/src/theme-control.ts) | [顶栏合同](COMPONENTS.md#布局与顶栏) | [示例](../examples/header-controls-react/app.tsx) |
 | `@coffeehc/xui-runtime/header-controls` <!-- public-entry: @coffeehc/xui-runtime/header-controls --> | [源码](../packages/runtime/src/header-controls.ts) | [语言合同](COMPONENTS.md#布局与顶栏) | [示例](../examples/header-controls-react/app.tsx) |
 | `@coffeehc/xui-runtime/loading` <!-- public-entry: @coffeehc/xui-runtime/loading --> | [源码](../packages/runtime/src/loading.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-runtime/text-links` <!-- public-entry: @coffeehc/xui-runtime/text-links --> | parseHttpURL / linkifyText / TextLinkPart | [安全正文链接](#安全正文链接) | [示例](../examples/public-capabilities-react/app.tsx) |
+| `@coffeehc/xui-runtime/theme-colors` <!-- public-entry: @coffeehc/xui-runtime/theme-colors --> | readThemeColors / observeThemeColors / ThemeColor 等类型 | [绘图主题颜色](#绘图主题颜色) | [示例](../examples/public-capabilities-react/app.tsx) |
 | `@coffeehc/xui-runtime/navigation` <!-- public-entry: @coffeehc/xui-runtime/navigation --> | [源码](../packages/runtime/src/navigation.ts) | [合同](COMPONENTS.md#导航与菜单) | [示例](../examples/menu-react/app.tsx) |
 | `@coffeehc/xui-runtime/http` <!-- public-entry: @coffeehc/xui-runtime/http --> | [源码](../packages/runtime/src/http.ts) | [合同](PUBLIC_API.md#http-与查询) | [示例](../examples/http-react/app.tsx) |
 | `@coffeehc/xui-runtime/query` <!-- public-entry: @coffeehc/xui-runtime/query --> | [源码](../packages/runtime/src/query.ts) | [合同](PUBLIC_API.md#http-与查询) | [示例](../examples/http-react/app.tsx) |
@@ -140,7 +142,7 @@
 | `@coffeehc/xui-react/date-time` <!-- public-entry: @coffeehc/xui-react/date-time --> | [React 组合](../packages/ui-react/src/date-time.tsx) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-react/app.tsx) |
 | `@coffeehc/xui-react/command` <!-- public-entry: @coffeehc/xui-react/command --> | [源码](../packages/ui-react/src/command.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-react/search-toolbar` <!-- public-entry: @coffeehc/xui-react/search-toolbar --> | 及根入口：`SearchToolbar` / `SearchToolbarProps`，search/actions/advanced 三内容槽；defaultExpanded=false，支持 expanded/onExpandedChange，advancedLabel 与 div props/ref。 | [组件合同](COMPONENTS.md) | — |
-| `@coffeehc/xui-react/display` <!-- public-entry: @coffeehc/xui-react/display --> | Typography.Heading/Text/Link/Code、Copyable、Separator、Tag、Image，及同名 props/共享类型。 | [组件合同](COMPONENTS.md) | — |
+| `@coffeehc/xui-react/display` <!-- public-entry: @coffeehc/xui-react/display --> | Typography.Heading/Text/Link/Code/LinkedText、LinkedText、Copyable、Separator、Tag、Image，及同名 props/共享类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/admin-setup` <!-- public-entry: @coffeehc/xui-react/admin-setup --> | AdminSetupPage / AdminSetupForm、各自Props/Handle与共享状态类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/card-group` <!-- public-entry: @coffeehc/xui-react/card-group --> | [源码](../packages/ui-react/src/card-group.tsx)；CardGroup、CardGroupProps、CardGroupContext、CardGroupCardProps及共用Collection类型 | [CardGroup](COMPONENTS.md#cardgroup) | [示例](../examples/card-group-react/app.tsx) |
 
@@ -939,3 +941,61 @@ import {UploadService} from '@coffeehc/xui-runtime/upload';
 `@coffeehc/xui-runtime/data-table`及runtime根入口新增`createDataTableColumnSizingController`与DataTableColumnWidths/Options/State/Change/Draft相关正式类型；React `/data-table`新增`DataTableColumnSizingProps`与可选`columnSizing`，默认或完整Controller注入互斥。列`resize`声明交互限制/翻译名称或false排除。原width、rows、排序和分页合同保留，精确字段见[交互列宽](COMPONENTS.md#交互列宽调整)与正式types。`table-resize.css`为可选交互能力分片，critical不预载未启用拖动的皮肤，style/components包含完整样式。
 
 4.2.14 的 AppShell/MenuLayout 保留公开 slot 与 Controller 类型，仅调整窄屏默认布局：导航抽屉默认全宽全高、单层内距、Tabs 独立轨道，内容超出区域预算时自动整体纵滚。SearchToolbar 的嵌套 actions 不再撑高高级筛选按钮。布局几何会变化，宿主不必增加补丁；桌面侧栏、主题、查询、认证与业务 owner 不变。
+
+## 安全正文链接
+
+4.2.15 的 runtime `/text-links` 与根入口导出纯 `parseHttpURL(value): string | null`、`linkifyText(text): readonly TextLinkPart[]`，也可调用 `UtilService.url.parseHttp` / `UtilService.text.linkify`。只接受显式绝对 HTTP(S)；拒绝凭据、隐藏/控制字符、反斜杠及需要修复的 authority（含短写 IPv4、NFKC 变化、百分号 host）。合法 IDN 由标准 URL 规范化；返回 href 不是原展示文本。正文分词保留每个原始码元，中文标点和未配对的尾括号留在链接外；非 URL、不安全候选保持普通文字。没有相对路径、自动补协议、HTML 解析或请求 owner。浏览器解析可能修复输入，因此此合同在调用 [URL 标准解析器](https://url.spec.whatwg.org/) 前后显式约束 authority。
+
+React `/display` 的 `LinkedText`（同 `Typography.LinkedText`）复用现有 Link 字体/颜色，外框只补安全换行并继承所属文字槽，不强制正文大小；只对字符串、数值及数组中的相应值分词；已有 React 元素完整保留、不遍历其内部，不接受 HTML。`value` 优先于 children（null/undefined 回退 children）。`linkProps` 保留标准 anchor 属性和事件但不能替换 href/内容；默认 `_blank`，始终追加 noopener/noreferrer 并移除 opener。`stopPropagation` 缺省 false，可为行/卡片显式开启，只停止链接 click 冒泡，不调用 preventDefault；宿主提供的事件仍可自行决定默认行为。既有 `Typography.Link` 行为不变，需 mailto 等协议继续显式使用它。
+
+```tsx
+<LinkedText value={message} stopPropagation linkProps={{target: '_self'}} />
+```
+
+## 标准通知视图与范围清空
+
+4.2.15 的 `Toast.View` 在同一 `Toast.Provider` 下组合已有 Portal/Viewport/Root/Content/Title/Description/Actions/Action/Close，不创建队列；`labels`（region/close）默认“通知/关闭通知”，`container`、`viewportProps` 与 `renderActions(toast, controller)` 是公开扩展。默认动作取记录的 actionProps；关闭按钮始终保留。字体、右上角、5秒/-1、窄屏/滚动、焦点与播报合同沿用已有部件。
+
+`createToastController` / `Toast.createToastManager` 返回 `ClearableToastController`：`clear()` 立即移除 active/ending 项和计时，无退出动画，不执行旧 onClose/onRemove 回调，不让 pending promise 的迟到结果恢复文案。它保留 Controller 与 View 租约，可用于同一队列的身份切换。旧自定义 `ToastController.clear` 为可选，旧非 scoped Provider 兼容；新增 `scopeKey` 要求注入 Controller 支持 clear，缺失则明确报错。
+
+```tsx
+const queue = Toast.createToastManager(); // 放在宿主稳定生命周期
+// 身份切换边界：先取消旧作用域生产者，再 queue.clear()，再发布新身份/启动新工作。
+<Toast.Provider controller={queue} scopeKey={identityGeneration}>
+  {children}<Toast.View labels={{region:'通知',close:'关闭通知'}} />
+</Toast.Provider>
+```
+
+scopeKey 变化时先从 React 投影中去掉旧文案，再于 layout 阶段 clear 旧队列；即使 Controller 同时替换也会清空旧实例，新实例已有队列保留。它不订阅认证、不取消任意业务异步生产者：宿主须取消/隔离旧身份的直接 add，避免旧任务在清空后重新 add。新身份工作不能抢在 Provider 完成旧队列清空前写入复用队列，推荐上述显式切换顺序。宿主仍拥有借用 Controller 的 destroy。
+
+## 模块与 CSS 的同一资源生命周期
+
+runtime `/loading` 新增 `loadModuleWithStyles` / `createModuleResource`，保留既有 createResource/loadStylesheet。`ResourceOptions.loader` 增加兼容的第三参数 `{request, retry}`（只读），原双参数 loader 不变。
+
+`loadModuleWithStyles({moduleURL,styles?,load,signal,document?})` 并行等待宿主 ESM loader 与 CSS，返回 `{module, release()}`。同 Document、同规范化 CSS URL 引用计数共享；最后一个 lease 释放才移除 link，在途/失败 link 清理且可重试。调用方取消同样释放其 lease，已就绪 CSS 的 lifetime 也受 signal 约束。无 CSS 可在 SSR 使用。只缓存 CSS lease，ESM 缓存/执行由浏览器或宿主 loader 拥有；release 不能撤销已执行模块，不承诺清除浏览器失败 import 缓存。
+
+`createModuleResource({timeoutMs, resolve(key,context), load, document?})` 在**一个**既有 Resource 上持有 lease，timeoutMs 必填正有限数，覆盖模块+CSS整个等待。load/retry 返回 Promise<void>，成功/失败从 getState 读取；不自动 retry。不同 key 先清除旧值与样式，同 key 刷新保留已确认模块/CSS，失败保留旧值；成功替换、cancel/timeout 在途任务、destroy 时分别释放相应 lease。生产者忽略 Abort 时本地仍结束等待，迟到结果不发布。宿主拥有模块组件挂载和副作用 teardown；切换 key/销毁前应卸载相应消费者。JS 失败缓存若需新 URL，由 resolve 的 trusted build map 在显式 retry 时选择，不追加任意网络输入或自动 cache-bust。
+
+```ts
+const panel = createModuleResource({
+  timeoutMs: 10000,
+  resolve: (key, context) => trustedAssets[key],
+  load: (url, signal) => import(url),
+});
+// React useResource(panel) 订阅同一个 owner；页面退出调用 panel.destroy()。
+```
+
+没有新增认证、fetch、业务请求或第二查询 owner，公共 bootstrap 不预加载可选模块。真实带凭据数据仍走 HttpService/原认证链路；trusted module/style 地址由构建清单提供。
+
+## 绘图主题颜色
+
+runtime `/theme-colors` 与根入口导出 `readThemeColors(mapping, {element?,document?})`、`observeThemeColors(mapping, listener, {theme?,element?,document?,signal?})` 及 ThemeColor/ThemeColors/ThemeColorObserver 等类型。mapping 由宿主指定语义名→CSS token 名，不另复制 palette。以目标 element（默认 documentElement）实际继承的 CSS 求值，包括 Color 4/color-mix/alpha；浏览器 Canvas 按 [sRGB 读回合同](https://html.spec.whatwg.org/multipage/canvas.html) 得到 `{colorSpace:'srgb', rgba:[r,g,b,a], css:'rgba(...)'}`，四通道归一化0–1，采样精度8位；透明度保留，超 sRGB 色域裁剪至 sRGB。WebGL 若需 linear-light，由其 renderer 明确转换，不能把 encoded sRGB 当线性输入。
+
+missing/invalid/不支持的颜色、SSR 或无 Canvas readback 返回 null，绝不猜黑色；读回只创建并移除临时 probe，无保留节点。observer 借用既有 ThemeService（可显式注入同一 theme owner），订阅主题状态、目标祖先 class/style/主题属性和 window resize，同值去重。初次同步发一次；CSSOM/样式表替换或宿主语义变化调用 `refresh()`，不承诺自动捕捉任意 CSS 变更。`dispose()` / signal.abort 幂等释放订阅与监听，不销毁借用主题；SSR observe 明确抛错。不会管理绘图循环、相机、尺寸、业务映射或新增主题 owner。
+
+```ts
+const colors = observeThemeColors({edge:'--diagram-edge',text:'--foreground'}, next => {
+  renderer.setColors(next); // null 的处理由实际 renderer 决定
+}, {theme: app.services.getThemeService(), element: canvas.parentElement!});
+// 卸载：colors.dispose()；stylesheet 替换后：colors.refresh()
+```
