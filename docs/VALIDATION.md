@@ -1,5 +1,15 @@
 # 验证证据与限制
 
+## NavigationMenu分支矢量指示与命中对齐（4.2.8，2026-10-17）
+
+旧正式4.2.7独立消费者中，链接分支按钮32×36px、字符指示器8.44×22px且偏中心6.78px，旁侧配置动作36×36px。证据`.artifacts/navigation-chevron-validation/baseline.json/png`。本轮复用公开DisclosureIndicator的16px装饰SVG及公共图标Button方形尺寸，去除字符字形差异与auto边距偏移；无链接分支也复用同一指示器，不新增状态或API。名称翻译、禁用、展开值、路由、配置及右键动作继续归现有owner。
+
+针对性验证、正式consumer/generation及各主题截图见同目录final-summary.json与consumer-final.json。执行build/typecheck/Token/docs、navigation-labels/navigation-slots/navigation/menu-controller/contract/docs定向unit、正式consumer；浏览器执行navigation-labels、navigation-chevron、rich-navigation，并定向执行navigation-presentation的RTL保留节点用例。覆盖三主题、桌面/窄屏、200%文字、真实Chrome200%、触屏、长中文、受控更新/翻译、disabled、roving、Enter/Space、aria-controls、独立动作/右键不导航和compact。SVG居中，命中与行尾配置尺寸相等；减少动效保留静态清晰指示。
+
+过程首次失败是旧版本正则断言未同步，以及浏览器测试在触屏/指针打开抽屉后仅程序性focus便要求键盘focus-visible；已更新版本断言并先经真实Tab建立键盘路径再检查同一按钮，未改库焦点策略。首次报告保留，触屏快速开关时还修正测试在SVG旋转中途取矩形的问题，等待真实动画结束后再量静态尺寸；最终browser-recheck/cross-recheck加touch-final/touch-cross-final覆盖63项唯一用例全部通过。27项unit与正式consumer通过。
+
+未跑全仓unit/browser、watch/cold-start、实体设备/读屏器或消费项目/API/部署。本项不调整业务高亮、团队归档或输入区行为，不把公共合成示例替代宿主验收。
+
 ## 内容Tabs默认line与侧栏唯一分隔（4.2.7，2026-10-17）
 
 仅修改xui公共组合、Token、文档和合成示例。xAgent原正式4.2.5与4.2.6的UI字节相同；以独立4.2.6安装包复现AppShell/MenuLayout的旧sidebarHeader组合，三主题6次均测得Tab底部与Shell分隔线相距5px。不是消费方私有边框。基线截图及原包重建输入见`.artifacts/tabs-baseline-validation/baseline.json`、baseline.log、baseline-metafile.json与images-before。

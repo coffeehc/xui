@@ -20,3 +20,11 @@ test('React branch names preserve English defaults and use the actual item and c
   assert.match(html,/aria-expanded="false" aria-controls="[^"]+"/);
   assert.doesNotMatch(render({...zh,items:[{...team('无链接分组'),href:undefined}]}),/aria-label="展开 无链接分组"/);
 });
+
+test('linked and button branches share a decorative vector without extra interactive controls',()=>{
+ for(const href of [undefined,'?team']){
+  const html=renderToStaticMarkup(React.createElement(NavigationMenu,{items:[{...team('研发团队'),href}],showCollapseToggle:false,defaultExpandedIds:['team']}));
+  assert.match(html,/<svg[^>]*class="xui-disclosure-indicator xui-menu-chevron"[^>]*data-open="true"[^>]*aria-hidden="true"[^>]*focusable="false"/);
+  assert.doesNotMatch(html,/⌄/);assert.equal((html.match(/<button/g)||[]).length,1);
+ }
+});

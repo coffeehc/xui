@@ -120,6 +120,17 @@ for(const kind of ['react']){
       }
       const toggle=branchToggle(page);
       await expect(toggle).toBeVisible();
+      const indicator=toggle.locator(':scope > svg');
+      await expect(indicator).toHaveAttribute('aria-hidden','true');
+      await expect(indicator).toHaveAttribute('focusable','false');
+      await page.keyboard.press('Tab');
+      const aligned=await toggle.evaluate(node=>{
+        const box=e=>{const r=e.getBoundingClientRect();return {width:r.width,height:r.height,cx:r.x+r.width/2,cy:r.y+r.height/2};};
+        return {control:box(node),indicator:box(node.firstElementChild),action:box(node.parentElement.querySelector('[data-menu-control="action"]')),font:parseFloat(getComputedStyle(document.documentElement).fontSize)};
+      });
+      expect(aligned.indicator.width).toBeCloseTo(aligned.font,1);expect(aligned.indicator.height).toBeCloseTo(aligned.font,1);
+      expect(aligned.indicator.cx).toBeCloseTo(aligned.control.cx,1);expect(aligned.indicator.cy).toBeCloseTo(aligned.control.cy,1);
+      expect(aligned.control.width).toBeCloseTo(aligned.action.width,1);expect(aligned.control.height).toBeCloseTo(aligned.action.height,1);
       await toggle.focus();
       await page.keyboard.press('ArrowRight');
       await expect(toggle).toHaveAttribute('aria-expanded','true');
