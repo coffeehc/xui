@@ -1013,7 +1013,7 @@ React `/layout` 的 AppShellProps 与 `/menu-layout` 的 MenuLayoutProps 新增�
 
 ### 透明文字动作（4.2.17）
 
-React `/button` 的 ButtonProps.variant 新增 `text`；`/navigation` 的 DisclosureProps 新增 `variant?: 'default' | 'text'`（默认default）。这只是公开CSS外观，不增加状态owner或业务状态。两种组件的独立CSS入口与聚合CSS一致。
+React `/button` 的 ButtonProps.variant 新增 `text`；`/navigation` 的 DisclosureProps 新增 `variant?: 'default' | 'text'`（4.2.18起默认text，default显式保留历史配方）。这只是公开CSS外观，不增加状态owner或业务状态。两种组件的独立CSS入口与聚合CSS一致。
 
 ```tsx
 <Disclosure title="计划" variant="text">{plan}</Disclosure>
@@ -1022,7 +1022,7 @@ React `/button` 的 ButtonProps.variant 新增 `text`；`/navigation` 的 Disclo
 </Button>
 ```
 
-尺寸、字体、焦点、disabled和受控/Controller注入合同沿用原入口；普通Button/Disclosure默认样式保留。不要用link变体冒充透明折叠动作，也无需消费者背景样式或复制Disclosure。
+尺寸、字体、焦点、disabled和受控/Controller注入合同沿用原入口；普通Button默认样式保留，Disclosure默认改为text。不要用link变体冒充透明折叠动作，也无需消费者背景样式或复制Disclosure。
 
 ### 透明导航与警告前景（4.2.17）
 
@@ -1037,3 +1037,44 @@ const items = [{id: 'team', label: '研发团队', href: '/team', tone: 'warning
 ```
 
 TriangleAlert 与 SessionLink 由宿主提供，link 必须转发 props/ref；例中完整名称用于读屏，不要求增加可见状态文字。宿主投射事实到通用 tone，不传业务生命周期枚举。Icon 是无动作装饰；配置动作仍进入 renderAction。既有 Controller、路由、roving 焦点、disabled 与 compact reveal 合同保持。正式示例见 [navigation-tones-react](../examples/navigation-tones-react/app.tsx)。
+
+### 纯图标按钮轮廓（4.2.18）
+
+`@coffeehc/xui-react/button` 的 IconButton / IconButtonProps / Button / ButtonProps 既有调用与事件入口保持。IconButton已设置公开data-icon="true"；Button显式使用相同标记时采用同一圆形容器，直接消费已有radius-full，文字按钮继续button-radius。圆形轮廓本身不新增属性、Token、状态或Service；可选危险tone见后文。
+
+```tsx
+<IconButton aria-label="发送"><SendHorizontal/></IconButton>
+<Button data-icon="true" variant="destructive" aria-label="停止"><Square/></Button>
+<Button><Plus/>新建研究任务</Button>
+```
+
+前两者为圆形容器，Square图标自身仍是方块，第三者保持普通文字按钮。disabled与aria-busy仍是两个独立事实，busy不自动禁用或提交请求。正式CSS的button.css、critical.css和style.css同源；定向可运行示例在正式消费者 `/react/button-state-contract.html` 的 Icon-only shapes 区域。
+
+行内下拉入口推荐直接复用现有组合，显式render不被重写：
+
+```tsx
+<Menu.Root>
+  <Menu.Trigger render={<Button variant="text"/>}>
+    <Icon><ModelGlyph/></Icon>当前模型 <Icon><ChevronDown/></Icon>
+  </Menu.Trigger>
+  <Menu.Content><Menu.Item onClick={selectModel}>模型选项</Menu.Item></Menu.Content>
+</Menu.Root>
+```
+
+Menu把aria-expanded等状态合并给同一个Button；text变体维持透明并使用公共品牌前景，Menu保留唯一展开/关闭/焦点owner。不要给宿主显式primary或destructive入口覆写text，也不改变普通Select/Input默认。
+
+4.2.18将上述标准上升为展开/收起动作的公共默认：无自定义render的Menu.Trigger使用Button.text；Disclosure缺省variant由default改text（显式default仍可用）；Accordion.Trigger、SearchToolbar高级条件、侧栏独立控制与TableExpandButton采用同一前景/透明规则。Menu.Trigger显式render不会被替换或强制改变variant；TableExpandButton保留原font/padding/高度，SortButton不改变。无新增公开属性或Controller，完整逐项映射见 [DESIGN](DESIGN.md#展开与收起入口的统一呈现4218)。这不是模型选择器特例，也不会靠aria-expanded扫描全页面来改宿主显式主/危险按钮。
+
+### 透明危险动作（4.2.18）
+
+`@coffeehc/xui-react/button` 新增 `ButtonTone = 'default' | 'danger'` 与可选 `ButtonProps.tone`，IconButton继承。tone只为variant=text选择前景，其他显式变体保持原配方。danger使用既有status-error-foreground，含hover/pressed/expanded/busy仍保持危险前景及透明背景；disabled沿用原禁用前景。没有授权、确认、请求或防重owner。
+
+```tsx
+<TableActions>
+  <IconButton variant="text" aria-label="查看详情" onClick={view}><Eye/></IconButton>
+  <IconButton variant="text" tone="danger" aria-label="删除记录"
+    disabled={!canDelete || pending} aria-busy={pending} onClick={confirmDelete}><Trash/></IconButton>
+</TableActions>
+```
+
+规则适用于每个表格的操作槽，产品按真实权限接线，不能以库级示例替代逐表验收。透明图标按钮仍采用同一圆形轮廓，带文字Button保持原圆角。

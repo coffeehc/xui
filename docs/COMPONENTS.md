@@ -1480,7 +1480,7 @@ AppShell 与 MenuLayout 公开可选 `sidebarRevealOnHover?: boolean`，默认 t
 
 ### 透明文字动作（4.2.17）
 
-`Button variant="text"` 与 `Disclosure variant="text"` 在默认、hover、pressed、展开及disabled时均透明。默认foreground，hover/pressed/aria-expanded采用action-primary，图标/DisclosureIndicator继承；禁用前景和执行阻断保留。Button保留size点击区与文字角色，取消该变体按压缩放；无下划线。Disclosure保留全宽trigger、body、分隔线及同一Overlay/focus owner，关闭时按原规则回到同一trigger。默认ghost/link/Disclosure未改变。可用 Button＋DisclosureIndicator 组合宿主自有折叠状态；它不代替宿主提供aria-expanded/controls。
+`Button variant="text"` 与 `Disclosure variant="text"` 在默认、hover、pressed、展开及disabled时均透明。默认foreground，hover/pressed/aria-expanded采用action-primary，图标/DisclosureIndicator继承；禁用前景和执行阻断保留。Button保留size点击区与文字角色，取消该变体按压缩放；无下划线。Disclosure保留全宽trigger、body、分隔线及同一Overlay/focus owner，关闭时按原规则回到同一trigger。默认ghost/link未改变，Disclosure自4.2.18默认text，显式default保留历史配方。可用 Button＋DisclosureIndicator 组合宿主自有折叠状态；它不代替宿主提供aria-expanded/controls。
 
 正式公开组合示例：[text-actions-react](../examples/text-actions-react/app.tsx)。
 
@@ -1489,3 +1489,17 @@ AppShell 与 MenuLayout 公开可选 `sidebarRevealOnHover?: boolean`，默认 t
 NavItem、NavigationItem 和 NavigationMenu/MenuLayout 可选 variant=text：普通/hover/pressed/selected/disabled 始终透明，普通前景继承正文角色，hover/pressed/选中为 action-primary。条目 tone=warning 优先 status-warning-foreground；不使用 warning soft 底，选中短线同警告前景。分支开关与主项保持一致，focus 和禁用前景沿用原规则。省略新选项不改变默认导航。
 
 renderLabel 内把名称放入 NavigationMenu.Label，尾随无动作警告 Icon 独立占位、不收缩并按既有首行偏移对齐；只有名称参与原有 marquee。触屏/减少动态效果保留完整静态名称。配置按钮仍进入 renderAction，颜色不继承 warning；分组和子项不继承父项 tone。业务事实、图标、完整可访问名称由宿主提供，不新增等待业务状态或导航 owner。[正式组合](../examples/navigation-tones-react/app.tsx)同时演示转发 ref/props 的 ContextMenu 链接、独立配置动作和原生 button 渲染的 NavItem。
+
+### 纯图标按钮（4.2.18）
+
+公开 IconButton 与 Button data-icon="true" 始终沿用同一等宽高配方，容器默认 radius-full，所有状态保持圆形，包括透明ghost/link/text背景在hover出现时。size、SVG尺寸、命中区、危险/disabled/busy/focus和render/ref键盘合同不变；停止图标本身仍可为方块。带文字Button沿用button-radius，不能加data-icon标记。现有宿主纯图标圆角补丁在升级并验收后可移除，无需修改组件私有CSS。此为公共默认外观变化，不要求消费项目立即升级。
+
+行内模型/语言等菜单入口使用既有 `Menu.Trigger render={<Button variant="text"/>}`，在Button内容中依次放装饰图标、当前名称和箭头；Menu负责展开、键盘和关闭回焦，Button负责透明与前景。这个已公开组合就是推荐标准，无需新建同义Trigger或竞争Menu组件。需要显式primary/destructive时仍由宿主选择；表单Select/Input不适用。正式消费者 `/react/button-state-contract.html` 的 Inline menu trigger 区域提供可操作示例。
+
+### 统一展开与收起入口（4.2.18）
+
+展开搜索、菜单下拉、折叠标题按相同行为语义呈现，详见[统一映射](DESIGN.md#展开与收起入口的统一呈现4218)。Menu.Trigger未传render时默认Button.text，显式render仍保持原选择；Disclosure默认text，显式default保留历史背景；Accordion.Trigger默认text；SearchToolbar高级条件、侧栏独立收拢/分支、TableExpandButton均透明且仅前景强调。无href导航分支在未显式给variant时默认text，主导航链接选择不变。所有尺寸/字体/命中与状态owner保留，Menu、Disclosure、Accordion等不共享全局展开状态。Accordion草稿遵循宿主原有受控值/Panel keepMounted或卸载策略，不由外观变更偷偷延长生命周期。宿主自有区域直接使用Button.text/IconButton.text并接准确aria-expanded/controls，不新建业务专用菜单或搜索皮肤。成功/警告/危险事实与普通表单Input/Select不适用这条透明规则。
+
+表格/重复行操作统一 `variant="text"`：查看等普通动作使用默认tone，删除显式 `tone="danger"`。两者各状态背景透明；危险前景在hover/pressed/expanded/busy不回品牌色，禁用仍由公共禁用角色接管。IconButton继承ButtonTone，ApiKeyManager与StructuredLogExplorer的内置表格行操作也使用同一text配方；撤销/删除为danger，确认弹窗保留原destructive。权限/确认/防重/行事件留给宿主。不要新增TableAction组件或用私有CSS模拟；显式非text主/危险按钮和普通表单不变。见[透明危险动作](PUBLIC_API.md#透明危险动作4218)。
+
+未传render的裸Menu.Trigger现在采用标准Button默认几何；已有render提供的Button.size、图标、标签和回调不被覆写。不要把这项默认规范化说成所有既有裸HTML触发器的浏览器默认尺寸都相同。

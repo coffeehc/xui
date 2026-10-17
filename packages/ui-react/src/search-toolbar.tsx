@@ -36,7 +36,7 @@ export function SearchToolbar({search,actions,advanced,controller,defaultExpande
       {hasSearch&&<div className="xui-search-toolbar-search">{search}</div>}
       {(hasActions||hasAdvanced)&&<div className="xui-search-toolbar-actions">
         {actions}
-        {hasAdvanced&&<Button ref={trigger} variant="outline" aria-expanded={open} aria-controls={panelId} onClick={()=>model.onOpenChange(!open,{reason:'trigger-press'})}>{advancedLabel.trim()?advancedLabel:'Advanced options'}<DisclosureIndicator open={open}/></Button>}
+        {hasAdvanced&&<Button ref={trigger} variant="text" aria-expanded={open} aria-controls={panelId} onClick={()=>model.onOpenChange(!open,{reason:'trigger-press'})}>{advancedLabel.trim()?advancedLabel:'Advanced options'}<DisclosureIndicator open={open}/></Button>}
       </div>}
     </Toolbar>
     <div ref={panel} id={panelId} className="xui-search-toolbar-advanced" hidden={!hasAdvanced||!open} inert={!hasAdvanced||!open} onFocusCapture={()=>{focusWithin.current=true;}} onBlurCapture={event=>{if(!event.currentTarget.hidden)focusWithin.current=event.currentTarget.contains(event.relatedTarget);}}>{advanced}</div>

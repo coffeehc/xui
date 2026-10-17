@@ -11,7 +11,7 @@
  .xui-avatar-fallback {font:var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);}
  .xui-accordion-item {border-block-end:var(--line-width-surface) solid var(--separator-line);min-inline-size:0;}
  .xui-accordion-header {margin:0;}
- .xui-accordion-trigger {inline-size:100%;justify-content:space-between;white-space:normal;text-align:start;background:transparent;color:var(--foreground);}
+ .xui-accordion-trigger {inline-size:100%;justify-content:space-between;white-space:normal;text-align:start;}
  .xui-accordion-trigger::after {content:'⌄';transform:rotate(0deg);transition:transform var(--motion-duration) var(--motion-easing);}
  .xui-accordion-trigger:where([data-panel-open],[aria-expanded='true'])::after,.xui-accordion-item[open]>.xui-accordion-trigger::after {transform:rotate(var(--motion-disclosure-rotation));}
  .xui-accordion-panel {padding:var(--space-control-gap);overflow-wrap:anywhere;opacity:1;transition:opacity var(--motion-duration) var(--motion-easing);animation:xui-feedback var(--motion-duration) var(--motion-easing);}

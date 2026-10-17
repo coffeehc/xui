@@ -59,20 +59,20 @@ function NavigationMenuRoot(allProps:NavigationMenuProps){const {controller:inje
   const compact=()=>controller.setCollapsed(!collapsed);
   const renderItems=(entries:readonly NavigationItem[]):React.ReactNode=>entries.map(item=>{
     const node=nodes.get(item.id)!,hasChildren=!!item.children?.length,open=!!item.group||expanded.includes(item.id),childId=prefix+'-'+encodeURIComponent(item.id);
-    const action=renderAction?.(item),tone=item.group?undefined:item.tone,variant:NavigationVariant=item.variant??options.variant??'default';
+    const action=renderAction?.(item),tone=item.group?undefined:item.tone,variant:NavigationVariant=item.variant??options.variant??(!item.href&&!item.group?'text':'default');
     const content=<>{(item.icon||collapsed)&&<Icon name={item.icon} resolver={options.resolveIcon}/>}<span className="xui-menu-label">{renderLabel?.(item)??(options.labelOverflow==='marquee'?<NavigationMenuLabel>{item.label}</NavigationMenuLabel>:item.label)}</span></>;
     return <li key={item.id} className="xui-menu-entry" data-menu-entry={item.id}><div className="xui-menu-row">
       {item.group?<h2 className="xui-menu-group-title">{content}</h2>:item.href?<NavItem render={renderLink?.(item)} href={item.href} target={item.target} rel={item.rel} download={item.download} selected={active===item.id} tone={tone} variant={variant} disabled={node.disabled} collapsed={collapsed} title={item.label} data-menu-id={item.id} data-menu-control="primary" onClick={event=>navigateNavigationItem(item,event,{...options,items,location:options.location??window.location.href,baseURL:options.baseURL??window.location.href})}>{content}</NavItem>:
         <BranchButton render={renderButton?.(item)} type="button" className="xui-nav-item" data-tone={tone} data-variant={variant} disabled={node.disabled||!hasChildren} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="primary" data-collapsed={collapsed} title={item.label} onClick={()=>setExpanded(item.id,!open)}>{content}<DisclosureIndicator className="xui-menu-chevron" open={open}/></BranchButton>}
       {(!!item.href&&hasChildren||action)&&<div className="xui-menu-row-controls">
-      {!!item.href&&hasChildren&&<Button className="xui-menu-branch-toggle" data-tone={tone} variant={variant==='text'||tone==='warning'?'text':'ghost'} data-icon="true" disabled={node.disabled} aria-label={(open?options.collapseBranchLabel:options.expandBranchLabel)?.(item)??`${open?'Collapse':'Expand'} ${item.label}`} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="toggle" onClick={()=>setExpanded(item.id,!open)}><DisclosureIndicator className="xui-menu-chevron" open={open}/></Button>}
+      {!!item.href&&hasChildren&&<Button className="xui-menu-branch-toggle" data-tone={tone} variant="text" data-icon="true" disabled={node.disabled} aria-label={(open?options.collapseBranchLabel:options.expandBranchLabel)?.(item)??`${open?'Collapse':'Expand'} ${item.label}`} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="toggle" onClick={()=>setExpanded(item.id,!open)}><DisclosureIndicator className="xui-menu-chevron" open={open}/></Button>}
       {action&&<RowAction item={item} disabled={node.disabled} render={action}/>}
       </div>}
     </div><ul className="xui-menu-children" id={childId} hidden={!open}>{renderItems(item.children??[])}</ul></li>;
   });
   return <nav ref={root} className={cx('xui-navigation-menu xui-layer',className)} aria-label={options.label??'Navigation'} data-collapsed={collapsed} data-label-overflow={options.labelOverflow??'wrap'} data-action-alignment={options.actionAlignment??'center'}
     onKeyDown={event=>keyboard.current?.key(event.nativeEvent)} onKeyUp={()=>keyboard.current?.released()} onBlur={()=>keyboard.current?.released()} onFocus={event=>keyboard.current?.focused(event.nativeEvent)}>
-    {!shell&&options.showCollapseToggle!==false&&<Button className="xui-menu-compact-toggle" variant="ghost" aria-label={collapsed?options.expandLabel??'Expand navigation':options.compactLabel??'Compact navigation'} aria-pressed={collapsed} onClick={compact}>{collapsed?'›':'‹'}</Button>}
+    {!shell&&options.showCollapseToggle!==false&&<Button className="xui-menu-compact-toggle" variant="text" aria-label={collapsed?options.expandLabel??'Expand navigation':options.compactLabel??'Compact navigation'} aria-pressed={collapsed} onClick={compact}>{collapsed?'›':'‹'}</Button>}
     <ul className="xui-menu-list">{renderItems(items)}</ul>{items.length===0&&<p className="xui-menu-empty">{options.emptyLabel??'No navigation items'}</p>}
   </nav>;
 }

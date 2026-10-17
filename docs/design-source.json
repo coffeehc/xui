@@ -1,5 +1,5 @@
 {
-  "contractVersion": "4.2.17",
+  "contractVersion": "4.2.18",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
   "defaultTokenCount": 414,
@@ -110,7 +110,10 @@
     "4.2.9 narrows the shared expanded sidebar to an 18vw preference bounded by six row heights plus padding and eight row heights, retaining the viewport safety cap; short sidebar Tabs keep intrinsic item widths and distribute across the track.",
     "4.2.13 follows the Stitch neutral-white/cyan review with neutral light shell/canvas, white content, lighter table surfaces and lines, and distinct dark shell/raised layers. Correct candidate contrast errors, preserve accessible primary/input pairs, state derivation, typography and public slots.",
     "4.2.13 retains the approved violet/lime and ember/midnight families as optional document-level CSS presets. Project config selects preset independently of sessionStorage light/dark/system; omitted preset retains precision. All presets use the same component slots, geometry and semantic graph.",
-    "Make Violet the authorized default; retain Precision and Ember and add Forest, Crimson and Cobalt as project-selected CSS-only palette families. Brightness, status roles and layout remain independent."
+    "Make Violet the authorized default; retain Precision and Ember and add Forest, Crimson and Cobalt as project-selected CSS-only palette families. Brightness, status roles and layout remain independent.",
+    "4.2.18 gives the existing data-icon Button recipe radius-full in every state; text buttons, dimensions, tokens, foreground/background roles and interaction owners remain unchanged.",
+    "4.2.18 standardizes ordinary expansion triggers on the existing text recipe: default Menu render, Disclosure, Accordion, advanced search, sidebar branch controls and table expansion. Explicit render/semantic actions, fields, routing and state ownership are retained.",
+    "4.2.18 adds optional ButtonTone default/danger for text action foregrounds, keeping transparent table actions and disabled precedence without changing explicit filled variants or business owners."
   ],
   "defaultPreset": "violet",
   "themePresets": [

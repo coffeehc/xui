@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.17。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.18。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1916,7 +1916,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 
 | 组件 | 表面、尺寸与用途 | 状态、行为和验收 |
 | --- | --- | --- |
-| Button / 图标按钮 | default36、sm32、xs24、lg40px；padding12/10/8/16、gap6/6/4/8；radius-md。主动作primary，次动作outline或中性secondary，重复行操作ghost，危险动作destructive | default/hover/pressed/focus/disabled/busy/error；只有真实切换才selected。Enter/Space执行，图标有名称；不改变请求、防重、确认。工具栏换行不裁掉动作 |
+| Button / 图标按钮 | default36、sm32、xs24、lg40px；padding12/10/8/16、gap6/6/4/8；文字按钮radius-md、纯图标按钮radius-full。主动作primary，次动作outline或中性secondary，重复行操作text，行内危险动作text＋tone=danger，独立危险主操作destructive | default/hover/pressed/focus/disabled/busy/error；只有真实切换才selected。Enter/Space执行，图标有名称；不改变请求、防重、确认。工具栏换行不裁掉动作 |
 | Input / Textarea / NativeSelect / 搜索 | 普通36px、小32px；body-sm；input表面、一层1px边界、radius-md。label/control/help/error间距8/4/4px | default/hover/focus/disabled/invalid/readOnly；busy由业务拥有。placeholder不代替label，错误用aria-invalid和describedby；只读可复制，native option跟随平台 |
 | InputGroup | 只一层边界与focus；内部控件不重复border/ring；addon与清除不覆盖文字 | 单行默认外高与Input一致，内部输入和动作使用input-group-control-min-height扣除外框两条边；多行使用input-group-textarea-min-height。长文或放大文字仍可增高。外层映射内部真实focus/invalid；浅深检查focus+invalid；输入可收缩 |
 | Switch / Checkbox / Toggle / Tabs | 默认Switch28×16.6px；Tabs高32、内padding3、项radius-md；Toggle高28、gap4；其他既有变体记录映射 | checked/selected来自真实状态，Space切换，方向键按控件语义；禁用项不可执行，hover不盖选中底；小屏项目可达 |
@@ -1938,7 +1938,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 | --- | --- | --- |
 | 垂直导航菜单 D/H/S/F/X；B/E仅所属业务存在时 | 高nav-item-height=36px、gap8、radius4；默认透明。内容始终保留12px内距 | D用menu-item-background/foreground；H用menu-item-hover-background/foreground，无位移且无左指示；S用menu-item-selected-background/foreground并显示nav-selected-indicator-*，无四周外框；S+H保持S。F用focus-width/offset和interaction-focus，失焦消失；X文字muted且不可操作，不以hover伪造可用 |
 | Dropdown/ContextMenu项 D/H/S/F/X；非选择项S不适用 | overlay+1px边界+shadow-overlay；menu-min-width128、item-min-height28、padding4、项内横8/gap8、radius-md、body-xs | D透明，H轻底不位移；radio/checkbox持久S用menu-item-selected-*和勾选语义，不画导航左竖线。F独立焦点，禁用不执行。方向键/Home/End/子菜单/Esc规则如下；业务B/E/空结果不是普通可执行选项 |
-| Button/图标按钮 D/H/P/F/X/B/E；真实切换才S | 高button-height36、padding12、gap6、radius4；背景button-background、文字button-foreground；图标16（xs12） | H用button-hover-background，P用button-pressed-background且松开恢复，适用按压反馈沿下方动效矩阵。F用focus-*；X用button-disabled-*并禁用执行。B保留已有忙碌文案，防重由业务拥有。outline=raised+surface-line；secondary=muted；ghost默认透明、H=interaction-hover；危险用status-error-soft/foreground及原确认 |
+| Button/图标按钮 D/H/P/F/X/B/E；真实切换才S | 高button-height36、padding12、gap6；文字按钮radius4、纯图标按钮radius-full；背景button-background、文字button-foreground；图标16（xs12） | H用button-hover-background，P用button-pressed-background且松开恢复，适用按压反馈沿下方动效矩阵。F用focus-*；X用button-disabled-*并禁用执行。B保留已有忙碌文案，防重由业务拥有。outline=raised+surface-line；secondary=muted；ghost默认透明、H=interaction-hover；危险用status-error-soft/foreground及原确认 |
 | Input/Textarea/搜索 D/H/F/X/E/readOnly；B由业务拥有；S不适用 | input-height36、radius4、input-background/foreground、1px input-border-color；label→control→help→error，8/4/4px | H保持input-border-color的必要对比；F独立focus-*；E的必要控件边界用status-error-foreground，status-error-line只用于有文字/图标伴随的辅助分隔；关联aria-invalid/describedby，E+F均可见。readOnly可选择复制；X不可编辑；loading不自行改请求。placeholder不代替label |
 | InputGroup D/H/F/X/E；S/B按内部控件 | 同输入，一层边界和焦点，addon/清除与内容gap8 | 外层映射内部真实focus/invalid，内部不重复border/ring；帮助和错误不撑偏相邻控件，不制造第二层皮肤 |
 | Combobox/自定义选择 D/H/S/F/X/B/E | 搜索复用输入、选项复用menu-item-*；弹层popover-width288、padding12 | 持续S与键盘活动项分开，活动项F只在键盘阶段存在。搜索输入保留焦点，方向键/Enter选择；无结果与错误不同，不自动选首项、不改查询防抖；NativeSelect由平台负责面板 |
@@ -2404,10 +2404,36 @@ LinkedText 使用正文/元信息所属文字角色与既有 Link 颜色，不�
 
 ### 透明文字动作（4.2.17）
 
-Button.variant=text 与 Disclosure.variant=text 为可选呈现，默认变体不变。默认/hover/pressed/展开及disabled均无底色或下划线；文字与箭头继承 foreground，hover/pressed/aria-expanded=true 时采用 action-primary，disabled采用原禁用前景并阻断动作。透明文字Button不做按压缩放，保留原size的padding、最小点击区和字体；Disclosure保留原全宽trigger、自然标题/indicator/body与分隔线，不创建第二个Overlay或关闭owner。focus-visible仍由原独立focus配方绘制，不能以hover颜色替代。默认ghost/link和普通Disclosure保留既有背景合同，不全局删除交互反馈。
+Button.variant=text 为可选呈现；Disclosure自4.2.18默认text，显式variant=default保留历史外观。默认/hover/pressed/展开及disabled均无底色或下划线；文字与箭头继承 foreground，hover/pressed/aria-expanded=true 时采用 action-primary，disabled采用原禁用前景并阻断动作。透明文字Button不做按压缩放，保留原size的padding、最小点击区和字体；Disclosure保留原全宽trigger、自然标题/indicator/body与分隔线，不创建第二个Overlay或关闭owner。focus-visible仍由原独立focus配方绘制，不能以hover颜色替代。默认ghost/link与显式Disclosure variant=default保留既有背景合同，不全局删除交互反馈。
 
 ### 导航文字呈现与warning前景（4.2.17）
 
 NavItem.variant=text、NavigationMenu/MenuLayout.variant=text 及逐 NavigationItem.variant=text 可选地保持主控件 default/hover/pressed/selected/disabled 背景透明；缺省default外观保留。普通text项的hover/pressed/已选文字与主图标用action-primary，选中仍仅由aria-current事实决定。NavigationItem的variant可覆盖菜单默认，不是父子继承状态。
 
 NavItem与NavigationItem的tone=warning只投影宿主事实；标题、主图标、公开Label/文字/Icon和尾随告警图标继承status-warning-foreground，选中指示也用该可读前景；warning各状态背景透明，不再采用此前建议的warning软底。tone优先于普通selected/hover文字品牌色；禁用前景、独立focus配方、aria-current与路由不变。组织组头忽略tone，子项不继承；独立配置动作继续自己的普通按钮外观，分支展开按钮跟随当前主项的透明呈现/前景。Name位于NavigationMenu.Label，旁侧被动Icon不收缩；名称按原wrap/marquee与触屏/reduced-motion退路处理，不复制DOM或增加渐变mask。
+
+### 纯图标按钮的统一轮廓（4.2.18）
+
+IconButton 与 Button data-icon="true" 使用同一纯图标配方：等宽高不变、radius-full，默认/hover/pressed/disabled/busy/expanded 都保持圆形容器。ghost/link/text 默认透明时同样保留圆形几何，背景出现不切换轮廓；图标自身形状不变，例如停止仍用方形图标。文字Button继续原button-radius，不变成圆形或胶囊。保留原size、点击区、前景/背景/危险/禁用/忙态、独立focus、render/ref/键盘和业务owner。不要用data-icon标记带可见文字的按钮，也不要通过产品私有CSS重新实现圆角。头像、缩略图和其他组件不适用这条按钮规则。
+
+行内、输入区和工具栏内不需要常驻表面边界的菜单入口，标准组合为 Menu.Trigger render={Button variant="text"}：图标、当前名称、箭头在同一文字按钮内容槽，默认/hover/pressed/展开保持透明，hover/pressed/展开用action-primary前景并由图标继承。使用既有text变体与Menu owner，不复制颜色配方或另设菜单封装。宿主显式primary/destructive等呈现优先；普通表单Select/Input继续其输入边界，不因这条行内菜单规则移除背景或边框。关闭、键盘与回焦仍由现有Menu负责。
+
+### 展开与收起入口的统一呈现（4.2.18）
+
+规则按动作语义归属，不为模型选择、展开搜索或其他业务各写皮肤。普通展开入口的default/hover/pressed/expanded背景透明，foreground为基础前景，hover/pressed/expanded采用action-primary，装饰图标继承；disabled保留禁用前景与执行阻断，focus独立可见，文字不加下划线。不推测通用Button是不是展开动作，也不将普通表单Select/Input、导航主链接选择、成功/警告/危险事实改成透明文字动作。
+
+| 入口 | 公共默认或标准组合 | 状态归属 |
+| --- | --- | --- |
+| 行内下拉 | Menu.Trigger未传render时默认Button.text；传render时保留宿主显式外观，推荐Button.text | 原Menu Controller、键盘及关闭回焦 |
+| 折叠标题 | Disclosure默认text；variant=default可显式保留历史配方 | 原Overlay Controller、同一trigger/body与草稿 |
+| 多节折叠 | Accordion.Trigger默认采用text；显式render保留声明的Button外观 | 原Accordion值Controller及焦点 |
+| 搜索高级条件 | SearchToolbar内置展开按钮采用text | 原expanded/Controller，不增加查询owner |
+| 侧栏收拢/分支 | 内置独立展开按钮采用text；无href分支默认text，显式导航variant优先 | 原导航Controller；主链接选择不改 |
+| 表格行展开 | TableExpandButton沿用原尺寸/字体，透明与主题前景；排序按钮按原合同 | 原expanded/controls与表格owner |
+| 宿主自有展开区域 | Button.text或IconButton.text，提供准确aria-expanded/controls；无文字时必须具名 | 宿主已有状态；不另设竞争Disclosure |
+
+以上是4.2.18有意的公共默认外观变化，几何、命中区、前景/背景语义Token和行为owner保持。没有替换显式主/危险按钮的含义。库级发布不要求任何消费项目必须升级；项目采用后应移除同义私有样式，再独立验收真实页面。
+
+### 表格与重复行操作的透明语义（4.2.18）
+
+所有同组表格操作入口统一以Button/IconButton variant=text表达，不混用带底色ghost/outline/primary/destructive。普通动作default用foreground，hover/pressed/expanded用action-primary；删除等危险动作显式tone=danger，所有可用状态用status-error-foreground，绝不退回品牌色或实心红底。disabled使用原禁用前景；default/hover/pressed/expanded/disabled/busy背景始终透明，独立focus保持。tone只影响text，不重写显式非text变体；警告/成功等业务事实仍使用原状态槽，未增加虚假tone。宿主逐表按真实动作给props，权限、确认、busy防重、行事件与提交owner不变，不新增TableAction业务包装或私有CSS。

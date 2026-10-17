@@ -290,3 +290,11 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 4.2.17 提供可选透明文字动作：计划等内联折叠用 `Disclosure variant="text"`，宿主自有折叠状态的工具计数可用 `Button variant="text"`＋`DisclosureIndicator`，后者由宿主提供aria-expanded/controls。不修改组件私有背景，默认变体继续原样；见 [透明文字动作](COMPONENTS.md#透明文字动作4217)。不要求其他项目升级。
 
 4.2.17 还提供可选 `NavigationMenu/MenuLayout variant="text"`、逐项 `NavigationItem.variant/tone` 与 `NavItem variant/tone`。需要透明会话导航时使用公开选项；warning 采用前景与指示线，不加软底，不染子项/配置动作。宿主只投射真实事实，使用公开 Label/装饰 Icon 和完整 aria-label，不复制导航 DOM/CSS。config.json 的 menu.items 可声明同字段。按 NAV-TEXT 逐项验收；见 [公共接口](PUBLIC_API.md#透明导航与警告前景4217)。本轮仍不通知或要求任何消费项目必须升级。
+
+4.2.18 将 IconButton 与公开 Button data-icon="true" 的默认容器统一为圆形，各状态沿用radius-full；带文字Button不改变。升级时可移除产品在此公开标记上仅选择radius-full的临时覆盖，再按 CTRL-003 验收真实动作、焦点、禁用/忙态和各size。不要将带文字按钮误标为data-icon，也不扩展到头像或缩略图。本轮不通知或要求其他项目必须升级。
+
+行内下拉（例如输入区模型选择）已有4.2.17的Button.text能力：采用 `Menu.Trigger render={<Button variant="text"/>}` 标准组合即可，不另写背景/品牌色CSS或菜单包装。其规范补充在4.2.18同步；普通表单Select/Input与宿主明确primary/destructive入口保留原语义。
+
+4.2.18 的展开入口默认变化应按 EXPAND-001～006 核对：Menu.Trigger未自定义render、Disclosure默认标题、Accordion、SearchToolbar高级搜索与侧栏/表格内置展开都采用公共透明前景配方。业务自有区域仍接自己的状态与aria，显式主/危险render和普通表单不改。需要历史Disclosure背景时显式variant=default。标准作用于所有同类动作，不为每个模型、搜索或详情业务写一套CSS。
+
+表格操作逐表统一Button/IconButton的variant=text；危险/删除用tone=danger，不能一组混用实心destructive或outline/primary来实现普通行操作。接线仍保留原权限、确认、禁用/忙态与业务owner；不要把所有text改成无危险前景的普通动作。4.2.18公共类型与正式CSS同步提供，无需消费者私有覆盖。

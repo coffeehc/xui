@@ -45,9 +45,9 @@ export interface DisclosureIndicatorProps {open:boolean;className?:string}
 /** Decorative default indicator; the trigger owns the accessible name/state. */
 export function DisclosureIndicator({open,className}:DisclosureIndicatorProps){return <svg className={cx('xui-disclosure-indicator',className)} data-open={open} aria-hidden="true" focusable="false" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)"><path d="m5 7 5 5 5-5"/></svg>;}
 export type DisclosureProps=Omit<React.ComponentProps<'div'>,'onChange'|'title'> & {title:React.ReactNode;disabled?:boolean;
-  /** Optional transparent text trigger; the default container, disclosure state and focus owner are retained. */
+  /** Defaults to text; default explicitly retains the legacy shaded trigger. State and focus ownership are unchanged. */
   variant?:'default'|'text'}&ControllerProps<OverlayController,{open?:boolean;defaultOpen?:boolean;onOpenChange?:(open:boolean)=>void}>;
-export function Disclosure({title,controller,open,defaultOpen,onOpenChange,disabled,variant='default',children,className,...props}:DisclosureProps){
+export function Disclosure({title,controller,open,defaultOpen,onOpenChange,disabled,variant='text',children,className,...props}:DisclosureProps){
   const state=useOverlay({controller,open,defaultOpen,onOpenChange}),expanded=state.open,id=React.useId(),trigger=React.useRef<HTMLButtonElement>(null),panel=React.useRef<HTMLDivElement>(null),focusWithin=React.useRef(false);
   React.useLayoutEffect(()=>{
     if(expanded)return;

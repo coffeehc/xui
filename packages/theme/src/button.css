@@ -24,7 +24,7 @@
   .xui-button[data-size="sm"] { min-height: var(--control-height-sm); padding-inline: var(--button-padding-inline-sm); }
   .xui-button[data-size="xs"] { min-height: var(--control-height-xs); padding-block:var(--button-padding-block-xs); padding-inline: var(--space-control-gap); gap: var(--space-text-gap); }
   .xui-button[data-size="lg"] { min-height: var(--control-height-lg); padding-inline: var(--space-section-gap); gap: var(--space-control-gap); }
-  .xui-button[data-icon="true"] { width: var(--button-height); height: var(--button-height); padding: 0; flex-shrink: 0; }
+  .xui-button[data-icon="true"] { width: var(--button-height); height: var(--button-height); padding: 0; flex-shrink: 0; border-radius: var(--radius-full); }
   .xui-button[data-icon="true"][data-size="xs"] { width: var(--control-height-xs); height: var(--control-height-xs); }
   .xui-button[data-icon="true"][data-size="sm"] { width: var(--control-height-sm); height: var(--control-height-sm); }
   .xui-button[data-icon="true"][data-size="lg"] { width: var(--control-height-lg); height: var(--control-height-lg); }
@@ -35,5 +35,6 @@
   .xui-button[data-variant="text"] {background:transparent;text-decoration:none;transform:none;}
   .xui-button[data-variant="text"]:not(:disabled,[aria-disabled="true"],[data-disabled]) {color:var(--foreground);}
   .xui-button[data-variant="text"]:where(:hover,:active,[data-pressed="true"],[aria-expanded="true"]):not(:disabled,[aria-disabled="true"],[data-disabled]) {color:var(--action-primary);}
+  .xui-button[data-variant="text"][data-tone="danger"]:not(:disabled,[aria-disabled="true"],[data-disabled]) {color:var(--status-error-foreground);}
   .xui-button[aria-busy="true"] { border-color: var(--surface-line-strong); }
 }

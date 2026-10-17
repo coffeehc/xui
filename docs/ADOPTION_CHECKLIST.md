@@ -266,7 +266,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 |---|---|---|---|---|
 | CTRL-001 | 页面有普通 Button 操作 | 使用公共 Button 变体表达主次/危险语义；保留默认 `type="button"`，提交动作显式为 submit | 正式 props、DOM type 与操作计数；link变体在default/hover/pressed/focus按实际背景检查普通文字≥4.5:1，图标继承文字色 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-002 | 页面用 Link/NavItem 跳转 | 保留浏览器链接 href、修改键、中键、target/download 和可访问名称；不把普通链接伪装成按钮 | DOM role/href 与鼠标键盘导航记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
-| CTRL-003 | 页面使用 IconButton | 图标动作有稳定可访问名称；busy/disabled 只按真实操作状态表达，不借图形颜色传达唯一含义 | accessibility tree 与键盘/disabled 记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
+| CTRL-003 | 页面使用 IconButton | 图标动作有稳定可访问名称；IconButton/公开data-icon=true默认全状态圆形，文字按钮不得误标；busy/disabled 只按真实状态表达，不借图形颜色传达唯一含义 | accessibility tree、各size与default/hover/pressed/disabled/busy/expanded轮廓、键盘/禁用记录 | [COMPONENTS 基础组件](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-004 | 页面使用 Checkbox 或 Switch | checked 来自真实布尔事实，Space 操作一次；readOnly 不发值变化，disabled 不进入操作 | 受控前后值、change 计数及浏览器键盘记录 | [COMPONENTS 选择与复合控件](COMPONENTS.md#成组选项) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-005 | 页面使用 ToggleGroup | 当前值受控更新，方向键只移动焦点、Enter/Space 选择；`allowEmpty` 与多选只按公开配置执行 | value、activeElement 与回调轨迹 | [COMPONENTS ToggleGroup](COMPONENTS.md#选择与复合控件) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
 | CTRL-006 | 页面使用 Tabs | Tab 与 Panel 关联准确；方向键、Home/End、disabled 跳过及手动/自动激活遵循实际 peer 配置 | ARIA 关系、activeElement 与按键轨迹 | [COMPONENTS Tabs](COMPONENTS.md#基础组件与通用状态) · [PUBLIC_API 正式入口](PUBLIC_API.md#全部正式入口) |
@@ -631,7 +631,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 
 | 编号 | 场景 | 必须检查 | 证据 | 合同 |
 |---|---|---|---|---|
-| ACTION-TEXT-001 | 计划Disclosure/轻量文字Button | 只用公开variant=text；各状态透明、无下划线；未选择的默认变体保持原背景，不私改CSS | default/hover/pressed/expanded/disabled computed与截图 | [COMPONENTS](COMPONENTS.md#透明文字动作4217) |
+| ACTION-TEXT-001 | 计划Disclosure/轻量文字Button | 只用公开variant=text；各状态透明、无下划线；显式Disclosure default保留历史背景，ghost/link保留既有配方，不私改CSS | default/hover/pressed/expanded/disabled computed与截图；行内下拉使用Menu.Trigger＋Button.text，不覆写显式主/危险入口或普通表单Select/Input | [COMPONENTS](COMPONENTS.md#透明文字动作4217) |
 | ACTION-TEXT-002 | 键盘/关闭/更新 | Enter/Space一次动作、aria-expanded/controls准确、同节点/尺寸/草稿、关闭回焦、禁用零动作；不另建Controller | 指针和键盘时间线、节点与调用计数 | [PUBLIC_API](PUBLIC_API.md#透明文字动作4217) |
 | ACTION-TEXT-003 | 阅读与主题 | light/dark/system/forest、窄屏、长中文、RTL、200%根字号和真实浏览器zoom下可达；独立focus清晰，reduced-motion遵守原合同 | 字体/命中/几何及两种200%事实 | [DESIGN](DESIGN.md#透明文字动作4217) |
 
@@ -643,3 +643,16 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | NAV-TEXT-002 | 需要人工介入事实 | 宿主投射 tone=warning；主名/主图标/警告图标/选中短线保持 warning 前景，无软底；完整可访问名称；不传业务枚举 | 类型、色值、aria 名称与真实事实来源 | [PUBLIC_API](PUBLIC_API.md#透明导航与警告前景4217) |
 | NAV-TEXT-003 | 同行或父子动作 | 分组/下级/配置动作不染色；分支独立切换、右键与配置不误导航；禁用零执行；普通入口默认外观保留 | 回调和路由计数、焦点、aria-current/expanded/controls | [COMPONENTS](COMPONENTS.md#透明导航与警告前景4217) |
 | NAV-TEXT-004 | 语言/状态/阅读更新 | 同一 Controller/DOM/草稿，长名只滚动 Label、Icon 不收缩；三模式/配色/窄屏/RTL/根200%及真实zoom下可读可操作 | 正式包、节点/几何/对比度/媒体与缩放事实 | [DESIGN](DESIGN.md#导航文字呈现与warning前景4217) |
+
+## 统一展开与收起逐项检查（4.2.18）
+
+| 编号 | 入口 | 标准 | 证据 | 合同 |
+| --- | --- | --- | --- | --- |
+| EXPAND-001 | Menu下拉入口 | 无render默认text；显式render/primary/destructive保留；键盘、关闭回焦与props/ref转发正常 | default/hover/pressed/展开computed、原节点/焦点和动作次数 | [映射](DESIGN.md#展开与收起入口的统一呈现4218) |
+| EXPAND-002 | Disclosure/Accordion标题 | 默认透明前景配方，同一值/Overlay owner，沿用原内容/草稿/keepMounted与回焦策略；Disclosure显式default仍可用 | 三主题各状态、aria与节点/草稿 | [映射](DESIGN.md#展开与收起入口的统一呈现4218) |
+| EXPAND-003 | SearchToolbar高级搜索 | 内置展开入口透明，原expanded/Controller与查询owner不变，筛选草稿不因收拢清空 | 开关/请求次数、草稿与焦点 | [映射](DESIGN.md#展开与收起入口的统一呈现4218) |
+| EXPAND-004 | 侧栏/导航分支/表格行展开 | 独立开关透明，aria/Controller/命中不变，主链接选择与SortButton不被套用 | 几何、键盘、独立动作和导航次数 | [映射](DESIGN.md#展开与收起入口的统一呈现4218) |
+| EXPAND-005 | 自有区域或纯图标入口 | 使用Button.text/IconButton.text，准确aria-expanded/controls及无文字名称；不重复样式或状态owner | 接线、可访问名称/状态与零重复执行 | [映射](DESIGN.md#展开与收起入口的统一呈现4218) |
+| EXPAND-006 | 视觉与范围 | 三模式、窄屏、长中文、200%文字/浏览器zoom下可达；图标前景继承，独立focus/disabled；不抹掉输入边界/成功警告危险事实 | 正式包、色值/几何/两种200%及范围检查 | [映射](DESIGN.md#展开与收起入口的统一呈现4218) |
+
+| TABLE-ACTION-001 | 每个表格操作槽 | 查看等动作统一text，删除用text＋tone=danger；各状态透明，危险前景不被hover品牌覆盖，disabled仍禁用；保留权限/确认/防重/行事件 | 逐表props清单、三主题各状态computed、动作/确认计数与真实页面 | [透明危险动作](PUBLIC_API.md#透明危险动作4218) |

@@ -1,5 +1,29 @@
 # 验证证据与限制
 
+## 公共动作轮廓、透明展开与危险前景（4.2.18，2026-10-17）
+
+仅修改xui，不通知或要求其他项目必须升级。IconButton/公开Button data-icon=true在各状态统一radius-full，保留24/32/36/40尺寸、SVG本身形状和命中区；带文字Button不改变。普通Menu裸Trigger、Disclosure、Accordion、SearchToolbar高级筛选、侧栏独立开关与TableExpandButton复用已有透明前景配方；显式Menu render/primary/destructive、输入边界、导航主链接选择和各自Controller保持。裸Menu.Trigger现在采用标准Button几何，不声称浏览器原裸按钮几何完全相同。Disclosure显式variant=default保留历史背景；Accordion草稿仍由原受控值/Panel keepMounted或卸载策略负责。
+
+Button/IconButton新增可选ButtonTone（default/danger），仅为text选择前景；危险动作使用status-error-foreground，hover/pressed/expanded/busy不回品牌色，disabled沿用公共禁用前景。ApiKeyManager和StructuredLogExplorer内置表格行操作也改为text，撤销/删除带danger；确认Dialog的destructive和原CRUD/查询/权限/清密/回焦owner保留。没有TableAction新封装、业务状态或第二套CSS。
+
+Stitch完成纯文字设计边界核准及API名词纠正，记录在 `.artifacts/expansion-actions-4.2.18/stitch-{review,final,errata}.txt`。保留现有等宽高、间距、分隔和独立焦点，没有重复增加aspect/min-width、mask或自动注入宿主已有箭头；ghost不等同text，danger不借warning，实体危险入口仍为variant=destructive。Stitch没有查看最终工程截图或宣称实测，浏览器实测由本库独立执行。
+
+最终sourceGeneration `3b4f06c8aed3f355dae5bde3eba86c8a8e40819516cb6c9ac747c99e40f68425`，三包及DESIGN均4.2.18，正式独立安装 `.consumers/run-9fUPtk/react`。final4 build、414 Token、typecheck、8文件定向unit25/25、文档1513链接/107入口/455检查均通过；所有正式ESM/CSS/types、类型正反例、React/ReactDOM19.2.8与BaseUI1.7.0单实例及零源码alias通过。receipt/performance见consumer-final4.json和performance-final4.json；critical CSS gzip21247/21248、初始JS gzip143865/153600，未提高预算。正式fixture与根测试源码逐字节相同。
+
+正式包浏览器171个唯一用例全部通过，无最终失败、跳过或flaky：browser-core-accepted.json为155项，browser-zoom-final.json为16项，逐案与报告SHA见case-summary.json。覆盖纯图标7变体/各状态与4size、非图标边界、停止SVG和render链接、透明展开/菜单键盘/ref/显式主动作、六套实际preset×三模式的普通与危险前景和实际合成对比度≥4.5、禁用零执行与busy独立事实、navigation warning保留与父子/配置/右键隔离、原位草稿/受控值/Controller、CRUD与日志筛选/游标/迟到/清密回归。ApiKeyManager在三模式390px/根字号200%下验证进入确认而不直接写入、Escape回原按钮；StructuredLogExplorer新增三模式390px行操作，另以既有深色390px/根200%用例核对详情可达。
+
+Forest三模式分别验证窄屏RTL/根字号200%与真实Chrome设置200%（DPR×2、CSS viewport减半、根字号不变、CSS zoom=1、pinch=1）。未使用缩字或隐藏长标题。主线程已查看最终代次的浅色圆形按钮、浅色透明危险行操作、深色RTL根200%以及真实zoom截图，PNG与缩放事实在proof-final。该fixture为状态合同展示，不当作业务页面排版样板或消费项目已验收。
+
+浏览器复现：对 expansion-actions、button-state-contract、button-size-contract、text-actions、search-toolbar、action-menu、navigation-tones、sidebar-reveal、api-key、structured-log 这10个 tests/browser/*.spec.mjs 运行 `pnpm exec playwright test <文件列表> --grep-invert 'actual browser|genuine.*browser' --workers=2`；对 expansion-actions、text-actions、search-toolbar、action-menu、navigation-tones、sidebar-reveal 运行 `--grep 'actual browser|genuine.*browser' --workers=1`。保持正式consumer生成的dist输出与现有本地preview；各次原始报告归档，没有把旧候选通过数并入171。
+
+过程失败与修正保留：初始SSR测试错误要求peer的关闭Menu静态HTML带aria-expanded=false，修正为已有真实SSR合同；Accordion现有CSS箭头参与可访问名称，测试按标题前缀定位，未改变生产名称。旧candidate未同步fixture的keepMounted/后补非text对照控件，引发草稿/找不到节点失败；在同一正式安装中重新编译fixture并严格tsc，不修改包或使用src alias。新tone默认属性曾覆盖导航内部warning前景，既有navigation-tones回归检出；生产改为仅显式tone投射属性，补单测并重新构建fresh consumer，旧代次不作最终证据。中途按主线程要求中止的一次consumer（exit130）仅保留日志，没有伪造receipt。
+
+真实zoom菜单旧测试在指针打开后直接发End，错误假设焦点已进入菜单。过程曾怀疑浏览器进程混用，但独立运行仍失败；zoom-focus.json实际记录document.hasFocus=true、activeElement仍为触发器，不能把“菜单项inactive”解释成文档失焦。测试改为等待菜单可见，使用公开ArrowDown进入，再严格断言首项、End末项、Enter和Escape回焦；没有force click、直接focus菜单项、放宽断言或修改生产键盘逻辑。普通page与真实Chrome设置zoom分开运行，所有失败截图/trace/JSON保留，单次偶然通过不作为根因证据。
+
+复现基础门禁：`pnpm build && pnpm check:tokens && pnpm typecheck && node --test tests/contract.test.mjs tests/button-disabled-contract.test.mjs tests/button-xs-contract.test.mjs tests/expansion-actions.test.mjs tests/search-toolbar.test.mjs tests/navigation-labels.test.mjs tests/navigation-slots.test.mjs tests/table-actions.test.mjs && node scripts/check-docs.mjs && pnpm test:consumer`。浏览器按case-summary.json对应的file/title去重；正式manifest/public-api/sourceGeneration/SHA256SUMS仍由archive脚本自动生成并验证。
+
+未运行全套unit/browser、watch/cold-start、其他浏览器引擎、实体设备/读屏器或任何产品真实页面、后端和部署。不恢复原生UI，仅保留既有TypeScript数据/Service合同；不以本库验收宣布产品已升级或要求产品升级。
+
 
 ## 透明动作与导航语义完整交付（4.2.17，2026-10-17）
 

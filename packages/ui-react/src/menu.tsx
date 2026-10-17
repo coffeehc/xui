@@ -1,4 +1,5 @@
 import {useOwnedController} from './controller.js';
+import {Button} from './button.js';
 import {assertControllerProps} from './controller.js';
 import {useOverlay,useValue,type WithController,type OverlayController,type ValueController} from './interaction-hooks.js';
 import * as React from 'react';
@@ -23,6 +24,8 @@ function Popup({className,ref,...props}:React.ComponentProps<typeof Base.Popup>)
 }
 export const Menu = {
  ...Base,Root,RadioGroup,
+ /** Uncomposed inline triggers use the shared text action; explicit render keeps its presentation. */
+ Trigger:function Trigger({render,...props}:React.ComponentProps<typeof Base.Trigger>){return <Base.Trigger {...props} render={render??<Button variant="text"/>}/>;},
  Popup,
  /** Serializable menu composition with an owned default or fully replaced public controller. */
  View:MenuView,

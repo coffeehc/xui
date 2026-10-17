@@ -11,7 +11,7 @@ function stickyStyle(sticky:StickyCellProps['sticky'],offset:StickyCellProps['st
 export function TableHeaderCell({sticky,stickyOffset,style,...props}:React.ComponentProps<'th'>&StickyCellProps){return <th scope="col" {...props} data-sticky={sticky} style={stickyStyle(sticky,stickyOffset,style)}/>;}
 export function TableCell({sticky,stickyOffset,style,...props}:React.ComponentProps<'td'>&StickyCellProps){return <td {...props} data-sticky={sticky} style={stickyStyle(sticky,stickyOffset,style)}/>;}
 export function TableExpandedRow({colSpan,children,className,...props}:React.ComponentProps<'tr'>&{colSpan:number}){return <tr {...props} className={cx('xui-table-row xui-table-expanded-row',className)}><td colSpan={colSpan}>{children}</td></tr>;}
-export function TableExpandButton({expanded,controls,className,...props}:React.ComponentProps<'button'>&{expanded:boolean;controls:string}){return <button type="button" {...props} aria-expanded={expanded} aria-controls={controls} className={cx('xui-sort-button',className)}/>;}
+export function TableExpandButton({expanded,controls,className,...props}:React.ComponentProps<'button'>&{expanded:boolean;controls:string}){return <button type="button" {...props} aria-expanded={expanded} aria-controls={controls} className={cx('xui-sort-button xui-table-expand-button',className)}/>;}
 /** Host owns aria-sort on the th and the actual ordering; one click, one callback. */
 export function SortButton({className,...props}:React.ComponentProps<'button'>){return <button type="button" {...props} className={cx('xui-sort-button',className)}/>;}
 

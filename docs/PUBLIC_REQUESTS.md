@@ -1,6 +1,6 @@
 # 公共能力维护清单
 
-本页登记消费项目提交的公共能力缺口及核对结果，不定义另一份接口合同。当前仅维护以4.2.1为基准的单一版本线（当前4.2.12），后续递增末位；3.x兼容分发已退役，以下双版本记录只代表历史证据，不再回补或提供兼容包。下文是各条目原提交时的固定版本、现象与历史验证，不代表 2.0.0 产品已迁移或其最新状态。当前公开服务/配置/React入口以 [PUBLIC_API](PUBLIC_API.md) 与 [COMPONENTS](COMPONENTS.md) 为准；消费项目升级和逐页验收仍由各自仓库完成。待实现条目的建议字段不是现有 API。请求登记不代表已排期、实现或通过消费项目验收。
+本页登记消费项目提交的公共能力缺口及核对结果，不定义另一份接口合同。当前仅维护以4.2.1为基准的单一版本线（当前4.2.18），后续递增末位；3.x兼容分发已退役，以下双版本记录只代表历史证据，不再回补或提供兼容包。下文是各条目原提交时的固定版本、现象与历史验证，不代表 2.0.0 产品已迁移或其最新状态。当前公开服务/配置/React入口以 [PUBLIC_API](PUBLIC_API.md) 与 [COMPONENTS](COMPONENTS.md) 为准；消费项目升级和逐页验收仍由各自仓库完成。待实现条目的建议字段不是现有 API。请求登记不代表已排期、实现或通过消费项目验收。
 
 ## 历史 2.0.0 公共架构说明
 
@@ -180,3 +180,13 @@ xAgent维护线程在4.2.16导航产物冻结后补充：会话计划/工具次�
 ### XUI-REQ-20261017-31：透明导航与局部警告前景（4.2.17）
 
 按用户最后收口，NavItem/NavigationItem/NavigationMenu/MenuLayout 提供可选 variant=text；条目可声明通用 tone=warning。透明矩阵覆盖 default/hover/pressed/selected/disabled；警告只改变本项文字/图标/指示线，不使用软底，不向分组、子项或配置按钮传播。config/MenuService 同步保留字段；不承接业务等待枚举、查询或路由 owner。未声明选项的默认外观不变。与 Stitch 完成文字合同核准，浏览器证据由 xui 正式独立消费者提供，不以设计确认代替实测；入口及接入逐项清单见 [PUBLIC_API](PUBLIC_API.md#透明导航与警告前景4217) 和 [NAV-TEXT](ADOPTION_CHECKLIST.md#可选透明导航逐项检查4217)。本轮仅 xui，不要求消费项目升级。
+
+### XUI-REQ-20261017-32：纯图标按钮统一圆形（4.2.18）
+
+xAgent固定4.2.17（9b0dc8f）转交公共视觉规则：现有纯图标按钮虽等宽高，仍继承文字button-radius，背景显示为圆角方块。库在已有data-icon="true"配方采用radius-full，不改尺寸、图标形状、状态语义或行为owner，IconButton自动采用，文字Button保持原样。消费项目现有公开Token圆角选择可在独立升级验收后移除；本轮不修改或通知任何消费项目。接口和验收见 [PUBLIC_API](PUBLIC_API.md#纯图标按钮轮廓4218)、CTRL-003及[VALIDATION](VALIDATION.md)。
+
+同一请求补充的行内模型下拉已有4.2.17公开Button.text实现，未列为缺失API。本轮明确Menu.Trigger＋Button.text为推荐公共组合，并在同一正式示例验证透明/品牌前景、键盘关闭回焦和草稿保留；不增加同义Trigger或重写显式主/危险按钮、普通表单Select/Input。
+
+用户随后将同一规则明确扩展到所有普通展开/收起入口。4.2.18对无自定义render的Menu.Trigger、Disclosure默认、Accordion、高级搜索与侧栏/表格内置展开采用共同透明/品牌前景配方，原Controller和焦点/命中不变；显式主/危险render、表单与导航链接选择不改。不是模型专用修补；默认变化及历史Disclosure显式选项见 [统一映射](DESIGN.md#展开与收起入口的统一呈现4218)。
+
+同任务追加 XUI-REQ-20261017-33：4.2.17缺少透明危险按钮表达。4.2.18在Button/IconButton公开可选tone=default/danger，仅对text前景生效；同组表格操作各状态透明，删除保持危险前景，disabled为公共禁用语义。既有显式非text变体不改，不新增TableAction或业务owner。逐表接入由产品独立完成，本轮不修改消费项目。
