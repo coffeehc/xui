@@ -1,5 +1,5 @@
 {
-  "contractVersion": "4.2.16",
+  "contractVersion": "4.2.17",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
   "defaultTokenCount": 414,
@@ -95,7 +95,8 @@
     "Render Card as header/content/footer only; description and children share content, with natural height and no empty content track.",
     "4.2.14 Stitch layout review: control-bottom aligned multirow SearchToolbar; full navigation drawer, single inset, independent Tabs, bounded indentation and content-budget whole-scroll fallback. Existing desktop widths, fonts, palettes and state owners retained.",
     "4.2.15 adds safe prose links, the standard Toast.View and immediate scope clearing, Resource-owned module/CSS leases, and existing-ThemeService sRGB readback. No new palette, UI skin, authentication or business loading owner.",
-    "4.2.16 adds optional desktop compact-sidebar hover/focus reveal without Controller writes or main reflow, aligns compact footer compositions, and narrows expanded width to 16vw bounded by derived 192/224px with the existing viewport cap."
+    "4.2.16 adds optional desktop compact-sidebar hover/focus reveal without Controller writes or main reflow, aligns compact footer compositions, and narrows expanded width to 16vw bounded by derived 192/224px with the existing viewport cap.",
+    "4.2.17 adds optional transparent Button/Disclosure text actions using existing foreground/action/focus/disabled roles. Default variants, geometry and state owners remain unchanged."
   ],
   "architectureReference": {
     "path": "docs/design-sources/stitch-token-architecture.v1.txt",

@@ -173,6 +173,6 @@ xAgent 固定4.2.14（bbe98dd11caa29afc0b46388a2c6c83fa6bebd0b）反馈：compac
 
 AppShell/MenuLayout新增默认开启的可选 sidebarRevealOnHover，临时覆盖而不改持久Controller/正文布局；slot派生公共portal参与焦点/指针归属，Escape按弹层→预览分层。页脚以实际呈现态控制同轴和36px最小按钮点击区，passive不改语义。宽度改16vw/192–224px并保留50vw封顶、60px compact和根Token覆盖。主线程与Stitch文本审查对齐方向；保留自然文本高和iconless事实全文，未采用固定两行高度或缩写事实的建议。验证记录见VALIDATION，消费项目升级与业务验收另行决定。
 
-### XUI-REQ-20261017-30：可选透明文字动作与Disclosure外观（待实现）
+### XUI-REQ-20261017-30：可选透明文字动作与Disclosure外观（4.2.17）
 
-xAgent维护线程在4.2.16导航产物冻结后补充：会话计划/工具次数需要可选、无默认/hover/pressed/expanded底色的轻量文字触发器，保留主题强调、真实button键盘与独立focus。当前Disclosure未公开外观/trigger槽，ghost/link仍有既有背景，不能让宿主穿透CSS或冒用link代替；普通Button/导航/菜单的默认背景不应全局删除。本项未纳入4.2.16已实现接口或验收，需按独立公共外观能力处理，不能从本轮导航测试推断完成。xAgent状态区、执行中Badge及输入上方状态属于宿主业务，不在此修改。
+xAgent维护线程在4.2.16导航产物冻结后补充：会话计划/工具次数需要可选、无默认/hover/pressed/expanded底色的轻量文字触发器，保留主题强调、真实button键盘与独立focus。当前Disclosure未公开外观/trigger槽，ghost/link仍有既有背景，不能让宿主穿透CSS或冒用link代替；普通Button/导航/菜单的默认背景不应全局删除。本项未纳入4.2.16；4.2.17以Button/Disclosure可选variant=text实现，默认外观和原状态owner保留，验证见VALIDATION。xAgent状态区、执行中Badge及输入上方状态属于宿主业务，不在此修改。

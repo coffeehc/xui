@@ -1,5 +1,13 @@
 # 验证证据与限制
 
+## 透明文字动作（4.2.17 第一项阶段，2026-10-17）
+
+只修改xui。Button/Disclosure新增可选variant=text，复用原状态/焦点/大小/字体owner，各状态透明，强调仅前景；普通ghost/link/Disclosure不变。Stitch文字审查及最终边界确认见 `.artifacts/semantic-actions-4.2.17/stitch-{review,final}.txt`；按用户明确要求保留独立focus，未采用其先前改warning焦点环、加入渐变mask或要求宿主补Disclosure间距的建议。
+
+4.2.16正式consumer单独复现原ghost/Disclosure hover有底色1/1（合法既有行为，属于新增可选外观缺口，不称默认失效）。第一项候选sourceGeneration `d6dcbb1c88142504620c98e650fbd0c8c7374e0338ddb7d1c34b8bab2364842c`，正式安装 `.consumers/run-jF4Xq4/react`。build/414 Token/typecheck/定向unit21项/文档444项、107个ESM/CSS/types入口与peer单实例/零源码alias通过；CSS gzip21115/21184，新增两独立CSS入口配方相对旧cap多59bytes，给该功能有界+128，JS/Button/service门槛不变。证据位于text-stage。本候选仅用于第一项独立提交，最终包含导航能力的正式源与归档见后续同版本完整验收，不能混代使用。
+
+正式包text-actions定向浏览器24项通过：六种实际preset×light/dark/system的default/hover/pressed/expanded/disabled、Enter/Space单次调用、同节点、尺寸、独立focus及>=4.5:1实际合成背景文字对比；forest三模式下390px/RTL/根200%长标题、草稿、受控关闭回焦；三模式真实Chrome200%（DPR×2、viewport减半、根字号不变、CSS zoom=1、pinch=1）。示例最初只接受两种preset，补齐正式六种并增加根属性断言后重编译、重新验收；不能把参数本身当成配色已生效。原始记录text-first.json与修正后text-final.json分别保存。实际查看浅色Forest与深色RTL根200%、真实缩放截图。未运行全套unit/browser、其他引擎、读屏器、真实设备或消费项目；未通知其他项目升级。
+
 ## 紧凑导航临时揭示、页脚中心与默认宽度（4.2.16，2026-10-17）
 
 仅修改 xui，不要求或通知其他项目必须升级。xAgent 固定4.2.14/bbe98dd的反馈只用于公共复现；本轮不改任何消费项目、认证、HTTP或业务 owner。Stitch 纯文字审查确认192–224px/16vw方向、150ms交互宽限、无正文backdrop、自然换行与页脚中轴；已纠正其固定两行高度、passive事实缩写及错误规范版本建议。记录为 `.artifacts/navigation-preview-4.2.16/stitch-{review,final}.txt`；不声称 Stitch 查看了最终截图。

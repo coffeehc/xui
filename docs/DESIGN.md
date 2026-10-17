@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.16。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.16、4.2.17…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.17。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -2401,3 +2401,7 @@ sidebarHeader 放操作/搜索，sidebarTabs 是独立、不被 Header 裁切的
 LinkedText 使用正文/元信息所属文字角色与既有 Link 颜色，不增加字号、卡片或装饰说明。安全正文 URL 的展示文本与原文字序完整保留；已有 React 内容不得由组件擅自拆解。Toast.View 复用通知部件、同一个 Controller 和既有 Title/Description/Actions/Close 槽；中文默认名称可翻译，关闭操作具名可达。身份切换的旧文案立即清空，不保留动画残影或旧回调；业务生产者仍由宿主按作用域取消。
 
 可选模块的 loading/error/refreshing 继续由单个 Resource 发布，首次反馈相对所属内容区居中，同范围刷新保留正文与焦点，不把请求当作整页重挂。CSS 引用租约和模块的业务挂载生命周期分别明确，释放样式不能冒称卸载已执行 ESM。绘图颜色使用目标上下文的当前语义 token 与同一 ThemeService，保留 alpha，明确 sRGB 通道、null 和订阅清理；不以另一份 palette 或渲染状态替换公共主题。具体公开格式、限制和迁移见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)。本次不增加视觉皮肤或默认 token，不要求消费项目必须升级。
+
+### 透明文字动作（4.2.17）
+
+Button.variant=text 与 Disclosure.variant=text 为可选呈现，默认变体不变。默认/hover/pressed/展开及disabled均无底色或下划线；文字与箭头继承 foreground，hover/pressed/aria-expanded=true 时采用 action-primary，disabled采用原禁用前景并阻断动作。透明文字Button不做按压缩放，保留原size的padding、最小点击区和字体；Disclosure保留原全宽trigger、自然标题/indicator/body与分隔线，不创建第二个Overlay或关闭owner。focus-visible仍由原独立focus配方绘制，不能以hover颜色替代。默认ghost/link和普通Disclosure保留既有背景合同，不全局删除交互反馈。

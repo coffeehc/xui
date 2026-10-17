@@ -1010,3 +1010,16 @@ React `/layout` 的 AppShellProps 与 `/menu-layout` 的 MenuLayoutProps 新增�
 ```
 
 正式 CSS 的 nav-sidebar-width 默认16vw夹取192–224px（根16px）并50vw封顶，compact仍60px；nav-reveal-close-delay默认150ms是离开且失焦的宽限。完整键盘/portal/页脚规则见 [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216)。runtime 继续只提供原 TypeScript Controller，不恢复原生 UI，不引入持久显示态。
+
+### 透明文字动作（4.2.17）
+
+React `/button` 的 ButtonProps.variant 新增 `text`；`/navigation` 的 DisclosureProps 新增 `variant?: 'default' | 'text'`（默认default）。这只是公开CSS外观，不增加状态owner或业务状态。两种组件的独立CSS入口与聚合CSS一致。
+
+```tsx
+<Disclosure title="计划" variant="text">{plan}</Disclosure>
+<Button variant="text" aria-expanded={open} aria-controls={id} onClick={toggle}>
+  调用了 {count} 次工具 <DisclosureIndicator open={open}/>
+</Button>
+```
+
+尺寸、字体、焦点、disabled和受控/Controller注入合同沿用原入口；普通Button/Disclosure默认样式保留。不要用link变体冒充透明折叠动作，也无需消费者背景样式或复制Disclosure。

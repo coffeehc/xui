@@ -286,3 +286,5 @@ Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖
 ### 可选升级：导航揭示与宽度（4.2.16）
 
 AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退出。它仅管理临时显示，不能据此写入 collapsed 或展开集合；原 Controller 仍唯一。宿主无需 DOM/CSS hover 补丁。阅读 [临时揭示合同](COMPONENTS.md#紧凑导航的临时揭示4216)，检查同一节点、草稿/滚动、弹层 Escape、页脚指针与键盘，窄屏仍用原抽屉。默认展开宽度改变，需保留旧宽度的项目可继续在根 Token 层覆盖公开 min/max/width。此发行不要求任何其他项目立即升级；库的正式包验证不替代项目实际页面验收。
+
+4.2.17 提供可选透明文字动作：计划等内联折叠用 `Disclosure variant="text"`，宿主自有折叠状态的工具计数可用 `Button variant="text"`＋`DisclosureIndicator`，后者由宿主提供aria-expanded/controls。不修改组件私有背景，默认变体继续原样；见 [透明文字动作](COMPONENTS.md#透明文字动作4217)。不要求其他项目升级。

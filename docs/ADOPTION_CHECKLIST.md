@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.16）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.17）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -626,3 +626,11 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | NAV-REVEAL-007 | 宽度与可读性 | 192–224/16vw、50vw上限、60 compact、12px内距与公开覆盖；长中文/RTL不截内容、不缩字 | 800/1280/1600/1920、三模式、根字号与浏览器200%分别实测  | [COMPONENTS](COMPONENTS.md#紧凑导航的临时揭示4216) |
 
 上述尺寸以根16px为基准，字体放大后按 Token 派生并以视口上限保护正文；正式包结果不代替产品页面验收。本轮无强制消费方升级或自动通知。
+
+## 可选透明动作逐项检查（4.2.17）
+
+| 编号 | 场景 | 必须检查 | 证据 | 合同 |
+|---|---|---|---|---|
+| ACTION-TEXT-001 | 计划Disclosure/轻量文字Button | 只用公开variant=text；各状态透明、无下划线；未选择的默认变体保持原背景，不私改CSS | default/hover/pressed/expanded/disabled computed与截图 | [COMPONENTS](COMPONENTS.md#透明文字动作4217) |
+| ACTION-TEXT-002 | 键盘/关闭/更新 | Enter/Space一次动作、aria-expanded/controls准确、同节点/尺寸/草稿、关闭回焦、禁用零动作；不另建Controller | 指针和键盘时间线、节点与调用计数 | [PUBLIC_API](PUBLIC_API.md#透明文字动作4217) |
+| ACTION-TEXT-003 | 阅读与主题 | light/dark/system/forest、窄屏、长中文、RTL、200%根字号和真实浏览器zoom下可达；独立focus清晰，reduced-motion遵守原合同 | 字体/命中/几何及两种200%事实 | [DESIGN](DESIGN.md#透明文字动作4217) |

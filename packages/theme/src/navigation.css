@@ -56,6 +56,9 @@
   .xui-disclosure-trigger:hover:not(:disabled,[aria-disabled="true"]) {background:var(--interaction-hover);}
   .xui-disclosure-trigger:active:not(:disabled,[aria-disabled="true"]) {background:var(--interaction-pressed);}
   .xui-disclosure-trigger:disabled,.xui-disclosure-trigger[aria-disabled="true"] {color:var(--muted-foreground);cursor:not-allowed;}
+  .xui-disclosure>.xui-disclosure-trigger[data-variant="text"] {background:transparent;transition:color var(--motion-duration-fast) var(--motion-easing);}
+  .xui-disclosure>.xui-disclosure-trigger[data-variant="text"]:not(:disabled,[aria-disabled="true"]) {color:var(--foreground);}
+  .xui-disclosure>.xui-disclosure-trigger[data-variant="text"]:where(:hover,:active,[aria-expanded="true"]):not(:disabled,[aria-disabled="true"]) {color:var(--action-primary);}
   .xui-disclosure-label {min-inline-size:0;overflow-wrap:anywhere;}
   .xui-disclosure-indicator {inline-size:var(--control-icon-size);block-size:var(--control-icon-size);flex-shrink:0;transition:transform var(--motion-duration-fast) var(--motion-easing);}
   .xui-disclosure-indicator[data-open='true'],[aria-expanded='true']>.xui-disclosure-indicator {transform:rotate(var(--motion-disclosure-rotation));}

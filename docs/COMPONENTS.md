@@ -1477,3 +1477,9 @@ AppShell 与 MenuLayout 公开可选 `sidebarRevealOnHover?: boolean`，默认 t
 侧栏 slot 及其公共 React portal 的指针/焦点共同维持显示；离开且失焦后150ms宽限收拢。公共菜单或 Dialog 优先关闭/回焦，再次 Escape 收起预览并回唯一导航开关。消失的焦点节点与 Shell 卸载会清理占用及资源。窄屏、触屏不依赖 hover，仍用已有显式抽屉；不为独立 NavigationMenu 添加第二套宽度 owner。
 
 `SidebarFooterRow` 中的 ghost Button → SidebarFooterContent（直接 SVG）、Toolbar → ghost Button 或 passive span → SidebarFooterContent（Icon 包 SVG），以及更新 Button 或 role=status 均居于 compact 的同一中心线。默认按钮保留36px最小点击区，图标16px；passive 不成为按钮，无 icon 的事实仍完整换行。展开与预览时恢复完整文字并按自然宽度换行，使用继承字体，无逐项目宽度表。正式示例：[sidebar-reveal-react](../examples/sidebar-reveal-react/app.tsx)。
+
+### 透明文字动作（4.2.17）
+
+`Button variant="text"` 与 `Disclosure variant="text"` 在默认、hover、pressed、展开及disabled时均透明。默认foreground，hover/pressed/aria-expanded采用action-primary，图标/DisclosureIndicator继承；禁用前景和执行阻断保留。Button保留size点击区与文字角色，取消该变体按压缩放；无下划线。Disclosure保留全宽trigger、body、分隔线及同一Overlay/focus owner，关闭时按原规则回到同一trigger。默认ghost/link/Disclosure未改变。可用 Button＋DisclosureIndicator 组合宿主自有折叠状态；它不代替宿主提供aria-expanded/controls。
+
+正式公开组合示例：[text-actions-react](../examples/text-actions-react/app.tsx)。

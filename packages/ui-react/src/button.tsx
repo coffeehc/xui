@@ -3,7 +3,8 @@ import { Button as BaseButton } from '@base-ui/react/button';
 import { branded } from './shared.js';
 
 export type ButtonProps = React.ComponentProps<typeof BaseButton> & {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link';
+  /** Text is a transparent action in every state; it preserves size, focus and disabled semantics. */
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link' | 'text';
   size?: 'xs' | 'sm' | 'default' | 'lg';
 };
 /** Busy is a fact; disabled is a separate interaction policy owned by the host. */
