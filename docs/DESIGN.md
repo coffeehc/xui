@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.6。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.7、4.2.8…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.7。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.8、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -610,6 +610,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --sheet-max-block-size: 80dvh;
     --tabs-padding: calc(var(--spacing) * .75);
     --tabs-item-max-inline-size: var(--layout-field-min);
+    --tabs-line-baseline-shadow: inset 0 calc(-1 * var(--line-width-surface)) 0 var(--separator-line);
     --layout-workspace-content-min-block-size: 0px;
     --data-table-filter-min: 9rem;
     --data-table-min-block-size: calc(var(--control-height) * 4);
@@ -1219,7 +1220,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 
 | 层/区域 | 内容与公开归属 | 呈现与着色 | 空槽、状态与滚动 |
 | --- | --- | --- | --- |
-| 应用壳 | AppShell/MenuLayout 的 headerSlots、sidebarHeader/sidebar/sidebarFooter、pageHeader/pageToolbar/children/pageFooter | 顶栏与侧栏用 shell 表面；主内容用 canvas；全局动作与页面动作分开 | 一个导航/主题 owner；侧栏Header分隔用space-text-gap，内嵌Tabs.Panel不叠内容padding；正文容器稳定，模式与焦点见布局手册 |
+| 应用壳 | AppShell/MenuLayout 的 headerSlots、sidebarHeader/sidebarTabs/sidebar/sidebarFooter、pageHeader/pageToolbar/children/pageFooter | 顶栏与侧栏用 shell 表面；主内容用 canvas；全局动作与页面动作分开 | 一个导航/主题 owner；普通Header分隔用space-text-gap；sidebarTabs专放水平line List，由List拥有唯一分隔基线，Shell交出底边与底部padding；内嵌Tabs.Panel不叠内容padding；正文容器稳定，模式与焦点见布局手册 |
 | 应用顶栏 | leading=平台区域、brand=品牌、breadcrumb=路径、context=工作区；status=真实状态、actions=全局动作、auxiliary=辅助、account=账号 | 品牌/路径为正文，状态按真实 tone；辅助与账号不抢页面主动作 | 缺失扩展不占位；保留唯一导航、主题和显式启用的语言入口 |
 | 页面标题 | PageHeader.title/description/meta/actions | title 唯一 h1/page-title；description 为 muted/body-sm；meta 为 muted/body-xs；actions 中 primary 为任务主操作 | 描述/meta/动作空则无包装；长标题换行，动作整组换行，不把刷新状态写进标题 |
 | 页面工具 | pageToolbar 或 DataTable.toolbar 中的 SearchToolbar.search/actions/advanced | 搜索与常用筛选、动作、展开筛选各居其槽；默认中性，真实异常另用反馈 | 每组工具只有一个位置；高级筛选按需打开，焦点/草稿保持 |
@@ -1233,7 +1234,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 | 弹层 | Dialog/Sheet.Header/Title/Description、Body、Footer | 标题与说明分开，body 负责长内容，footer 放所属 FormActions | 开关只改可见性；正常 body 滚动、极端高度公共回退；关闭返回真实触发入口 |
 | 导航/菜单 | NavigationMenu 的 items[].label/icon、renderLabel/renderAction 与公开渲染/事件扩展；Menu/ContextMenu 的 Item/Icon/Separator | 选中由真实 active/expanded，危险项使用 danger，图标继承语义色 | 独立分支和动作不导航；disabled 不执行；键盘及长名称由公共组件管理 |
 | 原子控件 | Button/Link/IconButton 的内容与事件；Checkbox/Switch/Toggle/Radio 的标签与状态；Select/Combobox/Command 的公开 parts | 动作、选中、禁用、只读、错误分别映射已有语义，不依靠颜色推断业务 | 不给所有控件添加同一套 slot；保留原生/peer 表单与键盘语义 |
-| 内容Tabs | Root=value，List=轨道布局，Tab.children/Label=名称，Icon=可选装饰图标，Panel=对应内容 | 内容宽为默认，equal在单项上限内等分可用宽度；variant=segmented默认内嵌底色，line为无外槽的文字与唯一底部选中线；强调色/字重与图标状态继承一致 | Root作为Flex/Grid子项允许收缩；纯文字无空图标位；单项上限tabs-item-max-inline-size，长名仅Label在hover/键盘聚焦滚动，减少动效/触屏等完整静态折行；键盘、disabled与panel关联见组件合同，刷新不重挂Root |
+| 内容Tabs | Root=value，List=轨道布局，Tab.children/Label=名称，Icon=可选装饰图标，Panel=对应内容 | 内容宽为默认，equal在单项上限内等分可用宽度；variant默认line，显式segmented使用内嵌底色；水平line由tabs-line-baseline-shadow派生淡分隔，与单行当前项底线共基线，多行当前项仍在自身行底；强调色/字重与图标状态继承一致 | Root作为Flex/Grid子项允许收缩；纯文字无空图标位；单项上限tabs-item-max-inline-size，长名仅Label在hover/键盘聚焦滚动，减少动效/触屏等完整静态折行；键盘、disabled与panel关联见组件合同，刷新不重挂Root |
 | 披露与时间 | Disclosure/Accordion的trigger/content；Calendar和DateTimePicker的已选值、查看月份及受控事件 | 当前选项与展开状态明确；时间按分钟墙上时间/ISO日期合同，时区归宿主 | 焦点连续，日期/月份事件独立；不隐式截断精度或转换时区 |
 | 反馈/媒体 | DataRegion.children/feedback；Alert/Toast；Typography/Copyable/Tag/Image | 临近相关操作的状态、错误、一次性反馈；文案/图像来源真实，复制/删除有明确入口 | 状态不重挂 children；图片预留真实比例；被动文本不增 Tab stop；通知只有一个 owner |
 

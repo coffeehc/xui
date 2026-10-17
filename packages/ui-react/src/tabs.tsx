@@ -8,10 +8,10 @@ import {assertControllerProps} from './controller.js';
 export type TabsListProps=React.ComponentProps<typeof BaseTabs.List>&{
   /** Content follows its labels; equal distributes width up to the shared per-tab maximum. */
   layout?:'content'|'equal';
-  /** Segmented preserves the existing surface; line uses text and one selected bottom edge. */
+  /** Defaults to line; segmented explicitly selects the inset surface. State and keyboard are shared. */
   variant?:'segmented'|'line';
 };
-function TabsList({className,onKeyDown,loopFocus=true,layout='content',variant='segmented',...props}:TabsListProps) {
+function TabsList({className,onKeyDown,loopFocus=true,layout='content',variant='line',...props}:TabsListProps) {
   const direction=React.useContext(DirectionContext)?.direction;
   return <BaseTabs.List {...props} data-layout={layout} data-variant={variant} loopFocus={loopFocus} className={branded('xui-tabs-list',className)} onKeyDown={event => {
     onKeyDown?.(event);

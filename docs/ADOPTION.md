@@ -4,6 +4,8 @@ xui 为新产品 UI 统一采用 React：公共组件从 `@coffeehc/xui-react` �
 
 本手册引用公共规范、正式类型与示例，不另定义组件或品牌合同。采用前核对实际消费版本、Git SHA、本地依赖或 tarball，以及 [全部公开入口与默认行为](PUBLIC_API.md)。Codex 流程的唯一源随 checkout 维护，见 [adopt-xui](../.agents/skills/adopt-xui/SKILL.md)；全局发现入口可以链接同一源，物理路径解析遵循该 skill。
 
+4.2.7起Tabs.List默认line，原内嵌底槽须显式variant="segmented"；侧栏末位水平Tabs移入AppShell/MenuLayout.sidebarTabs，与原Tabs.Root/Panel共用状态，避免Shell header重复分隔。
+
 ## 阅读顺序与职责
 
 1. 核对采用项目规则、工作区、固定版本与正式 exports，保护已有修改后按项目 Git 规范同步。
@@ -17,7 +19,7 @@ theme 提供预构建 CSS/tokens；runtime 只提供无框架 TypeScript 服务�
 
 runtime 原生 DOM UI exports 已从当前公开入口移除，原生 UI 示例也不再作为接入路径。该 breaking change 不代表 XQuant、XLead 或其他消费项目已完成 React 迁移或通过验收；消费项目须按自己的授权核实固定包版本、调用点和实际页面。HTTP/auth/query/theme/resource 等 TypeScript 服务、模型、解析器与工具继续公开，React 宿主可直接复用。
 
-以4.2.1为基准只维护一条版本线，当前正式版本为 **4.2.6**，后续所有变更只递增末位，不再维护3.x兼容包或其他平行版本。历史验证记录保留用于溯源，不是当前可用的兼容分发。三个包必须同版本、同sourceGeneration安装；版本递增不代表语义兼容，升级前核对实际迁移合同。当前 DESIGN 与三个私有包均为 4.2.6，runtime 基础 Service 不再导出 `create*` 工厂；消费者需在入口 bootstrap 后按窄模块导入稳定 Service 引用；4.0 的 bootstrap 不再加载所有实现，容器 getter 需先加载对应模块，`/services` 仅用于明确需要全量的隔离装配。须复核固定 ESM/CSS/types 与打包依赖。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。2.0.1的公共认证页采用Stitch V3：品牌居于卡片外部，宿主只使用已有配置和slot，不补私有CSS。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
+以4.2.1为基准只维护一条版本线，当前正式版本为 **4.2.7**，后续所有变更只递增末位，不再维护3.x兼容包或其他平行版本。历史验证记录保留用于溯源，不是当前可用的兼容分发。三个包必须同版本、同sourceGeneration安装；版本递增不代表语义兼容，升级前核对实际迁移合同。当前 DESIGN 与三个私有包均为 4.2.7，runtime 基础 Service 不再导出 `create*` 工厂；消费者需在入口 bootstrap 后按窄模块导入稳定 Service 引用；4.0 的 bootstrap 不再加载所有实现，容器 getter 需先加载对应模块，`/services` 仅用于明确需要全量的隔离装配。须复核固定 ESM/CSS/types 与打包依赖。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。2.0.1的公共认证页采用Stitch V3：品牌居于卡片外部，宿主只使用已有配置和slot，不补私有CSS。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
 
 HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方 client，并从 bootstrap 共享 service 获取依赖；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 

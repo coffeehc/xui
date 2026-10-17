@@ -611,6 +611,7 @@ Card的icon槽可放Avatar或Icon：已有完整头像表现时选择Card.iconVa
 | 可选语言 | `locale` | auxiliary 之后、主题之前；未启用不生成控件 | 宿主 i18n owner 提供事实/列表/回调 |
 | 独立账号区 | `headerSlots.account` | secondary 最末，工具组之外；窄屏自然换行 | 账号菜单/认证/权限完全由宿主拥有 |
 | 侧栏顶 | `sidebarHeader` | 菜单之前；与底部一起限制高度并可滚动；compact 仍受公共栏宽约束 | 同一个侧栏树随响应式进入导航抽屉，不加第二个菜单开关 |
+| 侧栏内容范围 | `sidebarTabs` | 侧栏顶最后一段，只放水平`Tabs.List`（默认line）；轨道铺满，项仍按content/equal排列 | List拥有唯一分隔基线，Shell交出header的底边/底部padding；共享Tabs.Root/Panel继续归宿主 |
 | 导航正文 | `AppShell.sidebar` / `MenuLayout.items` | 长菜单自身滚动；sidebar 替换完整默认菜单区，null 恢复 items | 一个 shell/drawer owner；宿主保管自组内容生命周期 |
 | 侧栏底 | `sidebarFooter` | 短菜单贴底；极长内容自身滚动 | 返回/授权/版本只是可选业务内容，无默认内置意义 |
 | 页面标题与操作 | `pageHeader` 内的 `PageHeader(title/description/meta/actions)` | 正文滚动流开头；标题右侧 actions 窄屏换行 | 复用现有 PageHeader，不增加同义标题 API |
@@ -1297,6 +1298,25 @@ const cardRef = React.useRef<HTMLElement>(null);
 
 `AppShell.sidebarHeader` / `MenuLayout.sidebarHeader` 的裸说明为次要文字；不约束直属或嵌套 Button 的宽度/字体；默认按内容宽度，宿主需要全宽时明确使用公开 style/className；Toolbar/业务布局管理动作组合，空间不足时由公开布局自然换行。页头仍最多占侧栏合同上限，独立滚动且至少保留一项导航高度；footer 与菜单保留自己的滚动和焦点。Header 分隔两侧采用 space-text-gap，sidebar 中的 Tabs.Panel 不再叠加通用内容 padding；普通页面 Tabs 不变。无需宿主 wrapper 或内部 CSS。[正式示例](../examples/sidebar-footer-react/app.tsx)的 `?header=actions&row` 复现两项文字动作和一个图标动作，`header=long` 验证长中文，`header=direct|full|content|business` 验证宽度归属；`header=tabs` 展示一个 Tabs.Root 覆盖 sidebarHeader 内的 Toolbar/Input/Tabs.List 与 sidebar 内的 keepMounted Tabs.Panel/NavigationMenu。
 
+从4.2.7起，若末位是水平line Tabs，AppShell和MenuLayout均使用可选`sidebarTabs`槽，动作/搜索仍在sidebarHeader。槽位自动占满header净宽，List保留content/equal的项排列和单项最大宽度；Shell省略该header的分隔线及底部padding，普通header与segmented Tabs继续采用原边界。它不接管Root值、路由或Panel，也不复制侧栏。已采用4.2.5/4.2.6的宿主需把末位List从sidebarHeader移到sidebarTabs，共用同一个Tabs.Root；仅升级而未迁移slot的旧组合仍保留原Shell边界，不能宣称自动合线。无需宿主私有CSS、负margin、伪元素或删全站分隔。
+
+```tsx
+<Tabs.Root value={view} onValueChange={setView}>
+  <AppShell
+    sidebarHeader={<Stack>{actions}{search}</Stack>}
+    sidebarTabs={<Tabs.List variant="line" aria-label="会话范围">
+      <Tabs.Tab value="current">普通</Tabs.Tab><Tabs.Tab value="team">团队</Tabs.Tab>
+      <Tabs.Tab value="plugins">插件</Tabs.Tab><Tabs.Tab value="archive">已归档</Tabs.Tab>
+    </Tabs.List>}
+    sidebar={panels}
+  >{content}</AppShell>
+</Tabs.Root>
+```
+
+该slot只用于水平line List；segmented、竖向或其他header内容仍使用原sidebarHeader，不把普通内容冒充Tabs。正式[组合示例](../examples/tabs-overlay-react/app.tsx)的`?sidebar=shell`/`?sidebar=menu`覆盖两个公共布局，`controlled`/`injected`展示同一个Root状态，`long`展示长中文与换行；不是产品的会话分类/API实现。
+
+sidebarTabs不以内容改变整栏宽度。既有nav-sidebar-width需要可参与Grid、header品牌列calc的长度/百分比表达式，不能赋max-content等intrinsic关键字；当前没有“按四项Tab自然宽度收窄整栏”的公开模式。该能力须由公共布局另外实现与验收，不能由宿主读取私有DOM或临时宽度/CSS补丁模拟。
+
 ## Tabs
 
 Tabs布局与图标部件从1.2.0提供；本版增强默认/选中对比，执行结果见[验证记录](VALIDATION.md)。固定1.1.3不包含新增部件。
@@ -1305,11 +1325,11 @@ React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Label/Icon/Panel` 和 
 
 `Tabs.List.layout` 默认 `content`：轨道贴合标签组，不自动铺满父容器；轨道最大宽度为可用空间，项之间允许换行。每个Tab最大宽度由公共 `--tabs-item-max-inline-size` 统一约束，默认复用layout-field-min（根字号16px时240px），同时不超出父容器。显式 `equal` 才在该上限内等分可用宽度，不为铺满而超过单项上限；宽容器允许轨道末尾留白。依赖旧满宽轨道的采用方应明确选择equal，不通过宿主内部CSS或缩字号修补。图标保持公共尺寸与非收缩；纯文字不留图标空位。
 
-`Tabs.List.variant` 可选 `segmented | line`，省略时仍为现有segmented。line仅改变同一组件的外观：无外胶囊底槽、无项内选中框，普通文字/图标继承muted-foreground，当前项继承action-primary与heading字重，唯一底部选中线使用line-width-emphasis和currentColor；其他项预留同宽透明底边，hover/focus不替换选中归属。没有额外选中外圈或新状态owner。content/equal、竖向/RTL键盘仍沿用原合同；竖向line也保留每个项底部的唯一选中线。无额外原生UI实现。
+`Tabs.List.variant` 可选 `segmented | line`，从4.2.7起省略时默认line，需原内嵌外观时显式segmented。line仅改变同一组件的外观：无外胶囊底槽、无项内选中框，普通文字/图标继承muted-foreground，当前项继承action-primary与heading字重，唯一底部选中线使用line-width-emphasis和currentColor；其他项预留同宽透明底边，hover/focus不替换选中归属。水平List拥有separator-line/line-width-surface绘制的内嵌淡分隔，单行时与选中段同一底部基线，不增加布局高度或第二条平行线。多行时各行自然排版，选中段仍在所属项底边，整体淡分隔位于最后一行底部；不为合线裁切、固定高度或压缩字体。没有额外选中外圈或新状态owner。content/equal、竖向/RTL键盘仍沿用原合同；竖向line保留原每项底部选中线，不加入水平整行分隔。无额外原生UI实现。
 
 Tab直属字符串/数字自动进入公共Label文本槽；组合内容显式使用 `<Tabs.Label text={name}/>`，装饰Icon、计数和状态放在文本槽之外，不把整组内容一起滚动。Label复用OverflowText：支持精细鼠标且未减少动效时，长名称单行省略，Tab hover或已有键盘焦点停留后仅名称按共享速度单次滚至末端，离开且失焦复位；完整名称始终在DOM/可访问名称中，不依赖title，不新增Tab停靠或更改选择。触屏、减少动效、无动画/JS、不能键盘进入的disabled项保留完整静态折行，以保证所有人可读。短名称不动画，内容/宽度/语言更新重新测量且不重挂Tab/Panel；RTL沿相应方向揭示。自定义嵌套label不被库猜测和改写，应使用公开Label槽，不能套自己的截断/滚动CSS。
 
-默认segmented的普通项使用body 400文字；选中项使用raised底色、强调色文字/图标、heading 600和细边界，透明边框预留的线宽不会改变未选项几何。普通、选中、hover、键盘focus都清晰可辨。沿用peer的controlled、activateOnFocus、loop、RTL/orientation与panel关联；xui的键盘适配仍只负责跳过disabled。刷新、busy/error及草稿属于宿主或对应Panel，不因切换轨道布局而重挂Root或业务内容。
+显式segmented的普通项使用body 400文字；选中项使用raised底色、强调色文字/图标、heading 600和细边界，透明边框预留的线宽不会改变未选项几何。普通、选中、hover、键盘focus都清晰可辨。沿用peer的controlled、activateOnFocus、loop、RTL/orientation与panel关联；xui的键盘适配仍只负责跳过disabled。刷新、busy/error及草稿属于宿主或对应Panel，不因切换轨道布局而重挂Root或业务内容。
 
 ```tsx
 <Tabs.Root value={view} onValueChange={setView}>

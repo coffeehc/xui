@@ -151,6 +151,11 @@
     .xui-header-locale {border-color:var(--foreground);}
   }
   .xui-shell-sidebar-header {align-items:flex-start;max-block-size:var(--nav-sidebar-header-max);padding-block-end:var(--space-text-gap);margin-block-end:var(--space-text-gap);border-block-end:var(--line-width-surface) solid var(--separator-line);}
+  /* The dedicated trailing Tabs slot hands the divider to the line List. */
+  .xui-shell-sidebar-header[data-tabs="true"] {padding-block-end:0;border-block-end:0;}
+  .xui-shell-sidebar-tabs {align-self:stretch;min-inline-size:0;padding-block-start:var(--space-text-gap);}
+  .xui-shell-sidebar-tabs:first-child {padding-block-start:0;}
+  .xui-shell-sidebar-tabs>.xui-tabs-list {inline-size:100%;}
   .xui-shell-sidebar-with-footer:has(>.xui-shell-sidebar-header:not([hidden]))>.xui-shell-sidebar-menu {min-block-size:var(--nav-item-height);}
   .xui-shell-content,.xui-shell-page-header,.xui-shell-page-footer {min-inline-size:0;overflow-wrap:anywhere;}
   .xui-shell-page-header {margin-block-end:var(--layout-section-gap);}

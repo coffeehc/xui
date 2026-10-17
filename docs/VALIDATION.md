@@ -1,5 +1,17 @@
 # 验证证据与限制
 
+## 内容Tabs默认line与侧栏唯一分隔（4.2.7，2026-10-17）
+
+仅修改xui公共组合、Token、文档和合成示例。xAgent原正式4.2.5与4.2.6的UI字节相同；以独立4.2.6安装包复现AppShell/MenuLayout的旧sidebarHeader组合，三主题6次均测得Tab底部与Shell分隔线相距5px。不是消费方私有边框。基线截图及原包重建输入见`.artifacts/tabs-baseline-validation/baseline.json`、baseline.log、baseline-metafile.json与images-before。
+
+按用户最新要求，Tabs.List省略variant即line；显式segmented仍可使用旧底槽，但不新建视觉分支或状态owner。水平List以内嵌淡线拥有整体基线；AppShell/MenuLayout新增可选sidebarTabs，只放末位水平Tabs.List，自动铺满header净宽，交出Shell边框与底部padding。普通header不变。旧用户须迁移List槽位，Root/Controller/Panel不更换；仅安装包而沿用sidebarHeader不能宣称已合线。四项合成示例为“普通 / 团队 / 插件 / 已归档”。单行共线，多行强调线仍属当前项所在行，整体淡线在最后一行，不固定高度或裁切。
+
+验收按最终正式consumer执行：build、typecheck、Token、docs、35项定向unit及完整ESM/CSS/types/导出/类型/示例/体积/单实例peer门禁；406 Token、104入口、397检查。浏览器覆盖Chrome三主题、AppShell与MenuLayout、LTR/RTL、桌面/390px、200%根字号/长中文、真实Chrome200%缩放；Firefox/WebKit同步验证同一组合。确认普通400/选中600、边线等高、切换无高度跳变、List铺满、键盘和焦点可达、同一节点及各Panel草稿/70px滚动保留；非line显式segmented与普通header仍保留Shell边界。最终通过数、generation和正式consumer见同目录report-default-final.json与consumer-default-final.json。
+
+过程候选记录保留：第一次Token审计拒绝在局部CSS引入inset设计值，改为集中tabs-line-baseline-shadow；初次窄屏MenuLayout测试在模态导航打开时编辑被隔离正文而超时，修正为关闭抽屉检查正文再打开同一树；第二次把程序性Home聚焦误当作激活，改用Enter明确选择并验证hover不改选择。截图复核还发现槽容器随内容收缩，增加公共stretch并补齐轨道等于header净宽的几何断言。未放宽模态、焦点或宽度规则。default-final证据是默认line及铺满修正后的最终包，之前candidate/final/recheck仅保留过程，不混作最终构建。
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/tabs-presentation.test.mjs tests/workspace-layout.test.mjs tests/interaction-controller.test.mjs tests/contract.test.mjs tests/docs.test.mjs`、`node scripts/check-docs.mjs`、`pnpm test:consumer`；预览4173，使用同目录playwright.config.mjs/cross.config.mjs执行tabs-baseline.spec.mjs（cross排除genuine Chrome），另以tabs-overlay.spec.mjs定向选择capped name-only motion、manual activation、segmented。未运行全仓unit/browser、watch/cold-start、实体设备/读屏器或消费项目页面/API/部署；宿主接线与真实升级验收归消费方。
+
 ## 正式产物统一归档与独立校验（4.2.6，2026-10-17）
 
 仅修改xui的交付工具链、文档、版本与回归。三包/DESIGN为 **4.2.6**，末位递增，单一分发。最终sourceGeneration为`f861e4149344cb3e538b3c35d3fae0f6f8851ff637b5a181f306e2a827194c0f`；完整正式consumer为`.consumers/run-qTW68P/react`，React/ReactDOM19.2.8、Base UI1.7.0单实例。405 Token、104公开入口、396逐项检查。与4.2.5三包的300份dist文件逐一比较，仅三个build.json因generation变化，其余ESM/CSS/types字节完全相同；没有UI/运行时业务行为变更或新增公开包入口。

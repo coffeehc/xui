@@ -4,6 +4,8 @@
 
 新建或改造产品 UI 统一以 `@coffeehc/xui-react` 为唯一公共 UI 层。runtime 只保留无框架 TypeScript 服务、模型、解析器、presentation 数据/helper 与工具，不提供 DOM UI factory/controller；React 页面可按真实职责复用这些 TS 能力。XQuant、XLead 等产品迁移状态以各自仓库逐页验收为准。
 
+4.2.7的`AppShellProps`/`MenuLayoutProps`可选`sidebarTabs?: React.ReactNode`为水平line Tabs提供统一分隔归属；Root/Panel/业务状态保持原owner，迁移与四项组合见[侧栏Tabs合同](COMPONENTS.md#侧栏快捷操作组合)。
+
 下表链接到可读源码与合同；正式 types 路径由包 exports.types 指向 dist 声明。请固定 checkout SHA，先构建再消费，不直接把源码链接设成产品 alias。根入口是相应子入口的汇总；命名类型和运行时导出逐项记录到可再生成的 `.artifacts/public-api.json`，不手写另一份函数签名。
 
 [scripts/public-api.mjs](../scripts/public-api.mjs) 从实际 manifests/构建声明取全部名字；[文档守卫](../scripts/check-docs.mjs) 检查本表入口与 manifests 完全一致。[正式消费](../scripts/consumers.mjs) 在独立 tarball 安装中读取 ESM/CSS/init、编译命名导出的 type import、核对运行时导出并打包全部 ESM/CSS。下面的完整页面与 fixture 再证明实际组装行为，入口通过不代表未跑的产品集成通过。
@@ -873,4 +875,4 @@ import {UploadService} from '@coffeehc/xui-runtime/upload';
 
 槽位、字体和焦点见 [Upload 组件](COMPONENTS.md#文件上传-upload)；正式独立示例见 [upload-react](../examples/upload-react/app.tsx)。
 
-`@coffeehc/xui-react/tabs` 的 `TabsListProps.variant?: "segmented" | "line"` 是现有List的可选视觉组合，默认segmented兼容；line不创建选择/路由/查询owner。单项最大宽度使用公共tabs-item-max-inline-size；直属文字自动进入溢出阅读槽，组合名称公开Tabs.Label与TabsLabelProps（text:string、无interactionRef），复用OverflowText的hover/键盘与静态降级。详见[Tabs合同](COMPONENTS.md#tabs)与[正式示例](../examples/tabs-overlay-react/app.tsx)。弹层关闭按[完整Escape层级](COMPONENTS.md#嵌套弹层与-tooltip-的-escape-顺序)验证，不能将Tooltip消耗的一次Escape记为Sheet丢失监听。
+`@coffeehc/xui-react/tabs` 的 `TabsListProps.variant?: "segmented" | "line"` 是现有List的可选视觉组合，从4.2.7起默认line，需内嵌底槽时显式segmented；仅默认视觉改变，line不创建选择/路由/查询owner。单项最大宽度使用公共tabs-item-max-inline-size；直属文字自动进入溢出阅读槽，组合名称公开Tabs.Label与TabsLabelProps（text:string、无interactionRef），复用OverflowText的hover/键盘与静态降级。详见[Tabs合同](COMPONENTS.md#tabs)与[正式示例](../examples/tabs-overlay-react/app.tsx)。弹层关闭按[完整Escape层级](COMPONENTS.md#嵌套弹层与-tooltip-的-escape-顺序)验证，不能将Tooltip消耗的一次Escape记为Sheet丢失监听。

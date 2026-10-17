@@ -35,6 +35,7 @@
   .xui-tab[aria-selected="true"] {background:var(--layer-raised);color:var(--action-primary);font-weight:var(--font-weight-heading);border-color:var(--surface-line);}
   /* One visual variant of the same semantic Tabs; selection never changes geometry. */
   .xui-tabs-list[data-variant="line"] {padding:0;background:transparent;border:0;border-radius:0;}
+  .xui-tabs-list[data-variant="line"][data-orientation="horizontal"] {box-shadow:var(--tabs-line-baseline-shadow);}
   .xui-tabs-list[data-variant="line"]>.xui-tab {background:transparent;border:0;border-block-end:var(--line-width-emphasis) solid transparent;border-radius:0;}
   .xui-tabs-list[data-variant="line"]>.xui-tab[aria-selected="true"] {border-block-end-color:currentColor;}
   .xui-tabs-list[data-variant="line"]>.xui-tab:where(:hover):not(:disabled,[aria-disabled="true"]) {background:var(--interaction-hover);}

@@ -21,7 +21,7 @@ test('line manual activation and vertical RTL preserve the existing peer contrac
  await visit(page,'manual&controlled');const tabs=page.getByRole('tab'),first=tabs.nth(0),team=tabs.nth(2);await first.focus();await page.keyboard.press('ArrowRight');await expect(team).toBeFocused();await expect(first).toHaveAttribute('aria-selected','true');await page.keyboard.press('Space');await expect(team).toHaveAttribute('aria-selected','true');
  await tabsContract(page,info,{query:'vertical&injected'});await page.evaluate(()=>document.documentElement.dir='rtl');await first.focus();await page.keyboard.press('ArrowDown');await expect(team).toBeFocused();
 });
-test('omitting the variant retains the segmented skin and disabled items cannot activate',async({page})=>{
+test('explicit segmented retains its skin and disabled items cannot activate',async({page})=>{
  await visit(page,'segmented&controlled');const list=page.getByRole('tablist'),disabled=list.getByRole('tab',{name:'不可用范围'});await expect(list).toHaveAttribute('data-variant','segmented');expect(await list.evaluate(node=>getComputedStyle(node).backgroundColor)).not.toBe('rgba(0, 0, 0, 0)');const rect=await disabled.boundingBox();await page.mouse.click(rect.x+rect.width/2,rect.y+rect.height/2);await expect(list.getByRole('tab').nth(0)).toHaveAttribute('aria-selected','true');expect(await page.evaluate(()=>window.tabsOverlayDemo.events.length)).toBe(0);
 });
 async function overlayContract(page,info,{tooltip=false,sibling=false,strict=false}={}){
