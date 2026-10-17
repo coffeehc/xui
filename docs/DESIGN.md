@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.8。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.8、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.9。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.9、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -514,9 +514,9 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --nav-collapsed-item-size: 2.25rem;
     --nav-selected-indicator-inset-collapsed: 2px;
     /* shell-role-tokens:start */
-    --nav-sidebar-min-width: calc(var(--nav-item-height) * 9);
-    --nav-sidebar-max-width: calc(var(--nav-item-height) * 12);
-    --nav-sidebar-width: min(clamp(var(--nav-sidebar-min-width), 25vw, var(--nav-sidebar-max-width)), 50vw);
+    --nav-sidebar-min-width: calc(var(--nav-item-height) * 6 + var(--nav-sidebar-padding) * 2);
+    --nav-sidebar-max-width: calc(var(--nav-item-height) * 8);
+    --nav-sidebar-width: min(clamp(var(--nav-sidebar-min-width), 18vw, var(--nav-sidebar-max-width)), 50vw);
     --nav-row-first-line-height: max(var(--nav-item-height), var(--button-height), calc(var(--line-height-body-sm) + var(--space-text-gap) * 2 + var(--line-width-surface) * 2));
     --card-title-min-inline-size: calc(var(--control-height) * 3);
     --text-overflow-scroll-delay: calc(var(--motion-duration-fast) * 4);
@@ -1573,9 +1573,9 @@ SSR/预渲染和客户端首次hydration必须给出相同文本与结构；轻�
 
 应用头部按brand、breadcrumb、status、actions角色组合。收起/展开入口由公共AppShell/MenuLayout持有并管理位置：sidebarTogglePlacement默认top位于全局Header品牌单元行尾，与Logo/品牌名称保持同一行，不占侧栏顶部独立辅助行；显式bottom将同一个控件放在侧栏菜单与可选业务sidebarFooter之后，菜单独立滚动，顶部不留占位。业务sidebarFooter需要同行时用公开SidebarFooterRow，自然宽度并按空间换行，长事实不截断；默认非Row组合保持全宽，紧凑rail按组纵排。bottom展开时沿侧栏内距靠末端，紧凑rail中居中；top紧凑时保持品牌Logo与开关相邻，不把全局Header压成一个60px图标槽。窄屏两种配置均将同一入口置于顶栏品牌行尾以打开已有导航抽屉；不在两处复制按钮或另建抽屉。公共层统一其按钮尺寸、位置、动效、键盘焦点、可访问名称和aria-expanded/controls，跨断点复用同一个控件节点，宿主仅传状态与事件，受控请求不能冒充已确认状态。导航入口和品牌/路径为左侧主组，状态和动作在右侧；采用方提供内容、名称、链接语义及实际动作，不在公共库写入产品权限或版本规则。主组保留layout-header-primary-min的合理宽度，窄屏优先完整保留导航入口，品牌与路径各在所属空间省略长文字；链接可聚焦，完整名称保留可访问语义，宿主可提供title或明确详情入口。状态/动作空间不足时整组换到下一行，动作组内部按需换行，不能盖住品牌、互相重叠或令整页横向溢出。不静默隐藏状态或重要动作，不用缩小字体解决空间问题；没有动作时不预留空白占位。旧任意header内容继续支持，迁移后通用排列由公共组合负责。
 
-展开侧栏用nav-sidebar-width，按视口25%动态计算，在nav-sidebar-min-width与nav-sidebar-max-width之间夹取，默认根16px下324–432px，再以50vw封顶（视口约束优先于最小宽度）；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。焦点环和短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
+展开侧栏用nav-sidebar-width，按视口18%动态计算，在nav-sidebar-min-width与nav-sidebar-max-width之间夹取，默认根16px下240–288px，再以50vw封顶（视口约束优先于最小宽度）；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。焦点环和短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
 
-长名称默认保持wrap兼容；显式labelOverflow=marquee时，只有公开名称部件在有hover、fine pointer且未减少动态效果时单行省略，主项悬停或聚焦停留后按nav-label-scroll-delay开始，以nav-label-scroll-speed（单位CSS px/秒）单次滚到末端并停驻。离开且失焦即取消和复位，短名称、禁用、紧凑隐藏名称不滚动；触屏/无hover/减少动态效果或不支持动画时保留完整静态换行。富标签使用公开名称部件分隔主名称，描述和Badge保持静止；库不猜消费者strong/br结构。actionAlignment=start将独立分支与行尾动作中心对准首行文字行框，主图标及无href分支箭头同步定位；start或marquee呈现用nav-row-primary-min-width保留可读名称净宽，空间不足时独立动作自然换到下一行，不能把名称压成零宽；默认center兼容既有布局，紧凑栏仍逐控件纵排。两项呈现更新不得重建主控件、切换路由或更改展开状态；宿主只声明公开选项，不穿透DOM写样式。默认展开324px是用户明确授权的全局变更，窄屏drawer独立封顶视口，阅读列max宽度仍是上限而非刚性占宽。
+长名称默认保持wrap兼容；显式labelOverflow=marquee时，只有公开名称部件在有hover、fine pointer且未减少动态效果时单行省略，主项悬停或聚焦停留后按nav-label-scroll-delay开始，以nav-label-scroll-speed（单位CSS px/秒）单次滚到末端并停驻。离开且失焦即取消和复位，短名称、禁用、紧凑隐藏名称不滚动；触屏/无hover/减少动态效果或不支持动画时保留完整静态换行。富标签使用公开名称部件分隔主名称，描述和Badge保持静止；库不猜消费者strong/br结构。actionAlignment=start将独立分支与行尾动作中心对准首行文字行框，主图标及无href分支箭头同步定位；start或marquee呈现用nav-row-primary-min-width保留可读名称净宽，空间不足时独立动作自然换到下一行，不能把名称压成零宽；默认center兼容既有布局，紧凑栏仍逐控件纵排。两项呈现更新不得重建主控件、切换路由或更改展开状态；宿主只声明公开选项，不穿透DOM写样式。默认展开宽度按本节4.2.9公共上下限合同统一派生，窄屏drawer独立封顶视口，阅读列max宽度仍是上限而非刚性占宽。
 
 导航的当前页选中与键盘焦点相互独立：已有真实菜单焦点优先；没有菜单焦点时，菜单状态更新可把可用当前页设为单一tab停靠点。打开抽屉本身必须保留打开前合法的菜单停靠点，不能由浏览器默认聚焦首项而意外改写它。React shell/dialog由公共owner在模态建立前确定初始焦点并避免中途首项focusin；无可用菜单项时回退关闭按钮。保留的焦点项在长菜单中应可见；取消回可见入口，宿主已移动到新标题或新模态的焦点不得被旧关闭事件夺走。
 
@@ -1675,7 +1675,7 @@ LoadingState layout=inline 复用既有 Spinner 与一个 status 文本，无块
 
 `@coffeehc/xui-runtime/theme`（及runtime根入口）的 `setInterfaceScale(scale, options?)` 是唯一设置方法，React页面直接调用，不再封装另一套比例owner或设置组件。`InterfaceScale` 为 `1 | 1.25 | 1.5 | 2`，分别对应100%、125%、150%、200%；默认100%保留既有尺度。`options.window`只用于明确的同源iframe文档或隔离测试，不提供组件子树缩放。无浏览器时导入及合法调用均安全无操作；非法运行时参数抛出TypeError，且不改DOM/存储。
 
-方法写当前document根的 `data-interface-scale` 与语义变量 `--interface-scale`，以 `--interface-root-font-size` 中的百分比派生根字号。文字、图标、rem间距、控件与布局约束共同放大；内容根据实际可用宽度换行，表单继续按净宽决定列数。展开侧栏使用公开nav-sidebar-min-width/max-width约束，默认分别为9/12个nav-item-height（100%时324/432px），首选25vw，并以50vw封顶，为中等视口放大后的正文保留至少一半宽度；compact rail和窄屏抽屉保持各自合同。视口百分比/上限不机械倍增，细边框、焦点线、媒体查询阈值和真实像素测量保留各自语义。该方法不采用transform或CSS zoom，不重挂组件、不刷新Document、不发业务请求、不创建订阅。浏览器默认字号与浏览器zoom仍独立生效；宿主不得用固定html字号、组件尺寸补丁或第二套CSS zoom覆盖此owner。
+方法写当前document根的 `data-interface-scale` 与语义变量 `--interface-scale`，以 `--interface-root-font-size` 中的百分比派生根字号。文字、图标、rem间距、控件与布局约束共同放大；内容根据实际可用宽度换行，表单继续按净宽决定列数。展开侧栏使用公开nav-sidebar-min-width/max-width约束，默认最小为6个nav-item-height加两侧内距、最大为8个nav-item-height（100%时240/288px），首选18vw，并以50vw封顶，为中等视口放大后的正文保留至少一半宽度；compact rail和窄屏抽屉保持各自合同。视口百分比/上限不机械倍增，细边框、焦点线、媒体查询阈值和真实像素测量保留各自语义。该方法不采用transform或CSS zoom，不重挂组件、不刷新Document、不发业务请求、不创建订阅。浏览器默认字号与浏览器zoom仍独立生效；宿主不得用固定html字号、组件尺寸补丁或第二套CSS zoom覆盖此owner。
 
 合法设置保存在当前同源标签页的sessionStorage键 `ui.interface.scale`，值为上述倍率字符串；与主题键独立。正式 `@coffeehc/xui-runtime/init.js` 在CSS和可见内容之前同步加载，首屏恢复比例，即使已有主题owner也会恢复。无值、非法值、读取失败均保留默认100%；写入失败仍即时应用当前页，不伪称已经持久化。切回100%调用 `setInterfaceScale(1)`。刷新/同标签页导航保留；关闭会话后的生命周期遵循浏览器sessionStorage，复制标签页/opener可能复制初值，不能宣称所有新标签页都强制重置。
 
@@ -1698,7 +1698,7 @@ LoadingState layout=inline 复用既有 Spinner 与一个 status 文本，无块
 
 Dialog偏好layout-dialog-width-ratio=40%，min/max分别24rem/48rem；Confirm偏好30%，min/max为20rem/32rem；侧向Sheet偏好60%，min/max为24rem/64rem。layout-dialog/confirm/drawer-width仍是公开组合结果，可单独覆盖；比例与rem边界均集中定义。普通Dialog/Confirm最后用视口减去两侧layout-viewport-inset封顶，min下限不能让320px视口溢出。侧向Sheet紧贴边缘、窄屏封顶完整视口；上下Sheet只使用独立layout-sheet-block-size与sheet-max-block-size，绝不把横向百分比再用作纵向尺寸。
 
-1280px宽、16px根字号下，Dialog/Confirm仍为512/384px，侧向Sheet改为768px；1920px时分别768/512/1024px上限。窄屏由各自最终视口约束决定，不能只验证字符串。导航drawer继续由nav-drawer-max-inline-size限制为默认288px，独立于这些详情面板；展开侧栏按本轮授权改为324px，紧凑侧栏保留60px。本段是用户追加的响应式宽度默认变更，不能并入“其余设计token迁移默认不变”的声明。
+1280px宽、16px根字号下，Dialog/Confirm仍为512/384px，侧向Sheet改为768px；1920px时分别768/512/1024px上限。窄屏由各自最终视口约束决定，不能只验证字符串。导航drawer继续由nav-drawer-max-inline-size限制为默认288px，独立于这些详情面板；展开侧栏现按4.2.9合同为240–288px，紧凑侧栏保留60px。本段是用户追加的响应式宽度默认变更，不能并入“其余设计token迁移默认不变”的声明。
 
 ### 公共布局插槽与默认顶栏工具
 

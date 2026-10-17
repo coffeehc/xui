@@ -39,9 +39,9 @@ for(const kind of ['react'])test(`${kind} interface scale respects the browser f
 
 for(const kind of ['react'])test(`${kind} responsive sidebar respects public min and max without remount`,async({page},info)=>{
  await open(page,kind,{width:1280,scale:1});await page.evaluate(()=>window.scaleSidebar=document.querySelector('.xui-shell-sidebar'));
- for(const [width,expected] of [[800,324],[1280,324],[1600,400],[1920,432]]){await page.setViewportSize({width,height:1000});await expect.poll(()=>page.locator('.xui-shell-sidebar').evaluate(n=>n.getBoundingClientRect().width)).toBeCloseTo(expected,1);expect(await page.evaluate(()=>window.scaleSidebar===document.querySelector('.xui-shell-sidebar'))).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);}
+ for(const [width,expected] of [[800,240],[1280,240],[1600,288],[1920,288]]){await page.setViewportSize({width,height:1000});await expect.poll(()=>page.locator('.xui-shell-sidebar').evaluate(n=>n.getBoundingClientRect().width)).toBeCloseTo(expected,1);expect(await page.evaluate(()=>window.scaleSidebar===document.querySelector('.xui-shell-sidebar'))).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);}
  await info.attach('sidebar-wide.png',{body:await page.screenshot(),contentType:'image/png'});
  await page.addStyleTag({content:'@layer product-overrides { :root { --nav-sidebar-min-width:18rem; --nav-sidebar-max-width:24rem; } }'});
- for(const [width,expected] of [[800,288],[1280,320],[1920,384]]){await page.setViewportSize({width,height:1000});await expect.poll(()=>page.locator('.xui-shell-sidebar').evaluate(n=>n.getBoundingClientRect().width)).toBeCloseTo(expected,1);}
+ for(const [width,expected] of [[800,288],[1280,288],[1920,345.6]]){await page.setViewportSize({width,height:1000});await expect.poll(()=>page.locator('.xui-shell-sidebar').evaluate(n=>n.getBoundingClientRect().width)).toBeCloseTo(expected,1);}
 
 });

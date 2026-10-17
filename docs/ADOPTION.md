@@ -6,6 +6,8 @@ xui 为新产品 UI 统一采用 React：公共组件从 `@coffeehc/xui-react` �
 
 4.2.7起Tabs.List默认line，原内嵌底槽须显式variant="segmented"；侧栏末位水平Tabs移入AppShell/MenuLayout.sidebarTabs，与原Tabs.Root/Panel共用状态，避免Shell header重复分隔。
 
+4.2.9默认展开侧栏改为240–288px（100%基准、18vw偏好与50vw封顶），sidebarTabs短项自然分布填满；原默认324–432px需保留的宿主可使用公开宽度Token。compact rail和窄屏抽屉不变。
+
 ## 阅读顺序与职责
 
 1. 核对采用项目规则、工作区、固定版本与正式 exports，保护已有修改后按项目 Git 规范同步。

@@ -1,5 +1,5 @@
 {
-  "contractVersion": "4.2.8",
+  "contractVersion": "4.2.9",
   "defaultTheme": "Precision Engineering Console",
   "defaultMode": "dark",
   "defaultTokenCount": 406,
@@ -9,7 +9,7 @@
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "da1fdf729c0914ec12acc1da3279302659c7514fe4fb581db60fedcbd9d42853",
+  "defaultCssSha256": "08f708d4ded9fc45bd93fb7b5986d222e708e24a527f5644edb143e5f2755b80",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -101,6 +101,7 @@
     "resolution": "Adopt token tiers and slot/state ownership; retain published names, accessible scales, keyboard and actual host facts. DESIGN documents implementation corrections."
   },
   "implementationChanges": [
-    "3.0.0 replaces the Toast peer action bus with one fully injectable xui queue, retains public rendering and anchor primitives, defaults to top-end and five-second dismissal; -1 pins, zero/omitted uses the configured default. Shared semantic typography and tokens remain unchanged."
+    "3.0.0 replaces the Toast peer action bus with one fully injectable xui queue, retains public rendering and anchor primitives, defaults to top-end and five-second dismissal; -1 pins, zero/omitted uses the configured default. Shared semantic typography and tokens remain unchanged.",
+    "4.2.9 narrows the shared expanded sidebar to an 18vw preference bounded by six row heights plus padding and eight row heights, retaining the viewport safety cap; short sidebar Tabs keep intrinsic item widths and distribute across the track."
   ]
 }

@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.8）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.9）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -149,7 +149,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | SHELL-019 | 可选 slot 无内容 | 不产生可见空条、空边距或键盘停靠点 | 空 slot DOM/geometry 与 Tab 序列 | [COMPONENTS 语义区域矩阵](COMPONENTS.md#语义区域矩阵) |
 | SHELL-020 | sidebarHeader 放直属Button、Toolbar或业务布局 | slot不强改按钮宽度/字号/折叠态padding；默认内容宽，宿主显式公开style/className的全宽或内容宽均保留 | 直属/Toolbar/业务布局、width=100%/max-content的几何与字体计算值 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
 | SHELL-021 | sidebarHeader内Tabs.List控制sidebar内Tabs.Panel | 一个Tabs.Root与受控值；侧栏Panel不叠内容padding，Header分隔紧凑，普通页面Tabs保持原Token间距 | 切换前后间距、首项位置、search草稿与普通Tabs对照 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
-| SHELL-022 | 侧栏Header/列表/Footer有可聚焦控件 | Header保留限高/独立滚动、菜单最小高度和Footer；各控件inset焦点可绘制，invalid边界仍可读 | 324px/窄屏/200%文字与真实zoom、键盘焦点和滚动记录 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
+| SHELL-022 | 侧栏Header/列表/Footer有可聚焦控件 | Header保留限高/独立滚动、菜单最小高度和Footer；各控件inset焦点可绘制，invalid边界仍可读 | 默认展开/窄屏/200%文字与真实zoom、键盘焦点和滚动记录 | [COMPONENTS 侧栏组合](COMPONENTS.md#侧栏快捷操作组合) |
 | SHELL-023 | 需要调整公共收起/展开入口 | `top` 时桌面唯一控件位于全局品牌单元行尾；显式 `bottom` 保持侧栏菜单/页尾后；窄屏复用同一抽屉入口，不替换私有SVG或另造按钮 | placement接线、唯一节点、实际位置/命中区、Enter/Space及Escape回焦点 | [COMPONENTS 唯一开关](COMPONENTS.md#导航内部唯一收起展开控件) |
 | SHELL-024 | AppShell/MenuLayout侧栏与正文相邻 | 桌面使用公共inline-end低对比分隔，展开/紧凑外宽与内容净宽不变，RTL换侧；窄屏抽屉不叠内侧边线，不增加resize handle或宿主私有CSS | 与固定旧包几何对照、三主题/RTL/窄屏/两种200%、滚动和同一portal/焦点/草稿证据 | [COMPONENTS 公共侧栏边界](COMPONENTS.md#公共侧栏与正文边界) |
 
@@ -175,7 +175,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 |---|---|---|---|---|
 | TYPE-001 | 任何公共组件内容 | 宿主非必要不自设字号；逐项定位font/font-size/family/line-height/weight、style及文字工具类覆盖 | 覆盖扫描、用途和限定范围 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-002 | AppHeader/HeaderBrand各文字slot | brand、路径、context、status、辅助及账号逐槽匹配公共映射，内嵌控件保持自身角色 | 逐slot四项computed与嵌套Button | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
-| TYPE-003 | AppShell/MenuLayout侧栏 | header/footer裸说明为meta，控件保持自身control角色；slot不递归覆盖字体 | 324px/窄屏200%时三动作与导航、footer几何 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-003 | AppShell/MenuLayout侧栏 | header/footer裸说明为meta，控件保持自身control角色；slot不递归覆盖字体 | 默认展开/窄屏200%时三动作与导航、footer几何 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-004 | PageHeader/Section | title、description、meta、章节正文分别匹配page/section/body/meta，动作不被降字号 | 每个文字slot四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-005 | Card/CardGroup | 标题、说明、正文、归属badge、footerMeta、计数和分页逐槽匹配；元信息内Button保持control | 每张卡各slot和集合footer计算样式 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-006 | MetricCard | label/value/marker分别使用label/metric与所用状态组件，值用Mono/tabular | 字体族、四项computed及完整长值 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
@@ -348,10 +348,10 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | NAV-002 | 菜单项有独立配置/更多动作 | 动作进入公开 action slot/callback，不冒泡触发行导航 | 点击动作计数与 location/history | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-003 | 菜单项配置右键菜单 | 右键菜单动作不触发主链接导航 | contextmenu 和导航事件日志 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-004 | 分支名长于菜单宽度 | 仅名称按 OverflowText 合同展示；折叠/展开按钮和行尾动作不被挤出 | 最小/中间/最大宽度矩形、悬停录像与焦点录像 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
-| NAV-005 | 桌面默认展开或收起 | 展开使用公共min/max与25vw动态宽度（默认324–432px）、50vw封顶；收起使用60px compact rail，不写内部宽度覆盖 | computed width 与正式默认值 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
+| NAV-005 | 桌面默认展开或收起 | 展开使用公共min/max与18vw动态宽度（默认240–288px）、50vw封顶；收起使用60px compact rail，不写内部宽度覆盖 | computed width 与正式默认值 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-006 | 用户键盘操作菜单 | 方向键、Home/End、Enter/Space 按公开导航合同工作 | 自动化按键轨迹与 active/expanded 状态 | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
 | NAV-007 | 菜单处于窄屏 Drawer | 只有一个可见打开入口；关闭回到原触发按钮 | 窄屏 DOM 计数、焦点前后 activeElement | [COMPONENTS 导航与菜单](COMPONENTS.md#导航与菜单) |
-| NAV-008 | 名称旁有非交互运行/等待状态 | renderLabel使用主项剩余宽度；名称可收缩、尾随状态不收缩并位于逻辑末端；有独立分支/配置时保留各自轨道，不将状态伪装成action按钮 | 短/长名称、324/60、窄屏与200%矩形，状态出现/消失前后节点与焦点 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
+| NAV-008 | 名称旁有非交互运行/等待状态 | renderLabel使用主项剩余宽度；名称可收缩、尾随状态不收缩并位于逻辑末端；有独立分支/配置时保留各自轨道，不将状态伪装成action按钮 | 短/长名称、默认展开/60、窄屏与200%矩形，状态出现/消失前后节点与焦点 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
 | NAV-009 | 富标签开启名称滚动 | 只有NavigationMenu.Label内的名称移动；尾随状态和分支/配置不动，触控/reduced-motion完整换行且与名称首行对齐 | 悬停/键盘录像、动态偏好切换、RTL及名称/状态更新记录 | [COMPONENTS 富条目导航](COMPONENTS.md#富条目独立行尾动作与上下文菜单) |
 | NAV-010 | 导航项处于当前选中状态 | 主名称、富标签说明与公共文字/图标槽共同继承主题 selected 前景，muted 不覆盖选中色；hover、pressed、focus 保持该色，禁用前景优先，竖线仅辅助 | 三主题、普通/富标签与200%文字/浏览器zoom的computed color及截图 | [DESIGN 状态前景](DESIGN.md#逐组件外观与状态映射) · [COMPONENTS 导航](COMPONENTS.md#导航与菜单) |
 | MENU-SEP-001 | 菜单中需要分隔不同内容组 | 使用 `Menu.Separator` 或 `ContextMenu.Separator`，它不执行动作、不可成为额外键盘停靠点，浅深主题下仍清晰可辨 | role/aria、Tab顺序、主题computed样式与两种菜单组合 | [COMPONENTS 弹层与工具栏](COMPONENTS.md#弹层与工具栏) |

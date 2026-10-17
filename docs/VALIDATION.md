@@ -1,5 +1,15 @@
 # 验证证据与限制
 
+## 公共侧栏紧凑宽度与短Tabs分布（4.2.9，2026-10-17）
+
+仅修改xui默认布局Token和sidebarTabs排列；不修改消费项目。正式4.2.7独立消费者在管理MenuLayout与会话AppShell的800/1280/1600/1920px视口均测得324/324/400/432px，见`.artifacts/sidebar-compact-validation/baseline.json`。首个取样脚本遗漏目录尾斜线，后又在视口尚未完成绘制时读宽度；修正路径并以减少动效及双RAF取样，未把旧脚本结果当公共故障。
+
+新默认18vw、最小6项高加两侧内距、最大8项高（100%时240–288px）且50vw封顶。四个短Tabs使用content自然宽度，槽内两端分布；不增加内容测量模式、查询或选择owner。公共宽度Token继续覆盖，普通header、60px compact、同一窄屏抽屉与品牌列对齐保留。
+
+正式sourceGeneration为`31c40661b514efd70de362a22d92e7ef96db8cbb44a69daa942ac5b80b842795`，consumer为`.consumers/run-VPhXLJ/react`，精确三包/peer与单项结果见同目录consumer-final.json及final-summary.json。25项定向unit、完整consumer、Chrome62项及两项缩放合同、Firefox/WebKit96项浏览器全部通过（最终160项，无失败/跳过）。检查包括build/typecheck/Token/docs、定向unit及完整正式consumer；浏览器以sidebar-width、tabs-baseline、interface-scale的responsive sidebar/medium viewport、menu-layout和navigation-chevron定向组合，覆盖三主题、管理与两类会话Shell、800–1920桌面、390px/RTL/200%文字及真实Chrome200%缩放。验证四短项单行无截断、轨道两端填满、同一节点/草稿/滚动、公共min/max覆盖、放大800视口正文至少一半、焦点/抽屉关闭回焦及无文档横溢出。
+
+未执行全仓unit/browser、watch/cold-start、实体设备/读屏器或消费项目页面/API/部署。默认宽度是明确的视觉兼容变化；产品额外品牌/内容约束须用公开Token并在自身验收。没有声称整栏会自动等于任意Tab的固有总宽。
+
 ## NavigationMenu分支矢量指示与命中对齐（4.2.8，2026-10-17）
 
 旧正式4.2.7独立消费者中，链接分支按钮32×36px、字符指示器8.44×22px且偏中心6.78px，旁侧配置动作36×36px。证据`.artifacts/navigation-chevron-validation/baseline.json/png`。本轮复用公开DisclosureIndicator的16px装饰SVG及公共图标Button方形尺寸，去除字符字形差异与auto边距偏移；无链接分支也复用同一指示器，不新增状态或API。名称翻译、禁用、展开值、路由、配置及右键动作继续归现有owner。
