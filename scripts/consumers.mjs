@@ -103,7 +103,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
         assert(gzip<=performance.budgets.narrowServiceGzip,`${entry} gzip budget: ${gzip}/${performance.budgets.narrowServiceGzip}`);
         performance.services.push({entry,minified:bytes.length,gzip,contributing:contributing.map(file=>file.replace(cwd+'/',''))});
     }
-    for(const [entry,symbol,allowed] of [['bootstrap','bootstrap',['theme-service']],['http','HTTPService',['http-service']],['auth','AuthService',['http-service','auth-service']],['download','DownloadService',['http-service','download-service']],['upload','UploadService',['http-service','upload-service']]]){
+    for(const [entry,symbol,allowed] of [['bootstrap','bootstrap',['theme-service']],['bootstrap','disposeXuiServices',['theme-service']],['http','HTTPService',['http-service']],['auth','AuthService',['http-service','auth-service']],['download','DownloadService',['http-service','download-service']],['upload','UploadService',['http-service','upload-service']]]){
         const result=await build({stdin:{contents:`import {${symbol}} from '@coffeehc/xui-runtime/${entry}';window.xuiService=${symbol};`,resolveDir:cwd,sourcefile:'progressive-service.js'},bundle:true,format:'esm',minify:true,write:false,metafile:true,platform:'browser',target:'es2022'});
         const contributing=Object.values(result.metafile.outputs).flatMap(output=>Object.entries(output.inputs).filter(([,data])=>data.bytesInOutput>0).map(([path])=>path));
         for(const implementation of ['http-service','auth-service','theme-service','route-core','i18n-core','menu-service-core','download-service','upload-service'])assert.equal(contributing.some(file=>file.endsWith('/'+implementation+'.js')),allowed.includes(implementation),`${entry} dependency: ${implementation}`);
@@ -271,7 +271,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await writeFile(`${layoutTypographyOutput}/metafile.json`, JSON.stringify(layoutTypographyBuild.metafile, null, 2));
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'layout-typography/app.tsx'], { cwd, stdio: 'inherit' });
     // These fixtures are built only from independently installed formal packages.
-    for(const name of ['typography-slots','action-menu','toast','upload','continuity','collection-refresh','tabs-overlay','dialog-resume']){
+    for(const name of ['typography-slots','action-menu','toast','upload','continuity','collection-refresh','tabs-overlay','dialog-resume','public-layout']){
       const fixture=resolve(cwd,name),output=resolve(`dist/${name}-react`);
       await cp(`examples/${name}-react`,fixture,{recursive:true});
       const options={entryPoints:[`${fixture}/app.tsx`],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}};

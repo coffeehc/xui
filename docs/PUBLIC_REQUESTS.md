@@ -152,3 +152,13 @@ xQuant原反馈固定3.0.0 / `b9753a4f43967c76f566eefdab38042d0423da18`。最新
 请求是保留完整权威列表读取，同时让较长的 Key 列表在公共 DataTable 内分页。1.3.0的 `ApiKeyManagerProps.pagination` 接受 `false` 或 `{defaultPageSize?, pageSizeOptions?}`；默认页长10、选项10/25/50。分页只切分当前完整已确认的 `rows`，改变页或页长不触发adapter请求，显示的total只使用完整集合长度；刷新保留当前页范围并夹紧到有效页。`pagination={false}`保留全量表格显示。
 
 该能力不创建服务端分页、查询、CRUD/controller或业务提交owner，不改变 `adapter.list` 的完整读取与HTTP合同；`tableLabels`仅覆盖公共DataTable标签。库级types、正式tarball与最终metadata范围浏览器结果见本轮[验证记录](VALIDATION.md)。API Key产品升级和真实密钥服务验收仍归消费项目；不要据此标记任何产品已完成迁移。
+
+### XUI-REQ-20261017-20～22：启动释放入口、多行工具与窄屏导航（4.2.14）
+
+来自 xQuant/xLead/xAgent 对固定4.2.13的消费证据，本轮只修公共库：
+
+- 启动生命周期：`@coffeehc/xui-runtime/bootstrap` 正式导出同一个 `disposeXuiServices`，不再为释放 Window registry 导入全量 services。保留原根/聚合入口，不改变借用与 owned 归属；`app.services.dispose()` 不替代 Window registry 移除。
+- SearchToolbar：允许 actions 直接控件或嵌套 Toolbar，普通 Field 控制边框和独立按钮按底边对齐；操作组多行不拉高高级筛选。长文案自然增高，含帮助/错误的复杂筛选放 advanced。
+- AppShell/MenuLayout：导航 Drawer 默认贴边全宽全高、集中单层内距；sidebarTabs 独立轨道，List 仍拥有单一分隔基线；头尾/Tabs超预算时 Body 整体自然纵滚，主导航文字优先，辅助操作整组换行并限制累计缩进。保留四slot、同一树/Controller、字号/主题和焦点合同。
+
+与 Stitch 对齐的文字契约、4.2.13同组合复现和正式包浏览器证据见 [VALIDATION](VALIDATION.md)。这是库级修复，三个消费项目仍须独立升级和实际页面复验，不能自动宣布其完成。

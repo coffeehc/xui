@@ -106,7 +106,7 @@ interface AppShellSlots extends Omit<React.ComponentProps<'div'>,'children'> {
   /** Desktop: top (default) is the global brand row's trailing control; bottom follows the sidebar menu/footer. Narrow screens use the brand-row drawer trigger. */
   sidebarTogglePlacement?:SidebarTogglePlacement;
   /** Trailing horizontal Tabs.List variant="line". The List owns the sole header
-   * divider; sidebarHeader contains the preceding actions/search. Root/Panel
+   * divider in an independent track; sidebarHeader contains preceding actions/search. Root/Panel
    * state and lifecycle remain with the host's shared Tabs.Root. */
   sidebarTabs?:React.ReactNode;
   theme?:ThemeController;themeLabels?:Partial<ThemeModeLabels>;locale?:HeaderLocaleOptions;scrollMode?:ShellScrollMode;sidebar:React.ReactNode;sidebarHeader?:React.ReactNode;sidebarFooter?:React.ReactNode;pageHeader?:React.ReactNode;pageToolbar?:React.ReactNode;pageFooter?:React.ReactNode;header?:React.ReactNode;headerSlots?:AppHeaderSlots;children:React.ReactNode;
@@ -126,9 +126,10 @@ export function AppShell(allProps:AppShellProps){const {controller:injected,them
   const headerControl=narrow||sidebarTogglePlacement==='top';
   const requestCollapsed=controller.setCollapsed;
   const hasFooter=hasContent(sidebarFooter),hasTabs=hasContent(sidebarTabs),hasHeader=hasContent(sidebarHeader)||hasTabs,hasSections=hasHeader||hasFooter||sidebarTogglePlacement==='bottom';
-  const sidebarHeading=hasHeader?<div className="xui-shell-sidebar-header" data-tabs={hasTabs?'true':undefined}>{sidebarHeader}{hasTabs&&<div className="xui-shell-sidebar-tabs">{sidebarTabs}</div>}</div>:null;
-  const [sidebarElement,setSidebarElement]=React.useState<HTMLElement|null>(null),[navigationControl,setNavigationControl]=React.useState<HTMLDivElement|null>(null);
-  const desktopSlot=React.useRef<HTMLDivElement>(null),drawerSlot=React.useRef<HTMLDivElement>(null),headerElement=React.useRef<HTMLElement>(null),headerToggleSlot=React.useRef<HTMLSpanElement>(null),controlHadFocus=React.useRef(false);
+  const sidebarHeading=<>{hasContent(sidebarHeader)&&<div className="xui-shell-sidebar-header" data-tabs={hasTabs?'true':undefined}>{sidebarHeader}</div>}{hasTabs&&<div className="xui-shell-sidebar-tabs" onFocus={event=>{if(narrow)event.target.scrollIntoView({block:'nearest',inline:'nearest'});}}>{sidebarTabs}</div>}</>;
+  const [sidebarElement,setSidebarElement]=React.useState<HTMLElement|null>(null),[navigationControl,setNavigationControl]=React.useState<HTMLDivElement|null>(null),[drawerBody,setDrawerBody]=React.useState<HTMLDivElement|null>(null);
+  const desktopSlot=React.useRef<HTMLDivElement>(null),drawerSlot=React.useRef<HTMLDivElement>(null),headerElement=React.useRef<HTMLElement>(null),headerToggleSlot=React.useRef<HTMLSpanElement>(null),controlHadFocus=React.useRef(false),measureSidebar=React.useRef<()=>void>(()=>{});
+  const attachDrawerBody=React.useCallback((node:HTMLDivElement|null)=>{drawerSlot.current=node;setDrawerBody(node);if(node&&narrow&&sidebarElement&&sidebarElement.parentNode!==node)node.append(sidebarElement);},[narrow,sidebarElement]);
   // A constant portal target moves between the desktop grid and the existing drawer.
   // The content tree survives responsive changes and repeated open/close cycles.
   React.useLayoutEffect(()=>{const element=document.createElement('aside'),control=document.createElement('div');element.className='xui-shell-sidebar';element.id=sidebarId;control.className='xui-shell-navigation-control';setSidebarElement(element);setNavigationControl(control);return()=>{control.remove();element.remove();};},[sidebarId]);
@@ -139,6 +140,25 @@ export function AppShell(allProps:AppShellProps){const {controller:injected,them
   // One owned control moves with the responsive frame, preserving its DOM and focus.
   React.useLayoutEffect(()=>{if(!sidebarElement||!navigationControl)return;const target=headerControl?headerToggleSlot.current:sidebarElement;if(!target||navigationControl.parentNode===target&&target.lastElementChild===navigationControl)return;const active=document.activeElement,focused=!!active&&navigationControl.contains(active)||controlHadFocus.current&&active===document.body;target.append(navigationControl);if(focused)navigationControl.querySelector<HTMLButtonElement>('button')?.focus();else controlHadFocus.current=false;},[sidebarElement,navigationControl,headerControl,hasHeader,hasFooter]);
   React.useLayoutEffect(()=>{if(!hasSections||!sidebarElement||!headerElement.current)return;const headerNode=headerElement.current;const measure=()=>{sidebarElement.style.blockSize=!narrow&&scrollMode==='document'?`max(var(--nav-sidebar-min-height), calc(100dvh - ${headerNode.getBoundingClientRect().height}px))`:'';};measure();const observer=new ResizeObserver(measure);observer.observe(headerNode);return()=>observer.disconnect();},[hasSections,sidebarElement,narrow,scrollMode]);
+  // Layout projection only: neither region budgets nor responsive scrolling own host state.
+  // Measure natural region content, not clipped boxes, so switching flow cannot oscillate.
+  React.useLayoutEffect(()=>{
+    if(!sidebarElement||!narrow||!drawerBody)return;
+    const body=drawerBody;
+    const header=sidebarElement.querySelector<HTMLElement>('.xui-shell-sidebar-header'),tabs=sidebarElement.querySelector<HTMLElement>('.xui-shell-sidebar-tabs'),footer=sidebarElement.querySelector<HTMLElement>('.xui-shell-sidebar-footer');
+    const measure=()=>{
+      const available=body.clientHeight;if(!available)return;
+      const styles=getComputedStyle(sidebarElement),ratio=(name:string)=>Number.parseFloat(styles.getPropertyValue(name));
+      const headerHeight=header?.scrollHeight??0,footerHeight=footer?.scrollHeight??0,tabsHeight=tabs?.getBoundingClientRect().height??0;
+      const whole=headerHeight>available*ratio('--nav-drawer-header-ratio')||footerHeight>available*ratio('--nav-drawer-footer-ratio')||headerHeight+footerHeight+tabsHeight>available*(1-ratio('--nav-drawer-menu-ratio'));
+      const flow=whole?'whole':'split';if(sidebarElement.dataset.sidebarFlow!==flow)sidebarElement.dataset.sidebarFlow=flow;
+    };
+    const observer=new ResizeObserver(measure);
+    for(const region of [body,sidebarElement,header,tabs,footer,...Array.from(header?.children??[]),...Array.from(footer?.children??[])])if(region)observer.observe(region);
+    measureSidebar.current=measure;measure();return()=>{measureSidebar.current=()=>{};observer.disconnect();delete sidebarElement.dataset.sidebarFlow;};
+  },[sidebarElement,narrow,drawerBody,hasContent(sidebarHeader),hasTabs,hasFooter]);
+  // Fresh React slot objects must not tear down flow and reset scroll positions.
+  React.useLayoutEffect(()=>{measureSidebar.current();});
   // The owned control must occupy its final space before locating the active row.
   React.useLayoutEffect(()=>{sidebarElement?.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});},[hasSections,sidebarElement,navigationControl,narrow,navigationLabel,scrollMode]);
   const open=state.sidebarOpen;const trigger=React.useRef<HTMLButtonElement>(null),main=React.useRef<HTMLElement>(null),drawer=React.useRef<HTMLDivElement>(null);const id=React.useId();
@@ -161,5 +181,5 @@ export function AppShell(allProps:AppShellProps){const {controller:injected,them
     {navigationControl&&createPortal(navigationToggle,navigationControl)}
     {sidebarElement&&createPortal(<>{sidebarHeading}<div className={hasSections?"xui-shell-sidebar-menu":undefined}>{navigationSidebar}</div>{hasFooter&&<div className="xui-shell-sidebar-footer">{sidebarFooter}</div>}</>,sidebarElement)}
     <main className="xui-shell-main" id={id} ref={main} tabIndex={-1}>{hasContent(pageHeader)&&<div className="xui-shell-page-header">{pageHeader}</div>}{hasContent(pageToolbar)&&<div className="xui-shell-page-toolbar">{pageToolbar}</div>}<div className="xui-shell-content">{children}</div>{hasContent(pageFooter)&&<footer className="xui-shell-page-footer">{pageFooter}</footer>}</main>
-  </div>{<Dialog.Content id={drawerId} keepMounted ref={drawer} className="xui-shell-drawer" finalFocus={()=>{const active=document.activeElement;if(!restoreSidebarFocus||active&&active!==document.body&&active!==trigger.current&&active.isConnected&&!drawer.current?.contains(active))return false;return window.matchMedia('(max-width: 47.999rem)').matches?trigger.current:main.current;}}><Dialog.Title>{navigationLabel}</Dialog.Title><Dialog.Body ref={node=>{drawerSlot.current=node;if(node&&narrow&&sidebarElement&&sidebarElement.parentNode!==node)node.append(sidebarElement);}} className={hasSections?'xui-shell-sidebar-body':undefined}></Dialog.Body><Dialog.Footer><Dialog.Close render={<Button variant="outline"/>}>{closeLabel}</Dialog.Close></Dialog.Footer></Dialog.Content>}</PeerDialog.Root>;
+  </div>{<Dialog.Content id={drawerId} keepMounted ref={drawer} className="xui-shell-drawer" finalFocus={()=>{const active=document.activeElement;if(!restoreSidebarFocus||active&&active!==document.body&&active!==trigger.current&&active.isConnected&&!drawer.current?.contains(active))return false;return window.matchMedia('(max-width: 47.999rem)').matches?trigger.current:main.current;}}><Dialog.Title>{navigationLabel}</Dialog.Title><Dialog.Body ref={attachDrawerBody} className={hasSections?'xui-shell-sidebar-body':undefined}></Dialog.Body><Dialog.Footer><Dialog.Close render={<Button variant="outline"/>}>{closeLabel}</Dialog.Close></Dialog.Footer></Dialog.Content>}</PeerDialog.Root>;
 }

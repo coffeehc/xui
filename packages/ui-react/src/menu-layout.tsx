@@ -64,8 +64,10 @@ function NavigationMenuRoot(allProps:NavigationMenuProps){const {controller:inje
     return <li key={item.id} className="xui-menu-entry" data-menu-entry={item.id}><div className="xui-menu-row">
       {item.group?<h2 className="xui-menu-group-title">{content}</h2>:item.href?<NavItem render={renderLink?.(item)} href={item.href} target={item.target} rel={item.rel} download={item.download} selected={active===item.id} disabled={node.disabled} collapsed={collapsed} title={item.label} data-menu-id={item.id} data-menu-control="primary" onClick={event=>navigateNavigationItem(item,event,{...options,items,location:options.location??window.location.href,baseURL:options.baseURL??window.location.href})}>{content}</NavItem>:
         <BranchButton render={renderButton?.(item)} type="button" className="xui-nav-item" disabled={node.disabled||!hasChildren} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="primary" data-collapsed={collapsed} title={item.label} onClick={()=>setExpanded(item.id,!open)}>{content}<DisclosureIndicator className="xui-menu-chevron" open={open}/></BranchButton>}
+      {(!!item.href&&hasChildren||action)&&<div className="xui-menu-row-controls">
       {!!item.href&&hasChildren&&<Button className="xui-menu-branch-toggle" variant="ghost" data-icon="true" disabled={node.disabled} aria-label={(open?options.collapseBranchLabel:options.expandBranchLabel)?.(item)??`${open?'Collapse':'Expand'} ${item.label}`} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="toggle" onClick={()=>setExpanded(item.id,!open)}><DisclosureIndicator className="xui-menu-chevron" open={open}/></Button>}
       {action&&<RowAction item={item} disabled={node.disabled} render={action}/>}
+      </div>}
     </div><ul className="xui-menu-children" id={childId} hidden={!open}>{renderItems(item.children??[])}</ul></li>;
   });
   return <nav ref={root} className={cx('xui-navigation-menu xui-layer',className)} aria-label={options.label??'Navigation'} data-collapsed={collapsed} data-label-overflow={options.labelOverflow??'wrap'} data-action-alignment={options.actionAlignment??'center'}

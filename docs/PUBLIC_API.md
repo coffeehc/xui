@@ -90,7 +90,7 @@
 | `@coffeehc/xui-runtime/login-view` <!-- public-entry: @coffeehc/xui-runtime/login-view --> | [登录展示模型](../packages/runtime/src/login-view.ts)，显式借用AuthClient | [双模式](COMPONENTS.md#状态所有权与-controller-模式) | [登录](../examples/login-react/app.tsx) |
 | `@coffeehc/xui-runtime/clipboard` <!-- public-entry: @coffeehc/xui-runtime/clipboard --> | [只写剪贴板服务](../packages/runtime/src/clipboard.ts) | [复制合同](#剪贴板复制服务) | [正式浏览器示例](../tests/browser/clipboard.spec.mjs) |
 | `@coffeehc/xui-runtime/services` <!-- public-entry: @coffeehc/xui-runtime/services --> | [应用服务注册表](../packages/runtime/src/services.ts)：XuiServices、共享 getters、disposeXuiServices；不导出 install/create service factories | [启动、配置与应用服务](#启动配置与应用服务) | — |
-| `@coffeehc/xui-runtime/bootstrap` <!-- public-entry: @coffeehc/xui-runtime/bootstrap --> | [同步启动入口](../packages/runtime/src/bootstrap.ts)：bootstrap、BootstrapEnvironment、XuiApplication | [启动、配置与应用服务](#启动配置与应用服务) | [React示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-runtime/bootstrap` <!-- public-entry: @coffeehc/xui-runtime/bootstrap --> | [同步启动入口](../packages/runtime/src/bootstrap.ts)：bootstrap、disposeXuiServices、BootstrapEnvironment、XuiApplication | [启动、配置与应用服务](#启动配置与应用服务) | [React示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-runtime/config` <!-- public-entry: @coffeehc/xui-runtime/config --> | [纯配置解析与类型](../packages/runtime/src/config.ts)：resolveConfig、XuiConfig、XuiConfigOverrides、ConfigService | [启动、配置与应用服务](#启动配置与应用服务) | — |
 | `@coffeehc/xui-runtime/config.json` <!-- public-entry: @coffeehc/xui-runtime/config.json --> | [随包默认配置](../packages/runtime/src/config.json) | [启动、配置与应用服务](#启动配置与应用服务) | — |
 | `@coffeehc/xui-runtime/route` <!-- public-entry: @coffeehc/xui-runtime/route --> | [History路由服务与类型](../packages/runtime/src/route.ts) | [启动、配置与应用服务](#启动配置与应用服务) | — |
@@ -937,3 +937,5 @@ import {UploadService} from '@coffeehc/xui-runtime/upload';
 `@coffeehc/xui-react/tabs` 的 `TabsListProps.variant?: "segmented" | "line"` 是现有List的可选视觉组合，从4.2.7起默认line，需内嵌底槽时显式segmented；仅默认视觉改变，line不创建选择/路由/查询owner。单项最大宽度使用公共tabs-item-max-inline-size；直属文字自动进入溢出阅读槽，组合名称公开Tabs.Label与TabsLabelProps（text:string、无interactionRef），复用OverflowText的hover/键盘与静态降级。详见[Tabs合同](COMPONENTS.md#tabs)与[正式示例](../examples/tabs-overlay-react/app.tsx)。弹层关闭按[完整Escape层级](COMPONENTS.md#嵌套弹层与-tooltip-的-escape-顺序)验证，不能将Tooltip消耗的一次Escape记为Sheet丢失监听。
 
 `@coffeehc/xui-runtime/data-table`及runtime根入口新增`createDataTableColumnSizingController`与DataTableColumnWidths/Options/State/Change/Draft相关正式类型；React `/data-table`新增`DataTableColumnSizingProps`与可选`columnSizing`，默认或完整Controller注入互斥。列`resize`声明交互限制/翻译名称或false排除。原width、rows、排序和分页合同保留，精确字段见[交互列宽](COMPONENTS.md#交互列宽调整)与正式types。`table-resize.css`为可选交互能力分片，critical不预载未启用拖动的皮肤，style/components包含完整样式。
+
+4.2.14 的 AppShell/MenuLayout 保留公开 slot 与 Controller 类型，仅调整窄屏默认布局：导航抽屉默认全宽全高、单层内距、Tabs 独立轨道，内容超出区域预算时自动整体纵滚。SearchToolbar 的嵌套 actions 不再撑高高级筛选按钮。布局几何会变化，宿主不必增加补丁；桌面侧栏、主题、查询、认证与业务 owner 不变。

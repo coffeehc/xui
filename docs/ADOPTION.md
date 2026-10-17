@@ -79,6 +79,7 @@ pnpm preview
 | 工作区 | [workspace-react](../examples/workspace-react/app.tsx) |
 | 卡片集合 | [card-group-react](../examples/card-group-react/app.tsx) |
 | 完整表格 | [data-table-react](../examples/data-table-react/app.tsx) |
+| 多行操作、窄屏导航与阅读缩放 | [public-layout-react](../examples/public-layout-react/app.tsx) |
 | 高信噪比页面、表单和局部刷新 | [page-composition-react](../examples/page-composition-react/app.tsx) |
 | 日期时间 | [date-time-react](../examples/date-time-react/app.tsx) |
 | 登录 | [login-react](../examples/login-react/app.tsx) |
@@ -241,7 +242,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认配色为 Violet 电光紫，规范版本 4.2.13，另有五套官方配色供项目选择；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认配色为 Violet 电光紫，规范版本 4.2.14，另有五套官方配色供项目选择；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 
@@ -273,3 +274,5 @@ Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖
 ### 自助改密接入
 
 只在实际后端支持官方PUT /api/v1/auth/password时使用同一个AuthService.changePassword或公共PasswordChangeForm；禁止前后端各加一层翻译、备用URL、手写token读取或自动重试。复用现有NewPasswordFields；Dialog/Sheet保留挂载时传active=open，默认卸载与pagehide清密；业务回焦和重新登录目的地仍由宿主使用公开容器/RouteService接线。已提交与结果未知都不能再次写入来“核验”，后端全部会话撤销须在产品自己的真实链路验证。逐项按[AUTH-PASSWORD检查](ADOPTION_CHECKLIST.md)与[公共合同](PUBLIC_API.md#自助改密)，库级示例不等于产品升级完成。
+
+4.2.14 应用结束从 `@coffeehc/xui-runtime/bootstrap` 导入 `disposeXuiServices(window)`，不为 teardown 导入全量 `/services`。窄屏导航和多行查询工具的实际验收按 TOOLBAR-005、NAV-SPACE-001～003 执行；升级不代表消费项目已通过这些页面检查。

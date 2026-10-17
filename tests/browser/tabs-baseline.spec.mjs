@@ -12,8 +12,8 @@ async function visit(page,{shell='shell',root200=false,rtl=false,long=false,mode
  await expect(page.getByRole('tablist',{name:'会话范围'})).toBeVisible();await settle(page);
 }
 async function geometry(page){return page.getByRole('tablist',{name:'会话范围'}).evaluate(list=>{
- const rect=node=>{const r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height};},header=list.closest('.xui-shell-sidebar-header'),selected=list.querySelector('[aria-selected=true]'),css=getComputedStyle(list);
- return {list:rect(list),header:rect(header),headerScrollHeight:header.scrollHeight,headerClientHeight:header.clientHeight,selected:rect(selected),headerBorder:getComputedStyle(header).borderBlockEndWidth,headerPadding:getComputedStyle(header).paddingBlockEnd,shadow:css.boxShadow,rows:new Set([...list.children].map(node=>node.getBoundingClientRect().top.toFixed(2))).size,tabs:[...list.querySelectorAll('[role=tab]')].map(node=>({selected:node.getAttribute('aria-selected'),weight:getComputedStyle(node).fontWeight,font:getComputedStyle(node).fontSize,border:getComputedStyle(node).borderBlockEndWidth,color:getComputedStyle(node).color,rect:rect(node)}))};
+ const rect=node=>{const r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height};},header=list.closest('aside').querySelector('.xui-shell-sidebar-header'),track=list.closest('.xui-shell-sidebar-tabs')??header,selected=list.querySelector('[aria-selected=true]'),css=getComputedStyle(list);
+ return {list:rect(list),track:rect(track),header:rect(header),headerScrollHeight:header.scrollHeight,headerClientHeight:header.clientHeight,selected:rect(selected),headerBorder:getComputedStyle(header).borderBlockEndWidth,headerPadding:getComputedStyle(header).paddingBlockEnd,shadow:css.boxShadow,rows:new Set([...list.children].map(node=>node.getBoundingClientRect().top.toFixed(2))).size,tabs:[...list.querySelectorAll('[role=tab]')].map(node=>({selected:node.getAttribute('aria-selected'),weight:getComputedStyle(node).fontWeight,font:getComputedStyle(node).fontSize,border:getComputedStyle(node).borderBlockEndWidth,color:getComputedStyle(node).color,rect:rect(node)}))};
  });}
 async function verify(page,info,{rtl=false,zoom=false}={}){
  const list=page.getByRole('tablist',{name:'会话范围'}),tabs=list.getByRole('tab'),search=page.getByRole('searchbox',{name:'搜索会话'});await search.fill('保留搜索草稿');
@@ -26,12 +26,12 @@ async function verify(page,info,{rtl=false,zoom=false}={}){
  const observations=[];
  for(const tab of await tabs.all()){
   await tab.click();await expect(tab).toHaveAttribute('aria-selected','true');await withPanel(async()=>{const panel=page.getByRole('tabpanel').filter({visible:true});await panel.getByRole('textbox').fill('对应Panel保留的草稿');await panel.getByRole('region').evaluate(node=>node.scrollTop=70);});
-  const measured=await geometry(page);expect(measured.headerBorder).toBe('0px');expect(measured.headerPadding).toBe('0px');expect(measured.shadow).not.toBe('none');expect(measured.list.width).toBeCloseTo(measured.header.width,1);if(measured.headerScrollHeight<=measured.headerClientHeight+1)expect(measured.header.bottom).toBeCloseTo(measured.list.bottom,2);
+  const measured=await geometry(page);expect(measured.headerBorder).toBe('0px');expect(measured.headerPadding).toBe('0px');expect(measured.shadow).not.toBe('none');expect(measured.track.width).toBeCloseTo(measured.header.width,1);expect(measured.header.bottom).toBeLessThanOrEqual(measured.list.top+1);
   for(const item of measured.tabs){expect(item.weight).toBe(item.selected==='true'?'600':'400');expect(parseFloat(item.border)).toBeGreaterThan(0);}
   if(measured.rows===1)expect(measured.selected.bottom).toBeCloseTo(measured.list.bottom,2);else expect(measured.selected.bottom).toBeLessThanOrEqual(measured.list.bottom+.01);
   observations.push(measured);
  }
- const singleRows=observations.filter(item=>item.rows===1);if(singleRows.length===observations.length)for(const item of singleRows){expect(item.list.height).toBeCloseTo(singleRows[0].list.height,2);expect(item.header.bottom).toBeCloseTo(singleRows[0].header.bottom,2);}
+ const singleRows=observations.filter(item=>item.rows===1);if(singleRows.length===observations.length)for(const item of singleRows){expect(item.list.height).toBeCloseTo(singleRows[0].list.height,2);expect(item.header.height).toBeCloseTo(singleRows[0].header.height,2);}
  for(const tab of await tabs.all()){
   await tab.click();await withPanel(async()=>{const panel=page.getByRole('tabpanel').filter({visible:true});await expect(panel.getByRole('textbox')).toHaveValue('对应Panel保留的草稿');expect(await panel.getByRole('region').evaluate(node=>node.scrollTop)).toBe(70);});
   expect(await list.evaluate(node=>window.baselineNodes.list===node&&window.baselineNodes.panels.every((panel,index)=>panel===document.querySelectorAll('[role=tabpanel]')[index])&&window.baselineNodes.inputs.every((input,index)=>input===document.querySelectorAll('[role=tabpanel] input')[index]))).toBe(true);

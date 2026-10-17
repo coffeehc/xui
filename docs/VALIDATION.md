@@ -1,5 +1,25 @@
 # 验证证据与限制
 
+## 启动释放、多行工具栏与窄屏阅读空间（4.2.14，2026-10-17）
+
+仅修改 xui。与 Stitch 在既有设计会话审查 SearchToolbar 的跨行拉伸抑制、控件底边、单一抽屉内距、名称净宽与低高度退路。采用既有 48rem 断点（默认 768px），不采用设计回复中把 48rem 写成 640px 的笔误；区域预算按标题/关闭区之外的 Body 实际可用高度计算，不把 30%/20%/50% 当作整个视口可同时保证的比例。原始讨论与最终文字核准位于 `.artifacts/public-fixes-4.2.14/stitch-layout-review*`。Stitch 的附件通道未返回文件选择事件，本轮为文字/真实几何合同复核；实际截图由本地浏览器独立检查，不声称 Stitch 已查看最终截图。
+
+公开 `@coffeehc/xui-runtime/bootstrap` 直接再导出既有 `disposeXuiServices(window)`，释放 Window registry 及 owned 服务、保留 borrowed 服务，重复释放安全，再 bootstrap 创建新 owner；根入口与聚合入口保持。`app.services.dispose()` 只释放容器，不注销 Window registry。正式窄依赖图允许启动所需 theme，不带入 HTTP/Auth/Menu/Upload 等功能实现。没有新的认证、路由或请求 owner。
+
+SearchToolbar 的 search/actions 轨道、actions 内直接公开 Toolbar 使用控件底边对齐，多行操作不会拉高旁侧高级筛选；长文案保留自然高度。导航 Drawer 默认贴边全宽全高，取消重复 Dialog 内距，Sidebar 一层集中 padding；四槽仍为 Header、独立 Tabs、主菜单、Footer。头尾/Tabs 超预算时转为 Body 整体自然纵滚；普通高度保持 split。限制累计缩进，分支/配置动作成组换行，为名称保留净宽；desktop 宽度、compact rail、主题和阅读字号不变。默认窄屏抽屉外观有意改变，项目仍可通过公开 nav-drawer-max-inline-size 限制宽度；不要求产品覆盖内部 CSS。
+
+旧固定 4.2.13 独立 tarball 消费者 `.consumers/run-WrGaW4/react` 使用同一正式公共组合复现：1440px 工具栏高级筛选 108px、刷新 36px；390×900/scale=2 时 drawer 326px，四字“团队经理”名称 96px 宽、88px 高（两行，行高44px）。`baseline.log` 为单独 1/1 复现通过，证明旧包确有问题；它不计入新包通过数。
+
+最终 sourceGeneration 为 `e42488a95c75e690658ba8b24634a77be0ae83d563a38ef92a529c01b314c8da`，完整正式消费者 `.consumers/run-VbJaAA/react`。build/typecheck、581/581 unit、413 Token、文档/425条接入检查、contract/docs 11/11及完整独立 tarball consumer 的105个公开 ESM/CSS/types入口通过，React/ReactDOM/Base UI 单实例、零源码alias。关键CSS gzip 20,986/20,992 bytes，未放宽原预算；bootstrap+释放入口 gzip5,555，单独释放导入3,975，依赖图没有功能HTTP/Auth/Menu/Upload实现。三包SHA、依赖图与测试收据由自动归档的 manifest、metadata/consumer-validation.json、public-api.json 与 SHA256SUMS绑定，不手工补齐元数据。证据集中在 `.artifacts/public-fixes-4.2.14/`。
+
+最终正式包浏览器：`browser-final4.log` 为新增9/9通过（同文件的旧基线场景按模式故意跳过1项，已另跑旧包1/1）；`regression-final4.log` 为既有九文件179/179通过，无失败或跳过，合计188个候选场景，不累计quick或早期重复结果。覆盖light/dark/system、1440桌面/320和390窄屏/390×400短屏、100%与200%阅读、三主题真实Chrome设置200%浏览器缩放（DPR加倍、viewport减半、根字号不变、CSS zoom=1、pinch=1），另保留既有RTL、长中文与compact回归。工具栏高级筛选实测36px，actions108px时仍与36px输入/刷新底边一致；390×900/scale=2抽屉390px全宽、Body四向padding=0、四字名称268.31×44px（28px字/44px行高，单行）。正常split与短屏/放大whole均实测；逐个Tab焦点全可见、分支Enter/Space、独立配置仅一次、Footer与选中项的Tab/Shift+Tab、Escape回焦、宽窄往返同一节点和草稿通过。已查看浅色390/200%、深色320/200%、末项Tab焦点和桌面多行工具栏截图；`browser-proof`保存几何JSON与截图。正式归档的validation仅收录最终收据/日志/截图、旧基线与明确标记的失败过程，不混入quick tarball。
+
+过程失败保留：完整 unit 首轮命中旧324px断言，按已发布4.2.9的240–288px公共宽度修正；既有179项浏览器首轮128通过/51失败，包含旧宽度、Tabs嵌套位置与顶部toggle归属断言，以及真实的窄屏分支/配置部分换行问题和 SearchToolbar 示例缺少主题 owner。已将辅助动作成组、示例接公共 bootstrap，并更新测试到实际公共slot与现行宽度；保留焦点、几何、节点身份和交互断言。候选 CSS 多次超预算，合并重复默认声明与轨道约束后保留原20,992-byte预算，没有放宽门槛。严格分区断言另找出延迟挂载Body未启动预算的真实问题，改为稳定ref挂载信号；截图复核恢复Body明确padding=0；逐项Tab焦点净宽检查找出末项仍被横向裁切，公共sidebarTabs现按最近边界滚入，布局投影不因新JSX对象每次清理重置。早期候选失败与一次quick安装未完成即启动的404测试均单独保留，不计为新包通过。既有Footer测试同步按当前宽度允许的自然换行与whole模式实际滚动owner验收，没有取消可见边界、对齐、焦点或节点身份检查。
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm test:unit`、`pnpm test:consumer`；preview4173后运行 `tests/browser/public-layout.spec.mjs`，旧包单独以 `XUI_LAYOUT_BASELINE=1` 与 `--grep baseline` 复现。既有回归为 search-toolbar、sidebar-footer、sidebar-header-toolbar、sidebar-bottom、sidebar-width、tabs-baseline、navigation-presentation、navigation-labels、navigation-status 九个 spec。新示例 `examples/public-layout-react` 只消费公开 ESM/CSS/types，安装目录独立，不能通过 packages/src alias 或私有样式修复。
+
+未运行全仓 browser、watch/cold-start、Firefox/WebKit、实体设备或读屏器；不宣称 xAgent/xLead/xQuant 的实际页面、后端、升级或部署已验收。
+
 ## 六套项目配色与归属边界（4.2.13，2026-10-17）
 
 仅修改 xui。与 Stitch 在既有设计会话对齐 Violet/Ember，并根据用户决定将 Violet 作为默认，增加 Forest/Crimson/Cobalt，保留 Precision；具体色值由浏览器合成测量校正，不将设计稿标称比值当作验收。主题讨论和实际截图位于 `.artifacts/theme-comparison/`；正式回归、对比值、功能文件哈希和消费者 receipt 位于 `.artifacts/ownership-contract-4.2.13/`。

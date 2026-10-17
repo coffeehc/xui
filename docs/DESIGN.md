@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.13。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.14、4.2.15…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.14。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.14、4.2.15…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -606,7 +606,12 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --layout-header-brand-max: 50%;
     --nav-sidebar-footer-max: 50%;
     --nav-sidebar-min-height: calc(var(--nav-item-height) * 4);
-    --nav-drawer-max-inline-size: calc(var(--nav-item-height) * 8);
+    --nav-drawer-max-inline-size: 100vw;
+    --nav-drawer-padding: min(var(--nav-sidebar-padding), max(var(--space-text-gap), 2vw));
+    --nav-drawer-indent: min(var(--space-control-gap), 3vw);
+    --nav-drawer-header-ratio: .3;
+    --nav-drawer-footer-ratio: .2;
+    --nav-drawer-menu-ratio: .5;
     --nav-toggle-transform-origin: 60% 50%;
     --login-card-padding: calc(var(--space-section-gap) * 1.75);
     --login-card-inline-padding: min(var(--login-card-padding), 8vw);
@@ -2264,7 +2269,7 @@ LoadingState layout=inline 复用既有 Spinner 与一个 status 文本，无块
 
 Dialog偏好layout-dialog-width-ratio=40%，min/max分别24rem/48rem；Confirm偏好30%，min/max为20rem/32rem；侧向Sheet偏好60%，min/max为24rem/64rem。layout-dialog/confirm/drawer-width仍是公开组合结果，可单独覆盖；比例与rem边界均集中定义。普通Dialog/Confirm最后用视口减去两侧layout-viewport-inset封顶，min下限不能让320px视口溢出。侧向Sheet紧贴边缘、窄屏封顶完整视口；上下Sheet只使用独立layout-sheet-block-size与sheet-max-block-size，绝不把横向百分比再用作纵向尺寸。
 
-1280px宽、16px根字号下，Dialog/Confirm仍为512/384px，侧向Sheet改为768px；1920px时分别768/512/1024px上限。窄屏由各自最终视口约束决定，不能只验证字符串。导航drawer继续由nav-drawer-max-inline-size限制为默认288px，独立于这些详情面板；展开侧栏现按4.2.9合同为240–288px，紧凑侧栏保留60px。本段是用户追加的响应式宽度默认变更，不能并入“其余设计token迁移默认不变”的声明。
+1280px宽、16px根字号下，Dialog/Confirm仍为512/384px，侧向Sheet改为768px；1920px时分别768/512/1024px上限。窄屏由各自最终视口约束决定，不能只验证字符串。导航drawer继续独立于详情Sheet：默认贴边全宽/全高，nav-drawer-max-inline-size 可由项目限制；展开侧栏现按4.2.9合同为240–288px，紧凑侧栏保留60px。本段是用户追加的响应式宽度默认变更，不能并入“其余设计token迁移默认不变”的声明。
 
 ### 公共布局插槽与默认顶栏工具
 
@@ -2311,7 +2316,7 @@ HeaderBrand logo盒使用control-height-sm，图片/SVG以contain限于盒内，
 
 ### 通用搜索与操作工具栏
 
-SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。search、actions 和 advanced 是公开内容入口，不增加查询、分页、权限或请求 owner。宽屏搜索轨道采用 flex 剩余空间与 min-inline-size:0，主操作在行末；Input 的 100% 默认宽度只相对于搜索轨道，不把操作挤到下一行。操作组按 control-height、button-padding-inline、button-gap、control-icon-size 统一按钮尺寸；长标签可自然增高，同一行 stretch，不以固定高度裁切。工具栏按自身容器 40rem 既有断点换行，搜索独占一行，操作仍完整可达，不只依赖窗口宽度。
+SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。search、actions 和 advanced 是公开内容入口，不增加查询、分页、权限或请求 owner。宽屏搜索轨道采用 flex 剩余空间与 min-inline-size:0，主操作在行末；Input 的 100% 默认宽度只相对于搜索轨道，不把操作挤到下一行。操作组按 control-height、button-padding-inline、button-gap、control-icon-size 统一按钮尺寸；长标签可自然增高，不以固定高度裁切。search 与 actions 轨道以及 actions 内的公开 Toolbar 采用控件底边对齐；带标签 Field 的控制项与普通按钮对齐。嵌套 Toolbar 可独立换行，高级筛选按钮保持自身内容高度，不能被整组多行高度 stretch 拉高。简单无帮助字段以控制边框底边对齐；含帮助/错误的复杂字段放在 advanced，不以内部 DOM 测量猜测其控制位置。工具栏按自身容器 40rem 既有断点换行，搜索独占一行，操作仍完整可达，不只依赖窗口宽度。
 
 高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和生命周期见 [弹层与工具栏](COMPONENTS.md#searchtoolbar)。
 
@@ -2377,3 +2382,11 @@ runtime ToastController 是集合、进入/关闭阶段、可见上限、超时�
 新增通知不抢焦点；F6 聚焦通知区域，Tab 进入动作，再次 F6 返回原位置，Escape/关闭把焦点移至其余可见通知或原位置。普通通知 polite，高优先级 assertive；关闭或不可见项退出交互。重要错误持续显示在所属内容区域，不能只放自动消失 Toast。借用 Controller 退出 View 时释放 DOM/暂停租约，不销毁宿主队列；默认实例真实退出时销毁。完整双模式、迁移差异和可执行验证分别见 COMPONENTS、PUBLIC_API 与 VALIDATION。
 
 4.2.12的可选DataTable列宽交互复用原表头、表体、footer与独立状态owner。headerLabel/排序动作保留表头文字角色；逻辑末端separator为独立24px命中区，细线使用separator-line，hover/focus/拖动使用action-primary与interaction-hover；禁用保留静态线和aria-disabled。DataTable数据/分页不归列宽Controller。默认上下限由data-table-column-resize-min/max集中派生，用户确认宽度属于真实CSS像素测量例外，不构成消费项目自行缩字号。详细状态、slot与清理合同见COMPONENTS交互列宽章节。
+
+### 窄屏导航空间与区域预算（4.2.14）
+
+导航抽屉沿用 AppShell/MenuLayout 的同一份侧栏与模态焦点，既有 48rem 窄屏断点不变。抽屉默认贴边全宽全高，标题、Body、关闭动作沿纵向排列；Body 不再叠加 Dialog 内距，Sidebar 仅一层 nav-drawer-padding=min(nav-sidebar-padding,max(space-text-gap,2vw))，文字、图标和点击区域继续按公开阅读尺度放大。桌面侧栏宽度与紧凑 rail 不变。
+
+sidebarHeader 放操作/搜索，sidebarTabs 是独立、不被 Header 裁切的水平 List 轨道，sidebar 是主要菜单，sidebarFooter 是账号/环境。正常 split 模式以 Body 可用高度为预算：Header 最多 nav-drawer-header-ratio=.3，Footer 最多 nav-drawer-footer-ratio=.2，菜单目标至少 nav-drawer-menu-ratio=.5。标题、关闭动作和 Tabs 的实际占用也计入预算，不能把这些比例误认为整个视口的同时保证。任一区域自然高度超预算，或头/尾/Tabs 总占用超过剩余菜单预算时，公共 ResizeObserver 只切换布局投影为 whole：Header→Tabs→Menu→Footer 在 Body 同一自然流纵滚，不各自裁切成多个小窗口。无固定总行数假设，不缩字、不隐藏入口；焦点、草稿、展开状态与节点保持。
+
+窄屏导航层级只累计一层 nav-drawer-indent=min(space-control-gap,3vw)，更深层保留语义层级，不继续蚕食宽度。主项以 nav-row-primary-min-width 优先分配，独立分支/行尾动作作为一组，空间不足时整组换行；名称部件消费剩余宽度。390px 与公共 scale=2 时以“团队经理”四字完整横排验收，并测有图标、状态、独立动作及长账号。触屏/减少动效继续完整静态换行；不把 marquee 当作修复净宽的手段。富标签中宿主自有组合仍须允许自身内容换行，公共库不推断任意后代结构。

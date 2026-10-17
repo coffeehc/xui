@@ -31,11 +31,11 @@ test('AppShell preserves legacy header markup and adds the default right theme c
 test('compact sidebar derives exactly one item plus symmetric insets from DESIGN',async()=>{
   const {light}=checkContract(await readFile('docs/DESIGN.md','utf8'));
   const number=(name,font=16,viewport=1280)=>{const expression=expand(light[name],light).replace(/calc/g,'').replace(/min/g,'Math.min').replace(/rem/g,'*'+font).replace(/vw/g,'*'+viewport+'/100').replace(/px/g,'');assert.match(expression.replace(/Math\.min|clamp/g,''),/^[\d\s,.*+()/\-]+$/);return Function('clamp',`return (${expression})`)((lo,value,hi)=>Math.max(lo,Math.min(value,hi)));};
-  assert.equal(number('--nav-sidebar-width'),324);
-  assert.equal(number('--nav-sidebar-width',16,1600),400);
-  assert.equal(number('--nav-sidebar-width',16,1920),432);
+  assert.equal(number('--nav-sidebar-width'),240);
+  assert.equal(number('--nav-sidebar-width',16,1600),288);
+  assert.equal(number('--nav-sidebar-width',16,1920),288);
   assert.equal(number('--nav-sidebar-width',32,800),400);
-  assert.equal(number('--nav-sidebar-width',32,1600),648);
+  assert.equal(number('--nav-sidebar-width',32,1600),480);
   assert.equal(number('--nav-sidebar-padding'),12);
   assert.equal(number('--nav-collapsed-width'),60);
   assert.equal(number('--nav-collapsed-width'),number('--nav-collapsed-item-size')+2*number('--nav-sidebar-padding'));

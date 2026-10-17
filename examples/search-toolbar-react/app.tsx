@@ -6,6 +6,8 @@ import {Input,Field,Textarea} from '@coffeehc/xui-react/forms';
 import {Container,Grid,PageHeader,Stack,Toolbar} from '@coffeehc/xui-react/layout';
 import {Surface} from '@coffeehc/xui-react/feedback';
 import '@coffeehc/xui-runtime/init.js';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
+bootstrapBrowserExample();
 import '@coffeehc/xui-theme/style.css';
 
 declare global {interface Window {searchToolbarExample:{update():void;setExpanded(value:boolean):void;setAdvanced(value:boolean):void;setAccept(value:boolean):void}}}

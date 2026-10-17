@@ -1032,6 +1032,8 @@ React 推荐组合：`<Dialog.Header closeButtonProps={{'aria-label':'关闭设�
 
 完整接线见 [React SearchToolbar](../examples/search-toolbar-react/app.tsx)。
 
+`actions` 可直接填公开控件，也可填嵌套 Toolbar。控制区域按底边对齐，Field 标签可自然换行；带帮助/错误的复杂字段放 advanced。操作组内部换行不会拉高独立高级筛选按钮，按钮按公共最小高度与自身文案自然增高。示例见 [多行工具与导航](../examples/public-layout-react/app.tsx)。
+
 - search/actions/advanced：ReactNode，可分别省略；null/undefined/布尔/空字符串/空 Fragment/空数组不占对应槽。0 是内容。返回 null 的自定义组件仍是已提供的内容，不对它做 DOM 探测。
 - defaultExpanded：仅初始值，默认 false；true 初始展开。后续改变此字段不会重置用户选择。
 - expanded/onExpandedChange(next)：受控事实与请求；拒绝/暂不回传时界面不擅自改变。程序更新 expanded 不触发 onExpandedChange。受控与非受控模式应保持稳定。
@@ -1452,3 +1454,9 @@ AuthClient新方法及busy的password分支是新增公开合同；使用官方S
 ## 进度 Progress
 
 Progress保留语义progress、真实value/max与无value的未知状态；轨道及填充统一使用radius-sm的小圆角等高条形，不能用radius-full把宽轨道变成椭圆。宽度由所在公共slot决定，主题/RTL/缩放/forced-colors和reduced-motion沿用原合同。
+
+### 导航抽屉的阅读空间（4.2.14）
+
+AppShell/MenuLayout 在既有窄屏断点使用同一侧栏、同一导航 Controller 和模态焦点。默认贴边全宽全高；标题/关闭区与 Sidebar 各处只保留一层集中内距，Body 无重复 padding。sidebarTabs 与 sidebarHeader 分开布局，四个长中文 Tab 可以在 sidebarTabs 横向轨道中滚动，List 保留单一分隔基线，不能被 Header 的纵向裁切吞掉。窄屏公共槽将获得焦点的项按最近边界滚入可见区域，宿主不必补滚动事件；普通内容重渲染不先重置区域布局投影。
+
+正常分区按 Body 可用高度和集中比例分配 Header/Footer/Menu；头尾自然内容超预算，或 Tabs 等占用导致菜单目标空间不足时，公共层自动改为 Body 整体纵滚。Header→Tabs→Menu→Footer 顺序与内容不变，不重挂组件，不销毁草稿/选中/展开事实。短屏、长账户与200%阅读不通过缩字或隐藏动作解决。独立分支与行尾操作空间不足换行，深层缩进最多累计一层；触屏长名称仍完整静态换行。实际公开组合见 [多行工具与导航](../examples/public-layout-react/app.tsx)。

@@ -1,15 +1,15 @@
 {
-  "contractVersion": "4.2.13",
+  "contractVersion": "4.2.14",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
-  "defaultTokenCount": 408,
+  "defaultTokenCount": 413,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "397def2935195bf8f939bfeb76312101d1f43b6d8c0b664fe0eb829fb6ae5d40",
+  "defaultCssSha256": "0521e301af998d4b5788d2a41f1ec2d782de09828ed9520bf8be250d31c06559",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -92,7 +92,8 @@
     "Add one shared document interface-scale method and sessionStorage pre-paint restore; keep the default at 100 percent and derive rem geometry from the browser root font baseline. No new UI control or React-specific scaling owner.",
     "Use public sidebar minimum/maximum tokens (324/432px at the default scale), a 25vw preference and a 50vw safety cap; keep the compact rail and mobile drawer independent.",
     "Remove native DOM UI exports and implementations in the authorized 1.0.0 breaking release. React owns UI; runtime retains services, models and utilities.",
-    "Render Card as header/content/footer only; description and children share content, with natural height and no empty content track."
+    "Render Card as header/content/footer only; description and children share content, with natural height and no empty content track.",
+    "4.2.14 Stitch layout review: control-bottom aligned multirow SearchToolbar; full navigation drawer, single inset, independent Tabs, bounded indentation and content-budget whole-scroll fallback. Existing desktop widths, fonts, palettes and state owners retained."
   ],
   "architectureReference": {
     "path": "docs/design-sources/stitch-token-architecture.v1.txt",

@@ -589,3 +589,10 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | AUTH-PASSWORD-GEN | 并发session/refresh/身份变化 | 共享原owner预算；旧代迟到不能覆盖新登录；写入期间拒绝重复 | 代次竞争/取消与跨tab证据 | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
 | AUTH-PASSWORD-SECRET | 输入/提交/关闭/卸载 | 三密码只在DOM和提交作用域；清密/显隐复位；state/URL/storage/log/error无秘密 | DOM引用与安全state/诊断扫描 | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
 | AUTH-PASSWORD-VIEW | 表单默认/完整Controller注入 | 唯一Auth；复用NewPasswordFields/Field/FormActions/Alert；keepMounted以active接open | 类型互斥、焦点/键盘/主题/两种200% | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
+
+| ID | 对象 | 必须检查 | 证据 | 依据 |
+|---|---|---|---|---|
+| TOOLBAR-005 | actions 内含嵌套 Toolbar/带标签 Field | 换成多行不把高级筛选拉高到整组高度；普通字段控制边框与按钮底边对齐；长字自然增高 | 单行/多行/窄容器/两种200%真实几何及截图 | [SearchToolbar](COMPONENTS.md#searchtoolbar) |
+| NAV-SPACE-001 | 窄屏导航抽屉 | 默认贴边全宽，一层内距；320/390px与scale=2名称保持可辨、四字常规名称不逐字纵排 | computed内距、名称净宽/行高及截图 | [阅读空间](COMPONENTS.md#导航抽屉的阅读空间4214) |
+| NAV-SPACE-002 | Header/Tabs/Menu/Footer | Tabs独立；菜单有主要空间；头尾超预算/短屏自动整体纵滚，全部动作/账号/搜索可达 | 两种flow、滚动owner、键盘和短屏截图 | [阅读空间](COMPONENTS.md#导航抽屉的阅读空间4214) |
+| NAV-SPACE-003 | 分区切换与宽窄往返 | 保留节点/草稿/展开/选择；独立动作不误导航；Escape回真实触发器 | 节点身份、请求/动作次数、焦点 | [阅读空间](COMPONENTS.md#导航抽屉的阅读空间4214) |
