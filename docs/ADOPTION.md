@@ -261,3 +261,7 @@ Vite 无法静态发现的懒加载深入口可能在首次访问时触发依赖
 2.0.0 状态控制采用 [逐项双模式矩阵](COMPONENTS.md#状态所有权与-controller-模式) 与 STATE-OWNER-001～007、STATE-COPY-001。旧受控props仍有效；需要完整自定义交互时注入同契约Controller，不把value/onChange/handle当完整替换。服务页面区分旧 service controller 和 viewController，AuthClient、业务loader/adapter与权限仍归原owner。基础服务从 bootstrap/注册表获取，组件Controller factory仍按组件生命周期使用。复制统一使用 [runtime只写服务](PUBLIC_API.md#剪贴板复制服务) 或通过第二参数注入的平台writer，不新增前端传输适配/认证/查询层。3.0.0 的 Toast 注入完整 xui Controller，旧 Base UI manager 须换为 xui 工厂；不访问 peer 私有 store。逐项验证仍须以消费项目为准。
 
 可选列宽拖动从4.2.10起使用DataTable.columnSizing及正式Controller；无需复制表头逻辑。完整style.css已含table-resize.css，采用critical或按需table.css的宿主须显式载入该可选分片。升级不自动为旧表打开拖动，也不保存列偏好；见[交互列宽](COMPONENTS.md#交互列宽调整)。
+
+### 自助改密接入
+
+只在实际后端支持官方PUT /api/v1/auth/password时使用同一个AuthService.changePassword或公共PasswordChangeForm；禁止前后端各加一层翻译、备用URL、手写token读取或自动重试。复用现有NewPasswordFields；Dialog/Sheet保留挂载时传active=open，默认卸载与pagehide清密；业务回焦和重新登录目的地仍由宿主使用公开容器/RouteService接线。已提交与结果未知都不能再次写入来“核验”，后端全部会话撤销须在产品自己的真实链路验证。逐项按[AUTH-PASSWORD检查](ADOPTION_CHECKLIST.md)与[公共合同](PUBLIC_API.md#自助改密)，库级示例不等于产品升级完成。

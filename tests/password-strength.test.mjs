@@ -63,3 +63,8 @@ test('new-password aggregate owns error, tip and both visibility states without 
  assert.doesNotMatch(JSON.stringify(snapshot)+JSON.stringify(states),/synthetic-confirmation-secret/);controller.clear();assert.deepEqual(controller.getState(),{error:null,tipOpen:false,strength:{status:'idle'}});assert.equal(controller.password.inputController.getState().visible,false);assert.equal(controller.confirmation.getState().visible,false);
  controller.destroy();controller.setTipOpen(true);assert.equal(controller.getState().tipOpen,false);
 });
+
+
+test('aggregate cleanup preserves error callback deduplication',()=>{
+ const changes=[],controller=createNewPasswordFieldsController({onErrorChange:value=>changes.push(value)});controller.clear();controller.setError('confirmation_mismatch');controller.clear();controller.clear();assert.deepEqual(changes,['confirmation_mismatch',null]);controller.destroy();
+});

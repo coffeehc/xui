@@ -37,7 +37,7 @@ export function createPasswordStrengthController(options:PasswordStrengthControl
  const controller:PasswordStrengthController={getState:()=>state,subscribe(listener){if(dead)return()=>{};listeners.add(listener);return()=>{listeners.delete(listener);};},
   update(next){if(dead)return;current={...current,...next};inputController.update({defaultVisible:current.defaultVisible,onVisibleChange:visible=>current.onVisibleChange?.(visible)});},
   bindReader(readPassword){if(typeof readPassword!=='function')throw new TypeError('Password reader must be a function');if(dead)return()=>{};const lease={read:readPassword};binding=lease;owner.clear();return()=>{if(binding!==lease)return;binding=undefined;owner.clear();};},
-  clear(){if(dead)return;owner.clear();inputController.markCleared();},refresh(readPassword){if(dead)return;if(readPassword)current={...current,readPassword};owner.refresh();},inputController,
+  clear(){if(dead)return;try{owner.clear();}finally{inputController.markCleared();}},refresh(readPassword){if(dead)return;if(readPassword)current={...current,readPassword};owner.refresh();},inputController,
   destroy(){if(dead)return;dead=true;binding=undefined;lifetime.abort();owner.destroy();inputController.destroy();listeners.clear();current={readPassword:()=>''};state=Object.freeze({status:'idle'});}};
  return Object.freeze(controller);
 }
@@ -56,12 +56,12 @@ export function createNewPasswordFieldsController(options:NewPasswordFieldsContr
  const password=createPasswordStrengthController({readPassword:()=>null,defaultVisible:options.defaultVisible,onVisibleChange:options.onVisibleChange,onChange:options.onStrengthChange});
  const confirmation=createPasswordInputController({defaultVisible:options.defaultVisible,onVisibleChange:options.onVisibleChange});
  const snapshot=()=>Object.freeze({error,tipOpen,strength:password.getState()});let state:Readonly<NewPasswordFieldsState>=snapshot();
- const publish=()=>{if(dead)return;state=snapshot();for(const listener of [...listeners])if(listeners.has(listener))listener();};
- const unsubStrength=password.subscribe(()=>{state=snapshot();for(const listener of [...listeners])if(listeners.has(listener))listener();});
+ const publish=()=>{if(dead)return;state=snapshot();for(const listener of [...listeners])if(listeners.has(listener))try{listener();}catch{/* Observers cannot interrupt sibling password cleanup. */}};
+ const unsubStrength=password.subscribe(publish);
  const setError=(next:string|null)=>{if(dead||next===error)return;error=next;publish();current.onErrorChange?.(next);};
  const controller:NewPasswordFieldsController={getState:()=>state,subscribe(listener){if(dead)return()=>{};listeners.add(listener);return()=>{listeners.delete(listener);};},
   update(next){if(dead)return;current={...current,...next};password.update({defaultVisible:current.defaultVisible,onVisibleChange:current.onVisibleChange,onChange:current.onStrengthChange});confirmation.update({defaultVisible:current.defaultVisible,onVisibleChange:current.onVisibleChange});},
-  setError,setTipOpen(next){if(dead||tipOpen===next)return;tipOpen=next;publish();},clear(){if(dead)return;setError(null);if(tipOpen){tipOpen=false;publish();}password.clear();confirmation.markCleared();},
+  setError,setTipOpen(next){if(dead||tipOpen===next)return;tipOpen=next;publish();},clear(){if(dead)return;const hadError=error!==null;error=null;tipOpen=false;for(const clear of [()=>password.clear(),()=>confirmation.markCleared()])try{clear();}catch{/* Always attempt both visibility resets. */}publish();try{if(hadError)current.onErrorChange?.(null);}catch{/* Cleanup has already completed. */}},
   password,confirmation,destroy(){if(dead)return;dead=true;unsubStrength();password.destroy();confirmation.destroy();listeners.clear();current={};error=null;tipOpen=false;state=Object.freeze({error:null,tipOpen:false,strength:Object.freeze({status:'idle'})});}};
  return Object.freeze(controller);
 }

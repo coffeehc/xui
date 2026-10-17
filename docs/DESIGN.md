@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.11。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.9、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.12。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.9、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1613,7 +1613,7 @@ UI是人类观察系统状态和数据、直接操作并介入Agent操作的入�
 
 必要结果摘要必须完整显示，未知结果及实际可用的后续操作不可隐藏在详情中。登录和 Key 管理按各自公开合同通过普通会话或列表单次核验，不增加持久写入门禁或自动重发写请求。宿主有独立冗长说明时，可在现有feedback slot中组合公共Disclosure；默认摘要仍在外部，展开有明确名称、支持Enter/Space、全文随文档滚动，收起与回焦点保留输入。公共布局不能猜截断宿主文案、另造摘要或改变业务语义；仅给了一个长消息时显示全文。不新增详情API或业务动作。反馈动作在同一反馈区域自然换行，不与长消息争夺窄小横向空间。
 
-提交忙态仅在主按钮原位显示一次状态文案并以单一live/status语义发布，配合aria-busy和既有禁重入。与按钮不同的session核对、未知、错误与恢复信息仍在反馈区域；不能为去重隐藏重要事实。React必填字段按已有Field惯例显示aria-hidden星号，真实required与准确可访问名称保持。普通密码登录不显示新密码规则或强度；管理员初始化采用NewPasswordFields。没有虚构的注册、找回密码、SSO或验证码入口。安全可重试读取使用公共ghost动作；未知写入不自动refresh/logout/重放。
+提交忙态仅在主按钮原位显示一次状态文案并以单一live/status语义发布，配合aria-busy和既有禁重入。与按钮不同的session核对、未知、错误与恢复信息仍在反馈区域；不能为去重隐藏重要事实。React必填字段按已有Field惯例显示aria-hidden星号，真实required与准确可访问名称保持。普通密码登录不显示新密码规则或强度；管理员初始化与自助改密的新密码部分采用NewPasswordFields。自助改密独立form按Field→FormActions→真实反馈编排，当前密码使用同一PasswordInput；无新皮肤、尺寸或秘密草稿。确定拒绝、已更改和结果未知分别呈现，不把取消/超时说成服务器回滚；关闭清密，保留挂载通过公开active状态停止所属等待。没有虚构的注册、找回密码、SSO或验证码入口。安全可重试读取使用公共ghost动作；未知写入不自动refresh/logout/重放。
 
 SSO显式配置时作为主动作后的次级组。极端长主动作保留完整可访问名称，login-action-max-block-size（20dvh且至少login-control-height）限制单按钮高度并可内部滚动，保留safe center与四边focus。状态标签原位切换并滚动归零；普通通知不重挂输入或按钮。登录、初始化和纯AuthPage消费同一结构和token，不允许产品私有CSS补丁。
 
@@ -1812,4 +1812,4 @@ runtime ToastController 是集合、进入/关闭阶段、可见上限、超时�
 
 新增通知不抢焦点；F6 聚焦通知区域，Tab 进入动作，再次 F6 返回原位置，Escape/关闭把焦点移至其余可见通知或原位置。普通通知 polite，高优先级 assertive；关闭或不可见项退出交互。重要错误持续显示在所属内容区域，不能只放自动消失 Toast。借用 Controller 退出 View 时释放 DOM/暂停租约，不销毁宿主队列；默认实例真实退出时销毁。完整双模式、迁移差异和可执行验证分别见 COMPONENTS、PUBLIC_API 与 VALIDATION。
 
-4.2.11的可选DataTable列宽交互复用原表头、表体、footer与独立状态owner。headerLabel/排序动作保留表头文字角色；逻辑末端separator为独立24px命中区，细线使用separator-line，hover/focus/拖动使用action-primary与interaction-hover；禁用保留静态线和aria-disabled。DataTable数据/分页不归列宽Controller。默认上下限由data-table-column-resize-min/max集中派生，用户确认宽度属于真实CSS像素测量例外，不构成消费项目自行缩字号。详细状态、slot与清理合同见COMPONENTS交互列宽章节。
+4.2.12的可选DataTable列宽交互复用原表头、表体、footer与独立状态owner。headerLabel/排序动作保留表头文字角色；逻辑末端separator为独立24px命中区，细线使用separator-line，hover/focus/拖动使用action-primary与interaction-hover；禁用保留静态线和aria-disabled。DataTable数据/分页不归列宽Controller。默认上下限由data-table-column-resize-min/max集中派生，用户确认宽度属于真实CSS像素测量例外，不构成消费项目自行缩字号。详细状态、slot与清理合同见COMPONENTS交互列宽章节。

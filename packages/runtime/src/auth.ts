@@ -13,6 +13,7 @@ export type {
   AuthUser,
   AuthSession,
   LoginCredentials,
+  PasswordChangeCredentials,
   AuthRequestOptions,
   AuthState,
   AuthClientOptions,
@@ -31,4 +32,4 @@ import {getAuthService as resolveAuth} from './auth-access.js';
 import type {AuthClient} from './auth-service.js';
 import {serviceInstance} from './service-resolvers.js';
 /** Shared authentication reference; all methods use the registered application's one auth owner. */
-export const AuthService:AuthClient=serviceInstance(resolveAuth,['getState','subscribe','currentUser','refresh','login','logout','cancel','expire','destroy']);
+export const AuthService:AuthClient=serviceInstance(resolveAuth,['getState','subscribe','currentUser','refresh','login','logout','changePassword','cancel','expire','destroy']);

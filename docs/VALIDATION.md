@@ -1,8 +1,22 @@
 # 验证证据与限制
 
+## 自助改密与原认证owner（4.2.12，2026-10-17）
+
+复核4.2.11没有公开改密命令后实现，不重复改造已闭环的组件。仅修改xui；只读核对BaseService `5e2c906bcb19913bbbd1959bf06d7463f486edb4`官方fixture。`AuthClient/AuthService.changePassword`固定官方PUT、唯一Bearer、omit/no-store/error redirect，严格确认schema1三字段；成功清凭据并要求重新登录，不添加备用URL、通用auth白名单、第二owner或写入重放。公共PasswordChangeForm复用原Field/PasswordInput/NewPasswordFields/FormActions/Alert，支持默认及完整Controller注入、keepMounted的active、清密和关闭回焦。
+
+证据集中在`.artifacts/auth-password-validation/`，最终sourceGeneration为`8f1141f2ec8ddc2b26b9d5a482948402253408cd9f3dc9c5f1b9b9459ae343a1`。完整正式consumer通过全部105个ESM/CSS/types入口、peer单实例和公开分片/包尺寸门槛；三包摘要见consumer-final.json与自动归档manifest。build/typecheck、Token 408项与文档检查通过。`unit-final-v3.log`为85项定向unit全部通过，包含原Auth、密码/强度、官方DTO正负例、确定拒绝/冲突/50302、超时未知、单一等待预算、共享refresh、取消与旧代迟到、安全错误、同毫秒双owner、锁释放后旧失败延迟投递及异常订阅者清理。`browser-final-v3.json`20项Chromium与`cross-final-v3.json`34项Firefox/WebKit通过；`field-regression-final-v3.json`另有5项原登录/初始化/新密码字段回归通过，均无跳过，不累计早期候选结果。
+
+浏览器只使用独立安装的正式ESM/CSS/types三包（最终consumer-final.json、完整正式消费者`.consumers/run-fIN7HR/react`），保持React/ReactDOM/Base UI单实例、零packages/src alias。覆盖owned/injected、light/dark/system及系统主题切换、桌面/390窄屏、长中文、200%根字号、真实Chrome设置200%缩放，必填/确认错误关联与焦点、弱但符合长度的密码可提交、busy单次写入、确定拒绝可修改、未知不重发、成功反馈焦点、keepMounted关闭回到公共trigger、卸载及pagehide清空保留DOM引用、真实兄弟标签页失效且零refresh恢复。已查看review-light-desktop/review-dark-narrow/review-system-zoom三张截图，输入、主动作、自然换行和焦点轮廓可见。
+
+过程失败与修正：审查发现全局cancel可恢复旧凭据、异常observer中断模型进度、错误DTO分类不严，以及同毫秒跨owner旧事件/聚合密码显隐清理，均补代码和回归。跨tab只存数字协调水位，不存密码/token或会话；storage被禁用时不阻断认证，但不承诺跨tab完整排序，详见PUBLIC_API。浏览器候选中一次选中了额外的隐藏strength status，一次在写入尚未派发时立即卸载却期待有一次写入；分别收紧反馈定位和等待实际派发后再测取消，不要求库强行发送已取消写入，旧失败日志保留。
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node scripts/check-docs.mjs`；`node --test tests/auth.test.mjs tests/auth-password.test.mjs tests/auth-coordination.test.mjs tests/password-change.test.mjs tests/password.test.mjs tests/password-strength.test.mjs tests/contract.test.mjs`。定向consumer脚本在证据目录，完整正式消费使用`pnpm test:consumer`；preview4173执行password-change.spec.mjs及证据目录cross.config.mjs；字段回归运行password-fields/public-feedback并grep `both password reveal|NewPasswordFields|clear`。
+
+未执行全仓unit/browser、真实账户或BaseService数据库撤销测试、消费项目升级/页面/API/部署、实体设备或读屏器；合成响应不能证明全部服务器旧会话已撤销。官方后端GET/PUT协议不会因公共表单自动适配，产品仍需独立核验真实鉴权与撤销。
+
 ## Progress等高轨道（4.2.11，2026-10-17）
 
-旧4.2.10正式消费者`.consumers/run-852Het/react`复现600×8轨道border-radius为50%，截图及来源见`.artifacts/progress-shape-validation/baseline.json/png`。仅Progress及原生绘制伪元素改用已有radius-sm；不改变全局circle token、Spinner、value/max或查询。正式三包定向消费者generation为`8e7836e7bb8267a94ff25b6ecd47688ac310108abd4a77b6b457882de5a07b54`，路径和三包摘要见同目录consumer.json，ESM/CSS/types及React/ReactDOM/Base UI单实例已核验；本版不单独生成完整归档，后续统一正式包需再过完整consumer。
+旧4.2.10正式消费者`.consumers/run-852Het/react`复现600×8轨道border-radius为50%，截图及来源见`.artifacts/progress-shape-validation/baseline.json/png`。仅Progress及原生绘制伪元素改用已有radius-sm；不改变全局circle token、Spinner、value/max或查询。正式三包定向消费者generation为`8e7836e7bb8267a94ff25b6ecd47688ac310108abd4a77b6b457882de5a07b54`，路径和三包摘要见同目录consumer.json，ESM/CSS/types及React/ReactDOM/Base UI单实例已核验；随后在独立检出`c6021d6a3a7e9463be546bc4b6fac0e0d6a0d8fa`完成同代完整consumer（`.consumers/run-ZUODDQ/react`），归档`.artifacts/public-c6021d6a3a7e9463be546bc4b6fac0e0d6a0d8fa`并自动校验18个归档文件；不含后续改密开发。manifest、105入口和三包摘要由归档流程生成。
 
 15项定向unit、docs通过；chromium-pass.json的12项与cross-final.json的18项通过。600px宽轨道用实际截图顶边像素验证平直条形，覆盖0/中间/100/未知、三主题、RTL、390px/200%文字；旧Progress专项覆盖真实比例、动态变化/节点身份、主题覆盖、forced-colors实际填充/边界、减弱动效静止；Chrome另做三主题真实200%浏览器缩放。review-final.png已人工查看。
 

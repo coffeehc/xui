@@ -1,6 +1,6 @@
 // Package-private capability bridge. No secret-bearing hook is exported by a public entrypoint.
 import type {HttpClient, HttpRequestOptions} from './http.js';
-export type AuthOperation = 'login' | 'refresh' | 'session' | 'logout';
+export type AuthOperation = 'login' | 'refresh' | 'session' | 'logout' | 'password';
 export interface AccessLease {value:string;generation:number}
 export interface HttpAuthBinding {
   mode:(path:string,method:string,operation:AuthOperation|undefined)=>'cookie'|'bearer'|undefined;

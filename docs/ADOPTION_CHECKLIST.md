@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.11）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.12）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -560,3 +560,11 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | TABLE-RESIZE-001 | 需要用户调整列宽的DataTable | 使用columnSizing默认或完整Controller，不能竞争widths/defaultWidths；按稳定列id接线，列resize声明名称/限制，正确载入正式CSS | 三主题、指针/触屏/键盘/RTL、最小最大、取消/卸载清理、刷新/数据/排序/分页后保行与宽度 | [交互列宽](COMPONENTS.md#交互列宽调整) |
 
 | FEEDBACK-PROGRESS-001 | 呈现已测或未知进度 | 公共Progress真实value/max或省略value；等高小圆角，不改成椭圆；缩放/RTL/强制颜色及减弱动效保持 | 属性、窄屏几何与真实绘制截图 | [Progress](COMPONENTS.md#进度-progress) |
+
+| AUTH-PASSWORD-REQ | 提交一次改密 | 固定PUT官方JSON/唯一Bearer、omit/no-store/error redirect；零备用URL/自动重放 | Network精确方法/字段/凭据/次数 | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
+| AUTH-PASSWORD-OK | 严格确认成功 | 封闭schema1三字段全true；清access/user与旧代次；同源epoch通知，重新登录 | 正负DTO、状态时间线及跨tab | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
+| AUTH-PASSWORD-REJECT | 400/403/429/501与401/409 | 官方确定拒绝可修正；失效/冲突清凭据，不触发refresh | 按状态码的真实请求轨迹/错误 | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
+| AUTH-PASSWORD-UNKNOWN | 超时/取消/503/解析失败 | 不宣称回滚，不自动核验或重复写；50302区分已提交后续失败 | 阻塞及迟到夹具/等待预算/重试零次数 | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
+| AUTH-PASSWORD-GEN | 并发session/refresh/身份变化 | 共享原owner预算；旧代迟到不能覆盖新登录；写入期间拒绝重复 | 代次竞争/取消与跨tab证据 | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
+| AUTH-PASSWORD-SECRET | 输入/提交/关闭/卸载 | 三密码只在DOM和提交作用域；清密/显隐复位；state/URL/storage/log/error无秘密 | DOM引用与安全state/诊断扫描 | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
+| AUTH-PASSWORD-VIEW | 表单默认/完整Controller注入 | 唯一Auth；复用NewPasswordFields/Field/FormActions/Alert；keepMounted以active接open | 类型互斥、焦点/键盘/主题/两种200% | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |

@@ -87,7 +87,8 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile('tests/fixtures/toast-types.tsx',`${cwd}/toast-types.tsx`);
     await copyFile('tests/fixtures/upload-types.tsx',`${cwd}/upload-types.tsx`);
     await copyFile('tests/fixtures/data-table-types.tsx',`${cwd}/data-table-types.tsx`);
-    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','controlled-render.tsx','admin-setup-form-types.tsx','toast-types.tsx','upload-types.tsx','data-table-types.tsx'],{cwd,stdio:'inherit'});
+    await copyFile('tests/fixtures/password-change-types.tsx',`${cwd}/password-change-types.tsx`);
+    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','controlled-render.tsx','admin-setup-form-types.tsx','toast-types.tsx','upload-types.tsx','data-table-types.tsx','password-change-types.tsx'],{cwd,stdio:'inherit'});
     await copyFile('examples/shared/layout.css', `${cwd}/layout.css`);
     await writeFile(`${cwd}/product.css`, extract(await readFile('docs/DESIGN.md', 'utf8'), 'design-product-css'));
     const require = createRequire(`${cwd}/package.json`);

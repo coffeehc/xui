@@ -77,6 +77,7 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 | `Copyable` | 原复制选项或 `CopyController`，工厂 `createCopyController` | value/disabled/status 可订阅；默认复用 runtime 剪贴板服务，显式 writer 保持兼容。普通可展示文本可进入此快照，密码和一次性 secret 使用自身秘密合同 |
 | `PasswordInput` | 默认安全显隐模型或 `PasswordInputController` | 仅 visible/cleared，不含秘密值；DOM/reset/pagehide/退出清理不可禁用，宿主受控密码仍由宿主持有 |
 | `PasswordStrengthInput` | 默认强度模型或 `PasswordStrengthController` | 无秘密强度摘要及其密码显隐子模型；DOM reader 在绑定期有效，worker/迟到结果按代次隔离 |
+| `PasswordChangeForm` | 默认借用AuthClient的独立PasswordChangeController，或互斥完整注入 | 只拥有改密展示/显隐/反馈与提交作用域，认证与会话仍归原AuthClient |
 | `NewPasswordFields` | 默认或 `NewPasswordFieldsController` | 安全错误码、提示开合、两个显隐/强度子实例；只在提交边界瞬时读取密码，快照不含密码或匹配词 |
 | `AdminSetupPage / AdminSetupForm` | 原 state/onSubmit/onCheck 或 `AdminSetupController` | 旧权威初始化状态与提交/核对合同保留，新增 form 聚合含用户名错误与密码字段展示子模型；不新建 auth/API |
 | `AppShell`、`MenuLayout`、`NavigationMenu` | 原 props 或 `NavigationPresentationController`，工厂 `createNavigationPresentationController` | collapsed/sidebarOpen/expandedIds；MenuLayout 父子共用一实例，AppShell 内导航沿用共享上下文。activeId/路由/数据分页不迁入。环境宽度、同一树 Portal、实际 roving 焦点仍由 View 执行 |
@@ -1301,7 +1302,7 @@ import {DateTimePicker} from '@coffeehc/xui-react/date-time';
 
 React AuthPage、完整 LoginPage 和初始化页的 `logo.alt:''` 必须首次即输出显式 `alt=""`；非空替代文本与更新/移除 logo 遵从已有配置，不能用 DOM 属性的默认空值推断已输出属性。
 
-`NewPasswordLabels.showPassword/hidePassword` 同样为可选字段，由 React NewPasswordFields 转交给新密码和确认两个内部输入；AdminSetupPage 的 passwordLabels 原样支持。默认英文与旧配置保持兼容，密码规则和强度建议不变。独立改密表单的合成正式消费者见 [React](../examples/password-change-react/app.tsx)，只演示宿主提交与清密，没有新增改密 API。
+`NewPasswordLabels.showPassword/hidePassword` 同样为可选字段，由 React NewPasswordFields 转交给新密码和确认两个内部输入；AdminSetupPage 的 passwordLabels 原样支持。默认英文与旧配置保持兼容，密码规则和强度建议不变。独立改密表单的合成正式消费者见 [React](../examples/password-change-react/app.tsx)，演示公开自助改密命令、完整表单及清理；服务端使用明确合成fixture，不连接真实账户。
 
 ### 通用长标题
 
@@ -1391,6 +1392,28 @@ Tab直属字符串/数字自动进入公共Label文本槽；组合内容显式�
 | actions | 当前队列唯一 Upload 主操作 | 内容宽度；空队列、无 queued、busy、锁定时禁用 |
 
 交互只由明确选择/拖入追加文件，开始与重试是明确动作。disabled/readOnly 保留结果展示并禁用编辑；owner 可终止等待。焦点动作消失时转到同行可用操作；移除当前行落到下一行、上一行或选择按钮；焦点已离开组件时，后台完成不抢焦点。触屏/键盘使用同一选择按钮；文件选择器关闭遵循浏览器原生返回行为。窄屏、长中文、文字/界面/浏览器缩放依公共继承和容器 reflow，无横向页面溢出。正式示例 [upload-react](../examples/upload-react/app.tsx) 仅消费公开 ESM/CSS，不含私有皮肤。
+
+## 自助改密表单
+
+`@coffeehc/xui-react/password`及根入口公开`PasswordChangeForm`、`PasswordChangeFormProps/Handle`。一个真实form复用Field、PasswordInput、NewPasswordFields、FormActions和Alert，不含AuthPage/卡片/路由或第二认证owner。默认传`auth`、可选`onChanged`；亦可传完整`controller`，二者互斥。labels/passwordLabels只影响文案；`ref.clear()`清DOM与显隐，不解锁unknown或重发。必填当前密码错误关联Field并聚焦；新密码校验与强度建议沿用原组合。提交立即清三密码框，确定拒绝后也需要重新输入，不保留秘密帮助“恢复草稿”。
+
+```tsx
+import {AuthService} from '@coffeehc/xui-runtime/auth';
+import {PasswordChangeForm} from '@coffeehc/xui-react/password';
+<PasswordChangeForm auth={AuthService} onChanged={()=>openLogin()} />
+```
+
+openLogin是宿主的真实路由动作示意，库不生成登录URL。若置于AuthPage，省略AuthPage.form以免嵌套form；置于Dialog/Sheet则由该公共容器拥有标题、关闭和最终回焦。保留挂载的容器须将其公开open状态传给`active={open}`：false时清密、取消所属等待、禁用；默认卸载同样清理。外部身份失效/变化清密，未知结果维持锁定，新登录后的新表单生命周期才可重新发起。关闭不能回滚服务端写入。
+
+| 区域 | 所属内容/形式 | 状态与文字角色 |
+| --- | --- | --- |
+| fields | 当前PasswordInput + 固定NewPasswordFields | 公共Field正文/标签/错误；不得自行覆盖字号或复制显隐按钮 |
+| actions | 唯一FormActions主Button | 内容宽度，busy禁重入，宿主权限不可绕过 |
+| feedback | 唯一公共Alert | 不预留空白，真实错误/未知自然增高；提交结束反馈可获焦，现有主题语义 |
+
+runtime/password公开`createPasswordChangeController({auth,onChanged?})`，`PasswordChangeController/Options/State/Labels`、`passwordChangeLabels/getPasswordChangeMessage`。快照只有status、currentPasswordRequired、安全error；readonly auth为借用依赖，currentPassword/newPassword为显隐及校验子模型。`submit(credentials)`只调用一次AuthClient.changePassword且立即擦除传入对象；`validateCurrentPassword/clearCurrentPasswordError`管理字段反馈；`suspend`取消本表单作用域，`update({onChanged})`只替换未来回调；`destroy`由创建者调用，不销毁Auth。注入实例由宿主销毁，View仅释放自己的等待/DOM；一份实例只服务一个活动表单。confirmed后onChanged失败不改写已提交事实、不重发。
+
+AuthClient新方法及busy的password分支是新增公开合同；使用官方Service的旧登录/退出调用无需改接线，手写完整AuthClient/对busy穷举的实现须补齐。正式三包须同版本；不能把4.2.3对象冒充当前完整注入接口。请求/代次与结果未知矩阵以[PUBLIC_API](PUBLIC_API.md#自助改密)为准。
 
 ## 进度 Progress
 

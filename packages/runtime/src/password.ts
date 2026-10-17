@@ -50,3 +50,6 @@ export function getNewPasswordErrorMessage(error:NewPasswordError|null,labels:Ne
   if(typeof count==='number'&&count>passwordMaximumCharacters)return (labels.tooLong??newPasswordLabels.tooLong!)(passwordMaximumCharacters);
   return labels.length(passwordMinimumCharacters,passwordMaximumCharacters);
 }
+
+export {createPasswordChangeController,passwordChangeLabels,getPasswordChangeMessage} from './password-change.js';
+export type {PasswordChangeController,PasswordChangeOptions,PasswordChangeState,PasswordChangeLabels} from './password-change.js';

@@ -404,6 +404,7 @@ ACL/权限过滤后的有界扫描可以连续返回空 list 与非空 next_curs
 | refresh | POST /api/v1/auth/refresh，JSON {} | 无 Authorization，仅恢复 Cookie，credentials:same-origin | IssuedSessionV2 |
 | currentUser 的 session 核对 | GET /api/v1/auth/session | session access Bearer，credentials:omit | AuthSessionV2 |
 | logout | POST /api/v1/auth/logout，JSON {} | 无 Authorization，仅恢复 Cookie，credentials:same-origin | null |
+| changePassword | PUT /api/v1/auth/password，JSON current_password/new_password | 当前access Bearer，credentials:omit | 独立schema_version:1的changed/reauthenticate确认 |
 
 以上请求统一 `Accept:application/json`、写入 `Content-Type:application/json`、`cache:no-store`、`redirect:error`，无自动重试。成功外层严格采用 httpx `AjaxResponse`：success/message/payload/request_id/code；业务成功仍由 success=true 决定，code 为安全整数。HTTP状态与业务码分开，不猜 data/msg 等别名。
 
@@ -413,6 +414,24 @@ IssuedSessionV2 在上述字段之外恰有 `access_token`、`token_type:"Bearer
 用户 id 默认是正十进制 int64 字符串；`bootstrap({auth:{enabled:true,idEncoding:"hex"}})` 与 `parseAuthSession(value,"hex")` 可明确选择小写无前缀/前导零 hex。两者范围均为正 int64，不得转JS number；未知编码立即拒绝。详见 [共享实体编码](PUBLIC_API.md#显式实体身份编码)。username 非空、最多128 UTF-16单元；display_name 为null或最多256单元。拒绝额外字段、getter、旧版本、角色/权限/tenant投影。`access_token` 使用 `<prefix>-v1-sha256-access-<secret>`：prefix 为 `[a-z][a-z0-9]{0,31}`，secret 是32字节随机值的43字符规范无padding base64url。客户端仅接受 v1、sha256 和 access 类型的结构；服务端仍按配置前缀、凭据记录及 scope 校验，不能凭标识直接授权。此处 v1 是凭据格式版本，与 HTTP DTO 的 schema_version=2 分开；sha256 是高熵凭据摘要算法，不是密码算法，也不表示 JWT。新基线不接受旧无版本格式。expires_at 为尚未到期的UTC RFC3339；服务器默认access寿命5分钟，可由后端显式配置，不将JWT解码结果当作服务端权限。
 
 用户名提交前trim；密码不trim且最多4096字符，只在POST body使用，不进入回调、URL、storage、日志或state。返回的 identity 不是授权决策依据。
+
+### 自助改密
+
+`AuthClient.changePassword(credentials, {signal?})` 与同一个 `AuthService.changePassword` 只消费上表固定PUT；`PasswordChangeCredentials`恰为`{current_password:string,new_password:string}`。没有备用URL、通用auth白名单、token getter或新认证owner。新密码沿固定6–32 Unicode码点校验；当前密码不trim/重用新密码长度规则，须有效Unicode且最多128 UTF-8字节。参数复制仅在提交作用域内，调用者对象不被AuthClient修改；不进入快照/URL/storage/日志。公共表单会立即清除自己的传入对象及DOM。错误只保留安全HttpError元数据，不透传服务端message/business。
+
+成功AjaxResponse payload必须恰有`{schema_version:1,changed:true,reauthenticate:true}`，别名/额外字段/错版本/false均拒绝；此schema独立于登录v2。方法返回`Promise<void>`，只在严格确认后resolve。成功由原auth owner清access/user、使旧读取代次失效、结束busy，并用原同源epoch通道的password事件通知兄弟标签页本地失效，必须重新登录；不发额外logout/refresh/session，不签发或返回token。服务端全部旧会话撤销是BaseService权威事实，xui不模拟撤销服务器记录。
+
+| 结果 | Auth行为 | 重试/反馈 |
+| --- | --- | --- |
+| 完整官方400/403/429/501拒绝 | 恢复仍属同一代的此前会话，保留安全error | 宿主可让用户修正后明确重提，绝不自动重发 |
+| 401或409冲突 | 清本地凭据并使旧响应失效 | 重新登录；不触发401自动refresh |
+| 50302 | 本地失效，按官方码识别已提交但后续失败；Promise仍reject | 表单显示已更改/后续未完成，不能再次写入 |
+| 50301/其他5xx、传输/解析失败、发出后取消/超时 | 本地失效且通知同源标签页；不能推断密码是否已提交 | 明确结果未知，重新登录核对，不重发或用session读取冒充改密确认 |
+| 排队且尚未调用请求时取消 | 恢复此前本地身份 | 取消不是服务端已写入的证据；表单仍保守锁定本次未知等待 |
+
+默认15秒是该命令从取得当前access、等待同源锁到写入/读响应的共同预算；前置恢复只由现有owner合并，取消某个等待者不破坏其他refresh调用。拿到access后开始新的命令代次，取消旧session/refresh读取；写入期间拒绝新的session/refresh/重复改密。旧代迟到成功、401、异常和取消不能覆盖后续新登录；expire/cancel/destroy与跨tab身份事件沿同一代次隔离。改密在锁内实际派发前预留数字水位，成功/未知/取消沿用该序号；迟到失败不再分配比新登录更新的序号，未派发的取消不广播。写入无通用retry和确认性重放。成功/未知及全局cancel/expire/destroy中的改密intent会锁定当前owner重新登录，禁止后续currentUser/refresh自动恢复旧凭据；只有明确的新登录或同源新登录事件解除。BroadcastChannel/Web Locks可用时复用原跨tab机制，只有epoch/kind，无密码/token；缺少这些平台能力时仍由服务端鉴权/撤销裁决，不承诺即时跨tab通知。
+
+React组合与关闭/卸载合同见[自助改密表单](COMPONENTS.md#自助改密表单)，合成示例[password-change-react](../examples/password-change-react/app.tsx)。固定官方fixture来源为BaseService `5e2c906bcb19913bbbd1959bf06d7463f486edb4`的`docs/contracts/password-change.v1.json`，本库只读核对，不修改后端。
 
 ### 一个内存 owner 与显式保护端点
 
@@ -441,14 +460,14 @@ access和expiry只存在闭包内存，public AuthState、login/refresh/currentU
 
 ### 会话初始化、401与并发
 
-公开接口为 `getState/subscribe/currentUser/refresh/login/logout/cancel/expire/destroy`。state仅有status、user、busy、safe HttpError，不暴露secret/expiry。
+公开接口为 `getState/subscribe/currentUser/refresh/login/logout/changePassword/cancel/expire/destroy`。state仅有status、user、busy、safe HttpError，不暴露secret/expiry。
 
 - 新页面第一次currentUser先进行一次cookie refresh，再以新access调用session核对。缺失/过期恢复凭据401是正常anonymous，后续不会循环bootstrap。这支持现有默认整页location.assign；目标页同样先连接owner并currentUser。没有把默认导航强制改SPA。
 - access到期或将到期时，只在业务请求需求发生后refresh，不做后台keepalive。
 - 已发送业务请求的401只对它使用的access generation失效，合并一个refresh；原业务请求仍拒绝401，绝不自动重放写入。旧代迟到401不会清掉较新login/refresh结果。403不触发refresh，不变成“未登录”。若宿主要重读，必须明确是幂等读，由该领域owner最多重试一次；该auth owner禁止generic retry。
 - 同tab refresh和session核对singleflight。取消一个调用者的signal仅撤销该等待者，不取消其他等待者共享的刷新。显式auth.cancel/destroy才取消owner执行并抛弃迟到结果。
 - login/refresh/logout按本地队列串行；支持Web Locks的浏览器还按同origin锁跨tab串行。logout先清本地access，等待已在途refresh完成后使用浏览器最新恢复cookie撤销整个family。新login/退出意图阻止旧请求恢复旧identity。
-- BroadcastChannel只发送不含 token/user 的临时身份失效通知；不保存 localStorage epoch 或持久操作记录。无 Web Locks/广播或存在同源非 xui 客户端时不承诺跨窗口无缝协调，后端事务和会话凭据规则仍是事实来源。
+- BroadcastChannel只发送不含token/user的kind/epoch。复用Web Locks串行已提交变更，并以同源localStorage的`xui.auth.clock.v1:<origin>`保存唯一数字水位，避免同毫秒旧身份事件使后完成的新登录失效；水位不是会话/操作记录，不用于恢复或判定认证。禁止在此键保存秘密。storage被禁用时不阻断认证，退回本地水位并拒绝重复/同值事件；缺少共享storage、Web Locks/广播或存在同源不同版本/非xui客户端时不承诺跨窗口完整排序/即时失效，后端事务和会话凭据规则仍是事实来源。
 
 不要保留旧 `onUnauthorized:()=>auth.expire()` 作为第二个失效owner。managed Bearer由auth按generation处理401；宿主订阅认证变化并清理所属resource、私密草稿、连接和业务缓存。HTTP onUnauthorized可观察事实，但不要在其中再次清理/触发refresh或重放。
 
