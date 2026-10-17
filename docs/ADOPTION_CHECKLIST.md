@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.10）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.11）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -558,3 +558,5 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | SIDEBAR-TABS-001 | 侧栏header末位水平line Tabs | 动作/搜索留在sidebarHeader，List放sidebarTabs；单行选中段与淡分隔同基线，Shell无第二条；多行按所属行底边，不裁切；非line及普通header保持旧边界 | AppShell/MenuLayout、四项组合、三主题/RTL/两种200%、焦点、草稿/Panel节点和滚动连续性 | [侧栏Tabs](COMPONENTS.md#侧栏快捷操作组合) |
 
 | TABLE-RESIZE-001 | 需要用户调整列宽的DataTable | 使用columnSizing默认或完整Controller，不能竞争widths/defaultWidths；按稳定列id接线，列resize声明名称/限制，正确载入正式CSS | 三主题、指针/触屏/键盘/RTL、最小最大、取消/卸载清理、刷新/数据/排序/分页后保行与宽度 | [交互列宽](COMPONENTS.md#交互列宽调整) |
+
+| FEEDBACK-PROGRESS-001 | 呈现已测或未知进度 | 公共Progress真实value/max或省略value；等高小圆角，不改成椭圆；缩放/RTL/强制颜色及减弱动效保持 | 属性、窄屏几何与真实绘制截图 | [Progress](COMPONENTS.md#进度-progress) |

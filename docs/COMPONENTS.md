@@ -1391,3 +1391,7 @@ Tab直属字符串/数字自动进入公共Label文本槽；组合内容显式�
 | actions | 当前队列唯一 Upload 主操作 | 内容宽度；空队列、无 queued、busy、锁定时禁用 |
 
 交互只由明确选择/拖入追加文件，开始与重试是明确动作。disabled/readOnly 保留结果展示并禁用编辑；owner 可终止等待。焦点动作消失时转到同行可用操作；移除当前行落到下一行、上一行或选择按钮；焦点已离开组件时，后台完成不抢焦点。触屏/键盘使用同一选择按钮；文件选择器关闭遵循浏览器原生返回行为。窄屏、长中文、文字/界面/浏览器缩放依公共继承和容器 reflow，无横向页面溢出。正式示例 [upload-react](../examples/upload-react/app.tsx) 仅消费公开 ESM/CSS，不含私有皮肤。
+
+## 进度 Progress
+
+Progress保留语义progress、真实value/max与无value的未知状态；轨道及填充统一使用radius-sm的小圆角等高条形，不能用radius-full把宽轨道变成椭圆。宽度由所在公共slot决定，主题/RTL/缩放/forced-colors和reduced-motion沿用原合同。

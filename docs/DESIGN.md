@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.10。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.9、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.11。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.9、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1739,7 +1739,7 @@ DataTable默认横向铺满，通常省略列宽；仅在列内容或用户尺�
 
 实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](PUBLIC_API.md#显式实体身份编码)。
 
-原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止。forced-colors下progress保持原生元素、真实value/max与未知语义，采用浏览器提供的Canvas轨道、CanvasText边界与填充；颜色只由progress-forced-track/border/fill集中定义，design-accessibility层保证它们继续取系统色，不接受品牌覆盖。使用既有line-width-surface与radius-full，保留轨道形状并补可识别边界；确定状态按原生比例填充，无value仅显示由progress-forced-pending-border-style声明的空心虚线轨道，不画合成分数或全满填充，且保留已有状态脉冲及reduced-motion静止。forced-color-adjust继续为auto，不关闭用户强制颜色机制；appearance:none仅保留原生progress内部的真实比例布局与可控CSS动效，不能把computed appearance:auto当作浏览器原生绘制已恢复的证据。Checkbox/range等选择标记继续恢复各自的浏览器绘制。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
+原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。Progress轨道与填充使用radius-sm，维持等高条形而非50%椭圆；不改变圆形Spinner的radius-full。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止。forced-colors下progress保持原生元素、真实value/max与未知语义，采用浏览器提供的Canvas轨道、CanvasText边界与填充；颜色只由progress-forced-track/border/fill集中定义，design-accessibility层保证它们继续取系统色，不接受品牌覆盖。使用既有line-width-surface与radius-full，保留轨道形状并补可识别边界；确定状态按原生比例填充，无value仅显示由progress-forced-pending-border-style声明的空心虚线轨道，不画合成分数或全满填充，且保留已有状态脉冲及reduced-motion静止。forced-color-adjust继续为auto，不关闭用户强制颜色机制；appearance:none仅保留原生progress内部的真实比例布局与可控CSS动效，不能把computed appearance:auto当作浏览器原生绘制已恢复的证据。Checkbox/range等选择标记继续恢复各自的浏览器绘制。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
 
 公共 SimpleSelect（包含顶栏语言入口）的浮层选项之间使用 space-text-gap（默认 4px），选项组与组内标题/选项同样保留该间距；选中与悬停背景不得垂直贴合。间距由公共样式负责，不改变选项最小高度、弹层定位或隐藏语义。
 
@@ -1812,4 +1812,4 @@ runtime ToastController 是集合、进入/关闭阶段、可见上限、超时�
 
 新增通知不抢焦点；F6 聚焦通知区域，Tab 进入动作，再次 F6 返回原位置，Escape/关闭把焦点移至其余可见通知或原位置。普通通知 polite，高优先级 assertive；关闭或不可见项退出交互。重要错误持续显示在所属内容区域，不能只放自动消失 Toast。借用 Controller 退出 View 时释放 DOM/暂停租约，不销毁宿主队列；默认实例真实退出时销毁。完整双模式、迁移差异和可执行验证分别见 COMPONENTS、PUBLIC_API 与 VALIDATION。
 
-4.2.10的可选DataTable列宽交互复用原表头、表体、footer与独立状态owner。headerLabel/排序动作保留表头文字角色；逻辑末端separator为独立24px命中区，细线使用separator-line，hover/focus/拖动使用action-primary与interaction-hover；禁用保留静态线和aria-disabled。DataTable数据/分页不归列宽Controller。默认上下限由data-table-column-resize-min/max集中派生，用户确认宽度属于真实CSS像素测量例外，不构成消费项目自行缩字号。详细状态、slot与清理合同见COMPONENTS交互列宽章节。
+4.2.11的可选DataTable列宽交互复用原表头、表体、footer与独立状态owner。headerLabel/排序动作保留表头文字角色；逻辑末端separator为独立24px命中区，细线使用separator-line，hover/focus/拖动使用action-primary与interaction-hover；禁用保留静态线和aria-disabled。DataTable数据/分页不归列宽Controller。默认上下限由data-table-column-resize-min/max集中派生，用户确认宽度属于真实CSS像素测量例外，不构成消费项目自行缩字号。详细状态、slot与清理合同见COMPONENTS交互列宽章节。

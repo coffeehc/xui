@@ -30,10 +30,10 @@
   .xui-data-region[aria-busy='true'] {border-color:var(--surface-line-strong);}
   .xui-skeleton {min-block-size:var(--control-height);inline-size:100%;background:var(--muted);border-radius:var(--radius-md);animation:xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate;}
   .xui-spinner {display:inline-block;flex:none;inline-size:var(--control-icon-size);block-size:var(--control-icon-size);border:var(--line-width-emphasis) solid var(--action-primary);border-inline-end-color:transparent;border-radius:var(--radius-full);animation:xui-spin var(--motion-duration-spin) linear infinite;}
-  .xui-progress {appearance:none;display:block;inline-size:100%;block-size:var(--space-control-gap);border:0;border-radius:var(--radius-full);overflow:hidden;background:var(--muted);color:var(--action-primary);accent-color:var(--action-primary);}
-  .xui-progress::-webkit-progress-bar {background:var(--muted);border-radius:var(--radius-full);}
-  .xui-progress::-webkit-progress-value {background:var(--action-primary);border-radius:var(--radius-full);}
-  .xui-progress::-moz-progress-bar {background:var(--action-primary);border-radius:var(--radius-full);}
+  .xui-progress {appearance:none;display:block;inline-size:100%;block-size:var(--space-control-gap);border:0;border-radius:var(--radius-sm);overflow:hidden;background:var(--muted);color:var(--action-primary);accent-color:var(--action-primary);}
+  .xui-progress::-webkit-progress-bar {background:var(--muted);border-radius:var(--radius-sm);}
+  .xui-progress::-webkit-progress-value {background:var(--action-primary);border-radius:var(--radius-sm);}
+  .xui-progress::-moz-progress-bar {background:var(--action-primary);border-radius:var(--radius-sm);}
   /* Omitted value remains truly indeterminate; never manufacture a percent. */
   .xui-progress:indeterminate {background:var(--interaction-selected);animation:xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate;}
   .xui-progress:indeterminate::-webkit-progress-bar {background:var(--interaction-selected);}

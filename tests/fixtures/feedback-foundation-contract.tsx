@@ -36,9 +36,10 @@ function LoadingExamples(){
   </div>
  </section>;
 }
+const progressOnly=new URL(location.href).searchParams.has('progress-only');
 function App({value,max}:{value:number|null;max:number}){return <main className="xui-container xui-stack" aria-labelledby="feedback-title">
  <h1 id="feedback-title">Feedback foundation contract</h1>
- <button type="button" className="xui-button" id="before-feedback">Before feedback</button>
+ {!progressOnly&&<><button type="button" className="xui-button" id="before-feedback">Before feedback</button>
  <section className="xui-stack" aria-labelledby="alerts-title" id="alerts">
   <h2 id="alerts-title">Alert tones</h2>
   <Alert data-testid="alert-default">Default informational message</Alert>
@@ -49,7 +50,7 @@ function App({value,max}:{value:number|null;max:number}){return <main className=
   <h2 id="loading-title">Decorative loading indicators</h2>
   <div role="status" aria-busy="true" id="loading-status"><Spinner data-testid="spinner"/><span>正在读取示例内容。</span><Skeleton data-testid="skeleton"/></div>
  </section>
- <section className="xui-stack" aria-labelledby="progress-title" id="progress-feedback">
+ </>}<section className="xui-stack" aria-labelledby="progress-title" id="progress-feedback">
   <h2 id="progress-title">Progress facts</h2>
   <Progress value={0} max={100} aria-label="Zero progress" data-testid="progress-zero"/>
   <Progress value={40} max={100} aria-label="Determinate progress" data-testid="progress-determinate"/>
@@ -58,8 +59,8 @@ function App({value,max}:{value:number|null;max:number}){return <main className=
   <Progress aria-label="Indeterminate progress" data-testid="progress-indeterminate"/>
   <Progress value={value??undefined} max={max} aria-label="Changing progress" data-testid="progress-changing"/>
  </section>
- <button type="button" className="xui-button" id="after-feedback">After feedback</button>
- <LoadingExamples/>
+ {!progressOnly&&<><button type="button" className="xui-button" id="after-feedback">After feedback</button>
+ <LoadingExamples/></>}
  </main>;}
 const root=createRoot(document.getElementById('root')!);
 window.setFeedbackProgress=(value,max=100)=>root.render(<App value={value} max={max}/>);

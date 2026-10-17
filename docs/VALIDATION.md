@@ -1,5 +1,15 @@
 # 验证证据与限制
 
+## Progress等高轨道（4.2.11，2026-10-17）
+
+旧4.2.10正式消费者`.consumers/run-852Het/react`复现600×8轨道border-radius为50%，截图及来源见`.artifacts/progress-shape-validation/baseline.json/png`。仅Progress及原生绘制伪元素改用已有radius-sm；不改变全局circle token、Spinner、value/max或查询。正式三包定向消费者generation为`8e7836e7bb8267a94ff25b6ecd47688ac310108abd4a77b6b457882de5a07b54`，路径和三包摘要见同目录consumer.json，ESM/CSS/types及React/ReactDOM/Base UI单实例已核验；本版不单独生成完整归档，后续统一正式包需再过完整consumer。
+
+15项定向unit、docs通过；chromium-pass.json的12项与cross-final.json的18项通过。600px宽轨道用实际截图顶边像素验证平直条形，覆盖0/中间/100/未知、三主题、RTL、390px/200%文字；旧Progress专项覆盖真实比例、动态变化/节点身份、主题覆盖、forced-colors实际填充/边界、减弱动效静止；Chrome另做三主题真实200%浏览器缩放。review-final.png已人工查看。
+
+过程失败保留：首轮宽度夹具把600px放在Grid子项造成测试宿主溢出，改为父容器min(600px,100%)；版本正则和误改的Spinner测试预期已纠正，生产Spinner未改。旧Skeleton/Spinner专项仍断言历史surface-line-strong/primary边框方向，与本次未修改的现实现不符，失败已保留，未扩大修复且不计入通过；最终限定Progress专项。WebKit不支持forced-color-adjust属性，测试按CSS.supports核对空computed值，仍执行实际强制色绘制断言，未跳过像素验收。
+
+复现：`pnpm build`、`node --test tests/feedback-foundation-contract.test.mjs tests/contract.test.mjs`、同目录consumer.mjs；preview4173执行progress-shape与feedback-foundation-contract两文件的Progress专项，cross排除genuine Chrome。未跑全仓、消费项目或部署；4.2.11以后的固定正式包/产品页面另验。
+
 ## DataTable交互列宽（4.2.10，2026-10-17）
 
 只修改xui。4.2.9正式独立消费者确认DataTable无resize separator/公开sizing类型（baseline.json、baseline-metafile.json）；不是宿主已写列宽却使用错误。新增可选columnSizing，默认拥有独立Controller，亦可受控widths或注入完整Controller；不拥有查询、排序或分页。第一次调整固定当前全部轨道、只改变目标列；启用时初始最小轨道避免窄屏零宽列；未启用仍保留旧响应式布局。确认后的widths为CSS像素，不自动随根字号同比放大，reset恢复当前响应式初始轨道。

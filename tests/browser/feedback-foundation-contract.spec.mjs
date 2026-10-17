@@ -38,7 +38,7 @@ async function paintedProgress(page,node,expected,info,name){
 
 
 // Analyze actual screenshot pixels without assuming DPR or a rectangular track.
-// Four image regions see each part of the existing rounded/elliptical perimeter.
+// Four image regions see each part of the small-radius strip perimeter.
 // The archived failure below is run through the same oracle to reject blank paint.
 async function paintSummary(page,png,track,cropTop=0){return page.evaluate(async({encoded,track,cropTop})=>{
  const image=new Image();image.src=`data:image/png;base64,${encoded}`;await image.decode();
@@ -136,7 +136,7 @@ for(const kind of ['react'])for(const theme of ['light','dark','system']){
   // Accessibility-layer roles outrank the deliberately conflicting brand overrides.
   await expect(page.locator('html')).toHaveCSS('--progress-forced-track','Canvas');await expect(page.locator('html')).toHaveCSS('--progress-forced-fill','CanvasText');
   for(const [id,value,max,position]of facts){
-   const node=page.getByTestId(`progress-${id}`);await expect(node).toHaveCSS('appearance','none');await expect(node).toHaveCSS('forced-color-adjust','auto');await expect(node).toHaveCSS('border-top-color',systemInk);await expect(node).toHaveCSS('border-top-width','1px');await expect(node).toHaveCSS('border-top-style',value===null?'dashed':'solid');
+   const node=page.getByTestId(`progress-${id}`);await expect(node).toHaveCSS('appearance','none');await expect(node).toHaveCSS('forced-color-adjust',await page.evaluate(()=>CSS.supports('forced-color-adjust','auto'))?'auto':'');await expect(node).toHaveCSS('border-top-color',systemInk);await expect(node).toHaveCSS('border-top-width','1px');await expect(node).toHaveCSS('border-top-style',value===null?'dashed':'solid');
    expect(await node.evaluate(element=>({value:element.getAttribute('value'),max:element.max,position:element.position}))).toEqual({value:value===null?null:String(value),max,position});
   }
   const legacy=await readFile(new URL(`../fixtures/evidence/progress-forced-colors-770a83d-${theme==='light'?'light':'dark'}.png`,import.meta.url));
