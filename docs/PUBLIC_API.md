@@ -905,7 +905,7 @@ notifications.add({title: '已保存', description: '更改已保存。'});
 
 add 返回稳定字符串 id，同 id 活跃项转为 update；update/close、getState/subscribe、promise、bindView/destroy 均为同一 owner。快照/集合/记录浅只读，内容/data由宿主提供。revision 与 transitionStatus 是只读回执信息，宿主不写内部阶段。close 全部或指定项进入 ending、onClose 一次；动画回执或exitTimeout移除、onRemove一次。相同id替换关闭中的旧项会完成旧移除回调，不影响新记录。Promise 返回原结果/拒绝；记录已关闭、被手动更新或实例已销毁时不再执行迟到格式化/写入。
 
-Actions独立末行靠右并自然换行，无内容不占位，沿用small公共Button。Title/Description 缺省 children 使用记录内容（h2/p）；render/ref/className(state)/style(state) 保持公开组合，id 与 aria 关联同步。Action 使用 actionProps，不默认关闭；Close 可按普通公开 Button disabled。普通通知 role=status/polite，高优先级 role=alert/assertive；不抢新增焦点。键盘、暂停、手势及默认右上角见 [DESIGN](DESIGN.md#通知队列与视图合同)。Positioner/Arrow 使用 Base UI 公开 Popover 几何能力；`toast.positionerProps` 或部件 props 指定真实anchor。没有第二个通知 store。
+Actions承载实际操作时独立末行靠右并自然换行，无内容不占位，沿用small公共Button；4.2.19仅有Close的旧Actions组合与正文首行同排。Title/Description 缺省 children 使用记录内容（h2/p）；render/ref/className(state)/style(state) 保持公开组合，id 与 aria 关联同步。Action 使用 actionProps，不默认关闭；Close 可按普通公开 Button disabled。普通通知 role=status/polite，高优先级 role=alert/assertive；不抢新增焦点。键盘、暂停、手势及默认右上角见 [DESIGN](DESIGN.md#通知队列与视图合同)。Positioner/Arrow 使用 Base UI 公开 Popover 几何能力；`toast.positionerProps` 或部件 props 指定真实anchor。没有第二个通知 store。
 
 **3.0.0迁移**：旧外部 `@base-ui/react/toast` manager/ToastObject/专有内部状态不能注入；改用以上xui入口。`Toast.createToastManager` 名称继续可用，但返回完整xui Controller；旧 Provider/Viewport/Root/Content/Title/Description/Close/Action/Portal/Positioner/Arrow/useToastManager 名称保留。Viewport默认位置变为右上角，timeout旧0常驻需改为-1（不填/0使用默认5秒），默认右滑保留纵向滚动；不保留peer堆叠高度/索引等私有CSS变量。宿主不复制队列或写DOM/CSS适配层。示例 `examples/toast-react/` 仅展示隔离合成动作，不代表业务保存已实现。
 
@@ -954,7 +954,7 @@ React `/display` 的 `LinkedText`（同 `Typography.LinkedText`）复用现有 L
 
 ## 标准通知视图与范围清空
 
-4.2.15 的 `Toast.View` 在同一 `Toast.Provider` 下组合已有 Portal/Viewport/Root/Content/Title/Description/Actions/Action/Close，不创建队列；`labels`（region/close）默认“通知/关闭通知”，`container`、`viewportProps` 与 `renderActions(toast, controller)` 是公开扩展。默认动作取记录的 actionProps；关闭按钮始终保留。字体、右上角、5秒/-1、窄屏/滚动、焦点与播报合同沿用已有部件。
+4.2.15 的 `Toast.View` 在同一 `Toast.Provider` 下组合已有 Portal/Viewport/Root/Content/Title/Description/Actions/Action/Close，不创建队列；`labels`（region/close）默认“通知/关闭通知”，`container`、`viewportProps` 与 `renderActions(toast, controller)` 是公开扩展。默认动作取记录的 actionProps；关闭按钮始终保留。4.2.19标准View采用Icon—Content—Close三列，Close首行图标，Actions仅承载真实动作。字体、右上角、5秒/-1、窄屏/滚动、焦点与播报合同沿用已有部件。
 
 `createToastController` / `Toast.createToastManager` 返回 `ClearableToastController`：`clear()` 立即移除 active/ending 项和计时，无退出动画，不执行旧 onClose/onRemove 回调，不让 pending promise 的迟到结果恢复文案。它保留 Controller 与 View 租约，可用于同一队列的身份切换。旧自定义 `ToastController.clear` 为可选，旧非 scoped Provider 兼容；新增 `scopeKey` 要求注入 Controller 支持 clear，缺失则明确报错。
 
@@ -1078,3 +1078,20 @@ Menu把aria-expanded等状态合并给同一个Button；text变体维持透明�
 ```
 
 规则适用于每个表格的操作槽，产品按真实权限接线，不能以库级示例替代逐表验收。透明图标按钮仍采用同一圆形轮廓，带文字Button保持原圆角。
+
+### 紧凑通知部件（4.2.19）
+
+React `/toast` 新增 `Toast.Icon` / `ToastIconProps`：装饰状态槽，缺省图形只按记录显式type映射success/error/warning/info，其他为中性，不改变priority、队列或计时。children/render可替换装饰图形，原ref/className(state)/style(state)沿用，aria-label/labelledby不属于该装饰槽类型。Toast.Close缺省绘制×、透明圆形32px触点，显式children/render及可翻译aria-label保持；标准View默认关闭名称不变。Root直接组合Icon/Content/Close时共享公共三列布局，无固定内容高度。窄容器说明/动作跨全行，极窄时文字移到图标/关闭之后的完整下一行；不改DOM顺序。Title继承label的500字重，并由公共Toast角色统一使用body-sm（14/22px）；Description保持body-xs（13/20px）与400字重。
+
+```tsx
+<Toast.Root toast={toast}>
+  <Toast.Icon/>
+  <Toast.Content>
+    <Toast.Title/><Toast.Description/>
+    <Toast.Actions><Toast.Action/></Toast.Actions>
+  </Toast.Content>
+  <Toast.Close aria-label="关闭通知"/>
+</Toast.Root>
+```
+
+通常直接使用Toast.View。旧parts仍可用，Actions只有Close时默认去除其独立底行；含实际动作的旧组合保留操作顺序。独立根Token toast-width与toast-icon-offset由DESIGN集中派生，popover宽度不受此修改影响。重复文案不自动合并，宿主若有重复请求反馈应在已有请求/通知owner消除重复触发；本库不会吞掉独立通知。

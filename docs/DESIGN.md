@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.18。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.19。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -497,6 +497,8 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --menu-radius: var(--radius-xl);
     --floating-offset: var(--space-text-gap);
     --popover-width: 18rem;
+    --toast-width: 24rem;
+    --toast-icon-offset: calc((var(--line-height-body-sm) - var(--control-icon-size)) / 2);
     --toast-viewport-max-block-size: 40dvh;
     --popover-padding: var(--space-content-gap);
     --tooltip-max-width: 20rem;
@@ -1551,7 +1553,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | Popover / Tooltip | Popover.Title/Description → section/body；popup 裸正文 → body；Tooltip → meta | portal 的 xui-layer 与主树采用同一主题与比例 |
 | Surface / Alert / DataRegion | Surface/Alert 裸内容继承所属文字槽（默认 body）；DataRegion 中正文由其内容组件决定 | 状态 tone 改颜色；布局 DataRegion 不覆盖内容文字 |
 | LoadingState / EmptyState / ErrorState | 文案/说明 → 所属正文或元信息（默认 body）；Empty/Error title → 同字号+600（默认 body-heading）；retry → Button | block 文案继承所属内容正文；inline 文案继承所属动作/元信息槽，不另设字号；加载在所属内容区居中 |
-| Toast | Title → label；Description → meta；其余裸文本 → body；Close/action → Button | 使用通知专用标题/说明层级；默认右上角，内距与间距继承公共 token，窄屏/放大时通知区域内部滚动，焦点四边可见 |
+| Toast | Title → label字重/body-sm；Description → meta；其余裸文本 → body；Close/action → Button | 使用通知专用标题/说明层级；默认右上角，内距与间距继承公共 token，窄屏/放大时通知区域内部滚动，焦点四边可见 |
 | Badge / Tag | label → label；删除动作 → Button | 中性分类与语义状态共用字号；不因 tone 改字重 |
 | Icon | 图形，无独立文字角色；颜色经icon-color默认currentColor继承 | 可选color/blink不改变所属Button、Badge或Tab的文字角色；装饰图标不新增键盘/朗读通知 |
 | Typography | Heading → page或section（语义级别单独指定）；Text → body；Link → 所属文字槽；Code → code；Strong → 所属角色+600 | 链接继承段落或元信息角色，Text 明确正文边界；Code 是技术值，不能当全站字体 |
@@ -2380,7 +2382,11 @@ CardGroup 是与 DataTable 同层的受控集合组合。rows 是宿主当前确
 
 ### 通知队列与视图合同
 
-Toast 默认固定在右上角（逻辑 block-start / inline-end，RTL 随语言镜像），沿用既有 layer-overlay、surface-line、shadow-overlay 和 label/meta/Button 字体角色。队列最新项在上，默认至多显示三项；视口按实际根字号换算不超过48rem或font-scale大于1时默认仅最新一项。视图报告可见上限，不更改宿主limit配置，退出时释放；悬停或聚焦展开队列，最大高度使用toast-viewport-max-block-size（40dvh）并受视口安全边界封顶，内部滚动。Title、Description、Actions、Action、Close 各有公开部件，Content统一8px纵向间距，Actions独立末行靠右并自然换行，沿用small 32px公共按钮，不用负margin修正基线；空槽不占位。Close具有可翻译的aria-label或可见文字名称，纯图标按公共装饰语义隐藏；不插入页脚/实现说明，不依靠宿主私有 CSS 定位。
+Toast 默认固定在右上角（逻辑 block-start / inline-end，RTL随语言镜像），沿用layer-overlay、surface-line、shadow-overlay与label/meta/Button文字角色。4.2.19的标准View采用“Icon—Content—Close”三列，Close锁定首行末端，不再占据独立底行；Icon仅为装饰，16px并按toast-icon-offset对齐首行，Close为32px触点/16px图形的公共透明圆形按钮。Title继承label的500字重并使用body-sm（14/22px），由Toast公共文字角色统一定义，Description继承help（body-xs/400）；两者间space-text-gap=4px，外内距space-content-gap=12px、列距space-control-gap=8px，文字自然换行且不截断。空Title/Description不占位，Content只在实际Action存在时增加末行Actions（合计8px上间距、靠末端、自然换行）；关闭是独立控制，不作为操作区存在的理由。旧部件组合的Actions若仅有Close，公共CSS也使它与正文首行同排；有真实动作的旧组合保留原DOM/交互，推荐采用标准View或把Close置于Root直下。显式render、事件、禁用与标签仍由原公开parts接收，不复制宿主DOM。
+
+Toast独立宽度使用toast-width=24rem（根16px时384px，扣除viewport焦点gutter后单项约368px），不再借用popover-width；窄屏以可用视口封顶，无固定最小宽度。Viewport容器净宽不超过18rem时，保留首行Icon/Title/Close，Description与真实Actions跨全行；不超过12rem时，Title或无标题的Description也移到Icon/Close之后的完整下一行，避免单字窄缝。18rem/12rem是本合同声明的容器结构断点（CSS查询不能引用var），按根字号响应阅读放大；Content仅投影display:contents，不改DOM/Tab顺序，不隐藏图标或缩字。旧Actions内含Close的组合保持既有布局，不强制改为新三列。队列最新项在上，默认至多三项；实际阅读宽度不超过48rem或font-scale大于1时仅最新一项。悬停或聚焦展开队列；toast-viewport-max-block-size=40dvh只限制整个Viewport并内部滚动，单项随内容自然增长，不固定height或裁切文案。图标只有显式type=success/error/warning/info使用对应status-*-foreground与不同形状，缺省/未知类型用中性信息图标；不从中文文案猜类型，不编造“连接异常”等标题，不改变priority播报或合并同文通知。细中性边界和不透明浮层表面保持，不将整卡染成状态色。
+
+Icon、Title、Description、Actions、Action、Close均为公开parts；Close缺省为装饰×图形并保留可翻译aria-label，显式文字/render可继续使用。无负margin、绝对定位、固定正文高度或宿主私有CSS。长中文、无标题、URL/技术长串、RTL、浅深system、根字号/界面/真实浏览器200%均检查首行关闭可达、正文完整、空操作区零占位及独立焦点。默认5秒与暂停、回焦、clear/scopeKey和同一Controller合同不因排版改变。
 
 runtime ToastController 是集合、进入/关闭阶段、可见上限、超时与暂停原因的唯一 owner。React 只投影 DOM、测量手势、转发动画完成和实际焦点。无 View、隐藏文档、窗口失焦、悬停、焦点及正在手势期间暂停计时，恢复剩余时间；被可见上限隐藏的项暂停。仅更新文案保留剩余时间；显式 timeout 更新或同 id add 重新计算该项时限，-1 表示不自动关闭，省略或0采用配置默认（5秒）；旧动画和旧 Promise 不得修改新实例或复活关闭项。默认右滑关闭，纵向保留浏览器滚动；显式上下滑会接管对应触控手势。手势 CSS 位移是实时指针测量，不是设计尺寸默认值。
 

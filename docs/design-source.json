@@ -1,15 +1,15 @@
 {
-  "contractVersion": "4.2.18",
+  "contractVersion": "4.2.19",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
-  "defaultTokenCount": 414,
+  "defaultTokenCount": 416,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "2fdcacdf8bf2b10e97d617e979d59ac0eaea42805c420e417469d9d886ded495",
+  "defaultCssSha256": "b8c9c6f43a8160a7bc8f0a1cf129bcfa1b9583835f61f7b1756cae4ebbb1624b",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -113,7 +113,8 @@
     "Make Violet the authorized default; retain Precision and Ember and add Forest, Crimson and Cobalt as project-selected CSS-only palette families. Brightness, status roles and layout remain independent.",
     "4.2.18 gives the existing data-icon Button recipe radius-full in every state; text buttons, dimensions, tokens, foreground/background roles and interaction owners remain unchanged.",
     "4.2.18 standardizes ordinary expansion triggers on the existing text recipe: default Menu render, Disclosure, Accordion, advanced search, sidebar branch controls and table expansion. Explicit render/semantic actions, fields, routing and state ownership are retained.",
-    "4.2.18 adds optional ButtonTone default/danger for text action foregrounds, keeping transparent table actions and disabled precedence without changing explicit filled variants or business owners."
+    "4.2.18 adds optional ButtonTone default/danger for text action foregrounds, keeping transparent table actions and disabled precedence without changing explicit filled variants or business owners.",
+    "4.2.19 standardizes compact Toast icon/content/close slots, a separate width token and optional actions, preserving the queue, priorities, timers and focus owners."
   ],
   "defaultPreset": "violet",
   "themePresets": [

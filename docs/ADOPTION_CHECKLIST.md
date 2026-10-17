@@ -281,7 +281,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CTRL-015 | 页面使用 MetricCard | 只呈现回答当前任务的真实指标；loading/unknown/error 与数值0分别表达，不把未知补成零 | 数据来源、状态样本与实际首屏位置 | [COMPONENTS MetricCard](COMPONENTS.md#metriccard) · [DESIGN 指标映射](DESIGN.md#逐组件外观与状态映射) |
 | CTRL-016 | 页面使用 Toast | 仅短暂、非关键反馈进入 Toast；需要持续处理的错误/权限/风险仍在所属内容位置可见 | Provider/调用路径与错误恢复后截图 | [COMPONENTS 通用状态](COMPONENTS.md#基础组件与通用状态) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
 | TOAST-001 | 通知队列与注入 | 默认 Provider 仅建一个队列；controller/toastManager 与 timeout/limit/exitTimeout 互斥，借用实例不销毁 | 双模式、StrictMode、同id实例替换/退出与迟到结果 | [通知合同](DESIGN.md#通知队列与视图合同) |
-| TOAST-002 | 通知位置与文字 | 默认右上角，Title/Description/Actions/Action/Close 使用公共槽，动作末行靠右；窄屏与大字默认最新1项、40dvh内滚动、焦点四边可见，宿主不写定位/字号补丁 | 三主题、长中文、200%文字与真实页面缩放截图 | [通知合同](DESIGN.md#通知队列与视图合同) |
+| TOAST-002 | 通知位置与文字 | 默认右上角，Icon/Title/Description/Actions/Action/Close 使用公共槽，Close首行末端，只有实际动作才有末行；窄屏与大字默认最新1项、40dvh内滚动、焦点四边可见，宿主不写定位/字号补丁 | 三主题、长中文、200%文字与真实页面缩放截图 | [通知合同](DESIGN.md#通知队列与视图合同) |
 | TOAST-003 | 计时与关闭 | 悬停/聚焦/文档隐藏/无View/隐藏项暂停；恢复剩余时长，关闭回调各一次，旧Promise不复活关闭项 | 受控时钟、真实指针/键盘、错误与退出用例 | [通知合同](DESIGN.md#通知队列与视图合同) |
 | TOAST-004 | 通知焦点与播报 | 新增不抢焦点；F6/Tab/Escape与关闭后回焦；polite/assertive 按真实优先级，必要错误原位持续 | DOM语义、键盘与动作焦点；读屏器未测须单独注明 | [通知合同](DESIGN.md#通知队列与视图合同) |
 | CTRL-017 | 页面使用 Alert 或 ErrorState | 文案与 severity 来自真实业务结果；重试按钮只在真实可重试时出现，Alert 不吞掉表单错误关联 | HTTP/业务错误夹具、aria-describedby 与回调次数 | [COMPONENTS 局部失败反馈](COMPONENTS.md#局部失败反馈与离线边界) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
@@ -656,3 +656,5 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | EXPAND-006 | 视觉与范围 | 三模式、窄屏、长中文、200%文字/浏览器zoom下可达；图标前景继承，独立focus/disabled；不抹掉输入边界/成功警告危险事实 | 正式包、色值/几何/两种200%及范围检查 | [映射](DESIGN.md#展开与收起入口的统一呈现4218) |
 
 | TABLE-ACTION-001 | 每个表格操作槽 | 查看等动作统一text，删除用text＋tone=danger；各状态透明，危险前景不被hover品牌覆盖，disabled仍禁用；保留权限/确认/防重/行事件 | 逐表props清单、三主题各状态computed、动作/确认计数与真实页面 | [透明危险动作](PUBLIC_API.md#透明危险动作4218) |
+
+| TOAST-LAYOUT-001 | 标准或高级parts通知 | 标准View/新parts的Icon/Content/Close分列，关闭首行可达；窄容器说明/动作跨行、极窄时全文转入下一行；纯文案无操作空行，旧Actions包含真实动作和Close时保留原顺序；空Title/Description不占位、不推断type或priority | 无标题/长中文/技术长串/动作与关闭几何，六配色三模式，两种200%及RTL，空槽、ref/render/动作计数与回焦 | [紧凑通知](PUBLIC_API.md#紧凑通知部件4219) |

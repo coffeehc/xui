@@ -336,6 +336,14 @@ function Root({toast: input, swipeDirection = ['right'], ref, ...props}: ToastRo
 type TextState = {
     type: string | undefined;
 };
+/** Decorative status slot. Only explicit known types select status color; unknown types stay neutral. */
+export type ToastIconProps = Omit<PartProps<'span', TextState>, 'aria-label' | 'aria-labelledby' | 'aria-hidden'>;
+function Icon({children, ...props}: ToastIconProps) {
+    const {toast} = useToastItemContext(), tone = ['success','error','warning','info'].includes(toast.type ?? '') ? toast.type : 'default';
+    const path = tone === 'success' ? 'm6 10 3 3 5-6' : tone === 'error' ? 'm7 7 6 6m0-6-6 6' : 'M10 9v5m0-9v1';
+    const glyph = <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)" aria-hidden="true" focusable="false">{tone === 'warning' ? <path d="m10 2 9 16H1Z"/> : <circle cx="10" cy="10" r="8"/>}<path d={path}/></svg>;
+    return usePart('span',props,{type:toast.type},'xui-toast-icon',{'aria-hidden':true,'data-tone':tone,children:children??glyph});
+}
 export type ToastTitleProps = PartProps<'h2', TextState>;
 function useToastLabelElement(element: React.ReactElement, defaultId: string, setId: React.Dispatch<React.SetStateAction<string | undefined>>) {
   const rendered = React.isValidElement<{id?: string; children?: React.ReactNode}>(element) ? element : null;
@@ -349,13 +357,13 @@ function useToastLabelElement(element: React.ReactElement, defaultId: string, se
 }
 function Title({id, children, ...props}: ToastTitleProps) {
   const item = useToastItemContext(), resolved = id ?? item.defaultTitleId;
-  const element = usePart('h2', props, {type: item.toast.type}, 'xui-label', {id: resolved, children: children ?? item.toast.title});
+  const element = usePart('h2', props, {type: item.toast.type}, 'xui-label xui-toast-title', {id: resolved, children: children ?? item.toast.title});
   return useToastLabelElement(element, resolved, item.setTitleId);
 }
 export type ToastDescriptionProps = PartProps<'p', TextState>;
 function Description({id, children, ...props}: ToastDescriptionProps) {
   const item = useToastItemContext(), resolved = id ?? item.defaultDescriptionId;
-  const element = usePart('p', props, {type: item.toast.type}, 'xui-help', {id: resolved, children: children ?? item.toast.description});
+  const element = usePart('p', props, {type: item.toast.type}, 'xui-help xui-toast-description', {id: resolved, children: children ?? item.toast.description});
   return useToastLabelElement(element, resolved, item.setDescriptionId);
 }
 export type ToastContentProps = PartProps<'div', {
@@ -373,10 +381,10 @@ function hasTextContent(value: React.ReactNode): boolean {
   return false;
 }
 export type ToastCloseProps = Omit<React.ComponentProps<typeof BaseButton>, 'className' | 'style'> & Pick<PartProps<'button', TextState>, 'className' | 'style'>;
-function Close({ className, style, ...props }: ToastCloseProps) { const value = useToastContext(), { toast } = useToastItemContext(), state = { type: toast.type }; return <BaseButton {...mergeProps({ type: 'button', 'aria-label': hasTextContent(props.children)||(React.isValidElement<{children?:React.ReactNode}>(props.render)&&hasTextContent(props.render.props.children))||typeof props.render==='function' ? undefined : 'Close notification', 'data-variant': 'ghost', 'data-size': 'sm', onClick: (event: React.MouseEvent) => { if (!event.defaultPrevented) {
+function Close({ className, style, ...props }: ToastCloseProps) { const value = useToastContext(), { toast } = useToastItemContext(), state = { type: toast.type }, defaultIcon = props.children === undefined && props.render === undefined; return <BaseButton {...mergeProps({ type: 'button', 'aria-label': hasTextContent(props.children)||(React.isValidElement<{children?:React.ReactNode}>(props.render)&&hasTextContent(props.render.props.children))||typeof props.render==='function' ? undefined : 'Close notification', 'data-variant': 'text', 'data-size': 'sm', ...(defaultIcon?{'data-icon':'true',children:<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)" aria-hidden="true" focusable="false"><path d="m5 5 10 10m0-10L5 15"/></svg>}:{}), onClick: (event: React.MouseEvent) => { if (!event.defaultPrevented) {
         restoreAfterClose(value, toast.id);
         value.controller.close(toast.id);
-    } } }, props)} className={branded('xui-button', typeof className === 'function' ? className(state) : className)} style={typeof style === 'function' ? style(state) : style}/>; }
+    } } }, props)} className={branded('xui-button xui-toast-close', typeof className === 'function' ? className(state) : className)} style={typeof style === 'function' ? style(state) : style}/>; }
 export type ToastActionProps = ToastCloseProps;
 function Action({className, style, children, nativeButton, focusableWhenDisabled, ...props}: ToastActionProps) {
   const {toast} = useToastItemContext(), state = {type: toast.type};
@@ -406,7 +414,7 @@ export interface ToastViewProps<Data extends object=Record<string,unknown>> {
 /** Complete standard queue View. Provider remains the sole owner; advanced parts stay available. */
 function View<Data extends object=Record<string,unknown>>({labels:overrides,container,viewportProps,renderActions}:ToastViewProps<Data>){
     const controller=useToastManager<Data>(),labels={...toastViewLabels,...overrides};
-    return <Portal container={container}><Viewport aria-label={labels.region} {...viewportProps}>{controller.toasts.map(toast=><Root key={toast.id} toast={toast}><Content><Title/><Description/><Actions>{renderActions?renderActions(toast,controller):<Action/>}<Close aria-label={labels.close}>{labels.close}</Close></Actions></Content></Root>)}</Viewport></Portal>;
+    return <Portal container={container}><Viewport aria-label={labels.region} {...viewportProps}>{controller.toasts.map(toast=><Root key={toast.id} toast={toast}><Icon/><Content><Title/><Description/><Actions>{renderActions?renderActions(toast,controller):<Action/>}</Actions></Content><Close aria-label={labels.close}/></Root>)}</Viewport></Portal>;
 }
 /** Public parts share one queue. Base UI is used only for buttons/rendering/anchor geometry. */
-export const Toast = { Provider, View, Viewport, Root, Content, Title, Description, Close, Action, Actions, Portal, Positioner, Arrow: BasePopover.Arrow, useToastManager, createToastManager };
+export const Toast = { Provider, View, Viewport, Root, Icon, Content, Title, Description, Close, Action, Actions, Portal, Positioner, Arrow: BasePopover.Arrow, useToastManager, createToastManager };

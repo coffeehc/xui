@@ -298,3 +298,5 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 4.2.18 的展开入口默认变化应按 EXPAND-001～006 核对：Menu.Trigger未自定义render、Disclosure默认标题、Accordion、SearchToolbar高级搜索与侧栏/表格内置展开都采用公共透明前景配方。业务自有区域仍接自己的状态与aria，显式主/危险render和普通表单不改。需要历史Disclosure背景时显式variant=default。标准作用于所有同类动作，不为每个模型、搜索或详情业务写一套CSS。
 
 表格操作逐表统一Button/IconButton的variant=text；危险/删除用tone=danger，不能一组混用实心destructive或outline/primary来实现普通行操作。接线仍保留原权限、确认、禁用/忙态与业务owner；不要把所有text改成无危险前景的普通动作。4.2.18公共类型与正式CSS同步提供，无需消费者私有覆盖。
+
+4.2.19统一紧凑Toast：标准View默认Icon—Content—Close，关闭为首行透明图标，不再撑出底部空行。高级parts优先同样组合，Actions只放真实动作；仅有Close的旧操作槽也自动同行。沿用原队列/5秒/-1/暂停/回焦，显式type才映射状态图标，不自动去重。无需私有CSS或改字号；按TOAST-LAYOUT-001在实际页面核对。此维护仍为可选升级，不通知其他项目必须升级。

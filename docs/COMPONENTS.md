@@ -1464,7 +1464,7 @@ AppShell/MenuLayout 在既有窄屏断点使用同一侧栏、同一导航 Contr
 ### LinkedText、Toast.View 与绘图资源（4.2.15）
 
 - `LinkedText` / `Typography.LinkedText` 归属正文或元信息的原文字槽，继承字体，包含未链接的长文本也安全换行，不增加新皮肤；字符串/数字只将安全绝对 HTTP(S) 片段呈现为现有 Link，其他文字与 React 元素保持原样。普通 Link 不变。嵌套行操作时显式 stopPropagation，不重写浏览器链接默认行为。
-- `Toast.View` 是已有部件的标准全量组合：Title=label、Description=meta、Actions=已有小按钮、Close=具名关闭；空标题/描述/动作不占位。labels 提供区域/关闭名称，renderActions 只填动作槽，不能创建第二队列。scopeKey 和 clear 的隐私边界不保留退出动画文案；旧异步 add 的取消由宿主负责。
+- `Toast.View` 是已有部件的标准全量组合：Title=label字重/body-sm、Description=meta、Actions=已有小按钮、Close=具名关闭；空标题/描述/动作不占位。labels 提供区域/关闭名称，renderActions 只填动作槽，不能创建第二队列。scopeKey 和 clear 的隐私边界不保留退出动画文案；旧异步 add 的取消由宿主负责。
 - `useResource(createModuleResource(...))` 沿用 DataRegion/LoadingState/ErrorState：首次等待在所属内容区居中，同 key 刷新保留已挂载内容/焦点，失败仅显示局部恢复动作。模块的 React mount/teardown 和 trusted assets map 仍由宿主提供，库只管理一次资源等待和 CSS lease。
 - 绘图从 `/theme-colors` 读取当前语义 token，复用 ThemeService，Canvas/WebGL 的业务状态与绘制循环保留原 owner，不增加原生 UI 版本。上述纯工具、资源与颜色接口完整边界见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)。
 
@@ -1503,3 +1503,7 @@ renderLabel 内把名称放入 NavigationMenu.Label，尾随无动作警告 Icon
 表格/重复行操作统一 `variant="text"`：查看等普通动作使用默认tone，删除显式 `tone="danger"`。两者各状态背景透明；危险前景在hover/pressed/expanded/busy不回品牌色，禁用仍由公共禁用角色接管。IconButton继承ButtonTone，ApiKeyManager与StructuredLogExplorer的内置表格行操作也使用同一text配方；撤销/删除为danger，确认弹窗保留原destructive。权限/确认/防重/行事件留给宿主。不要新增TableAction组件或用私有CSS模拟；显式非text主/危险按钮和普通表单不变。见[透明危险动作](PUBLIC_API.md#透明危险动作4218)。
 
 未传render的裸Menu.Trigger现在采用标准Button默认几何；已有render提供的Button.size、图标、标签和回调不被覆写。不要把这项默认规范化说成所有既有裸HTML触发器的浏览器默认尺寸都相同。
+
+### 紧凑通知排版（4.2.19）
+
+优先Toast.View；高级parts按Icon—Content—Close三个Root直下槽组合，Title/Description/实际Actions进入Content。装饰Icon16px按显式type使用对应语义色，正文保持中性、不造标题，缺省Close为透明圆形32px×触点并与首行顶部对齐。Title统一body-sm 14/22px、500字重，Description为body-xs 13/20px、400字重；12px内距、8px列距、4px文本距都继承Token；仅真实操作增加末行8px间隔，没有动作不留空脚。单项默认约368px可用宽，视口不足自然缩窄；长正文自然增高、Viewport40dvh滚动。容器净宽≤18rem时说明/动作跨全行，≤12rem时首段文字也移到图标/关闭后的下一行；只重排公开槽位，不缩字、不隐藏图标或更改Tab顺序。旧Actions只有Close也自动同行；有动作的旧parts保持顺序，可按公开槽位迁至标准组合。未知type中性、重复通知不自动合并，5秒/-1、暂停、焦点、priority/aria与Controller不变。详见[公共组合](PUBLIC_API.md#紧凑通知部件4219)。

@@ -1,5 +1,23 @@
 # 验证证据与限制
 
+## 紧凑通知与窄容器重排（4.2.19，2026-10-18）
+
+仅修改xui，三包及DESIGN统一4.2.19；本轮可选维护，不通知其他项目必须升级。标准Toast.View复用同一Controller，采用Icon—Content—Close三列；新增公开Toast.Icon/ToastIconProps，显式success/error/warning/info映射语义小图标，缺省/未知中性，不根据文案猜状态、不造标题、不自动去重。Close缺省透明圆形32px触点/16px图形，保留显式children/render/ref、disabled、preventDefault和翻译名称；Title统一14/22px、500字重，Description13/20px、400。没有缩字或固定正文高度，真实Actions才有末行；仅Close的旧Actions自动同行，有实际动作的旧组合保留DOM与Tab顺序。默认宽度从借用popover-width改为独立toast-width=24rem，根16px时单项实测368×70px（本轮截图文案）；popover不改。计时默认5秒、-1常驻、暂停/回焦/优先级/身份清空保持。
+
+Stitch在既有会话完成三列、条件操作区和极窄重排的文字评审；原始意见与修正在 `.artifacts/toast-layout-4.2.19/stitch-{review,final,narrow}.txt`，没有把其“归档”文案当作工程验收。拒绝负margin和20rem硬最小宽度。实测320px+根字号200%时，三列中段原本只有46px；本版以Viewport净宽18rem/12rem为结构断点，说明/动作跨全行，极窄时首段文字也落到图标/关闭之后的整行，Content仅使用display:contents投影。图标不隐藏，字号不回缩，不改DOM/Tab顺序；读长文仍在既有40dvh Viewport内部滚动。主线程已查看本代浅/深色、RTL大字与真实zoom截图，位于proof；Stitch没有查看最终工程截图或声称已实测。
+
+最终sourceGeneration `aff03f3381ba0e93bff89de244197e64e8f50d74c0fd7297002f9928936617a0`。build、416 Token、typecheck、contract/toast-controller定向unit30/30、全部公开ESM/CSS/types与正反类型夹具通过，文档与456条接入检查通过。正式安装 `.consumers/current/react` 使用测试过的三包tarball；React/ReactDOM19.2.8和BaseUI1.7.0保持单实例，零packages/src alias。消费验证脚本现在仅用固定工具缓存、符号链接引用main现有示例/fixture源码，esbuild/tsc preserveSymlinks使依赖解析到独立正式安装；生成入口先解除链接再写，输入SHA验证构建没有写回main。没有创建额外工作树、checkout或维护第二份项目源码版本；包安装和编译输出仍为正常工具缓存。
+
+正式receipt见consumer-final.json，performance-final.json记录critical CSS gzip21619/21760、初始JS gzip143867/153600；Toast布局/语义/窄屏配方及两个派生Token的独立style探针相对旧包增加407 gzip bytes，预算只为本功能有界增加512，Button/JS/窄服务上限不变。包SHA、manifest、public-api、sourceGeneration及SHA256SUMS沿用归档脚本自动生成校验，不手补正式元数据。
+
+正式包浏览器74个唯一用例全部通过，无最终失败、跳过或flaky：browser-final.json为65项，browser-zoom.json为9项，逐项与报告SHA在case-summary.json；关键问题另复验6/6，不累计重复通过数。覆盖六套实际preset×light/dark/system的截图原文双通知、14px角色、32px关闭/无空脚、普通文字实际合成对比度≥4.5与显式语义图标，未知/无标题、真实动作、长中文、RTL、窄屏根字号200%、既有界面缩放200%、原有parts及Positioner、默认5秒/-1、暂停/手势/禁用/阻止关闭、Controller替换/StrictMode、clear/scopeKey与迟到Promise、F6/Tab/Space/Escape及草稿/回焦。真实Chrome设置200%覆盖三模式，记录DPR加倍、CSS viewport减半、根字号不变、CSS zoom=1/pinch=1。内置浏览器另实测指针关闭后仅移除对应一项，几何在geometry-iab.json。
+
+首轮68项为46过/22失败，保留browser-normal.log与原始失败证据：18项检出标题实际继承13px，已由Toast公共文字角色修正；3项检出极窄网格内容最小宽挤入关闭列，已改为公开槽位响应重排。旧计时用例在clock.install后仍允许真实时间推进，改为pauseAt后逐段runFor，不改生产计时算法。默认Token首次构建还检出组件内裸calc除数和Token计数漂移，已将偏移集中为派生Token并同步416项/哈希；失败候选不作最终验收。没有force click、私有DOM补丁、放宽焦点或取消几何断言。
+
+复现基础：`pnpm build && pnpm check:tokens && pnpm typecheck && node --test tests/contract.test.mjs tests/toast-controller.test.mjs && node scripts/check-docs.mjs && pnpm test:consumer`。现有preview4173后，对toast-layout、toast、public-capabilities这三个tests/browser/*.spec.mjs运行 `pnpm exec playwright test <文件列表> --grep-invert 'genuine.*Chrome|genuine.*browser|actual browser' --workers=2`；真实zoom以同文件列表和 `--grep 'genuine.*Chrome|genuine.*browser|actual browser' --workers=1` 单独运行。静态规范与文档自查不当作真实业务验收。
+
+未运行全仓unit/browser、watch/cold-start、Firefox/WebKit、实体设备或读屏器；未修改或验收xAgent/其他产品真实页面、后端、升级和部署。不恢复原生UI，不改变HTTP或认证owner。
+
 ## 公共动作轮廓、透明展开与危险前景（4.2.18，2026-10-17）
 
 仅修改xui，不通知或要求其他项目必须升级。IconButton/公开Button data-icon=true在各状态统一radius-full，保留24/32/36/40尺寸、SVG本身形状和命中区；带文字Button不改变。普通Menu裸Trigger、Disclosure、Accordion、SearchToolbar高级筛选、侧栏独立开关与TableExpandButton复用已有透明前景配方；显式Menu render/primary/destructive、输入边界、导航主链接选择和各自Controller保持。裸Menu.Trigger现在采用标准Button几何，不声称浏览器原裸按钮几何完全相同。Disclosure显式variant=default保留历史背景；Accordion草稿仍由原受控值/Panel keepMounted或卸载策略负责。
