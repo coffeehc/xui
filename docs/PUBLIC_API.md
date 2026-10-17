@@ -488,6 +488,22 @@ access和expiry只存在闭包内存，public AuthState、login/refresh/currentU
 
 本地取消不能撤回已经执行的 Set-Cookie，也不能读取 HttpOnly Cookie。退出失败不宣称已安全退出，不以 logout 作为 refresh 失败的补救。服务端会话事实负责最终结果；前端没有恢复弹窗、专用 Lookup/Resolve 或跨重载写入锁。
 
+### 未知退出与页面重载
+
+“未知退出”指同一个Auth owner的`logout()`最终reject且状态仍为`unknown`；不是每次logout请求收到错误就已经结束。退出意图先清本地access/user并使旧读取代次失效。除显式取消等停止等待路径外，原owner可在一次既有`refresh → session`核验中确认结果：refresh的401可确认匿名并使logout完成；若仍存在会话或读取无法确认，则保留`unknown + error`、`user:null`、`busy:null`，不得把它称为服务器已安全退出。该核验的候选凭据不发布成已登录身份。宿主不得再叠加核验循环或重发logout。
+
+| 阶段/上下文 | 公共行为 | 宿主必须完成的接线 |
+| --- | --- | --- |
+| 退出意图开始或最终未知 | 本地身份已清除；未知不等于Cookie撤销 | 隐藏私有页面，停止/取消领域读取并清理所属私密缓存，隔离迟到响应；保留必要的未知结果反馈 |
+| 同一个owner最终保留logout错误，挂载/重挂ConfigurableLoginPage | 无busy时可手动提交普通login；该logout错误不触发登录页自动session初始化，也不生成专用恢复按钮 | 复用原owner，用户提交后走一次正常login；登录未确认时领域读取继续停止，确认身份/权限后再恢复 |
+| 普通session读取发生可恢复的网络/超时/服务端失败 | 公开登录页可按现有条件显示“Retry connection” | 此入口是普通读取错误重试，不恢复旧“检查登录状态→进入工作空间”的退出专用流程 |
+| 主Document真正重载、新标签页或重新创建Auth owner | 原内存中的unknown/error不保留；新owner从unknown且无error开始，正常初始化可refresh/session并按服务端事实发布身份 | 不在读取完成前显示旧私密数据或启动领域请求；确认authenticated后才允许恢复，401匿名不循环读取 |
+| bfcache恢复且仍是同一个owner | 不是新Document初始化；LoginView按现有状态resume，保留的logout unknown/error不会凭pageshow清掉 | 记录pageshow.persisted与实例身份；不人为销毁重建owner、清除错误或调用额外读取来绕过未知退出路径 |
+
+同owner的普通登录按钮是现行可用入口，不要求另建恢复组件。宿主须分别记录“明确手动login”“Auth内部的一次结果核验”“新Document的正常初始化”；不能把三者的请求合并后断言所有refresh/session均非法，也不能用初始化读取成功冒充原logout已成功。
+
+当前合同没有持久的“必须手动重新登录”门禁。localStorage中的数字协调水位只用于事件排序，不能恢复或判定认证；不得用URL、storage标记、假anonymous状态或前端Auth适配层宣称跨重载退出已确认。真实Cookie/服务器会话撤销仍由后端裁决。若产品要求刷新后也始终禁止自动会话恢复，应列为不同的公共合同请求，不能从本节或“无恢复弹窗”推导该能力。严格测试迁移时删除旧退出恢复按钮断言，同时保留未知反馈、零写入重放、私密读取停止、迟到隔离和不同初始化上下文的断言。
+
 ### Cookie、CSRF与后端责任
 
 恢复cookie名 `__Host-baseservice-refresh`：HttpOnly、Secure、SameSite=Strict、Path=/、无Domain；只有后端明确development-only insecure模式才使用 `baseservice_refresh`。重复/替代名cookie、Cookie/Header混用、legacy会话cookie、错误purpose或API Key不能作为session/refresh fallback。

@@ -80,7 +80,7 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 | `PasswordChangeForm` | 默认借用AuthClient的独立PasswordChangeController，或互斥完整注入 | 只拥有改密展示/显隐/反馈与提交作用域，认证与会话仍归原AuthClient |
 | `NewPasswordFields` | 默认或 `NewPasswordFieldsController` | 安全错误码、提示开合、两个显隐/强度子实例；只在提交边界瞬时读取密码，快照不含密码或匹配词 |
 | `AdminSetupPage / AdminSetupForm` | 原 state/onSubmit/onCheck 或 `AdminSetupController` | 旧权威初始化状态与提交/核对合同保留，新增 form 聚合含用户名错误与密码字段展示子模型；不新建 auth/API |
-| `AppShell`、`MenuLayout`、`NavigationMenu` | 原 props 或 `NavigationPresentationController`，工厂 `createNavigationPresentationController` | collapsed/sidebarOpen/expandedIds；MenuLayout 父子共用一实例，AppShell 内导航沿用共享上下文。activeId/路由/数据分页不迁入。环境宽度、同一树 Portal、实际 roving 焦点仍由 View 执行 |
+| `AppShell`、`MenuLayout`、`NavigationMenu` | 原 props 或 `NavigationPresentationController`，工厂 `createNavigationPresentationController` | collapsed/sidebarOpen/expandedIds；同一导航树沿用Shell上下文，独立keepMounted范围各自注入，详见[导航Controller作用域](#导航-controller-作用域)。activeId/路由/数据分页不迁入。环境宽度、同一树 Portal、实际 roving 焦点仍由 View 执行 |
 | `DataTable.columnSizing` | 省略关闭；options默认或`controller:DataTableColumnSizingController`完整替换 | 只拥有稳定列id宽度与可取消草稿，工厂createDataTableColumnSizingController；数据/排序/分页不迁入；平台轨道测量、capture和焦点归React View |
 | `Pagination` | 原 props 或 `PaginationController`，工厂 `createPaginationController` | page/pageCount/disabled；受控页只发请求，不能建立服务器页历史/query/cache |
 | `Disclosure`、`SearchToolbar` | 原开合 props 或 `OverlayController` | 仅所属开合；查询/表单值归宿主，关闭前后实际焦点仍由 View 合法恢复 |
@@ -760,6 +760,36 @@ SimpleSelect 的展开浮层在自己的事件区域消费 Escape，先请求关
 
 应用导航数据可来自 `getMenuService()`；其 `items/label` 与配置语言联动，但菜单的 `expandedIds`、focus、active route、导航动作和权限仍由宿主与 React NavigationMenu 所有。使用 NavigationMenu 的 React `controller` 时，它替换展开等组件状态，不替换 MenuService 内容；反之传 MenuService 也不会建立额外键盘或DOM UI owner。
 
+### 导航 Controller 作用域
+
+`NavigationMenu` 采用明确的实例优先级：显式 `controller` → 最近的AppShell/MenuLayout上下文Controller → 脱离Shell时由菜单创建的默认Controller。Shell内的默认借用适用于同一导航树的共同展示，不表示每个NavigationMenu自动拥有独立展开集合。在该Shell内，仅更换`items`、React `key`、条目id、Tabs范围或视觉隐藏也不会隔离借用的实例。
+
+| 实际场景 | Controller归属 | 接线规则 |
+| --- | --- | --- |
+| 脱离Shell、未注入 | 该NavigationMenu默认实例 | 在菜单props提供展开/收拢选项，由组件管理默认实例生命周期 |
+| Shell内同一导航树、未注入 | 借用最近Shell的实例 | Shell与导航约定同一个展开集合和收拢事实，不让多个独立范围写该集合 |
+| 同一Shell内普通/团队/插件/归档等独立范围，尤其keepMounted | 每个范围各自稳定持有并注入实例 | 受控值与回调进入各自Controller；业务列表、游标、路由和权限仍归原宿主owner |
+
+隐藏的keepMounted菜单仍然挂载，其effect和受控更新仍可执行。给多个菜单各传`expandedIds/onExpandedChange`并不会分离它们默认借用的Shell实例：后更新的空范围`[]`可覆盖另一范围的展开集合；更换id或仅隐藏Panel不能修复该归属冲突。这些独立范围必须使用公开`createNavigationPresentationController`与`NavigationMenu controller`，不能修改内部DOM或复制导航实现。
+
+```tsx
+import {createNavigationPresentationController} from '@coffeehc/xui-runtime/interaction';
+import {NavigationMenu} from '@coffeehc/xui-react/menu-layout';
+
+// 在所属范围初始化时创建一次；以下变量来自原范围和Shell事实owner。
+const controller = createNavigationPresentationController({
+  expandedIds, onExpandedChange, collapsed, onCollapsedChange,
+});
+// 原owner确认值或替换回调后同步；update不是用户展开请求。
+controller.update({expandedIds, onExpandedChange, collapsed, onCollapsedChange});
+<NavigationMenu controller={controller} items={items} activeId={activeId} />;
+// 真正结束该范围生命周期时由创建者controller.destroy()。
+```
+
+注入后不得再把`expandedIds/defaultExpandedIds/onExpandedChange`、`collapsed/defaultCollapsed/onCollapsedChange`同时传给NavigationMenu；类型与JS检查均拒绝混用。`setExpandedIds`在受控模式只发请求，宿主确认后`update({expandedIds})`才改变事实。若各范围要跟随Shell收拢，应将同一个Shell owner的`collapsed`同步给各Controller，必要的收拢请求也回到原owner；注入不会再自动继承Shell的收拢状态。不要为展开隔离额外创建Shell、drawer或第二个全局收拢owner。
+
+实例跟随真实范围生命周期：普通render、数据刷新和Tab隐藏不重建/销毁；真实卸载或范围替换时由宿主退订并销毁所属注入实例，NavigationMenu只释放自己的View连接。React StrictMode检查性effect重放不能永久销毁仍被复用的注入实例；实际键盘与焦点由View执行，active route、数据和业务缓存不迁入Controller。
+
 ### 共享数据与内容扩展
 
 `NavigationItem` 是可序列化树，含稳定 id、label、图标标识、href、children、group、disabled 与 HTML 链接属性。`indexNavigation` 建立索引并验证唯一 id；`getNavigationActiveId` 匹配显式 activeId 或 location。图标由 React `resolveIcon` 或公开默认映射解析。一个菜单树由宿主提供，状态、权限与导航 adapter 不由文案或 CSS 推导。
@@ -1172,6 +1202,8 @@ owner确认有效authenticated后，无论来自初始session检查还是主动l
 `extensions.beforeSubmit/actions/errorLabel` 和beforeFields/afterFields仍只接收username与AbortSignal，不接收密码/token/原始响应。宿主标准SSO、服务地址与账户来源保留同一认证owner。重复提交、扩展卸载中止、迟到导航和密码节点清空仍受页面generation控制；修改真实服务由产品安全策略决定。
 
 ### 认证布局 slot 归属
+
+未知logout后继续使用同一Auth owner的普通登录、重载/新owner与bfcache的不同初始化条件，以[未知退出与重载边界](PUBLIC_API.md#未知退出与页面重载)为准；不能从“没有恢复弹窗”推断Cookie已撤销或跨重载禁止会话恢复。
 
 | 真实入口 | 内容与位置 | 文字/着色 | 空内容与状态 |
 |---|---|---|---|
