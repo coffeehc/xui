@@ -1,5 +1,17 @@
 # 验证证据与限制
 
+## DataTable交互列宽（4.2.10，2026-10-17）
+
+只修改xui。4.2.9正式独立消费者确认DataTable无resize separator/公开sizing类型（baseline.json、baseline-metafile.json）；不是宿主已写列宽却使用错误。新增可选columnSizing，默认拥有独立Controller，亦可受控widths或注入完整Controller；不拥有查询、排序或分页。第一次调整固定当前全部轨道、只改变目标列；启用时初始最小轨道避免窄屏零宽列；未启用仍保留旧响应式布局。确认后的widths为CSS像素，不自动随根字号同比放大，reset恢复当前响应式初始轨道。
+
+证据在`.artifacts/data-table-resize-validation/`。最终generation为`514e48e2ecbce8552474d6114bf948a8a854a2a15b17ad29ba9292e9d718bb21`，完整正式消费者`.consumers/run-852Het/react`，三包、SHA256、peer、全部105个ESM/CSS/types入口见consumer-final.json与正式归档manifest；408 Token、398条接入检查。build/typecheck、54项定向unit、docs及完整consumer通过。最终browser-final-v2.json为53项Chromium、cross-final-v2.json为44项Firefox/WebKit通过，无失败/跳过；重叠候选结果不累计。
+
+浏览器验证owned/controlled/injected三模式、light/dark/system、1280桌面、390窄屏/RTL/200%根字号、三主题真实Chrome200%浏览器缩放及真实触摸事件。验证准确轨道/单次确认、不触发排序或查询、旧行/按钮身份、上下限/键盘/RTL、焦点轮廓与End后可见、pointercancel/lost capture/Escape/字尺度变化/禁用/刷新/列变更/卸载清理、注入实例不销毁、受控拒绝/外部更新/reset、空表与独立排序；既有width、focus、cursor定向回归包含sticky、表体横滚及自然页脚。新增可选table-resize.css正式分片由style.css/components.css包含，critical.css继续不包含该可延迟交互样式；拆分消费需同时导入table.css和table-resize.css。
+
+过程证据保留：最早候选根字号/窄屏暴露零宽弹性列，修正初始最小轨道；lost-capture测试最初在原生待处理事件尚未触发时轮询，改为真实下一次pointermove；首次consumer在主线程修正无原型列id快照时检测source变化并拒绝receipt，随后冻结源码重建；截图复核补齐键盘拉宽及Tab进入时的可见焦点。最终结果以final-*和*-final-v2为准，不用旧候选receipt归档。
+
+复现：`pnpm build`、`pnpm typecheck`、`node --test tests/data-table-sizing.test.mjs tests/data-table.test.mjs tests/design-value-guard.test.mjs tests/contract.test.mjs`、`node scripts/check-docs.mjs`、`pnpm test:consumer`；preview4173，以上同目录playwright.config.mjs执行data-table-resize/widths/focus/cursor四文件，cross.config.mjs执行resize并排除genuine Chrome与real touch。未跑全仓unit/browser、watch/cold-start、实体触摸设备/读屏器、消费项目页面/API/部署。新增能力须宿主显式启用和固定正式包，不能宣称xAgent已升级。
+
 ## 公共侧栏紧凑宽度与短Tabs分布（4.2.9，2026-10-17）
 
 仅修改xui默认布局Token和sidebarTabs排列；不修改消费项目。正式4.2.7独立消费者在管理MenuLayout与会话AppShell的800/1280/1600/1920px视口均测得324/324/400/432px，见`.artifacts/sidebar-compact-validation/baseline.json`。首个取样脚本遗漏目录尾斜线，后又在视口尚未完成绘制时读宽度；修正路径并以减少动效及双RAF取样，未把旧脚本结果当公共故障。

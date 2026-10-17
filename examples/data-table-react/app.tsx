@@ -8,6 +8,8 @@ import {Button} from '@coffeehc/xui-react/button';
 import {Input,SimpleSelect} from '@coffeehc/xui-react/forms';
 import {LoadingState,EmptyState,ErrorState} from '@coffeehc/xui-react/feedback';
 import {ScrollArea} from '@coffeehc/xui-react/scroll-area';
+import {createDataTableColumnSizingController,type DataTableColumnWidths} from '@coffeehc/xui-runtime/data-table';
+import {SortButton} from '@coffeehc/xui-react/table';
 import {DataTable,DataTableToolbar,DataTableFilter,type DataTableColumn} from '@coffeehc/xui-react/data-table';
 import {createDataTableExample,tableLabels,type ExampleRow} from '../shared/data-table-model';
 import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
@@ -16,6 +18,12 @@ import '@coffeehc/xui-theme/style.css';
 
 bootstrapBrowserExample();
 const query=new URLSearchParams(location.search);
+const resizeEvents:{widths:DataTableColumnWidths;reason:string}[]=[],resizeMode=query.get('resize');
+const injectedSizing=createDataTableColumnSizingController({onWidthsChange:(widths,details)=>resizeEvents.push({widths,reason:details.reason})});
+let updateSizing:(next:Partial<{accept:boolean;disabled:boolean;reverse:boolean;hidden:string;enabled:boolean}>)=>void=()=>{};
+Object.assign(window,{dataTableSizingDemo:{controller:injectedSizing,events:resizeEvents,update:(next:Parameters<typeof updateSizing>[0])=>updateSizing(next)}});
+window.addEventListener('pagehide',()=>injectedSizing.destroy(),{once:true});
+
 // The synthetic twelve-row regression is an explicit supported page size.
 const pageSizeOptions=query.get('size')==='12'?[12,20,50,100]:[20,50,100];
 const owner=createDataTableExample({pageSize:Number(query.get('size')??20),offset:Number(query.get('offset')??0),empty:query.has('empty'),unknown:query.has('unknown')||query.has('cursor')&&!query.has('cursor-total'),local:query.has('local'),cursor:query.has('cursor')});
@@ -42,6 +50,12 @@ window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions],setColum
 
 function App(){
   const state=React.useSyncExternalStore(owner.subscribe,owner.getState,owner.getState);
+  const [sizingConfig,setSizingConfig]=React.useState({accept:true,disabled:false,reverse:false,hidden:'',enabled:true}),[controlledWidths,setControlledWidths]=React.useState<DataTableColumnWidths>({});
+  const [sortClicks,setSortClicks]=React.useState(0);
+  React.useLayoutEffect(()=>{updateSizing=next=>setSizingConfig(current=>({...current,...next}));return()=>{updateSizing=()=>{};};},[]);
+  const onWidthsChange=(widths:DataTableColumnWidths,details:{reason:string})=>{resizeEvents.push({widths,reason:details.reason});if(sizingConfig.accept)setControlledWidths(widths);};
+  const columnSizing=!resizeMode||!sizingConfig.enabled?undefined:resizeMode==='injected'?{controller:injectedSizing}:resizeMode==='controlled'?{widths:controlledWidths,onWidthsChange}:{onWidthsChange};
+
   const [columnView,setColumnView]=React.useState<{mode:WidthMode;hidden:string[]}>({mode:query.get('column-mode')==='sized'?'sized':query.has('widths')?'mixed':'auto',hidden:query.getAll('hide-column')});
   React.useLayoutEffect(()=>{configureColumns=(mode,hidden=[])=>setColumnView({mode,hidden});return()=>{configureColumns=()=>{};};},[]);
   const [inspected,setInspected]=React.useState('尚未查看');
@@ -50,22 +64,22 @@ function App(){
   // Inspecting a retained row is a local, read-only action and stays available during refresh.
   const columns=React.useMemo<readonly DataTableColumn<ExampleRow>[]>(()=>[
     {id:'id',header:'编号',cell:row=>row.id,sticky:sticky==='both'||sticky==='start'?'start':undefined},
-    {id:'name',header:'名称',cell:row=>row.name},
+    {id:'name',header:resizeMode?<SortButton onClick={()=>setSortClicks(count=>count+1)}>名称</SortButton>:'名称',cell:row=>row.name},
     {id:'kind',header:'类型',cell:row=>row.kind},
     {id:'scope',header:'范围',cell:row=>row.scope},
     {id:'source',header:'来源',cell:row=>row.source},
     {id:'actions',header:'操作',sticky:sticky==='both'||sticky==='end'?'end':undefined,cell:row=><Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button>},
   ],[inspect]);
-  const visibleColumns=React.useMemo(()=>columns.filter(column=>!columnView.hidden.includes(column.id)&&(!noActions||column.id!=='actions')).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'||query.has('fluid-content')?160:undefined):column.id==='name'&&columnView.mode==='mixed'&&query.has('fluid-content')?undefined:widths[column.id as keyof typeof widths]})),[columns,columnView]);
+  const visibleColumns=React.useMemo(()=>columns.filter(column=>!columnView.hidden.includes(column.id)&&(!noActions||column.id!=='actions')).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'||query.has('fluid-content')?160:undefined):column.id==='name'&&columnView.mode==='mixed'&&query.has('fluid-content')?undefined:widths[column.id as keyof typeof widths],resize:resizeMode?(column.id==='actions'?false as const:{label:`调整${column.id}列宽`,maxWidth:700}):undefined})),[columns,columnView]);
   const toolbar=noSearch?undefined:<DataTableToolbar aria-label="记录筛选" data-testid="record-filters">
     <DataTableFilter label="搜索记录" grow><Input type="search" value={String(state.filters.search??'')} onChange={event=>owner.filter('search',event.currentTarget.value)}/></DataTableFilter>
     {filters.map(filter=><DataTableFilter label={filter.label} key={filter.name}><SimpleSelect value={String(state.filters[filter.name]??'')} onChange={event=>owner.filter(filter.name,event.currentTarget.value)}><option value="">全部{filter.label}</option>{filter.values.map(value=><option key={value} value={value}>{value}</option>)}</SimpleSelect></DataTableFilter>)}
     <Button variant="outline" onClick={owner.clear}>清空筛选</Button>
   </DataTableToolbar>;
   const pageHeader=<PageHeader data-testid="record-header" title={title}
-    meta={<p>125 条合成记录；不连接业务服务。<output aria-label="查看结果">{inspected}</output></p>}
+    meta={<p>{resizeMode&&<output aria-label="排序次数">{sortClicks}</output>}125 条合成记录；不连接业务服务。<output aria-label="查看结果">{inspected}</output></p>}
     actions={noActions?undefined:<><Button onClick={()=>owner.refresh()} disabled={state.busy}>刷新</Button><Button variant="outline" onClick={()=>owner.refresh(true)} disabled={state.busy}>模拟失败</Button><Button variant="outline" onClick={restore} disabled={state.busy}>恢复记录</Button><Button variant="outline" onClick={owner.cancel} disabled={!state.busy}>取消请求</Button></>}/>;
-  const table=<DataTable id="records-table" label="合成记录表格" layout={layout} rows={state.rows} columns={visibleColumns} rowKey={rowKey}
+  const table=<DataTable id="records-table" label="合成记录表格" layout={layout} rows={state.rows} columns={(sizingConfig.reverse?[...visibleColumns].reverse():visibleColumns).filter(column=>column.id!==sizingConfig.hidden)} rowKey={rowKey} columnSizing={columnSizing} disabled={sizingConfig.disabled}
     status={state.status} filtered={state.filtered} labels={{...tableLabels,...(query.has('long-error')?{error:tableLabels.error.repeat(30)}:{}),...(query.has('no-count')?{count:()=>''}:{})}} onRetry={owner.retry} striped
     toolbar={internal?toolbar:undefined}
     feedback={query.has('disclosure-feedback')?<div><p>合成读取说明：现有记录仍保留。</p><Disclosure title="查看完整说明"><p>{'完整合成详情，无任何用户数据。'.repeat(40)}</p><Input aria-label="详情备注" defaultValue="保留值"/></Disclosure></div>:query.has('nested-feedback')?<table aria-label="辅助表格"><tbody><tr><td>嵌套反馈</td></tr></tbody></table>:undefined}

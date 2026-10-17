@@ -80,6 +80,7 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 | `NewPasswordFields` | 默认或 `NewPasswordFieldsController` | 安全错误码、提示开合、两个显隐/强度子实例；只在提交边界瞬时读取密码，快照不含密码或匹配词 |
 | `AdminSetupPage / AdminSetupForm` | 原 state/onSubmit/onCheck 或 `AdminSetupController` | 旧权威初始化状态与提交/核对合同保留，新增 form 聚合含用户名错误与密码字段展示子模型；不新建 auth/API |
 | `AppShell`、`MenuLayout`、`NavigationMenu` | 原 props 或 `NavigationPresentationController`，工厂 `createNavigationPresentationController` | collapsed/sidebarOpen/expandedIds；MenuLayout 父子共用一实例，AppShell 内导航沿用共享上下文。activeId/路由/数据分页不迁入。环境宽度、同一树 Portal、实际 roving 焦点仍由 View 执行 |
+| `DataTable.columnSizing` | 省略关闭；options默认或`controller:DataTableColumnSizingController`完整替换 | 只拥有稳定列id宽度与可取消草稿，工厂createDataTableColumnSizingController；数据/排序/分页不迁入；平台轨道测量、capture和焦点归React View |
 | `Pagination` | 原 props 或 `PaginationController`，工厂 `createPaginationController` | page/pageCount/disabled；受控页只发请求，不能建立服务器页历史/query/cache |
 | `Disclosure`、`SearchToolbar` | 原开合 props 或 `OverlayController` | 仅所属开合；查询/表单值归宿主，关闭前后实际焦点仍由 View 合法恢复 |
 | `SimpleSelect` | 默认开合模型或 `OverlayController` | 只替换弹层语义；HTML select 继续拥有实际值/FormData/reset/validity，DOM options/disabled 是平台投影 |
@@ -1031,6 +1032,31 @@ React 推荐组合：`<Dialog.Header closeButtonProps={{'aria-label':'关闭设�
 - `status` 明确为 `idle/loading/ready/refreshing/error`，默认为 ready。`disabled` 阻止组件自有分页/条数/重试动作；单元业务动作由宿主按真实权限决定，context 提供 busy/disabled 事实。只读查看可在刷新时继续可用，不把整个表体设为 inert。
 - `toolbar`、`emptyState`、`errorState`、`feedback`、`footer` 是公开插槽；内部 toolbar、反馈、表体与 footer 位于同一个 frame，没有默认业务动作或自动写入。`labels` 覆盖加载、错误、空态、分页和 `count({rowCount,total})` 文案。
 - 所有 rowKey 必须唯一、稳定，字符串/数字经文本化也不能重合；列 id 唯一非空。空列、不合法 page facts 在渲染之前拒绝。
+
+### 交互列宽调整
+
+4.2.10的`DataTable.columnSizing`为可选对象，省略时保留现有响应式初始列宽、默认铺满与无拖动按钮。`{}`启用默认Controller；`{widths,onWidthsChange}`受控；`{controller}`完整替换，不能同时传widths/defaultWidths/onWidthsChange。工厂从`@coffeehc/xui-runtime/data-table`导入`createDataTableColumnSizingController`，只拥有列宽确认值与拖动草稿，原rows/query/排序/分页/权限仍归宿主。列id必须稳定，列重排后宽度按id匹配；未显示的id可保留供重新显示，宿主决定是否丢弃/保存偏好，库不读写storage。
+
+```tsx
+import {DataTable} from '@coffeehc/xui-react/data-table';
+import {createDataTableColumnSizingController} from '@coffeehc/xui-runtime/data-table';
+// style.css已包含；若使用critical.css或独立table.css，还需此正式可选分片。
+import '@coffeehc/xui-theme/table-resize.css';
+const sizing=createDataTableColumnSizingController();
+<DataTable label="触发器" rows={rows} rowKey={row=>row.id}
+  columns={[
+    {id:'name',header:'名称',width:'16rem',resize:{label:'调整名称列宽',minWidth:80,maxWidth:700},cell:row=>row.name},
+    {id:'actions',header:'操作',width:120,resize:false,cell:renderActions},
+  ]} columnSizing={{controller:sizing}} />;
+```
+
+创建者销毁注入实例；View只订阅并清理自己的指针操作，不销毁注入者。`getState/subscribe/destroy`同既有observable合同；`begin(id,liveWidths,{minWidth,maxWidth},reason?)`开始、`resizeTo(px)`预览、`commit()`确认、`cancel()`无通知取消、`reset()`请求空widths恢复原布局、`update({widths,onWidthsChange})`接收确认/配置。模型不持DOM，View传入当前实际像素轨道。widths是只读`Record<稳定列id,正有限CSS像素数>`，不接受CSS字符串；初始列width继续支持rem/百分比/CSS数学式。数字是CSS像素而非设备像素，不做时区、查询或业务转换。
+
+指针开始时快照全部当前可见列的实际宽度；预览固定这些轨道，只改变目标列，避免浏览器将增量重新分摊。松开一次回调`onWidthsChange(widths,{columnId,reason:'pointer'|'keyboard'|'reset'})`，移动/受控update/零移动/取消不回调。确认后表格按精确总宽渲染，可大于或小于可视表体；其他列保持宽度、表体自身横滚，footer仍沿表体自然宽度。尚未确认的默认布局继续铺满。受控宿主若不确认则返回旧值；外部新确认值会取消旧草稿，同步回调确认优先。`reset()`不改变数据或页码。
+
+每列默认出现一个独立的focusable separator；`resize:false`排除。`resize.label`可本地化；默认名称使用字符串header或稳定id，不假设ReactNode能转成文字。header内容/排序按钮与separator是兄弟，拖动不触发排序。role=separator、vertical、aria-valuenow/min/max由真实宽度与交互范围维护。左右键每次1 CSS px，Shift为10；RTL反向，Home/End到交互上下限。Escape只取消本次拖动并保留焦点，不顺带关闭外层弹层。
+
+启用columnSizing后，初始轨道以已有width与resize.minWidth（缺省使用公共data-table-column-resize-min）中较大者为下限；没有width的列也获得此下限，避免窄屏弹性列被压到零宽。余宽仍由浏览器分配。maxWidth是调整上限，默认min/max为64/1920 CSS px并随文字尺度派生；初始弹性分配可能超过max，第一次有效调整会收敛。显式确认widths是正有限CSS像素快照；重置空记录恢复上述初始分配。未启用columnSizing的表格保持旧布局。指针拖动、键盘确认、独立配置、两种Controller遵守同一限制。触屏使用24px×表头高的独立拖动轨道和pointer capture；不将整个th或tr改成按钮。disabled/loading/refreshing时禁止列调整并取消在途草稿；保留已确认宽度、行与焦点。pointercancel、丢失capture、窗口失焦/resize、pagehide、bounds/列结构/Controller更换、卸载均取消并释放临时监听；字尺度导致默认上下限变化也取消。窄屏/缩放使用同一表体横滚，不刷新Document或重挂rows。
 
 ### 列宽与内容边界
 

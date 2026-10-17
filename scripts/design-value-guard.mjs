@@ -177,6 +177,8 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
         const measuredToastSwipe = file === 'packages/ui-react/src/toast.tsx' && ((prop === '--toast-swipe-movement-x' && raw === '`${movement.x}px`') || (prop === '--toast-swipe-movement-y' && raw === '`${movement.y}px`'));
         const measuredLoadingHeader = file === 'packages/ui-react/src/data-table-layout.ts' && prop === 'marginBlockStart' && raw === '`${headHeight}px`';
         if (measuredToastSwipe || measuredLoadingHeader || measuredTextarea || measuredSidebar || measuredTableTrack || measuredTableMinimum) { exceptions.add(`${file}: measured ${prop}`); return; }
+        // Exact columns come from live CSS probes or the public user sizing model, not a new design scale.
+        if(file === 'packages/ui-react/src/data-table.tsx' && (prop === 'width' && raw === '`${width}px`' || prop === 'inlineSize' && raw === '`${totalWidth}px`')) { exceptions.add(`${file}: measured ${prop}`); return; }
         errors.push(`${where(loc(node))} ${prop}: Unreviewed dynamic style template ${raw}`);
       }
     }

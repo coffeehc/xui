@@ -45,6 +45,7 @@
 | `@coffeehc/xui-theme/layout.css` <!-- public-entry: @coffeehc/xui-theme/layout.css --> | [源码](../packages/theme/src/layout.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-theme/floating.css` <!-- public-entry: @coffeehc/xui-theme/floating.css --> | [源码](../packages/theme/src/floating.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-theme/table.css` <!-- public-entry: @coffeehc/xui-theme/table.css --> | [源码](../packages/theme/src/table.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
+| `@coffeehc/xui-theme/table-resize.css` <!-- public-entry: @coffeehc/xui-theme/table-resize.css --> | [源码](../packages/theme/src/table-resize.css)，列宽拖动可选交互分片，已含于style/components，critical或独立table需另加本片 | [列宽拖动](COMPONENTS.md#交互列宽调整) | [示例](../examples/data-table-react/app.tsx) |
 | `@coffeehc/xui-theme/critical.css` <!-- public-entry: @coffeehc/xui-theme/critical.css --> | [源码](../scripts/tokens.mjs) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-theme/auth.css` <!-- public-entry: @coffeehc/xui-theme/auth.css --> | [源码](../packages/theme/src/auth.css) | [合同](PUBLIC_API.md#认证会话) | [示例](../examples/login-react/app.tsx) |
 | `@coffeehc/xui-theme/sheet.css` <!-- public-entry: @coffeehc/xui-theme/sheet.css --> | [Sheet/确认/触发器样式](../packages/theme/src/sheet.css)，同样包含在critical/style | — | — |
@@ -876,3 +877,5 @@ import {UploadService} from '@coffeehc/xui-runtime/upload';
 槽位、字体和焦点见 [Upload 组件](COMPONENTS.md#文件上传-upload)；正式独立示例见 [upload-react](../examples/upload-react/app.tsx)。
 
 `@coffeehc/xui-react/tabs` 的 `TabsListProps.variant?: "segmented" | "line"` 是现有List的可选视觉组合，从4.2.7起默认line，需内嵌底槽时显式segmented；仅默认视觉改变，line不创建选择/路由/查询owner。单项最大宽度使用公共tabs-item-max-inline-size；直属文字自动进入溢出阅读槽，组合名称公开Tabs.Label与TabsLabelProps（text:string、无interactionRef），复用OverflowText的hover/键盘与静态降级。详见[Tabs合同](COMPONENTS.md#tabs)与[正式示例](../examples/tabs-overlay-react/app.tsx)。弹层关闭按[完整Escape层级](COMPONENTS.md#嵌套弹层与-tooltip-的-escape-顺序)验证，不能将Tooltip消耗的一次Escape记为Sheet丢失监听。
+
+`@coffeehc/xui-runtime/data-table`及runtime根入口新增`createDataTableColumnSizingController`与DataTableColumnWidths/Options/State/Change/Draft相关正式类型；React `/data-table`新增`DataTableColumnSizingProps`与可选`columnSizing`，默认或完整Controller注入互斥。列`resize`声明交互限制/翻译名称或false排除。原width、rows、排序和分页合同保留，精确字段见[交互列宽](COMPONENTS.md#交互列宽调整)与正式types。`table-resize.css`为可选交互能力分片，critical不预载未启用拖动的皮肤，style/components包含完整样式。

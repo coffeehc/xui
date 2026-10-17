@@ -80,3 +80,13 @@ export const cursorExample=<DataTable rows={rows} columns={columns} rowKey={row=
 export const confirmedEmptyRefreshError=<DataTable rows={[]} columns={columns} rowKey={(row:Row)=>row.id} label="Known empty" status="error" hasValue/>;
 // @ts-expect-error Confirmed data is a boolean fact, not an inferred count.
 export const invalidConfirmedResult=<DataTable rows={rows} columns={columns} rowKey={row=>row.id} label="Invalid fact" hasValue={0}/>;
+
+import {createDataTableColumnSizingController,type DataTableColumnWidths} from '@coffeehc/xui-runtime/data-table';
+const base={rows,columns,rowKey:(row:Row)=>row.id,label:'Resizable records'};
+const widths:DataTableColumnWidths={name:240};
+const sizing=createDataTableColumnSizingController({defaultWidths:widths,onWidthsChange:(next,details)=>{const pixel:number=next.name;const id:string|null=details.columnId;void pixel;void id;}});
+const resizingViews=[<DataTable {...base} columnSizing={{}}/>,<DataTable {...base} columnSizing={{widths,onWidthsChange:()=>{}}}/>,<DataTable {...base} columnSizing={{controller:sizing}}/>];void resizingViews;
+// @ts-expect-error an injected sizing owner cannot also receive default state
+const duplicateSizing=<DataTable {...base} columnSizing={{controller:sizing,defaultWidths:widths}}/>;
+// @ts-expect-error exact user widths are CSS pixel numbers, not CSS declarations
+const invalidSizing=<DataTable {...base} columnSizing={{widths:{name:'12rem'}}}/>;

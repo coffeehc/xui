@@ -1,0 +1,9 @@
+@layer xui-components {
+  .xui-table[data-resizable='true'] th[data-resizable='true'] {position:relative;padding-inline-end:var(--control-height-xs);}
+  .xui-table[data-resizable='true'][data-sticky-header='true'] th,.xui-table[data-resizable='true'] th[data-sticky] {position:sticky;}
+  .xui-table-column-resize {position:absolute;inset-block:0;inset-inline-end:0;inline-size:var(--control-height-xs);border-inline-end:var(--line-width-emphasis) solid var(--separator-line);cursor:col-resize;touch-action:none;user-select:none;}
+  .xui-table-column-resize:not([aria-disabled='true']):where(:hover,:focus-visible,[data-resizing]) {border-color:var(--action-primary);background:var(--interaction-hover);}
+  .xui-table-column-resize:focus-visible {outline-offset:calc(-1 * var(--focus-width));}
+  .xui-table-column-resize[aria-disabled='true'] {cursor:not-allowed;}
+  .xui-data-table-body>.xui-table[data-column-sizing='resized'] {min-inline-size:0;}
+}

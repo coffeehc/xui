@@ -1,15 +1,15 @@
 {
-  "contractVersion": "4.2.9",
+  "contractVersion": "4.2.10",
   "defaultTheme": "Precision Engineering Console",
   "defaultMode": "dark",
-  "defaultTokenCount": 406,
+  "defaultTokenCount": 408,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "08f708d4ded9fc45bd93fb7b5986d222e708e24a527f5644edb143e5f2755b80",
+  "defaultCssSha256": "30dae750869b1a1efed3aaef1084e290af175ccc9d8e12350ac1119419016e27",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",

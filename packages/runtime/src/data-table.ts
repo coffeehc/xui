@@ -1,3 +1,4 @@
+import type {DataTableColumnResizeOptions} from './data-table-sizing.js';
 import {validateCollectionKeys} from './collection-view.js';
 export {
   getCollectionState as getDataTableState,
@@ -38,8 +39,13 @@ function validateColumnWidth(width: DataTableColumnWidth | undefined) {
   throw new TypeError('DataTable width must be a finite nonnegative pixel number or a valid CSS length, percentage, math expression or custom property');
 }
 
-export function validateDataTableKeys<T>(rows: readonly T[], columns: readonly {id: string; width?: DataTableColumnWidth}[], rowKey: (row: T) => string | number): readonly (string | number)[] {
+export function validateDataTableKeys<T>(rows: readonly T[], columns: readonly {id: string; width?: DataTableColumnWidth;resize?:DataTableColumnResizeOptions|false}[], rowKey: (row: T) => string | number): readonly (string | number)[] {
   if (!columns.length || columns.some(column => !column.id) || new Set(columns.map(column => column.id)).size !== columns.length) throw new TypeError('DataTable columns need unique nonempty ids');
-  for (const column of columns) validateColumnWidth(column.width);
+  for (const column of columns) {
+    validateColumnWidth(column.width);
+    if(column.resize&&([column.resize.minWidth,column.resize.maxWidth].some(width=>width!==undefined&&(!Number.isFinite(width)||width<=0))||column.resize.minWidth!==undefined&&column.resize.maxWidth!==undefined&&column.resize.minWidth>column.resize.maxWidth))throw new TypeError('Invalid column resize bounds');
+  }
   return validateCollectionKeys(rows,rowKey);
 }
+
+export {createDataTableColumnSizingController,type DataTableColumnWidths,type DataTableColumnResizeOptions,type DataTableColumnSizingOptions,type DataTableColumnSizingChange,type DataTableColumnResizeDraft,type DataTableColumnSizingState,type DataTableColumnSizingController} from './data-table-sizing.js';

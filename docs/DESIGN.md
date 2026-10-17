@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.9。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.9、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.10。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.9、4.2.9…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -639,6 +639,8 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --table-row-background: var(--layer-raised);
     --table-row-stripe-background: var(--palette-table-stripe);
     --table-row-expanded-background: var(--interaction-hover);
+    --data-table-column-resize-min: calc(var(--control-height-lg) + var(--table-cell-padding-inline) * 2);
+    --data-table-column-resize-max: calc(var(--layout-field-min) * 8);
     --table-header-min-height: var(--control-height);
     --table-row-min-height: var(--control-height-lg);
     --table-cell-padding-inline: var(--space-content-gap);
@@ -1809,3 +1811,5 @@ Toast 默认固定在右上角（逻辑 block-start / inline-end，RTL 随语言
 runtime ToastController 是集合、进入/关闭阶段、可见上限、超时与暂停原因的唯一 owner。React 只投影 DOM、测量手势、转发动画完成和实际焦点。无 View、隐藏文档、窗口失焦、悬停、焦点及正在手势期间暂停计时，恢复剩余时间；被可见上限隐藏的项暂停。仅更新文案保留剩余时间；显式 timeout 更新或同 id add 重新计算该项时限，-1 表示不自动关闭，省略或0采用配置默认（5秒）；旧动画和旧 Promise 不得修改新实例或复活关闭项。默认右滑关闭，纵向保留浏览器滚动；显式上下滑会接管对应触控手势。手势 CSS 位移是实时指针测量，不是设计尺寸默认值。
 
 新增通知不抢焦点；F6 聚焦通知区域，Tab 进入动作，再次 F6 返回原位置，Escape/关闭把焦点移至其余可见通知或原位置。普通通知 polite，高优先级 assertive；关闭或不可见项退出交互。重要错误持续显示在所属内容区域，不能只放自动消失 Toast。借用 Controller 退出 View 时释放 DOM/暂停租约，不销毁宿主队列；默认实例真实退出时销毁。完整双模式、迁移差异和可执行验证分别见 COMPONENTS、PUBLIC_API 与 VALIDATION。
+
+4.2.10的可选DataTable列宽交互复用原表头、表体、footer与独立状态owner。headerLabel/排序动作保留表头文字角色；逻辑末端separator为独立24px命中区，细线使用separator-line，hover/focus/拖动使用action-primary与interaction-hover；禁用保留静态线和aria-disabled。DataTable数据/分页不归列宽Controller。默认上下限由data-table-column-resize-min/max集中派生，用户确认宽度属于真实CSS像素测量例外，不构成消费项目自行缩字号。详细状态、slot与清理合同见COMPONENTS交互列宽章节。
