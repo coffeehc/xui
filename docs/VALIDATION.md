@@ -1,5 +1,22 @@
 # 验证证据与限制
 
+
+## 透明动作与导航语义完整交付（4.2.17，2026-10-17）
+
+最终包含两项独立实现：Button/Disclosure 的可选 text 动作，以及 NavItem/NavigationItem/NavigationMenu/MenuLayout 的可选 text 呈现与条目 warning 前景。均复用已有 Controller、字体、尺寸、focus/disabled、路由和槽位，不改消费项目或发出升级通知。缺省导航、ghost/link 和普通 Disclosure 的外观保持；warning 只投射宿主事实，不增加等待业务枚举或查询 owner。用户最后要求透明背景，已覆盖此前 warning soft 建议。Stitch 的最终文字核准保存在 `.artifacts/semantic-actions-4.2.17/stitch-transparent-navigation.txt`；实际截图由主线程检查，不声称 Stitch 已查看最终工程截图。
+
+最终 sourceGeneration `b935ed626e94109303e1cc68ebe6cb8780da03f9bb3a7acb6105847db5fb38e7`，正式独立安装 `.consumers/run-Rmyom9/react`。build、414 Token、typecheck、6文件定向unit 27/27、448项接入检查/1500文档链接均通过。107个公开ESM/CSS/types入口、正式类型正反例、React/ReactDOM/Base UI单实例与零源码alias、服务依赖门禁通过；receipt为 `navigation-stage/consumer-final2.json`，测量为 `performance-final2.json`。CSS gzip21226/21248，新增透明导航与首行Icon配方相对前置cap多42bytes，给本功能有界+64；初始JS gzip143841/153600，Button及窄服务预算不变。此前第一项候选仅作独立提交证据，完整正式归档以本段generation为准。
+
+正式包浏览器68个唯一用例全部通过，无最终失败、跳过或flaky：新导航29、透明动作24、既有rich-navigation 5与navigation-selected 10。`navigation-recheck.json`10项、`browser-regression.json`58项覆盖完整集合；`navigation-marquee.json`额外重验1项并保存减少动态效果切换前的截图，69次执行去重为68，逐案见 `case-summary.json`。验证六种实际preset×light/dark/system的普通/hover/pressed/选中/展开/disabled，透明背景、警告优先前景、图标继承与普通文字实际合成背景对比度≥4.5；独立配置/右键不导航、Enter/Space单次动作、roving焦点、准确aria、普通与警告切换保留节点/Controller/展开/草稿。禁用阻断、按钮渲染的NavItem与转发props/ref的ContextMenu链接通过；分组、子项和配置按钮不继承tone。减少动态/触屏完整静态名称、名称单独marquee和不收缩Icon、compact揭示不改变collapsed或触发折叠回调均通过。
+
+Forest三模式覆盖390px/RTL/根字号200%及三模式真实Chrome设置200%：DPR加倍、CSS viewport减半、根字号不变、CSS zoom=1、pinch=1；检查长名称、首行警告图标、分支/配置动作、独立focus和关闭回原触发器。主线程已查看深色RTL根200%、浅色真实zoom、正常marquee和减少动态静态退路截图，PNG见 `proof-final`。没有通过缩字号、隐藏名称或消费者私有CSS完成验收。
+
+过程失败单独保留：最初新增data-tone/data-variant未补cloneElement的元素属性声明导致构建失败，已补类型后通过；consumer first.log/second.log的clipboard预算分别4128/4096与4098/4096，收拢同一入口的无效导航校验与异常文字，全部校验仍在，未提高窄服务门槛，freshconsumer已通过。浏览器首轮在窄屏错误查找桌面的“展开导航”，实际公开按钮名为“工作导航”；停止余下同类等待后修正测试locator，3模式根200%及真实zoom全部复验。首轮被中止未生成完整JSON，不计入通过总数，失败截图/trace仍在navigation-first-run；未为测试更改生产按钮名称。
+
+复现：`pnpm build && pnpm check:tokens && pnpm typecheck && node --test tests/contract.test.mjs tests/navigation.test.mjs tests/navigation-labels.test.mjs tests/navigation-slots.test.mjs tests/navigation-tones.test.mjs tests/config-services.test.mjs && node scripts/check-docs.mjs && pnpm test:consumer`；`pnpm exec playwright test tests/browser/text-actions.spec.mjs tests/browser/navigation-tones.spec.mjs tests/browser/rich-navigation.spec.mjs tests/browser/navigation-selected.spec.mjs`。正式manifest/public-api/sourceGeneration/SHA256SUMS继续由既有archive脚本自动生成及校验。
+
+未跑全套unit/browser、watch/cold-start、其他浏览器引擎、实体设备/读屏器、xAgent及其他产品真实页面/业务后端/部署；触屏为浏览器仿真。没有原生UI实现或新增持久化状态，只有既有TypeScript数据合同。此发布可选采用，不要求任何消费项目必须升级。
+
 ## 透明文字动作（4.2.17 第一项阶段，2026-10-17）
 
 只修改xui。Button/Disclosure新增可选variant=text，复用原状态/焦点/大小/字体owner，各状态透明，强调仅前景；普通ghost/link/Disclosure不变。Stitch文字审查及最终边界确认见 `.artifacts/semantic-actions-4.2.17/stitch-{review,final}.txt`；按用户明确要求保留独立focus，未采用其先前改warning焦点环、加入渐变mask或要求宿主补Disclosure间距的建议。

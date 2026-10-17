@@ -176,3 +176,7 @@ AppShell/MenuLayout新增默认开启的可选 sidebarRevealOnHover，临时覆�
 ### XUI-REQ-20261017-30：可选透明文字动作与Disclosure外观（4.2.17）
 
 xAgent维护线程在4.2.16导航产物冻结后补充：会话计划/工具次数需要可选、无默认/hover/pressed/expanded底色的轻量文字触发器，保留主题强调、真实button键盘与独立focus。当前Disclosure未公开外观/trigger槽，ghost/link仍有既有背景，不能让宿主穿透CSS或冒用link代替；普通Button/导航/菜单的默认背景不应全局删除。本项未纳入4.2.16；4.2.17以Button/Disclosure可选variant=text实现，默认外观和原状态owner保留，验证见VALIDATION。xAgent状态区、执行中Badge及输入上方状态属于宿主业务，不在此修改。
+
+### XUI-REQ-20261017-31：透明导航与局部警告前景（4.2.17）
+
+按用户最后收口，NavItem/NavigationItem/NavigationMenu/MenuLayout 提供可选 variant=text；条目可声明通用 tone=warning。透明矩阵覆盖 default/hover/pressed/selected/disabled；警告只改变本项文字/图标/指示线，不使用软底，不向分组、子项或配置按钮传播。config/MenuService 同步保留字段；不承接业务等待枚举、查询或路由 owner。未声明选项的默认外观不变。与 Stitch 完成文字合同核准，浏览器证据由 xui 正式独立消费者提供，不以设计确认代替实测；入口及接入逐项清单见 [PUBLIC_API](PUBLIC_API.md#透明导航与警告前景4217) 和 [NAV-TEXT](ADOPTION_CHECKLIST.md#可选透明导航逐项检查4217)。本轮仅 xui，不要求消费项目升级。

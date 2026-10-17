@@ -1,6 +1,14 @@
+/** Optional foreground semantics; hosts project facts, never business lifecycle enums. */
+export type NavigationTone='default'|'warning';
+/** Text keeps every primary-control background transparent; the default appearance is unchanged. */
+export type NavigationVariant='default'|'text';
 /** Shared, serializable menu data. Icons are identifiers resolved once by the host. */
 export interface NavigationItem {
   id:string; label:string; icon?:string; href?:string; children?:readonly NavigationItem[];
+  /** Warning is local to this actionable item; group headings and descendants do not inherit it. */
+  tone?:NavigationTone;
+  /** Overrides the containing NavigationMenu appearance only for this item. */
+  variant?:NavigationVariant;
   group?:boolean; disabled?:boolean; target?:string; download?:string|boolean; rel?:string;
 }
 export interface NavigationIcon {viewBox?:string;paths:readonly string[]}
@@ -14,6 +22,8 @@ export interface NavigationAdapter {navigate:(request:NavigationRequest)=>void;c
 export interface NavigationNode {item:NavigationItem;parentId:string|null;ancestors:readonly string[];disabled:boolean}
 export interface NavigationMenuState {activeId:string|null;collapsed:boolean;expandedIds:readonly string[]}
 export interface NavigationMenuOptions extends NavigationSelection {
+  /** Default primary-control appearance; per-item variant may override it. */
+  variant?:NavigationVariant;
   items:readonly NavigationItem[];navigation?:NavigationAdapter;resolveIcon?:NavigationIconResolver;
   /** Optional name-only hover/keyboard scrolling. Defaults to wrap; touch and reduced motion retain full static names. */
   labelOverflow?:'wrap'|'marquee';
@@ -32,8 +42,9 @@ export function indexNavigation(items:readonly NavigationItem[]):Map<string,Navi
   const nodes=new Map<string,NavigationNode>();
   const walk=(entries:readonly NavigationItem[],parentId:string|null,ancestors:string[],inheritedDisabled:boolean)=>{
     for(const item of entries){
-      if(typeof item.id!=='string'||!item.id||typeof item.label!=='string'||!item.label||nodes.has(item.id))throw new TypeError('Navigation items need unique nonempty string ids and labels');
-      if(item.group&&item.href)throw new TypeError('A navigation group cannot also be a link');
+      if(typeof item.id!=='string'||!item.id||typeof item.label!=='string'||!item.label||nodes.has(item.id)
+        ||![undefined,'default','warning'].includes(item.tone)||![undefined,'default','text'].includes(item.variant))throw new TypeError('Invalid navigation id, label, tone or variant');
+      if(item.group&&item.href)throw new TypeError('Navigation groups cannot link');
       const disabled=inheritedDisabled||!!item.disabled;nodes.set(item.id,{item,parentId,ancestors:[...ancestors],disabled});
       if(item.children)walk(item.children,item.id,[...ancestors,item.id],disabled);
     }

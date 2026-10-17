@@ -2405,3 +2405,9 @@ LinkedText 使用正文/元信息所属文字角色与既有 Link 颜色，不�
 ### 透明文字动作（4.2.17）
 
 Button.variant=text 与 Disclosure.variant=text 为可选呈现，默认变体不变。默认/hover/pressed/展开及disabled均无底色或下划线；文字与箭头继承 foreground，hover/pressed/aria-expanded=true 时采用 action-primary，disabled采用原禁用前景并阻断动作。透明文字Button不做按压缩放，保留原size的padding、最小点击区和字体；Disclosure保留原全宽trigger、自然标题/indicator/body与分隔线，不创建第二个Overlay或关闭owner。focus-visible仍由原独立focus配方绘制，不能以hover颜色替代。默认ghost/link和普通Disclosure保留既有背景合同，不全局删除交互反馈。
+
+### 导航文字呈现与warning前景（4.2.17）
+
+NavItem.variant=text、NavigationMenu/MenuLayout.variant=text 及逐 NavigationItem.variant=text 可选地保持主控件 default/hover/pressed/selected/disabled 背景透明；缺省default外观保留。普通text项的hover/pressed/已选文字与主图标用action-primary，选中仍仅由aria-current事实决定。NavigationItem的variant可覆盖菜单默认，不是父子继承状态。
+
+NavItem与NavigationItem的tone=warning只投影宿主事实；标题、主图标、公开Label/文字/Icon和尾随告警图标继承status-warning-foreground，选中指示也用该可读前景；warning各状态背景透明，不再采用此前建议的warning软底。tone优先于普通selected/hover文字品牌色；禁用前景、独立focus配方、aria-current与路由不变。组织组头忽略tone，子项不继承；独立配置动作继续自己的普通按钮外观，分支展开按钮跟随当前主项的透明呈现/前景。Name位于NavigationMenu.Label，旁侧被动Icon不收缩；名称按原wrap/marquee与触屏/reduced-motion退路处理，不复制DOM或增加渐变mask。

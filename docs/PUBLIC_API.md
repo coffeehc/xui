@@ -1023,3 +1023,17 @@ React `/button` 的 ButtonProps.variant 新增 `text`；`/navigation` 的 Disclo
 ```
 
 尺寸、字体、焦点、disabled和受控/Controller注入合同沿用原入口；普通Button/Disclosure默认样式保留。不要用link变体冒充透明折叠动作，也无需消费者背景样式或复制Disclosure。
+
+### 透明导航与警告前景（4.2.17）
+
+Runtime `/navigation` 的 `NavigationVariant = 'default' | 'text'`、`NavigationTone = 'default' | 'warning'` 由 React `/navigation` 与 `/menu-layout` 同步导出。NavItem 新增可选 variant/tone；NavigationItem 新增相同字段，NavigationMenuOptions 与 MenuLayout 支持容器 variant，条目 variant 优先。省略字段保留默认外观；warning 仅改变该条目主控件的文字、图标、分支开关和选中短线，背景透明，不影响分组标题、子项、独立配置按钮或焦点环。config.json 的 menu.items 支持相同字段并校验枚举，MenuService 保留它们。
+
+```tsx
+const items = [{id: 'team', label: '研发团队', href: '/team', tone: 'warning' as const}];
+<NavigationMenu items={items} variant="text"
+  renderLabel={item => <><NavigationMenu.Label>{item.label}</NavigationMenu.Label>
+    {item.tone === 'warning' && <Icon><TriangleAlert/></Icon>}</>}
+  renderLink={item => <SessionLink aria-label={`${item.label}，需要人工确认`}/>} />
+```
+
+TriangleAlert 与 SessionLink 由宿主提供，link 必须转发 props/ref；例中完整名称用于读屏，不要求增加可见状态文字。宿主投射事实到通用 tone，不传业务生命周期枚举。Icon 是无动作装饰；配置动作仍进入 renderAction。既有 Controller、路由、roving 焦点、disabled 与 compact reveal 合同保持。正式示例见 [navigation-tones-react](../examples/navigation-tones-react/app.tsx)。

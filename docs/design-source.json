@@ -96,7 +96,8 @@
     "4.2.14 Stitch layout review: control-bottom aligned multirow SearchToolbar; full navigation drawer, single inset, independent Tabs, bounded indentation and content-budget whole-scroll fallback. Existing desktop widths, fonts, palettes and state owners retained.",
     "4.2.15 adds safe prose links, the standard Toast.View and immediate scope clearing, Resource-owned module/CSS leases, and existing-ThemeService sRGB readback. No new palette, UI skin, authentication or business loading owner.",
     "4.2.16 adds optional desktop compact-sidebar hover/focus reveal without Controller writes or main reflow, aligns compact footer compositions, and narrows expanded width to 16vw bounded by derived 192/224px with the existing viewport cap.",
-    "4.2.17 adds optional transparent Button/Disclosure text actions using existing foreground/action/focus/disabled roles. Default variants, geometry and state owners remain unchanged."
+    "4.2.17 adds optional transparent Button/Disclosure text actions using existing foreground/action/focus/disabled roles. Default variants, geometry and state owners remain unchanged.",
+    "4.2.17 adds optional text navigation appearance and warning foreground semantics, with transparent surfaces in every opted-in state, local item projection, preserved focus/disabled/routing owners, and inherited public label/icon colors. No warning soft surface is introduced."
   ],
   "architectureReference": {
     "path": "docs/design-sources/stitch-token-architecture.v1.txt",

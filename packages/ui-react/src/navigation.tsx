@@ -2,22 +2,28 @@ import {assertControllerProps} from './controller.js';
 import {useOverlay,type WithController,type OverlayController} from './interaction-hooks.js';
 import {useOwnedController,type ControllerProps} from './controller.js';
 import {createPaginationController,type PaginationController,type PaginationOptions} from '@coffeehc/xui-runtime/interaction';
+import type {NavigationTone,NavigationVariant} from '@coffeehc/xui-runtime/navigation';
+export type {NavigationTone,NavigationVariant} from '@coffeehc/xui-runtime/navigation';
 import * as React from 'react';
 import { useRender } from '@base-ui/react/use-render';
 import { cx, branded } from './shared.js';
 export function Nav({className,...props}: React.ComponentProps<'nav'>) { return <nav {...props} className={cx('xui-nav',className)} />; }
-export type NavItemState = { selected:boolean; disabled:boolean; collapsed:boolean };
-export type NavItemProps = useRender.ComponentProps<'a',NavItemState,React.ComponentPropsWithRef<'a'>> & { selected?: boolean; disabled?: boolean; collapsed?: boolean };
-export function NavItem({selected,'aria-current':ariaCurrent,disabled,collapsed,className,render,ref,...props}: NavItemProps) {
+export type NavItemState = { selected:boolean; disabled:boolean; collapsed:boolean;tone?:NavigationTone;variant?:NavigationVariant };
+export type NavItemProps = useRender.ComponentProps<'a',NavItemState,React.ComponentPropsWithRef<'a'>> & { selected?: boolean; disabled?: boolean; collapsed?: boolean;
+  /** Warning changes local text/icon/indicator semantics and keeps the surface transparent. */
+  tone?:NavigationTone;
+  /** Text is transparent in default/hover/pressed/selected/disabled states. */
+  variant?:NavigationVariant };
+export function NavItem({selected,'aria-current':ariaCurrent,disabled,collapsed,tone='default',variant='default',className,render,ref,...props}: NavItemProps) {
   const renderCurrent=React.isValidElement<React.ComponentProps<'a'>>(render)?render.props['aria-current']:undefined;
   const current=selected === undefined ? ariaCurrent ?? renderCurrent : selected ? 'page' : undefined;
-  const state={selected:current==='page',disabled:!!disabled,collapsed:!!collapsed};
-  const element=useRender({defaultTagName:'a',render,ref,state,props:{...props,className:cx('xui-nav-item',className),'aria-current':current,'aria-disabled':disabled || undefined,'data-collapsed':collapsed}}) as React.ReactElement<React.ComponentProps<'a'> & {'data-collapsed'?:boolean}>;
+  const state={selected:current==='page',disabled:!!disabled,collapsed:!!collapsed,tone,variant};
+  const element=useRender({defaultTagName:'a',render,ref,state,props:{...props,className:cx('xui-nav-item',className),'aria-current':current,'aria-disabled':disabled || undefined,'data-collapsed':collapsed,'data-tone':tone,'data-variant':variant}}) as React.ReactElement<React.ComponentProps<'a'> & {'data-collapsed'?:boolean;'data-tone'?:NavigationTone;'data-variant'?:NavigationVariant}>;
   const merged=element.props as React.ComponentProps<'a'>;
   // Capture guards run before a composed link's router handler. Enabled links
   // retain the browser's normal modifiers, target and download behavior.
   return React.cloneElement(element,{
-    'aria-current':current,'aria-disabled':disabled || undefined,'data-collapsed':collapsed,
+    'aria-current':current,'aria-disabled':disabled || undefined,'data-collapsed':collapsed,'data-tone':tone,'data-variant':variant,
     href:disabled?undefined:merged.href,tabIndex:disabled?-1:merged.tabIndex,
     onClickCapture:(event:React.MouseEvent<HTMLAnchorElement>)=>{if(disabled){event.preventDefault();event.stopPropagation();}merged.onClickCapture?.(event);},
     onAuxClickCapture:(event:React.MouseEvent<HTMLAnchorElement>)=>{if(disabled){event.preventDefault();event.stopPropagation();}merged.onAuxClickCapture?.(event);},

@@ -1483,3 +1483,9 @@ AppShell 与 MenuLayout 公开可选 `sidebarRevealOnHover?: boolean`，默认 t
 `Button variant="text"` 与 `Disclosure variant="text"` 在默认、hover、pressed、展开及disabled时均透明。默认foreground，hover/pressed/aria-expanded采用action-primary，图标/DisclosureIndicator继承；禁用前景和执行阻断保留。Button保留size点击区与文字角色，取消该变体按压缩放；无下划线。Disclosure保留全宽trigger、body、分隔线及同一Overlay/focus owner，关闭时按原规则回到同一trigger。默认ghost/link/Disclosure未改变。可用 Button＋DisclosureIndicator 组合宿主自有折叠状态；它不代替宿主提供aria-expanded/controls。
 
 正式公开组合示例：[text-actions-react](../examples/text-actions-react/app.tsx)。
+
+### 透明导航与警告前景（4.2.17）
+
+NavItem、NavigationItem 和 NavigationMenu/MenuLayout 可选 variant=text：普通/hover/pressed/selected/disabled 始终透明，普通前景继承正文角色，hover/pressed/选中为 action-primary。条目 tone=warning 优先 status-warning-foreground；不使用 warning soft 底，选中短线同警告前景。分支开关与主项保持一致，focus 和禁用前景沿用原规则。省略新选项不改变默认导航。
+
+renderLabel 内把名称放入 NavigationMenu.Label，尾随无动作警告 Icon 独立占位、不收缩并按既有首行偏移对齐；只有名称参与原有 marquee。触屏/减少动态效果保留完整静态名称。配置按钮仍进入 renderAction，颜色不继承 warning；分组和子项不继承父项 tone。业务事实、图标、完整可访问名称由宿主提供，不新增等待业务状态或导航 owner。[正式组合](../examples/navigation-tones-react/app.tsx)同时演示转发 ref/props 的 ContextMenu 链接、独立配置动作和原生 button 渲染的 NavItem。

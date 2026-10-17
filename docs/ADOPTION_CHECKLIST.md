@@ -634,3 +634,12 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | ACTION-TEXT-001 | 计划Disclosure/轻量文字Button | 只用公开variant=text；各状态透明、无下划线；未选择的默认变体保持原背景，不私改CSS | default/hover/pressed/expanded/disabled computed与截图 | [COMPONENTS](COMPONENTS.md#透明文字动作4217) |
 | ACTION-TEXT-002 | 键盘/关闭/更新 | Enter/Space一次动作、aria-expanded/controls准确、同节点/尺寸/草稿、关闭回焦、禁用零动作；不另建Controller | 指针和键盘时间线、节点与调用计数 | [PUBLIC_API](PUBLIC_API.md#透明文字动作4217) |
 | ACTION-TEXT-003 | 阅读与主题 | light/dark/system/forest、窄屏、长中文、RTL、200%根字号和真实浏览器zoom下可达；独立focus清晰，reduced-motion遵守原合同 | 字体/命中/几何及两种200%事实 | [DESIGN](DESIGN.md#透明文字动作4217) |
+
+## 可选透明导航逐项检查（4.2.17）
+
+| 编号 | 场景 | 标准 | 证据 | 入口 |
+| --- | --- | --- | --- | --- |
+| NAV-TEXT-001 | 透明导航各状态 | 使用公开 variant=text；default/hover/pressed/selected/disabled 背景透明、无按压缩放，普通选中/hover为主题动作色 | 实际 computed、指针及键盘截图 | [COMPONENTS](COMPONENTS.md#透明导航与警告前景4217) |
+| NAV-TEXT-002 | 需要人工介入事实 | 宿主投射 tone=warning；主名/主图标/警告图标/选中短线保持 warning 前景，无软底；完整可访问名称；不传业务枚举 | 类型、色值、aria 名称与真实事实来源 | [PUBLIC_API](PUBLIC_API.md#透明导航与警告前景4217) |
+| NAV-TEXT-003 | 同行或父子动作 | 分组/下级/配置动作不染色；分支独立切换、右键与配置不误导航；禁用零执行；普通入口默认外观保留 | 回调和路由计数、焦点、aria-current/expanded/controls | [COMPONENTS](COMPONENTS.md#透明导航与警告前景4217) |
+| NAV-TEXT-004 | 语言/状态/阅读更新 | 同一 Controller/DOM/草稿，长名只滚动 Label、Icon 不收缩；三模式/配色/窄屏/RTL/根200%及真实zoom下可读可操作 | 正式包、节点/几何/对比度/媒体与缩放事实 | [DESIGN](DESIGN.md#导航文字呈现与warning前景4217) |

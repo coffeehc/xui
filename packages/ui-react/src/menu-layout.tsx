@@ -5,7 +5,7 @@ import {createNavigationKeyboard} from './navigation-keyboard.js';
 import * as React from 'react';
 import {bindNavigationPresentation} from './navigation-presentation.js';
 import {useRender} from '@base-ui/react/use-render';
-import {indexNavigation,getNavigationActiveId,resolveNavigationIcon,navigateNavigationItem,type NavigationItem,type NavigationMenuOptions,type NavigationMenuState,type NavigationIconResolver} from '@coffeehc/xui-runtime/navigation';
+import {indexNavigation,getNavigationActiveId,resolveNavigationIcon,navigateNavigationItem,type NavigationItem,type NavigationMenuOptions,type NavigationMenuState,type NavigationIconResolver,type NavigationVariant} from '@coffeehc/xui-runtime/navigation';
 import {NavItem,DisclosureIndicator} from './navigation.js';
 import {AppShell,type AppHeaderSlots,type ShellScrollMode,type ShellContentInset,type SidebarTogglePlacement} from './layout.js';
 export type {SidebarTogglePlacement} from './layout.js';
@@ -15,7 +15,7 @@ import type {HeaderLocaleOptions} from '@coffeehc/xui-runtime/header-controls';
 import type {ThemeModeLabels} from '@coffeehc/xui-runtime/theme-control';
 import type {ThemeController} from '@coffeehc/xui-runtime/theme';
 import {ShellNavigationContext} from './shell-context.js';
-export type {NavigationItem,NavigationMenuOptions,NavigationMenuState,NavigationIconResolver} from '@coffeehc/xui-runtime/navigation';
+export type {NavigationItem,NavigationMenuOptions,NavigationMenuState,NavigationIconResolver,NavigationTone,NavigationVariant} from '@coffeehc/xui-runtime/navigation';
 
 interface NavigationMenuSlots extends Omit<NavigationMenuOptions,keyof NavigationPresentationOptions> {
   className?:string;renderLink?:(item:NavigationItem)=>React.ReactElement;
@@ -59,13 +59,13 @@ function NavigationMenuRoot(allProps:NavigationMenuProps){const {controller:inje
   const compact=()=>controller.setCollapsed(!collapsed);
   const renderItems=(entries:readonly NavigationItem[]):React.ReactNode=>entries.map(item=>{
     const node=nodes.get(item.id)!,hasChildren=!!item.children?.length,open=!!item.group||expanded.includes(item.id),childId=prefix+'-'+encodeURIComponent(item.id);
-    const action=renderAction?.(item);
+    const action=renderAction?.(item),tone=item.group?undefined:item.tone,variant:NavigationVariant=item.variant??options.variant??'default';
     const content=<>{(item.icon||collapsed)&&<Icon name={item.icon} resolver={options.resolveIcon}/>}<span className="xui-menu-label">{renderLabel?.(item)??(options.labelOverflow==='marquee'?<NavigationMenuLabel>{item.label}</NavigationMenuLabel>:item.label)}</span></>;
     return <li key={item.id} className="xui-menu-entry" data-menu-entry={item.id}><div className="xui-menu-row">
-      {item.group?<h2 className="xui-menu-group-title">{content}</h2>:item.href?<NavItem render={renderLink?.(item)} href={item.href} target={item.target} rel={item.rel} download={item.download} selected={active===item.id} disabled={node.disabled} collapsed={collapsed} title={item.label} data-menu-id={item.id} data-menu-control="primary" onClick={event=>navigateNavigationItem(item,event,{...options,items,location:options.location??window.location.href,baseURL:options.baseURL??window.location.href})}>{content}</NavItem>:
-        <BranchButton render={renderButton?.(item)} type="button" className="xui-nav-item" disabled={node.disabled||!hasChildren} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="primary" data-collapsed={collapsed} title={item.label} onClick={()=>setExpanded(item.id,!open)}>{content}<DisclosureIndicator className="xui-menu-chevron" open={open}/></BranchButton>}
+      {item.group?<h2 className="xui-menu-group-title">{content}</h2>:item.href?<NavItem render={renderLink?.(item)} href={item.href} target={item.target} rel={item.rel} download={item.download} selected={active===item.id} tone={tone} variant={variant} disabled={node.disabled} collapsed={collapsed} title={item.label} data-menu-id={item.id} data-menu-control="primary" onClick={event=>navigateNavigationItem(item,event,{...options,items,location:options.location??window.location.href,baseURL:options.baseURL??window.location.href})}>{content}</NavItem>:
+        <BranchButton render={renderButton?.(item)} type="button" className="xui-nav-item" data-tone={tone} data-variant={variant} disabled={node.disabled||!hasChildren} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="primary" data-collapsed={collapsed} title={item.label} onClick={()=>setExpanded(item.id,!open)}>{content}<DisclosureIndicator className="xui-menu-chevron" open={open}/></BranchButton>}
       {(!!item.href&&hasChildren||action)&&<div className="xui-menu-row-controls">
-      {!!item.href&&hasChildren&&<Button className="xui-menu-branch-toggle" variant="ghost" data-icon="true" disabled={node.disabled} aria-label={(open?options.collapseBranchLabel:options.expandBranchLabel)?.(item)??`${open?'Collapse':'Expand'} ${item.label}`} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="toggle" onClick={()=>setExpanded(item.id,!open)}><DisclosureIndicator className="xui-menu-chevron" open={open}/></Button>}
+      {!!item.href&&hasChildren&&<Button className="xui-menu-branch-toggle" data-tone={tone} variant={variant==='text'||tone==='warning'?'text':'ghost'} data-icon="true" disabled={node.disabled} aria-label={(open?options.collapseBranchLabel:options.expandBranchLabel)?.(item)??`${open?'Collapse':'Expand'} ${item.label}`} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="toggle" onClick={()=>setExpanded(item.id,!open)}><DisclosureIndicator className="xui-menu-chevron" open={open}/></Button>}
       {action&&<RowAction item={item} disabled={node.disabled} render={action}/>}
       </div>}
     </div><ul className="xui-menu-children" id={childId} hidden={!open}>{renderItems(item.children??[])}</ul></li>;
