@@ -1,4 +1,4 @@
 interface:
   display_name: "接入与升级 xui / baseservice"
-  short_description: "新接入与升级统一逐页、逐 slot 验收，也支持项目设计、主题与联合接入"
-  default_prompt: "使用 $adopt-xui，按授权执行新接入、升级、自查、项目设计或主题生成；实施按统一流程逐页、逐 slot 验收，公共缺口交给 xui，保留业务与已有主题。"
+  short_description: "区分完整接入与定向升级，按受影响页面和 slot 验收，保留业务与主题"
+  default_prompt: "使用 $adopt-xui，按授权选择完整接入、定向升级、自查、设计或主题生成；定向任务只验受影响页面/slot与必要回归，StructuredLogExplorer走专项流程，公共缺口交给xui。"

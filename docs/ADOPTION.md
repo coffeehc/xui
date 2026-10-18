@@ -13,7 +13,7 @@ xui 为新产品 UI 统一采用 React：公共组件从 `@coffeehc/xui-react` �
 ## 阅读顺序与职责
 
 1. 核对采用项目规则、工作区、固定版本与正式 exports，保护已有修改后按项目 Git 规范同步。
-2. 按项目自己的 `docs/DESIGN.md` 生成主题；xui [DESIGN](DESIGN.md) 定义公共默认值和变量合同。
+2. 核对项目自己的 `docs/DESIGN.md` 和已有主题；仅首次主题接入或主题差异命中本次范围时生成/更新，xui [DESIGN](DESIGN.md) 定义公共默认值和变量合同。
 3. 在 [组件手册](COMPONENTS.md) 只读当前任务对应章节；正式入口、运行时与默认服务合同见 [PUBLIC_API](PUBLIC_API.md)。
 4. 按 [逐项接入检查清单](ADOPTION_CHECKLIST.md)建立每个页面/组件/API的检查记录，先核对槽位映射再构建并验证实际消费页面；当前已验和未验范围见 [VALIDATION](VALIDATION.md)。
 
@@ -122,7 +122,19 @@ pnpm preview
 
 ## 新接入与升级的统一执行流程
 
-本流程适用于实施型新接入、升级和改造，默认覆盖当前项目授权范围内全部实际页面；升级不能只替换包版本或检查新增 API。用户明确限定页面、模块、阶段时按该范围执行；主题生成仍按[主题专项](#主题css-与单-owner)，只读自查/评审使用同一清单记录现状，不因此取得修改授权。仅升级 xui 不授权修改后端、公共库、其他项目、业务协议或部署。
+本流程适用于实施型新接入、升级和改造，先按下表选择范围；升级不能只替换包版本，也不默认重跑全部接入。主题生成仍按[主题专项](#主题css-与单-owner)，只读自查/评审使用同一适用清单记录现状，不因此取得修改授权。仅升级 xui 不授权修改后端、公共库、其他项目、业务协议或部署。
+
+### 按影响选择执行范围
+
+| 场景 | 页面和合同范围 | 验证与停止条件 |
+| --- | --- | --- |
+| 首次整体接入、明确的全量迁移 | 当前授权范围内所有实际页面、入口与已采用能力 | 走完整接入；每个实际实例和slot分别验收 |
+| 版本升级、指定组件/页面改造 | 固定版本的合同差异及实际调用点决定全部受影响实例；保留已正确接线 | 只读相关章节，选择适用ID，运行必要构建/类型、受影响测试及产品页面/请求验收；相关检查通过后完成交付 |
+| 只读自查/评审 | 用户指定或由差异确定的受影响集合 | 同样核对实例和slot，以现状、证据、缺口为完成，不实施迁移 |
+
+完整接入细则仅在相应范围读取，见[skill按需参考](../.agents/skills/adopt-xui/references/full-adoption.md)。定向任务不重做未受影响的登录、菜单、主题、全部API或后端接线，不遍历整份清单给无关项逐条填不适用。共享主题、Shell、认证或构建入口确有变化时，按合同差异和调用关系加入所有受影响页面并说明原因；影响未查清不能假定无影响。仅StructuredLogExplorer升级走[专项流程](../.agents/skills/adopt-xui/references/structured-log.md)，与下文共用同一layout/slot、产物和报告合同。
+
+同一构建的产物校验、peer单实例和共享入口证据可以验证一次、在各实例报告中引用；每页自身的slot、局部状态和请求接线仍分别验收。已有证据只有固定产物、项目构建、代码与环境仍适用时才复用。项目规则、实质变更或关联失败没有要求时，不机械重跑全套unit/browser、冷启动或无关模块回归；必要检查通过后进入交付。
 
 ### 确定范围与固定产物
 
@@ -365,6 +377,6 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 
 ### StructuredLogExplorer 查询组合（4.2.22）
 
-升级完整Explorer后采用库内QueryForm及其fields/actions/advanced/summary，不在宿主再做一套筛选/DTO adapter。页级辅助内容传pageToolbar，标题动作传headerActions；按[组件动作矩阵](COMPONENTS.md#structuredlogexplorer-查询与槽位4222)验证各slot。原controller/options/viewController接法和唯一请求owner保持，缺少跨组records的项目继续省略该能力。
+升级完整Explorer执行[skill专项](../.agents/skills/adopt-xui/references/structured-log.md)，只覆盖实际使用页面及必要共享回归，不展开为整项目迁移。采用库内QueryForm及其fields/actions/advanced/summary，不在宿主再做一套筛选/DTO adapter。页级辅助内容传pageToolbar，标题动作传headerActions；按[组件动作矩阵](COMPONENTS.md#structuredlogexplorer-查询与槽位4222)验证各slot。原controller/options/viewController接法和唯一请求owner保持，缺少跨组records的项目继续省略该能力。
 
 逐页分别验证：编辑与“重置草稿”零请求、恢复最近提交条件且保留游标/结果；“清除筛选”明确提交空范围并产生一次当前视图查询；刷新仅用已提交filter而不提交草稿。提交新条件清旧范围并隔离迟到，取消/错误/详情回焦沿原Controller。不能以按钮旧名称认定HTTP故障，也不能把“清除已生效筛选”改名“重置”后仍请求。库示例仅是正式包验收，产品仍须固定产物并验收自己的页面和API。
