@@ -101,7 +101,10 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // JS, Button and narrow-service caps remain unchanged.
 // 4.2.20 query width/tracks and scrollport feedback have a bounded +256-byte
 // allowance above the prior cap. JS, Button and narrow-service caps stay fixed.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22016, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
+// 4.2.21 adds the compact initials recipe and nine shared chart geometry tokens.
+// The isolated critical.css probe grew 137 gzip bytes; allow a bounded +256.
+// Chart drawing CSS remains optional and is gated separately from critical CSS.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22272, reactInitialJsGzip: 153600, narrowServiceGzip: 4096,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // Recreate one generated cache so npm cannot reuse a stale same-version tarball.
 const runDirectory = resolve('.consumers/current');
@@ -632,12 +635,18 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--preserveSymlinks','--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', ...(['rich-navigation/app.tsx', 'navigation-slots-types.tsx'])], { cwd, stdio: 'inherit' });
     await copyFile('examples/shared/query-page-model.ts', `${cwd}/shared/query-page-model.ts`);
     await copyFile('examples/shared/page-composition-model.ts', `${cwd}/shared/page-composition-model.ts`);
-    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition', 'query-page', 'bootstrap', 'theme-presets', 'sidebar-reveal','text-actions','navigation-tones','public-capabilities']) {
+    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition', 'query-page', 'bootstrap', 'theme-presets', 'sidebar-reveal','text-actions','navigation-tones','public-capabilities','charts']) {
         const directory = resolve(cwd, name), output = resolve('dist/' + name + '-' + kind);
         await cp('examples/' + name + '-' + kind, directory, { recursive: true });
         const result = await build({ entryPoints: [directory + '/app.' + ('tsx')], outdir: output, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '"production"' } });
         assert(Object.keys(result.metafile.inputs).every(file => resolve(file).startsWith(cwd + '/')), 'Interaction consumer escaped standalone install');
         assert(!Object.keys(result.metafile.inputs).some(file => file.endsWith('.css') && !file.includes('/@coffeehc/xui-theme/') && !(name==='theme-presets'&&resolve(file)===directory+'/layout.css')), 'Interaction consumer requires private CSS');
+        if(name==='charts'){
+          const javascriptGzip=gzipSync(await readFile(output+'/app.js')).length,cssGzip=gzipSync(await readFile(output+'/app.css')).length;
+          assert(javascriptGzip<=performance.budgets.reactInitialJsGzip,'Chart consumer JS exceeds the existing React entry budget');
+          assert(cssGzip<=performance.budgets.chartCssGzip,'Chart + critical CSS exceeds its optional feature budget');
+          performance.charts={javascriptGzip,cssGzip};
+        }
         if(name==='theme-presets'){
           const early=await build({entryPoints:[directory+'/prepaint.ts'],outfile:output+'/config-init.js',bundle:true,format:'iife',platform:'browser',target:'es2022',minify:true,metafile:true});
           assert(Object.keys(early.metafile.inputs).every(file=>resolve(file).startsWith(cwd+'/')),'Pre-paint config escaped standalone install');

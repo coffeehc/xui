@@ -1,0 +1,45 @@
+@layer xui-components {
+  .xui-chart,.xui-chart-region,.xui-chart-content {min-inline-size:0;}
+  .xui-chart-legend {display:flex;flex-wrap:wrap;gap:var(--space-control-gap) var(--space-section-gap);list-style:none;margin:0 0 var(--space-content-gap);padding:0;font-size:var(--chart-legend-font-size);line-height:var(--line-height-body-xs);}
+  .xui-chart-legend li {display:flex;align-items:baseline;gap:var(--space-text-gap);min-inline-size:0;overflow-wrap:anywhere;}
+  .xui-chart-swatch {flex-shrink:0;font-weight:var(--font-weight-control);color:var(--foreground);}
+  .xui-chart [data-color='1'] {color:var(--chart-color-1);}
+  .xui-chart [data-color='2'] {color:var(--chart-color-2);}
+  .xui-chart [data-color='3'] {color:var(--chart-color-3);}
+  .xui-chart [data-color='4'] {color:var(--chart-color-4);}
+  .xui-chart [data-color='5'] {color:var(--chart-color-5);}
+  .xui-chart [data-color='6'] {color:var(--chart-color-6);}
+  .xui-chart-viewport {max-inline-size:100%;overflow:auto;padding:var(--space-section-gap) var(--space-control-gap);}
+  .xui-chart-cartesian {display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-control-gap);}
+  .xui-chart-y-axis {position:relative;block-size:var(--chart-plot-block-size);color:var(--chart-axis-foreground);font:var(--font-weight-body) var(--chart-axis-font-size)/var(--line-height-caption) var(--font-mono);}
+  .xui-chart-axis-measure {visibility:hidden;}
+  .xui-chart-tick {position:absolute;inset-inline-end:0;white-space:nowrap;transform:translateY(var(--chart-tick-offset));}
+  .xui-chart-plot {display:block;inline-size:100%;block-size:var(--chart-plot-block-size);overflow:visible;font-size:var(--chart-axis-font-size);}
+  .xui-chart-plot:focus-visible {outline:var(--focus-width) solid var(--interaction-focus);outline-offset:var(--focus-offset);}
+  .xui-chart-grid {stroke:var(--chart-grid-color);stroke-width:var(--line-width-surface);}
+  .xui-chart-grid[data-zero='true'] {stroke:var(--surface-line-strong);}
+  .xui-chart-line {fill:none;stroke:currentColor;stroke-width:var(--chart-line-width);}
+  .xui-chart-series[data-line-pattern='1'] .xui-chart-line {stroke-dasharray:var(--chart-dash-length) var(--chart-dash-gap);}
+  .xui-chart-series[data-line-pattern='2'] .xui-chart-line {stroke-dasharray:var(--chart-dash-gap) var(--chart-dash-gap);}
+  .xui-chart-point {fill:var(--layer-raised);stroke:currentColor;stroke-width:var(--chart-line-width);}
+  .xui-chart-bar {fill:currentColor;stroke:var(--layer-raised);stroke-width:var(--line-width-surface);}
+  .xui-chart-point[data-active='true'],.xui-chart-bar[data-active='true'] {stroke:var(--foreground);stroke-width:var(--chart-line-width-emphasis);}
+  .xui-chart-x-axis {display:grid;color:var(--chart-axis-foreground);font:var(--font-weight-body) var(--chart-axis-font-size)/var(--line-height-caption) var(--font-sans);text-align:center;}
+  .xui-chart-x-axis span {padding-inline:var(--space-text-gap);overflow-wrap:anywhere;}
+  .xui-chart-inspection {overflow-wrap:anywhere;font-size:var(--chart-legend-font-size);line-height:var(--line-height-body-xs);}
+  .xui-chart-region>.xui-feedback-slot {block-size:var(--chart-inspector-block-size);min-block-size:var(--chart-inspector-block-size);}
+  .xui-chart-placeholder {display:grid;place-items:center;min-block-size:var(--chart-plot-block-size);}
+  .xui-chart-placeholder>.xui-loading-state {min-block-size:var(--chart-plot-block-size);}
+  .xui-chart-data {margin-block-start:var(--space-content-gap);}
+  .xui-chart-pie-layout {display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-section-gap);}
+  .xui-chart-pie-viewport {flex:1 1 var(--chart-min-inline-size);min-inline-size:0;max-inline-size:100%;overflow:auto;padding:var(--space-control-gap);}
+  .xui-chart-pie {min-inline-size:var(--chart-min-inline-size);}
+  .xui-chart-pie-legend {flex:1 1 var(--chart-min-inline-size);min-inline-size:0;display:grid;gap:var(--space-control-gap);list-style:none;margin:0;padding:0;font-size:var(--chart-legend-font-size);line-height:var(--line-height-body-xs);}
+  .xui-chart-pie-legend li {display:flex;flex-wrap:wrap;gap:var(--space-text-gap);overflow-wrap:anywhere;}
+  .xui-chart-number {margin-inline-start:auto;font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+  .xui-chart-slice {fill:currentColor;stroke:var(--layer-raised);stroke-width:var(--chart-line-width);}
+  .xui-chart-slice[data-active='true'] {stroke:var(--foreground);stroke-width:var(--chart-line-width-emphasis);}
+  @media (forced-colors:active) {
+    .xui-chart [data-color] {color:inherit;}
+  }
+}

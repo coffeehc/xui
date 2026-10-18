@@ -63,7 +63,7 @@ export function checkContract(document) {
   const lightRule = rules.find(rule => rule.selector === ':root[data-theme="light"]');
   assert(lightRule, 'Missing explicit light recipe');
   const light = { ...defaults, ...declarations(lightRule) };
-  assert.equal(Object.keys(defaults).length, 422, 'Default token count');
+  assert.equal(Object.keys(defaults).length, 431, 'Default token count');
   for (const name of ['--font-scale','--line-height-scale']) {
     const registration=tree.nodes.find(node=>node.type==='atrule'&&node.name==='property'&&node.params===name);
     assert(registration, `Missing typed ${name} registration`);
@@ -150,7 +150,7 @@ function composeComponentStyles(styles) {
   }
   return layer.toString()+'\n';
 }
-export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','selection','floating','table','table-resize','auth','sheet','widgets','search-toolbar'];
+export const styleParts=['base','button','forms','navigation','feedback','dialog','layout','selection','floating','table','table-resize','auth','sheet','widgets','search-toolbar','chart'];
 export async function generate(check = false, outputDirectory='packages/theme/dist') {
   const audit = await auditDesignSources();
   console.log(`Design values: ${audit.files} files, ${audit.declarations} declarations and explicit structural/runtime exceptions checked.`);
@@ -168,7 +168,7 @@ export async function generate(check = false, outputDirectory='packages/theme/di
   const component=composeComponentStyles(styleParts.map(name=>parts[name]).join('\n'));
   checkStyles(await readFile('examples/shared/layout.css','utf8'),light);
   checkStyles(await readFile('examples/theme-presets-react/layout.css','utf8'),light);
-  const files = { 'tokens.css':css, 'components.css':component, 'style.css':css+'\n'+component,'critical.css':css+'\n'+composeComponentStyles(styleParts.filter(name=>!['floating','table-resize'].includes(name)).map(name=>parts[name]).join('\n')),...Object.fromEntries(styleParts.map(name=>[`${name}.css`,parts[name]])),'floating.css':composeComponentStyles(parts.selection+'\n'+parts.floating),'forms.css':composeComponentStyles(parts.forms+'\n'+parts.selection) };
+  const files = { 'tokens.css':css, 'components.css':component, 'style.css':css+'\n'+component,'critical.css':css+'\n'+composeComponentStyles(styleParts.filter(name=>!['floating','table-resize','chart'].includes(name)).map(name=>parts[name]).join('\n')),...Object.fromEntries(styleParts.map(name=>[`${name}.css`,parts[name]])),'floating.css':composeComponentStyles(parts.selection+'\n'+parts.floating),'forms.css':composeComponentStyles(parts.forms+'\n'+parts.selection) };
   await mkdir(outputDirectory,{recursive:true});
   for (const [name,value] of Object.entries(files)) {
     const path = `${outputDirectory}/${name}`;

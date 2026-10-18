@@ -1,4 +1,5 @@
 export * from './button.js';
+export * from './chart.js';
 export * from './forms.js';
 export * from './navigation.js';
 export * from './menu-layout.js';

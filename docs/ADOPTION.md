@@ -81,6 +81,7 @@ pnpm preview
 | 工作区 | [workspace-react](../examples/workspace-react/app.tsx) |
 | 卡片集合 | [card-group-react](../examples/card-group-react/app.tsx) |
 | 完整表格 | [data-table-react](../examples/data-table-react/app.tsx) |
+| 折线、柱状与饼图 | [charts-react](../examples/charts-react/app.tsx) |
 | 多行操作、窄屏导航与阅读缩放 | [public-layout-react](../examples/public-layout-react/app.tsx) |
 | 高信噪比页面、表单和局部刷新 | [page-composition-react](../examples/page-composition-react/app.tsx) |
 | 日期时间 | [date-time-react](../examples/date-time-react/app.tsx) |
@@ -355,3 +356,9 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 [完整查询页](../examples/query-page-react/app.tsx) 使用同一个原生 form、已提交条件与草稿分离、Resource 的同范围刷新/新范围取消代次、受控分页、详情回焦；模型数据为内存合成，未适配任何产品 API。查询前、加载、已查空、首次失败、有数据、刷新、刷新失败和提交新范围须按 [逐项清单](ADOPTION_CHECKLIST.md#手动查询页逐项检查) 在每个真实页面验收。没有真实total时传null，未确认时不造分页。刷新使用已提交条件，重置草稿不自动查询；保留产品现有HTTP/Auth和领域协议，不新增前端DTO适配owner。
 
 4.2.20 为同一版本线的可选维护。新增接口可选，旧 SearchToolbar/EmptyState 默认布局保持；DataTable/CardGroup 在尚未确认数据时取消假0播报，可能改变该阶段的页脚显示。正式产物与公开包浏览器证据只说明库样例，不能代替消费项目真实页面验收；本轮不要求其他项目必须升级。
+
+### 公共图表接入（4.2.21）
+
+采用[LineChart / BarChart / PieChart](COMPONENTS.md#公共图表)时，先将已有后端/Resource结果投影为categories/series或slices，保留现有请求、缓存、单位、时区、范围隔离与权限owner，不复制示例loader。图表共用Card的title/description/actions/content/footerMeta/footerActions；按[图表清单](ADOPTION_CHECKLIST.md#公共图表逐项检查)逐页检查图例、绘图区、读值、数据表和反馈槽。已有自定义chart-color/axis/grid/文字Token覆盖继续继承；不在页面覆写私有SVG或另加一套图例/tooltip。窄入口按critical.css + chart.css加载，正式style.css已包含图表。
+
+无图标导航的紧凑回退见[组件合同](COMPONENTS.md#无图标紧凑导航)，不要求产品补占位图标；真实名称和显式图标保持宿主事实。

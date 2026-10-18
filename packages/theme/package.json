@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-theme",
-  "version": "4.2.20",
+  "version": "4.2.21",
   "private": true,
   "type": "module",
   "files": [
@@ -27,6 +27,7 @@
     "./sheet.css": "./dist/sheet.css",
     "./widgets.css": "./dist/widgets.css",
     "./search-toolbar.css": "./dist/search-toolbar.css",
-    "./table-resize.css": "./dist/table-resize.css"
+    "./table-resize.css": "./dist/table-resize.css",
+    "./chart.css": "./dist/chart.css"
   }
 }

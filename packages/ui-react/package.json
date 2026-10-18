@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-react",
-  "version": "4.2.20",
+  "version": "4.2.21",
   "private": true,
   "type": "module",
   "files": [
@@ -187,6 +187,10 @@
     "./upload": {
       "types": "./dist/upload.d.ts",
       "import": "./dist/upload.js"
+    },
+    "./chart": {
+      "types": "./dist/chart.d.ts",
+      "import": "./dist/chart.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -194,7 +198,7 @@
     "react": ">=19.2.8 <20",
     "react-dom": ">=19.2.8 <20",
     "@base-ui/react": ">=1.7.0 <2",
-    "@coffeehc/xui-runtime": "4.2.20"
+    "@coffeehc/xui-runtime": "4.2.21"
   },
   "devDependencies": {
     "@coffeehc/xui-runtime": "workspace:*"

@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.20。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.21。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -149,7 +149,7 @@ HTML语义元素、React NativeSelect、浏览器/OS控件及HTTP nativeOrigin�
 - **应当 / SHOULD**：默认遵守；其他方案须说明场景和取舍。
 - **可以 / MAY**：允许选择，不要求所有页面采用。
 
-分为三层：通用基础定义语义 token、尺度、状态与可访问性；框架适配负责 CSS 映射及公共控件；产品扩展负责领域状态、内容、画布和图表。适配和产品扩展依赖基础，基础不能依赖业务路由、专属状态或框架 API。不同项目可以各自实现，无须共享一个运行时包。
+分为三层：通用基础定义语义 token、尺度、状态与可访问性；框架适配负责 CSS 映射、公共控件和通用图表；产品扩展负责领域状态、内容、专有画布及图表的数据投影。适配和产品扩展依赖基础，基础不能依赖业务路由、专属状态或框架 API。领域图形不因通用图表接入而失去自己的职责。
 
 <!-- external-protocol-boundary:start -->
 xui公共服务操作按正式wire统一接入：使用BaseService时直接接对应已存在的facade与xui官方client/HTTP adapter；不使用BaseService时由宿主后端在一个facade边界实现同一wire，前端直接调用官方client，不再增加字段、成功语义、认证或重试的兼容转换。范围是认证4项、平台Key6项、业务日志2项和程序错误观察4项，逐项见ADOPTION_CHECKLIST；仅选择业务需要的模块。后端前置缺失时报告未接入，UI范围授权不包含擅自迁移后端。普通领域API、OAuth2/OIDC/SAML和第三方继续遵循自己的协议，typed ResponseAdapter/ErrorResponseAdapter等公开扩展保留用于这些边界、独立展示及测试；不能用它们绕过上述公共服务验收。
@@ -437,6 +437,15 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --chart-legend-font-size: var(--font-size-body-xs);
     --chart-line-width: 2px;
     --chart-line-width-emphasis: 2.5px;
+    --chart-plot-block-size: 14rem;
+    --chart-min-inline-size: 18rem;
+    --chart-category-min-inline-size: 5rem;
+    --chart-bar-band-ratio: .72;
+    --chart-bar-fill-ratio: .85;
+    --chart-inspector-block-size: calc(var(--line-height-body-xs) * 2);
+    --chart-tick-offset: -50%;
+    --chart-dash-length: .5rem;
+    --chart-dash-gap: .25rem;
     --diagram-node-fill: var(--interaction-selected);
     --diagram-node-stroke: var(--surface-line-strong);
     --diagram-node-text: var(--foreground);
@@ -2481,3 +2490,15 @@ IconButton 与 Button data-icon="true" 使用同一纯图标配方：等宽高�
 ### 表格与重复行操作的透明语义（4.2.18）
 
 所有同组表格操作入口统一以Button/IconButton variant=text表达，不混用带底色ghost/outline/primary/destructive。普通动作default用foreground，hover/pressed/expanded用action-primary；删除等危险动作显式tone=danger，所有可用状态用status-error-foreground，绝不退回品牌色或实心红底。disabled使用原禁用前景；default/hover/pressed/expanded/disabled/busy背景始终透明，独立focus保持。tone只影响text，不重写显式非text变体；警告/成功等业务事实仍使用原状态槽，未增加虚假tone。宿主逐表按真实动作给props，权限、确认、busy防重、行事件与提交owner不变，不新增TableAction业务包装或私有CSS。
+
+### 公共图表布局与状态合同（4.2.21）
+
+LineChart、BarChart、PieChart 是 React 数据展示组合，复用 Card 的 title/description/actions/content/footerMeta/footerActions 和 DataRegion/LoadingState/EmptyState/ErrorState。标题、操作与页尾沿用现有文字/布局角色，不加第二个边框、装饰标题条或虚拟指标；默认“查看数据”动作位于 Card.actions，宿主 actions 在它之前。内容依次为图例、绘图区、共用既有反馈槽的就近读值区与反馈，数据表在内容后按需展开。查询、缓存、筛选、单位、业务时区、聚合、总数及范围切换归宿主，图表没有请求/选择/提交 owner。
+
+既有 chart-color-1～6 是分类色，负柱不自动变红；标题/轴/图例/网格/焦点分别继承 Card、chart-axis-foreground、foreground、chart-grid-color 与 interaction-focus。普通文字不着系列色；色点/线条仅作非文字标记。折线以圆/方/菱形和实/虚/点线辅助区分，分组柱按图例序号排列，饼图从上端顺时针按图例顺序呈现，并提供标签/原值/占比及完整数据表。主色和状态色不会代替分类事实。宿主重排系列/扇区且需保色时显式提供 color=1～6；省略时按当前输入顺序循环映射，超过六项不承诺颜色/线型唯一，不自动合并类别。
+
+集中几何 Token 规定默认绘图区14rem、最小可读净宽18rem、每类别轨至少5rem；坐标轴 caption、图例/读值 body-xs，数值用 mono/tabular-nums。SVG 无缩放 viewBox，按 ResizeObserver 测得的 CSS 像素绘制；轴标签用同一角色的 HTML，点形半径从实际轴字号派生。数据轨数、等距刻度和分组柱宽是数据几何，不是另一套字号/尺寸。窄屏与200%文字/界面比例下保留字体和可读轨宽，只在所属绘图区横滚；图例/页头/操作/读值自然换行，饼图与图例按净宽换行。不加渐变遮罩、缩字、整页横滚或被截断的浮层。
+
+折线每类别对应有限数值或显式null，null断开且不插值/补0；柱图始终包含0基线，正负值按实际方向绘制，0柱高度为0。饼仅接受有限非负数，零项不画扇区，全零显示居中空态而非等分；单项全占比为完整圆。原值和数据表不经过日期/时区转换，默认原数值字符串；格式化只影响显示。无数据的idle/loading/ready/error分别显示引导/居中加载/居中空态/可重试错误；保有同范围数据时loading/refreshing/error继续保图，反馈在固定既有反馈槽，不遮罩/透明化/重挂SVG。新范围由宿主清除旧数据并执行取消/迟到隔离。
+
+绘图区是一个独立键盘停靠点：左右查看类别，笛卡尔图上下切系列，Home/End查看首末，Escape清除读值；饼方向键按输入次序巡检（含零值），不触发业务动作。鼠标/触屏在图中读值，同一就近文本区播报；查看数据入口保留所有类别/系列/原值与缺失标识，使用公开DataTable。数据/名称更新用稳定ID重新定位读值，删除后不继续播报旧记录。刷新不抢焦点，ResizeObserver随SVG节点卸载释放；不是全局Controller或独立原生UI。

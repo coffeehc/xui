@@ -49,3 +49,4 @@ export * from './toast.js';
 export * from './upload.js';
 export * from './text-links.js';
 export * from './theme-colors.js';
+export * from './chart.js';

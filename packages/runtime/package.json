@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-runtime",
-  "version": "4.2.20",
+  "version": "4.2.21",
   "private": true,
   "type": "module",
   "files": [
@@ -191,6 +191,10 @@
     "./theme-colors": {
       "types": "./dist/theme-colors.d.ts",
       "import": "./dist/theme-colors.js"
+    },
+    "./chart": {
+      "types": "./dist/chart.d.ts",
+      "import": "./dist/chart.js"
     }
   },
   "types": "./dist/index.d.ts",

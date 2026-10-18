@@ -20,6 +20,7 @@
 - [导航与菜单](#导航与菜单)
 - [弹层与工具栏](#弹层与工具栏)
 - [数据表格](#数据表格)
+- [公共图表](#公共图表)
 - [登录与管理员表单](#登录与管理员表单)
 
 ## 界面缩放
@@ -115,6 +116,7 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 | `SearchInput` | value/onValueChange必需，clear/submit发意图；本地仅IME、reset与DOM ref | **不适用**：查询文本已有宿主owner，composition是平台事实；不与CommandPicker拥有query的情况混淆 | [Inputs](../packages/ui-react/src/text-inputs.tsx) |
 | `DataTable` | rows/columns/rowKey、status、selected/expanded及页/游标事实由宿主传入；layout helper只测量/投影 | **不适用查询Controller**：公共request guard仅防同回合重复动作，不能推进未确认分页或创建query/cache；行内业务控件保留自己的owner | [DataTable](../packages/ui-react/src/data-table.tsx)、[view helper](../packages/ui-react/src/collection-view.tsx) |
 | `CardGroup` | 与DataTable同一受控集合合同；卡片等高由真实内容测量 | **不适用查询Controller**：保留宿主rows/分页/请求与派生高度，不将renderCard中的业务草稿收进集合 | [CardGroup](../packages/ui-react/src/card-group.tsx) |
+| `LineChart`、`BarChart`、`PieChart` | 数据/status由宿主受控，临时读值与数据表开合由View管理，几何由实际CSS测量 | **不适用查询/选择Controller**：沿用宿主Resource，不新建请求、数据缓存或全局图表单例 | [Chart](../packages/ui-react/src/chart.tsx) |
 | `DataTableFilter`、`DataTableToolbar` | 公开字段/toolbar布局，过滤值或children由宿主给定 | **不适用**：没有自己的查询状态，不因组件名称含Filter就创建查询owner | [DataTable](../packages/ui-react/src/data-table.tsx) |
 | `RenderBoundary` | React捕获render异常，以类实例error/resetKey/reset显示fallback | **不适用完整外部替换**：捕获与重新渲染受React生命周期约束；保留onError/reset，不造并行error store，不重试业务Promise | [Feedback](../packages/ui-react/src/feedback.tsx) |
 | `Image` | src/retryKey来自宿主；loading/loaded/error由img真实load/error/complete发布 | **不适用**：资源状态是浏览器事实，不能注入假ready或第二图片请求 | [Display](../packages/ui-react/src/display.tsx) |
@@ -1533,3 +1535,32 @@ QueryField 沿用完整 FieldProps 与错误/帮助/required/控件关联；`wid
 ~~~
 
 正式 style.css 已包含查询布局。按需 CSS 须有 tokens/base/button/forms/feedback/navigation/layout/search-toolbar，以及实际 Select/DateTime/Table 使用的样式；不需要宿主复制内部 DOM。没有 runtime/native UI 版本；沿用 TS Resource/Overlay Controller。
+
+### 无图标紧凑导航
+
+NavigationMenu 未提供 item.icon 时，展开态继续使用完整名称，紧凑态显示真实名称缩写，替代原来的统一三横线。中文取前两个完整grapheme；英文多词取前两词首字母，单词取前两字符；首个emoji完整保留。缩写 aria-hidden，完整 label/title 与已有紧凑 hover/focus 临时揭示保持，selected/warning/disabled前景继承所属行，不新增彩色徽章或动作。相同前缀不生成编号或猜业务图标；需要消歧时使用已有显式 icon/resolveIcon。空白异常回退中性点，正常项目仍须有真实名称；语言改变时按当前名称重新投影，无新增请求/路由/Controller。
+
+## 公共图表
+
+正式入口为 @coffeehc/xui-react/chart，包含 LineChart、BarChart、PieChart；根入口同步导出，类型/纯计算在 @coffeehc/xui-runtime/chart。样式用正式 style.css，或 critical.css + chart.css（critical不含图表配方）。不引入图表库 peer，React/ReactDOM/Base UI沿用宿主单实例。
+
+共同 props：title 必填；headingLevel/description/actions/footerMeta/footerActions/className/id复用Card；status为idle/loading/ready/refreshing/error，缺省ready；error为宿主批准的安全文字，onRetry只发重试意图；labels覆盖全部内置文字，formatValue只格式化显示。数据全受控，不提供loader、URL、周期、聚合或业务时区选项。就近读值与数据表开合仅是View内临时交互，不建立查询Controller；宿主已有Resource继续拥有请求/取消/迟到/刷新。
+
+折线/柱图传 categories: {id,label}[] 与 series: {id,label,values,color?}[]，每系列values必须与类别等长，元素是有限number或null（缺采样）。类别和系列各自ID唯一且非空，名称非空，缺项/undefined/NaN/Infinity被拒绝，不猜0。柱图为分组柱而非堆叠，零基线固定；折线直线连接有效相邻采样，null断开。饼图传 slices: {id,label,value,color?}[]，有限非负值，零项保留在图例/数据表而不绘制扇区，全零为空态，单一正项是圆；比例计算先归一化避免有限极值相加溢出，不虚构总计。color为可选1～6公开分类槽；稳定ID保留节点与读值归属，显式color可在重排时保色，缺省按输入顺序循环。
+
+所有槽位、文字、状态与几何见[唯一设计合同](DESIGN.md#公共图表布局与状态合同4221)。头部只有公共标题与宿主真实动作；内容为图例/绘图区/就近读值/反馈；footerMeta/footerActions仍由宿主提供；默认查看数据动作在actions内，按需展开同一正式DataTable，不再嵌套私有表格皮肤。
+
+绘图区无viewBox缩字；轴与长类别文字继承caption，图例/读值继承body-xs，窄屏保轨宽在本图内部横滚。每图一个图形键盘入口，左右/上下/Home/End/Escape查看值，Tab离开；鼠标/触屏读值不导航或提交。查看数据是完整等价入口，含null的缺失标签与零项；图中颜色不是唯一的读值通路。刷新时宿主保留同范围data，组件保留图形、焦点与滚动；更新后由稳定ID定位当前值，移除所选ID后清除读值，不播报过期记录；键盘指引保留在图形可访问名称。
+
+最小消费（所有数据都由宿主准备）：
+
+```tsx
+import {LineChart, BarChart, PieChart} from '@coffeehc/xui-react/chart';
+const categories = [{id:'a',label:'甲'}, {id:'b',label:'乙'}];
+const series = [{id:'tasks',label:'任务',color:1 as const,values:[12,null]}];
+<LineChart title="任务趋势" categories={categories} series={series} />;
+<BarChart title="净变化" categories={categories} series={[{id:'delta',label:'净变化',values:[12,-3]}]} />;
+<PieChart title="任务分布" slices={[{id:'r',label:'研究',value:12},{id:'v',label:'复核',value:3}]} />;
+```
+
+完整正式包示例：[charts-react](../examples/charts-react/app.tsx)。其Resource和内存延迟数据只演示正常/空/全零/缺失/单项/刷新失败/范围变化，不代表任何消费项目或后端验收。

@@ -1,5 +1,27 @@
 # 验证证据与限制
 
+## 公共图表与无图标紧凑导航（4.2.21，2026-10-18）
+
+仅修改xui，三包与DESIGN统一4.2.21。新增公开React `/chart` 的 LineChart、BarChart、PieChart 及对应类型，runtime `/chart` 仅提供数据类型、校验、笛卡尔域/归一化和饼弧计算；根入口同步导出，正式CSS可选 `critical.css + chart.css` 或完整style。复用Card、DataRegion、LoadingState/EmptyState/ErrorState、ScrollArea、DataTable和现有六个分类色，未引入图表依赖、原生UI、请求/缓存/业务状态owner。新增9个集中几何Token与三个精确限定到chart.tsx的数据几何例外，不放宽普通控件颜色/字号门禁。COMPONENTS、PUBLIC_API、ADOPTION及CHART-001～014同步，导航补NAV-FALLBACK-001～002，接入清单共500项。
+
+NavigationMenu缺省icon的收起态由同一三横线改为真实名称缩写：中文两个完整grapheme、英文多词首字母、首个emoji完整保留；展开与窄屏显示完整名称。完整label/title、显式icon/resolveIcon、disabled/selected/warning、独立分支/配置/右键、原Controller与路由行为保持。不猜业务图标或生成新动作；同前缀仍需宿主用现有显式图标消歧。没有修改任何消费项目。
+
+Stitch在既有会话完成图表slot、分类色与非颜色标记、宽度/缩放、状态和无图标回退的文字复核，原始记录为 `.artifacts/charts-4.2.21/stitch-{review,final,errata}.txt`。图稿中的Donut、虚构指标/导出没有实现；最终勘误明确全零饼图复用居中EmptyState、不画圆环，读值在就近固定内容槽、没有浮层。Stitch未查看最终工程截图或运行测试，其文字确认不当作工程验收。
+
+最终sourceGeneration `d8723c9fe1bf50b42434cda31751872b3db0aaac700048c9be152a59b1ad5592`。build、431 Token图/指纹、typecheck、定向unit38/38、全部110个正式入口ESM/CSS/types与正反类型夹具通过。独立消费者 `.consumers/current/react` 安装三个4.2.21 tarball；React/ReactDOM19.2.8、Base UI1.7.0保持单实例，chart metafile的287个输入均来自正式消费者，无packages/src alias。完整示例 `examples/charts-react/app.tsx` 沿用一个现有Resource和内存合成数据；没有真实业务API、隐式时区或总数。
+
+最终正式包浏览器90个唯一用例全部通过，无最终失败、跳过或重试：browser-accepted.json的86项加browser-zoom.json的4项，逐案和报告SHA见case-summary.json。新图表/回退导航47项，相关rich-navigation、navigation-selected、query-page、page-composition回归43项。覆盖六preset×light/dark/system、系统实时变化、自定义Token、桌面/320/390、长中文、根字号200%与公开界面比例125/150/200%、RTL、null断线、零/负柱、单项/全零饼、有限极值、完整数据表、中英文、键盘/指针/触屏仿真、稳定ID更新/移除、局部横滚、Observer释放和forced-colors。普通文字实测合成对比度≥4.5，示例系列图形≥3；全数据还有公共表格入口。
+
+首次/未查询/空/错误反馈在组件区域居中；同范围刷新或失败保持原SVG/点节点、焦点、横滚和图形位置，单一Resource请求计数准确；范围切换清旧值并验证取消/迟到隔离。真实Chrome设置200%分别覆盖图表三模式及导航抽屉，记录DPR加倍、CSS视口减半、根字号不变、CSS zoom=1/pinch=1；不同于文字放大。主线程已查看最终浅/深色、窄屏长中文大字和真实zoom截图，并在内置浏览器实际点击收起导航及图表导航；图片与缩放事实在proof。
+
+候选失败保留：首轮36通过/3失败，发现窄屏仍显示缩写，已限于桌面compact显示。第二轮33通过/10失败，新断言检出边点未完整揭示及顶部刻度越界9px；原因是图表选用ScrollArea的inset模式按合同清零padding，改回默认gutter让集中Token留白生效，九组窄屏边界通过。RTL窗口改变后边界检查一度未等待ResizeObserver的新几何；独立五次通过没有累计为验收，最终明确等待首类别标签/点对齐，再严格检查Home/End点位在本图可视边界。之前候选仅作过程证据，90项全部来自最终generation。
+
+正式receipt/performance在consumer-final.json与performance-final.json：初始JS gzip143908/153600，critical CSS22163/22272，图表示例JS150365/153600、critical+chart合包CSS22046/24576。相对4.2.20实测critical CSS22016增加147字节，预算为本功能有界增加256；Button/窄Service上限保持，chart配方未进入critical。正式manifest、public-api、sourceGeneration和SHA256SUMS继续由archive自动生成与校验，不手补元数据。
+
+复现：`pnpm build && pnpm check:tokens && pnpm typecheck`，`node --test tests/chart.test.mjs tests/contract.test.mjs tests/design-value-guard.test.mjs tests/docs.test.mjs tests/navigation-fallback.test.mjs tests/navigation-labels.test.mjs`；`node scripts/check-docs.mjs && pnpm test:consumer`。consumer完成后对charts、navigation-fallback、rich-navigation、navigation-selected、query-page、page-composition这六个tests/browser/*.spec.mjs运行 `pnpm exec playwright test <文件列表> --grep-invert 'genuine.*Chrome|genuine.*browser|actual browser' --workers=2`；charts和navigation-fallback另以 `--grep 'genuine.*browser' --workers=1` 验真实zoom。归档使用 `pnpm archive --evidence .artifacts/charts-4.2.21` 和archive:verify。
+
+未跑全仓unit/browser、watch/cold-start、Firefox/WebKit、实体触屏设备、读屏器或完整hydration验收；SSR仅验证静态输出无DOM访问。未执行消费项目真实页面/后端/升级/部署，也未通知项目必须升级。现有接口保留，新图表可选采用；缺省icon的compact视觉变化由本版统一提供。
+
 ## 新接入与升级流程固化（文档与 skill，2026-10-18）
 
 仅修改 adopt-xui 的入口/界面元数据、ADOPTION、ADOPTION_CHECKLIST 和本记录。接入手册统一范围盘点、固定产物、逐页 layout/slot 映射、状态/请求接线、实际页面验收和交付条件；skill 路由到同一流程，新增 FLOW-001～006，清单共484项。组件默认值、类型、ESM/CSS、DESIGN 与三包版本保持4.2.20；手册原先残留的“当前4.2.13”改为核对目标正式manifest，避免历史说明冒充最新版本。

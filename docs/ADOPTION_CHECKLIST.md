@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.20）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.21）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -701,3 +701,29 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | QUERY-020 | 草稿变更和重置 | 不擅自查询或更改已展示范围，刷新继续用已提交条件 | 草稿/applied和请求参数对照 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
 | QUERY-021 | 主题和文字角色 | 正式CSS、light/dark/system、公共字体继承、无私有字号/皮肤/DOM补丁 | computed style、主题切换及源码 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
 | QUERY-022 | 日期和领域边界 | 保留DateTimePicker分钟字符串，无隐式时区；起止、窗口与HTTP/业务协议仍宿主管 | 提交参数和公开接线、真实API验收 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+
+## 无图标紧凑导航逐项检查
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| NAV-FALLBACK-001 | NavigationMenu未指定icon并收起 | 按真实名称显示grapheme安全缩写，不再出现相同三横线；显式icon不变，完整名称/disabled/selected继承 | 中文、英文、组合字符、emoji、语言切换、显式图标与完整可访问名 | [组件合同](COMPONENTS.md#无图标紧凑导航) |
+| NAV-FALLBACK-002 | 紧凑回退项交互与放大 | 单一roving、Enter导航/分支动作独立、hover/focus临时揭示及窄屏完整名称保持，不因缩写制造动作/路由owner | 三主题、桌面/窄屏、两种200%、指针/键盘、节点/Controller及回焦证据 | [组件合同](COMPONENTS.md#无图标紧凑导航) |
+
+## 公共图表逐项检查
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| CHART-001 | 正式包消费图表 | 从/chart或根入口取得三类React组件及types，runtime/chart仅纯类型/计算，CSS来自正式style或critical+chart，无新增图表库/源码alias/重复peer | 独立tarball types/ESM/CSS、module graph及peer路径 | [公开入口](PUBLIC_API.md#全部正式入口) |
+| CHART-002 | 图表页面slot编排 | title/description/actions/正文/页尾复用Card，图例/绘图区/就近读值/反馈各有归属，查看数据动作就近，不嵌套私有卡/表/tooltip | 每页实例slot矩阵及实际DOM/geometry | [图表组件](COMPONENTS.md#公共图表) |
+| CHART-003 | categories/series/slices变化 | 稳定唯一ID、非空名称、数值有限、长度匹配，null仅表示缺失；非法输入拒绝，不补0/截断/猜单位或时间 | 正负类型、非法数据回归及实际数据来源 | [数据合同](COMPONENTS.md#公共图表) |
+| CHART-004 | 折线缺采样/单点/全零 | null处断开而非补0/插值，单点仍有点形，合法0保留；线型/点形与分类图例对应 | SVG路径/点、键盘读值、数据表及截图 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
+| CHART-005 | 分组柱含负/零值 | 0基线与刻度明确，正负方向和长度正确，零柱高度0；不把负数改为错误色，分组次序对应图例 | 实际柱几何、0刻度、色Token与数据表 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
+| CHART-006 | 饼图含零/单项/极值 | 有限非负值，零项无弧但可读；全零为空态，单正项完整圆，比例归一化避免溢出，不虚构总数 | 弧度/占比、全零/单项/有限极值回归与截图 | [数据合同](COMPONENTS.md#公共图表) |
+| CHART-007 | 主题或品牌变化 | 图形只用既有chart-color等语义Token，文字/轴/图例/网格/焦点同步；分类不充当状态，重排保色需求显式配color | 六preset×浅深system、实时切换、实际文字/图形对比与自定义Token继承 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
+| CHART-008 | 窄屏/长中文/200%文字或真实zoom | 轴/图例/读值不缩字，类别按可读轨宽在本图横滚，其他slot自然重排，页面无横裁/焦点遮挡 | 桌面/320/390、根字号/真实zoom分开记录，字体与几何截图 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
+| CHART-009 | 键盘/鼠标/触屏读值 | 每绘图区一个键盘入口，方向/Home/End/Escape准确读值且Tab可离开，指针与触屏同样就近显示，不提交/导航 | activeElement、播报文本、值与实际指针/触屏事件 | [交互合同](COMPONENTS.md#公共图表) |
+| CHART-010 | 查看数据入口 | 公共DataTable完整列出类别/系列/原值/null/零项及适用占比，公开文字可翻译，展开/关闭动作与焦点可达 | 实际表格内容、Enter/Space、长中文与英文接线 | [交互合同](COMPONENTS.md#公共图表) |
+| CHART-011 | 首次加载/空/错误/未查询 | 反馈在组件区域居中，保留标题/操作，无假0分布/无限重试，宿主重试意图保留 | 每状态截图、反馈居中矩形与真实状态 | [状态合同](DESIGN.md#公共图表布局与状态合同4221) |
+| CHART-012 | 同范围刷新/失败 | 旧SVG/点/柱节点、焦点和横滚保留，反馈不遮罩或改变图形透明度；没有新增请求owner | 刷新前/中/后节点/滚动/几何、请求计数与错误恢复 | [状态合同](DESIGN.md#公共图表布局与状态合同4221) |
+| CHART-013 | 数据重排/删除/换范围 | 按稳定类别/系列ID读取更新值，删除后不报旧值；范围清理/取消/迟到由原Resource负责 | 重排/删除的节点与读值、范围切换及迟到回归 | [状态合同](COMPONENTS.md#公共图表) |
+| CHART-014 | SSR/挂载/卸载/减少动效/强制颜色 | SSR无DOM访问；测量随节点更新并释放，无自动请求/循环动效；强制颜色及数据表仍可用 | SSR结果、StrictMode/Observer释放、media与实际页面检查 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |

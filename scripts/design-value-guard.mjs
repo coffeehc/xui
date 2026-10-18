@@ -176,6 +176,13 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
         const measuredTextarea = file === 'packages/ui-react/src/textarea.ts' && prop === 'blockSize' && raw === "`${style.boxSizing==='border-box'?size:size-padding-border}px`";
         const measuredToastSwipe = file === 'packages/ui-react/src/toast.tsx' && ((prop === '--toast-swipe-movement-x' && raw === '`${movement.x}px`') || (prop === '--toast-swipe-movement-y' && raw === '`${movement.y}px`'));
         const measuredLoadingHeader = file === 'packages/ui-react/src/data-table-layout.ts' && prop === 'marginBlockStart' && raw === '`${headHeight}px`';
+        // Categorical tracks and tick positions project actual data counts into
+        // the central chart dimensions; they do not introduce a private scale.
+        const chartGeometry=file==='packages/ui-react/src/chart.tsx'&&(
+          prop==='minInlineSize'&&raw==='`max(var(--chart-min-inline-size), calc(var(--chart-category-min-inline-size) * ${categories.length}))`'
+          ||prop==='insetBlockStart'&&raw==='`${(1-scaleChartValue(tick,domain))*100}%`'
+          ||prop==='gridTemplateColumns'&&raw==='`repeat(${Math.max(1,categories.length)}, minmax(0, 1fr))`');
+        if(chartGeometry){exceptions.add(`${file}: data-derived ${prop}`);return;}
         if (measuredToastSwipe || measuredLoadingHeader || measuredTextarea || measuredSidebar || measuredTableTrack || measuredTableMinimum) { exceptions.add(`${file}: measured ${prop}`); return; }
         // Exact columns come from live CSS probes or the public user sizing model, not a new design scale.
         if(file === 'packages/ui-react/src/data-table.tsx' && (prop === 'width' && raw === '`${width}px`' || prop === 'inlineSize' && raw === '`${totalWidth}px`')) { exceptions.add(`${file}: measured ${prop}`); return; }
