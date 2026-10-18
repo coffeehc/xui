@@ -176,6 +176,14 @@ pnpm preview
 
 适用失败项未解决或实际页面验收未跑时，不宣布完整接入/升级验收通过；交付已完成范围、失败/未跑项、依赖与后续 owner。公共缺口不由消费项目补丁规避，也不阻止继续完成与其无关的授权工作。全部适用项有结论后按项目规则交付代码；推送、发布和部署各遵循实际授权，不由本流程自动授权。
 
+## 四类默认页面接入
+
+项目启用管理员初始化、登录、业务日志或平台API Key业务且无已确认特殊要求时，按[默认完整页合同](COMPONENTS.md#默认完整页面与配套接线4223)采用现有整页，不只取原子控件重拼；配置app和pages，使用resolveDefaultPages投影，复用原HTTP/Auth/Controller和主题。品牌、标题、路由位置和公开slot属于正常配置。宿主注册路由并按真实服务能力/权限挂载，config不会自动启用业务或初始化管理员。
+
+执行[skill默认页面专项](../.agents/skills/adopt-xui/references/default-pages.md)，只读本次命中的页面/配套API合同和检查ID；其它页面不重做。BaseService已有认证、Key、业务日志facade直接连官方client/adapter，不改method/DTO/凭据和错误，不在前端加兼容转换；非BaseService由后端一次实现正式wire，前置缺失记录owner，不借UI升级改后端。管理员初始化缺少统一HTTP合同，先用已有权威回调和同一AuthPage外壳；[可转发提示词](PUBLIC_REQUESTS.md#baseservice-管理员初始化合同提示词)交BaseService，不猜初始化URL。
+
+特殊领域流程先用公开slot/controller/callback表达；仍有公共缺口列明场景、受限slot/接口和最小复现交xui。没有相应业务不挂假页面/生成假日志或平台Key数据。既有第三方SSO与领域协议保留真实owner，明确完整默认页未适用的原因及已验范围。按[DEFAULT-PAGE检查](ADOPTION_CHECKLIST.md#四类默认页面逐项检查)完成实际页面和请求验收，固定产物证据可共享，实例接线不可由样板代替。
+
 ## 组件层次与扩展原则
 
 xui 按 **原子→组合→页面** 提供同一前端体系。这是贡献与采用的架构准则；完整通用视觉/交互规则与默认 token 来源仍仅为 [DESIGN.md](DESIGN.md)，本节说明真实实现如何分层，不复制另一套皮肤规则。

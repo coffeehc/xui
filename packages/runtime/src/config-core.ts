@@ -3,6 +3,7 @@ import type {ThemeMode,InterfaceScale} from './theme.js';
 import {isThemePreset,type ThemePreset} from './theme-preset.js';
 import type {NavigationItem} from './navigation.js';
 import {indexNavigation} from './navigation.js';
+import type {DefaultPagesConfig} from './default-pages.js';
 export type ConfigValue=null|boolean|number|string|readonly ConfigValue[]|{readonly [key:string]:ConfigValue};
 export type ConfigReadonly<T>=T extends object?{readonly [K in keyof T]:ConfigReadonly<T[K]>}:T;
 /** Only this configuration shape is serialized. Callbacks/instances belong to the bootstrap environment. */
@@ -17,6 +18,8 @@ export interface XuiConfig {
   http:{baseURL:string;timeoutMs:number};
   auth:{enabled:boolean;timeoutMs:number;protectedPaths:readonly string[];idEncoding:'decimal'|'hex'};
   router:{basePath:string};
+  /** Default full-page presentation only. Does not register routes, enable services or grant access. */
+  pages?:DefaultPagesConfig;
   theme:{preset:ThemePreset;mode:ThemeMode;scale:InterfaceScale;persist:boolean};
   i18n:{enabled:boolean;defaultLocale:string;fallbackLocale:string;locales:readonly {value:string;label:string}[];messages:Readonly<Record<string,Readonly<Record<string,string>>>>};
   menu:{label:string;labelKey:string|null;items:readonly ConfigMenuItem[]};
@@ -48,7 +51,7 @@ function text(value:unknown,path:string,empty=false):asserts value is string{if(
 function bool(value:unknown,path:string){if(typeof value!=='boolean')fail(path);}
 function deadline(value:unknown,path:string){if(typeof value!=='number'||!Number.isSafeInteger(value)||value<=0||value>2147483647)fail(path);}
 function validate(value:unknown):asserts value is XuiConfig {
-  keys(value,['schemaVersion','app','http','auth','router','theme','i18n','menu','extensions'],'config');
+  keys(value,['schemaVersion','app','http','auth','router','pages','theme','i18n','menu','extensions'],'config');
   if(value.schemaVersion!==1)fail('schemaVersion');
   const {app,http,auth,router,theme,i18n,menu,extensions}=value;
   keys(app,['name','title','logo'],'app');text(app.name,'app.name');text(app.title,'app.title',true);if(app.logo!==null)text(app.logo,'app.logo');
@@ -56,6 +59,17 @@ function validate(value:unknown):asserts value is XuiConfig {
   try{const url=new URL(http.baseURL,'https://xui.invalid/');if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.search||url.hash)fail('http.baseURL');}catch{fail('http.baseURL');}
   keys(auth,['enabled','timeoutMs','protectedPaths','idEncoding'],'auth');bool(auth.enabled,'auth.enabled');deadline(auth.timeoutMs,'auth.timeoutMs');if(!['decimal','hex'].includes(auth.idEncoding as string))fail('auth.idEncoding');if(!Array.isArray(auth.protectedPaths)||auth.protectedPaths.some(path=>typeof path!=='string'||!path.startsWith('/')||path.startsWith('//')||/[\\?#%\u0000-\u0020\u007f]/.test(path)||new URL(path,'https://xui.invalid').pathname!==path))fail('auth.protectedPaths');
   keys(router,['basePath'],'router');text(router.basePath,'router.basePath');if(!router.basePath.startsWith('/')||router.basePath.startsWith('//')||/[?#\\]|(?:^|\/)\.\.?(?:\/|$)/.test(router.basePath))fail('router.basePath');
+  keys(value.pages,['login','adminSetup','businessLog','apiKeys'],'pages');
+  const paths=new Set<string>();
+  for(const [name,page] of Object.entries(value.pages)){
+    const path=`pages.${name}`,authPage=name==='login'||name==='adminSetup';
+    keys(page,authPage?['path','title','description','layout']:name==='apiKeys'?['path','title','pageSize','pageSizeOptions']:['path','title','pageSize'],path);
+    text(page.path,`${path}.path`);const uri=page.path;if(!uri.startsWith('/')||uri.startsWith('//')||/[\\?#%\u0000-\u0020\u007f]/.test(uri)||new URL(uri,'https://xui.invalid').pathname!==uri||paths.has(uri.replace(/\/$/,'')||'/'))fail(`${path}.path`);paths.add(uri.replace(/\/$/,'')||'/');
+    text(page.title,`${path}.title`);if(page.title.length>200)fail(`${path}.title`);
+    if(authPage){text(page.description,`${path}.description`,true);if(page.description.length>600||!['card','fullscreen'].includes(page.layout as string))fail(path);}
+    else {if(!Number.isSafeInteger(page.pageSize)||Number(page.pageSize)<1||name==='businessLog'&&Number(page.pageSize)>200)fail(`${path}.pageSize`);
+      if(name==='apiKeys'&&(!Array.isArray(page.pageSizeOptions)||!page.pageSizeOptions.length||page.pageSizeOptions.some(size=>!Number.isSafeInteger(size)||size<1)||new Set(page.pageSizeOptions).size!==page.pageSizeOptions.length||!page.pageSizeOptions.includes(page.pageSize)))fail(`${path}.pageSizeOptions`);}
+  }
   keys(theme,['preset','mode','scale','persist'],'theme');if(!isThemePreset(theme.preset))fail('theme.preset');if(!['light','dark','system'].includes(theme.mode as string))fail('theme.mode');if(![1,1.25,1.5,2].includes(theme.scale as number))fail('theme.scale');bool(theme.persist,'theme.persist');
   keys(i18n,['enabled','defaultLocale','fallbackLocale','locales','messages'],'i18n');bool(i18n.enabled,'i18n.enabled');text(i18n.defaultLocale,'i18n.defaultLocale');text(i18n.fallbackLocale,'i18n.fallbackLocale');
   if(!Array.isArray(i18n.locales)||!i18n.locales.length)fail('i18n.locales');const locales=new Set<string>();
@@ -69,6 +83,6 @@ function validate(value:unknown):asserts value is XuiConfig {
 }
 function freeze<T>(value:T):ConfigReadonly<T>{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value as ConfigReadonly<T>;}
 /** Pure resolution/validation; neither mutates defaults/input nor initializes any service. */
-export function resolveConfig(overrides:XuiConfigOverrides={}):ConfigReadonly<XuiConfig>{
+export function resolveConfig(overrides:ConfigReadonly<XuiConfig>|XuiConfigOverrides={}):ConfigReadonly<XuiConfig>{
   if(!object(overrides))fail('overrides');const value=merge(json(defaults,'defaults'),json(overrides,'overrides'));validate(value);return freeze(value);
 }

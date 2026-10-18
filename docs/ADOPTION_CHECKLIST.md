@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.22）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.23）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -741,3 +741,16 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | LOG-QUERY-006 | 不合法筛选与时间 | 无请求，错误在所属summary可见；原RFC3339Nano/半开区间与显式offset保留，无隐式时区 | 非法/纳秒/offset正负例与错误截图 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
 | LOG-QUERY-007 | 新范围/取消/迟到/可选records | 原service拥有查询、游标和代次；缺省records不展示/请求，旧响应不污染新范围 | 各模式请求、取消及迟到回归 | [PUBLIC_API](PUBLIC_API.md#程序错误观察) |
 | LOG-QUERY-008 | 三主题/窄屏/长中文/放大 | 公开字段宽度、动作对齐、原字号继承；局部横滚与详情回焦可达，无页面横裁 | 浅深system、320/390、根字号/真实zoom分别记录 | [设计合同](DESIGN.md#手动查询页布局与状态合同4220) |
+
+## 四类默认页面逐项检查
+
+| ID | 操作 | 必须结果 | 证据 | 合同 |
+| --- | --- | --- | --- | --- |
+| DEFAULT-PAGE-001 | 启用初始化/登录/业务日志/平台Key业务 | 无已确认特殊要求时采用对应完整公共页，不只用原子控件重拼；无业务不造假页面 | 实际调用点、业务能力、正式exports与例外依据 | [默认选择](DESIGN.md#四类默认公共页面4223) |
+| DEFAULT-PAGE-002 | 加载app/pages配置 | 同一bootstrap配置经resolveDefaultPages投影品牌、标题、URI与分页，默认值只来自随包JSON；不自动挂路由/请求或授权 | 配置/默认值、resolved结果和实际路径 | [配置合同](COMPONENTS.md#默认完整页面与配套接线4223) |
+| DEFAULT-PAGE-003 | 填充品牌和附加内容 | 正常差异走配置与本页真实公开slot，保留Logo、自定义主题和文字继承；不复制内部皮肤 | 各实例slot映射、源码与computed style | [slot架构](DESIGN.md#页面与组件的槽位架构) |
+| DEFAULT-PAGE-004 | 连接已有BaseService facade | 官方client/adapter与原唯一HTTP/Auth owner直接连接；method/DTO/错误/凭据不经消费方兼容改写 | 实际请求、官方合同与适用REQ/OK/ERR | [服务前置](PUBLIC_API.md#默认适配器的服务前置) |
+| DEFAULT-PAGE-005 | 进入管理员初始化 | 使用权威state/onCheck/onSubmit；不从JSON/读取失败解锁、不猜HTTP端点、不重放未知写入、不自动登录 | 状态/提交/核对、取消/迟到与秘密清理 | [初始化合同](COMPONENTS.md#管理员初始化页) |
+| DEFAULT-PAGE-006 | 连接日志/Key及权限 | 日志真实只读事实、Key能力来自后端getConfiguration；pageSize不伪造total/权限、不新增查询owner | Controller/adapter身份、权限响应、分页与写入 | [完整接线](COMPONENTS.md#默认完整页面与配套接线4223) |
+| DEFAULT-PAGE-007 | 默认整页不匹配领域需求 | 先使用公开slot/controller；例外有场景/受限接口/范围依据，公共增强交xui，前置缺口交服务owner | 最小复现、保留流程、责任和验收条件 | [缺口归属](ADOPTION.md#接入合规与公共缺口归属) |
+| DEFAULT-PAGE-008 | 实际挂载页面验收 | 固定正式包上按适用状态/布局/焦点/刷新/秘密与请求验收；不能拿库mock代替产品，相关检查通过后交付 | 逐实例浏览器/Network/构建及未跑边界 | [专项流程](../.agents/skills/adopt-xui/references/default-pages.md) |

@@ -93,7 +93,7 @@
 | `@coffeehc/xui-runtime/clipboard` <!-- public-entry: @coffeehc/xui-runtime/clipboard --> | [只写剪贴板服务](../packages/runtime/src/clipboard.ts) | [复制合同](#剪贴板复制服务) | [正式浏览器示例](../tests/browser/clipboard.spec.mjs) |
 | `@coffeehc/xui-runtime/services` <!-- public-entry: @coffeehc/xui-runtime/services --> | [应用服务注册表](../packages/runtime/src/services.ts)：XuiServices、共享 getters、disposeXuiServices；不导出 install/create service factories | [启动、配置与应用服务](#启动配置与应用服务) | — |
 | `@coffeehc/xui-runtime/bootstrap` <!-- public-entry: @coffeehc/xui-runtime/bootstrap --> | [同步启动入口](../packages/runtime/src/bootstrap.ts)：bootstrap、disposeXuiServices、BootstrapEnvironment、XuiApplication | [启动、配置与应用服务](#启动配置与应用服务) | [React示例](../examples/foundation-react/app.tsx) |
-| `@coffeehc/xui-runtime/config` <!-- public-entry: @coffeehc/xui-runtime/config --> | [纯配置解析与类型](../packages/runtime/src/config.ts)：resolveConfig、XuiConfig、XuiConfigOverrides、ConfigService | [启动、配置与应用服务](#启动配置与应用服务) | — |
+| `@coffeehc/xui-runtime/config` <!-- public-entry: @coffeehc/xui-runtime/config --> | [纯配置解析与类型](../packages/runtime/src/config.ts)：resolveConfig、resolveDefaultPages、DefaultPagesConfig、XuiConfig、XuiConfigOverrides、ConfigService | [启动、配置与应用服务](#启动配置与应用服务) | — |
 | `@coffeehc/xui-runtime/config.json` <!-- public-entry: @coffeehc/xui-runtime/config.json --> | [随包默认配置](../packages/runtime/src/config.json) | [启动、配置与应用服务](#启动配置与应用服务) | — |
 | `@coffeehc/xui-runtime/route` <!-- public-entry: @coffeehc/xui-runtime/route --> | [History路由服务与类型](../packages/runtime/src/route.ts) | [启动、配置与应用服务](#启动配置与应用服务) | — |
 | `@coffeehc/xui-runtime/i18n` <!-- public-entry: @coffeehc/xui-runtime/i18n --> | [应用语言服务](../packages/runtime/src/i18n.ts)：类型与 getI18nService | [启动、配置与应用服务](#启动配置与应用服务) | — |
@@ -766,6 +766,10 @@ cursor 最多 4096 UTF-8 字节，作为不透明值透传，绑定服务端 sco
 这里注入合成 fetch，使用显式假路径，不实现 loopback 后端，也不连接产品。测试只有展示合同与生命周期证据，不证明 Go/PostgreSQL、真实认证/脱敏、tenant 隔离或产品集成通过；详情复制用模拟 Clipboard。控制器 [逻辑测试](../tests/structured-log.test.mjs)、两类 [浏览器测试](../tests/browser/structured-log.spec.mjs) 与限制见 [验证记录](VALIDATION.md#chromium-浏览器结果)。
 
 生产采用时先补明确 facade/DTO mapper、后端 scope/权限/错误映射、预算与脱敏，再保留产品必要业务行为后清理旧错误观察 owner。宿主稳定创建一个 controller，首次明确 refresh；React 组件接收外部 controller。视图不拥有外部 controller：卸载/页面离开关闭详情并取消读取；宿主释放自身订阅后 destroy controller/client，组件卸载释放视图订阅。接入迁移见 [ADOPTION.md](ADOPTION.md)，不得用本例通过宣称产品已迁移。
+
+## 四类默认完整页面与配置（4.2.23）
+
+`@coffeehc/xui-runtime/config`导出`DefaultPagesConfig`、`resolveDefaultPages(overrides?)`，根入口同步；同一config.json新增可选pages输入，解析时始终补齐四类默认展示。返回认证页config、业务日志options、Key labels/pagination与带router.basePath的URI路径，不注册路由、不创建服务/请求、不启用业务或授予权限。完整字段、兼容性、默认整页与BaseService接线见[组件合同](COMPONENTS.md#默认完整页面与配套接线4223)。管理员初始化仍用权威state/onCheck/onSubmit，当前没有新的默认初始化HTTP客户端或路由；缺口见[BaseService提示词](PUBLIC_REQUESTS.md#baseservice-管理员初始化合同提示词)。
 
 ## 默认适配器的服务前置
 

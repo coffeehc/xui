@@ -1,7 +1,7 @@
-import {createBusinessLogController,compareBusinessLogTimestamps,type BusinessLogEvent,type BusinessLogDetail,type BusinessLogLoader,type BusinessLogQuery} from '@coffeehc/xui-runtime/business-log';
+import {createBusinessLogController,compareBusinessLogTimestamps,type BusinessLogEvent,type BusinessLogDetail,type BusinessLogLoader,type BusinessLogQuery,type BusinessLogOptions} from '@coffeehc/xui-runtime/business-log';
 import {HttpError} from '@coffeehc/xui-runtime/http';
 import labels from './business-log-labels.json';
-export function createBusinessLogExample(baseURL:string){
+export function createBusinessLogExample(baseURL:string,page:Pick<BusinessLogOptions,'pageSize'|'labels'>={}){
   const stamp=(minute:number)=>`2026-10-11T12:${String(minute).padStart(2,'0')}:00.000000123Z`;
   let rows:BusinessLogEvent[]=[
     {id:'business-log:1',event_type:'order.approved',schema_version:1,occurred_at:stamp(30),recorded_at:stamp(31),actor:{kind:'user',id:'demo-user',display_name:'示例审核员'},object:{kind:'order',id:'order-7',display_name:'示例订单'},action:'approve',result:'succeeded',summary:'订单审核通过',correlation_id:'demo-workflow-7',request_id:'demo-request-1'},
@@ -24,6 +24,6 @@ export function createBusinessLogExample(baseURL:string){
     async detail(id){requests.push({operation:'detail',id});if(behavior.detail==='error')throw Error('FAKE_PRIVATE_BUSINESS_LOG_ERROR');if(behavior.detail==='forbidden'||behavior.detail==='not_found')throw new HttpError('http',{status:behavior.detail==='forbidden'?403:404,attempts:1});const event=rows.find(event=>event.id===id);if(!event)throw new HttpError('http',{status:404,attempts:1});const state=behavior.detail==='expired'?'expired':behavior.detail==='unavailable'?'unavailable':'available';return wait('detail',{event:structuredClone(event),state,payload:state==='available'?(payloads.get(id)??null):null} as BusinessLogDetail);
     },
   };
-  const controller=createBusinessLogController({loader,pageSize:2,labels,baseURL,resolveObject:object=>object.kind==='order'?'./reference.html':null});
+  const controller=createBusinessLogController({loader,pageSize:page.pageSize??2,labels:{...labels,...page.labels},baseURL,resolveObject:object=>object.kind==='order'?'./reference.html':null});
   return {controller,getRequests:()=>structuredClone(requests),getRows:()=>structuredClone(rows),setRows:(next:BusinessLogEvent[])=>{rows=structuredClone(next);},setPayload:(id:string,value:unknown)=>payloads.set(id,structuredClone(value)),setMode:(operation:'list'|'detail',value:string)=>{behavior[operation]=value;},release:(operation:'list'|'detail')=>{for(const pending of held.get(operation)??[])pending.resolve(pending.value);held.delete(operation);},renderApproved:(detail:Readonly<BusinessLogDetail>)=>{const payload=detail.payload as {approval?:{reason?:unknown}};return '审核意见：'+(typeof payload?.approval?.reason==='string'?payload.approval.reason:'未知');},destroy(){controller.destroy();snapshots.clear();payloads.clear();held.clear();}};
 }

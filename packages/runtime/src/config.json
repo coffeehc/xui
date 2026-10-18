@@ -4,6 +4,12 @@
   "http": {"baseURL": "/", "timeoutMs": 15000},
   "auth": {"enabled": false, "timeoutMs": 15000, "protectedPaths": [], "idEncoding": "decimal"},
   "router": {"basePath": "/"},
+  "pages": {
+    "login": {"path": "/login", "title": "Sign in", "description": "", "layout": "card"},
+    "adminSetup": {"path": "/setup", "title": "Set up administrator", "description": "", "layout": "card"},
+    "businessLog": {"path": "/business-logs", "title": "Business logs", "pageSize": 25},
+    "apiKeys": {"path": "/api-keys", "title": "API keys", "pageSize": 10, "pageSizeOptions": [10, 25, 50]}
+  },
   "theme": {"preset": "violet", "mode": "dark", "scale": 1, "persist": true},
   "i18n": {
     "enabled": false,

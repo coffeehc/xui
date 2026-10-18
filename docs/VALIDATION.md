@@ -1,5 +1,23 @@
 # 验证证据与限制
 
+## 四类默认完整页面与配置接入（4.2.23，2026-10-18）
+
+仅修改xui，核对main e595a683/4.2.22已有AdminSetupPage、ConfigurableLoginPage、BusinessLogExplorer、ApiKeyManager及配套Controller/client；没有重复实现整页或增加UI包装器。4.2.23在默认config.json增加pages展示配置，公开/config和根入口提供DefaultPagesConfig、resolveDefaultPages；继承app品牌/Logo和router.basePath，投影到原组件config/options/labels/pagination。保留旧配置及旧手写XuiConfig可省略pages。JSON校验拒绝端点、权限、初始化状态、歧义URI、重复路径和无效分页；纯函数无Window、路由注册、服务实例或IO。主题、认证、请求、查询及权限owner未改。
+
+DESIGN、PUBLIC_API、COMPONENTS、ADOPTION、DEFAULT-PAGE-001～008和adopt-xui默认页面专项同步；共516项接入检查是合同条目数量，不是516个产品页面的通过数。业务已启用且无已确认特殊要求时使用完整公共页，品牌/文案/slot配置不构成重新拼页理由；公共缺口交xui，不在前端转换标准协议。专项只加载命中页面的接入/请求/slot检查，不扩为每次全项目迁移。管理员初始化尚无统一BaseService HTTP合同，继续使用权威state/onCheck/onSubmit，不猜URL、伪造初始化授权或自动重放。可转交任务已在[维护清单](PUBLIC_REQUESTS.md#baseservice-管理员初始化合同提示词)列明安全首次授权、原子提交、并发唯一性、未知结果核对和密码清理；本轮没有修改BaseService或消费项目。
+
+最终sourceGeneration `a17a4b5529afe2bd524f4574e1f5d540db21bbfc6eb58f51d5356f08d65d5c74`。build、431 Token图/指纹、typecheck、定向unit90/90、文档链接与skill校验通过；全部110个正式入口的ESM/CSS/types和正反类型夹具通过，bootstrap-types直接把配置投影传给四个原公共入口。独立消费者`.consumers/current/react`安装三个4.2.23正式tarball，React/ReactDOM19.2.8、Base UI1.7.0单实例，无packages/src alias；receipt、性能及peer证据位于`.artifacts/default-pages-4.2.23/consumer-final.json`、performance-final.json与peers-final.json/peer-paths-final.log。
+
+首次正式consumer在Clipboard gzip4556/4096失败，consumer.log保留，未把它算作通过。实测新增全局默认JSON与校验使该入口由4075增至4556（+481）字节；未带入默认页投影运行代码、UI、HTTP或认证实现。窄服务预算为这项配置能力有界增加512到4608，其余依赖排除、Button/初始JS/CSS门禁不变。重建后四个窄入口clipboard/theme/i18n/menu-service分别4556/4264/3722/3958，初始JS144519/153600、critical CSS22163/22272，正式consumer通过，日志为consumer-release.log。候选类型检查曾发现递归JSON快照到覆盖类型的展开过深，已允许resolveConfig/resolveDefaultPages直接接受只读配置；最终类型及正式夹具通过。
+
+正式包浏览器57个唯一用例全部通过，无失败、跳过、重试或flaky；browser-accepted.json含53项，browser-zoom.json含4项，逐案与报告SHA见case-summary.json。四个现有示例的?defaults配置接线16项，其余41项回归原bootstrap与四页：light/dark/system、桌面/390px、根字号200%、品牌/标题、输入校验、键盘、稳定焦点、错误/取消/迟到、登录固定facade、初始化串行写入/未知结果不解锁/密码清理、Key单次secret与客户端分页不额外请求、日志快照游标与刷新保行。示例沿用原合成transport/回调；没有真实账户、秘密或后端部署。真实Chrome设置200%逐页记录DPR加倍、CSS视口减半、根字号不变、CSS zoom=1/pinch=1，不以文字放大冒充浏览器zoom。
+
+主线程实际查看浅色登录、深色初始化、窄屏大字日志/Key与真实zoom截图；内置浏览器指针操作Key下一页后呈现旧记录、未知事实与禁用撤销，截图为proof/default-key-iab.png。无新皮肤或Token变更，本轮没有把既有Stitch设计复核称为新增视觉审查。
+
+复现：`pnpm build && pnpm check:tokens && pnpm typecheck`；`node --test tests/default-pages.test.mjs tests/config-services.test.mjs tests/service-modules.test.mjs tests/contract.test.mjs tests/docs.test.mjs tests/auth.test.mjs tests/admin-setup.test.mjs tests/api-key-v2.test.mjs tests/business-log.test.mjs`；`node scripts/check-docs.mjs && pnpm test:consumer`。完整consumer结束后，以default-pages/bootstrap/login/admin-setup/api-key/business-log这六个tests/browser/*.spec.mjs运行`pnpm exec playwright test <文件列表> --grep-invert 'genuine.*Chrome|genuine.*browser|actual browser|real browser' --workers=2`；default-pages以`--grep 'genuine.*browser' --workers=1`单独验真实zoom。归档使用`pnpm archive --evidence .artifacts/default-pages-4.2.23`与archive:verify，manifest、public-api、sourceGeneration和SHA256SUMS自动生成校验。
+
+未跑全仓unit/browser、watch/cold-start、Firefox/WebKit、实体设备/读屏器及任何产品真实页面、BaseService集成、升级或部署。默认初始化HTTP接线仍依赖BaseService正式合同，不据公共合成样板宣布产品初始化或联调完成；版本仅递增末位到4.2.23。
+
 ## StructuredLogExplorer 查询布局与草稿语义（4.2.22，2026-10-18）
 
 核对最新main 4.2.21（3df9d4e）仍使用Disclosure/Grid。4.2.22将完整Explorer的查询区域统一为QueryForm/QueryField：primary摘要、compact等级常显，其余条件进入原filters OverlayController的advanced/FormGrid，动作与已提交summary归公共槽位。新增可选pageToolbar，保留headerActions；原service、ViewController.draft、HTTP adapter、可选records、分页/快照、取消/迟到及详情owner不变。短枚举视图选择器沿用compact Token，显式退出Toolbar的伸展和标准字段最小宽度。没有新皮肤、Token、请求owner或消费项目修改。

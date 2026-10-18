@@ -1,9 +1,12 @@
 import * as React from 'react';
 import {hydrateRoot,createRoot} from 'react-dom/client';
 import {AdminSetupPage,type AdminSetupState,type AdminSetupResult,type AdminSetupCheckResult} from '@coffeehc/xui-react/admin-setup';
+import {resolveDefaultPages} from '@coffeehc/xui-runtime/config';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/style.css';
 const passwordLabels={showPassword:'显示密码',hidePassword:'隐藏密码'};
-const config={productName:'Example',title:'创建管理员'};
+const application=new URLSearchParams(location.search).has('defaults')?bootstrapBrowserExample({app:{name:'Example'},pages:{adminSetup:{title:'创建管理员'}}}):undefined,pages=application?resolveDefaultPages(application.config):undefined,config=pages?.adminSetup.config??{productName:'Example',title:'创建管理员'};
+if(application)Object.assign(window,{defaultPagesDemo:{config:application.config,pages}});
 const labels=new URLSearchParams(location.search).has('long')?{rejected:'暂时无法创建管理员。请检查输入的用户名，然后再试。'.repeat(8)}:undefined;
 let checks=0,settleCheck:(result:AdminSetupCheckResult|'error')=>void=()=>{};
 let calls=0,settle:(result:AdminSetupResult)=>void=()=>{},setState:(state:AdminSetupState)=>void=()=>{},rerender:()=>void=()=>{};

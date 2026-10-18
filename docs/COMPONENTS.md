@@ -1581,3 +1581,47 @@ const series = [{id:'tasks',label:'任务',color:1 as const,values:[12,null]}];
 options.labels新增可翻译resetDraft（默认Reset draft）、appliedFilters（默认Applied filters）；旧的手写Controller.labels可省略这两个新字段，View使用相同英文默认；既有clear保留默认Clear filters及宿主覆盖，中文示例保留“清除筛选”并明确此动作为查询。Controller类型、factory、HTTP/DTO/认证、可选records、snapshot/游标/详情清理行为保持。React时间Input保留原RFC3339Nano字符串，未换成分钟型DateTimePicker或做时区转换。
 
 完整正式包示例为[log-react](../examples/log-react/app.tsx)：默认借用原service；`?injected&slots`展示完整ViewController与pageToolbar，使用同一service和高级Overlay。`?network&grouped`仅供浏览器拦截测试真实POST wire，没有后端或基础设施；默认仍为注入内存transport的合成观察，不代表产品联调。
+
+## 默认完整页面与配套接线（4.2.23）
+
+四类业务启用且没有已确认特殊要求时，直接挂载现有完整页。品牌、文案、Logo、路由和公开扩展不要求复制页面；[默认选择规则](DESIGN.md#四类默认公共页面4223)由DESIGN定义。
+
+| 页面 | 公共React入口 | 默认接线及保留的owner |
+| --- | --- | --- |
+| 管理员初始化 | `/admin-setup` AdminSetupPage；连续检查外壳用AuthPage + AdminSetupForm | 后端权威state/onCheck/onSubmit；当前没有统一初始化HTTP入口，不能猜URL或自动创建管理员 |
+| 用户登录 | `/login` ConfigurableLoginPage | bootstrap注册的同一AuthService/ThemeService；固定authenticationservice/webfacade合同 |
+| 业务日志查询与详情 | `/business-log` BusinessLogExplorer | 同一HttpService上的createBusinessLogHttpLoader，再接既有BusinessLogController/ViewController；只读查询，权限和脱敏归后端 |
+| 平台API Key管理 | `/api-key` ApiKeyManager | 同一HttpService上的createApiKeyHttpAdapter；getConfiguration读取服务权限/期限，再创建一个所属Controller，不从JSON猜权限 |
+
+`@coffeehc/xui-runtime/config`（根入口同步）新增`DefaultPagesConfig`与纯函数`resolveDefaultPages(overrides?)`。可传bootstrap返回的config或部分JSON覆盖；沿用resolveConfig的校验、深合并、数组替换、不可变快照。旧配置缺省pages时补入同一config.json默认值，旧手写XuiConfig可省略该字段。函数不读取Window、不创建服务/Controller、不注册路由/菜单、不启动IO；SSR按请求传自身配置。
+
+| config.json位置 | 默认与含义 | 投影结果 |
+| --- | --- | --- |
+| pages.login | path=/login，title=Sign in，空description，layout=card | login.path及login.config（LoginPageConfig兼容） |
+| pages.adminSetup | path=/setup，title=Set up administrator，空description，layout=card | adminSetup.path及adminSetup.config（AuthPageConfig兼容） |
+| pages.businessLog | path=/business-logs，title=Business logs，pageSize=25（1～200） | businessLog.path及options.pageSize/labels.title |
+| pages.apiKeys | path=/api-keys，title=API keys，pageSize=10，pageSizeOptions=[10,25,50] | apiKeys.path、labels.title与pagination；本地完整集合分页 |
+
+path是相对router.basePath的绝对URI路径，不接受hash、query、外站、转义/穿越或四页重复路径。认证页品牌继承app.name/logo，description空值省略，login.fallbackReturnTo继承router.basePath。Key pageSize/选项为正安全整数且选项必须包含初始值；不会改变HTTP adapter的服务端分页。其它字段文案仍用各组件现有labels扩展和项目语言owner，函数不新增i18n副本。pages不能设置端点、凭据、权限、服务启用或初始化状态；真实业务能力/权限不足时不挂载，不把配置当授权。
+
+最小接线（宿主已按既有生命周期管理state、signals与Controller）：
+
+```tsx
+const pages = resolveDefaultPages(ConfigService.getConfig());
+// 路由由宿主注册到pages.*.path；品牌/标题来自同一配置，额外内容使用各页真实公开slot。
+<ConfigurableLoginPage auth={AuthService} theme={ThemeService} config={pages.login.config} />;
+<AdminSetupPage config={pages.adminSetup.config} state={setupState} onCheck={checkSetup} onSubmit={submitSetup} />;
+
+const loader = createBusinessLogHttpLoader({http: HttpService});
+const logs = createBusinessLogController({...pages.businessLog.options, loader});
+<BusinessLogExplorer controller={logs} />;
+
+const adapter = createApiKeyHttpAdapter({http: HttpService, idEncoding: ConfigService.getConfig().auth.idEncoding});
+const capabilities = await adapter.getConfiguration({signal});
+const keys = createApiKeyManagerController({...capabilities, adapter, labels: pages.apiKeys.labels});
+<ApiKeyManager controller={keys} pagination={pages.apiKeys.pagination} />;
+```
+
+上述创建仅在原装配/作用域执行一次，不放入每次render，不并存第二个service/ViewController；借用Controller时初始读取仍由宿主显式执行，卸载和身份切换按原合同清理。官方端点/method/DTO/认证/错误由[服务前置表](PUBLIC_API.md#默认适配器的服务前置)定义，不在pages开放第二套配置。现有特殊SSO/领域协议先保留其真实owner与AuthPage等公开布局，记录默认完整页不匹配的合同，不能为外观升级改协议。
+
+正式包示例沿用四个现有页面的`?defaults`模式：[登录](../examples/login-react/app.tsx)、[初始化](../examples/admin-setup-react/app.tsx)、[业务日志](../examples/business-log-react/app.tsx)、[Key](../examples/api-key-react/app.tsx)。它们消费bootstrap配置投影和原单一Controller，仅使用合成transport/回调，不代表真实BaseService部署。接入步骤见[默认页面专项](../.agents/skills/adopt-xui/references/default-pages.md)，初始化缺口提示词见[维护清单](PUBLIC_REQUESTS.md#baseservice-管理员初始化合同提示词)。

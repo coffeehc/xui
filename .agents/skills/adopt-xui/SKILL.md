@@ -41,6 +41,10 @@ description: 新接入、升级或自查 xui；区分完整接入与定向升级
 
 本次使用或升级完整StructuredLogExplorer时，读取[专项流程](references/structured-log.md)，按现有QueryForm/QueryField和LOG-QUERY-001～008执行；不要加载完整接入细则或将其展开为全项目迁移。组件内部slot和重置/清除动作的合同仍只由引用文档定义。
 
+### 默认完整页面
+
+本次涉及管理员初始化、登录、业务日志或平台API Key时，读取[默认页面专项](references/default-pages.md)。业务已启用且无已确认特殊要求时直接用公共完整页，经app/pages配置和公开slot接入，官方BaseService合同直接连接，不自行拼页面、改接口或增加前端兼容层；初始化缺口交BaseService，不猜默认端点。
+
 ## 项目组件与页面设计
 
 读取项目自己的设计和当前页面，按当前AGENTS中的前端设计路由核对信息披露和说明文案；不把公共默认值当作产品事实。按[首屏信息架构](../../../docs/DESIGN.md#首屏信息架构与信息密度)、[公共页面组合](../../../docs/DESIGN.md#高信噪比页面组合)、[表单](../../../docs/DESIGN.md#表单和响应式)、[刷新](../../../docs/DESIGN.md#数据刷新与视图连续性)及[私有组合边界](../../../docs/DESIGN.md#项目私有组合组件的设计方法)确定任务、主次、动作、状态owner和容器。

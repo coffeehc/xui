@@ -1,5 +1,6 @@
 /** Public JSON configuration policy plus the shared application's configuration reference. */
 export * from './config-core.js';
+export {resolveDefaultPages,type DefaultPagesConfig} from './default-pages.js';
 export {getConfigService} from './config-access.js';
 import type {ConfigService as ConfigContract} from './config-core.js';
 import {getConfigService} from './config-access.js';
