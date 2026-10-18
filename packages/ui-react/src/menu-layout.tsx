@@ -29,6 +29,13 @@ interface NavigationMenuSlots extends Omit<NavigationMenuOptions,keyof Navigatio
 }
 export type NavigationMenuProps=NavigationMenuSlots&ControllerProps<NavigationPresentationController,Pick<NavigationPresentationOptions,'collapsed'|'defaultCollapsed'|'onCollapsedChange'|'expandedIds'|'defaultExpandedIds'|'onExpandedChange'>>;
 function Icon({name,resolver}:{name?:string;resolver?:NavigationIconResolver}){const icon=resolveNavigationIcon(name,resolver);return <svg aria-hidden="true" viewBox={icon.viewBox??'0 0 20 20'} fill="none" stroke="currentColor" strokeWidth="var(--nav-icon-stroke-width)">{icon.paths.map((d,index)=><path key={index} d={d}/>)}</svg>;}
+/** Presentation only: preserve grapheme clusters and never guess a business icon. */
+function nameInitials(label:string){
+  const name=label.trim(),words=name.split(/\s+/);
+  if(/^[A-Za-z]/.test(name)&&words.length>1&&words.every(word=>/^[A-Za-z]/.test(word)))return words.slice(0,2).map(word=>word[0].toUpperCase()).join('');
+  const characters=Array.from(new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(name),part=>part.segment);
+  return /\p{Extended_Pictographic}/u.test(characters[0]??'')?characters[0]:characters.slice(0,2).join('')||'·';
+}
 function BranchButton({render,disabled,ref,...props}:React.ComponentPropsWithRef<'button'>&{render?:React.ReactElement}){
   const element=useRender({defaultTagName:'button',render,ref,props:{...props,disabled}}) as React.ReactElement<React.ComponentProps<'button'>>;
   return React.cloneElement(element,{disabled,onClickCapture:event=>{if(disabled){event.preventDefault();event.stopPropagation();}element.props.onClickCapture?.(event);}});
@@ -60,7 +67,7 @@ function NavigationMenuRoot(allProps:NavigationMenuProps){const {controller:inje
   const renderItems=(entries:readonly NavigationItem[]):React.ReactNode=>entries.map(item=>{
     const node=nodes.get(item.id)!,hasChildren=!!item.children?.length,open=!!item.group||expanded.includes(item.id),childId=prefix+'-'+encodeURIComponent(item.id);
     const action=renderAction?.(item),tone=item.group?undefined:item.tone,variant:NavigationVariant=item.variant??options.variant??(!item.href&&!item.group?'text':'default');
-    const content=<>{(item.icon||collapsed)&&<Icon name={item.icon} resolver={options.resolveIcon}/>}<span className="xui-menu-label">{renderLabel?.(item)??(options.labelOverflow==='marquee'?<NavigationMenuLabel>{item.label}</NavigationMenuLabel>:item.label)}</span></>;
+    const content=<>{item.icon?<Icon name={item.icon} resolver={options.resolveIcon}/>:collapsed&&<span className="xui-nav-initials" aria-hidden="true">{nameInitials(item.label)}</span>}<span className="xui-menu-label">{renderLabel?.(item)??(options.labelOverflow==='marquee'?<NavigationMenuLabel>{item.label}</NavigationMenuLabel>:item.label)}</span></>;
     return <li key={item.id} className="xui-menu-entry" data-menu-entry={item.id}><div className="xui-menu-row">
       {item.group?<h2 className="xui-menu-group-title">{content}</h2>:item.href?<NavItem render={renderLink?.(item)} href={item.href} target={item.target} rel={item.rel} download={item.download} selected={active===item.id} tone={tone} variant={variant} disabled={node.disabled} collapsed={collapsed} title={item.label} data-menu-id={item.id} data-menu-control="primary" onClick={event=>navigateNavigationItem(item,event,{...options,items,location:options.location??window.location.href,baseURL:options.baseURL??window.location.href})}>{content}</NavItem>:
         <BranchButton render={renderButton?.(item)} type="button" className="xui-nav-item" data-tone={tone} data-variant={variant} disabled={node.disabled||!hasChildren} aria-expanded={open} aria-controls={childId} data-menu-id={item.id} data-menu-control="primary" data-collapsed={collapsed} title={item.label} onClick={()=>setExpanded(item.id,!open)}>{content}<DisclosureIndicator className="xui-menu-chevron" open={open}/></BranchButton>}
