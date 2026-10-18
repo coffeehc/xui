@@ -1,9 +1,9 @@
 ---
 name: adopt-xui
-description: 按“仅接入xui”集成前端，按“接入xui+baseservice”联合接入宿主前后端；也用于 xui 接入评审、项目组件与页面设计，或根据项目 docs/DESIGN.md 生成 theme.css。
+description: 新接入、升级或自查 xui，按 layout/slot 逐页验收；“仅接入xui”处理前端，“接入xui+baseservice”联合接入宿主前后端。也用于项目组件与页面设计，或根据项目 docs/DESIGN.md 生成 theme.css。
 ---
 
-# 接入 xui、项目设计与主题生成
+# 接入与升级 xui、项目设计与主题生成
 
 ## 先确定范围与参考根目录
 
@@ -11,7 +11,7 @@ description: 按“仅接入xui”集成前端，按“接入xui+baseservice”�
 - 用户说“仅接入xui”或“接入xui+baseservice”（允许空格和大小写差异）时，选择下方对应接入模式；明确的页面、模块或阶段范围优先，分析/评审请求保持只读，不因短指令扩大到其他项目。未指定范围的这两个实施短指令默认完成当前项目所需的完整接入，持续完成改造、清理和实际验收，不停在方案或主题生成。
 - 用户说“根据 DESIGN.md 生成 xui 可识别的 theme.css”或仅要求生成、更新、接入项目主题时，进入[项目主题流程](references/theming.md)，默认设计来源是采用项目的 `docs/DESIGN.md`。完成主题和必要入口接入、验证后结束；不执行下文完整迁移，不借此改业务、页面布局、HTTP、认证或后端。
 - 用户要求设计或评审项目私有组合组件、页面信息呈现时，执行下方“项目组件与页面设计”；只处理当前任务，仅设计不触发完整迁移或实现。
-- 用户明确要求采用、迁移、改造或评审 xui 接入时，先按项目设计流程明确职责和信息主次，再执行下文与任务相关的接入步骤；只评审时保持只读，只处理已授权的页面和能力。需要生成主题时再读[项目主题流程](references/theming.md)。
+- 用户明确要求采用、升级、迁移、改造或评审 xui 接入时，先按项目设计流程明确职责和信息主次，再执行下文与任务相关的接入步骤；只评审时保持只读，只处理已授权的页面和能力。未另行授权后端工作的“升级 xui”按“仅接入xui”边界执行，不因服务前置缺失扩展后端改造。需要生成主题时再读[项目主题流程](references/theming.md)。
 
 ## 两种接入模式
 
@@ -33,12 +33,13 @@ description: 按“仅接入xui”集成前端，按“接入xui+baseservice”�
 3. 方案给出当前任务需要的信息结构、公开组件映射、私有组合边界和关键状态样本。需要落盘的稳定约定更新项目已有设计章节；只要求分析/评审时直接给结论。仅设计时在方案完成后结束，不实施代码、升级依赖或迁移 API/认证/后端。
 4. 有实施授权时复用现有领域能力与 xui 公共控件，允许项目自有语义结构和布局 CSS，遵守主题及公共状态合同；不复制控件内部皮肤或建立竞争 owner。按实际容器与状态验证正文、动作、输入/焦点连续性和异常路径，区分设计方案、源码检查与实际运行证据。公共缺口写清场景和受限位置，业务特例留在项目。
 
-## 完整采用：固定版本与阅读入口
+## 新接入与升级：统一执行入口
 
 1. 在任务指定的 xui checkout 与采用仓库读取 AGENTS.md，检查 git status、当前 SHA、分支、包 manifests/exports 和已有改动。按任务授权正常 fetch，比较版本；保护全部提交和业务修改。不要 reset/clean/强推、用文件树 API 同步、猜 registry 版本或改其他仓库。
 2. 先读 [采用手册](../../../docs/ADOPTION.md)、[xui 默认完整规范](../../../docs/DESIGN.md)、[公开入口与默认行为](../../../docs/PUBLIC_API.md) 和 [实施映射](../../../docs/ADOPTION.md#组件层次与扩展原则)。另读采用项目自己的 `docs/DESIGN.md`，区分产品视觉要求与 xui 默认合同。以实际消费版本的正式声明和源码核对 API，不能把计划或其他版本写成可调用能力。
 3. 读 [原子→组合→页面的单一架构源](../../../docs/ADOPTION.md#组件层次与扩展原则)，为页面选择实际公开层次与扩展点；按需要读 [导航](../../../docs/COMPONENTS.md#导航与菜单)、[HTTP/query](../../../docs/PUBLIC_API.md#http-与查询)、[登录/认证](../../../docs/PUBLIC_API.md#认证会话)、[API Key](../../../docs/PUBLIC_API.md#api-key-管理) 或 [业务日志](../../../docs/PUBLIC_API.md#业务日志)；确有错误观察需求再读 [独立错误 facade](../../../docs/PUBLIC_API.md#程序错误观察)；读 [宿主边界](../../../docs/ADOPTION.md#宿主边界) 与 [实际验证和限制](../../../docs/VALIDATION.md)。不要复制完整规范、默认品牌值或另造组件合同。
-4. 首次接入、升级与自查必须先建立[槽位映射](../../../docs/DESIGN.md#页面与组件的槽位架构)，逐条执行[检查清单](../../../docs/ADOPTION_CHECKLIST.md)并保留每个ID、对象、结果与证据。不得用总评替代逐项判定；只评审时保持只读。 文字按[公共文字槽映射](../../../docs/DESIGN.md#公共文字槽验收)和[TYPE逐项验收](../../../docs/ADOPTION_CHECKLIST.md#公共文字槽逐项验收)检查；核对真实computed字体四项及宿主覆盖，记录必要领域例外，不靠宿主补字号掩盖公共缺口。随后执行[接入合规与公共缺口归属](../../../docs/ADOPTION.md#接入合规与公共缺口归属)：核对真实消费、公共请求链路与无用UI信息；公共组件修改/增强由消费项目列举并交给xui，不在消费项目自行补丁或复制实现。必须同时执行[前端实现基础自查](../../../docs/ADOPTION.md#前端实现基础自查)，覆盖统一表单/刷新标准、状态并发、生命周期及适用工程实践。只要求自查时保持只读，按该节输出证据与分类缺口。
+4. 新接入与升级均完整执行[统一流程](../../../docs/ADOPTION.md#新接入与升级的统一执行流程)：先列授权范围内全部实际页面、组件实例与运行入口，再建立“内容 → 正式 API.slot/part → 文字/色彩角色 → 状态 → 滚动/焦点 owner → 检查 ID”映射，按页实施并验收，不能用首页、组件样板或一次总评代替。升级同时记录旧版本到目标版本的合同差异和既有用法；已正确的接线保留并提供证据，不为了升级重写。
+5. 按[清单使用规则与报告模板](../../../docs/ADOPTION_CHECKLIST.md#使用与报告规则)逐条记录结果；文字、表单、刷新、请求与生命周期均按对应 ID 检查。公共缺口执行[归属与反馈](../../../docs/ADOPTION.md#接入合规与公共缺口归属)，消费项目只列举并交给 xui，不自行修改、增强、复制或补丁公共组件；继续不依赖缺口的已授权工作。实际页面验收未跑或仍有适用失败项时，只报告已完成范围与剩余项，不宣布完整接入/升级验收通过。只评审时以同一矩阵只读核查，不实施迁移。
 
 ## 联合服务接线（仅“接入xui+baseservice”）
 
@@ -62,7 +63,7 @@ xui 提供通用组件、主题、交互与可选页面组合。宿主拥有业�
 
 ## 连接单一所有者与正式产物
 
-1. 固定已验证提交，构建并本地打包安装；产品 UI 用正式 ESM/CSS/types/init 与 React/ReactDOM/Base UI peers 单实例。runtime 导入限于仍公开的 TypeScript service/model/parser/tool 等非 UI 能力。按 [手册](../../../docs/ADOPTION.md) 联调 built dist；不以 packages/src alias、下游 Tailwind 扫描依赖目录或未分层 CSS 覆写冒充接入。
+1. 按[固定产物流程](../../../docs/ADOPTION.md#固定产物与可运行示例)安装目标完整 SHA 对应的正式归档，核对 manifest、SHA256SUMS、sourceGeneration、三包及锁文件解析；优先使用已验 tarball，不猜 registry 发布状态或在消费项目重建另一代包。需要从源码构建时使用任务指定的 xui checkout，遵循其项目规则和既有构建、独立消费者与归档流程，不借包构建修改公共库源码。产品 UI 用正式 ESM/CSS/types/init 与 React/ReactDOM/Base UI peers 单实例，runtime 仅导入公开非 UI 能力；不以 packages/src alias、下游 Tailwind 扫描依赖目录或未分层 CSS 覆写冒充接入。
 2. 首屏初始化先于 CSS/内容；复用一个文档根主题 owner，支持 light/dark/system 和失败回退。已有 JSON 持久化用受控 bridge 保留其他字段。少量语义覆盖在规定 layer，默认值只来自 DESIGN；清理旧 matchMedia/storage/context、原始色与 selected/hover/focus 竞争规则。
 3. 核[冷启动/开发模式](../../../docs/ADOPTION.md#开发联调与冷启动)：navigation从首次可操作菜单就连接，canNavigate=false放行浏览器链接默认行为，不作ready阻止。Vite不可扫描的lazy deep imports须预声明实际optimizeDeps.include并保持peer dedupe，用冷/暖cache的optimizer日志、HMR full-reload和Document请求找因果，不等待几分钟/禁HMR/吞错；用户本地/部署产物未核不冒充确认。菜单共用数据，在根接一次 location/activeId 和 navigation adapter；保留链接修改键、中键、target/download。不要逐项重复选中/路由、叠加第二个 drawer 或用 route key 重挂整个 shell。应用头部优先采用headerSlots的brand/breadcrumb/status/actions或AppHeader；按组件手册的导航迁移说明删掉消费方通用排列/紧凑栏宽度CSS，不替换业务动作。菜单唯一开关由公共组件定位：桌面属于侧栏内部，窄屏同一节点移至顶栏打开已有导航抽屉；宿主仅接collapsed/sidebarOpen及回调，删除产品重复按钮和媒体监听，不能搬私有DOM。侧栏尾部内容使用sidebarFooter及公开SidebarFooterContent；headerSlots仍是顶栏；按[布局slot矩阵](../../../docs/COMPONENTS.md#布局与顶栏)选择context/auxiliary/account与sidebarHeader/pageHeader/pageToolbar/pageFooter，空槽不占位，复用PageHeader.actions和正文，不复制内部布局。默认顶栏主题复用单theme owner；locale仅显式enabled时接现有i18n状态/语言列表/回调，业务不用另拼主题或默认语言入口；删除消费方底部定位/滚动/紧凑宽度补丁，保留业务权限和回调。菜单图标采用Menu.Icon/ContextMenu.Icon或公开xui-menu-icon类，默认菜单与label文字尺度由公共CSS负责，不再全局缩小Portal或所有SVG。
 4. 一个 HTTP transport/auth/error owner，加宿主领域 endpoint adapter 与一个所属 resource/controller。明确响应模式；选择默认 ajax 模式时使用准确 Go envelope，业务成功只由 success=true 判定，code 保留必填安全整数元数据，只有明确的端点合同才 opt-in 严格 successCode；固定安全反馈、区分 401/403/business，宿主拥有预算、凭据与登录动作。禁止默认猜 data/msg/items、自创 query AST、隐式日期/页码、重复编码或自动重放写操作。
@@ -77,7 +78,7 @@ xui 提供通用组件、主题、交互与可选页面组合。宿主拥有业�
 - 新 UI 采用 React 参考：[默认HTTP/弹层/下载/表格](../../../examples/capabilities-react/app.tsx)、[React 菜单](../../../examples/menu-react/app.tsx)、[React 标准页](../../../examples/http-react/app.tsx)、[React 登录](../../../examples/login-react/app.tsx)、[基础页面](../../../examples/foundation-react/app.tsx)。所有参考例子均为合成数据，不等于任何产品迁移。
 - 公共 TypeScript runtime 模型可继续与 React 示例共享，例如 [API Key 模型](../../../examples/shared/api-key-model.ts)、[业务日志模型](../../../examples/shared/business-log-model.ts)；这类服务/model 消费不构成 native UI。
 - 运行采用产品的真实构建、独立业务 API 检查与页面交互；检查 resolved package 路径、peer 单实例、types/CSS/init generation、computed style 和 watch 故障恢复。涉及 xui 实现或公开行为时按受影响合同执行必要门禁，正式产物采用包含独立 tarball 消费的验证；纯文档/引用治理检查文档、来源合同和相关静态规则。采用页改动实际验证该产品，不能拿 xui 示例结果代替。
-- 报告代码 SHA、范围、移除的旧 owner、保留的业务能力、通过/失败/未跑、剩余缺口和实际证据。真实后端/tenant/移动 OS/读屏器/其他浏览器/SSR/生产性能未验就明示。
+- 按[统一流程的交付条件](../../../docs/ADOPTION.md#交付与完成条件)报告代码 SHA、范围、固定产物、逐页/逐 slot/逐 API 矩阵、移除的旧 owner、保留的业务能力、公共缺口与实际证据。使用通过/失败/未跑/有依据的不适用四种结论；真实后端/tenant/移动 OS/读屏器/其他浏览器/SSR/生产性能未验就明示。
 - 先逐页采用 xui；按产品授权逐项目接入baseservice facade或换后端 adapter。公共合同变更同步升级消费方依赖/固定 SHA、DTO adapter、类型和独立业务/页面回归；不自动修改其他项目，也不要求全产品同时切换。
 - 只在具体任务授权的仓库和操作范围内行动。这份 skill 不授权提交其他产品、push、包发布、部署、生成真实密钥或改许可证/可见性；已获授权的操作不重复索取确认。
 

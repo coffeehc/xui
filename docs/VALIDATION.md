@@ -1,5 +1,15 @@
 # 验证证据与限制
 
+## 新接入与升级流程固化（文档与 skill，2026-10-18）
+
+仅修改 adopt-xui 的入口/界面元数据、ADOPTION、ADOPTION_CHECKLIST 和本记录。接入手册统一范围盘点、固定产物、逐页 layout/slot 映射、状态/请求接线、实际页面验收和交付条件；skill 路由到同一流程，新增 FLOW-001～006，清单共484项。组件默认值、类型、ESM/CSS、DESIGN 与三包版本保持4.2.20；手册原先残留的“当前4.2.13”改为核对目标正式manifest，避免历史说明冒充最新版本。
+
+`node scripts/check-docs.mjs`通过12份文档、1597个相对链接、107个公开入口及484项清单；`node --test tests/docs.test.mjs`通过2/2，含公开入口缺失/虚构、清单重复/缺少操作结果/缺少合同来源的负向检查。skill-creator 的 `quick_validate.py .agents/skills/adopt-xui` 与 `git diff --check`通过；新增/变更链接的31个文内锚点另行核对通过，界面short_description为36字符。
+
+主线程按六类请求静态走查流程：完整新接入须盘点全部实例；已有自定义主题的升级保留品牌/owner；限定单页改造只验授权范围且手动查询归入QueryForm；公共缺口列举交给xui并继续独立工作；缺少后端wire前置不得在前端加兼容层；主题专项和只读评审不触发完整迁移。四种结果、未跑不能报通过和库样例不能代替产品验收均已明确。这是文档场景走查，不是消费项目执行证据。
+
+重算构建输入sourceGeneration仍为 `60ce89b93d91b1e38019f1986caf4ca6f4225d07ca3adaef0b03dbdb0def49bf`。本次未重建/重归档4.2.20包，未重跑UI浏览器、全仓测试或任何消费项目；既有正式包验收见下节，不把它计作本次新增产品验收。未修改、通知或部署其他项目。
+
 ## 手动查询页公共编排（4.2.20，2026-10-18）
 
 仅修改xui，三个正式包及DESIGN统一4.2.20。本轮新增QueryForm/QueryField（既有/search-toolbar及根入口）、DataTable可选idleState、EmptyState可选align/icon；原SearchToolbar和EmptyState默认排版保持。QueryForm复用既有Field/Surface样式和SearchToolbar的唯一disclosure Controller，负责原生form、fields/actions/advanced/summary槽位与宽度/四轨对齐，不增加查询、HTTP、认证、时区或业务owner。未确认数据时DataTable/CardGroup的可见计数与aria名称不再填造0；确认空结果与同范围刷新/失败仍保留真实计数。该阶段页脚是否显示可能改变，真实分页事实仍归宿主。

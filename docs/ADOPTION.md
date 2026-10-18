@@ -17,13 +17,15 @@ xui 为新产品 UI 统一采用 React：公共组件从 `@coffeehc/xui-react` �
 3. 在 [组件手册](COMPONENTS.md) 只读当前任务对应章节；正式入口、运行时与默认服务合同见 [PUBLIC_API](PUBLIC_API.md)。
 4. 按 [逐项接入检查清单](ADOPTION_CHECKLIST.md)建立每个页面/组件/API的检查记录，先核对槽位映射再构建并验证实际消费页面；当前已验和未验范围见 [VALIDATION](VALIDATION.md)。
 
+首次接入与版本升级均按[统一执行流程](#新接入与升级的统一执行流程)推进；本手册定义执行顺序，[DESIGN](DESIGN.md)定义布局与视觉合同，[COMPONENTS](COMPONENTS.md)和正式类型定义实际扩展点，[检查清单](ADOPTION_CHECKLIST.md)定义逐项判定与报告格式。项目已有接入记录只保存本次实例、差异与证据，不复制另一套规范。
+
 ## React 是唯一公共 UI
 
 theme 提供预构建 CSS/tokens；runtime 只提供无框架 TypeScript 服务、模型、解析器和工具；`@coffeehc/xui-react` 是唯一公共 UI 实现，使用宿主提供的 React/ReactDOM/Base UI peer。runtime 不提供第二套 DOM UI factory/controller。宿主保管业务状态、权限、租户范围、导航条件、输入草稿与业务动作；公共组合通过数据、配置和 React props/parts/slots/render/adapters 接入，不复制组件内部 DOM 或私有皮肤。
 
 runtime 原生 DOM UI exports 已从当前公开入口移除，原生 UI 示例也不再作为接入路径。该 breaking change 不代表 XQuant、XLead 或其他消费项目已完成 React 迁移或通过验收；消费项目须按自己的授权核实固定包版本、调用点和实际页面。HTTP/auth/query/theme/resource 等 TypeScript 服务、模型、解析器与工具继续公开，React 宿主可直接复用。
 
-以4.2.1为基准只维护一条版本线，当前正式版本为 **4.2.13**，后续所有变更只递增末位，不再维护3.x兼容包或其他平行版本。历史验证记录保留用于溯源，不是当前可用的兼容分发。三个包必须同版本、同sourceGeneration安装；版本递增不代表语义兼容，升级前核对实际迁移合同。当前 DESIGN 与三个包均为 4.2.13，runtime 基础 Service 不再导出 `create*` 工厂；消费者需在入口 bootstrap 后按窄模块导入稳定 Service 引用；4.0 的 bootstrap 不再加载所有实现，容器 getter 需先加载对应模块，`/services` 仅用于明确需要全量的隔离装配。须复核固定 ESM/CSS/types 与打包依赖。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。2.0.1的公共认证页采用Stitch V3：品牌居于卡片外部，宿主只使用已有配置和slot，不补私有CSS。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
+以4.2.1为基准只维护一条版本线，后续所有变更只递增末位，不再维护3.x兼容包或其他平行版本。目标版本以固定归档的manifest、三包及DESIGN为准，不从历史段落猜“最新版”。历史验证记录保留用于溯源，不是当前可用的兼容分发。三个包必须同版本、同sourceGeneration安装；版本递增不代表语义兼容，升级前核对实际迁移合同。runtime 基础 Service 不再导出 `create*` 工厂；消费者需在入口 bootstrap 后按窄模块导入稳定 Service 引用；4.0 的 bootstrap 不再加载所有实现，容器 getter 需先加载对应模块，`/services` 仅用于明确需要全量的隔离装配。须复核固定 ESM/CSS/types 与打包依赖。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。2.0.1的公共认证页采用Stitch V3：品牌居于卡片外部，宿主只使用已有配置和slot，不补私有CSS。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
 
 HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方 client，并从 bootstrap 共享 service 获取依赖；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 
@@ -116,6 +118,50 @@ pnpm preview
 交付说明采用范围、实际版本/SHA、主题与入口位置、公开能力映射、验证结果及具体缺口。业务局部需求在宿主组合；公共缺口应有可复用场景和受限位置，不默认扩展 xui API。公共合同升级后重新核对依赖、类型、adapter 和受影响页面回归，只在对应项目授权中实施。
 
 最短页面接入请求：`阅读 xui/.agents/skills/adopt-xui/SKILL.md，使用 @coffeehc/xui-react 按实际公开合同接入当前 React 页面需要的通用组件；保留宿主业务、权限、路由与 runtime 服务 owner，使用正式产物，运行实际构建并报告通过、未跑和缺口。` 使用实际 checkout 路径替换 xui。
+
+## 新接入与升级的统一执行流程
+
+本流程适用于实施型新接入、升级和改造，默认覆盖当前项目授权范围内全部实际页面；升级不能只替换包版本或检查新增 API。用户明确限定页面、模块、阶段时按该范围执行；主题生成仍按[主题专项](#主题css-与单-owner)，只读自查/评审使用同一清单记录现状，不因此取得修改授权。仅升级 xui 不授权修改后端、公共库、其他项目、业务协议或部署。
+
+### 确定范围与固定产物
+
+1. 读取项目规则、已有设计/接入记录、实际入口与依赖，保护现有修改。列出范围内每个路由页面、嵌套视图、详情、表单和弹层，以及实际支持的 Web/Desktop/embed 构建入口；标明权限、领域 API、认证、路由、查询/缓存、草稿与提交 owner。多个页面共用组件仍分别列出实例，不能只选首页或代表性样板。
+2. 记录当前与目标的完整源码 SHA、DESIGN/三包版本、正式归档 manifest、SHA256SUMS、sourceGeneration 和安装锁文件解析。按[正式归档](#正式归档的唯一入口)校验目标，优先安装已验 tarball，不假定 registry 已发布；核对正式 ESM/CSS/types/init、peer 单实例和零源码 alias。需要源码构建时使用任务指定的 xui checkout，遵循其项目规则与正式流程，不复制源码或借包构建修改公共库。
+3. 对照固定版本的 [PUBLIC_API](PUBLIC_API.md)、[COMPONENTS](COMPONENTS.md)、[DESIGN](DESIGN.md)及[验证限制](VALIDATION.md)记录升级差异，检查现有用法是否受影响。新接入记录尚缺的接线；升级记录保留/迁移/移除及原因。已符合合同的实现保留并验证，不为升级重写业务或覆盖已有自定义主题。
+
+### 逐页建立 layout 与 slot 映射
+
+在代码改动前，为每个页面的每个实际组件实例列出：`内容 → 正式 API.slot/part → 文字/色彩角色 → 适用状态 → 滚动/焦点 owner → 检查 ID`。映射与验收共用[逐项报告模板](ADOPTION_CHECKLIST.md#每条检查的报告模板)，实施后填写实际与证据；不另造一份无法对照的总评。
+
+| 页面区域 | 选择与归位 | 逐项入口 |
+| --- | --- | --- |
+| 全局框架与页头 | AppShell/MenuLayout 的导航、顶栏、pageHeader/pageToolbar/pageFooter；PageHeader 承接任务标题、真实状态与主要动作，空槽按合同处理 | [SHELL](ADOPTION_CHECKLIST.md#页面框架与具名-slot)、[SLOT](ADOPTION_CHECKLIST.md#每个页面和组件的-slot-矩阵) |
+| 手动查询与即时筛选 | 手动提交用 QueryForm 的 fields/actions/advanced/summary，按内容为 QueryField 选择公开宽度角色；即时筛选用 SearchToolbar，不在外部工具栏与表内重复同组控件 | [查询合同与完整示例](#手动查询页接入4220)、[QUERY](ADOPTION_CHECKLIST.md#手动查询页逐项检查) |
+| 创建与编辑 | Fieldset/Field/FormGrid/FormActions 分组、字段宽度、标签/帮助/错误关联和按钮对齐；长表单选择适用的页面/Sheet/Dialog 容器 | [表单与弹层](ADOPTION_CHECKLIST.md#表单数据表格和弹层) |
+| 结果与详情 | 按任务选择 DataTable/CardGroup 等公开组合，工具、数据、反馈、真实计数/分页和页尾各归其槽；详情复用公开 parts，不嵌套竞争的表格外壳或多层装饰卡片 | [工具栏与卡片](ADOPTION_CHECKLIST.md#页面标题工具栏与卡片)、[卡片集合](ADOPTION_CHECKLIST.md#卡片集合逐项检查) |
+| 文字、色彩与状态 | 标题/正文/meta/help/error/技术标识继承各自公共角色；真实状态才着状态色，加载/空/错反馈位于所属区域；不在页面逐个定字号、状态色或复制内部皮肤 | [TYPE](ADOPTION_CHECKLIST.md#公共文字槽逐项验收)、[加载位置](ADOPTION_CHECKLIST.md#组件内容加载位置) |
+
+具体字段宽度、字体、间距、颜色、状态和响应式取值只引用上述固定版本合同，不把示例或 Stitch 单页数值另立为项目默认。保留宿主 Logo、品牌覆盖、用户主题/缩放偏好以及编辑器、Markdown、领域图形等专有能力；通过公开 props/slots/render/callbacks 组合，公共能力缺口按[归属规则](#接入合规与公共缺口归属)交给 xui。
+
+### 实施与状态、请求接线
+
+逐页完成映射后实施，清理本次公共能力替代的重复外壳、样式、listener 和状态 owner，保留业务权限与动作。公共控件复用既有实现与文字角色；主题和共享服务复用已有 owner，各独立组件按公开合同保留所属 Controller，不将多菜单或多视图状态合成全局单例。不复制示例的合成 loader 充当产品数据层，不另建 HTTP、认证、通知或查询状态体系。
+
+按[刷新与身份清单](ADOPTION_CHECKLIST.md#刷新身份与生命周期)及各组件合同，区分未查询、首次加载、成功、空结果、首次失败、同范围刷新、刷新失败和范围切换。同范围刷新保留旧内容、稳定 key/节点、草稿、焦点与滚动；新范围隔离旧数据并取消/丢弃迟到结果。不得以整页 reload、先隐藏/卸载组件、随机 key 或无界自动重试实现刷新。手动查询的编辑草稿与已应用条件分别记录，业务时区、时间精度、起止顺序和窗口限制继续归宿主。
+
+对采用的[16 个公共操作](ADOPTION_CHECKLIST.md#16-个公共-api-操作逐项检查)分别核对 REQ/OK/ERR：已有 BaseService facade 直接使用官方 client；未用 BaseService 的后端应一次实现同一 wire，不在前后端各加一层兼容转换。后端前置缺失时记录 owner 与未验项，不借 UI 升级授权修改后端；领域/第三方 API 保留合法 typed 边界。没有相应业务的公共操作按清单提供不适用依据，不为凑齐能力新增业务。
+
+### 实际页面验收
+
+运行采用项目的真实构建、相关测试及[逐项浏览器矩阵](ADOPTION_CHECKLIST.md#逐项浏览器验收矩阵)，逐页、逐实例、逐 slot 填证据。覆盖适用的 light/dark/system 及系统实时切换、桌面/窄屏、长中文、200%文字与真实浏览器200%缩放、键盘/回焦、弹层指针命中与滚动；界面比例、用户文字放大与真实浏览器 page zoom 分别记录，不能相互替代。各实际支持的构建入口分别检查，dev 页面不能代表嵌入产物或 Desktop。
+
+用真实请求与权限验证数据、分页、错误恢复、取消和迟到丢弃；用刷新前/中/后的节点身份、几何、焦点、输入与滚动记录检查连续性。截图不能单独证明请求或生命周期正确，源码静态检查不能单独证明实际排版。xui 正式包示例、mock、DOM 存在或编译通过均不能替代产品页面验收；环境、数据或权限不足的场景如实记未跑。
+
+### 交付与完成条件
+
+采用[清单四种状态与报告格式](ADOPTION_CHECKLIST.md#使用与报告规则)，在项目既有接入记录中保存范围/页面/入口清单、固定产物身份、升级差异、逐页/组件/slot/API 矩阵、具体证据及责任 owner。报告同时列出保留的业务/品牌、移除的竞争实现和[公共缺口材料](#接入合规与公共缺口归属)；清单 ID 对每个实际对象分别判定，不只记录“模板已通过”。
+
+适用失败项未解决或实际页面验收未跑时，不宣布完整接入/升级验收通过；交付已完成范围、失败/未跑项、依赖与后续 owner。公共缺口不由消费项目补丁规避，也不阻止继续完成与其无关的授权工作。全部适用项有结论后按项目规则交付代码；推送、发布和部署各遵循实际授权，不由本流程自动授权。
 
 ## 组件层次与扩展原则
 
