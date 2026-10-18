@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.21。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.22。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1814,7 +1814,7 @@ xui既提供控件，也定义它们如何形成清楚的任务界面。每个�
 | DataTable.idleState / emptyState / errorState | 尚未查询 / 已查询无匹配 / 首次失败的差异化内容 | 位于同一语义表格结果框；保留列头。提示宽度按表格可视滚动区域，横滚及RTL后仍可读，不按所有列宽之和居中。轻量居中引导使用 EmptyState.align=center，可选 icon 仅装饰；不造全屏大空卡或重复说明 |
 | DataTable.toolbar / footer | 已提交结果的局部刷新；真实计数和单一受控分页 | 不添加图稿中的假耗时、节点或总数，不复制查询 owner；横滚只属于表格，不能扩大整页 |
 
-查询宽度由集中 Token 定义：根字号16px时 query-field-primary=480px、compact=192px、standard 继承 layout-field-min=240px，query-field-min=160px是宽容器流式轨道的下限，并非手机硬最小宽。字段不超过其容器和角色上限，主输入在可用空间不足时先收缩/换带。QueryForm 自身净宽不超过40rem时转单列，各控件占当前列净宽，动作组在字段之后按 DOM 顺序换行；40rem随根字号缩放，不按整个屏幕猜侧栏后的空间。长中文标签自然换行，同带共享 label/control/help/error 四条轨道，按钮只与 control 轨道底边对齐，帮助和错误不推走动作。不固定文字高度或行数。
+查询宽度由集中 Token 定义：根字号16px时 query-field-primary=480px、compact=192px、standard 继承 layout-field-min=240px，query-field-min=160px是宽容器流式轨道的下限，并非手机硬最小宽。字段不超过其容器和角色上限，主输入在可用空间不足时先收缩/换带。QueryForm 自身净宽不超过40rem时转单列，各控件占当前列净宽，动作组在字段之后按 DOM 顺序换行；40rem随根字号缩放，不按整个屏幕猜侧栏后的空间。长中文标签自然换行，同带共享 label/control/help/error 四条轨道，动作组只与 control 轨道底边对齐；多行动作按DOM顺序自然换行，以整个动作组的末行底边对齐，帮助和错误不推走动作。不固定文字高度或行数。
 
 表单和结果各一层 layer-raised/surface-line，沿用 Surface、控件及 DataTable 的默认边框/圆角；不加装饰性彩条。内距 card-padding，字段/动作间距 layout-toolbar-gap，相关支持文案沿用 space-text-gap。标题沿用 PageHeader；标签13/20px、控件与动作14/22px的默认角色与继承由公共组件负责，宿主不逐个改字号。采用项目可通过现有主题合同改变语义 Token，不用私有 CSS 重建 QueryForm。
 
@@ -1830,6 +1830,18 @@ xui既提供控件，也定义它们如何形成清楚的任务界面。每个�
 | 提交新范围 | 新请求范围键，hasValue=false、清旧 rows 后 loading | 旧结果不冒充新条件；取消/代次丢弃迟到响应；草稿未提交时不自动刷新或换范围 |
 
 QueryForm 是 HTML form 与布局，不查询、不缓存、不推断权限、业务时区、起止顺序或窗口限制。例子复用 `createResource` 的同 key 保值/新 key 清值及取消代次；宿主已有查询 owner 时继续使用它。DateTimePicker 仍传递无时区分钟字符串，不为此页面增加协议适配或时间戳转换。提交失败、范围变更、分页及重置由宿主显式决定；重置草稿不自动改变已展示结果的范围。
+
+“重置草稿”只恢复明确的草稿基准，不提交、不刷新、不改结果范围。“清除已生效筛选”是另一项显式查询动作：提交空过滤并从首段读取，允许经同一请求owner发起一次查询；不得用“重置”文案暗示无请求。StructuredLogExplorer自4.2.22采用下表，不将旧“清除筛选”请求认定为HTTP故障。
+
+| StructuredLogExplorer 内容 | 公共layout/slot与状态归属 |
+| --- | --- |
+| 标题、刷新、取消、host headerActions、确认的命中数 | PageHeader；刷新使用service已提交filter，保留同范围结果 |
+| 分组/全量切换、组内返回、host pageToolbar | 查询表单之外的Toolbar；短枚举继承query-field-compact净宽上限，视图变化是已有service动作，空槽不占位 |
+| 摘要、等级 | QueryForm.fields中primary/compact QueryField；即时编辑只改原ViewController.draft |
+| 时间、来源、性质、类别、组件、错误码、对象 | QueryForm.advanced内FormGrid/Field；原ViewController.filters负责展开、hidden/inert和回焦，时间保留RFC3339Nano与显式offset |
+| 应用、重置草稿、清除筛选 | QueryForm.actions；submit/reset/button分别调用service.setFilter(draft)、view.setDraft(service.filter)、service.setFilter({})；重置基准为最近提交条件，不是全部空值 |
+| 已提交条件与本次筛选校验错误 | QueryForm.summary；只从service.filter取范围，错误不藏到折叠区；无内容不占位 |
+| 结果、游标/快照、详情与回焦 | 继续现有Table/DataRegion和唯一service；不新增total、分页、HTTP或查询owner |
 
 验收逐个页面/slot执行 [QUERY 清单](ADOPTION_CHECKLIST.md#手动查询页逐项检查)：在真实侧栏后的净宽、长中文、light/dark/system、窄屏、200%根字号与真实浏览器200%缩放下检查控件宽度/按钮底边/焦点/高级展开及全部状态。图稿用于设计校准，正式包示例与产品现场各自验收，不能互相替代。
 

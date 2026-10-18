@@ -1,5 +1,23 @@
 # 验证证据与限制
 
+## StructuredLogExplorer 查询布局与草稿语义（4.2.22，2026-10-18）
+
+核对最新main 4.2.21（3df9d4e）仍使用Disclosure/Grid。4.2.22将完整Explorer的查询区域统一为QueryForm/QueryField：primary摘要、compact等级常显，其余条件进入原filters OverlayController的advanced/FormGrid，动作与已提交summary归公共槽位。新增可选pageToolbar，保留headerActions；原service、ViewController.draft、HTTP adapter、可选records、分页/快照、取消/迟到及详情owner不变。短枚举视图选择器沿用compact Token，显式退出Toolbar的伸展和标准字段最小宽度。没有新皮肤、Token、请求owner或消费项目修改。
+
+“重置草稿”只恢复最近提交filter，native form.reset/Space/Enter均不请求、不取消在途读取，不修改service状态、结果节点、游标、快照或错误；“清除筛选”保留显式空范围查询语义，仅经同一service提交一次当前视图首段，组内模式仍携带group_id。刷新只读取已提交filter，不提交草稿。两个新文案resetDraft/appliedFilters可翻译，旧手写Controller.labels省略它们仍有英文默认。旧“清除筛选”会查询不是HTTP故障，准确行为和接线见[组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222)及LOG-QUERY-001～008。
+
+最终sourceGeneration `721f55305bcc6108f0ae4c4ee5d33e13fdabee47433c6f2d2f5aa01716acd9ed`。build、431 Token图/指纹、typecheck、定向unit64/64和110个全部正式入口ESM/CSS/types、类型正反例通过。独立消费者 `.consumers/current/react` 安装三个4.2.22 tarball，React/ReactDOM19.2.8、Base UI1.7.0各单实例，无packages/src alias。receipt/performance为 `.artifacts/structured-log-query-4.2.22/consumer-final.json` 与performance-final.json，初始JS gzip143908/153600、critical CSS22163/22272，预算没有调整。文档逐项清单508项是合同检查数量，不代表508个产品页面已验收。
+
+本代正式包浏览器86个唯一用例全部通过，无最终失败、跳过、重试或flaky。browser-accepted.json含80项，browser-zoom.json含6项；逐案及报告SHA在case-summary.json。新查询19项、既有StructuredLog/列布局/QueryForm/集合刷新回归67项，覆盖借用service与注入ViewController、中英文、长中文、light/dark/system、1280/390/320、200%根字号、字段净宽与多行动作末行对齐、唯一form、slot位置、高级条件草稿/关闭回焦、非法条件、纳秒及显式offset原样保留、分组和组内清除、刷新保行、取消/迟到、权限/错误/详情回焦。没有通过force click、缩字号或私有CSS完成验收。
+
+`?network&grouped`以真实浏览器fetch和POST、官方HTTP adapter连接拦截响应，real-post-wire.json记录首次查询、提交text、清除text=null三次请求；中间编辑和重置零请求。默认示例仍是注入transport的合成观察，不连接业务后端。真实Chrome设置200%分别覆盖查询和原列布局的三种模式，zoom事实记录DPR×2、CSS视口减半、根字号不变、CSS zoom=1/pinch=1；不把根字号放大冒充浏览器缩放。主线程查看最终浅色桌面、深色窄屏大字与真实zoom截图，并在内置浏览器实际提交、修改和重置；proof/query-iab-light.png对应本代。长页fullPage截图可能把原视口外的fixed skip link拼入图中，另存viewport截图及几何证明其实际bottom=-68、未获焦且在可视区域之外。
+
+候选过程保留，不累计为最终通过：首轮把多行动作的首个按钮底边当成动作组底边，改为按既有公共布局验证整个组的末行并补清规范。随后真实测量检出Toolbar默认flex伸展及240px字段下限分别覆盖compact宽度，已在Explorer的该Field退出这两个默认约束，最终桌面三模式均为192px上限。候选三轮各77通过/3失败及trace/截图保留在browser-first、browser-width-candidate、browser-min-width-candidate与对应results；最终86项全部来自上述最终generation。
+
+复现：`pnpm build && pnpm check:tokens && pnpm typecheck`；`node --test tests/contract.test.mjs tests/design-value-guard.test.mjs tests/docs.test.mjs tests/interaction-controller.test.mjs tests/query-page.test.mjs tests/structured-log.test.mjs tests/structured-log-query.test.mjs`；`node scripts/check-docs.mjs && pnpm test:consumer`。完整consumer结束后，在既有4173预览上运行 `pnpm exec playwright test tests/browser/structured-log-query.spec.mjs tests/browser/structured-log.spec.mjs tests/browser/structured-log-columns.spec.mjs tests/browser/query-page.spec.mjs tests/browser/collection-refresh.spec.mjs --grep-invert 'genuine.*Chrome|genuine.*browser|actual browser' --workers=2`；另以两个structured-log-query/structured-log-columns文件及 `--grep 'genuine.*Chrome|genuine.*browser' --workers=1` 验真实zoom。归档使用 `pnpm archive --evidence .artifacts/structured-log-query-4.2.22` 并archive:verify，manifest、public-api、sourceGeneration和SHA256SUMS由既有流程自动生成核验。
+
+未运行全仓unit/browser、watch/cold-start、Firefox/WebKit、实体设备/读屏器或任何产品真实页面、后端、升级和部署。不宣布xQuant或其他产品已完成，不通知其他项目必须升级；保留已有认证和请求合同，仅末位升级到4.2.22。
+
 ## 公共图表与无图标紧凑导航（4.2.21，2026-10-18）
 
 仅修改xui，三包与DESIGN统一4.2.21。新增公开React `/chart` 的 LineChart、BarChart、PieChart 及对应类型，runtime `/chart` 仅提供数据类型、校验、笛卡尔域/归一化和饼弧计算；根入口同步导出，正式CSS可选 `critical.css + chart.css` 或完整style。复用Card、DataRegion、LoadingState/EmptyState/ErrorState、ScrollArea、DataTable和现有六个分类色，未引入图表依赖、原生UI、请求/缓存/业务状态owner。新增9个集中几何Token与三个精确限定到chart.tsx的数据几何例外，不放宽普通控件颜色/字号门禁。COMPONENTS、PUBLIC_API、ADOPTION及CHART-001～014同步，导航补NAV-FALLBACK-001～002，接入清单共500项。

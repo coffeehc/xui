@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.21）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.22）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -727,3 +727,16 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CHART-012 | 同范围刷新/失败 | 旧SVG/点/柱节点、焦点和横滚保留，反馈不遮罩或改变图形透明度；没有新增请求owner | 刷新前/中/后节点/滚动/几何、请求计数与错误恢复 | [状态合同](DESIGN.md#公共图表布局与状态合同4221) |
 | CHART-013 | 数据重排/删除/换范围 | 按稳定类别/系列ID读取更新值，删除后不报旧值；范围清理/取消/迟到由原Resource负责 | 重排/删除的节点与读值、范围切换及迟到回归 | [状态合同](COMPONENTS.md#公共图表) |
 | CHART-014 | SSR/挂载/卸载/减少动效/强制颜色 | SSR无DOM访问；测量随节点更新并释放，无自动请求/循环动效；强制颜色及数据表仍可用 | SSR结果、StrictMode/Observer释放、media与实际页面检查 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
+
+## StructuredLogExplorer 查询逐项检查
+
+| ID | 操作 | 必须结果 | 证据 | 合同 |
+| --- | --- | --- | --- | --- |
+| LOG-QUERY-001 | 渲染查询区和宿主内容 | 只一份QueryForm；fields/advanced/actions/summary按公共映射，pageToolbar与headerActions各归其位，空槽不占位 | 正式types、DOM与slot矩阵 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
+| LOG-QUERY-002 | 修改后重置草稿 | 恢复最近提交filter；零请求，service/结果/游标/快照/错误保持 | 前后state身份、请求计数与参数 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
+| LOG-QUERY-003 | 清除已生效筛选 | 同一service提交空filter、首段cursor=null，仅一次当前视图请求，不伪称草稿reset | 真实POST body/次数、分组与组内模式 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
+| LOG-QUERY-004 | 提交与刷新 | Enter/应用提交草稿；刷新使用原applied，summary仅显示service.filter | 草稿/applied/网络及刷新节点 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
+| LOG-QUERY-005 | 收起高级条件和键盘操作 | 复用原filters Controller；草稿保留、hidden/inert和准确aria，关闭回唯一触发器 | Controller身份、焦点和键盘 | [设计合同](DESIGN.md#手动查询页布局与状态合同4220) |
+| LOG-QUERY-006 | 不合法筛选与时间 | 无请求，错误在所属summary可见；原RFC3339Nano/半开区间与显式offset保留，无隐式时区 | 非法/纳秒/offset正负例与错误截图 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
+| LOG-QUERY-007 | 新范围/取消/迟到/可选records | 原service拥有查询、游标和代次；缺省records不展示/请求，旧响应不污染新范围 | 各模式请求、取消及迟到回归 | [PUBLIC_API](PUBLIC_API.md#程序错误观察) |
+| LOG-QUERY-008 | 三主题/窄屏/长中文/放大 | 公开字段宽度、动作对齐、原字号继承；局部横滚与详情回焦可达，无页面横裁 | 浅深system、320/390、根字号/真实zoom分别记录 | [设计合同](DESIGN.md#手动查询页布局与状态合同4220) |

@@ -686,6 +686,8 @@ createBusinessLogHttpLoader({http,timeoutMs?}) 固定 GET /api/v1/business-logs 
 
 这是实现接口；完整通用规则只在 [DESIGN.md](DESIGN.md)。runtime/structured-log 提供无框架类型、DTO 校验、HTTP bridge 和单一查询/详情控制器；React `/structured-log` 的 StructuredLogExplorer 提供只读页面；runtime/structured-log 只提供无框架类型、DTO 校验、HTTP bridge 和查询/详情 controller。没有额外日志皮肤或下游 Tailwind 扫描要求。
 
+React查询组合自4.2.22复用QueryForm/QueryField和既有ViewController.filters；可选pageToolbar及“重置草稿/清除已生效筛选”的准确请求语义见[组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222)。未增加或替换HTTP/Controller owner。
+
 ### 配套源码基线与范围
 
 配套只读协议的固定源码基线为 commons 提交 `b0bc0f9bbb72b708fb9a7d251c033ba946d820f8`：

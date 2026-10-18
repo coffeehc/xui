@@ -15,3 +15,16 @@ export const invalid=<QueryField width="400px" label="编号"/>;
 export const unnamed=<QueryForm fields={null} actions={null}/>;
 // @ts-expect-error Injected disclosure has a single state owner.
 export const duplicate=<QueryForm {...form} disclosure={{controller:createOverlayController(),expanded:true}}/>;
+
+import {StructuredLogExplorer,type StructuredLogExplorerSlots} from '@coffeehc/xui-react/structured-log';
+import type {StructuredLogController} from '@coffeehc/xui-runtime/structured-log';
+declare const logs:StructuredLogController;
+const logSlots:StructuredLogExplorerSlots={pageToolbar:<span>宿主范围</span>,headerActions:<span>宿主动作</span>};
+export const logQuery=<StructuredLogExplorer controller={logs} {...logSlots}/>;
+// @ts-expect-error Layout slots cannot introduce a second request owner.
+export const secondLogOwner=<StructuredLogExplorer controller={logs} loader={async()=>[]}/>;
+
+import {structuredLogDefaultLabels,type StructuredLogLabels} from '@coffeehc/xui-runtime/structured-log';
+const {resetDraft,appliedFilters,...priorLogLabels}=structuredLogDefaultLabels;
+export const compatiblePriorLabels:StructuredLogLabels=priorLogLabels;
+export const localizedLogLabels:StructuredLogLabels={...priorLogLabels,resetDraft:'恢复草稿',appliedFilters:'已提交范围'};

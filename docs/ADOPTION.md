@@ -362,3 +362,9 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 采用[LineChart / BarChart / PieChart](COMPONENTS.md#公共图表)时，先将已有后端/Resource结果投影为categories/series或slices，保留现有请求、缓存、单位、时区、范围隔离与权限owner，不复制示例loader。图表共用Card的title/description/actions/content/footerMeta/footerActions；按[图表清单](ADOPTION_CHECKLIST.md#公共图表逐项检查)逐页检查图例、绘图区、读值、数据表和反馈槽。已有自定义chart-color/axis/grid/文字Token覆盖继续继承；不在页面覆写私有SVG或另加一套图例/tooltip。窄入口按critical.css + chart.css加载，正式style.css已包含图表。
 
 无图标导航的紧凑回退见[组件合同](COMPONENTS.md#无图标紧凑导航)，不要求产品补占位图标；真实名称和显式图标保持宿主事实。
+
+### StructuredLogExplorer 查询组合（4.2.22）
+
+升级完整Explorer后采用库内QueryForm及其fields/actions/advanced/summary，不在宿主再做一套筛选/DTO adapter。页级辅助内容传pageToolbar，标题动作传headerActions；按[组件动作矩阵](COMPONENTS.md#structuredlogexplorer-查询与槽位4222)验证各slot。原controller/options/viewController接法和唯一请求owner保持，缺少跨组records的项目继续省略该能力。
+
+逐页分别验证：编辑与“重置草稿”零请求、恢复最近提交条件且保留游标/结果；“清除筛选”明确提交空范围并产生一次当前视图查询；刷新仅用已提交filter而不提交草稿。提交新条件清旧范围并隔离迟到，取消/错误/详情回焦沿原Controller。不能以按钮旧名称认定HTTP故障，也不能把“清除已生效筛选”改名“重置”后仍请求。库示例仅是正式包验收，产品仍须固定产物并验收自己的页面和API。

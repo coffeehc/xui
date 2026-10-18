@@ -1564,3 +1564,20 @@ const series = [{id:'tasks',label:'任务',color:1 as const,values:[12,null]}];
 ```
 
 完整正式包示例：[charts-react](../examples/charts-react/app.tsx)。其Resource和内存延迟数据只演示正常/空/全零/缺失/单项/刷新失败/范围变化，不代表任何消费项目或后端验收。
+
+## StructuredLogExplorer 查询与槽位（4.2.22）
+
+正式 `/structured-log` 的 `StructuredLogExplorerProps` 与导出的 `StructuredLogExplorerSlots` 保留headerActions/className/writeClipboard，新增可选pageToolbar。它追加在原分组/全量切换与组内返回的工具区，位于QueryForm之前；空槽无占位，不替换内置筛选，不创建请求或路由owner。内置查询槽对应[唯一设计矩阵](DESIGN.md#手动查询页布局与状态合同4220)，不要求宿主复制QueryForm或穿透DOM。
+
+原ViewController.draft拥有编辑值，service.filter拥有提交范围；QueryForm复用原filters OverlayController，primary摘要与compact等级常显，其余条件进入advanced的FormGrid。收起不丢草稿，外部受控关闭从高级字段回焦唯一触发器。summary只显示service.filter与校验反馈，不把草稿冒充已展示结果的范围。
+
+| 动作 | 对草稿/已提交范围的影响 | 请求与结果 |
+| --- | --- | --- |
+| 应用筛选 / Enter | 提交当前ViewController.draft，校验仍归service | 有效时同一service.setFilter；首段cursor=null，新范围清旧数据并隔离迟到；无效时不请求 |
+| 重置草稿 / native form.reset | preventDefault后setDraft(service.getState().filter)，恢复最近提交条件 | 零请求；不取消在途读取，不改service状态、结果/游标/快照/错误或高级展开 |
+| 清除筛选（清除已生效条件） | service.setFilter({})，由原service订阅同步草稿 | 显式提交空范围并请求一次当前视图首段；保留groups/records/groupId与既有取消/代次，不是草稿reset |
+| 刷新快照 | 使用当前service.filter，未提交draft保留 | 原refresh动作；同范围保结果，不自动提交草稿 |
+
+options.labels新增可翻译resetDraft（默认Reset draft）、appliedFilters（默认Applied filters）；旧的手写Controller.labels可省略这两个新字段，View使用相同英文默认；既有clear保留默认Clear filters及宿主覆盖，中文示例保留“清除筛选”并明确此动作为查询。Controller类型、factory、HTTP/DTO/认证、可选records、snapshot/游标/详情清理行为保持。React时间Input保留原RFC3339Nano字符串，未换成分钟型DateTimePicker或做时区转换。
+
+完整正式包示例为[log-react](../examples/log-react/app.tsx)：默认借用原service；`?injected&slots`展示完整ViewController与pageToolbar，使用同一service和高级Overlay。`?network&grouped`仅供浏览器拦截测试真实POST wire，没有后端或基础设施；默认仍为注入内存transport的合成观察，不代表产品联调。
