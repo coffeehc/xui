@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.17）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于改造前、实现中和部署前逐项核对。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.20）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -627,7 +627,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 
 上述尺寸以根16px为基准，字体放大后按 Token 派生并以视口上限保护正文；正式包结果不代替产品页面验收。本轮无强制消费方升级或自动通知。
 
-## 可选透明动作逐项检查（4.2.17）
+## 可选透明动作逐项检查（4.2.20）
 
 | 编号 | 场景 | 必须检查 | 证据 | 合同 |
 |---|---|---|---|---|
@@ -635,7 +635,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | ACTION-TEXT-002 | 键盘/关闭/更新 | Enter/Space一次动作、aria-expanded/controls准确、同节点/尺寸/草稿、关闭回焦、禁用零动作；不另建Controller | 指针和键盘时间线、节点与调用计数 | [PUBLIC_API](PUBLIC_API.md#透明文字动作4217) |
 | ACTION-TEXT-003 | 阅读与主题 | light/dark/system/forest、窄屏、长中文、RTL、200%根字号和真实浏览器zoom下可达；独立focus清晰，reduced-motion遵守原合同 | 字体/命中/几何及两种200%事实 | [DESIGN](DESIGN.md#透明文字动作4217) |
 
-## 可选透明导航逐项检查（4.2.17）
+## 可选透明导航逐项检查（4.2.20）
 
 | 编号 | 场景 | 标准 | 证据 | 入口 |
 | --- | --- | --- | --- | --- |
@@ -658,3 +658,33 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | TABLE-ACTION-001 | 每个表格操作槽 | 查看等动作统一text，删除用text＋tone=danger；各状态透明，危险前景不被hover品牌覆盖，disabled仍禁用；保留权限/确认/防重/行事件 | 逐表props清单、三主题各状态computed、动作/确认计数与真实页面 | [透明危险动作](PUBLIC_API.md#透明危险动作4218) |
 
 | TOAST-LAYOUT-001 | 标准或高级parts通知 | 标准View/新parts的Icon/Content/Close分列，关闭首行可达；窄容器说明/动作跨行、极窄时全文转入下一行；纯文案无操作空行，旧Actions包含真实动作和Close时保留原顺序；空Title/Description不占位、不推断type或priority | 无标题/长中文/技术长串/动作与关闭几何，六配色三模式，两种200%及RTL，空槽、ref/render/动作计数与回焦 | [紧凑通知](PUBLIC_API.md#紧凑通知部件4219) |
+
+
+## 手动查询页逐项检查
+
+以下每行按实际页面与slot记录，不能用“已采用QueryForm”合并通过。宽度、Token与状态唯一来源是 [DESIGN](DESIGN.md#手动查询页布局与状态合同4220)。
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| QUERY-001 | 手动提交条件查询 | 使用 QueryForm 单一原生 form，label 可访问名称明确，宿主提交 preventDefault 且无整页 reload | 源码、Enter提交、Network/document导航 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-002 | 页面区域映射 | pageHeader 标题、pageToolbar 查询、children 结果，toolbar 不重复摆条件，单层表面无双 Card | 逐slot映射、DOM和首屏截图 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-003 | 主标识或搜索输入 | fields 内 QueryField.width=primary，宽屏受角色上限约束，不占半屏/全屏强拉伸 | 净宽与控件边界实测 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-004 | 短状态枚举 | QueryField.width=compact，不机械等分剩余宽度；长选项仍可完整理解 | 真实选项、宽度与键盘截图 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-005 | 普通和长规则字段 | 默认standard，必要长内容显式full跨整行，fields直接QueryField或Fragment | 类型与实际slot DOM | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-006 | 查询或次动作 | actions 只放真实动作，submit显式type，内容自然宽；同带control底边齐，不被help/error挤偏 | 长label/help/error及按钮底边几何 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-007 | 字段关联 | 每项一个公共控件，required/error/help关联且首错可定位，不能用空标签补对齐 | aria-labelledby/describedby/invalid、焦点 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-008 | 高级条件 | advanced 使用已有公共组合，收起保持DOM与草稿、hidden/inert、Tab不可进入 | 节点identity、输入保留、键盘记录 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-009 | 高级区关闭 | 内部焦点回展开按钮；外部已移动焦点不被抢回，长中文按钮可达 | 受控关闭及Tab/Enter/Space | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-010 | 已提交高级范围 | summary只呈现已提交事实，无内容不占位，草稿不伪装已生效 | 修改未提交日期、已提交摘要对照 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-011 | 窄容器与放大 | 按组件净宽重排、单列和动作换行，长中文不单字挤压；无页面横向溢出 | 侧栏后净宽、320/390/768、200%字号和真zoom | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-012 | 尚未查询 | idle/hasValue=false，idleState提示必要输入，不调用count造0、不传伪分页；横滚后提示仍在可视表体内 | 首次无请求、DOM/aria/计数 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-013 | 首次加载 | 表体居中加载，页面壳/列头/输入identity与焦点保持，不整页重载或隐藏 | 延迟请求、几何、焦点和挂载 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-014 | 成功有数据 | 稳定rowKey、真实行与total或null，唯一受控分页，翻页对应当前范围 | 响应、行键、页码与请求次数 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-015 | 成功无匹配 | ready/hasValue=true，emptyState给有效下一步，真实空才可计0 | 空响应、计数、横滚/RTL可见性和真实动作 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-016 | 首次失败 | error/hasValue=false，就近错误与重试；条件/输入保留，无无限重发 | 失败Network、焦点/输入和重试次数 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-017 | 同范围刷新 | 使用已提交条件，保留旧行与节点/滚动/选择/输入焦点；局部busy无整区遮罩 | 延迟刷新、前中后几何/DOM/scroll | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-018 | 刷新失败 | hasValue=true保留旧事实，footer就近反馈与一次重试；不清表或假空 | 失败响应、旧行和恢复 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-019 | 提交新范围 | 清旧值进入loading，取消/代次丢弃迟到响应，不串用旧范围 | 交错响应、abort及最终行归属 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-020 | 草稿变更和重置 | 不擅自查询或更改已展示范围，刷新继续用已提交条件 | 草稿/applied和请求参数对照 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-021 | 主题和文字角色 | 正式CSS、light/dark/system、公共字体继承、无私有字号/皮肤/DOM补丁 | computed style、主题切换及源码 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |
+| QUERY-022 | 日期和领域边界 | 保留DateTimePicker分钟字符串，无隐式时区；起止、窗口与HTTP/业务协议仍宿主管 | 提交参数和公开接线、真实API验收 | [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220) · [公开组件](COMPONENTS.md#手动查询页-queryform--queryfield4220) |

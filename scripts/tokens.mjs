@@ -35,7 +35,7 @@ export function checkGraph(values) {
 export function tokenTier(name) {
   if (/^--(?:palette|base)-/.test(name)) return 1;
   if (name === '--input-surface' || name === '--icon-stroke-width' || /^--table-.*(?:background|foreground)$/.test(name)) return 2;
-  return /^--(?:button|input|card|menu|nav|floating|popover|tooltip|metric|table|data-table|login|dialog|sheet|switch|checkbox|radio|choice|range|tabs|toggle|textarea|feedback|avatar|image|icon|calendar|combobox|select)-/.test(name) ? 3 : 2;
+  return /^--(?:button|input|card|menu|nav|floating|popover|tooltip|metric|table|data-table|login|dialog|sheet|switch|checkbox|radio|choice|query|range|tabs|toggle|textarea|feedback|avatar|image|icon|calendar|combobox|select)-/.test(name) ? 3 : 2;
 }
 /** Fail before generation when a shared role starts depending on one component. */
 export function checkTokenLayers(values) {
@@ -63,7 +63,7 @@ export function checkContract(document) {
   const lightRule = rules.find(rule => rule.selector === ':root[data-theme="light"]');
   assert(lightRule, 'Missing explicit light recipe');
   const light = { ...defaults, ...declarations(lightRule) };
-  assert.equal(Object.keys(defaults).length, 416, 'Default token count');
+  assert.equal(Object.keys(defaults).length, 422, 'Default token count');
   for (const name of ['--font-scale','--line-height-scale']) {
     const registration=tree.nodes.find(node=>node.type==='atrule'&&node.name==='property'&&node.params===name);
     assert(registration, `Missing typed ${name} registration`);

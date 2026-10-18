@@ -10,6 +10,8 @@
 @layer xui-components {
   .xui-state {display:flex;align-items:flex-start;flex-direction:column;gap:var(--space-control-gap);padding:var(--space-content-gap);overflow-wrap:anywhere;animation:xui-feedback var(--motion-duration) var(--motion-easing);}
   .xui-state-error {color:var(--status-error-foreground);background:var(--status-error-soft);border-radius:var(--radius-lg);}
+  .xui-empty-state[data-align='center'] {align-items:center;justify-content:center;text-align:center;min-block-size:var(--feedback-empty-min-block-size);}
+  .xui-state-icon {display:inline-flex;align-items:center;justify-content:center;color:var(--muted-foreground);}
   .xui-loading-state {align-items:center;justify-content:center;text-align:center;min-inline-size:0;}
   .xui-loading-state[data-layout='block'] {block-size:100%;min-block-size:var(--feedback-slot-block-size);}
   .xui-loading-label {min-inline-size:0;max-inline-size:100%;overflow-wrap:anywhere;}

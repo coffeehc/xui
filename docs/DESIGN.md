@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.19。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.20。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -463,6 +463,10 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --layout-field-gap: var(--space-section-gap);
     --layout-field-min: 15rem;
     --layout-field-long-min: 18rem;
+    --query-field-min: 10rem;
+    --query-field-primary: 30rem;
+    --query-field-compact: 12rem;
+    --query-field-standard: var(--layout-field-min);
     --layout-header-height: calc(var(--spacing) * 12);
     --layout-dialog-width: clamp(var(--layout-dialog-min-width), var(--layout-dialog-width-ratio), var(--layout-dialog-max-width));
     --layout-confirm-width: clamp(var(--layout-confirm-min-width), var(--layout-confirm-width-ratio), var(--layout-confirm-max-width));
@@ -584,6 +588,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --button-danger-hover-background: color-mix(in oklab, var(--action-danger) 92%, var(--foreground));
     --button-danger-pressed-background: color-mix(in oklab, var(--action-danger) 88%, var(--foreground));
     --backdrop-background: color-mix(in oklab, var(--foreground) 24%, transparent);
+    --feedback-empty-min-block-size: calc(var(--control-height) * 4);
     --feedback-slot-block-size: calc(var(--control-height) + var(--space-content-gap) * 2 + (var(--focus-width) + var(--focus-offset)) * 2);
     --data-region-min-block-size: calc(var(--control-height) * 8);
     --textarea-min-block-size: calc(var(--input-height) * 2);
@@ -640,6 +645,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --tabs-line-baseline-shadow: inset 0 calc(-1 * var(--line-width-surface)) 0 var(--separator-line);
     --layout-workspace-content-min-block-size: 0px;
     --data-table-filter-min: 9rem;
+    --data-table-placeholder-inline-size: calc(100cqi - var(--table-cell-padding-inline) * 2);
     --data-table-min-block-size: calc(var(--control-height) * 4);
     --table-min-inline-size: calc(var(--control-height) * 12);
     --table-primary-min-inline-size: var(--layout-field-min);
@@ -1785,6 +1791,38 @@ xui既提供控件，也定义它们如何形成清楚的任务界面。每个�
 
 验收清单：在所有声明视口首次进入/刷新，不滚动截图；核对关键内容和主操作完整可见；真实点击主操作；使用键盘及触屏方式打开说明、关闭并回焦点；触发相关错误/风险反馈；检查长值、空/加载状态与200%缩放可达性。必要的缩放可滚动阅读不等于默认视口首屏失败，但不能用改缩放作为首屏过关手段。未声明核心内容或未验证支持视口，不算完成首屏验收。
 
+
+### 手动查询页布局与状态合同（4.2.20）
+
+手动提交条件的查询页采用 `MenuLayout/AppShell.pageHeader → pageToolbar(QueryForm) → children(DataTable)`。PageHeader 只放任务标题与真实页面动作；查询主按钮归 QueryForm.actions，刷新当前已提交条件归结果 toolbar，分页归结果 footer。不得在 pageToolbar 与 DataTable.toolbar 重复查询条件，不给已有表面再套 Card，不将短枚举和主输入机械等分拉满宽屏。完整可运行组合见 [查询页示例](../examples/query-page-react/app.tsx)，合成数据仅用于演示公共交互。
+
+| 区域/slot | 必须填入的内容 | 默认呈现与边界 |
+| --- | --- | --- |
+| QueryForm.fields | 直接 QueryField（可用 Fragment 分组），每项一个公共控件；label/help/error 沿用 Field 关联 | `primary` 主标识/搜索输入；`compact` 短枚举；`standard` 普通字段；`full` 长规则跨整行。标签与必填标记保持可见，帮助和错误分别归自己的轨道 |
+| QueryForm.actions | 查询 `type=submit`，以及宿主确实提供的重置等动作 | 查询采用公共主按钮；次动作 outline/text。按钮自然内容宽，与同带控件底边齐；不靠标签占位、负 margin、固定高度或缩字对齐 |
+| QueryForm.advanced | 次要日期/范围条件，使用 FormGrid/Field/DateTimePicker 等既有组合 | 复用 SearchToolbar 唯一 disclosure Controller；收起保持 DOM、草稿、hidden/inert；关闭时内部焦点回展开按钮，外部已移动焦点不抢回 |
+| QueryForm.summary | 宿主已提交并确认归属的范围说明 | body-xs/muted，无内容不占位；不能把未提交的隐藏草稿写成已生效条件。查询/失败后仍须辨明结果对应哪个范围 |
+| DataTable.idleState / emptyState / errorState | 尚未查询 / 已查询无匹配 / 首次失败的差异化内容 | 位于同一语义表格结果框；保留列头。提示宽度按表格可视滚动区域，横滚及RTL后仍可读，不按所有列宽之和居中。轻量居中引导使用 EmptyState.align=center，可选 icon 仅装饰；不造全屏大空卡或重复说明 |
+| DataTable.toolbar / footer | 已提交结果的局部刷新；真实计数和单一受控分页 | 不添加图稿中的假耗时、节点或总数，不复制查询 owner；横滚只属于表格，不能扩大整页 |
+
+查询宽度由集中 Token 定义：根字号16px时 query-field-primary=480px、compact=192px、standard 继承 layout-field-min=240px，query-field-min=160px是宽容器流式轨道的下限，并非手机硬最小宽。字段不超过其容器和角色上限，主输入在可用空间不足时先收缩/换带。QueryForm 自身净宽不超过40rem时转单列，各控件占当前列净宽，动作组在字段之后按 DOM 顺序换行；40rem随根字号缩放，不按整个屏幕猜侧栏后的空间。长中文标签自然换行，同带共享 label/control/help/error 四条轨道，按钮只与 control 轨道底边对齐，帮助和错误不推走动作。不固定文字高度或行数。
+
+表单和结果各一层 layer-raised/surface-line，沿用 Surface、控件及 DataTable 的默认边框/圆角；不加装饰性彩条。内距 card-padding，字段/动作间距 layout-toolbar-gap，相关支持文案沿用 space-text-gap。标题沿用 PageHeader；标签13/20px、控件与动作14/22px的默认角色与继承由公共组件负责，宿主不逐个改字号。采用项目可通过现有主题合同改变语义 Token，不用私有 CSS 重建 QueryForm。
+
+| 查询状态 | 宿主确认事实及现有公共接线 | 必须保留 / 禁止 |
+| --- | --- | --- |
+| 尚未查询 | status=idle、hasValue=false，idleState 解释必要输入 | 保留表单/列头；不把尚未请求说成无数据或0条，未确认时不提供伪分页事实 |
+| 首次加载 | status=loading、hasValue=false | 表体内居中 LoadingState，保留壳、输入与焦点；不隐藏整页/重挂控件或整页 reload |
+| 成功有结果 | status=ready、真实 rows 与可选分页事实 | 稳定 rowKey，真实 total/null，不从一页长度推断总数 |
+| 成功无匹配 | status=ready、hasValue=true、rows=[] | emptyState 给可用下一步；真实空结果可报0，不能沿用“尚未查询” |
+| 首次失败 | status=error、hasValue=false | errorState 与可用重试，保留条件/输入；不清稿或自动无限重发 |
+| 同范围刷新 | status=refreshing、hasValue=true、保留旧 rows | 同一 DOM/rowKey/表格几何、阅读与滚动；按钮局部 busy，不加整区遮罩 |
+| 刷新失败 | status=error、hasValue=true，旧 rows 保留 | 结果 footer 就近反馈失败，旧事实可读；旧数据不得被清空为假空态 |
+| 提交新范围 | 新请求范围键，hasValue=false、清旧 rows 后 loading | 旧结果不冒充新条件；取消/代次丢弃迟到响应；草稿未提交时不自动刷新或换范围 |
+
+QueryForm 是 HTML form 与布局，不查询、不缓存、不推断权限、业务时区、起止顺序或窗口限制。例子复用 `createResource` 的同 key 保值/新 key 清值及取消代次；宿主已有查询 owner 时继续使用它。DateTimePicker 仍传递无时区分钟字符串，不为此页面增加协议适配或时间戳转换。提交失败、范围变更、分页及重置由宿主显式决定；重置草稿不自动改变已展示结果的范围。
+
+验收逐个页面/slot执行 [QUERY 清单](ADOPTION_CHECKLIST.md#手动查询页逐项检查)：在真实侧栏后的净宽、长中文、light/dark/system、窄屏、200%根字号与真实浏览器200%缩放下检查控件宽度/按钮底边/焦点/高级展开及全部状态。图稿用于设计校准，正式包示例与产品现场各自验收，不能互相替代。
 
 ### 页面与组件的槽位架构
 

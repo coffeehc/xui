@@ -141,7 +141,7 @@
 | `@coffeehc/xui-react/calendar` <!-- public-entry: @coffeehc/xui-react/calendar --> | [源码](../packages/ui-react/src/calendar.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
 | `@coffeehc/xui-react/date-time` <!-- public-entry: @coffeehc/xui-react/date-time --> | [React 组合](../packages/ui-react/src/date-time.tsx) | [日期时间](COMPONENTS.md#日期时间选择) | [示例](../examples/date-time-react/app.tsx) |
 | `@coffeehc/xui-react/command` <!-- public-entry: @coffeehc/xui-react/command --> | [源码](../packages/ui-react/src/command.tsx)，[合同](COMPONENTS.md#选择与复合控件) | — | — |
-| `@coffeehc/xui-react/search-toolbar` <!-- public-entry: @coffeehc/xui-react/search-toolbar --> | 及根入口：`SearchToolbar` / `SearchToolbarProps`，search/actions/advanced 三内容槽；defaultExpanded=false，支持 expanded/onExpandedChange，advancedLabel 与 div props/ref。 | [组件合同](COMPONENTS.md) | — |
+| `@coffeehc/xui-react/search-toolbar` <!-- public-entry: @coffeehc/xui-react/search-toolbar --> | 及根入口：`SearchToolbar` / `SearchToolbarProps`；`QueryForm` / `QueryField` 及其 Props、QueryFieldWidth，原生查询 form、字段宽度角色及既有 disclosure。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/display` <!-- public-entry: @coffeehc/xui-react/display --> | Typography.Heading/Text/Link/Code/LinkedText、LinkedText、Copyable、Separator、Tag、Image，及同名 props/共享类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/admin-setup` <!-- public-entry: @coffeehc/xui-react/admin-setup --> | AdminSetupPage / AdminSetupForm、各自Props/Handle与共享状态类型。 | [组件合同](COMPONENTS.md) | — |
 | `@coffeehc/xui-react/card-group` <!-- public-entry: @coffeehc/xui-react/card-group --> | [源码](../packages/ui-react/src/card-group.tsx)；CardGroup、CardGroupProps、CardGroupContext、CardGroupCardProps及共用Collection类型 | [CardGroup](COMPONENTS.md#cardgroup) | [示例](../examples/card-group-react/app.tsx) |
@@ -1095,3 +1095,8 @@ React `/toast` 新增 `Toast.Icon` / `ToastIconProps`：装饰状态槽，缺省
 ```
 
 通常直接使用Toast.View。旧parts仍可用，Actions只有Close时默认去除其独立底行；含实际动作的旧组合保留操作顺序。独立根Token toast-width与toast-icon-offset由DESIGN集中派生，popover宽度不受此修改影响。重复文案不自动合并，宿主若有重复请求反馈应在已有请求/通知owner消除重复触发；本库不会吞掉独立通知。
+
+
+### 查询页公开编排（4.2.20）
+
+`/search-toolbar` 与根入口新增 QueryForm/QueryFormProps、QueryField/QueryFieldProps、QueryFieldWidth；`/data-table` 的 DataTableProps 新增可选 idleState；`/feedback` 的 EmptyStateProps 新增可选 align/icon。均为兼容扩展，无新 package subentry、Service 或查询 owner。未确认集合的 count 不再调用或播报假0；已确认空结果保留0计数，真实分页仍由宿主提供。类型、槽位、原生表单行为与迁移边界见 [组件合同](COMPONENTS.md#手动查询页-queryform--queryfield4220)，区域/宽度/八种状态见 [DESIGN](DESIGN.md#手动查询页布局与状态合同4220)，[示例](../examples/query-page-react/app.tsx)仅消费正式公共入口。

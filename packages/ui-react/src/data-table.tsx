@@ -33,7 +33,7 @@ export interface DataTableProps<T> extends DataTableViewOptions {
   /** Optional guarded row shortcuts; provide a normal cell Button/link for keyboard access. */
   rowEvents?:DataTableRowEvents<T>;
   /** Use this OR the existing pageToolbar slot, never duplicate controls in both. */
-  toolbar?:React.ReactNode; emptyState?:React.ReactNode; errorState?:React.ReactNode; feedback?:React.ReactNode;
+  toolbar?:React.ReactNode; idleState?:React.ReactNode; emptyState?:React.ReactNode; errorState?:React.ReactNode; feedback?:React.ReactNode;
   /** Optional supplementary footer content; standard cursor controls are supplied by pagination. */
   footer?:React.ReactNode;
   /** Optional local column sizing. Omit for the original responsive layout without handles. */
@@ -44,7 +44,7 @@ export interface DataTableProps<T> extends DataTableViewOptions {
 export function DataTableToolbar({className,...props}:React.ComponentProps<typeof Toolbar>) {return <Toolbar {...props} className={cx('xui-data-table-toolbar',className)}/>;}
 export function DataTableFilter({className,grow=false,...props}:FieldProps&{grow?:boolean}) {return <Field {...props} data-grow={grow} className={cx('xui-data-table-filter',className)}/>;}
 /** Query facts stay controlled. Optional local sizing never requests data or changes page facts. */
-export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,emptyState,errorState,feedback,footer,striped=false,stickyHeader=true,className,id,columnSizing:resizeOptions,...options}:DataTableProps<T>) {
+export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,idleState,emptyState,errorState,feedback,footer,striped=false,stickyHeader=true,className,id,columnSizing:resizeOptions,...options}:DataTableProps<T>) {
   const keys=validateDataTableKeys(rows,columns,rowKey),view=useCollectionView(options,rows.length),{state}=view,{labels}=state;
   const rowEvent=<E extends React.SyntheticEvent<HTMLTableRowElement>>(row:T,index:number,event:E,handler:((row:T,context:DataTableRowContext,event:E)=>void)|undefined)=>{
     if(!state.blocked&&isDataTableRowEvent(event.nativeEvent,event.currentTarget))handler?.(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked},event);
@@ -85,7 +85,7 @@ export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,emp
   return <DataRegion id={id} className={cx('xui-data-table',className)} data-layout={state.layout} aria-label={options.label} busy={state.busy}>
     <div ref={layoutFrame} className="xui-data-table-frame">
       {hasContent(toolbar)&&<div className="xui-data-table-tools">{toolbar}</div>}
-      <TableContainer ref={layoutBody} data-column-sizing={columnSizing} className="xui-data-table-body" aria-label={options.label+' — '+labels.count({rowCount:rows.length,total:state.total})}>
+      <TableContainer ref={layoutBody} data-column-sizing={columnSizing} className="xui-data-table-body" aria-label={options.label+(state.hasValue?' — '+labels.count({rowCount:rows.length,total:state.total}):'')}>
         <div ref={widthProbes} className="xui-data-table-widths" aria-hidden="true" hidden={!columnSizing&&!resizeOptions}>{columns.map(column=><div key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}{resizeOptions&&<><div ref={minimum} style={{width:'var(--data-table-column-resize-min)'}}/><div ref={maximum} style={{width:'var(--data-table-column-resize-max)'}}/></>}</div>
         <Table ref={layoutTable} data-column-sizing={columnSizing} striped={striped} stickyHeader={stickyHeader} data-resizable={!!resizeOptions||undefined} aria-label={options.label}>
           <colgroup ref={columnGroup}>{columns.map(column=><col key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</colgroup>
@@ -95,7 +95,7 @@ export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,emp
             onDoubleClick={rowEvents?.onDoubleClick?event=>rowEvent(row,index,event,rowEvents.onDoubleClick):undefined}
             onContextMenu={rowEvents?.onContextMenu?event=>rowEvent(row,index,event,rowEvents.onContextMenu):undefined}
             onKeyDown={rowEvents?.onKeyDown?event=>rowEvent(row,index,event,rowEvents.onKeyDown):undefined}
-          >{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow aria-hidden={loading||undefined}><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{loading?null:showError&&!state.hasValue?error:state.status==='idle'?<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
+          >{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow aria-hidden={loading||undefined}><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{loading?null:showError&&!state.hasValue?error:state.status==='idle'?idleState??<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
         </Table>
       </TableContainer>
       {/* Share the visible body track, not the horizontally overflowing table.

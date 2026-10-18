@@ -1507,3 +1507,29 @@ renderLabel 内把名称放入 NavigationMenu.Label，尾随无动作警告 Icon
 ### 紧凑通知排版（4.2.19）
 
 优先Toast.View；高级parts按Icon—Content—Close三个Root直下槽组合，Title/Description/实际Actions进入Content。装饰Icon16px按显式type使用对应语义色，正文保持中性、不造标题，缺省Close为透明圆形32px×触点并与首行顶部对齐。Title统一body-sm 14/22px、500字重，Description为body-xs 13/20px、400字重；12px内距、8px列距、4px文本距都继承Token；仅真实操作增加末行8px间隔，没有动作不留空脚。单项默认约368px可用宽，视口不足自然缩窄；长正文自然增高、Viewport40dvh滚动。容器净宽≤18rem时说明/动作跨全行，≤12rem时首段文字也移到图标/关闭后的下一行；只重排公开槽位，不缩字、不隐藏图标或更改Tab顺序。旧Actions只有Close也自动同行；有动作的旧parts保持顺序，可按公开槽位迁至标准组合。未知type中性、重复通知不自动合并，5秒/-1、暂停、焦点、priority/aria与Controller不变。详见[公共组合](PUBLIC_API.md#紧凑通知部件4219)。
+
+
+### 手动查询页 QueryForm / QueryField（4.2.20）
+
+公开入口 `@coffeehc/xui-react/search-toolbar`（根入口同样导出）新增 `QueryForm / QueryFormProps`、`QueryField / QueryFieldProps / QueryFieldWidth`；原 SearchToolbar 接口与默认布局保留。排版唯一合同见 [DESIGN 查询页](DESIGN.md#手动查询页布局与状态合同4220)，[完整示例](../examples/query-page-react/app.tsx)复用现有 Resource、MenuLayout、DataTable、DateTimePicker 与 Sheet，无额外 CSS 或查询服务。
+
+QueryForm 是原生 form：`label` 必填并形成可访问名称，`fields`、`actions` 为必填具名 ReactNode 槽；`advanced`、`summary` 可省略。form 的 id/ref/onSubmit/noValidate/aria 属性照常使用，调用方负责 preventDefault、字段校验和唯一查询 owner。actions 的查询 Button 显式 type=submit，Enter 通过原生表单提交；高级按钮为 button。advancedLabel 默认 Advanced options，由宿主翻译。`disclosure` 可提供 `{defaultExpanded}` 或 `{expanded,onExpandedChange}`，也可提供 `{controller: OverlayController}`；不可同时注入 Controller 和另一套展开状态。复用 SearchToolbar 原有 keep-mounted/hidden/inert/回焦行为，不再建第二个 Controller。
+
+QueryField 沿用完整 FieldProps 与错误/帮助/required/控件关联；`width` 仅 primary/compact/standard/full，默认 standard。fields 直接填 QueryField 或 Fragment，每项一个控件；高级区由 FormGrid 管理。不要再用 equal FormGrid、空 label、固定 margin 或私有 CSS 对齐查询动作。summary 只接已提交事实，清草稿不应把旧结果冒充新范围。空 summary/advanced 不绘制对应内容。
+
+`@coffeehc/xui-react/data-table` 的可选 `idleState` 仅替换尚未查询的表体内容；省略保留原 labels.idle。DataTable 的 idle/empty/首次error正文跟随当前表体可视净宽，逻辑sticky在横向滚动与RTL下保持可达；不要求宿主测宽或补定位。`@coffeehc/xui-react/feedback` 的 EmptyState 新增可选 `align=start|center`（默认start）和装饰 `icon`，不会生成请求或填造标题。DataTable/CardGroup 未确认任何数据时不调用 count/宣称0条；已确认空结果、保留值刷新及失败仍显示真实计数。仅未确认阶段的计数播报/页脚几何有意变化；宿主仍负责只传真实分页事实。
+
+最小组合（业务校验与请求处理由 onSubmit 所属 owner 提供）：
+
+~~~tsx
+<QueryForm label="消息查询条件" onSubmit={submit}
+  fields={<><QueryField label="Agent ID" width="primary" required><Input value={agent} onChange={changeAgent}/></QueryField><QueryField label="消息状态" width="compact"><SimpleSelect value={status} onChange={changeStatus}>{statusOptions}</SimpleSelect></QueryField></>}
+  actions={<Button type="submit" disabled={busy}>查询消息</Button>}
+  advancedLabel="按日期筛选" advanced={dateFields} summary={appliedRange}/>
+<DataTable label="消息查询结果" rows={rows} columns={columns} rowKey={rowKey}
+  status={statusFact} hasValue={hasValue}
+  idleState={<EmptyState align="center" title="输入 Agent ID 开始查询"/>}
+  emptyState={<EmptyState align="center" title="没有匹配的消息"/>}/>
+~~~
+
+正式 style.css 已包含查询布局。按需 CSS 须有 tokens/base/button/forms/feedback/navigation/layout/search-toolbar，以及实际 Select/DateTime/Table 使用的样式；不需要宿主复制内部 DOM。没有 runtime/native UI 版本；沿用 TS Resource/Overlay Controller。

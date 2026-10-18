@@ -35,7 +35,7 @@ export function CardGroup<T>({rows,rowKey,renderCard,cardSizing='natural',toolba
   const error=errorState??view.error,empty=emptyState??view.empty;
   return <DataRegion id={id} className={cx('xui-card-group',className)} data-layout={state.layout} data-card-sizing={cardSizing} aria-label={options.label} busy={state.busy}>
     {hasContent(toolbar)&&<div className="xui-card-group-tools">{toolbar}</div>}
-    <ScrollArea.Viewport className="xui-card-group-body" aria-label={options.label+' — '+state.labels.count({rowCount:rows.length,total:state.total})} tabIndex={state.layout==='document'?-1:0} focusMode="gutter">
+    <ScrollArea.Viewport className="xui-card-group-body" aria-label={options.label+(state.hasValue?' — '+state.labels.count({rowCount:rows.length,total:state.total}):'')} tabIndex={state.layout==='document'?-1:0} focusMode="gutter">
       {rows.length>0?<ul className="xui-grid xui-card-group-items">{rows.map((row,rowIndex)=>{
         const props=renderCard(row,{rowIndex,rowKey:keys[rowIndex],busy:state.busy,disabled:state.blocked});
         if(!props||typeof props!=='object'||React.isValidElement(props))throw new TypeError('CardGroup renderCard must return public Card props');

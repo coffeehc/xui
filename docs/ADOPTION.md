@@ -242,7 +242,7 @@ pnpm dev 监听规范、CSS、TS/TSX、包入口、lock/config 和构建脚本�
 
 ## 规范来源
 
-通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认配色为 Violet 电光紫，规范版本 4.2.14，另有五套官方配色供项目选择；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
+通用规范最初取自 [xagent@29139f7843d9a79a9eca42892cb87da8f08f6320 的 docs/DESIGN.md](https://github.com/coffeehc/xagent/blob/29139f7843d9a79a9eca42892cb87da8f08f6320/docs/DESIGN.md)，来源版本为 0.4.0。当前默认配色为 Violet 电光紫，规范版本 4.2.20，另有五套官方配色供项目选择；来源 SHA、可逆变更和受控 CSS 指纹由 [design-source.json](design-source.json) 记录，原始参考材料保留在 [Precision 来源](design-sources/precision-engineering-console.v1.txt) 与 [历史家族规范快照](design-sources/product-family-ui.0.7.0.txt)。历史指纹用于溯源，不代表当前实现已全部验收。
 
 [生成器](../scripts/tokens.mjs) 从 DESIGN 的标记 CSS 提取产物并核对 token、依赖和来源；[合同测试](../tests/contract.test.mjs) 检查当前协议边界和原始规范逆重建。维护时同步当前合同元数据，保留历史来源与快照指纹。产品采用按 [ADOPTION.md](ADOPTION.md) 固定版本和自己的扩展，无需复制全文或历史实施流水。
 
@@ -300,3 +300,12 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 表格操作逐表统一Button/IconButton的variant=text；危险/删除用tone=danger，不能一组混用实心destructive或outline/primary来实现普通行操作。接线仍保留原权限、确认、禁用/忙态与业务owner；不要把所有text改成无危险前景的普通动作。4.2.18公共类型与正式CSS同步提供，无需消费者私有覆盖。
 
 4.2.19统一紧凑Toast：标准View默认Icon—Content—Close，关闭为首行透明图标，不再撑出底部空行。高级parts优先同样组合，Actions只放真实动作；仅有Close的旧操作槽也自动同行。沿用原队列/5秒/-1/暂停/回焦，显式type才映射状态图标，不自动去重。无需私有CSS或改字号；按TOAST-LAYOUT-001在实际页面核对。此维护仍为可选升级，不通知其他项目必须升级。
+
+
+### 手动查询页接入（4.2.20）
+
+采用 [QueryForm/QueryField](COMPONENTS.md#手动查询页-queryform--queryfield4220) 后，逐一映射 pageHeader → pageToolbar.fields/actions/advanced/summary → DataTable body/toolbar/footer，不只检查组件 import。字段按 primary/compact/standard/full 角色，宽度、轨道底边、文字与着色由 [DESIGN 查询页合同](DESIGN.md#手动查询页布局与状态合同4220) 统一管理；宿主只填真实字段/动作与条件，不用私有样式补排版。手动查询不用等列编辑 FormGrid 平摊短枚举；高级编辑区仍用 FormGrid。
+
+[完整查询页](../examples/query-page-react/app.tsx) 使用同一个原生 form、已提交条件与草稿分离、Resource 的同范围刷新/新范围取消代次、受控分页、详情回焦；模型数据为内存合成，未适配任何产品 API。查询前、加载、已查空、首次失败、有数据、刷新、刷新失败和提交新范围须按 [逐项清单](ADOPTION_CHECKLIST.md#手动查询页逐项检查) 在每个真实页面验收。没有真实total时传null，未确认时不造分页。刷新使用已提交条件，重置草稿不自动查询；保留产品现有HTTP/Auth和领域协议，不新增前端DTO适配owner。
+
+4.2.20 为同一版本线的可选维护。新增接口可选，旧 SearchToolbar/EmptyState 默认布局保持；DataTable/CardGroup 在尚未确认数据时取消假0播报，可能改变该阶段的页脚显示。正式产物与公开包浏览器证据只说明库样例，不能代替消费项目真实页面验收；本轮不要求其他项目必须升级。

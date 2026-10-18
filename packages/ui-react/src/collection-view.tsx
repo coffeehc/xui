@@ -25,7 +25,7 @@ export function CollectionFooter({prefix,view,pagination,rowCount,error,feedback
   error:React.ReactNode;feedback?:React.ReactNode;footer?:React.ReactNode;
 }){
   const {state,request}=view,{labels}=state,hasValue=rowCount>0||state.hasValue;
-  const countLabel=labels.count({rowCount,total:state.total});
+  const countLabel=hasValue?labels.count({rowCount,total:state.total}):'';
   const hasSummary=!!countLabel||hasValue&&state.status==='error'||hasContent(feedback);
   const hasFooter=hasSummary||!!pagination||hasContent(footer);
   const part=(name:string)=>`${prefix}-${name}`;

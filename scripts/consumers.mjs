@@ -99,7 +99,9 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // 4.2.19 adds the Toast three-column/status-slot recipe and two derived tokens.
 // The standalone style probe grows 407 gzip bytes including narrow reflow; bound to +512.
 // JS, Button and narrow-service caps remain unchanged.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 21760, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
+// 4.2.20 query width/tracks and scrollport feedback have a bounded +256-byte
+// allowance above the prior cap. JS, Button and narrow-service caps stay fixed.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22016, reactInitialJsGzip: 153600, narrowServiceGzip: 4096 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // Recreate one generated cache so npm cannot reuse a stale same-version tarball.
 const runDirectory = resolve('.consumers/current');
@@ -628,8 +630,9 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await writeFile(`${richNavigationOutput}/metafile.json`, JSON.stringify(richNavigationBuild.metafile, null, 2));
     await copyFile('tests/fixtures/navigation-slots-types.tsx', `${cwd}/navigation-slots-types.tsx`);
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--preserveSymlinks','--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', ...(['rich-navigation/app.tsx', 'navigation-slots-types.tsx'])], { cwd, stdio: 'inherit' });
+    await copyFile('examples/shared/query-page-model.ts', `${cwd}/shared/query-page-model.ts`);
     await copyFile('examples/shared/page-composition-model.ts', `${cwd}/shared/page-composition-model.ts`);
-    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition', 'bootstrap', 'theme-presets', 'sidebar-reveal','text-actions','navigation-tones','public-capabilities']) {
+    for (const name of ['card-group', 'calendar-month', 'menu-danger', 'row-events', 'date-time', 'page-composition', 'query-page', 'bootstrap', 'theme-presets', 'sidebar-reveal','text-actions','navigation-tones','public-capabilities']) {
         const directory = resolve(cwd, name), output = resolve('dist/' + name + '-' + kind);
         await cp('examples/' + name + '-' + kind, directory, { recursive: true });
         const result = await build({ entryPoints: [directory + '/app.' + ('tsx')], outdir: output, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '"production"' } });

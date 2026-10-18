@@ -118,7 +118,7 @@ for(const kind of kinds){
     await setup(page,kind,{query:'?manual&empty',viewport,wait:false});
     const initial=await metrics(page);await expect(table(page).getByRole('columnheader')).toHaveCount(6);await expect(page.getByText('等待加载',{exact:true}).first()).toBeVisible();
     await page.evaluate(()=>{window.emptyHeaders=[...document.querySelectorAll('#records-table th')];window.dataTableDemo.owner.planNext({delayMs:500});window.dataTableDemo.owner.load();});
-    await expect(page.locator('#records-table')).toHaveAttribute('aria-busy','true');await expect(table(page).locator('.xui-skeleton')).toHaveCount(5);await expect(page.getByText('还没有记录',{exact:true})).toHaveCount(0);
+    await expect(page.locator('#records-table')).toHaveAttribute('aria-busy','true');await expect(table(page).locator('tbody tr[aria-hidden="true"]')).toHaveCount(1);await expect(page.locator('#records-table .xui-data-table-loading[role="status"]')).toBeVisible();await expect(page.getByText('还没有记录',{exact:true})).toHaveCount(0);
     await ready(page);await expect(rows(page)).toHaveCount(0);await expect(table(page).getByText('还没有记录',{exact:true})).toBeVisible();await expect(page.locator('.xui-data-table-count')).toHaveText('显示 0 条，共 0 条');
     await expect(previous(page)).toBeDisabled();await expect(next(page)).toBeDisabled();const empty=await metrics(page);for(const key of ['header','toolbar','table'])stays(initial,empty,key);
     await page.getByRole('button',{name:'恢复记录',exact:true}).click();await ready(page);await assertWorkspace(page);await assertColumns(page);
@@ -155,7 +155,7 @@ for(const kind of kinds){
   });
 
   test(`${kind}: page size has one controlled owner and cancellation restores confirmed facts`,async({page})=>{
-    await setup(page,kind);await expect(size(page)).toHaveCount(1);expect(await page.locator(`[id=${JSON.stringify(await size(page).getAttribute('aria-controls'))}] [role=option]`).allTextContents()).toEqual(['20','50','100']);
+    await setup(page,kind);await expect(size(page)).toHaveCount(1);await size(page).click();await expect(page.getByRole('option')).toHaveText(['20','50','100']);await page.keyboard.press('Escape');await expect(size(page)).toBeFocused();
     await page.evaluate(()=>window.dataTableDemo.owner.planNext({delayMs:900,ignoreAbort:true}));const count=await requestCount(page);await chooseSelect(page,size(page),'50');
     await expect(size(page)).toHaveText('20');await expect(size(page)).toBeDisabled();expect((await state(page)).pageSize).toBe(20);await expect(rows(page)).toHaveCount(20);
     await size(page).evaluate(node=>{node.dispatchEvent(new MouseEvent('click',{bubbles:true}));});expect(await requestCount(page)).toBe(count+1);

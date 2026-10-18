@@ -33,7 +33,6 @@
   .xui-data-table-tools,:is(.xui-data-table-feedback,.xui-card-group-feedback) {flex:none;min-inline-size:0;}
   .xui-data-table-tools {grid-row:1;padding:var(--space-content-gap);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
   .xui-data-table-frame {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(var(--control-height),1fr) auto;flex:1 1 auto;min-block-size:0;min-inline-size:0;border:var(--line-width-surface) solid var(--surface-line);border-radius:var(--radius-lg);background:var(--layer-raised);isolation:isolate;}
-  .xui-data-table-body {grid-row:2;grid-column:1;}
   .xui-data-table-loading[data-layout='block'] {grid-row:2;grid-column:1;block-size:auto;margin-block-start:var(--table-header-min-height);z-index:var(--z-sticky);pointer-events:none;}
   :is(.xui-data-table-footer,.xui-card-group-footer) {grid-row:3;}
   /* One colgroup owns all tracks. Only opted-in tables stop content from resizing columns. */
@@ -44,9 +43,11 @@
   .xui-data-table-widths {position:absolute;inset-inline:0;inset-block-start:0;block-size:0;overflow:hidden;visibility:hidden;pointer-events:none;}
   .xui-data-table-widths>* {block-size:0;min-inline-size:0;}
   .xui-data-table-body[data-column-sizing] {position:relative;}
-  .xui-data-table-body {min-block-size:0;border:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
+  .xui-data-table-body {grid-row:2;grid-column:1;container-type:inline-size;min-block-size:0;border:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;overscroll-behavior:contain;scroll-padding:var(--space-control-gap);}
   .xui-data-table-tools:not(:empty):not([hidden])~.xui-data-table-body {border-start-start-radius:0;border-start-end-radius:0;}
-  .xui-data-table-placeholder {min-block-size:var(--feedback-slot-block-size);min-inline-size:0;overscroll-behavior:contain;padding:calc(var(--focus-width) + var(--focus-offset));scroll-padding:calc(var(--focus-width) + var(--focus-offset));}
+  /* Empty/error/idle content belongs to the visible scrollport, not the sum of
+     column widths. Logical sticky placement also follows horizontal RTL scroll. */
+  .xui-data-table-placeholder {position:sticky;inset-inline-start:var(--table-cell-padding-inline);inline-size:var(--data-table-placeholder-inline-size);min-block-size:var(--feedback-slot-block-size);min-inline-size:0;overscroll-behavior:contain;padding:calc(var(--focus-width) + var(--focus-offset));scroll-padding:calc(var(--focus-width) + var(--focus-offset));}
   .xui-data-table-body tbody>tr:last-child>td {border-block-end:0;}
   :is(.xui-data-table-footer,.xui-card-group-footer) {display:flex;align-items:center;flex:none;flex-wrap:wrap;min-inline-size:0;gap:var(--space-control-gap) var(--space-section-gap);padding:var(--space-control-gap) var(--space-content-gap);border-block-start:var(--line-width-surface) solid var(--surface-line);border-radius:0 0 var(--radius-lg) var(--radius-lg);background:var(--layer-raised);font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);overflow-wrap:anywhere;}
   :is(.xui-data-table-tools,:is(.xui-data-table-footer-extra,.xui-card-group-footer-extra)):empty {display:none;}

@@ -1,5 +1,27 @@
 # 验证证据与限制
 
+## 手动查询页公共编排（4.2.20，2026-10-18）
+
+仅修改xui，三个正式包及DESIGN统一4.2.20。本轮新增QueryForm/QueryField（既有/search-toolbar及根入口）、DataTable可选idleState、EmptyState可选align/icon；原SearchToolbar和EmptyState默认排版保持。QueryForm复用既有Field/Surface样式和SearchToolbar的唯一disclosure Controller，负责原生form、fields/actions/advanced/summary槽位与宽度/四轨对齐，不增加查询、HTTP、认证、时区或业务owner。未确认数据时DataTable/CardGroup的可见计数与aria名称不再填造0；确认空结果与同范围刷新/失败仍保留真实计数。该阶段页脚是否显示可能改变，真实分页事实仍归宿主。
+
+Stitch在既有项目会话生成查询样板，并完成字段宽度、label/control/help/error四轨、两个独立单层表面、40rem净宽单列及八种状态的文字审查。原始讨论与勘误见 `.artifacts/query-layout-4.2.20/stitch-{review,final,errata}.txt`。图稿额外环境指标/耗时/节点/密度及未经提供的删除重试动作没有实现；旧HEX、强制五行骨架及表头下错误反馈的文字已勘误，采用当前Violet语义Token、既有表内居中LoadingState和正常footer错误槽。Stitch没有查看最终工程截图或执行浏览器测试，其核准不当作工程通过证据。
+
+完整示例为 `examples/query-page-react/app.tsx` 与共享query-page-model.ts，仅消费正式公开入口，无源码alias或私有CSS；一份真实HTML form连接一个现有createResource。草稿与已提交范围分离，Enter/点击提交、重置、受控分页、详情Sheet回焦、同key保行/新key清旧值与取消迟到响应均有实测。模型是内存合成数据，不是任何产品领域API，不新增前端DTO适配层或产品查询服务。规范/公开入口/组件/接入文档和QUERY-001～022逐项清单同步，共478项接入检查。
+
+主线程实际查看截图时发现宽表格的居中空态落到表宽中点、窄屏看不到提示；已在公共DataTable内用集中data-table-placeholder-inline-size与逻辑sticky，将idle/empty/首次error正文约束到可视表体净宽。没有让宿主测宽或穿透DOM。新增三模式用例分别覆盖三个状态、LTR/RTL、100%/200%字号与横滚两端，合计72组边界断言；提示、错误与重试均保持可读/可达。最终浅色交互、深色390px大字与真实zoom截图已查看，见proof。普通列宽、sticky、横滚与表格语义保留。
+
+最终sourceGeneration为 `60ce89b93d91b1e38019f1986caf4ca6f4225d07ca3adaef0b03dbdb0def49bf`。build、422 Token图/指纹、typecheck、定向unit48/48、107个全部正式入口ESM/CSS/types与正反类型夹具、文档检查通过。独立安装 `.consumers/current/react` 只引用三包tarball；React/ReactDOM19.2.8和BaseUI1.7.0保持宿主单实例，peer路径证据在peers-final.log与peer-paths-final.json。消费脚本用现有main示例的符号链接及preserveSymlinks，输入SHA防写回，没有新建源码副本、分支或worktree。
+
+本代正式包浏览器124个唯一用例全部通过，无最终失败、跳过或flaky：browser-accepted.json为118项，browser-accepted-zoom.json为6项，逐项与报告SHA在case-summary.json。覆盖新查询组合及SearchToolbar、DataTable、表格反馈/布局、CardGroup、页面/表单组合回归；新查询15项含light/dark/system、系统实时切换、320/390/768及桌面、长中文、标签/帮助/错误、按钮实际底边、200%字号、hidden/inert/草稿、Enter/Space/关闭回焦、八种状态、分页、刷新节点/几何/输入selection保持、范围隔离与取消。真实Chrome设置200%三模式分别验证查询页和既有SearchToolbar，记录DPR加倍、CSS视口减半、根字号不变、CSS zoom=1/pinch=1；不是CSS缩放或模拟截图。内置浏览器另实际指针查询并核对13条合成结果与唯一分页，最终截图为proof/query-iab-light.png。
+
+候选阶段测试存在旧Select选择器、隐藏代理误判、InputGroup焦点绘制位置断言，以及消费者重建输出时并发访问导致404；已修正测试并按“先完整正式consumer、后浏览器”顺序重验。扩大回归还发现两处旧五行骨架断言及一处未打开Select先读选项的断言，改为验证真实居中加载，以及打开弹层后的选项与Escape回焦，没有force click或放宽可见性。前代browser-final.json的112通过/3失败与recheck3通过仅保留历史；最终以本代118+6完整报告为准，不累计重复通过。
+
+正式receipt与性能见consumer-final.json/performance-final.json：critical CSS gzip22016/22016（较4.2.19实际21619增加397字节，原cap21760的功能预算有界增加256）；初始JS gzip143908/153600，Button/窄Service上限不变。新增六个集中Token，几何配方没有散落裸尺寸或放宽设计门禁。manifest、public-api、sourceGeneration和SHA256SUMS继续由既有归档命令自动生成校验；归档路径与提交以manifest.commit为准，不手补元数据。
+
+复现：`pnpm build && pnpm check:tokens && pnpm typecheck`；`node --test tests/contract.test.mjs tests/query-page.test.mjs tests/search-toolbar.test.mjs tests/data-table.test.mjs tests/resource.test.mjs tests/card-group.test.mjs`；`node scripts/check-docs.mjs && pnpm test:consumer`。consumer完成且4173预览可用后，针对query-page/search-toolbar/data-table/data-table-feedback/data-table-layout/card-group/page-composition这七个tests/browser/*.spec.mjs运行 `pnpm exec playwright test <文件列表> --grep-invert 'genuine.*Chrome|genuine.*browser|actual browser' --workers=2`；query-page/search-toolbar以 `--grep 'genuine.*Chrome|genuine.*browser' --workers=1` 单独运行真实zoom。归档用 `pnpm archive --evidence .artifacts/query-layout-4.2.20` 并archive:verify。
+
+未跑全仓unit/browser、watch/cold-start、Firefox/WebKit、实体设备或读屏器；未修改或验收任何消费项目、真实后端、升级与部署。本轮是可选公共维护，不通知其他项目必须升级。
+
 ## 紧凑通知与窄容器重排（4.2.19，2026-10-18）
 
 仅修改xui，三包及DESIGN统一4.2.19；本轮可选维护，不通知其他项目必须升级。标准Toast.View复用同一Controller，采用Icon—Content—Close三列；新增公开Toast.Icon/ToastIconProps，显式success/error/warning/info映射语义小图标，缺省/未知中性，不根据文案猜状态、不造标题、不自动去重。Close缺省透明圆形32px触点/16px图形，保留显式children/render/ref、disabled、preventDefault和翻译名称；Title统一14/22px、500字重，Description13/20px、400。没有缩字或固定正文高度，真实Actions才有末行；仅Close的旧Actions自动同行，有实际动作的旧组合保留DOM与Tab顺序。默认宽度从借用popover-width改为独立toast-width=24rem，根16px时单项实测368×70px（本轮截图文案）；popover不改。计时默认5秒、-1常驻、暂停/回焦/优先级/身份清空保持。
