@@ -293,11 +293,13 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CTRL-013 | 页面使用 Tag | 普通分类保持被动中性文本；只有存在移除动作时才显示独立可访问移除按钮 | Tag props、computed tone 与动作回调 | [COMPONENTS Tag](COMPONENTS.md#separator-与-tag) |
 | CTRL-014 | 页面使用 Image | 帧尺寸由公开尺寸/aspect-ratio 保持；loading/error 文案及 alt 语义真实，资源更新不替换外层布局节点 | naturalWidth、状态、外层节点 identity 与截图 | [COMPONENTS Image](COMPONENTS.md#image) |
 | CTRL-015 | 页面使用 MetricCard | 只呈现回答当前任务的真实指标；loading/unknown/error 与数值0分别表达，不把未知补成零 | 数据来源、状态样本与实际首屏位置 | [COMPONENTS MetricCard](COMPONENTS.md#metriccard) · [DESIGN 指标映射](DESIGN.md#逐组件外观与状态映射) |
-| CTRL-016 | 页面使用 Toast | 仅短暂、非关键反馈进入 Toast；需要持续处理的错误/权限/风险仍在所属内容位置可见 | Provider/调用路径与错误恢复后截图 | [COMPONENTS 通用状态](COMPONENTS.md#基础组件与通用状态) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
+| CTRL-016 | 页面产生操作反馈 | 页面级临时通知使用公共Toast，不以show/hide整块提示挤动内容；需持续处理的错误/权限/风险与关键结果仍在所属位置可见 | 触发/关闭路径、反馈归属和实际恢复证据 | [DESIGN 反馈归属](DESIGN.md#反馈位置与保留时间) |
 | TOAST-001 | 通知队列与注入 | 默认 Provider 仅建一个队列；controller/toastManager 与 timeout/limit/exitTimeout 互斥，借用实例不销毁 | 双模式、StrictMode、同id实例替换/退出与迟到结果 | [通知合同](DESIGN.md#通知队列与视图合同) |
 | TOAST-002 | 通知位置与文字 | 默认右上角，Icon/Title/Description/Actions/Action/Close 使用公共槽，Close首行末端，只有实际动作才有末行；窄屏与大字默认最新1项、40dvh内滚动、焦点四边可见，宿主不写定位/字号补丁 | 三主题、长中文、200%文字与真实页面缩放截图 | [通知合同](DESIGN.md#通知队列与视图合同) |
 | TOAST-003 | 计时与关闭 | 悬停/聚焦/文档隐藏/无View/隐藏项暂停；恢复剩余时长，关闭回调各一次，旧Promise不复活关闭项 | 受控时钟、真实指针/键盘、错误与退出用例 | [通知合同](DESIGN.md#通知队列与视图合同) |
 | TOAST-004 | 通知焦点与播报 | 新增不抢焦点；F6/Tab/Escape与关闭后回焦；polite/assertive 按真实优先级，必要错误原位持续 | DOM语义、键盘与动作焦点；读屏器未测须单独注明 | [通知合同](DESIGN.md#通知队列与视图合同) |
+| TOAST-005 | 普通保存/复制等页面级临时通知 | 使用现有公共Toast及同一owner，不插入临时Alert/Card/横幅/提示行，不与页面块重复；持续错误/关键结果不只放Toast，控件原位反馈沿原合同，轮询不逐次报成功 | 每个触发点、Provider/Controller身份、持续状态入口和通知次数 | [反馈归属](DESIGN.md#反馈位置与保留时间) |
+| TOAST-006 | 连续触发通知并等待自动关闭/手动关闭 | 同视口同范围未变化内容的几何/节点/滚动/草稿与选区保持，焦点不无故转移，主动进入通知及关闭按公共合同回焦；不以大留白/固定反馈高度/裁切/隐藏正文掩盖跳动，必要内容增长单独归因 | 出现前/显示中/两种关闭后的bounding rect、DOM身份与交互记录；不能只给截图或CLS | [几何验收](DESIGN.md#反馈位置与保留时间) |
 | CTRL-017 | 页面使用 Alert 或 ErrorState | 文案与 severity 来自真实业务结果；重试按钮只在真实可重试时出现，Alert 不吞掉表单错误关联 | HTTP/业务错误夹具、aria-describedby 与回调次数 | [COMPONENTS 局部失败反馈](COMPONENTS.md#局部失败反馈与离线边界) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
 | CTRL-018 | 页面使用 PasswordInput 显隐按钮 | 显隐按钮保留正常 Tab 顺序及可访问名称/`aria-pressed`；不得使用 `tabIndex=-1` 或 `aria-hidden` 隐藏交互 | Tab 录像、DOM 属性与密码输入节点 identity | [COMPONENTS 密码输入](COMPONENTS.md#密码输入) |
 | CTRL-019 | DateTimePicker 使用 required 或清空 | 清空回调为 null；具名输入的 FormData 与浏览器 required validity 一致，不因 required 隐藏清空入口 | React 表单 FormData、validity 与回调计数 | [COMPONENTS 日期时间选择](COMPONENTS.md#日期时间选择) · [DESIGN 表单反馈](DESIGN.md#表单搜索与反馈) |
