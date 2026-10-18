@@ -1,5 +1,21 @@
 # 验证证据与限制
 
+## 公共链接默认无下划线（4.2.24，2026-10-18）
+
+仅修改xui，核对最新main 54d12ec5/4.2.23仍为下划线；在其既有正式消费者的LinkedText上先运行新断言，实际收到underline而期望none，baseline报告、截图和trace保存在`.artifacts/links-4.2.24/browser-baseline.*`及results-baseline。来源xLead的4.2.20/5aeefe73实际列表按反馈登记，本轮没有访问或修改xLead，不把库复现称为产品现网复验。
+
+4.2.24由正式base.css统一Typography.Link、LinkedText及xui/xui-layer范围内原生a的主题色与无下划线；Button link同步移除下划线及失去用途的offset，保持原hover成对前景/背景、pressed、disabled/busy和语义。正文链接仍继承所属文字槽，不新增长宽、字号、装饰props、路由或状态owner；href/target/download/rel、修饰键/中键及事件处理没有改动。已有导航/控件forced-colors选择下划线未删除，独立focus-visible保留。DESIGN、COMPONENTS、PUBLIC_API、ADOPTION及CAP-010同步，公共默认改变的兼容影响是旧页面链接外观，无接口/协议迁移。宿主升级后清理仅用于去下划线的局部覆盖，保留自己的真实品牌Token。
+
+最终sourceGeneration `e160cba525215ca46e2721302b0a13afe23f603605924c6fbf118f671c9b4258`。build、431 Token图/指纹、typecheck、定向unit24/24及文档检查通过；110个全部正式ESM/CSS/types入口、类型正反例及正式消费者通过，无packages/src alias。三包4.2.24，React/ReactDOM19.2.8、Base UI1.7.0各单实例，peer-paths-final.log保存实际安装路径。consumer-final.json/performance-final.json与各门禁日志位于`.artifacts/links-4.2.24`；初始JS gzip144519/153600、critical CSS22152/22272，所有预算保持不变。
+
+最终正式包浏览器21个唯一用例全部通过，无失败、跳过、重试或flaky；browser-accepted.json为17项，browser-zoom-links.json为4项，逐案及报告SHA见case-summary.json。新链接9项覆盖六preset×light/dark/system、1280/390、长中文与200%根字号、Typography.Link/LinkedText/范围内原生a主题色与字体继承、默认/hover/按下/键盘focus无下划线、可见焦点环、Enter/实际指针锚点导航、访问外链后的显示及noopener/noreferrer/window.opener=null。Button link既有8项覆盖light/dark/system的两种系统有效色、1280/320及200%根字号，默认/hover/按下/键盘focus的文字实际合成对比度均≥4.5:1，图标继承、disabled不执行、busy仍可执行和anchor的Enter/Space区别保留；另有Typography角色3项、LinkedText既有分词/React元素/外链和行隔离1项回归。
+
+三种模式分别使用真实Chrome设置200%，记录DPR加倍、CSS视口减半、根字号不变、CSS zoom=1/pinch=1，保留键盘焦点及无页面横溢出。主线程查看了最终浅色、深色窄屏大字和真实zoom截图；内置浏览器实际点击消息标题、Tab进入正文URL后保存proof/links-iab-light.png。访问后样式结论来自正式CSS合同与实际外链打开后的截图；不读取浏览器私有历史，不把getComputedStyle当作:visited隐私探针。没有改变链接的安全解析、认证或请求协议。
+
+复现：`pnpm build && pnpm check:tokens && pnpm typecheck`；`node --test tests/contract.test.mjs tests/docs.test.mjs tests/display.test.mjs tests/text-links.test.mjs`；`node scripts/check-docs.mjs && pnpm test:consumer`。完整consumer结束后，`pnpm exec playwright test tests/browser/link-defaults.spec.mjs tests/browser/button-link-contrast.spec.mjs tests/browser/display-foundation-contract.spec.mjs --grep-invert 'genuine.*browser' --workers=2`；再以link-defaults/public-capabilities两文件和`--grep 'safe LinkedText|public links.*genuine browser' --workers=1`运行4项。归档使用`pnpm archive --evidence .artifacts/links-4.2.24`与archive:verify，固定manifest、public-api、sourceGeneration和SHA256SUMS自动生成核验。
+
+未跑全仓unit/browser、watch/cold-start、Firefox/WebKit、实体设备/读屏器或任何消费项目真实页面、升级、后端及部署；未新增正文装饰分支或消费者私有皮肤。本轮版本只递增末位到4.2.24。
+
 ## 四类默认完整页面与配置接入（4.2.23，2026-10-18）
 
 仅修改xui，核对main e595a683/4.2.22已有AdminSetupPage、ConfigurableLoginPage、BusinessLogExplorer、ApiKeyManager及配套Controller/client；没有重复实现整页或增加UI包装器。4.2.23在默认config.json增加pages展示配置，公开/config和根入口提供DefaultPagesConfig、resolveDefaultPages；继承app品牌/Logo和router.basePath，投影到原组件config/options/labels/pagination。保留旧配置及旧手写XuiConfig可省略pages。JSON校验拒绝端点、权限、初始化状态、歧义URI、重复路径和无效分页；纯函数无Window、路由注册、服务实例或IO。主题、认证、请求、查询及权限owner未改。

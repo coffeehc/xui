@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.23。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.24。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -225,6 +225,8 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
 默认值只有本文件一份，生成 CSS 后由 React 公共组件消费。`scripts/tokens.mjs` 在生成和检查时验证依赖方向、完整图、浅深/system 配方与来源指纹；设计值守卫检查组件、示例中的原始色值和私造尺度。新增 token 必须说明角色、依赖、覆盖范围及两主题行为，不按每个页面/slot 再造变量。主题 owner 仍负责 sessionStorage 与首屏；组件不各自读 storage 或判断主题。
 
 [Stitch 架构参考](design-sources/stitch-token-architecture.v1.txt)提供三层 Token、自包含组件与视图连续性的方向；实际合同采用本文件已公开名称、尺度、三模式和无障碍规则。参考中的原始色值不替换现有品牌；普通正文不统一 mono，不新增 10/11px 提示角色；密码显隐保留键盘入口、label/错误关联，密码评分沿用公开建议而非安全熵事实。错误可自然增高或使用已有反馈槽，不能绝对定位遮住字段；管理员创建后的认证与导航由真实宿主事实决定，不内置自动登录承诺。
+
+公共链接自4.2.24默认无下划线：Typography.Link、LinkedText、xui/xui-layer样式范围内原生a及Button的link变体在默认、hover、pressed、focus和visited均不添加下划线。品牌色和真实链接语义保留，键盘focus-visible继续绘制独立焦点环；字体继承所属文字槽。导航/控件在forced-colors下表达选中事实的下划线不是链接装饰，仍保留；不影响xui范围外的普通HTML。消费者不复制局部链接皮肤。
 
 Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停期间pressed使用成对的interaction-hover / interaction-hover-foreground，图标继承currentColor。普通字号文字按实际合成背景达到4.5:1，不能只验证静态主色对白底；disabled仍只采用禁用配方，busy不改变交互权限。
 

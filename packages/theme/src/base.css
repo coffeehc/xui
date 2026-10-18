@@ -60,7 +60,7 @@
   .xui-text[data-tone="muted"] {color:var(--muted-foreground);}
   .xui-text[data-tone="error"] {color:var(--status-error-foreground);}
   .xui-text[data-tone="success"] {color:var(--status-success-foreground);}
-  .xui-link {color:var(--action-primary);text-decoration:underline;}
+  :where(.xui,.xui-layer) a,.xui-link {color:var(--action-primary);text-decoration:none;}
   .xui-code-block {margin:0;white-space:pre-wrap;overflow-wrap:anywhere;}
   .xui-separator {border:0;border-block-start:var(--line-width-separator) solid var(--separator-line);margin-block:var(--space-control-gap);inline-size:100%;}
   .xui-separator[data-orientation="vertical"] {border-block-start:0;border-inline-start:var(--line-width-separator) solid var(--separator-line);inline-size:0;align-self:stretch;margin-block:0;margin-inline:var(--space-control-gap);}

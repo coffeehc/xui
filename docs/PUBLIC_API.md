@@ -955,6 +955,8 @@ import {UploadService} from '@coffeehc/xui-runtime/upload';
 
 4.2.15 的 runtime `/text-links` 与根入口导出纯 `parseHttpURL(value): string | null`、`linkifyText(text): readonly TextLinkPart[]`，也可调用 `UtilService.url.parseHttp` / `UtilService.text.linkify`。只接受显式绝对 HTTP(S)；拒绝凭据、隐藏/控制字符、反斜杠及需要修复的 authority（含短写 IPv4、NFKC 变化、百分号 host）。合法 IDN 由标准 URL 规范化；返回 href 不是原展示文本。正文分词保留每个原始码元，中文标点和未配对的尾括号留在链接外；非 URL、不安全候选保持普通文字。没有相对路径、自动补协议、HTML 解析或请求 owner。浏览器解析可能修复输入，因此此合同在调用 [URL 标准解析器](https://url.spec.whatwg.org/) 前后显式约束 authority。
 
+4.2.24将公共默认链接统一为无下划线，覆盖Typography.Link、LinkedText、xui/xui-layer内原生a与Button link，公开ESM/types和导航协议未改变。主题色、独立键盘焦点、外链安全与事件合同保持，具体[文字样式合同](COMPONENTS.md#typography)由公共CSS维护。
+
 React `/display` 的 `LinkedText`（同 `Typography.LinkedText`）复用现有 Link 字体/颜色，外框只补安全换行并继承所属文字槽，不强制正文大小；只对字符串、数值及数组中的相应值分词；已有 React 元素完整保留、不遍历其内部，不接受 HTML。`value` 优先于 children（null/undefined 回退 children）。`linkProps` 保留标准 anchor 属性和事件但不能替换 href/内容；默认 `_blank`，始终追加 noopener/noreferrer 并移除 opener。`stopPropagation` 缺省 false，可为行/卡片显式开启，只停止链接 click 冒泡，不调用 preventDefault；宿主提供的事件仍可自行决定默认行为。既有 `Typography.Link` 行为不变，需 mailto 等协议继续显式使用它。
 
 ```tsx

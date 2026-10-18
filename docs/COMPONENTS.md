@@ -452,6 +452,8 @@ const noticeColor = 'var(--action-primary)';
 
 字体、字号、行高和字重由 xui 的[公共文字槽映射](DESIGN.md#公共文字槽验收)统一定义，消费项目非必要不得自行设置内容字号。Heading 分开指定 `level` 与 `visualRole`，Text 为正文、Link 继承所属文字槽，Code 为技术值；slot 的裸文本自动继承它的角色，嵌套 Button/Badge/Field 保留自身规则。不要在 meta 里包一层正文 Text 再用 CSS 改小；直接传字符串或无样式 span。
 
+4.2.24起，Typography.Link、LinkedText、xui/xui-layer范围内原生a及Button的link变体默认无下划线，hover/pressed/focus/visited不另加装饰。Link保留action-primary和原文字槽字体；Button link保留原hover成对前景/背景、禁用和点击区。键盘focus-visible仍绘制独立焦点环，原生href/target/download/rel/修饰键与导航owner不变。访问后不切换到浏览器默认紫色，xui范围外HTML不受此规则覆盖。forced-colors的导航/控件选中下划线仍表示选中事实，不在本次删除范围；没有新增装饰props或要求消费者写私有CSS。
+
 `TypographyTextProps.color`支持直接指定语义颜色变量，只覆盖前景，不改变tone以外的文字角色；省略时保留旧行为。颜色参数优先于style.color与tone的默认前景。
 
 本合同同时是 xui 发布门槛：正式独立消费者的[文字槽示例](../examples/typography-slots-react/app.tsx)不引入私有 CSS；浏览器逐项检查计算后的四项字体属性、父槽与子组件边界、主题、长中文与放大。纯布局/无文字部件按映射记不适用，新增文字 part 必须有角色及对应证据。
@@ -1465,7 +1467,7 @@ AppShell/MenuLayout 在既有窄屏断点使用同一侧栏、同一导航 Contr
 
 ### LinkedText、Toast.View 与绘图资源（4.2.15）
 
-- `LinkedText` / `Typography.LinkedText` 归属正文或元信息的原文字槽，继承字体，包含未链接的长文本也安全换行，不增加新皮肤；字符串/数字只将安全绝对 HTTP(S) 片段呈现为现有 Link，其他文字与 React 元素保持原样。普通 Link 不变。嵌套行操作时显式 stopPropagation，不重写浏览器链接默认行为。
+- `LinkedText` / `Typography.LinkedText` 归属正文或元信息的原文字槽，继承字体，包含未链接的长文本也安全换行，不增加新皮肤；字符串/数字只将安全绝对 HTTP(S) 片段呈现为现有 Link，其他文字与 React 元素保持原样。普通 Link 的装饰遵守当前[Typography合同](#typography)。嵌套行操作时显式 stopPropagation，不重写浏览器链接默认行为。
 - `Toast.View` 是已有部件的标准全量组合：Title=label字重/body-sm、Description=meta、Actions=已有小按钮、Close=具名关闭；空标题/描述/动作不占位。labels 提供区域/关闭名称，renderActions 只填动作槽，不能创建第二队列。scopeKey 和 clear 的隐私边界不保留退出动画文案；旧异步 add 的取消由宿主负责。
 - `useResource(createModuleResource(...))` 沿用 DataRegion/LoadingState/ErrorState：首次等待在所属内容区居中，同 key 刷新保留已挂载内容/焦点，失败仅显示局部恢复动作。模块的 React mount/teardown 和 trusted assets map 仍由宿主提供，库只管理一次资源等待和 CSS lease。
 - 绘图从 `/theme-colors` 读取当前语义 token，复用 ThemeService，Canvas/WebGL 的业务状态与绘制循环保留原 owner，不增加原生 UI 版本。上述纯工具、资源与颜色接口完整边界见 [PUBLIC_API](PUBLIC_API.md#安全正文链接)。

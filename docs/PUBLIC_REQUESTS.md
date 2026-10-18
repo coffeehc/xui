@@ -1,5 +1,9 @@
 # 公共能力维护清单
 
+## xLead 公共链接默认无下划线（4.2.24）
+
+xLead报告固定4.2.20/5aeefe73的Typography.Link消息标题与来源链接显示下划线，要求由xui公共CSS统一处理。最新main 4.2.23仍为underline；4.2.24将Typography.Link、LinkedText、xui/xui-layer内原生a及Button link统一为默认无下划线，保持主题色、导航/外链属性、独立focus-visible与原点击合同。导航和控件forced-colors选中标记仍保留。无新增props/owner；正式包结果见[验证记录](VALIDATION.md)，宿主须升级后复验自己的实际列表，库验收不等于xLead产品验收通过。本轮不修改xLead或BaseService。
+
 ## BaseService 管理员初始化合同提示词
 
 以下为交给BaseService维护者的独立任务；本轮xui仅提供默认页面/配置与现有回调接线，未实现或宣称已有初始化HTTP路由。接口命名和wire由BaseService确定，确认后xui再接正式默认client，不由消费项目猜测或创建前端兼容层。

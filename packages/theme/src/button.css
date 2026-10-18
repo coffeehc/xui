@@ -19,7 +19,7 @@
   .xui-button[data-variant="destructive"] { background: var(--action-danger); color: var(--action-danger-foreground); }
   .xui-button[data-variant="destructive"]:hover:not(:disabled,[aria-disabled="true"],[data-disabled]) { background: var(--button-danger-hover-background); }
   .xui-button[data-variant="destructive"]:where(:active, [data-pressed="true"]):not(:disabled,[aria-disabled="true"],[data-disabled]) { background: var(--button-danger-pressed-background); }
-  .xui-button[data-variant="link"] {background:transparent;border-color:transparent;color:var(--action-primary);text-decoration-line:underline;text-underline-offset:var(--space-text-gap);}
+  .xui-button[data-variant="link"] {background:transparent;border-color:transparent;color:var(--action-primary);text-decoration:none;}
   .xui-button[data-variant="link"]:hover:not(:disabled,[aria-disabled="true"],[data-disabled]) {background:var(--interaction-hover);color:var(--interaction-hover-foreground);}
   .xui-button[data-size="sm"] { min-height: var(--control-height-sm); padding-inline: var(--button-padding-inline-sm); }
   .xui-button[data-size="xs"] { min-height: var(--control-height-xs); padding-block:var(--button-padding-block-xs); padding-inline: var(--space-control-gap); gap: var(--space-text-gap); }

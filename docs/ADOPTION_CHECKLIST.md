@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.23）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.24）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -626,6 +626,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CAP-007 | 绘图消费主题颜色 | 用当前上下文token、同一ThemeService；sRGB归一化/8位/alpha/null明确，WebGL线性转换自有 | computed样式、Canvas读回与真实renderer输入 | [PUBLIC_API 颜色](PUBLIC_API.md#绘图主题颜色) |
 | CAP-008 | 主题/样式/renderer生命周期 | light/dark/system/配色/祖先覆盖更新；stylesheet变化refresh，dispose/abort后无通知/残留probe，不销毁借用theme | 切换、计数、监听清理和目标上下文 | [PUBLIC_API 颜色](PUBLIC_API.md#绘图主题颜色) |
 | CAP-009 | 上述能力实际呈现 | 桌面/窄屏、长中文、200%文字和真实200%浏览器zoom，焦点四边、通知滚动和链接无页面溢出 | 每主题实测与缩放事实 | [DESIGN 公共能力](DESIGN.md#正文链接通知范围与可选绘图资源4215) |
+| CAP-010 | 公共链接默认装饰 | Typography.Link/LinkedText、范围内原生a与Button link无下划线；颜色、键盘焦点、点击/修饰键/外链安全合同保留，不加局部皮肤 | 浅深system、默认/hover/pressed/focus、访问后与实际导航证据 | [文字合同](COMPONENTS.md#typography) |
 
 ## 导航临时显示逐项检查（4.2.16）
 
