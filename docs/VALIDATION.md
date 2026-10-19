@@ -1,5 +1,23 @@
 # 验证证据与限制
 
+## 卡片页脚、滚动传递与读取恢复（4.2.30，2026-10-19）
+
+先核对最新4.2.29/45067eab，以原已安装正式tarball和当前合成fixture复现：五列约280px Card的长footerMeta把动作推到下一排，footer为81px；natural真实wheel被后加载的ScrollArea contain截住；auth.refresh网络失败缺少公共检查入口。baseline.log、recovery-baseline.log及原始报告保存预期失败，没有切历史checkout或复制源码。本轮仅修改xui，不要求xAgent恢复已删除的版本/只读/来源信息行。
+
+Card公共Footer优先收缩可选metadata，最小可读轨道使用新增card-footer-meta-min-inline-size；能放下时动作同行。最终267.59375px卡片的footer为53px、metadata93.59375px、动作136px；确实不足时动作组下移，再不足组内换行，禁止裁动作/缩字伪装同行。私有React context只将当前Card既有交互面交给footer OverflowText，显式ref优先，无新DOM或tab stop；减少动态、粗指针、无可用入口及全部禁用时完整静态换行。回归发现旧focusable选择器把带tabindex=0的disabled按钮算成入口，已统一排除disabled、aria-disabled、负tabindex和隐藏input，并验禁用/重新启用。
+
+CardGroup通过公共组件规则优先级恢复auto滚动传递，natural/document在body无范围时真实wheel滚外层，workspace仍先滚body。公共登录页只为refresh/session的network/timeout/HTTP 5xx提供既有checkSession检查，调用同一AuthClient.currentUser；无自动retry、login/logout重放或新认证owner，403及unknown logout不提供该入口。公开props保持，三个包仅递增末位；DESIGN/COMPONENTS/PUBLIC_API、定向ADOPTION、CARD-FOOT-001～004/CARD-SCROLL-001/AUTH-RECOVERY-001～002及adopt-xui同步。
+
+最终build、433 Token图/指纹、typecheck、指定Node测试87/87、skill校验、正式三tarball ESM/CSS/types与正负类型消费者通过。sourceGeneration为`82a46036222cc82161638c6cad0a7c5bcc84be55118f2a574095b6d6bdaf2f41`，React/ReactDOM19.2.8及Base UI1.7.0单实例，无src alias。新增Footer规则/Token/滚动优先级使关键CSS gzip从22242到22299（+57 bytes），第一次超旧22272门禁的失败日志保留；仅给该能力增加64 bytes的有界预算到22336，其余预算不变。最终初始JS gzip144665/153600、关键CSS22299/22336。
+
+同代正式浏览器最终121个唯一用例全部通过（21项Card footer、7项滚动/读取恢复、22项CardGroup、20项OverflowText、51项登录/导航）。不是将多次执行次数相加：公共修复复验117通过，剩余4项仅因display示例没有持续ThemeService而失败；示例改为既有公共bootstrap后，只重验其完整20项且全通过，其他未变用例复用。两个原始报告browser-regressions-final.json/browser-overflow-final.json与case-summary.json明确保留该边界。较早候选的disabled入口真缺陷和退出负例缺少异步等待也已修复，失败原始记录保留，不计通过。
+
+覆盖light/dark/system及真实系统偏好热切换、桌面/390px、长元信息、200%根字号与真实Chrome设置200%缩放（DPR翻倍、净宽减半、CSS zoom=1/pinch=1）、当前卡hover/键盘揭示、减少动态/触屏/缺省槽位/禁用再启用、Switch/详情/删除独立且各回调一次、刷新保节点/草稿/勾选/焦点。三种CardGroup布局用真实wheel核对Document/body scrollTop；refresh network/timeout/5xx由同一owner手动恢复，超时迟到不回退身份，403及unknown logout无读取恢复按钮、logout只发送一次。原登录/导航仍覆盖generation、重复通知、密码清理与禁止重放。截图复核确认约267px五列同行、原生zoom及窄屏大字的完整聚焦动作；后者确实换行，不伪造“全部同行”。
+
+原始基线、候选失败、正式receipt/performance、截图、geometry/wheel/请求/zoom附件及visual-proof.json存于`.artifacts/card-footer-4.2.30`。复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`；`node --test tests/display.test.mjs tests/card-presentation.test.mjs tests/card-group.test.mjs tests/metric-card.test.mjs tests/login-layout.test.mjs tests/auth.test.mjs tests/auth-coordination.test.mjs tests/contract.test.mjs tests/docs.test.mjs`；skill quick_validate；`pnpm test:consumer`；`pnpm exec playwright test tests/browser/card-footer.spec.mjs tests/browser/public-recovery.spec.mjs tests/browser/card-group.spec.mjs tests/browser/overflow-text.spec.mjs tests/browser/login.spec.mjs tests/browser/login-navigation.spec.mjs --workers=2`。仅修示例主题启动后，补跑`pnpm exec playwright test tests/browser/overflow-text.spec.mjs --workers=2`。
+
+未跑全仓unit/browser、watch/cold-start、其他OS/浏览器、真实后端或消费项目现场/部署；合成回调与transport不代表xAgent/xLead已升级或业务验收通过。4.2.29的业务日志labels专项证据继续见下节，不由本轮卡片示例替代。
+
 ## 业务日志整页 labels 语言热更新（4.2.29，2026-10-19）
 
 先核对main 53f0812a/4.2.28：list展示回调可更新，但Controller.labels只有构造时词典。新增resolver/反馈键回归先运行原4.2.28 dist，得到预期2项失败（缺少resolver与反馈语义键），见`.artifacts/business-log-labels-4.2.29/baseline.log`。没有切历史checkout、复制源码或修改消费项目。

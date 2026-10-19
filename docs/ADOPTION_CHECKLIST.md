@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.29）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.30）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -765,6 +765,18 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | BIZ-LIST-003 | 动态替换list配置 | 不换Controller/loader、不请求、不清草稿/筛选/快照/详情；按行/列ID保留节点与有效焦点 | 配置前后请求/节点/草稿/焦点、各Controller模式 | [状态归属](COMPONENTS.md#状态所有权与-controller-模式) |
 | BIZ-LIST-004 | 应用筛选/打开关闭详情 | 筛选仍发送原始action/actor ID；详情保留技术事实与权限/过期分支；键盘关闭回同一按钮 | 实际请求参数、详情原字段、Enter/Escape与回焦 | [业务日志](PUBLIC_API.md#业务日志) |
 | BIZ-LIST-005 | 三主题/窄屏/长中文/两种200% | 继承公共表格文字和颜色，横滚只在表体，全部列与详情按钮可达，Tab及详情关闭回焦后按钮/焦点环完整位于表格可视边界，不以部分相交判通过；不裁文字/缩字/套私有皮肤 | 明暗system、桌面/390、根字号/真实zoom、实际几何与截图 | [设计合同](DESIGN.md#业务日志列表展示4227) |
+
+## 卡片页脚与读取恢复逐项检查
+
+| ID | 操作 | 必须结果 | 证据 | 合同 |
+| --- | --- | --- | --- | --- |
+| CARD-FOOT-001 | 有metadata及独立业务动作 | metadata优先收缩，能容纳最小meta+动作及间距时同排；长来源不先挤走动作 | 约267px卡片、五列、长短meta footer几何与正式CSS | [Card](COMPONENTS.md#card) |
+| CARD-FOOT-002 | footerMeta采用OverflowText | 借当前卡已有交互面，显式ref仍优先，不借集合/其他卡动作；支持揭示时省略，无新增tab stop | hover/键盘当前卡揭示、其他卡静止、完整DOM文本 | [Card](COMPONENTS.md#card) |
+| CARD-FOOT-003 | 窄屏/放大/减少动态/粗指针 | 不裁动作或缩字；空间不足可下移动作组，再不足组内换行；无动效揭示时完整静态换行 | 三主题、两种200%、完整按钮/焦点几何及真实状态，不伪造同行通过 | [Card](COMPONENTS.md#card) |
+| CARD-FOOT-004 | metadata或动作缺省/全部禁用/刷新 | 不要求恢复业务已删信息行，空槽无占位；原控件身份/草稿/权限/回调保持 | actions-only/meta-only/空、disabled、刷新与回调次数 | [Card](COMPONENTS.md#card) |
+| CARD-SCROLL-001 | CardGroup natural/document/workspace上真实wheel | 无body范围时滚外层，有界workspace先滚body；自然/文档不因ScrollArea contain吞滚轮 | 前后HTML/body scrollTop、client/scrollHeight、实际wheel和边界 | [公共恢复合同](COMPONENTS.md#cardgroup滚动传递与登录读取恢复4230) |
+| AUTH-RECOVERY-001 | refresh/session network/timeout/HTTP 5xx后手动检查 | 同一AuthClient.currentUser，保持unknown直到确认，手动只读恢复、不重放login/logout、不自动重试 | endpoint/status、owner身份、真实请求次数及失败/恢复/迟到 | [公共恢复合同](COMPONENTS.md#cardgroup滚动传递与登录读取恢复4230) |
+| AUTH-RECOVERY-002 | 403/401或unknown logout | 不借读取恢复按钮绕过权限或未知退出门禁，不重发logout；正常手动登录仍按原合同 | 负例按钮/请求和退出后的受保护读取 | [未知退出](PUBLIC_API.md#未知退出与页面重载) |
 
 ## 业务日志整页语言逐项检查
 

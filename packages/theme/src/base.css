@@ -103,6 +103,8 @@
  .xui-card-trailing>.xui-badge {flex:none;max-inline-size:100%;}
  .xui-card-body {min-inline-size:0;overflow-wrap:anywhere;}
  .xui-card-footer {flex:none;padding:var(--space-control-gap) var(--card-padding);border-block-start:var(--line-width-surface) solid var(--separator-line);background:var(--card-footer-background);border-end-start-radius:calc(var(--card-radius) - var(--line-width-surface));border-end-end-radius:calc(var(--card-radius) - var(--line-width-surface));}
+ .xui-card-footer>.xui-card-meta {flex:1 1 var(--card-footer-meta-min-inline-size);min-inline-size:min(100%,var(--card-footer-meta-min-inline-size));max-inline-size:100%;}
+ .xui-card-footer>.xui-card-actions {flex:0 1 auto;min-inline-size:0;max-inline-size:100%;}
  .xui-card-footer[data-variant='plain'] {padding-block-start:0;padding-block-end:var(--card-padding);border-block-start:0;background:none;}
  .xui-card[data-stretch='true'] {flex:1 1 auto;align-self:stretch;}
  .xui-card[data-stretch='true']>.xui-card-content {flex:1 0 auto;}

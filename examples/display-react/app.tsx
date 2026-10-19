@@ -1,11 +1,13 @@
 import * as React from 'react';
 import {createRoot} from 'react-dom/client';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/style.css';
 import {Typography,Copyable,Separator,Tag,Image,OverflowText,Card,Icon} from '@coffeehc/xui-react/display';
 import {Button,IconButton} from '@coffeehc/xui-react/button';
 import {Input,Checkbox,Field,SimpleSelect} from '@coffeehc/xui-react/forms';
 import {Surface,Badge} from '@coffeehc/xui-react/feedback';
 import {Avatar} from '@coffeehc/xui-react/avatar';
+bootstrapBrowserExample();
 function SeparatorSample(){return <Surface aria-label="Separator contract" className="xui-stack"><Typography.Text>分隔线与区域边框使用独立线宽。</Typography.Text><Separator aria-label="Horizontal separator"/><div className="xui-toolbar"><Typography.Text>左侧</Typography.Text><Separator orientation="vertical" aria-label="Vertical separator"/><Typography.Text>右侧</Typography.Text></div></Surface>;}
 function FoundationSample(){return <Surface aria-label="Display foundation" className="xui-stack">{(['default','muted','error','success'] as const).map(tone=><Typography.Text key={tone} tone={tone}>{tone}: 完整可读的基础文字</Typography.Text>)}<Input aria-label="Surface first input"/><Typography.Link href="#details">Surface middle link</Typography.Link><Button>Surface last action</Button></Surface>;}
 function App(){

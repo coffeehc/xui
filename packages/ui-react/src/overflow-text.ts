@@ -4,7 +4,7 @@ export function overflowTextGeometry(viewport:HTMLElement,track:HTMLElement,spee
  const delayText=style.animationDelay.split(',')[0],delay=parseFloat(delayText)*(delayText.endsWith('ms')?1:1000),direction=style.direction==='rtl'?1:-1;
  return {distance,speed,delay,direction,valid:distance>1&&Number.isFinite(speed)&&speed>0&&Number.isFinite(delay)};
 }
-const focusable='a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])';
+const focusable=':is(a[href],button,input:not([type="hidden"]),select,textarea,[tabindex]):not(:disabled,[aria-disabled="true"],[tabindex="-1"])';
 /** Internal presentation only. No values, tabindex, roles, navigation or business callbacks. */
 export function bindOverflowTextPresentation(viewport:HTMLElement,track:HTMLElement,getTarget:()=>HTMLElement|null){
  const doc=viewport.ownerDocument,win=doc.defaultView;

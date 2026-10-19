@@ -1,15 +1,15 @@
 {
-  "contractVersion": "4.2.29",
+  "contractVersion": "4.2.30",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
-  "defaultTokenCount": 432,
+  "defaultTokenCount": 433,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "8689cec771b976402b8bdc7ce88bbb232c2a433da63e09971d35623557867131",
+  "defaultCssSha256": "b9bca90ccea9d75a4060df96aed3dbf99f0393e0503294e285ff509bf83233ba",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",

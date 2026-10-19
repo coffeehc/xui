@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.29。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.30。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -503,6 +503,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --card-icon-offset: max(0px, calc((var(--line-height-section-title) - var(--card-icon-size)) / 2));
     --card-icon-background: var(--muted);
     --card-footer-background: var(--muted);
+    --card-footer-meta-min-inline-size: var(--control-height);
     --card-group-body-min: var(--feedback-slot-block-size);
     --card-group-item-min: var(--layout-field-long-min);
     --card-padding-small: calc(var(--spacing) * 2.5);
@@ -1851,6 +1852,12 @@ QueryForm 是 HTML form 与布局，不查询、不缓存、不推断权限、�
 | 结果、游标/快照、详情与回焦 | 继续现有Table/DataRegion和唯一service；不新增total、分页、HTTP或查询owner |
 
 验收逐个页面/slot执行 [QUERY 清单](ADOPTION_CHECKLIST.md#手动查询页逐项检查)：在真实侧栏后的净宽、长中文、light/dark/system、窄屏、200%根字号与真实浏览器200%缩放下检查控件宽度/按钮底边/焦点/高级展开及全部状态。图稿用于设计校准，正式包示例与产品现场各自验收，不能互相替代。
+
+### 卡片页脚与读取恢复（4.2.30）
+
+Card.footerMeta是可选次要事实轨道，优先收缩；footerActions的独立业务控件不因长来源先被挤走。meta最小轨道使用card-footer-meta-min-inline-size；可放下动作+最小元信息及间距时同排，确实不足才把动作组移到下排，再不足时动作组自然换行，禁止裁动作或缩字伪装适配。OverflowText按[Card合同](COMPONENTS.md#card)借当前卡的已有交互区域，支持揭示时省略；减少动态/粗指针/无键盘入口保留完整静态文字。不需要元信息的业务直接省略，不制造版本/权限/来源行。
+
+CardGroup的自然/文档布局在body无滚动范围时必须将真实wheel交给外层owner，公共ScrollArea规则不能覆盖集合自己的边界；有界workspace仍由body先滚动。登录页的refresh/session可恢复读取错误只提供同一Auth owner的手动检查，unknown退出不能借此恢复旧会话。逐项边界见[公共合同](COMPONENTS.md#cardgroup滚动传递与登录读取恢复4230)。
 
 ### 页面与组件的槽位架构
 

@@ -524,7 +524,7 @@ access和expiry只存在闭包内存，public AuthState、login/refresh/currentU
 | --- | --- | --- |
 | 退出意图开始或最终未知 | 本地身份已清除；未知不等于Cookie撤销 | 隐藏私有页面，停止/取消领域读取并清理所属私密缓存，隔离迟到响应；保留必要的未知结果反馈 |
 | 同一个owner最终保留logout错误，挂载/重挂ConfigurableLoginPage | 无busy时可手动提交普通login；该logout错误不触发登录页自动session初始化，也不生成专用恢复按钮 | 复用原owner，用户提交后走一次正常login；登录未确认时领域读取继续停止，确认身份/权限后再恢复 |
-| 普通session读取发生可恢复的网络/超时/服务端失败 | 公开登录页可按现有条件显示“Retry connection” | 此入口是普通读取错误重试，不恢复旧“检查登录状态→进入工作空间”的退出专用流程 |
+| 普通refresh/session读取发生可恢复的网络/超时/HTTP 5xx失败 | 4.2.30公开登录页非busy且未认证时显示现有checkSession检查动作，调用同一AuthClient.currentUser，无自动重放 | 此入口是普通读取错误重试，不恢复旧“检查登录状态→进入工作空间”的退出专用流程 |
 | 主Document真正重载、新标签页或重新创建Auth owner | 原内存中的unknown/error不保留；新owner从unknown且无error开始，正常初始化可refresh/session并按服务端事实发布身份 | 不在读取完成前显示旧私密数据或启动领域请求；确认authenticated后才允许恢复，401匿名不循环读取 |
 | bfcache恢复且仍是同一个owner | 不是新Document初始化；LoginView按现有状态resume，保留的logout unknown/error不会凭pageshow清掉 | 记录pageshow.persisted与实例身份；不人为销毁重建owner、清除错误或调用额外读取来绕过未知退出路径 |
 

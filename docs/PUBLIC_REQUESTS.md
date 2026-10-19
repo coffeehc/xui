@@ -1,5 +1,9 @@
 # 公共能力维护清单
 
+## Card footerMeta、自然滚轮及refresh读取恢复（4.2.30）
+
+xAgent的XUI-CARD-FOOTER-META-SHRINK与xLead两项反馈均源自正式4.2.28；核对4.2.29/45067eab仍存在。独立4.2.29消费者先复现五列约280px卡片长metadata令动作另起一行（footer81px）；xAgent实测约267px。4.2.30由公共Card维护压缩/回退及当前卡交互范围，不要求宿主取ref/穿DOM；技能/工具业务已删除信息行的项目继续省略footerMeta。另修CardGroup边界规则被通用ScrollArea覆盖，及公共登录页遗漏auth.refresh可恢复读取错误检查；未知退出合同保持。正式证据/未跑范围见[验证记录](VALIDATION.md)，不代表xAgent/xLead实际页面或部署已通过，本轮不改消费项目/BaseService。
+
 ## xAgent 业务日志整页语言热更新（4.2.29）
 
 核对固定4.2.28及最新main 53f0812a，list formatter可热更新，但controller.labels只在构造时合并，缺少整页展示入口。4.2.29新增BusinessLogExplorer.labels，默认options.labels也实时生效；沿用同一Controller/view、草稿、详情、分页与快照，语言本身不请求或取消。默认Controller保留旧错误字符串并公开语义键，React据当前词典呈现已有/迟到反馈；无重建owner或私有DOM补丁。[公开合同](COMPONENTS.md#业务日志整页标签热更新4229)、[逐项检查](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)与[正式验证](VALIDATION.md)分别记录。仅修改xui，不代表xAgent实际页面升级已通过。

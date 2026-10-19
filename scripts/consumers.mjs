@@ -107,7 +107,10 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // 4.2.23 adds four presentation defaults and validation to the shared config.
 // Clipboard's standalone probe grows from 4,075 to 4,556 gzip bytes (+481).
 // Bound that JSON/schema cost to +512; unrelated-service and UI exclusions stay gated.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22272, reactInitialJsGzip: 153600, narrowServiceGzip: 4608,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
+// 4.2.30 adds footer metadata compression, its minimum readable track and scroll
+// chaining specificity. The formal CSS grows 22,242 -> 22,299 gzip bytes (+57);
+// bound the feature to +64 bytes, retaining every JS/Button/service limit.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22336, reactInitialJsGzip: 153600, narrowServiceGzip: 4608,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // Recreate one generated cache so npm cannot reuse a stale same-version tarball.
 const runDirectory = resolve('.consumers/current');

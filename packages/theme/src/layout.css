@@ -193,7 +193,7 @@
   .xui-card-group[data-layout='workspace'] {block-size:100%;}
   .xui-card-group[data-layout='document'] {flex:none;max-block-size:none;grid-template-rows:auto auto auto;overflow:visible;}
   .xui-card-group-tools {grid-row:1;min-inline-size:0;margin-block-end:var(--space-content-gap);}
-  .xui-card-group-body {grid-row:2;min-inline-size:0;min-block-size:0;overscroll-behavior:auto;padding:calc(var(--focus-width) + var(--focus-offset));scroll-padding:var(--space-control-gap);}
+  .xui-card-group-body.xui-scroll-viewport {grid-row:2;min-inline-size:0;min-block-size:0;overscroll-behavior:auto;padding:calc(var(--focus-width) + var(--focus-offset));scroll-padding:var(--space-control-gap);}
   .xui-card-group[data-layout='document']>.xui-card-group-body {overflow:visible;}
   .xui-card-group-footer {grid-row:3;margin-block-start:var(--space-content-gap);}
   .xui-card-group-items {grid-template-columns:repeat(auto-fit,minmax(min(100%,var(--card-group-item-min)),1fr));list-style:none;margin:0;padding:0;align-items:start;}

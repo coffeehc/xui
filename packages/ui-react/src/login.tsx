@@ -59,7 +59,7 @@ export function ConfigurableLoginPage({controller:injected,auth:borrowed,config:
    return()=>{release();clearPassword();window.removeEventListener('pagehide',pause);window.removeEventListener('pageshow',resume);};
   },[controller]);
   const authenticated=state.status==='authenticated',busy=!!state.busy||viewOperation!==null||extensionBusy!==null||authenticated&&!sessionFailed&&navigationPhase!=='failed',locked=busy||authenticated;
-  const canCheck=!busy&&(sessionFailed&&!state.error||!authenticated&&state.error?.metadata.endpointId==='auth.session'&&(state.error.kind==='network'||state.error.kind==='timeout'||state.error.kind==='http'&&(state.error.status??0)>=500));
+  const canCheck=!busy&&(sessionFailed&&!state.error||!authenticated&&!!state.error&&['auth.session','auth.refresh'].includes(state.error.metadata.endpointId??'')&&(state.error.kind==='network'||state.error.kind==='timeout'||state.error.kind==='http'&&(state.error.status??0)>=500));
   const navigationReady=authenticated&&!state.busy&&viewOperation===null&&!sessionFailed,navigationFailed=navigationReady&&navigationPhase==='failed';
   // A rejected handoff preserves authentication, but is no longer work in flight.
   const navigating=navigationReady&&!navigationFailed;

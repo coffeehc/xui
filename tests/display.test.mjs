@@ -56,3 +56,8 @@ test('Card emits named semantic slots, safe title and neutral badge without empt
  const empty=render(Card,{title:'资源',actions:React.createElement(React.Fragment),children:React.createElement(React.Fragment),footerMeta:null});assert.doesNotMatch(empty,/xui-card-footer|xui-card-body|xui-card-trailing/);
  assert.throws(()=>render(Card,{title:'',headingLevel:3}),/nonempty/);assert.throws(()=>render(Card,{title:'x',headingLevel:1}),/2–6/);
 });
+
+test('Card footer OverflowText keeps complete SSR text with only existing business focus targets',()=>{
+ const html=render(Card,{title:'资源',footerMeta:React.createElement(OverflowText,{text:'v2 · 只读 · standard-skills'}),footerActions:React.createElement('button',null,'详情')});
+ assert.match(html,/xui-card-meta[^>]*><span class="xui-overflow-text"><span class="xui-overflow-text-content">v2 · 只读 · standard-skills/);assert.equal((html.match(/<button/g)??[]).length,1);assert.doesNotMatch(html,/tabindex|aria-hidden|provider/i);
+});

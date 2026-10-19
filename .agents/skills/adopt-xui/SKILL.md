@@ -39,6 +39,8 @@ description: 新接入、升级或自查 xui；区分完整接入与定向升级
 
 ### Toast、复制和业务日志列表定向升级
 
+卡片页脚、CardGroup滚动或公共登录页读取恢复的定向升级，按[接入手册适用项](../../../docs/ADOPTION.md#卡片布局与登录读取恢复定向升级)选择CARD-FOOT、CARD-SCROLL、AUTH-RECOVERY检查；业务已删除footerMeta时不恢复，三项不强制捆绑。
+
 本次差异或自查命中临时反馈、实际复制入口或BusinessLogExplorer/getBusinessLogTable列表展示时，按[接入手册专项](../../../docs/ADOPTION.md#toast-与复制及业务日志列表定向升级)分别选择TOAST-005～006、STATE-COPY-001～002、BIZ-LIST-001～005及关联检查。BusinessLogExplorer整页换语言另按该专项的BIZ-LABEL-001～006执行，使用实时labels，不通过key=locale重建Controller。三项不捆绑执行；只加载实际命中行引用的合同，不为缺失业务新增页面、数据或测试入口。通知验连续性，复制验真实系统全文，列表验展示与原请求/事实分离；具体步骤和证据以专项及原检查ID为准。
 
 已接入BusinessLogExplorer仅调整list展示时走此专项，保留原配置和Controller/loader，不重新执行四类默认页接入；仅用StructuredLogExplorer也不触发业务日志列表专项。共享变化按真实影响补验，未使用能力在范围摘要说明，不遍历全量清单。全部适用项有结论后按上方交付条件结束，公共缺口交xui，不自行修改公共组件。

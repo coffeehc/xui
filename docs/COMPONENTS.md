@@ -506,7 +506,11 @@ React `/display` 及根入口公开 `Card / CardProps / CardBadge / CardHeadingL
 | --- | --- | --- |
 | Header | `title`、`headingLevel`、`icon`、`iconVariant`、`iconColor`、`badge`、`actions` | 必填非空标题；headingLevel 2–6，默认3。图标为装饰，默认tile+主题强调色，plain适合已有头像/图像表现；badge默认neutral+soft，可显式color/variant。辅助动作与标题、Badge分离，窄屏可换行 |
 | Content | `description` 与 `children` | 唯一内容区 `.xui-card-content`。description 是可选 muted/body-sm 文本，children 是领域正文；两者按顺序放在同一容器，不新增第四块、独立边框或另一套正文布局 |
-| Footer | `footerMeta`、`footerActions`、`footerVariant` | 次要事实与业务动作属于同一页尾区，分别分组；默认band有公共支持表面和唯一分隔线，plain保留朴素呈现。空间足够同行，窄屏/大字下自然换行；两者都空时整个页尾不占位 |
+| Footer | `footerMeta`、`footerActions`、`footerVariant` | 次要事实与业务动作属于同一页尾区，分别分组；默认band有公共支持表面和唯一分隔线，plain保留朴素呈现。元信息优先收缩，动作组放不下时才换行；具体边界见下文4.2.30规则；两者都空时整个页尾不占位 |
+
+4.2.30补齐Footer压缩合同：footerMeta优先伸缩，最小可读轨道来自card-footer-meta-min-inline-size（默认依赖control-height），footerActions保留独立控件尺寸。二者及间距能放下时同行，长来源不再先把操作推下一行。meta使用OverflowText即可在支持动效的桌面指针环境省略，公共Card自动提供该卡片既有交互区域，不要求CardGroup消费者获取ref/穿透DOM；显式interactionRef仍优先。焦点/hover只揭示当前卡，不借整个集合触发其他卡的元信息。减少动态、粗指针或该卡没有既有可用键盘入口时，继续完整换行静态文字，不新增tab stop或藏掉无法揭示的事实。
+
+空间确实不够时，Footer将动作组放到下一行；动作组自身仍容不下则按原Toolbar换行，绝不裁动作、缩字号或强制同行。actions-only保持右侧动作且不预留meta空间，meta-only不造按钮/焦点，全部空仍无footer。业务不需要版本/来源时直接省略footerMeta；示例不是必须恢复该信息行。正式[CardGroup示例](../examples/card-group-react/app.tsx)的?footer-meta展示可选元信息与Switch/详情/删除，&actions-only、&meta-only、&plain-meta、&draft分别展示槽位缺省/纯文本/保留草稿；不改变业务请求或权限。
 
 Card仍只有header/content/footer三个根级区域，自身用Surface.padding=none避免重复内距，各区由公共Token提供边距。默认自然高度；`stretch`显式伸展到所属flex/grid轨道，content可增长、footer靠底，不设置正文像素高度或行数。图标容器、首行偏移与Footer背景由card-icon-size/offset/background和card-footer-background定义，标题仍section字体、正文仍body、底部仍meta，业务动作保留自身控件规则。
 
@@ -1595,6 +1599,12 @@ const series = [{id:'tasks',label:'任务',color:1 as const,values:[12,null]}];
 options.labels新增可翻译resetDraft（默认Reset draft）、appliedFilters（默认Applied filters）；旧的手写Controller.labels可省略这两个新字段，View使用相同英文默认；既有clear保留默认Clear filters及宿主覆盖，中文示例保留“清除筛选”并明确此动作为查询。Controller类型、factory、HTTP/DTO/认证、可选records、snapshot/游标/详情清理行为保持。React时间Input保留原RFC3339Nano字符串，未换成分钟型DateTimePicker或做时区转换。
 
 完整正式包示例为[log-react](../examples/log-react/app.tsx)：默认借用原service；`?injected&slots`展示完整ViewController与pageToolbar，使用同一service和高级Overlay。`?network&grouped`仅供浏览器拦截测试真实POST wire，没有后端或基础设施；默认仍为注入内存transport的合成观察，不代表产品联调。
+
+## CardGroup滚动传递与登录读取恢复（4.2.30）
+
+CardGroup的natural/document跟随真实外层滚动owner；body没有纵向范围时，真实wheel继续交给Document/祖先，不被通用ScrollArea的contain截住。workspace有范围时先滚body，沿既有auto边界传递；短宿主仍保留原集合/正文滚动合同，不新增观察器或第二滚动owner。纯布局修复须用真实wheel验证，不能只看overflow属性或程序设scrollTop。
+
+ConfigurableLoginPage对auth.refresh或auth.session的network/timeout/HTTP 5xx读取失败提供现有checkSession标签的检查动作，且必须非busy、未认证。用户明确触发后由原LoginViewController调用同一AuthClient.currentUser；没有自动retry、login/logout重放或新Auth owner。未知退出仍以auth.logout及既有禁恢复语义处理，不提供这种读恢复入口；403/401不是此重试按钮的条件。可恢复读取的unknown不当作anonymous或authenticated。
 
 ## 业务日志列表展示配置（4.2.27）
 

@@ -10,7 +10,7 @@ export function createLoginExample(baseURL:string){
     const body=init?.body?JSON.parse(String(init.body)):undefined;requests.push({path,method:init?.method??'GET',bodyKeys:body?Object.keys(body):[],hasPassword:typeof body?.password==='string',credentials:init?.credentials});
     const mode=modes[operation];if(mode==='hold')await new Promise<void>(resolve=>holds.set(operation,[...(holds.get(operation)??[]),resolve]));
     if(mode==='network')throw new Error('FAKE_PRIVATE_LOGIN_ERROR');
-    const status=mode==='credentials'?401:mode==='forbidden'?403:mode==='rateLimited'?429:['session','refresh'].includes(operation)&&!session?401:200;
+    const status=mode==='server'?503:mode==='credentials'?401:mode==='forbidden'?403:mode==='rateLimited'?429:['session','refresh'].includes(operation)&&!session?401:200;
     if(status===200&&mode!=='business'&&mode!=='malformed'){if(operation==='login')session={...user,username:body.username};if(operation==='logout')session=null;}
     const payload=operation==='logout'?null:{schema_version:2,user:session??user,...(['login','refresh'].includes(operation)?{access_token:'bs-v1-sha256-access-'+'A'.repeat(43),token_type:'Bearer',expires_at:new Date(Date.now()+300000).toISOString()}:{})};
     const wire=mode==='malformed'?{success:true,message:'',payload:{access_token:'FAKE_NOT_A_SESSION'},request_id:'demo:auth',code:1}:{success:status===200&&mode!=='business',message:status===200?'':'FAKE_PRIVATE_LOGIN_ERROR',payload:status===200?payload:null,request_id:'demo:auth',code:status===200&&mode!=='business'?1:-1};
