@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {HttpError} from '../packages/runtime/dist/http.js';
+import * as businessLog from '../packages/runtime/dist/business-log.js';
 import {createBusinessLogController,parseBusinessLogEvent,parseBusinessLogPage,parseBusinessLogDetail,parseBusinessLogPayload,validateBusinessLogFilter,findBusinessLogRenderer,getBusinessLogTable} from '../packages/runtime/dist/business-log.js';
 const stamp='2026-10-11T12:00:00.000000123Z',secret='FAKE_PRIVATE_BUSINESS_LOG_VALUE';
 const event=(extra={})=>({id:'demo:1',event_type:'order.approved',schema_version:1,occurred_at:stamp,recorded_at:stamp,actor:{kind:'user',id:'demo-user',display_name:null},object:{kind:'order',id:'order-1',display_name:null},action:'approve',result:'succeeded',summary:'Approved',correlation_id:null,request_id:null,...extra});
@@ -9,6 +10,29 @@ const detail=(extra={})=>({event:event(),state:'available',payload:{approval:{re
 const make=(extra={})=>createBusinessLogController({loader:{list:async()=>page(),detail:async()=>detail()},...extra});
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
 const tick=async()=>{await Promise.resolve();await Promise.resolve();};
+test('business log labels resolve live presentation independently of immutable controller state',async()=>{
+ assert.equal(typeof businessLog.resolveBusinessLogLabels,'function');
+ const {resolveBusinessLogLabels,businessLogDefaultLabels}=businessLog,controller=make({labels:{title:'初始标题',readError:'初始读取错误'}});
+ try{await controller.refresh();await controller.openDetail('demo:1');const state=controller.getState(),original=controller.labels;
+  const chinese=resolveBusinessLogLabels({title:'业务日志',close:'关闭'},original),english=resolveBusinessLogLabels({title:'Audit log'},original);
+  assert.equal(chinese.close,'关闭');assert.equal(english.close,original.close);assert.equal(english.title,'Audit log');assert.ok(Object.isFrozen(chinese));assert.equal(controller.getState(),state);assert.equal(controller.labels,original);assert.equal(controller.labels.title,'初始标题');assert.equal(resolveBusinessLogLabels().title,businessLogDefaultLabels.title);
+  assert.equal(resolveBusinessLogLabels({title:undefined},chinese).title,'业务日志');assert.equal(resolveBusinessLogLabels({title:''}).title,'');
+  for(const title of [null,3,{},()=> 'title'])assert.throws(()=>resolveBusinessLogLabels({title}),TypeError);
+ }finally{controller.destroy();}
+});
+test('business log feedback keys preserve legacy strings and clear atomically across read and detail transitions',async()=>{
+ for(const [mode,key] of [['read','readError'],['contract','contractError'],[403,'forbidden'],[404,'notFound']]){
+  let fail=true;const failure=()=>{if(mode==='contract')return {};throw typeof mode==='number'?new HttpError('http',{status:mode,attempts:1}):Error(secret);};
+  const controller=make({labels:{readError:'初始读取失败'},loader:{list:async()=>fail?failure():page(),detail:async()=>fail?failure():detail()}});
+  try{await controller.refresh();let state=controller.getState();assert.equal(state.errorKey,key);assert.equal(state.error,controller.labels[key]);assert.ok(!JSON.stringify(state).includes(secret));
+   const translated=businessLog.resolveBusinessLogLabels({[key]:'Live translated feedback'});assert.equal(translated[state.errorKey],'Live translated feedback');
+   await controller.openDetail('demo:1');state=controller.getState();assert.equal(state.detailErrorKey,key);assert.equal(state.detailError,controller.labels[key]);
+   controller.closeDetail();assert.equal(controller.getState().detailErrorKey,null);controller.cancel();assert.equal(controller.getState().errorKey,null);
+   fail=false;await controller.retry();await controller.openDetail('demo:1');assert.equal(controller.getState().errorKey,null);assert.equal(controller.getState().detailErrorKey,null);
+   await controller.setFilter({actor:{kind:'user',id:''}});assert.equal(controller.getState().errorKey,null);assert.equal(controller.getState().filterError,controller.labels.invalidFilter);assert.equal(controller.getState().filterErrorKey,'invalidFilter');await controller.setFilter({});assert.equal(controller.getState().filterErrorKey,null);
+  }finally{controller.destroy();}
+ }
+});
 test('business log list presentation selects ordered facts without changing wire state or requests',async()=>{
  let reads=0;const controller=make({loader:{list:async()=>{reads++;return page();},detail:async()=>detail()}});try{
   await controller.refresh();const state=controller.getState(),before=JSON.stringify(state),labels=controller.labels;

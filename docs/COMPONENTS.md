@@ -97,7 +97,7 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 | `ThemeModeButton`、`AppHeader` 的主题区、`useTheme` | 沿用共享文档默认 ThemeController 或 `theme` | prepaint/JSON sessionStorage 与公开缩放合同保持；按钮/头部卸载不 destroy 文档共享实例。locale 事实归宿主，展开采用 SimpleSelect 合同 |
 | `Toast` | `createToastController`（runtime `/toast`）；`Toast.Provider controller`，旧 `toastManager` 名称接受同一个 xui Controller | 唯一队列、阶段、上限、超时、暂停与Promise由模型持有；React负责DOM焦点/播报/动画回执和指针测量，默认实例拥有生命周期，借用实例不销毁。旧Base UI动作bus不满足此合同，3.0.0需迁移；Provider options 与注入互斥 |
 
-完整服务组合使用 `viewController` 区分旧服务 `controller`，避免把旧的必填服务实例改名后误称完整展示注入。借用服务不被 View 销毁，仍按原关闭/取消合同释放所属瞬态详情/secret；options 创建的服务由默认 view model 销毁。默认服务 options 仅在首次创建时使用；父组件传入新对象不会重建服务或丢失正在编辑的草稿。显式更换借用 service 身份会创建对应新展示实例，保持 React DOM 树；业务范围需要替换默认 owner 时由宿主明确重挂载。配置更新不覆盖注入者模型；注入者调用对应 update/动作。
+完整服务组合使用 `viewController` 区分旧服务 `controller`，避免把旧的必填服务实例改名后误称完整展示注入。借用服务不被 View 销毁，仍按原关闭/取消合同释放所属瞬态详情/secret；options 创建的服务由默认 view model 销毁。默认服务 options 的服务配置仅在首次创建时使用；BusinessLogExplorer的实时labels例外见[整页语言](#业务日志整页标签热更新4229)。父组件传入新对象不会重建服务或丢失正在编辑的草稿。显式更换借用 service 身份会创建对应新展示实例，保持 React DOM 树；业务范围需要替换默认 owner 时由宿主明确重挂载。配置更新不覆盖注入者模型；注入者调用对应 update/动作。
 
 #### 宿主事实、平台投影与无语义状态组件
 
@@ -1620,6 +1620,25 @@ const activityList: BusinessLogListPresentation = {
 主视图的四项事实为谁、何时、做了什么、结果，detail列只放原详情动作；业务摘要及操作者投影由宿主数据owner提供。summary使用主文字轨道，actor/result使用正文标签，时间/action沿现有技术值轨道，所有字体/颜色/横滚继续由公共Table/Theme负责。详情始终使用原事件ID、action、actor kind/id、原始时间、对象、关联/请求标识和授权payload，不应用列表formatter。列重排、语言/格式回调更新不重建Controller、不请求、不清除筛选草稿/快照/当前详情；以列ID及行ID维持节点，关闭详情回原按钮。列表配置独立适用于借用controller、注入viewController和options模式。
 
 正式[示例](../examples/business-log-react/app.tsx)的`?activity`使用五列，`&locale=en-GB`改变显示语言，`&time-zone=Asia/Shanghai`显式选择时区；不传time-zone使用浏览器本地时区。默认URL继续演示兼容七列。实际验收执行BIZ-LIST-001～005，库合成示例不代替产品事件可靠性、权限和真实请求验收。
+
+## 业务日志整页标签热更新（4.2.29）
+
+`BusinessLogExplorer.labels?: Partial<BusinessLogLabels>`是实时展示输入，借用`controller`、注入`viewController`及默认`options`三种模式均支持。宿主语言owner传入当前词典，不增加全局语言服务、Controller或查询owner。React `/business-log`及根入口公开`BusinessLogLabels`类型；runtime `/business-log`及根入口公开纯函数`resolveBusinessLogLabels(overrides?, base?)`和`BusinessLogFeedbackKey`。
+
+逐字段优先级为：当前React `labels` → 当前默认模式`options.labels`（借用/注入模式为原`controller.labels`）→ 公共英文默认。默认模式的`options.labels`随render生效，其余服务初始化项仍只用首次配置。每次覆盖替换上一份覆盖，不累积旧语言字段；undefined回退、空字符串保留，非字符串拒绝。移除React labels恢复当前基底；移除options.labels恢复公共默认，不回到构造时旧语言。纯resolver返回新的冻结词典，不修改输入或Controller。
+
+```tsx
+import {BusinessLogExplorer, type BusinessLogLabels} from '@coffeehc/xui-react/business-log';
+const labels: Partial<BusinessLogLabels> = translations[locale];
+// logs在语言变化前后保持同一个实例；也可使用viewController或options模式。
+<BusinessLogExplorer controller={logs} labels={labels} list={activityList} />;
+```
+
+整页标题/筛选字段/枚举/表头/结果/读取反馈/分页/快照前缀/详情标签/按钮及可访问名称同步更新，包括已显示的错误和仍在途的读取。原`controller.labels/options`和旧state.error/detailError字符串保留构造时合同；默认Controller新增可选errorKey/detailErrorKey，取值readError/contractError/forbidden/notFound或null，清除反馈时原子清空。filterError新增可选filterErrorKey=invalidFilter或null，同样在清除时原子清空。React按各自语义键取当前词典。手写旧Controller未提供对应键时继续显示其原安全错误字符串；要热翻译这类自定义错误，由该Controller提供对应公开语义键，不能按旧文字猜类别。
+
+换语言不发布service/view状态、不执行请求/重试/取消，不重置已生效筛选、草稿、开合、当前详情、分页、快照和已访问页缓存。原事件摘要/payload/代码/ISO、领域renderer及headerActions内容由宿主负责，词典不改写这些事实；列表时间格式仍走list的纯formatter。表格行/列、表单字段和详情动作使用稳定语义键，切换后保留节点、选区、滚动和有效焦点，不同译文重排时允许原生滚动锚点调整，不人为归零或重建滚动区。关闭详情回原按钮。详情动作按内容优先，超长译文按表格自身可视净宽换行，不能压成逐字竖排，使用公共间距为焦点环保留空间；不裁切文字或要求宿主限字/CSS覆盖。禁止key=locale、重挂载或复制公共DOM/CSS。
+
+[既有正式示例](../examples/business-log-react/app.tsx)的`?labels&activity`展示中文/English按钮；`&owner=view`注入完整ViewController，`&owner=options`演示默认模式（先点刷新）；不传owner借用service。示例使用合成loader，无业务后端。定向验收只执行[BIZ-LABEL-001～006](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)及实际受影响项，不因语言变化重跑认证或写入流程。
 
 ## 默认完整页面与配套接线（4.2.23）
 

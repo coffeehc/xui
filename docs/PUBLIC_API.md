@@ -617,6 +617,8 @@ baseservice 的 apikeyservice/webfacade 配套严格 v2。共享 [decimal](../te
 
 ## 业务日志
 
+4.2.29新增React `BusinessLogExplorer.labels?: Partial<BusinessLogLabels>`，三种Controller模式实时更新整页文案；默认模式当前options.labels也实时生效。runtime新增纯`resolveBusinessLogLabels(overrides?, base?)`和可选state.errorKey/detailErrorKey（BusinessLogFeedbackKey）、filterErrorKey（invalidFilter），旧字符串及Controller.labels保留兼容。优先级、替换/移除、错误回退及无需请求的连续性合同见[组件规范](COMPONENTS.md#业务日志整页标签热更新4229)。不改loader/HTTP/认证/wire，也不把业务事实或时区当成labels转换。
+
 4.2.27新增纯展示合同：React `BusinessLogExplorer.list`与runtime `getBusinessLogTable(state,labels,list?)`接受`BusinessLogListPresentation`（`columns`、`formatActor`、`formatAction`、`formatOccurredAt`），列键类型`BusinessLogListColumnId`。runtime/React `/business-log`及根入口均正式导出类型；既有props、默认七列及helper缺省headers/cells不变。detail省略时自动追加；formatter返回纯文本，原事件/筛选/详情不改。完整五列接线、locale/时区、动态更新和helper新增columnIds合同见[组件规范](COMPONENTS.md#业务日志列表展示配置4227)。
 
 用途是随时调取查阅领域业务记录，提供通用字段、可扩展payload、筛选分页和详情。用户所说的“审计”指这个业务日志用途，不是正式审计体系；旧BusinessAudit命名在同一实现上统一改为BusinessLog，没有增加另一套页面。公共事件描述谁在何时对哪个业务对象做了什么、结果如何、关联哪些请求及允许披露的业务细节。现有 [错误观察功能](PUBLIC_API.md#程序错误观察) 是独立功能，severity/错误分组/首次代表不能充当业务日志。完整通用规则仅在 [DESIGN.md](DESIGN.md)。
@@ -872,7 +874,7 @@ const selection=createSelectionController<string|null>({defaultValue:null});
 // <Select.Root<string> controller={selection}>...公共parts...</Select.Root>
 ```
 
-服务组合以 `viewController` 表示完整展示状态，旧 `controller` 继续表示既有服务，不能混称。`ApiKeyManager` 的 `options` 是 `ApiKeyManagerOptions`；日志的 `options` 分别是 `BusinessLogOptions` / `StructuredLogOptions`。显式 options 模式只创建一个所属服务，首挂载显式 start 一次；借用旧 controller 时不擅自开始宿主查询。`createApiKeyManagerViewController({service,pagination})` / `createBusinessLogViewController({service})` / `createStructuredLogViewController({service})` 引用服务，不复制结果和请求 owner；注入各自 viewController 后不可再传 service/options 初始化。API Key 页数来自完整 list，日志仍使用其真实游标/as_of，不虚构 total。`options` 只初始化当前默认服务一次；父组件传入新的等值配置对象不会重建服务、重发查询或丢弃草稿。更换业务数据 owner 时显式传入新的服务 controller/viewController，或按真实业务范围重挂载。AdminSetupController.update 可更新未来的 onSubmit/onCheck/validateUsername；不会重试在途操作，默认 Page 随回调更新核对入口。 PasswordStrengthController.bindReader 租用 View 的 DOM reader，释放或替换时取消旧代评估并恢复宿主原 reader；View 退出不永久保留 DOM 引用。
+服务组合以 `viewController` 表示完整展示状态，旧 `controller` 继续表示既有服务，不能混称。`ApiKeyManager` 的 `options` 是 `ApiKeyManagerOptions`；日志的 `options` 分别是 `BusinessLogOptions` / `StructuredLogOptions`。显式 options 模式只创建一个所属服务，首挂载显式 start 一次；借用旧 controller 时不擅自开始宿主查询。`createApiKeyManagerViewController({service,pagination})` / `createBusinessLogViewController({service})` / `createStructuredLogViewController({service})` 引用服务，不复制结果和请求 owner；注入各自 viewController 后不可再传 service/options 初始化。API Key 页数来自完整 list，日志仍使用其真实游标/as_of，不虚构 total。`options` 的服务配置只初始化当前默认服务一次（BusinessLogExplorer的当前options.labels作为实时展示输入，见[整页语言](COMPONENTS.md#业务日志整页标签热更新4229)）；父组件传入新的等值配置对象不会重建服务、重发查询或丢弃草稿。更换业务数据 owner 时显式传入新的服务 controller/viewController，或按真实业务范围重挂载。AdminSetupController.update 可更新未来的 onSubmit/onCheck/validateUsername；不会重试在途操作，默认 Page 随回调更新核对入口。 PasswordStrengthController.bindReader 租用 View 的 DOM reader，释放或替换时取消旧代评估并恢复宿主原 reader；View 退出不永久保留 DOM 引用。
 
 `createLoginViewController({auth,config,extensions?,onAuthenticated?})` 必须借用实际 AuthClient，View 不创建认证协议/client。绑定的 `readCredentials` 只提供瞬时读取边界，校验/扩展只保留用户名或安全错误，异步扩展完成后才读取用于 auth 的密码。交给 AuthClient 的参数属于其 IO 边界；本模型不在任何快照/缓存/日志保留密码，不破坏自定义 AuthClient 异步读取其参数的合同。实际 DOM 在提交、pagehide、替换和卸载时清理。Secret-safe 子模型与管理员初始化 form 聚合见组件矩阵。
 

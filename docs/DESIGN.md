@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.28。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.29。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -519,6 +519,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --tooltip-max-width: 20rem;
     --table-cell-padding: var(--space-control-gap);
     --table-action-gap: var(--space-text-gap);
+    --table-action-max-inline-size: calc(100cqi - (var(--focus-width) + var(--focus-offset) + var(--line-width-surface)) * 2);
     --metric-padding: var(--space-content-gap);
     --metric-gap: var(--space-text-gap);
     --button-hover-background: color-mix(in oklab, var(--action-primary) 94%, var(--foreground));
@@ -1856,6 +1857,10 @@ QueryForm 是 HTML form 与布局，不查询、不缓存、不推断权限、�
 #### 业务日志列表展示（4.2.27）
 
 审计主视图围绕操作者、发生时间、业务摘要和结果，技术标识/action代码/对象/关联信息进入既有详情；需要兼容旧视图的项目仍可保留七列。列选择/顺序与actor/action/time纯文本格式化统一走BusinessLogExplorer.list，不复制公共页或改写wire。操作者和摘要的真实领域含义由宿主提供，时间展示由宿主Intl按locale和明确时区政策处理；详情及筛选保留原id、代码和ISO事实。四项事实加原详情按钮构成五列；未配置detail时公共组件追加末列保证事实可达，空态/加载/失败和游标仍由原Controller拥有。文字/颜色/横滚遵循既有表格槽位，不因更换显示内容自行设置字号或增加卡片。TableContainer在子操作获焦且被自己的滚动边界裁切时就近揭示，scroll-padding为焦点环保留Token空间；真实Tab及详情关闭回焦须检查整个按钮和焦点环，不能以部分进入视口代替。公开字段、动态更新和回焦合同见[组件规范](COMPONENTS.md#业务日志列表展示配置4227)。
+
+#### 业务日志整页语言（4.2.29）
+
+BusinessLogExplorer的整页文案属于实时展示slot，宿主语言owner把当前labels传给同一个组件，不使用key=locale、重新创建Controller或再次查询换语言。标题、筛选字段/枚举、表头、结果、加载/空/错误、分页与快照前缀、详情事实标签和动作共同更新；原业务摘要、payload、ID、action、ISO和snapshot是事实，不翻译或改写。保留同一个service/view、已生效范围、未提交草稿、详情、游标/已访问页、节点和有效焦点，在途请求不因语言改变而取消或重发。超长详情动作译文受所属表格净宽约束并自然换行，焦点环不能因动作宽于滚动区而被裁。优先级、部分覆盖替换和错误语义见[组件合同](COMPONENTS.md#业务日志整页标签热更新4229)，按[BIZ-LABEL清单](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)验收。
 
 #### 四类默认公共页面（4.2.23）
 

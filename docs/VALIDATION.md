@@ -1,5 +1,21 @@
 # 验证证据与限制
 
+## 业务日志整页 labels 语言热更新（4.2.29，2026-10-19）
+
+先核对main 53f0812a/4.2.28：list展示回调可更新，但Controller.labels只有构造时词典。新增resolver/反馈键回归先运行原4.2.28 dist，得到预期2项失败（缺少resolver与反馈语义键），见`.artifacts/business-log-labels-4.2.29/baseline.log`。没有切历史checkout、复制源码或修改消费项目。
+
+React新增BusinessLogExplorer.labels实时展示输入，默认模式当前options.labels也实时生效。保留原service/view及状态，不用key=locale；部分覆盖每次替换、移除恢复当前基底。runtime纯resolveBusinessLogLabels与可选errorKey/detailErrorKey/filterErrorKey支持已有与未来反馈按当前词典呈现；旧Controller.labels、原错误字符串及无键的手写Controller行为保留。loader、HTTP、认证、筛选、详情和分页owner均未改变。公共类型、DESIGN/COMPONENTS/PUBLIC_API、定向接入及BIZ-LABEL-001～006、adopt-xui和原正式示例同步。
+
+额外截图/几何复核发现390px、根字号200%下超长详情译文原宽398px，大于表格326px，焦点环无法完整显示（narrow-long-baseline.json）。公共表格区域建立inline容器，以新增table-action-max-inline-size Token预留焦点环空间；按钮按内容优先、超上限才换行，避免自动表格把可换行中文压成逐字竖排。432 Token的计数/源指纹已同步，不放宽design-value-guard或性能预算。最终浏览器同时断言该固定长译文最多两行、完整焦点边界和热切回长文案后的同一焦点。
+
+最终构建、Token、typecheck、定向Node测试52/52、skill校验、正式三tarball ESM/CSS/types及正负类型消费者通过；sourceGeneration `ce48927e0c7e7b18fc860e5463b15b5e9cd50365a7099816d39bee4b19f62c19`。React/ReactDOM19.2.8、Base UI1.7.0单实例，无src alias。初始JS gzip144640/153600、关键CSS22242/22272、Button-only6631/16384 bytes，均在原预算内。
+
+同代正式浏览器44个唯一用例全部通过（26项新labels验收、18项原业务日志/列表回归）：service/view/options三模式保留已生效条件、未提交草稿及选区、开合、当前详情、第二页与snapshot、原数据和行/单元格/动作/弹层节点；语言切换的list/detail请求和abort增量为零，已访问上一页仍读缓存。覆盖部分词典/移除/优先级、已有读取与合同错误、403/404、无效筛选、空态、过期/不可用、renderer fallback、旧手写Controller三类安全错误，以及在途列表/详情、取消/迟到。原ISO/ID/action/payload不改写，三个时区的列表formatter继续通过。覆盖light/dark/system、1280/390、长中文、窄屏根字号200%、真实Chrome设置200%缩放（DPR翻倍、CSS zoom=1、pinch=1）、弹层滚动、Tab/Enter/Escape和回原动作。
+
+原始报告browser-final.json、case-summary.json、解码附件/截图、visual-proof.json和正式receipt/performance存于`.artifacts/business-log-labels-4.2.29`。截图复核包含浅深及窄屏中英文详情和真实zoom；补充真实wheel验证窄屏详情保持同一滚动节点，语言重排后scrollTop由500到544，未归零（不承诺不同译文下像素位置完全相等）；候选失败记录单独保留，不计为最终通过。复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`；`node --test tests/business-log.test.mjs tests/interaction-controller.test.mjs tests/page-api.test.mjs tests/contract.test.mjs tests/docs.test.mjs`；`pnpm test:consumer`；`pnpm exec playwright test tests/browser/business-log-labels.spec.mjs tests/browser/business-log.spec.mjs tests/browser/business-log-list.spec.mjs --workers=2`。
+
+未跑全仓unit/browser、watch/cold-start、其他浏览器/OS、真实业务后端或消费项目现场；库合成loader只证明公共展示/请求边界，不代表xAgent等项目已升级或其业务验收完成。旧手写Controller无语义键时有意保留原安全错误文字；宿主自定义renderer/headerActions及事件事实由宿主语言/数据owner负责，labels不代为翻译。
+
 ## 普通HTTP原生剪贴板完整复制（4.2.28，2026-10-19）
 
 核对4.2.18至4.2.27的公共fallback，均使用零尺寸textarea。早期无shim原生Chrome155对照中，0×0失败而1×1/2×2且opacity=0完整写入同一合成内容，证据`.artifacts/clipboard-confirm-4.2.26`。本轮新增系统回归先运行4.2.27正式tarball（sourceGeneration `6b899b4f543a588a964449c1a99c3b0df0ab939755d7520d5c83931f5c0b13cc`），原生Chrome156.0.8078.4、HTTP页面、isSecureContext=false、navigator.clipboard缺失、execCommand为native时，种子前置通过且service状态copied，但OS全文相等为false，得到预期失败；见`.artifacts/clipboard-4.2.28/baseline.log`和baseline.json。仅拦截页面合成HTML，不替换clipboard/execCommand，不用CUA剪贴板或快捷键作为系统证据。

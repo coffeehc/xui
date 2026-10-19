@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.28）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.29）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -11,7 +11,7 @@
 5. 每行证据必须指向此次固定产物上的真实消费源码、浏览器/Network 记录、自动化执行结果或后端 handler/合同测试。测试文件存在、样板通过、截图好看或旧版本通过均不能单独证明产品页面通过。
 6. 每个使用中的具名 slot 都要按实际“页面/组件实例 × slot”单独检查；报告必须分别记录归属/API、填入内容、视觉语义与 token 角色、排版/对齐、空槽行为、适用状态、滚动与焦点归属。一个组件样板不能代表所有页面实例。
 7. 实施前保存授权范围内的完整页面/组件实例/运行入口清单和 slot 映射，交付前提交逐项矩阵，至少包含：`ID、对象/页面/组件实例/slot/API、状态、期望、实际、证据、责任 owner`。不得以“符合 xui”“组件已复用”或按章节汇总代替逐行结论。适用失败项或实际页面验收未跑时，不宣布完整接入/升级验收通过。
-8. 同一构建的产物、peer和共享入口证据可以验证一次并引用，仍须验证各页面自己的slot/状态/请求接线。选择必要构建/类型和受影响回归，不以本表要求无关全套测试；共享变化或关联失败按影响补验，不重复仍适用的同代证据。Toast、复制与业务日志列表按[定向适用表](ADOPTION.md#toast-与复制及业务日志列表定向升级)分别选择TOAST-005～006、STATE-COPY-001～002、BIZ-LIST-001～005，不捆绑三项或新增业务；StructuredLogExplorer定向流程见[skill专项](../.agents/skills/adopt-xui/references/structured-log.md)，判定仍用下文LOG-QUERY-001～008。
+8. 同一构建的产物、peer和共享入口证据可以验证一次并引用，仍须验证各页面自己的slot/状态/请求接线。选择必要构建/类型和受影响回归，不以本表要求无关全套测试；共享变化或关联失败按影响补验，不重复仍适用的同代证据。Toast、复制与业务日志列表按[定向适用表](ADOPTION.md#toast-与复制及业务日志列表定向升级)分别选择TOAST-005～006、STATE-COPY-001～002、BIZ-LIST-001～005，不捆绑三项或新增业务；BusinessLogExplorer整页换语言按BIZ-LABEL-001～006，不以list formatter验收代替整页；StructuredLogExplorer定向流程见[skill专项](../.agents/skills/adopt-xui/references/structured-log.md)，判定仍用下文LOG-QUERY-001～008。
 
 ## 新接入与升级的流程门禁
 
@@ -765,6 +765,17 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | BIZ-LIST-003 | 动态替换list配置 | 不换Controller/loader、不请求、不清草稿/筛选/快照/详情；按行/列ID保留节点与有效焦点 | 配置前后请求/节点/草稿/焦点、各Controller模式 | [状态归属](COMPONENTS.md#状态所有权与-controller-模式) |
 | BIZ-LIST-004 | 应用筛选/打开关闭详情 | 筛选仍发送原始action/actor ID；详情保留技术事实与权限/过期分支；键盘关闭回同一按钮 | 实际请求参数、详情原字段、Enter/Escape与回焦 | [业务日志](PUBLIC_API.md#业务日志) |
 | BIZ-LIST-005 | 三主题/窄屏/长中文/两种200% | 继承公共表格文字和颜色，横滚只在表体，全部列与详情按钮可达，Tab及详情关闭回焦后按钮/焦点环完整位于表格可视边界，不以部分相交判通过；不裁文字/缩字/套私有皮肤 | 明暗system、桌面/390、根字号/真实zoom、实际几何与截图 | [设计合同](DESIGN.md#业务日志列表展示4227) |
+
+## 业务日志整页语言逐项检查
+
+| ID | 操作 | 必须结果 | 证据 | 合同 |
+| --- | --- | --- | --- | --- |
+| BIZ-LABEL-001 | 切换当前语言，沿用实际Controller模式 | labels为展示输入；默认options.labels也实时生效，不用key=locale或新owner；三模式采用同一优先级 | 正式types、实际调用点、Controller/view身份及语言前后DOM | [整页语言](COMPONENTS.md#业务日志整页标签热更新4229) |
+| BIZ-LABEL-002 | 替换部分词典、移除覆盖 | 当前labels覆盖当前基底；不继承上一份语言；移除恢复当前options/controller基底，默认options移除恢复英文默认 | 完整/部分/undefined覆盖、更新基底和默认对照 | [整页语言](COMPONENTS.md#业务日志整页标签热更新4229) |
+| BIZ-LABEL-003 | 已筛选、未提交草稿、非首页、打开详情时换语言 | 生效filter、草稿、Disclosure、详情、游标/快照/缓存及原事件事实保持；字段/行/动作/弹层节点、选区/滚动和有效焦点连续 | state/节点identity、输入选区/滚动、page/snapshot、Enter/Escape回焦 | [整页语言](COMPONENTS.md#业务日志整页标签热更新4229) |
+| BIZ-LABEL-004 | 已有错误、空/加载/过期状态和在途请求时换语言 | 所有公共文案/可访问名称使用当前词典；已显示错误按语义键翻译；旧自定义Controller无键保留安全字符串 | 列表/详情读取与合同错误、403/404、无效筛选、空态、过期/不可用、加载及取消/迟到 | [整页语言](COMPONENTS.md#业务日志整页标签热更新4229) |
+| BIZ-LABEL-005 | 换语言前后记录请求/取消 | 语言本身零list/detail请求、零retry/cancel，不改变在途signal/generation；旧迟到不复活，已访问上一页不因翻译失去缓存 | 请求参数/次数、abort计数、在途和取消后释放；原loader owner | [业务日志](PUBLIC_API.md#业务日志) |
+| BIZ-LABEL-006 | 三主题、宽窄、长中文、根字号及真实200%缩放 | 继承公共layout/slot/文字，不裁剪或自写皮肤；弹层滚动和按钮/焦点环完整可达，关闭回同一动作 | 实际几何、焦点/scroll与浅深system截图；库示例不代替产品现场 | [设计合同](DESIGN.md#业务日志整页语言4229) |
 
 ## 四类默认页面逐项检查
 

@@ -1,5 +1,9 @@
 # 公共能力维护清单
 
+## xAgent 业务日志整页语言热更新（4.2.29）
+
+核对固定4.2.28及最新main 53f0812a，list formatter可热更新，但controller.labels只在构造时合并，缺少整页展示入口。4.2.29新增BusinessLogExplorer.labels，默认options.labels也实时生效；沿用同一Controller/view、草稿、详情、分页与快照，语言本身不请求或取消。默认Controller保留旧错误字符串并公开语义键，React据当前词典呈现已有/迟到反馈；无重建owner或私有DOM补丁。[公开合同](COMPONENTS.md#业务日志整页标签热更新4229)、[逐项检查](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)与[正式验证](VALIDATION.md)分别记录。仅修改xui，不代表xAgent实际页面升级已通过。
+
 ## xAgent 业务日志列表展示配置（4.2.27）
 
 核查报告的4.2.18及最新4.2.26：BusinessLogExplorer固定七列，actor拼接kind/name/id，时间原样ISO，没有列表列与formatter入口。4.2.27以可选list展示slot补齐列选择/顺序与actor/action/occurredAt纯字符串格式化；推荐actor、occurredAt、summary、result、detail，兼容旧七列。默认helper保留headers/cells形状并新增columnIds，原服务/请求、事件/筛选/详情不改。调用及验收见[组件合同](COMPONENTS.md#业务日志列表展示配置4227)与[验证记录](VALIDATION.md)。宿主仍负责真实业务摘要、操作者投影和locale，库示例不代表xAgent实际验收。本轮不修改xAgent/业务API/部署。
