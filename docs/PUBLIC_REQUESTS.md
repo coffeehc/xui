@@ -1,5 +1,11 @@
 # 公共能力维护清单
 
+## 业务日志查询 slot 与统一单元格扩展（4.2.34）
+
+核对正式4.2.33/f69aabf与当前源码，BusinessLogExplorer原list只有字符串列和专用format*，无额外QueryField槽；领域操作者/会话等真实投影不能通过普通列cell组合。4.2.34按用户明确决定统一为列定义＋cell，不继续扩充专用formatter、会话列或复制接口。未指定cell读取对应原值，指定时完整使用返回内容；旧展示配置需要按COMPONENTS迁移表调整，不称兼容。queryFields/querySummary复用既有QueryForm，Controller/loader、HTTP、分页、快照与原始事件不换owner。可选attributes显式保留宿主授权的不可变JSON投影，不推断任意DTO，不改xAgent。
+
+正式示例同时覆盖公共Button/Badge/OverflowText和ClipboardService/Toast组合，真实结构化会话ID仅复制，无导航/筛选，无会话为空。额外资源scope使用同一Controller取消/清空旧范围；list/labels热更新零请求并保留草稿/详情/分页。列宽和动作上限继承公共表格，已聚焦动作因标签更新变宽时原位揭示，不迫使消费项目补样式。测试及未执行范围见[验证记录](VALIDATION.md)。4.2.33记录的NavigationMenu历史滚动失败不在本项修复范围，消费项目仍须独立升级和实际页面验收。
+
 ## 图标按钮在组合容器中的覆盖遗漏（4.2.33）
 
 xAgent正式4.2.32/3c440f4真实页面验收发现SearchToolbar.actions中的默认outline图标按钮padding被公共规则改回0，target36/圆面34，root32时圆面70；同页Card仍为28/56，问题归公共库。核对还发现SidebarFooter文字按钮样式覆盖纯图标的居中/收拢内距/最小宽度。同源补充还确认workspace edge/ScrollArea inset的scope proximity及侧栏通用内描会覆盖纯图标offset，普通72px target的环变72px而非62px。4.2.33沿用既有IconButton圆面Token，修复SearchToolbar/advanced/QueryForm及Footer组合，并排除通用inset选择器对纯图标的接管；普通输入/invalid/滚动区自身与Dialog边界保持，不更换Controller、权限或请求owner，不改xAgent；消费方反馈的业务统计栏挤压由宿主处理。独立正式4.2.32消费者先复现padding/居中两项失败，并复现根100%/200%的inset两项失败；候选回归进一步修复大号图标被收拢Footer净宽压扁的问题。最终组合范围及未跑项见[验证记录](VALIDATION.md)。
@@ -25,7 +31,7 @@ xAgent的XUI-CARD-FOOTER-META-SHRINK与xLead两项反馈均源自正式4.2.28；
 
 ## xAgent 业务日志列表展示配置（4.2.27）
 
-核查报告的4.2.18及最新4.2.26：BusinessLogExplorer固定七列，actor拼接kind/name/id，时间原样ISO，没有列表列与formatter入口。4.2.27以可选list展示slot补齐列选择/顺序与actor/action/occurredAt纯字符串格式化；推荐actor、occurredAt、summary、result、detail，兼容旧七列。默认helper保留headers/cells形状并新增columnIds，原服务/请求、事件/筛选/详情不改。调用及验收见[组件合同](COMPONENTS.md#业务日志列表展示配置4227)与[验证记录](VALIDATION.md)。宿主仍负责真实业务摘要、操作者投影和locale，库示例不代表xAgent实际验收。本轮不修改xAgent/业务API/部署。
+核查报告的4.2.18及最新4.2.26：BusinessLogExplorer固定七列，actor拼接kind/name/id，时间原样ISO，没有列表列与formatter入口。4.2.27以可选list展示slot补齐列选择/顺序与actor/action/occurredAt纯字符串格式化；推荐actor、occurredAt、summary、result、detail，兼容旧七列。默认helper保留headers/cells形状并新增columnIds，原服务/请求、事件/筛选/详情不改。调用及验收见[组件合同](COMPONENTS.md#业务日志列定义与查询-slot4234)与[验证记录](VALIDATION.md)。宿主仍负责真实业务摘要、操作者投影和locale，库示例不代表xAgent实际验收。本轮不修改xAgent/业务API/部署。
 
 ## xAgent HTTP剪贴板假成功（4.2.28）
 

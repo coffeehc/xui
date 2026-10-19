@@ -1,5 +1,21 @@
 # 验证证据与限制
 
+## 业务日志列定义、cell 与查询槽（4.2.34，2026-10-19）
+
+核对正式4.2.33/f69aabf及最新main：原完整页仅有字符串列和专用format*，无queryFields。按用户最后决定，4.2.34只保留列定义＋cell：无cell/null读取event自身字段、其次显式attributes原值；有cell则使用完整React结果（包括null/undefined留空）。不增加全局defaultCell或会话/用户/复制专用接口，不保留旧展示兼容分支。普通列无需回调，时间键为occurred_at，custom列按需显式detail；runtime helper返回原event和逐列values。未传list的默认七列仍由公共默认列定义渲染。attributes经现有JSON边界深冻结，未知顶层字段继续丢弃，真实身份/会话投影由宿主授权提供。
+
+queryFields/querySummary复用既有QueryForm/QueryField：额外资源范围、标准宽事件类型和结果同带对齐，应用/清除在查询动作区，原刷新/取消保留标题次要动作。高级字段继续原Disclosure/ViewController草稿。scope切换由稳定loader先更新范围，再用同一Controller.setFilter清空旧列表/详情/缓存和快照、取消旧代；仅list/labels/cell更新零请求、零取消且不重挂。身份/权限/租户切换仍走原销毁边界。没有新增Controller、transport或业务owner。
+
+build、436 Token图/指纹、typecheck、75项定向Node检查及正式三tarball ESM/CSS/types、正负类型消费者通过，sourceGeneration=`a17cf0789c5313f3fe181bfb5cf3aed2d914f55ecef06b2fbf8b00419d4674e0`。React/ReactDOM19.2.8、Base UI1.7.0各一份，无src alias。关键CSS gzip22612，较4.2.33的22553增加59 bytes；原22592上限不足，限定本功能新增64到22656，其余JS/Button/service门禁不变；初始JS144665/153600。首轮CSS超限日志consumer-candidate.log保留，不当作最终通过。
+
+最终浏览器57/57通过：13项新cell/查询槽、12项列表、26项整页语言、6项原业务日志回归。覆盖无callback的0/false/null/缺失/嵌套JSON、callback留空及context.content保留详情、文本注入惰性、自定义Badge与Button、真实系统剪贴板写入结构化会话ID（无会话为空），复制前后URL/请求/行几何/焦点不变；scope在旧列表与详情在途时取消，迟到释放不复活；列重排、三种Controller模式及labels更新保留草稿/选区/详情/页/快照/缓存/节点和焦点。保留原筛选原始参数、权限/不存在/过期/错误/取消/重试和卸载清理回归。
+
+light/dark/system、1280/390、长中文、根字号200%和真实Chrome设置200%分别通过。真实zoom校验DPR翻倍、净宽减半、根字号不变、CSS zoom=1/pinch=1。验证Enter复制、Enter打开详情/Escape回同按钮、操作与焦点完整揭示；公共OverflowText的hover/已有focus滚动、reduced-motion完整换行均通过。已查看最终浅深初始完整查询区、深色窄屏大字和原生zoom会话动作截图。截图复核后将事件类型改为标准宽度并保留原标题刷新/取消，消除多行动作撑开的字段空隙；变更后已重建正式包并完整重跑上述57项。
+
+候选阶段发现自定义固定宽按钮超出窄表格净宽、已聚焦详情因语言变长后被裁，公共实现分别继承既有table-action-max-inline-size，并在本行展示更新后原位揭示当前动作，未要求宿主CSS。早期浏览器误用了尚未重建的4.2.33旧预览，已终止；该记录及候选50/56失败不作为本版结果。最终用例不累计多轮次数。原始日志、browser-final.json、逐例case-summary.json、解码截图/zoom附件、consumer-validation/performance和visual-proof均在`.artifacts/business-log-cells-4.2.34`。
+
+复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`；`node --test tests/business-log.test.mjs tests/interaction-controller.test.mjs tests/page-api.test.mjs tests/contract.test.mjs tests/docs.test.mjs tests/design-state-contract.test.mjs tests/design-value-guard.test.mjs`；`pnpm test:consumer`；`pnpm exec playwright test tests/browser/business-log-cells.spec.mjs tests/browser/business-log-list.spec.mjs tests/browser/business-log-labels.spec.mjs tests/browser/business-log.spec.mjs --workers=2`。未跑全库unit/browser、watch/cold-start、其他平台/浏览器、真实领域后端或消费项目页面/部署；不把库示例通过写成xAgent升级完成。4.2.33记录的两个历史NavigationMenu滚动失败仍单列PUBLIC_REQUESTS，不在本次修复范围。
+
 ## 图标按钮组合与内描边界（4.2.33，2026-10-19）
 
 先核对main 3c440f4/4.2.32及xAgent的真实组合证据。用已安装正式4.2.32 ESM/CSS/types运行新增回归，SearchToolbar圆面34而非28、Footer glyph不居中两项预期失败；另用同代正式CSS复现workspace edge的根100%/200%焦点环36/72而非34/62。baseline.log/json、focus-baseline.log/json及附件保留，无历史checkout或额外源码副本。

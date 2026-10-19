@@ -619,7 +619,7 @@ baseservice 的 apikeyservice/webfacade 配套严格 v2。共享 [decimal](../te
 
 4.2.29新增React `BusinessLogExplorer.labels?: Partial<BusinessLogLabels>`，三种Controller模式实时更新整页文案；默认模式当前options.labels也实时生效。runtime新增纯`resolveBusinessLogLabels(overrides?, base?)`和可选state.errorKey/detailErrorKey（BusinessLogFeedbackKey）、filterErrorKey（invalidFilter），旧字符串及Controller.labels保留兼容。优先级、替换/移除、错误回退及无需请求的连续性合同见[组件规范](COMPONENTS.md#业务日志整页标签热更新4229)。不改loader/HTTP/认证/wire，也不把业务事实或时区当成labels转换。
 
-4.2.27新增纯展示合同：React `BusinessLogExplorer.list`与runtime `getBusinessLogTable(state,labels,list?)`接受`BusinessLogListPresentation`（`columns`、`formatActor`、`formatAction`、`formatOccurredAt`），列键类型`BusinessLogListColumnId`。runtime/React `/business-log`及根入口均正式导出类型；既有props、默认七列及helper缺省headers/cells不变。detail省略时自动追加；formatter返回纯文本，原事件/筛选/详情不改。完整五列接线、locale/时区、动态更新和helper新增columnIds合同见[组件规范](COMPONENTS.md#业务日志列表展示配置4227)。
+4.2.34统一为列定义与cell：React `BusinessLogExplorerListPresentation.columns`为`{id,header,width?,overflow?,cell?}[]`，不指定cell读`event[id]`或显式`attributes[id]`原值，指定cell使用完整React返回结果（包括空值）。context公开只读rowId/columnId/event/value/text/content。无全局defaultCell，不保留字符串columns和format*；时间字段为occurred_at，custom列不自动追加detail。runtime `getBusinessLogTable`返回同序rows.values原值及原event，类型与React扩展均在正式子入口/根入口导出。可选attributes是经过JSON验证/深冻结的宿主投影，不是未知DTO透传。新增queryFields/querySummary复用QueryForm/QueryField，公共筛选/应用/清除与标题刷新/取消均由原Controller拥有。逐项迁移、列宽/长文本及scope取消规则见[组件合同](COMPONENTS.md#业务日志列定义与查询-slot4234)；不改HTTP/认证、loader、分页或快照owner。
 
 用途是随时调取查阅领域业务记录，提供通用字段、可扩展payload、筛选分页和详情。用户所说的“审计”指这个业务日志用途，不是正式审计体系；旧BusinessAudit命名在同一实现上统一改为BusinessLog，没有增加另一套页面。公共事件描述谁在何时对哪个业务对象做了什么、结果如何、关联哪些请求及允许披露的业务细节。现有 [错误观察功能](PUBLIC_API.md#程序错误观察) 是独立功能，severity/错误分组/首次代表不能充当业务日志。完整通用规则仅在 [DESIGN.md](DESIGN.md)。
 
@@ -631,7 +631,7 @@ runtime/business-log 提供 DTO、严格解析、loader 和单一 controller；R
 
 | 类型 | 字段与事实 |
 | --- | --- |
-| BusinessLogEvent | id、event_type、schema_version、occurred_at、recorded_at、actor、object、action、result、summary、correlation_id、request_id。列表没有 payload |
+| BusinessLogEvent | id、event_type、schema_version、occurred_at、recorded_at、actor、object、action、result、summary、correlation_id、request_id；可选attributes为显式授权的不可变JSON投影。列表没有 payload |
 | BusinessLogActor | kind 为 user/agent/service，id 为可信标识，display_name 为允许显示的字符串或 null。服务负责归属及代理授权，UI 不由名称猜身份 |
 | BusinessLogObject | kind、id、display_name；整个 object 可为 null。不同领域自定 kind，UI 不自行生成对象路由 |
 | result | succeeded/failed/denied/unknown；unknown 不伪装完成。异步任务、部分完成等领域事实进入对应 event_type/payload，adapter 必须明确结果映射，不能由 HTTP 200 或 severity 推断 |
@@ -652,7 +652,7 @@ filter 明确支持 `[since,until)` 事件时间、actor kind/id、object kind/i
 
 默认createBusinessLogHttpLoader采用 BaseService webfacade offset和httpx ListData，不产生cursor或snapshot。领域cursor loader的cursor须绑定scope/filter/顺序；snapshot_id可选，仅展示实际返回值，当前链保留已知真实snapshot基准，缺省metadata不抹掉基准，后来返回的真实snapshot必须一致；不填时间戳/常量/虚构ID。服务提供稳定全序（推荐记录顺序与 ID 解冲突），UI 保留返回顺序，不从事件时间猜提交顺序。缓存上一段只保存当前查询链的摘要，不重发 null cursor；下一段显式请求。过滤或刷新建新链，刷新失败保留旧事实和原已访问段编号，同时禁用旧链导航。cursor域的pageIndex只是成功访问的段；默认offset域明确将它作为基数0的服务页码，不能将两者混用。
 
-controller 的列表与详情各有取消/generation；替换、关闭、卸载与 destroy 拒绝迟到结果。状态转换一次通知，订阅回调的新意图优先；订阅释放/重绑不在同一次通知无限调用。权限/身份/scope 切换须销毁旧 controller，不能把摘要缓存跨租户复用。
+controller 的列表与详情各有取消/generation；替换、关闭、卸载与 destroy 拒绝迟到结果。状态转换一次通知，订阅回调的新意图优先；订阅释放/重绑不在同一次通知无限调用。身份、权限或租户切换须销毁旧 controller，不能把摘要缓存跨租户复用。同一身份下的资源查询scope切换可由稳定loader先更新范围，再用同一Controller.setFilter清空旧数据/详情/已访问缓存及快照，取消旧代并读取新范围；不能只refresh保留旧scope行。
 
 ### 详情与公开 renderer
 

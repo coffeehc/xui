@@ -1610,30 +1610,41 @@ CardGroup的natural/document跟随真实外层滚动owner；body没有纵向范�
 
 ConfigurableLoginPage对auth.refresh或auth.session的network/timeout/HTTP 5xx读取失败提供现有checkSession标签的检查动作，且必须非busy、未认证。用户明确触发后由原LoginViewController调用同一AuthClient.currentUser；没有自动retry、login/logout重放或新Auth owner。未知退出仍以auth.logout及既有禁恢复语义处理，不提供这种读恢复入口；403/401不是此重试按钮的条件。可恢复读取的unknown不当作anonymous或authenticated。
 
-## 业务日志列表展示配置（4.2.27）
+## 业务日志列定义与查询 slot（4.2.34）
 
-`BusinessLogExplorer.list?: BusinessLogListPresentation`是实时生效的展示slot：只选择/排列列表列并格式化文本，不是`BusinessLogOptions`或查询参数。runtime `/business-log`和React `/business-log`及其根入口公开`BusinessLogListColumnId`、`BusinessLogListPresentation`；纯helper `getBusinessLogTable(state, labels, list?)`使用同一合同。
+React `/business-log` 的 `BusinessLogExplorer.list?: BusinessLogExplorerListPresentation`统一使用列定义。`columns`每项为`{id, header, width?, overflow?, cell?}`；id是稳定列标识，也是默认字段名，非空且唯一；header由宿主提供当前语言。没有指定columns时仍显示公共七列，公共默认列用同一cell路径呈现操作者、结果和对象；一旦指定columns，顺序与数量完全由配置决定，不自动追加detail。
 
-列ID为`summary | result | actor | action | occurredAt | object | detail`。省略columns保留原七列及原始文本；配置必须非空、唯一且只有公开ID，顺序即表头/单元格顺序。`detail`可放在任意位置，省略时自动追加末列，不能因隐藏技术列失去完整事实入口。helper新增columnIds；headers与其同序，rows.cells只包含非detail列值，缺省时原headers/cells保持兼容。不要按旧固定数字索引猜新列含义。
+**只有两条渲染规则**：不指定cell（或null）时读取原值；指定`cell(context)`时完全使用其React返回值，包括null/undefined留空。无全局defaultCell、无formatActor/formatAction/formatOccurredAt。原值先读事件自身`event[id]`，没有该字段才读显式`event.attributes[id]`，不猜别名、不走点路径、不解析显示文本、不读取payload。0/false显示为0/false，null/undefined为空；对象/数组默认是安全JSON文本。原ISO/状态码不自动格式化或翻译，需要时在对应cell明确处理。`detail`是公共动作列，缺省cell提供原详情Button，宿主可用`context.content`保留这个动作；覆盖或省略它时，宿主需保留必要事实的可达入口。
 
-`formatActor(actor,event)`、`formatAction(action,event)`、`formatOccurredAt(iso,event)`只对选中的列执行，返回纯字符串，React按文本呈现。参数来自原不可变事件；回调不得改写wire或把显示名写进id/action/filter。未配置时仍为原actor组合、action代码和完整ISO；具体locale/本地时区由宿主的Intl.DateTimeFormat选择，库不隐式转换。格式化错误/非字符串是宿主展示配置错误，传播给宿主render boundary，不伪装成读取失败或触发重试。
+`BusinessLogExplorerCellContext`包含只读`rowId / columnId / event / value / text / content`。event是Controller当前页中对应的不可变原事件，value是该列原值，text为上述默认文本，content为公共默认呈现（detail为原按钮）。回调可以返回Badge、Button、链接、勾选等任意React内容；授权、确认、复制、导航和业务提交仍归宿主，不增加专用session/owner/copy列API。不得在渲染过程中请求/写入/修改事件；错误交宿主render boundary，不伪装成读取错误或触发重试。稳定列ID和行ID保留节点；回调组件自身的key/type由宿主保持。
+
+`BusinessLogListColumn`、`BusinessLogCellContext`及`BusinessLogListPresentation`由runtime与React `/business-log`、根入口导出，React另导出带ReactNode回调的`BusinessLogExplorerColumn / BusinessLogExplorerCellContext / BusinessLogExplorerListPresentation`。纯helper `getBusinessLogTable(state, labels, list?)`返回`columns / columnIds / headers / rows`，每行`{id,event,values}`，values与全部列一一同序，包含detail的undefined原值；它不执行React cell。列宽复用DataTable的公开长度合同；`overflow="ellipsis"`必须显式width，公共OverflowText在hover/已有动作focus下揭示全文，reduced-motion与触屏自然换行。自定义Button/链接可组合公开OverflowText，不添加私有CSS、title补丁或额外tabindex。字体、颜色、焦点和横滚继承公共表格。
+
+`BusinessLogEvent.attributes?: Readonly<Record<string,JSONValue>>`是可选、显式、宿主审核过的列表投影。parser只接纳这一个扩展对象并深冻结，沿用JSON payload的64KiB/深度16/4096节点边界；拒绝getter、自定义原型、循环和非JSON。未知顶层字段继续丢弃，不自动披露payload。属性不得覆盖原事件字段或冒充actor/ID/原始时间。领域loader负责确认字段真实性/权限/脱敏；列表和详情可携带相同投影。HTTP与Controller、排序/分页/快照合同不变，默认适配器不会自动把任意领域DTO变为该合同。
 
 ```tsx
-import {BusinessLogExplorer, type BusinessLogListPresentation} from '@coffeehc/xui-react/business-log';
-const activityList: BusinessLogListPresentation = {
-  columns: ['actor', 'occurredAt', 'summary', 'result', 'detail'],
-  formatActor: actor => actor.display_name ?? actor.id,
-  // locale由项目选择；不传timeZone时沿用宿主本地时区政策。
-  formatOccurredAt: iso => new Intl.DateTimeFormat(locale, {
-    dateStyle: 'short', timeStyle: 'medium',
-  }).format(new Date(iso)),
-};
-<BusinessLogExplorer controller={logs} list={activityList} />;
+import {BusinessLogExplorer, type BusinessLogExplorerListPresentation} from '@coffeehc/xui-react/business-log';
+import {Badge} from '@coffeehc/xui-react/feedback';
+import {QueryField} from '@coffeehc/xui-react/search-toolbar';
+const list: BusinessLogExplorerListPresentation = {columns: [
+  {id: 'owner_name', header: t('owner'), width: '10rem'}, // attributes.owner_name原值
+  {id: 'occurred_at', header: t('time'), cell: ({value}) => timestamp.format(new Date(String(value)))},
+  {id: 'summary', header: t('summary')}, // event.summary原值
+  {id: 'result', header: t('result'), cell: ({event}) => <Badge>{t(event.result)}</Badge>},
+  {id: 'detail', header: t('detail')},
+]};
+<BusinessLogExplorer controller={logs} labels={labels} list={list}
+  queryFields={<QueryField label={t('resource')} width="standard">{resourceSelect}</QueryField>}
+  querySummary={confirmedResourceSummary} headerActions={pageActions} />;
 ```
 
-主视图的四项事实为谁、何时、做了什么、结果，detail列只放原详情动作；业务摘要及操作者投影由宿主数据owner提供。summary使用主文字轨道，actor/result使用正文标签，时间/action沿现有技术值轨道，所有字体/颜色/横滚继续由公共Table/Theme负责。详情始终使用原事件ID、action、actor kind/id、原始时间、对象、关联/请求标识和授权payload，不应用列表formatter。列重排、语言/格式回调更新不重建Controller、不请求、不清除筛选草稿/快照/当前详情；以列ID及行ID维持节点，关闭详情回原按钮。列表配置独立适用于借用controller、注入viewController和options模式。
+queryFields只接直接QueryField子项（可含Fragment），放额外查询字段；querySummary只呈现已确认的额外范围/持续反馈；headerActions放语言等页面动作。公共事件类型/结果在QueryForm主字段，高级原字段在原Disclosure/FormGrid，应用、清除属于QueryForm.actions；刷新/取消读取保留原PageHeader位置，采用次要outline动作，不争抢查询主按钮。原“清除筛选”仍提交空公共filter并请求首段，不是重置未提交草稿，也不会擅自清除宿主queryFields的独立scope。仅list/labels/slot内容更新零请求、零取消，不清草稿、详情、页和快照。自定义列header与cell内文案由宿主随语言重新提供，不由labels猜测。
 
-正式[示例](../examples/business-log-react/app.tsx)的`?activity`使用五列，`&locale=en-GB`改变显示语言，`&time-zone=Asia/Shanghai`显式选择时区；不传time-zone使用浏览器本地时区。默认URL继续演示兼容七列。实际验收执行BIZ-LIST-001～005，库合成示例不代替产品事件可靠性、权限和真实请求验收。
+额外资源scope由宿主的稳定loader持有，不是新查询owner。同范围refresh保行；**跨scope**先更新loader读取的scope，再在同一Controller调用`setFilter(controller.getState().filter)`，立即清空旧数据/详情/已访问页与快照、取消旧读取并查新scope首段；旧代迟到结果不接管新页面。不用key=resource/locale重挂载，也不把新options当动态loader更新。额外scope的“清空”由宿主显式接线，与清除公共filter区别记录。
+
+4.2.34明确移除旧字符串columns和format*，不维护兼容分支：`'summary'`迁移为`{id:'summary',header:labels.summary}`；`occurredAt`迁移为真实字段`occurred_at`；formatActor迁到actor列cell（从context.event.actor读），formatAction/formatOccurredAt迁到对应列cell（从context.value读）。helper的rows.cells迁到rows.values，不再是旧格式化字符串；custom列需要详情时显式配置detail。未使用list配置的完整页无需调整。版本按项目政策只递增末位，不代表这一展示API兼容。
+
+正式[示例](../examples/business-log-react/app.tsx)：`?activity`为五列，`&locale=en-GB`/`&time-zone=Asia/Shanghai`由宿主选择时间格式；`?cells&labels`展示原值用户、结构化会话复制Button、Badge、固定列宽、QueryField资源scope和Toast。无会话为空；复制读取真实结构化ID，不导航、不筛选。合成loader只用于公共组合验收。执行BIZ-LIST-001～008及实际命中的BIZ-LABEL/STATE-COPY，不重跑无关完整接入。
 
 ## 业务日志整页标签热更新（4.2.29）
 
@@ -1650,7 +1661,7 @@ const labels: Partial<BusinessLogLabels> = translations[locale];
 
 整页标题/筛选字段/枚举/表头/结果/读取反馈/分页/快照前缀/详情标签/按钮及可访问名称同步更新，包括已显示的错误和仍在途的读取。原`controller.labels/options`和旧state.error/detailError字符串保留构造时合同；默认Controller新增可选errorKey/detailErrorKey，取值readError/contractError/forbidden/notFound或null，清除反馈时原子清空。filterError新增可选filterErrorKey=invalidFilter或null，同样在清除时原子清空。React按各自语义键取当前词典。手写旧Controller未提供对应键时继续显示其原安全错误字符串；要热翻译这类自定义错误，由该Controller提供对应公开语义键，不能按旧文字猜类别。
 
-换语言不发布service/view状态、不执行请求/重试/取消，不重置已生效筛选、草稿、开合、当前详情、分页、快照和已访问页缓存。原事件摘要/payload/代码/ISO、领域renderer及headerActions内容由宿主负责，词典不改写这些事实；列表时间格式仍走list的纯formatter。表格行/列、表单字段和详情动作使用稳定语义键，切换后保留节点、选区、滚动和有效焦点，不同译文重排时允许原生滚动锚点调整，不人为归零或重建滚动区。关闭详情回原按钮。详情动作按内容优先，超长译文按表格自身可视净宽换行，不能压成逐字竖排，使用公共间距为焦点环保留空间；不裁切文字或要求宿主限字/CSS覆盖。禁止key=locale、重挂载或复制公共DOM/CSS。
+换语言不发布service/view状态、不执行请求/重试/取消，不重置已生效筛选、草稿、开合、当前详情、分页、快照和已访问页缓存。原事件摘要/payload/代码/ISO、领域renderer及headerActions内容由宿主负责，词典不改写这些事实；列表时间格式仍走对应列的cell。表格行/列、表单字段和详情动作使用稳定语义键，切换后保留节点、选区、滚动和有效焦点，不同译文重排时允许原生滚动锚点调整，不人为归零或重建滚动区。关闭详情回原按钮。详情动作按内容优先，超长译文按表格自身可视净宽换行，不能压成逐字竖排，使用公共间距为焦点环保留空间；不裁切文字或要求宿主限字/CSS覆盖。禁止key=locale、重挂载或复制公共DOM/CSS。
 
 [既有正式示例](../examples/business-log-react/app.tsx)的`?labels&activity`展示中文/English按钮；`&owner=view`注入完整ViewController，`&owner=options`演示默认模式（先点刷新）；不传owner借用service。示例使用合成loader，无业务后端。定向验收只执行[BIZ-LABEL-001～006](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)及实际受影响项，不因语言变化重跑认证或写入流程。
 

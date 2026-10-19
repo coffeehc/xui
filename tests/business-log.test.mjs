@@ -33,21 +33,31 @@ test('business log feedback keys preserve legacy strings and clear atomically ac
   }finally{controller.destroy();}
  }
 });
-test('business log list presentation selects ordered facts without changing wire state or requests',async()=>{
- let reads=0;const controller=make({loader:{list:async()=>{reads++;return page();},detail:async()=>detail()}});try{
+test('business log columns read exact raw fields without changing state or requests',async()=>{
+ let reads=0;const raw=event({attributes:{owner_name:'用户甲',zero:0,flag:false,empty:null,summary:'cannot shadow',nested:{id:'session-real'}}});
+ const controller=make({loader:{list:async()=>{reads++;return page({list:[raw]});},detail:async()=>detail()}});try{
   await controller.refresh();const state=controller.getState(),before=JSON.stringify(state),labels=controller.labels;
-  const legacy=getBusinessLogTable(state,labels);assert.equal(legacy.headers.length,7);assert.equal(legacy.rows[0].cells.length,6);
-  const columns=['actor','occurredAt','summary','result','detail'],formatted=getBusinessLogTable(state,labels,{columns,formatActor:actor=>'友好名称：'+actor.id,formatOccurredAt:iso=>new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso))});
-  assert.deepEqual(formatted.headers,[labels.actor,labels.occurredAt,labels.summary,labels.result,labels.detail]);assert.deepEqual(formatted.columnIds,columns);assert.deepEqual(formatted.rows[0].cells,['友好名称：demo-user','20:00','Approved',labels.succeeded]);assert.equal(JSON.stringify(state),before);assert.equal(reads,1);
-  const reordered=getBusinessLogTable(state,labels,{columns:['detail','action'],formatActor:()=>{throw Error('hidden actor formatter');},formatOccurredAt:()=>{throw Error('hidden time formatter');},formatAction:(action,event)=>`${action} / ${event.summary}`});assert.deepEqual(reordered.columnIds,['detail','action']);assert.deepEqual(reordered.rows[0].cells,['approve / Approved']);assert.equal(state.data.list[0].action,'approve');
+  const standard=getBusinessLogTable(state,labels);assert.equal(standard.headers.length,7);assert.equal(standard.rows[0].values.length,7);
+  const ids=['owner_name','zero','flag','empty','missing','nested','occurred_at','summary','detail'];
+  const columns=ids.map(id=>({id,header:id})),table=getBusinessLogTable(state,labels,{columns});
+  assert.deepEqual(table.columnIds,ids);assert.deepEqual(table.rows[0].values.slice(0,5),['用户甲',0,false,null,undefined]);
+  assert.equal(table.rows[0].values[5].id,'session-real');assert.equal(table.rows[0].values[6],raw.occurred_at);assert.equal(table.rows[0].values[7],raw.summary);assert.equal(table.rows[0].event,state.data.list[0]);
+  assert.equal(JSON.stringify(state),before);assert.equal(reads,1);assert.ok(Object.isFrozen(state.data.list[0].attributes.nested));
+  const custom=getBusinessLogTable(state,labels,{columns:[{id:'action',header:'动作'}]});assert.deepEqual(custom.columnIds,['action']);assert.deepEqual(custom.rows[0].values,['approve']);
  }finally{controller.destroy();}
 });
-test('business log column configuration keeps a detail entry and rejects ambiguous columns',()=>{
- const controller=make();try{
-  const columns=['actor','summary'],table=getBusinessLogTable(controller.getState(),controller.labels,{columns});assert.deepEqual(columns,['actor','summary']);assert.deepEqual(table.columnIds,['actor','summary','detail']);
-  for(const value of [[],['actor','actor'],['payload'],null])assert.throws(()=>getBusinessLogTable(controller.getState(),controller.labels,{columns:value}),TypeError);
-  assert.throws(()=>getBusinessLogTable(controller.getState(),controller.labels,{formatActor:'invalid'}),TypeError);
+test('business log column definitions validate identities, widths and explicit overflow',()=>{
+ const controller=make(),table=columns=>getBusinessLogTable(controller.getState(),controller.labels,{columns});try{
+  assert.deepEqual(table([{id:'custom',header:'自定义',width:'20rem',overflow:'ellipsis'}]).columnIds,['custom']);
+  for(const columns of [[],['actor'],null,[{id:'x',header:'X'},{id:'x',header:'Y'}],[{id:'',header:'X'}],[{id:'x',header:''}],[{id:'x',header:'X',width:-1}],[{id:'x',header:'X',overflow:'ellipsis'}],[{id:'x',header:'X',overflow:'clip'}]])assert.throws(()=>table(columns),TypeError);
+  for(const key of ['formatActor','formatAction','formatOccurredAt'])assert.throws(()=>getBusinessLogTable(controller.getState(),controller.labels,{[key]:()=>''}),TypeError);
  }finally{controller.destroy();}
+});
+test('business log explicit attributes are immutable JSON, not unknown field passthrough',()=>{
+ const input=event({attributes:JSON.parse('{"__proto__":{"id":"safe"},"owner":{"id":"u","name":"名称"}}'),hidden:'hidden'}),parsed=parseBusinessLogEvent(input);
+ input.attributes.owner.id='changed';assert.equal(parsed.attributes.owner.id,'u');assert.equal(parsed.attributes.__proto__.id,'safe');assert.equal(Object.getPrototypeOf(parsed.attributes),null);assert.ok(Object.isFrozen(parsed.attributes.owner));assert.equal(parsed.hidden,undefined);
+ const controller=make();try{const state={...controller.getState(),data:parseBusinessLogPage(page({list:[parsed]}))};assert.equal(getBusinessLogTable(state,controller.labels,{columns:[{id:'constructor',header:'原型'}]}).rows[0].values[0],undefined);}finally{controller.destroy();}
+ const cycle={};cycle.self=cycle;for(const attributes of [null,[],new Date(),{get secret(){throw Error('getter');}},cycle,{n:1n},{n:Infinity}])assert.throws(()=>parseBusinessLogEvent(event({attributes})),TypeError);
 });
 test('business log common fields are exact immutable metadata; domain payload is never in list snapshots',()=>{
  const parsed=parseBusinessLogEvent(event({payload:secret,stack:secret,schema_version:42,actor:{kind:'agent',id:'a',display_name:'Agent'}}));assert.equal(parsed.schema_version,42);assert.equal(parsed.actor.kind,'agent');assert.equal(parsed.correlation_id,null);assert.ok(Object.isFrozen(parsed.actor));assert.ok(!JSON.stringify(parsed).includes(secret));

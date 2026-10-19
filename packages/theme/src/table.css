@@ -81,5 +81,9 @@
   .xui-record-table .xui-table-label,.xui-record-table .xui-button {white-space:nowrap;}
   .xui-record-table .xui-table-actions {flex-wrap:nowrap;}
   .xui-business-log-table {container-type:inline-size;}
+  .xui-business-log-table>.xui-table[data-column-sizing='fixed'] {table-layout:fixed;}
+  .xui-business-log-cell {display:block;min-inline-size:0;}
+  .xui-business-log-cell[data-overflow='wrap'] {white-space:normal;overflow-wrap:anywhere;}
+  .xui-business-log-cell[data-overflow='ellipsis']>:is(.xui-button,.xui-link) {inline-size:100%;max-inline-size:var(--table-action-max-inline-size);}
   .xui-business-log-table .xui-button {inline-size:max-content;max-inline-size:var(--table-action-max-inline-size);white-space:normal;overflow-wrap:anywhere;}
 }
