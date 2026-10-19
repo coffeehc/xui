@@ -1,5 +1,9 @@
 # 公共能力维护清单
 
+## 圆形图标动作外圈（4.2.32）
+
+xAgent固定4.2.31/7b05af0反馈纯图标按钮外圈留白偏大；已核对原始要求，约缩1/3是参考，不能机械缩所有尺寸或放大图标。公共默认36px target加focus-width/offset形成44px外圈。本轮统一IconButton与Button data-icon=true圆面/outline/busy及焦点内收，保持原target、glyph、状态和业务owner，工具栏/表格/弹层/Card共用；带文字按钮与Card图标tile不变。正式证据和未跑边界见[验证记录](VALIDATION.md)，产品不加私有补丁，本轮不修改或部署xAgent。
+
 ## Card操作图标间距（4.2.31）
 
 xAgent固定4.2.30/4150bcd6反馈各类卡片footerActions都偏疏，已核对用户原始要求及公共最小复现：动作组沿用普通Toolbar的8px gap、默认36px IconButton中心距44px。4.2.31由公共Card独立card-actions-gap默认4px收紧至40px中心距，不修改全站Toolbar、Button/Switch尺寸/焦点或业务owner；头部及页脚使用同一合同。消费方不写私有CSS、也不恢复已删除的metadata。正式证据及未跑边界见[验证记录](VALIDATION.md)，不代替xAgent实际页面升级或部署验收。

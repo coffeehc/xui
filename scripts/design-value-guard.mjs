@@ -19,6 +19,8 @@ export function checkDesignDeclaration(property, input, context = '') {
   if (prop.startsWith('--') && !workspaceTableMinimum) fail('Design defaults belong only in the central token contract');
   if (/var\(\s*--(?:base|palette)-/i.test(value)) fail('Consumers must use semantic tokens');
   if (prop === 'content' && /^(?:["'][^"']*["']|none|normal)$/.test(value)) return;
+  // Box selection is structural geometry, not a color or a size recipe.
+  if (prop === 'background-clip' && /^(?:border|padding|content)-box$/.test(value)) return;
   // A fallback is another default, even when its primary token is valid.
   let rest = value.replace(/var\(\s*--[\w-]+\s*\)/g, 'TOKEN');
   if (/var\s*\(/i.test(rest)) fail('Use a single token without a fallback');

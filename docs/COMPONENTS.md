@@ -1516,7 +1516,7 @@ renderLabel 内把名称放入 NavigationMenu.Label，尾随无动作警告 Icon
 
 ### 纯图标按钮（4.2.18）
 
-公开 IconButton 与 Button data-icon="true" 始终沿用同一等宽高配方，容器默认 radius-full，所有状态保持圆形，包括透明ghost/link/text背景在hover出现时。size、SVG尺寸、命中区、危险/disabled/busy/focus和render/ref键盘合同不变；停止图标本身仍可为方块。带文字Button沿用button-radius，不能加data-icon标记。现有宿主纯图标圆角补丁在升级并验收后可移除，无需修改组件私有CSS。此为公共默认外观变化，不要求消费项目立即升级。
+公开IconButton与Button data-icon="true"沿用同一等宽高target及radius-full。4.2.32默认将视觉圆面内收，由button-icon-inset/button-icon-padding维护背景、outline/busy边界和内部焦点位置；size、SVG、点击外沿、危险/disabled/busy事实及render/ref键盘合同保持。具体几何、缩放和覆盖限制只由[DESIGN轮廓合同](DESIGN.md#纯图标按钮的统一轮廓4218)定义。所有variant与工具栏/表格/Card槽共用，不只修Card；表面裁剪只影响背景，不裁glyph或focus。带文字Button和Card头部图标tile不变。升级不新增prop/Controller/业务owner，消费方不写私有CSS或改SVG来缩圆。已有纯图标圆角补丁在升级并实际验收后可移除，本轮不要求消费项目立即升级。
 
 行内模型/语言等菜单入口使用既有 `Menu.Trigger render={<Button variant="text"/>}`，在Button内容中依次放装饰图标、当前名称和箭头；Menu负责展开、键盘和关闭回焦，Button负责透明与前景。这个已公开组合就是推荐标准，无需新建同义Trigger或竞争Menu组件。需要显式primary/destructive时仍由宿主选择；表单Select/Input不适用。正式消费者 `/react/button-state-contract.html` 的 Inline menu trigger 区域提供可操作示例。
 

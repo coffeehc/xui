@@ -63,7 +63,7 @@ export function checkContract(document) {
   const lightRule = rules.find(rule => rule.selector === ':root[data-theme="light"]');
   assert(lightRule, 'Missing explicit light recipe');
   const light = { ...defaults, ...declarations(lightRule) };
-  assert.equal(Object.keys(defaults).length, 434, 'Default token count');
+  assert.equal(Object.keys(defaults).length, 436, 'Default token count');
   for (const name of ['--font-scale','--line-height-scale']) {
     const registration=tree.nodes.find(node=>node.type==='atrule'&&node.name==='property'&&node.params===name);
     assert(registration, `Missing typed ${name} registration`);
@@ -135,7 +135,7 @@ export function checkStyles(styles, values, runtimeVariables = []) {
     assert(!/var\(--(?:palette|base)-/.test(decl.value),'Components must use semantic tokens');
     assert(!/(#[a-f\d]{3,8}\b|\b(?:rgb|hsl|oklch|oklab)\s*\()/i.test(decl.value),'Raw color outside contract');
     assert(!decl.prop.startsWith('--'),'Components cannot invent default values');
-    if (decl.prop !== 'border-collapse' && decl.prop !== 'outline-offset' && /color|background|border(?!.*radius)|outline|shadow|fill|stroke/.test(decl.prop)) {
+    if (decl.prop !== 'border-collapse' && decl.prop !== 'outline-offset' && decl.prop !== 'background-clip' && /color|background|border(?!.*radius)|outline|shadow|fill|stroke/.test(decl.prop)) {
       const rest = decl.value.replace(/var\(--[\w-]+\)/g,'').replace(/color-mix\(|linear-gradient\(|\bin\s+oklab\b|\b(?:transparent|currentcolor|none|solid|inherit|initial|unset|px|rem|em)\b|[-+\d.%\s(),]/gi,'');
       assert.equal(rest,'','Raw named or uncontrolled color outside contract');
     }

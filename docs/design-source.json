@@ -1,15 +1,15 @@
 {
-  "contractVersion": "4.2.31",
+  "contractVersion": "4.2.32",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
-  "defaultTokenCount": 434,
+  "defaultTokenCount": 436,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "f66ae557cf2664f86c4eb10c8aee33d1339419c005dd0bc42047ddca6f159031",
+  "defaultCssSha256": "60949d054280236a7becb6aee84869ae4782d60ef09e9e1043e89db51b7d3f4a",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -115,7 +115,8 @@
     "4.2.18 standardizes ordinary expansion triggers on the existing text recipe: default Menu render, Disclosure, Accordion, advanced search, sidebar branch controls and table expansion. Explicit render/semantic actions, fields, routing and state ownership are retained.",
     "4.2.18 adds optional ButtonTone default/danger for text action foregrounds, keeping transparent table actions and disabled precedence without changing explicit filled variants or business owners.",
     "4.2.19 standardizes compact Toast icon/content/close slots, a separate width token and optional actions, preserving the queue, priorities, timers and focus owners.",
-    "4.2.20 adds QueryForm/QueryField width roles and shared label/control/help/error tracks, optional centered EmptyState and DataTable idleState. Unconfirmed collections no longer announce a zero count; Resource and controlled pagination retain their existing owners. Idle, empty and first-error content is bounded to the table scrollport with logical sticky placement, so wide columns cannot move its message off screen in LTR/RTL."
+    "4.2.20 adds QueryForm/QueryField width roles and shared label/control/help/error tracks, optional centered EmptyState and DataTable idleState. Unconfirmed collections no longer announce a zero count; Resource and controlled pagination retain their existing owners. Idle, empty and first-error content is bounded to the table scrollport with logical sticky placement, so wide columns cannot move its message off screen in LTR/RTL.",
+    "4.2.32 insets icon-button surfaces and focus without shrinking hit targets or glyphs. All variants retain semantic colors, busy/disabled behavior and rem-based interface scaling; text buttons and Card icon tiles are unchanged."
   ],
   "defaultPreset": "violet",
   "themePresets": [

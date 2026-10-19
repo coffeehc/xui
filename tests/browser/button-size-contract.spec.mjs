@@ -24,7 +24,7 @@ for(const kind of ['react'])for(const theme of ['light','dark','system'])for(con
   expect.soft(text.height,`${size} short default-scale text button uses its documented height`).toBeCloseTo(expected.height,2);
   expect.soft(text.padding.left).toBe(expected.padding);expect.soft(text.padding.right).toBe(expected.padding);expect.soft(text.gap).toBe(expected.gap);
   expect.soft(text.icon.width).toBe(expected.icon);expect.soft(text.icon.height).toBe(expected.icon);
-  expect.soft(icon.height).toBe(expected.height);expect.soft(icon.width).toBe(expected.height);expect.soft(icon.padding.top+icon.padding.bottom+icon.padding.left+icon.padding.right).toBe(0);
+  expect.soft(icon.height).toBe(expected.height);expect.soft(icon.width).toBe(expected.height);expect.soft(icon.padding.top+icon.padding.bottom+icon.padding.left+icon.padding.right).toBe(12);
  }
  await attach(page,info,`${kind}-${theme}-${width}-default-sizes`,normal);
  await page.addStyleTag({content:'@layer product-overrides { :root { --font-scale:2; --line-height-scale:2; } }'});await settle(page);

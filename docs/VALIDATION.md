@@ -1,5 +1,22 @@
 # 验证证据与限制
 
+## 圆形图标动作的紧凑圆面与焦点（4.2.32，2026-10-19）
+
+核对xAgent用户原始要求与固定4.2.31/7b05af0，缩约1/3是参考而非必须倍率。本轮只改xui公共IconButton及Button data-icon=true配方，不改Card图标tile、文字按钮或消费项目。先用已安装正式4.2.31 ESM/CSS/types运行新断言，预期失败：默认target36×36、SVG16×16、focus外径44px，背景仍按border-box绘制；正式receipt和baseline.json/geometry/截图保存在`.artifacts/icon-button-density-4.2.32`，没有历史checkout或额外源码副本。
+
+最终target及四种size保持24/32/36/40px，SVG12/16px；公共button-icon-inset默认4px，button-icon-padding扣除原1px边界得到3px。default圆面28px，outline/busy边界同样内移；focus宽2px，offset=-3px，外径34px，圆面与focus保留1px间隙。候选32px环与圆面相接，结构复核后保留该间隙，未把所有尺寸强制乘2/3。背景只按content-box绘制，不裁内容、外沿命中或focus；颜色配方改用background-color避免状态切换重置background-clip。纯图标外沿真实指针仍执行一次；危险前景、disabled、busy、链接render/ref和原动作owner保持。导航compact旧横向零padding不再覆盖纯图标，但文字‹/›控制仍保留原零padding。root200时default target72、glyph32、圆面56、focus外径62px；原生浏览器200%保持CSS尺寸并物理放大。
+
+三包及DESIGN仅递增末位到4.2.32，436 Token图/指纹及公开声明注释同步。COMPONENTS/PUBLIC_API/ADOPTION、ICON-ACTION-001～004、PUBLIC_REQUESTS和既有text-actions示例同步，无新增prop、Controller、Service或请求owner。设计审计把background-clip的三种box关键字识别为结构几何，正反测试仍拒绝颜色/尺寸/混合值。build/check:tokens/typecheck、定向37项Node测试、正式三tarball消费者ESM/CSS/types和正负类型检查通过；React/ReactDOM19.2.8及Base UI1.7.0单实例，无src alias。关键CSS gzip22462/22464（较4.2.31的22325增加137，复用旧11 bytes余量并有界加128 bytes预算）；初始React JS144665/153600不变，其他预算不放宽。首轮CSS预算超限的consumer-final2.log保留。
+
+最终同代码浏览器70/70通过：21项新密度/交互及49项Button尺寸、禁用、品牌继承、链接对比度和Card动作回归。覆盖light/dark/system及系统浅色热切换、1280/390及Card1682/390、各variant/四种size、危险/禁用/disabled+busy、真实外沿点击、Tab跳过禁用、Space/Enter各回调一次、render链接Space不导航/Enter一次、Menu Escape回同节点、工具栏/Card及导航独立分支/行尾动作。两种200%分别验证：根字号与Chrome设置真实200%（DPR翻倍、净宽减半、根字号保持、CSS zoom=1/pinch=1）；目标、glyph和焦点完整可达，文字按钮focus-offset仍2px。Card既有刷新保节点/草稿/勾选/焦点、危险颜色与gap4px/普通Toolbar8px均通过。已查看最终编辑铅笔focus、Card/Toolbar及dark原生zoom截图，圆面/环清晰，SVG及点击布局未缩小。
+
+首轮64通过、6项严格viewport ratio=1失败：同一长fixture原生最小滚动留下0.03125～0.4375px的透明target裁边，focus环完整。单用scrollIntoViewIfNeeded仍按浏览器舍入不移动，重复失败日志保留；测试改为在键盘往返前用原生scrollIntoView居中预定位，再真实Tab/Shift-Tab并保留ratio=1、尺寸及完整焦点断言，无固定睡眠、私有CSS、force或降低阈值。两项先通过后完整70重验通过；本轮不宣称修复document原生滚动的任意亚像素舍入。原始失败/最终browser JSON、trace/截图、case-summary.json与定位日志均保留，不将重复运行次数累计成唯一用例数。
+
+浏览器验收generation为`064f1129b689db241dab90d45ea929302458e60e2ee4e7a12b716745143ee3b9`。随后仅修正正式消费者脚本注释的实测CSS数字，并将DESIGN的阅读缩放入口指向公开`setInterfaceScale`；最终发布generation为`c58d490a92bb237fc379efaec0dfa17f5ab0dd01781c1f78f03acbabdc5c1811`。发布重建后逐项比较browser-validated-bytes.json中的935个已验收文件路径（涵盖正式包dist和示例JS/CSS/types/HTML/SVG），SHA全部相同、零差异；三包build.json与正式消费者receipt均记录新的发布generation。因此此前70/70浏览器验收覆盖的公开文件字节与本次正式包完全一致。最终正式tarball消费者和性能门禁通过；不以旧receipt替代新构建证据。
+
+复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`；`node --test tests/button-disabled-contract.test.mjs tests/button-xs-contract.test.mjs tests/design-value-guard.test.mjs tests/design-state-contract.test.mjs tests/contract.test.mjs tests/docs.test.mjs`；`pnpm test:consumer`；`pnpm exec playwright test tests/browser/icon-button-density.spec.mjs tests/browser/card-actions.spec.mjs tests/browser/button-size-contract.spec.mjs tests/browser/button-state-contract.spec.mjs tests/browser/button-brand-inheritance.spec.mjs tests/browser/button-link-contrast.spec.mjs --workers=2`。未跑全仓unit/browser、watch/cold-start、其他OS/浏览器或消费项目实际页面/后端/部署；本轮未修改或部署xAgent，库正式示例不代替产品升级验收。
+
+
 ## Card动作组紧凑间距（4.2.31，2026-10-19）
 
 核对xAgent反馈与用户原始要求、固定4.2.30/4150bcd6及最新main，公共Card动作组确实沿用普通Toolbar的8px间距。先以已安装正式4.2.30 ESM/CSS和新合成示例复现，新增默认间距断言得到预期失败；五列单卡267.59375px，Switch＋三个默认36px IconButton的动作组宽160px，相邻图标按钮中心距44px。原receipt、baseline.log/browser/geometry保存在`.artifacts/card-actions-4.2.31`，无源码alias、历史checkout或额外源码副本。

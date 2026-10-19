@@ -171,3 +171,8 @@ test('Toast gesture offsets permit only the exact measured CSS variables in its 
  await fixture({'packages/ui-react/src/toast.tsx':source},async root=>assert.doesNotReject(auditDesignSources({root})));
  for(const [name,content] of [['packages/ui-react/src/other.tsx',source],['packages/ui-react/src/toast.tsx',source.replace('movement.x','movement.x+8')],['packages/ui-react/src/toast.tsx',source.replace('--toast-swipe-movement-x','padding')]])await fixture({[name]:content},async root=>assert.rejects(auditDesignSources({root}),/Unreviewed dynamic/));
 });
+
+test('background clipping permits box geometry without accepting colors or mixed recipes',()=>{
+ for(const value of ['border-box','padding-box','content-box'])assert.doesNotThrow(()=>checkDesignDeclaration('background-clip',value));
+ for(const value of ['red','content-box red','13px'])assert.throws(()=>checkDesignDeclaration('background-clip',value));
+});

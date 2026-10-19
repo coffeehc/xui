@@ -18,5 +18,6 @@ export function Button({ className, variant='primary', tone, size='default', typ
     onKeyDown={event=>{onKeyDown?.(event);if(event.key===' '&&event.currentTarget.tagName==='A'&&event.currentTarget.getAttribute('role')==='link')event.preventBaseUIHandler();if(!event.defaultPrevented && !event.baseUIHandlerPrevented && (event.key==='Enter'||event.key===' '&&props.role!=='link'))setPressed(true);}}
     onKeyUp={event=>{onKeyUp?.(event);if(event.key===' '&&event.currentTarget.tagName==='A'&&event.currentTarget.getAttribute('role')==='link')event.preventBaseUIHandler();setPressed(false);}} onBlur={event=>{onBlur?.(event);setPressed(false);}} />;
 }
+/** Icon-only action: compact circular paint inside the original size target; aria-label is required. */
 export type IconButtonProps = ButtonProps & { 'aria-label': string };
 export function IconButton(props: IconButtonProps) { return <Button {...props} data-icon="true" />; }

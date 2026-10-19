@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.31。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.32。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -488,6 +488,8 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --button-padding-inline: var(--space-content-gap);
     --button-gap: var(--space-icon-gap);
     --button-radius: var(--radius-md);
+    --button-icon-inset: var(--space-text-gap);
+    --button-icon-padding: max(0px, calc(var(--button-icon-inset) - var(--line-width-surface)));
     --button-background: var(--action-primary);
     --button-foreground: var(--action-primary-foreground);
     --input-height: var(--control-height);
@@ -2012,7 +2014,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 
 | 组件 | 表面、尺寸与用途 | 状态、行为和验收 |
 | --- | --- | --- |
-| Button / 图标按钮 | default36、sm32、xs24、lg40px；padding12/10/8/16、gap6/6/4/8；文字按钮radius-md、纯图标按钮radius-full。主动作primary，次动作outline或中性secondary，重复行操作text，行内危险动作text＋tone=danger，独立危险主操作destructive | default/hover/pressed/focus/disabled/busy/error；只有真实切换才selected。Enter/Space执行，图标有名称；不改变请求、防重、确认。工具栏换行不裁掉动作 |
+| Button / 图标按钮 | default36、sm32、xs24、lg40px；padding12/10/8/16、gap6/6/4/8；文字按钮radius-md、纯图标按钮radius-full，命中区与紧凑圆面按下方统一轮廓区分。主动作primary，次动作outline或中性secondary，重复行操作text，行内危险动作text＋tone=danger，独立危险主操作destructive | default/hover/pressed/focus/disabled/busy/error；只有真实切换才selected。Enter/Space执行，图标有名称；不改变请求、防重、确认。工具栏换行不裁掉动作 |
 | Input / Textarea / NativeSelect / 搜索 | 普通36px、小32px；body-sm；input表面、一层1px边界、radius-md。label/control/help/error间距8/4/4px | default/hover/focus/disabled/invalid/readOnly；busy由业务拥有。placeholder不代替label，错误用aria-invalid和describedby；只读可复制，native option跟随平台 |
 | InputGroup | 只一层边界与focus；内部控件不重复border/ring；addon与清除不覆盖文字 | 单行默认外高与Input一致，内部输入和动作使用input-group-control-min-height扣除外框两条边；多行使用input-group-textarea-min-height。长文或放大文字仍可增高。外层映射内部真实focus/invalid；浅深检查focus+invalid；输入可收缩 |
 | Switch / Checkbox / Toggle / Tabs | 默认Switch28×16.6px；Tabs高32、内padding3、项radius-md；Toggle高28、gap4；其他既有变体记录映射 | checked/selected来自真实状态，Space切换，方向键按控件语义；禁用项不可执行，hover不盖选中底；小屏项目可达 |
@@ -2519,6 +2521,10 @@ NavItem与NavigationItem的tone=warning只投影宿主事实；标题、主图�
 ### 纯图标按钮的统一轮廓（4.2.18）
 
 IconButton 与 Button data-icon="true" 使用同一纯图标配方：等宽高不变、radius-full，默认/hover/pressed/disabled/busy/expanded 都保持圆形容器。ghost/link/text 默认透明时同样保留圆形几何，背景出现不切换轮廓；图标自身形状不变，例如停止仍用方形图标。文字Button继续原button-radius，不变成圆形或胶囊。保留原size、点击区、前景/背景/危险/禁用/忙态、独立focus、render/ref/键盘和业务owner。不要用data-icon标记带可见文字的按钮，也不要通过产品私有CSS重新实现圆角。头像、缩略图和其他组件不适用这条按钮规则。
+
+4.2.32将纯图标的视觉圆面与命中布局分开：尺寸仍为default36/sm32/xs24/lg40px，图标仍16px（xs12px），button-icon-inset默认由space-text-gap派生4px，button-icon-padding扣除原1px边界后为3px。圆面净径分别28/24/16/32px，outline/busy边界同样内移；背景按content-box绘制，不能裁内容或焦点。键盘焦点沿用focus-width与interaction-focus，offset为line-width-surface减button-icon-inset，以原线宽保留可见间隙，默认外径分别34/30/22/38px；文字Button及Card头部图标tile不适用。普通文字按钮仍用共享focus-offset。全主题/variant一致，text仍透明且危险前景不变；disabled不执行，busy本身不禁用。公开Token只控制视觉留白，不缩小真实target，不使用消费方wrapper、私有CSS或放大SVG。
+
+文字根字号/公开setInterfaceScale整体阅读缩放会同比例放大rem几何；focus-width及线宽继续既有px合同，不为凑倍数改线。根字号200%时default命中72、图标32、圆面56、焦点外径62px；真实浏览器200%保持CSS尺寸并整体物理放大。宿主自定义button-height或button-icon-inset时需验证图标不被挤压、焦点和真实外沿点击；不以视觉圆面取代点击区。改造后在工具栏、表格、弹层及Card actions/footerActions所有实际实例验收，不只验单一卡片。参见[纯图标逐项检查](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)。
 
 行内、输入区和工具栏内不需要常驻表面边界的菜单入口，标准组合为 Menu.Trigger render={Button variant="text"}：图标、当前名称、箭头在同一文字按钮内容槽，默认/hover/pressed/展开保持透明，hover/pressed/展开用action-primary前景并由图标继承。使用既有text变体与Menu owner，不复制颜色配方或另设菜单封装。宿主显式primary/destructive等呈现优先；普通表单Select/Input继续其输入边界，不因这条行内菜单规则移除背景或边框。关闭、键盘与回焦仍由现有Menu负责。
 

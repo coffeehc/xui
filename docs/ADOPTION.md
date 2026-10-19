@@ -417,3 +417,7 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 升级完整Explorer执行[skill专项](../.agents/skills/adopt-xui/references/structured-log.md)，只覆盖实际使用页面及必要共享回归，不展开为整项目迁移。采用库内QueryForm及其fields/actions/advanced/summary，不在宿主再做一套筛选/DTO adapter。页级辅助内容传pageToolbar，标题动作传headerActions；按[组件动作矩阵](COMPONENTS.md#structuredlogexplorer-查询与槽位4222)验证各slot。原controller/options/viewController接法和唯一请求owner保持，缺少跨组records的项目继续省略该能力。
 
 逐页分别验证：编辑与“重置草稿”零请求、恢复最近提交条件且保留游标/结果；“清除筛选”明确提交空范围并产生一次当前视图查询；刷新仅用已提交filter而不提交草稿。提交新条件清旧范围并隔离迟到，取消/错误/详情回焦沿原Controller。不能以按钮旧名称认定HTTP故障，也不能把“清除已生效筛选”改名“重置”后仍请求。库示例仅是正式包验收，产品仍须固定产物并验收自己的页面和API。
+
+### 纯图标动作密度定向升级
+
+4.2.32调整所有IconButton及Button data-icon=true的公共视觉圆面和焦点，保留原target、glyph、props与动作owner。按[ICON-ACTION-001～004](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)验收实际使用的工具栏、表格、Card槽及弹层，不能只验卡片。无纯图标实例时不执行此专项；正式包/peer证据同构建复用。保留自定义主题，通过已有公共Token继承；不在消费方复制按钮、添加wrapper或私有CSS缩圆，不把Card头部tile误改。公共验收不代替产品实际页面，也不要求无关认证/日志全流程重跑。

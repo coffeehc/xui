@@ -7,7 +7,7 @@ test('disabled button tokens take variant-level specificity without important or
  const selector='.xui-button:is(:disabled,[aria-disabled="true"],[data-disabled])';
  const rule=css.slice(css.indexOf(selector)).split('}')[0];
  assert.ok(css.includes(selector),'disabled states need the same specificity as a variant');
- for(const declaration of ['background: var(--button-disabled-background)','color: var(--button-disabled-foreground)','cursor: not-allowed','transform: none'])assert.ok(rule.includes(declaration));
+ for(const declaration of ['background-color: var(--button-disabled-background)','color: var(--button-disabled-foreground)','cursor: not-allowed','transform: none'])assert.ok(rule.includes(declaration));
  for(const variant of ['secondary','outline','ghost','destructive','link'])assert.ok(css.indexOf(selector)>css.indexOf(`.xui-button[data-variant="${variant}"]`));
  assert.doesNotMatch(rule,/!important|forced-color-adjust/);
  assert.doesNotMatch(css,/\.xui-button:where\(:disabled/);

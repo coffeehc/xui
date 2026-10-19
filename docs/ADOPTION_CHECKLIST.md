@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.31）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.32）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -802,3 +802,12 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | DEFAULT-PAGE-006 | 连接日志/Key及权限 | 日志真实只读事实、Key能力来自后端getConfiguration；pageSize不伪造total/权限、不新增查询owner | Controller/adapter身份、权限响应、分页与写入 | [完整接线](COMPONENTS.md#默认完整页面与配套接线4223) |
 | DEFAULT-PAGE-007 | 默认整页不匹配领域需求 | 先使用公开slot/controller；例外有场景/受限接口/范围依据，公共增强交xui，前置缺口交服务owner | 最小复现、保留流程、责任和验收条件 | [缺口归属](ADOPTION.md#接入合规与公共缺口归属) |
 | DEFAULT-PAGE-008 | 实际挂载页面验收 | 固定正式包上按适用状态/布局/焦点/刷新/秘密与请求验收；不能拿库mock代替产品，相关检查通过后交付 | 逐实例浏览器/Network/构建及未跑边界 | [专项流程](../.agents/skills/adopt-xui/references/default-pages.md) |
+
+## 纯图标动作紧凑呈现逐项检查
+
+| ID | 触发范围 | 必须结果 | 证据 | 合同 |
+|---|---|---|---|---|
+| ICON-ACTION-001 | IconButton或Button data-icon=true | 复用公共圆面/边界/焦点配方；保留所有size命中区及SVG，带文字Button/Card图标tile不套用；不加私有CSS/wrapper | 默认、hover、pressed、focus实际几何与截图，圆面与target分开记录 | [DESIGN](DESIGN.md#纯图标按钮的统一轮廓4218) |
+| ICON-ACTION-002 | 工具栏、表格、Card、弹层实际实例 | 外沿透明padding仍可点击且每动作一次；Tab/Shift-Tab与Enter/Space、链接导航、Menu Escape回焦正常；四边焦点清晰 | 真实指针坐标、键盘路径、回调/路由次数与可访问名称 | [COMPONENTS](COMPONENTS.md#纯图标按钮4218) |
+| ICON-ACTION-003 | 危险、禁用、busy | 危险前景保留；禁用含disabled+busy零调用且跳过Tab；busy本身按原合同可交互，边界内收不遮SVG | 各状态computed/截图、回调计数、原权限/防重owner | [PUBLIC_API](PUBLIC_API.md#纯图标按钮轮廓4218) |
+| ICON-ACTION-004 | 主题、缩放或视觉Token覆盖 | light/dark/system、桌面/窄屏、长中文、文字200%及真实浏览器200%分别可达；系统偏好更新，焦点完整；自定义不挤图标或缩target | 正式包/peer、几何、缩放事实及实际未跑范围 | [DESIGN](DESIGN.md#纯图标按钮的统一轮廓4218) |
