@@ -816,6 +816,8 @@ Calendar 的 `CalendarProps` 公开受控 `month`/`onMonthChange`；runtime `/ca
 
 `DataTableRowContext`/`DataTableRowEvents` 是 React `/data-table` 的 typed 行事件合同，`DataTableProps<T>` 接受 row events；事件来源边界由 React 组件内部维护，runtime 不导出 DOM 行事件处理器。键盘可达性、独立 cell action 与分页行为见[数据表格](COMPONENTS.md#数据表格)。
 
+4.2.26仅修复DataTable实际纵向滚动边界：无纵向范围时纵向wheel交给祖先，有范围时保留表体contain，横向与sticky不变。公开ESM/types和props无新增入口，无宿主overscroll开关或请求改变；示例与边界降级见[滚动合同](COMPONENTS.md#页面标题筛选与滚动)。
+
 Table/DataTable的正式CSS默认全表仅行线，sticky不额外添加列分割线；原有列sticky配置不变，当前没有行列网格开关。详见[表格组件](COMPONENTS.md#数据表格)。
 
 React `/date-time` 与根入口导出 `DateTimePicker`/`DateTimePickerProps`；runtime `/date-time` 保留值、解析与纯模型类型。输入为分钟精度的墙上时间字符串，不携带时区。完整行为见[日期时间选择](COMPONENTS.md#日期时间选择)及[React 示例](../examples/date-time-react/app.tsx)。

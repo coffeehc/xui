@@ -92,7 +92,7 @@ function App(){
     {!state.busy&&state.status==='ready'&&!state.rows.length&&<EmptyState title={state.filtered?tableLabels.noMatches:tableLabels.empty}/>}
     <Grid>{state.rows.map(row=><Card key={row.id} title={row.name} headingLevel={2} aria-label={`记录卡片 ${row.id}`} badge={{label:row.kind}} description={row.scope} footerMeta={row.source} footerActions={<Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button>}/>)}</Grid>
   </ScrollArea.Content></ScrollArea.Viewport></ScrollArea.Root>;
-  const common={style:{'--layout-workspace-content-min-block-size':'var(--data-table-min-block-size)'} as React.CSSProperties,scrollMode:query.has('unbounded')?'document' as const:'workspace' as const,headerSlots:{brand:<strong>公共列表组合</strong>},pageHeader,pageToolbar:internal?undefined:toolbar};
+  const common={style:{'--layout-workspace-content-min-block-size':'var(--data-table-min-block-size)'} as React.CSSProperties,scrollMode:query.has('viewport')?'viewport' as const:query.has('unbounded')?'document' as const:'workspace' as const,headerSlots:{brand:<strong>公共列表组合</strong>},pageHeader,pageToolbar:internal?undefined:toolbar};
   // A known-size host tests composition as a column-flex item, not just a block child.
   const content=cards?cardView:query.has('flex-host')?<div style={{display:'flex',flexDirection:'column',blockSize:'100%',minBlockSize:0}}>{table}</div>:table;
   return query.has('direct')?<AppShell {...common} sidebar={<NavigationMenu items={items} activeId="records" label="示例导航"/>}>{content}</AppShell>:<MenuLayout {...common} items={items} activeId="records" label="示例导航">{content}</MenuLayout>;

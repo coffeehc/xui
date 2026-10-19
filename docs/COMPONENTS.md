@@ -1124,6 +1124,8 @@ const sizing=createDataTableColumnSizingController();
 - `workspace`：显式保留旧有填满已分配正文高度和组件最小高度的行为，适合需要少量行也占满工作区的页面。
 - `document`：始终按无约束文档流增长，即使父容器有确定高度也不采用 natural 的高度上限；外层页面负责滚动可达性。
 
+4.2.26起，纵向滚动边界按表体实际`scrollHeight > clientHeight`建立，而非按layout/行数猜测。没有纵向溢出时，表格内的纵向滚轮自然传给既有祖先owner：`MenuLayout scrollMode="viewport"`由main滚动且header/侧栏保持，workspace由既有正文滚动区承担，document由文档承担。真正受限的表体仍内部纵滚，并在首末边界保持contain；横向contain、列宽、sticky、分页与焦点合同不变。现有同一布局观察器随内容/高度变化更新并在销毁时清理内部标记，不新增公开属性或wheel处理器；无布局测量时安全降级为纵向auto。此内部标记不是宿主配置接口。正式示例`/data-table-react/?viewport&size=50&no-search&no-actions`演示固定壳中的自然高度长表格；`?internal&size=50`演示有界表体。
+
 采用已有 `AppShell/MenuLayout` 的 `scrollMode="workspace"`、`pageHeader` 与正文可提供真实高度边界，没有第二套 PageLayout。下面让自然高度表格在 workspace 正文内按内容收缩，并把筛选放在同一表格外框内：
 
 组件内部的 toolbar、表体与 footer 共用一个 frame；已有行的状态反馈与自定义 feedback 放在 footer 的计数区域，未出现反馈时不在列头上方预留空行；只有表体 `TableContainer` 在高度受限时滚动，列头按原有 stickyHeader 合同默认启用。边框属于整体 frame，滚动容器不再叠一层外框；底栏有必要的信息分隔。组件使用真实可用高度，宿主无需测量 pageHeader 或减固定像素，也不 absolute/fixed 定位分页。

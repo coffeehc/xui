@@ -1,5 +1,15 @@
 # 验证证据与限制
 
+## DataTable无纵向溢出的滚轮链（4.2.26，2026-10-19）
+
+xLetter反馈4.2.22长表格内部滚轮不能带动viewport的main；4.2.25源码仍无条件双轴contain。先在4.2.25正式tarball消费者的workspace＋document表格运行新wheel回归，纵向输入450后内容owner仍为0，得到预期失败，见`.artifacts/data-table-scroll-4.2.26/baseline.log`、baseline.json与results-baseline。没有切换历史checkout、修改xLetter或操作其已登录线上标签页。
+
+修复只调整公共CSS与既有DataTable布局观察器：纵向默认auto，实际`scrollHeight > clientHeight`时contain，数据/空态/尺寸改变后重测并按原生命周期清理内部标记；无布局测量安全降级为auto。横向contain不变，无wheel监听、公开props/类型/endpoint或第二个滚动/请求owner。同步既有示例viewport模式、DESIGN/COMPONENTS/PUBLIC_API/ADOPTION及TABLE-SCROLL-001～003；宿主不需要私有DOM/CSS补丁。
+
+构建、Token、类型、指定6文件单测52/52与正式ESM/CSS/types消费者通过；React/ReactDOM19.2.8、Base UI1.7.0单实例，无源码alias。sourceGeneration为`d102a37effd4da192ceb6760ad8669ae76b66be2cf93d39f3873a152376e7eb9`；初始JS gzip144519 bytes、关键CSS gzip22186 bytes，预算未改。浏览器最终66/66：新增滚轮合同14项，加既有布局/列宽/焦点/游标分页52项；覆盖light/dark/system、natural/document/workspace、有界/无界、少/多/空行、字体/隐藏/尺寸恢复、桌面与窄屏、200%根字号和真实Chrome200%缩放、横向wheel与LTR/RTL sticky、刷新/焦点/分页与取消。新增用例真实鼠标命中可见表体交集，不以赋值scrollTop或注入CSS证明滚轮正确。第一次修复后测试有两处向上滚轮指针落到固定页头，命中策略修正后14项完整重跑通过，原始记录保留且不重复计入最终数量。
+
+实际查看light桌面、dark窄屏大字及真实缩放截图；viewport表体clientHeight=scrollHeight=2040时，main由0滚至450，表体scrollTop仍0，header/侧栏矩形与自身scrollTop不变。横向回归表体scrollLeft由0至114，main/content/document仍0，左右sticky列分别贴217与955的表体边界。截图、前后几何、缩放DPR/视口和逐例报告均在`.artifacts/data-table-scroll-4.2.26`。复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`、`node --test tests/data-table-layout.test.mjs tests/data-table.test.mjs tests/data-table-sizing.test.mjs tests/contract.test.mjs tests/docs.test.mjs tests/workspace-layout.test.mjs`、`pnpm test:consumer`、`pnpm exec playwright test tests/browser/data-table-scroll-chain.spec.mjs tests/browser/data-table-layout.spec.mjs tests/browser/data-table-focus.spec.mjs tests/browser/data-table-widths.spec.mjs tests/browser/data-table-cursor.spec.mjs --workers=2`。未跑全库套件、消费项目真实页面或部署；本记录不宣布xLetter已升级或现场问题已验收。
+
 ## 登录交接失败后的主动作状态（4.2.25，2026-10-19）
 
 仅修正ConfigurableLoginPage的呈现判断：onAuthenticated抛出或拒绝后，认证事实保留，主登录按钮恢复既有submit文案并保持disabled、aria-busy=false；局部错误与retryNavigation可用。只有真正再次等待导航时显示opening。没有新增props、文案键、认证/请求owner或诊断存储；已有Controller.navigationPhase可说明交接阶段，宿主具体失败步骤仍由原owner记录脱敏固定阶段/代码，不向公共状态传递原始异常、凭据或响应体。

@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.25）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.26）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -431,6 +431,10 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | LIFE-011 | React 组件卸载 | 组件拥有的 observer/listener/timer/request 清理；不清理宿主仍在使用的共享 service | observer/listener/request 计数与卸载记录 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-012 | 新身份、tenant 或资源 owner 接管 | 旧身份私密资源销毁，不让旧请求迟到污染新身份 | owner generation、缓存清理与请求序列 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-013 | 刷新开始时焦点位于表格行或表单控件 | 更新后原业务节点仍是 activeElement；只有用户操作或节点被业务合法删除时才移动焦点 | 刷新前后 activeElement 与节点 identity | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+
+| TABLE-SCROLL-001 | 自然高度表体无纵向溢出 | 指针位于单元格时，上下滚轮交给既有页面/内容owner；viewport的header/侧栏不随正文移动；不依赖表格外空白或wheel补丁 | 实际wheel输入、表体及祖先scrollTop/clientHeight/scrollHeight、header/侧栏矩形 | [DataTable滚动](COMPONENTS.md#页面标题筛选与滚动) |
+| TABLE-SCROLL-002 | 真实有界表体、少/多/空行及尺寸变化 | 有纵向范围时表体滚动且首末边界保留；范围消失后不阻断祖先；数据/字号/视口更新保留DOM和焦点 | 滚轮前中后范围、节点身份、两种200%、键盘入口 | [DataTable滚动](COMPONENTS.md#页面标题筛选与滚动) |
+| TABLE-SCROLL-003 | 表格横向溢出及sticky列 | 横向wheel仅滚动表体，页面不横向漂移；sticky列/表头对齐、分页和最后操作仍可达 | scrollLeft、sticky矩形、焦点与分页实际操作 | [DataTable列宽](COMPONENTS.md#页面标题筛选与滚动) |
 
 ## API 接入公共底座
 

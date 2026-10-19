@@ -1,6 +1,6 @@
 /**
  * @internal One geometry owner per rendered DataTable. Writes the body's track,
- * component minimum and no-records loading offset below the measured header.
+ * component minimum, actual vertical scroll boundary and no-records loading offset below the measured header.
  * Host heights, column sizing,
  * pagination and full-content document flow stay outside this owner.
  */
@@ -8,8 +8,8 @@ export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, ta
   const win = table.ownerDocument.defaultView;
   // Non-layout renderers (including server/test DOMs) need no geometry owner.
   if (!win || typeof table.offsetHeight !== 'number' || !frame.parentElement) return {update() {}, destroy() {}};
-  const root = frame.parentElement, original = frame.style.gridTemplateRows, originalMinimum = root.style.minBlockSize;
-  let dead = false, pending = 0, written: string | undefined, writtenMinimum: string | undefined;
+  const root = frame.parentElement, original = frame.style.gridTemplateRows, originalMinimum = root.style.minBlockSize, originalScrollable = body.dataset.scrollableY;
+  let dead = false, pending = 0, written: string | undefined, writtenMinimum: string | undefined, writtenScrollable: string | undefined;
   let positionedLoading: HTMLElement | undefined, originalLoadingMargin = '', writtenLoadingMargin = '';
   const restoreLoading = () => {
     if (positionedLoading?.style.marginBlockStart === writtenLoadingMargin) positionedLoading.style.marginBlockStart = originalLoadingMargin;
@@ -18,6 +18,12 @@ export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, ta
   const number = (value: string) => Number.parseFloat(value) || 0;
   const measure = () => {
     if (dead || !table.offsetHeight) return;
+    // overflow:auto creates a scroll container even without a scroll range.
+    // Only a real vertical range owns its edge; otherwise wheel input must
+    // chain to the existing page/content owner. The body/table are observed.
+    const scrollable = body.scrollHeight > body.clientHeight ? 'true' : 'false';
+    if (body.dataset.scrollableY !== scrollable) body.dataset.scrollableY = scrollable;
+    writtenScrollable = scrollable;
     const head = table.tHead, rows = table.tBodies[0]?.rows;
     const loading = Array.from(frame.children).find(node => node.classList.contains('xui-data-table-loading')) as HTMLElement | undefined;
     const headHeight = head?.offsetHeight ?? 0;
@@ -83,6 +89,10 @@ export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, ta
       win.removeEventListener('resize', schedule);
       if (written !== undefined && frame.style.gridTemplateRows === written) frame.style.gridTemplateRows = original;
       if (writtenMinimum !== undefined && root.style.minBlockSize === writtenMinimum) root.style.minBlockSize = originalMinimum;
+      if (writtenScrollable !== undefined && body.dataset.scrollableY === writtenScrollable) {
+        if (originalScrollable === undefined) delete body.dataset.scrollableY;
+        else body.dataset.scrollableY = originalScrollable;
+      }
       restoreLoading();positionedLoading = undefined;
     },
   };

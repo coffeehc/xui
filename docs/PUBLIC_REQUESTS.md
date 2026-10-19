@@ -1,5 +1,9 @@
 # 公共能力维护清单
 
+## xLetter DataTable无溢出滚轮陷阱（4.2.26）
+
+xLetter报告固定4.2.22在`MenuLayout scrollMode="viewport"`的长表格内滚轮不动，表体没有纵向范围却无条件contain；最新4.2.25源码仍有相同规则。公共修复按实际纵向范围切换边界，复用既有布局观察器，无新props、私有宿主补丁或请求owner。原4.2.25正式消费者已用真实wheel复现同类祖先滚动阻断；正式修复证据见[VALIDATION](VALIDATION.md)。本任务不访问xLetter已登录线上标签页、不改业务/部署，产品升级后的实际页面验收由xLetter独立完成。
+
 ## xLead 登录交接失败呈现（4.2.25）
 
 来源xLead固定4.2.20/5aeefe73；核对最新main 53b9c182/4.2.24仍把导航failed归入navigating，主按钮因此误显示opening。4.2.25只修正公共展示派生，失败时保留认证、字段锁定和空密码，主按钮普通文案/disabled/非busy，仅次动作重试导航；原Controller、认证和请求owner未改。正式包结果见[验证记录](VALIDATION.md)。xLead首次启动的模块/上下文失败步骤仍未确定，刷新后进入或另一轮200响应不能证明首次链路正常；本轮不修改xLead/BaseService，也不将宿主根因归为库缺陷。

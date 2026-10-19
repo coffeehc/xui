@@ -15,7 +15,7 @@ function fixture() {
     addEventListener:(name,fn) => listeners.set(name,fn),
     removeEventListener:(name,fn) => {if(listeners.get(name)===fn)listeners.delete(name);},
   };
-  const body = {offsetHeight:240,clientHeight:224};
+  const body = {offsetHeight:240,clientHeight:224,scrollHeight:1000,dataset:{}};
   const table = {ownerDocument:{defaultView:win},offsetWidth:500,offsetHeight:1000,tHead:head,tBodies:[{rows:[first,last]}]};
   const tools={offsetHeight:100},footer={offsetHeight:50};
   for(const node of [tools,body,footer])node.classList={contains:()=>false};
@@ -64,6 +64,19 @@ test('layout owner coalesces unchanged observations, retains hidden geometry, re
     assert.equal(f.pending.size,0);assert.equal(f.observed.size,0);assert.equal(f.listeners.size,0);
     assert.equal(f.frame.style.gridTemplateRows,'');assert.equal(f.root.style.minBlockSize,'');const destroyedWrites=f.writes;
     f.resize();owner.update();f.tick();assert.equal(f.writes,destroyedWrites);
+  } finally {owner?.destroy();f.restore();}
+});
+
+test('vertical boundary follows actual overflow, keeps hidden geometry and restores only owned state',()=>{
+  const f=fixture();let owner;
+  try {
+    owner=observeDataTableLayout(f.frame,f.body,f.table);f.tick();assert.equal(f.body.dataset.scrollableY,'true');
+    f.body.scrollHeight=f.body.clientHeight;f.resize();f.tick();assert.equal(f.body.dataset.scrollableY,'false');
+    f.table.offsetHeight=0;f.body.scrollHeight=1000;f.resize();f.tick();assert.equal(f.body.dataset.scrollableY,'false');
+    f.table.offsetHeight=1000;f.resize();f.tick();assert.equal(f.body.dataset.scrollableY,'true');
+    owner.destroy();assert.equal(f.body.dataset.scrollableY,undefined);
+    f.body.dataset.scrollableY='false';owner=observeDataTableLayout(f.frame,f.body,f.table);f.tick();owner.destroy();assert.equal(f.body.dataset.scrollableY,'false');
+    owner=observeDataTableLayout(f.frame,f.body,f.table);f.tick();f.body.dataset.scrollableY='external';owner.destroy();assert.equal(f.body.dataset.scrollableY,'external');
   } finally {owner?.destroy();f.restore();}
 });
 

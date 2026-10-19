@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.25。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.26。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1878,6 +1878,8 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 | 字段 | Field.label/children/help/error；InputGroup.Addon/控件/动作 | label 为字段名，help 为 muted，error 为 error 文本；单层输入边界；单位就近展示 | required/invalid/describedby 真实关联；长错误自然换行，焦点和输入节点保持 |
 | 卡片集合 | CardGroup.rows/rowKey/renderCard、cardSizing、toolbar、emptyState/errorState/feedback/footer与受控pagination | renderCard返回Card公开配置，集合创建实例；所有资源类型共用同一呈现。默认natural兼容；资源列表显式equal，由当前网格完整内容计算共同卡高 | 单一body滚动，toolbar/footer在外；稳定key保草稿/焦点；equal伸展content、卡尾靠底，不固定像素高度，不裁正文/动作 |
 | 表格 | DataTable.toolbar/columns、emptyState/errorState/feedback/footer、受控 pagination | 对象主列、技术值、状态 Badge 与行操作按各自语义；唯一计数/分页 | 首次加载在数据区；刷新保留行；表内横滚和既有 sticky，不用外框遮罩 |
+
+DataTable表体仅在实际存在纵向滚动范围时保留纵向边界；自然高度长表格没有自己的纵向范围，鼠标位于单元格上时，纵向滚轮仍交给既有页面/内容滚动owner。不能要求用户移到表格外才能滚动，也不能由宿主添加wheel转发、私有CSS或第二个滚动owner。横向滚动继续归表体，真正有界表体在首末边界不意外带动外层。此判断由公共布局观察器随数据、字号和可用高度更新，不按行数或layout名称猜测，详见[组件滚动合同](COMPONENTS.md#页面标题筛选与滚动)。
 | 弹层 | Dialog/Sheet.Header/Title/Description、Body、Footer | 标题与说明分开，body 负责长内容，footer 放所属 FormActions | 开关只改可见性；正常 body 滚动、极端高度公共回退；关闭返回真实触发入口 |
 | 导航/菜单 | NavigationMenu 的 items[].label/icon、renderLabel/renderAction 与公开渲染/事件扩展；Menu/ContextMenu 的 Item/Icon/Separator | 选中由真实 active/expanded，危险项使用 danger，图标继承语义色 | 独立分支和动作不导航；disabled 不执行；键盘及长名称由公共组件管理 |
 | 原子控件 | Button/Link/IconButton 的内容与事件；Checkbox/Switch/Toggle/Radio 的标签与状态；Select/Combobox/Command 的公开 parts | 动作、选中、禁用、只读、错误分别映射已有语义，不依靠颜色推断业务 | 不给所有控件添加同一套 slot；保留原生/peer 表单与键盘语义 |
