@@ -512,9 +512,13 @@ React `/display` 及根入口公开 `Card / CardProps / CardBadge / CardHeadingL
 
 空间确实不够时，Footer将动作组放到下一行；动作组自身仍容不下则按原Toolbar换行，绝不裁动作、缩字号或强制同行。actions-only保持右侧动作且不预留meta空间，meta-only不造按钮/焦点，全部空仍无footer。业务不需要版本/来源时直接省略footerMeta；示例不是必须恢复该信息行。正式[CardGroup示例](../examples/card-group-react/app.tsx)的?footer-meta展示可选元信息与Switch/详情/删除，&actions-only、&meta-only、&plain-meta、&draft分别展示槽位缺省/纯文本/保留草稿；不改变业务请求或权限。
 
+4.2.31起，头部actions及footerActions组统一使用card-actions-gap，默认依赖space-text-gap（100%阅读比例时4px），与普通Toolbar的layout-toolbar-gap分开。默认IconButton命中区仍36px，相邻图标按钮中心距由44px收紧到40px；Switch、按钮字号/图标、焦点环及危险tone不改。主题可在公共Token层调整card-actions-gap，不需要新增密度prop或穿透内部DOM/CSS。外层Footer的meta与动作分区间距、空间不足时换行、无meta时右对齐等合同保留；紧凑不承诺所有净宽均强制同行。
+
+[正式CardGroup示例](../examples/card-group-react/app.tsx)的?footer-meta&icon-actions使用默认尺寸Switch、详情/编辑/删除IconButton；&actions-only省略meta、&header-actions同时展示头部动作，&draft用于刷新保草稿。图标为宿主合成内容，实际动作、disabled和busy仍由原业务owner提供；普通表单/搜索Toolbar没有改变。
+
 Card仍只有header/content/footer三个根级区域，自身用Surface.padding=none避免重复内距，各区由公共Token提供边距。默认自然高度；`stretch`显式伸展到所属flex/grid轨道，content可增长、footer靠底，不设置正文像素高度或行数。图标容器、首行偏移与Footer背景由card-icon-size/offset/background和card-footer-background定义，标题仍section字体、正文仍body、底部仍meta，业务动作保留自身控件规则。
 
-`iconColor`与`badge.color`接受公共语义变量；缺省图标为action-primary，中性归属不冒充info/success。Avatar.Root也公开color并默认继承所在角色，适合真实头像/fallback；Icon适合已有SVG图形。宿主通过这些参数组合，不给内部svg补颜色或给卡片改字号。摘要由宿主从真实来源提供，完整说明留原详情；库不截断业务字符串、不伪造版本/指标/运行状态。辅助卡尾动作推荐显式Button size="xs"，不通过Card后代规则强改按钮尺寸。
+`iconColor`与`badge.color`接受公共语义变量；缺省图标为action-primary，中性归属不冒充info/success。Avatar.Root也公开color并默认继承所在角色，适合真实头像/fallback；Icon适合已有SVG图形。宿主通过这些参数组合，不给内部svg补颜色或给卡片改字号。摘要由宿主从真实来源提供，完整说明留原详情；库不截断业务字符串、不伪造版本/指标/运行状态。辅助文字动作可显式使用Button size="xs"；图标动作默认命中区不因紧凑而缩小，不通过Card后代规则强改按钮尺寸。
 
 默认tile已经拥有唯一身份图标容器，icon槽推荐传裸图形节点（如现有Brain图标）、裸emoji/文字，或无背景的公共Icon；不要直接复用列表中带Avatar外框的辅助组件再嵌套一层。列表头像继续使用Avatar；卡片确实展示真实头像时明确iconVariant="plain"，使用Avatar.Root/Image/Fallback与公开color。默认继承必须在正式消费者中验证，不能用宿主样式覆盖来补齐。
 

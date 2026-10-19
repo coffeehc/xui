@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.30）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.31）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -774,6 +774,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CARD-FOOT-002 | footerMeta采用OverflowText | 借当前卡已有交互面，显式ref仍优先，不借集合/其他卡动作；支持揭示时省略，无新增tab stop | hover/键盘当前卡揭示、其他卡静止、完整DOM文本 | [Card](COMPONENTS.md#card) |
 | CARD-FOOT-003 | 窄屏/放大/减少动态/粗指针 | 不裁动作或缩字；空间不足可下移动作组，再不足组内换行；无动效揭示时完整静态换行 | 三主题、两种200%、完整按钮/焦点几何及真实状态，不伪造同行通过 | [Card](COMPONENTS.md#card) |
 | CARD-FOOT-004 | metadata或动作缺省/全部禁用/刷新 | 不要求恢复业务已删信息行，空槽无占位；原控件身份/草稿/权限/回调保持 | actions-only/meta-only/空、disabled、刷新与回调次数 | [Card](COMPONENTS.md#card) |
+| CARD-FOOT-005 | Card头部/页脚多个动作 | Card动作间距使用card-actions-gap，默认紧凑；Button/IconButton/Switch命中区和焦点不缩小，普通Toolbar间距不变 | 实测动作gap、按钮尺寸/中心距离、三主题/窄屏/两种200%、有无meta、禁用及刷新 | [Card](COMPONENTS.md#card) |
 | CARD-SCROLL-001 | CardGroup natural/document/workspace上真实wheel | 无body范围时滚外层，有界workspace先滚body；自然/文档不因ScrollArea contain吞滚轮 | 前后HTML/body scrollTop、client/scrollHeight、实际wheel和边界 | [公共恢复合同](COMPONENTS.md#cardgroup滚动传递与登录读取恢复4230) |
 | AUTH-RECOVERY-001 | refresh/session network/timeout/HTTP 5xx后手动检查 | 同一AuthClient.currentUser，保持unknown直到确认，手动只读恢复、不重放login/logout、不自动重试 | endpoint/status、owner身份、真实请求次数及失败/恢复/迟到 | [公共恢复合同](COMPONENTS.md#cardgroup滚动传递与登录读取恢复4230) |
 | AUTH-RECOVERY-002 | 403/401或unknown logout | 不借读取恢复按钮绕过权限或未知退出门禁，不重发logout；正常手动登录仍按原合同 | 负例按钮/请求和退出后的受保护读取 | [未知退出](PUBLIC_API.md#未知退出与页面重载) |

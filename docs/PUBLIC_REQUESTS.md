@@ -1,5 +1,10 @@
 # 公共能力维护清单
 
+## Card操作图标间距（4.2.31）
+
+xAgent固定4.2.30/4150bcd6反馈各类卡片footerActions都偏疏，已核对用户原始要求及公共最小复现：动作组沿用普通Toolbar的8px gap、默认36px IconButton中心距44px。4.2.31由公共Card独立card-actions-gap默认4px收紧至40px中心距，不修改全站Toolbar、Button/Switch尺寸/焦点或业务owner；头部及页脚使用同一合同。消费方不写私有CSS、也不恢复已删除的metadata。正式证据及未跑边界见[验证记录](VALIDATION.md)，不代替xAgent实际页面升级或部署验收。
+
+
 ## Card footerMeta、自然滚轮及refresh读取恢复（4.2.30）
 
 xAgent的XUI-CARD-FOOTER-META-SHRINK与xLead两项反馈均源自正式4.2.28；核对4.2.29/45067eab仍存在。独立4.2.29消费者先复现五列约280px卡片长metadata令动作另起一行（footer81px）；xAgent实测约267px。4.2.30由公共Card维护压缩/回退及当前卡交互范围，不要求宿主取ref/穿DOM；技能/工具业务已删除信息行的项目继续省略footerMeta。另修CardGroup边界规则被通用ScrollArea覆盖，及公共登录页遗漏auth.refresh可恢复读取错误检查；未知退出合同保持。正式证据/未跑范围见[验证记录](VALIDATION.md)，不代表xAgent/xLead实际页面或部署已通过，本轮不改消费项目/BaseService。

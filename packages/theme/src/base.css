@@ -100,6 +100,7 @@
  .xui-card-trailing {align-items:center;min-block-size:var(--line-height-section-title);}
  .xui-card-header:has(.xui-card-icon[data-variant='tile'])>.xui-card-trailing {min-block-size:max(var(--card-icon-size),var(--line-height-section-title));}
  .xui-card-trailing,.xui-card-footer>.xui-card-actions {margin-inline-start:auto;}
+ .xui-card-actions.xui-toolbar {gap:var(--card-actions-gap);}
  .xui-card-trailing>.xui-badge {flex:none;max-inline-size:100%;}
  .xui-card-body {min-inline-size:0;overflow-wrap:anywhere;}
  .xui-card-footer {flex:none;padding:var(--space-control-gap) var(--card-padding);border-block-start:var(--line-width-surface) solid var(--separator-line);background:var(--card-footer-background);border-end-start-radius:calc(var(--card-radius) - var(--line-width-surface));border-end-end-radius:calc(var(--card-radius) - var(--line-width-surface));}

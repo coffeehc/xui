@@ -138,7 +138,7 @@ pnpm preview
 
 ### 卡片布局与登录读取恢复定向升级
 
-4.2.30不要求启用新业务或恢复已删除的footerMeta。实际使用Card/CardGroup footer时按[Card合同](COMPONENTS.md#card)核对metadata/动作槽，执行CARD-FOOT-001～004；采用natural/document/workspace集合时补CARD-SCROLL-001；使用公共登录页的项目按AUTH-RECOVERY-001～002验证读取失败恢复及未知退出隔离。各项按实际使用范围执行，原服务/权限/数据owner不变，无需捆绑认证重接或全仓流程。正式包/peer证据同构建复用，但各页面的真实wheel、动作可达和恢复请求仍需实际验收。公共缺口交xui，禁止消费者私有CSS补丁。
+4.2.31的Card动作组默认收紧，采用项目无需更换控件或写私有gap；按card-actions-gap继承公共主题，普通Toolbar不受影响。4.2.30及后续版本不要求启用新业务或恢复已删除的footerMeta。实际使用Card/CardGroup footer时按[Card合同](COMPONENTS.md#card)核对metadata/动作槽，执行CARD-FOOT-001～005；采用natural/document/workspace集合时补CARD-SCROLL-001；使用公共登录页的项目按AUTH-RECOVERY-001～002验证读取失败恢复及未知退出隔离。各项按实际使用范围执行，原服务/权限/数据owner不变，无需捆绑认证重接或全仓流程。正式包/peer证据同构建复用，但各页面的真实wheel、动作可达和恢复请求仍需实际验收。公共缺口交xui，禁止消费者私有CSS补丁。
 
 ### Toast 与复制及业务日志列表定向升级
 

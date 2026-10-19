@@ -114,7 +114,9 @@ export type CardProps=Omit<React.ComponentProps<'section'>,'title'|'children'>&{
  description?:string;children?:React.ReactNode;
  /** Read-only facts shrink before actions. OverflowText borrows this card’s existing interaction surface;
   * reduced motion/coarse pointers or no keyboard entry retain complete wrapping text. */
- footerMeta?:React.ReactNode;footerActions?:React.ReactNode;
+  footerMeta?:React.ReactNode;
+  /** Compact Card action spacing uses card-actions-gap; controls retain their own size and semantics. */
+  footerActions?:React.ReactNode;
  /** Band (default) separates the footer surface; plain keeps the unframed composition. */
  footerVariant?:'band'|'plain';
  /** Fill an available flex/grid track; content can grow and the footer stays at its end. */

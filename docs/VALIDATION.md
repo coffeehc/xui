@@ -1,5 +1,19 @@
 # 验证证据与限制
 
+## Card动作组紧凑间距（4.2.31，2026-10-19）
+
+核对xAgent反馈与用户原始要求、固定4.2.30/4150bcd6及最新main，公共Card动作组确实沿用普通Toolbar的8px间距。先以已安装正式4.2.30 ESM/CSS和新合成示例复现，新增默认间距断言得到预期失败；五列单卡267.59375px，Switch＋三个默认36px IconButton的动作组宽160px，相邻图标按钮中心距44px。原receipt、baseline.log/browser/geometry保存在`.artifacts/card-actions-4.2.31`，无源码alias、历史checkout或额外源码副本。
+
+新增公共card-actions-gap，默认依赖space-text-gap，Card头部actions及footerActions统一4px；通用Toolbar继续8px。正式实测同一宽度卡片的动作组由160px缩为148px，默认图标按钮仍36×36px、Switch标签命中区仍28×36px，中心距40px。字号200%时分别为72×72px/56×72px，Card gap为8px、普通Toolbar为16px；原生浏览器200%时CSS尺寸保持，物理显示放大。未修改Button/Switch字号、图标、焦点、危险tone、动作/权限/请求owner。公共主题可覆盖此Token，不新增密度prop或要求消费者穿透结构；原footerMeta可选、右对齐、长文揭示及真实不足时换行合同保留。
+
+三包和DESIGN仅递增到4.2.31，434 Token计数/图及CSS指纹同步；CardProps补正式声明注释，公开类型/方法保持。COMPONENTS、ADOPTION、CARD-FOOT-005及PUBLIC_REQUESTS同步，既有正式CardGroup示例添加icon-actions/header-actions组合。最终build、check:tokens、typecheck、定向Node测试30/30、正式三tarball ESM/CSS/types和正负消费者通过；sourceGeneration `b5b6dbe93adfdfb7a7e4c3291e51db146b652c223a54d1f96b08730fa7c567e1`，React/ReactDOM19.2.8及Base UI1.7.0单实例，无src alias。关键CSS gzip22325/22336（较4.2.30增加26 bytes）、初始JS144665/153600，未放宽性能预算。
+
+最终同代浏览器64/64通过：21项新动作间距验收及43项原Card footer/CardGroup回归，覆盖light/dark/system与系统偏好热切换、1682/390、长meta/纯文本meta/actions-only、头部与页脚、公共gap覆盖仍不影响Toolbar、文字200%、真实Chrome设置200%（DPR翻倍、净宽减半、CSS zoom=1/pinch=1）、Switch及三个独立图标按钮、危险颜色、真实Space/Tab/Enter各回调一次、disabled真实指针不执行、刷新保节点/草稿/勾选/焦点、排序/分页/集合滚动。每个聚焦控件和四边outline都要求完整位于body及窗口边界；不会以部分相交代替通过。截图确认桌面收紧及窄屏大字诚实换行。
+
+首轮63通过、1项system＋200%字号的Button可见比例仅0.625；量测时侧栏grid过渡仍在改变净宽/工具栏换行。单独复现通过，测试改为等待公开页面有限布局动画及字体完成后进入稳定200%状态，连续5次通过；随后64项最终完整重验全部通过。原始失败报告与截图保留，不计最终通过，不宣称本轮修复了字号过渡中任意时刻主动移焦的连续性。原始browser-final.json、case-summary.json、截图/geometry/zoom附件、正式receipt/performance及visual-proof.json见该证据目录。
+
+复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`；`node --test tests/display.test.mjs tests/card-presentation.test.mjs tests/card-group.test.mjs tests/contract.test.mjs tests/docs.test.mjs`；`pnpm test:consumer`；`pnpm exec playwright test tests/browser/card-actions.spec.mjs tests/browser/card-footer.spec.mjs tests/browser/card-group.spec.mjs --workers=2`。未跑全仓unit/browser、watch/cold-start、其他OS/浏览器或任何消费项目实际页面/后端/部署；本轮只改xui，正式示例不代替xAgent升级验收，也不要求恢复业务已删除的metadata。
+
 ## 卡片页脚、滚动传递与读取恢复（4.2.30，2026-10-19）
 
 先核对最新4.2.29/45067eab，以原已安装正式tarball和当前合成fixture复现：五列约280px Card的长footerMeta把动作推到下一排，footer为81px；natural真实wheel被后加载的ScrollArea contain截住；auth.refresh网络失败缺少公共检查入口。baseline.log、recovery-baseline.log及原始报告保存预期失败，没有切历史checkout或复制源码。本轮仅修改xui，不要求xAgent恢复已删除的版本/只读/来源信息行。
