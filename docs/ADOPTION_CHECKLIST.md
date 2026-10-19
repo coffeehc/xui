@@ -11,7 +11,7 @@
 5. 每行证据必须指向此次固定产物上的真实消费源码、浏览器/Network 记录、自动化执行结果或后端 handler/合同测试。测试文件存在、样板通过、截图好看或旧版本通过均不能单独证明产品页面通过。
 6. 每个使用中的具名 slot 都要按实际“页面/组件实例 × slot”单独检查；报告必须分别记录归属/API、填入内容、视觉语义与 token 角色、排版/对齐、空槽行为、适用状态、滚动与焦点归属。一个组件样板不能代表所有页面实例。
 7. 实施前保存授权范围内的完整页面/组件实例/运行入口清单和 slot 映射，交付前提交逐项矩阵，至少包含：`ID、对象/页面/组件实例/slot/API、状态、期望、实际、证据、责任 owner`。不得以“符合 xui”“组件已复用”或按章节汇总代替逐行结论。适用失败项或实际页面验收未跑时，不宣布完整接入/升级验收通过。
-8. 同一构建的产物、peer和共享入口证据可以验证一次并引用，仍须验证各页面自己的slot/状态/请求接线。选择必要构建/类型和受影响回归，不以本表要求无关全套测试；共享变化或关联失败按影响补验，不重复仍适用的同代证据。StructuredLogExplorer定向流程见[skill专项](../.agents/skills/adopt-xui/references/structured-log.md)，判定仍用下文LOG-QUERY-001～008。
+8. 同一构建的产物、peer和共享入口证据可以验证一次并引用，仍须验证各页面自己的slot/状态/请求接线。选择必要构建/类型和受影响回归，不以本表要求无关全套测试；共享变化或关联失败按影响补验，不重复仍适用的同代证据。Toast、复制与业务日志列表按[定向适用表](ADOPTION.md#toast-与复制及业务日志列表定向升级)分别选择TOAST-005～006、STATE-COPY-001～002、BIZ-LIST-001～005，不捆绑三项或新增业务；StructuredLogExplorer定向流程见[skill专项](../.agents/skills/adopt-xui/references/structured-log.md)，判定仍用下文LOG-QUERY-001～008。
 
 ## 新接入与升级的流程门禁
 
@@ -394,8 +394,6 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | AUTH-UI-007 | 检查/错误切换到管理员初始化 | 保留同一AuthPage与品牌/卡片节点；children使用AdminSetupForm，AuthPage从首次挂载省略form；检查阶段零form、初始化阶段唯一form，不复制校验/提交或嵌套完整页面；busy/清密/未知结果仍按原合同 | 阶段切换前后node identity、form计数、请求与密码清理轨迹 | [初始化组合](COMPONENTS.md#可组合初始化表单) |
 | AUTH-UI-008 | 管理员用户名规则 | 需附加规则时使用可选validateUsername同步纯函数：原值输入，null通过/非空本地化字符串拒绝；注入模式只在Controller配置；缺省仅非空。失败零写入、关联错误并聚焦，修正/clear后可恢复，未知结果仍锁定；不在宿主复制字段或私有DOM补丁 | 默认/注入、无规则、语言更新、异常回调、Enter、错误关联和零请求证据；核对未改写提交值 | [用户名校验](COMPONENTS.md#宿主用户名校验) |
 | AUTH-UI-009 | 已认证后的宿主交接失败与重试 | 失败保留认证，主按钮普通文案/禁用/非busy，不同时声称opening；仅重试导航，保留字段/密码清理与回焦；阶段订阅不携带异常正文或秘密 | 同步throw/Promise拒绝、失败→重试等待→再失败→成功，Network次数/节点/焦点及阶段事实 | [完整登录页](COMPONENTS.md#完整页面与扩展) |
-| STATE-COPY-001 | 复制文本或显式writer | 使用runtime剪贴板服务或既有平台writer，写入串行、取消/迟到隔离；失败就地反馈，不读剪贴板/持久化/自动重试 | 真实指针、fallback焦点/选区/scroll、队列/失败/取消计数 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
-| STATE-COPY-002 | 普通HTTP回退复制/系统验收 | 无Clipboard API时用原生平台及合成中文、多段/Markdown完整核对OS文本；仅copied/execCommand=true不算通过；不要求产品加读回或私有补丁 | 固定正式包、HTTP/secure能力、原生execCommand、种子前置及完整文本相等布尔值；无shim证据 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-003 | 展示警告/等待/人工介入状态 | tone 与真实状态分类逐条映射，不只用颜色传达状态 | 领域状态映射表和可访问文本 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
@@ -750,6 +748,13 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | LOG-QUERY-006 | 不合法筛选与时间 | 无请求，错误在所属summary可见；原RFC3339Nano/半开区间与显式offset保留，无隐式时区 | 非法/纳秒/offset正负例与错误截图 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
 | LOG-QUERY-007 | 新范围/取消/迟到/可选records | 原service拥有查询、游标和代次；缺省records不展示/请求，旧响应不污染新范围 | 各模式请求、取消及迟到回归 | [PUBLIC_API](PUBLIC_API.md#程序错误观察) |
 | LOG-QUERY-008 | 三主题/窄屏/长中文/放大 | 公开字段宽度、动作对齐、原字号继承；局部横滚与详情回焦可达，无页面横裁 | 浅深system、320/390、根字号/真实zoom分别记录 | [设计合同](DESIGN.md#手动查询页布局与状态合同4220) |
+
+## 剪贴板复制逐项检查
+
+| ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
+|---|---|---|---|---|
+| STATE-COPY-001 | 复制文本或显式writer | 使用runtime剪贴板服务或既有平台writer，写入串行、取消/迟到隔离；失败就地反馈，不读剪贴板/持久化/自动重试 | 真实指针、fallback焦点/选区/scroll、队列/失败/取消计数 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
+| STATE-COPY-002 | 普通HTTP回退复制/系统验收 | 无Clipboard API时用原生平台及合成中文、多段/Markdown完整核对OS文本；仅copied/execCommand=true不算通过；不要求产品加读回或私有补丁 | 固定正式包、HTTP/secure能力、原生execCommand、种子前置及完整文本相等布尔值；无shim证据 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
 
 ## 业务日志列表展示逐项检查
 

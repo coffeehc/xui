@@ -1,6 +1,6 @@
 # 四类默认完整页面接入
 
-命中管理员初始化、用户登录、业务日志或平台API Key时读取本页；仅处理本次受影响页面，不展开为全项目迁移。启用对应业务且无已确认特殊要求时，使用完整公共页，不只取Input/Button再拼同职责页面。品牌、Logo、文案、主题和路由差异优先作为正常配置。
+选择/迁移管理员初始化、用户登录、业务日志或平台API Key完整页，或改变其app/pages配置、服务接线时读取本页；仅处理本次受影响页面，不展开为全项目迁移。已正确接入BusinessLogExplorer且仅调整list展示时走[列表定向流程](../../../../docs/ADOPTION.md#toast-与复制及业务日志列表定向升级)，不重做本页接线。启用对应业务且无已确认特殊要求时，使用完整公共页，不只取Input/Button再拼同职责页面。品牌、Logo、文案、主题和路由差异优先作为正常配置。
 
 1. **确定能力和公开入口。** 按[默认页映射](../../../../docs/COMPONENTS.md#默认完整页面与配套接线4223)选择AdminSetupPage、ConfigurableLoginPage、BusinessLogExplorer或ApiKeyManager；先核对固定版本与真实后端能力，不为没有日志/平台Key业务的产品新增假页面或数据。
 2. **采用同一配置与已有owner。** app/pages经bootstrap和resolveDefaultPages投影成原组件的config/options/labels/pagination，挂到宿主URI路由；函数不挂菜单/路由、不创建服务或发请求。服务按模块导入，主题/Auth/HTTP沿用已有单例，独立页面保留所属Controller。完整字段、类型和接线例子只在[组件合同](../../../../docs/COMPONENTS.md#默认完整页面与配套接线4223)定义，skill不复制配置表。
