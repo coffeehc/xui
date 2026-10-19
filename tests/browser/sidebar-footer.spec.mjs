@@ -7,6 +7,8 @@ const test=base.extend({page:async({page},use,info)=>{
   expect(errors,'footer consumers must not emit browser errors or serious React warnings').toEqual([]);
 }});
 const actionName='查看工作空间授权与许可证状态',themeName='切换主题显示模式';
+// Public default since 4.2.16: 16vw clamped to 192–224px at the default root size.
+const expandedSidebarWidth=width=>Math.min(224,Math.max(192,width*.16));
 const nav=(page,id)=>page.locator(`[data-menu-id="${id}"][data-menu-control="primary"]`);
 const action=page=>page.getByTestId('footer-action');
 const menu=page=>page.locator('.xui-shell-sidebar-menu');
@@ -37,7 +39,7 @@ for(const kind of ['react']){
   for(const mode of ['light','dark','system'])for(const collapsed of [false,true])test(`${kind} ${mode} ${collapsed?'compact':'expanded'} footer stays at the bottom with complete action names`,async({page},info)=>{
     await setup(page,kind,`?collapsed=${collapsed}`,mode);await expect(action(page)).toBeVisible();const toggle=page.locator('.xui-shell-toggle');await expect(toggle).toHaveAccessibleName(collapsed?'展开导航':'紧凑导航');await expect(toggle).toHaveAttribute('aria-expanded',String(!collapsed));await expect(sidebar(page).locator('.xui-menu-compact-toggle:visible')).toHaveCount(0);
     const rail=await bounds(sidebar(page)),bottom=await bounds(footer(page)),menuBox=await bounds(menu(page));
-    expect(rail.width).toBeCloseTo(collapsed?60:240,1);within(bottom,rail);expect(Math.abs(rail.bottom-bottom.bottom-12)).toBeLessThanOrEqual(1);expect(menuBox.bottom).toBeLessThanOrEqual(bottom.y+1);
+    expect(rail.width).toBeCloseTo(collapsed?60:expandedSidebarWidth(1280),1);within(bottom,rail);expect(Math.abs(rail.bottom-bottom.bottom-12)).toBeLessThanOrEqual(1);expect(menuBox.bottom).toBeLessThanOrEqual(bottom.y+1);
     expect(menuBox.scrollHeight).toBeLessThanOrEqual(menuBox.clientHeight+1);expect(bottom.scrollHeight).toBeLessThanOrEqual(bottom.clientHeight+1);
     await expect(action(page)).toHaveAccessibleName(actionName);await expect(action(page).locator('.xui-sidebar-footer-label')).toHaveText(actionName);
     const label=await action(page).locator('.xui-sidebar-footer-label').evaluate(node=>({display:getComputedStyle(node).display,visibility:getComputedStyle(node).visibility,width:node.getBoundingClientRect().width,text:node.textContent}));
@@ -51,7 +53,7 @@ for(const kind of ['react']){
   test(`${kind} one owned toggle stays in the default brand row and opens the narrow drawer`,async({page},info)=>{
     await setup(page,kind);const toggle=page.locator('.xui-shell-toggle');await expect(toggle).toHaveCount(1);await expect(sidebar(page).locator('.xui-shell-toggle')).toHaveCount(0);await expect(page.locator('.xui-shell-header .xui-shell-toggle')).toHaveCount(1);await expect(toggle).toHaveAccessibleName('紧凑导航');await expect(toggle).toHaveAttribute('aria-expanded','true');await expect(sidebar(page).locator('.xui-menu-compact-toggle:visible')).toHaveCount(0);
     await toggle.focus();await page.keyboard.down('Space');await expect(toggle).toHaveAttribute('data-pressed','true');await page.keyboard.up('Space');await expect(toggle).toBeFocused();await expect(toggle).toHaveAccessibleName('展开导航');await expect(toggle).toHaveAttribute('aria-expanded','false');expect((await bounds(sidebar(page))).width).toBeCloseTo(60,1);
-    await page.keyboard.press('Enter');await expect(toggle).toBeFocused();await expect(toggle).toHaveAttribute('aria-expanded','true');expect((await bounds(sidebar(page))).width).toBeCloseTo(240,1);await page.keyboard.press('Tab');await expect(page.locator('.xui-theme-mode-toggle')).toBeFocused();await page.keyboard.press('Shift+Tab');await expect(toggle).toBeFocused();await page.keyboard.press('Tab');await page.keyboard.press('Tab');await expect(nav(page,'overview')).toBeFocused();
+    await page.keyboard.press('Enter');await expect(toggle).toBeFocused();await expect(toggle).toHaveAttribute('aria-expanded','true');expect((await bounds(sidebar(page))).width).toBeCloseTo(expandedSidebarWidth(1280),1);await page.keyboard.press('Tab');await expect(page.locator('.xui-theme-mode-toggle')).toBeFocused();await page.keyboard.press('Shift+Tab');await expect(toggle).toBeFocused();await page.keyboard.press('Tab');await page.keyboard.press('Tab');await expect(nav(page,'overview')).toBeFocused();
     await page.setViewportSize({width:390,height:844});await expect(toggle).toHaveAccessibleName('工作导航');await expect(page.locator('.xui-shell-header .xui-shell-toggle')).toHaveCount(1);await expect(sidebar(page).locator('.xui-shell-toggle')).toHaveCount(0);await expect(toggle).toHaveAttribute('aria-expanded','false');await toggle.focus();await page.keyboard.press('Enter');await expect(drawer(page)).toBeVisible();await expect(toggle).toHaveAttribute('aria-expanded','true');expect(await toggle.evaluate(node=>{const target=document.getElementById(node.getAttribute('aria-controls'));return target?.getAttribute('role')==='dialog'||target?.tagName==='DIALOG';})).toBe(true);await expect(page.locator('nav[aria-label="工作导航"]')).toHaveCount(1);await page.keyboard.press('Escape');await expect(toggle).toBeFocused();await expect(toggle).toHaveAttribute('aria-expanded','false');await capture(page,info,'sidebar-toggle-responsive-keyboard');
   });
 

@@ -1,5 +1,11 @@
 # 公共能力维护清单
 
+## 图标按钮在组合容器中的覆盖遗漏（4.2.33）
+
+xAgent正式4.2.32/3c440f4真实页面验收发现SearchToolbar.actions中的默认outline图标按钮padding被公共规则改回0，target36/圆面34，root32时圆面70；同页Card仍为28/56，问题归公共库。核对还发现SidebarFooter文字按钮样式覆盖纯图标的居中/收拢内距/最小宽度。同源补充还确认workspace edge/ScrollArea inset的scope proximity及侧栏通用内描会覆盖纯图标offset，普通72px target的环变72px而非62px。4.2.33沿用既有IconButton圆面Token，修复SearchToolbar/advanced/QueryForm及Footer组合，并排除通用inset选择器对纯图标的接管；普通输入/invalid/滚动区自身与Dialog边界保持，不更换Controller、权限或请求owner，不改xAgent；消费方反馈的业务统计栏挤压由宿主处理。独立正式4.2.32消费者先复现padding/居中两项失败，并复现根100%/200%的inset两项失败；候选回归进一步修复大号图标被收拢Footer净宽压扁的问题。最终组合范围及未跑项见[验证记录](VALIDATION.md)。
+
+扩大回归另发现长菜单收拢再展开后，最后活动行可能部分超出菜单可视区。正式4.2.32主题与4.2.33候选的内存对照均为末行bottom=671、菜单bottom=653，viewport/document两项原测试仍失败；这是后续NavigationMenu滚动连续性修复项，本轮未改其Controller/滚动实现，也不把这两项写成通过。消费方不通过私有DOM滚动补丁规避。
+
 ## 圆形图标动作外圈（4.2.32）
 
 xAgent固定4.2.31/7b05af0反馈纯图标按钮外圈留白偏大；已核对原始要求，约缩1/3是参考，不能机械缩所有尺寸或放大图标。公共默认36px target加focus-width/offset形成44px外圈。本轮统一IconButton与Button data-icon=true圆面/outline/busy及焦点内收，保持原target、glyph、状态和业务owner，工具栏/表格/弹层/Card共用；带文字按钮与Card图标tile不变。正式证据和未跑边界见[验证记录](VALIDATION.md)，产品不加私有补丁，本轮不修改或部署xAgent。

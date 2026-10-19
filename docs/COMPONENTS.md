@@ -1516,7 +1516,7 @@ renderLabel 内把名称放入 NavigationMenu.Label，尾随无动作警告 Icon
 
 ### 纯图标按钮（4.2.18）
 
-公开IconButton与Button data-icon="true"沿用同一等宽高target及radius-full。4.2.32默认将视觉圆面内收，由button-icon-inset/button-icon-padding维护背景、outline/busy边界和内部焦点位置；size、SVG、点击外沿、危险/disabled/busy事实及render/ref键盘合同保持。具体几何、缩放和覆盖限制只由[DESIGN轮廓合同](DESIGN.md#纯图标按钮的统一轮廓4218)定义。所有variant与工具栏/表格/Card槽共用，不只修Card；表面裁剪只影响背景，不裁glyph或focus。带文字Button和Card头部图标tile不变。升级不新增prop/Controller/业务owner，消费方不写私有CSS或改SVG来缩圆。已有纯图标圆角补丁在升级并实际验收后可移除，本轮不要求消费项目立即升级。
+公开IconButton与Button data-icon="true"沿用同一等宽高target及radius-full。4.2.32默认将视觉圆面内收，由button-icon-inset/button-icon-padding维护背景、outline/busy边界和内部焦点位置；size、SVG、点击外沿、危险/disabled/busy事实及render/ref键盘合同保持。具体几何、缩放和覆盖限制只由[DESIGN轮廓合同](DESIGN.md#纯图标按钮的统一轮廓4218)定义。所有variant与工具栏/表格/Card槽共用，不只修Card；表面裁剪只影响背景，不裁glyph或focus。带文字Button和Card头部图标tile不变。升级不新增prop/Controller/业务owner，消费方不写私有CSS或改SVG来缩圆。已有纯图标圆角补丁在升级并实际验收后可移除，本轮不要求消费项目立即升级。4.2.33同时覆盖SearchToolbar/QueryForm的actions与advanced，以及SidebarFooter的直放图标/行内图标；文字按钮布局规则不得覆盖纯图标内距、居中或等宽高；通用inset/@scope规则同样不能覆盖纯图标环的offset，普通输入和滚动边界的政策仍保留。[搜索组合示例](../examples/search-toolbar-react/app.tsx)的`?icon-actions`和[侧栏示例](../examples/sidebar-footer-react/app.tsx)的`?icon-actions&no-reveal`/`?row&collapsed=true&no-reveal`展示这些公开组合。
 
 行内模型/语言等菜单入口使用既有 `Menu.Trigger render={<Button variant="text"/>}`，在Button内容中依次放装饰图标、当前名称和箭头；Menu负责展开、键盘和关闭回焦，Button负责透明与前景。这个已公开组合就是推荐标准，无需新建同义Trigger或竞争Menu组件。需要显式primary/destructive时仍由宿主选择；表单Select/Input不适用。正式消费者 `/react/button-state-contract.html` 的 Inline menu trigger 区域提供可操作示例。
 

@@ -45,7 +45,7 @@
     :scope,:scope>.xui-shell-content {padding:0;scroll-padding:0;}
     :scope :is(button,a,input,textarea,select,[tabindex],.xui-input-group) {scroll-margin:0;}
     :scope:focus-visible,
-    :scope :is(button,a,input,textarea,select,[tabindex]):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
+    :scope :is(button,a,input,textarea,select,[tabindex]):where(:not(.xui-button[data-icon="true"])):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
     /* Keep an invalid control's boundary visible beside its inset indicator. */
     :scope :is(.xui-input,.xui-textarea,.xui-select)[aria-invalid='true']:focus-visible,
     :scope .xui-input-group:focus-within {outline-offset:calc(calc(-1 * var(--focus-width)) - var(--line-width-surface));}

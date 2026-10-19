@@ -1,5 +1,23 @@
 # 验证证据与限制
 
+## 图标按钮组合与内描边界（4.2.33，2026-10-19）
+
+先核对main 3c440f4/4.2.32及xAgent的真实组合证据。用已安装正式4.2.32 ESM/CSS/types运行新增回归，SearchToolbar圆面34而非28、Footer glyph不居中两项预期失败；另用同代正式CSS复现workspace edge的根100%/200%焦点环36/72而非34/62。baseline.log/json、focus-baseline.log/json及附件保留，无历史checkout或额外源码副本。
+
+公共SearchToolbar/QueryForm actions与advanced保留button-icon-padding；SidebarFooter文字布局规则排除纯图标，收拢行不再把图标设为100% flex-basis。含纯图标的Footer在原rail内居中保留至少最大公共目标所需轨道，四种size维持24/32/36/40等宽高与glyph中心；不扩大60px rail。候选测试发现lg被36px净宽压扁，以及较小目标在40px轨道内靠左，均已补齐公共布局及断言，失败记录保留。
+
+workspace contentInset=edge、ScrollArea inset、顶栏/侧栏通用内描以零额外specificity排除纯图标Button，保留其自身圆形offset；普通文字、invalid输入、InputGroup及滚动区自身的原政策保持，Dialog/gutter嵌套停止边界不变。默认target36、glyph16、圆面28、focus34；根200%为72/32/56/62。无新增API、Token、Controller或请求owner，旧props、文字按钮、权限与业务行为保持。三包/DESIGN仅递增末位，文档、ICON-ACTION-005～006及原正式示例的icon-actions/focus-scopes/no-reveal组合同步。
+
+最终build、436 Token图/指纹、typecheck、44项定向Node测试、正式三tarball ESM/CSS/types及正负类型消费者通过。sourceGeneration为`f41da6b03d38289573166f773af5cf53f859c20742d5176dd03f827b8c4025b4`；React/ReactDOM19.2.8、Base UI1.7.0单实例，无src alias。初始JS gzip144665/153600、关键CSS22553/22592；关键CSS比4.2.32增加91 bytes，仅有界加128 bytes预算，其余门禁不变。预探针为22552，正式消费者实测以22553为准；原22504/22464超限日志单独保留，不冒充最终通过。
+
+最终浏览器87个唯一用例中85通过、2个历史失败：61项图标密度/组合全部通过、7项SearchToolbar全部通过、19项SidebarFooter中17通过。light/dark/system、1280/390、长中文、根字号200%及真实Chrome设置200%分别验证；后者DPR翻倍、净宽减半、根字号保持、CSS zoom=1/pinch=1。覆盖纯图标各variant/size、横纵圆面、目标及glyph中心、收拢rail中心、真实外沿点击、Enter/Space、禁用零调用、busy防重复、原生zoom组合、原节点/草稿/展开连续性、普通文字/invalid与滚动区offset、嵌套Dialog Escape回焦。已查看浅深工具栏、窄屏大字、收拢Footer与真实zoom、深色窄屏Dialog截图；圆面和焦点完整，未裁SVG或缩小target。
+
+两项原SidebarFooter长菜单测试在viewport/document下，收拢再展开后末行bottom=671、菜单bottom=653而失败。将正式4.2.32 theme tarball只读展开到内存、编译后替换同一示例CSS，旧主题与本轮候选得到完全相同的区域/scrollTop；React/runtime实现本轮未改。sidebar-regression-baseline.json保留对照，问题已列PUBLIC_REQUESTS，本轮不修改NavigationMenu滚动实现、不降低断言或把失败算通过。另4项旧测试仍硬编码240px，按4.2.16已生效的16vw/192–224px规范更正后通过。本轮不宣称整个87项套件全绿。
+
+原始baseline、候选失败、browser-final.json/log、case-summary.json、解码几何/截图/zoom附件及visual-proof.json、正式consumer-final/performance-final存于`.artifacts/icon-button-composition-4.2.33`。复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`；`node --test tests/search-toolbar.test.mjs tests/sidebar-footer.test.mjs tests/contract.test.mjs tests/design-state-contract.test.mjs tests/design-value-guard.test.mjs tests/docs.test.mjs`；`pnpm test:consumer`；`pnpm exec playwright test tests/browser/icon-button-density.spec.mjs tests/browser/search-toolbar.spec.mjs tests/browser/sidebar-footer.spec.mjs --workers=2`。不累计多轮运行次数作为唯一用例数。
+
+未跑全仓unit/browser、watch/cold-start、其他OS/浏览器、真实业务后端或消费项目实际页面/部署。只改xui；xAgent统计栏分配、升级及部署由其宿主任务负责。公共样例通过不代表消费项目已接入，也不掩盖上述两项历史NavigationMenu失败。
+
 ## 圆形图标动作的紧凑圆面与焦点（4.2.32，2026-10-19）
 
 核对xAgent用户原始要求与固定4.2.31/7b05af0，缩约1/3是参考而非必须倍率。本轮只改xui公共IconButton及Button data-icon=true配方，不改Card图标tile、文字按钮或消费项目。先用已安装正式4.2.31 ESM/CSS/types运行新断言，预期失败：默认target36×36、SVG16×16、focus外径44px，背景仍按border-box绘制；正式receipt和baseline.json/geometry/截图保存在`.artifacts/icon-button-density-4.2.32`，没有历史checkout或额外源码副本。

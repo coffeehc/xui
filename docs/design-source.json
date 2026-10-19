@@ -1,5 +1,5 @@
 {
-  "contractVersion": "4.2.32",
+  "contractVersion": "4.2.33",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
   "defaultTokenCount": 436,
@@ -116,7 +116,8 @@
     "4.2.18 adds optional ButtonTone default/danger for text action foregrounds, keeping transparent table actions and disabled precedence without changing explicit filled variants or business owners.",
     "4.2.19 standardizes compact Toast icon/content/close slots, a separate width token and optional actions, preserving the queue, priorities, timers and focus owners.",
     "4.2.20 adds QueryForm/QueryField width roles and shared label/control/help/error tracks, optional centered EmptyState and DataTable idleState. Unconfirmed collections no longer announce a zero count; Resource and controlled pagination retain their existing owners. Idle, empty and first-error content is bounded to the table scrollport with logical sticky placement, so wide columns cannot move its message off screen in LTR/RTL.",
-    "4.2.32 insets icon-button surfaces and focus without shrinking hit targets or glyphs. All variants retain semantic colors, busy/disabled behavior and rem-based interface scaling; text buttons and Card icon tiles are unchanged."
+    "4.2.32 insets icon-button surfaces and focus without shrinking hit targets or glyphs. All variants retain semantic colors, busy/disabled behavior and rem-based interface scaling; text buttons and Card icon tiles are unchanged.",
+    "4.2.33 keeps the public icon-button padding inside SearchToolbar/QueryForm actions and advanced slots, and excludes icon-only targets from sidebar-footer text-button alignment/minimum overrides and generic inset focus scopes. Compact footer tracks retain large square targets inside the existing rail. Ordinary field and scroll-region focus policies remain intact. No geometry token or state owner changes."
   ],
   "defaultPreset": "violet",
   "themePresets": [

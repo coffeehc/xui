@@ -113,7 +113,10 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // 4.2.32 separates circular paint/focus from the original icon target in every state.
 // The final CSS probe grows from 22,325 to 22,462 gzip bytes (+137). Use
 // the previous 11-byte headroom and a bounded +128-byte allowance; retain JS/Button/service caps.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22464, reactInitialJsGzip: 153600, narrowServiceGzip: 4608,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
+// 4.2.33 preserves icon geometry inside toolbar/footer slots and inset focus scopes.
+// The CSS probe grows 22,462 -> 22,552 gzip bytes (+90), including a bounded
+// footer track for large icon targets. Add +128 bytes; every other cap stays fixed.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22592, reactInitialJsGzip: 153600, narrowServiceGzip: 4608,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // Recreate one generated cache so npm cannot reuse a stale same-version tarball.
 const runDirectory = resolve('.consumers/current');

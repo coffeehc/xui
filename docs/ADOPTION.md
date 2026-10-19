@@ -420,4 +420,6 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 
 ### 纯图标动作密度定向升级
 
-4.2.32调整所有IconButton及Button data-icon=true的公共视觉圆面和焦点，保留原target、glyph、props与动作owner。按[ICON-ACTION-001～004](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)验收实际使用的工具栏、表格、Card槽及弹层，不能只验卡片。无纯图标实例时不执行此专项；正式包/peer证据同构建复用。保留自定义主题，通过已有公共Token继承；不在消费方复制按钮、添加wrapper或私有CSS缩圆，不把Card头部tile误改。公共验收不代替产品实际页面，也不要求无关认证/日志全流程重跑。
+4.2.32调整所有IconButton及Button data-icon=true的公共视觉圆面和焦点，保留原target、glyph、props与动作owner。按[ICON-ACTION-001～006](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)验收实际使用的工具栏、表格、Card槽及弹层，不能只验卡片。无纯图标实例时不执行此专项；正式包/peer证据同构建复用。保留自定义主题，通过已有公共Token继承；不在消费方复制按钮、添加wrapper或私有CSS缩圆，不把Card头部tile误改。公共验收不代替产品实际页面，也不要求无关认证/日志全流程重跑。
+
+4.2.33补齐组合内部覆盖：SearchToolbar/QueryForm的actions与advanced、SidebarFooter直放或行内图标须分别执行ICON-ACTION-005；workspace edge/ScrollArea inset、顶栏/侧栏及Dialog嵌套另验ICON-ACTION-006，不能用独立按钮或Card截图替代。使用固定正式版本验收，消费方不补padding/圆角/居中CSS，也不因修外观重接查询或导航owner。

@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.32。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.33。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -2525,6 +2525,8 @@ IconButton 与 Button data-icon="true" 使用同一纯图标配方：等宽高�
 4.2.32将纯图标的视觉圆面与命中布局分开：尺寸仍为default36/sm32/xs24/lg40px，图标仍16px（xs12px），button-icon-inset默认由space-text-gap派生4px，button-icon-padding扣除原1px边界后为3px。圆面净径分别28/24/16/32px，outline/busy边界同样内移；背景按content-box绘制，不能裁内容或焦点。键盘焦点沿用focus-width与interaction-focus，offset为line-width-surface减button-icon-inset，以原线宽保留可见间隙，默认外径分别34/30/22/38px；文字Button及Card头部图标tile不适用。普通文字按钮仍用共享focus-offset。全主题/variant一致，text仍透明且危险前景不变；disabled不执行，busy本身不禁用。公开Token只控制视觉留白，不缩小真实target，不使用消费方wrapper、私有CSS或放大SVG。
 
 文字根字号/公开setInterfaceScale整体阅读缩放会同比例放大rem几何；focus-width及线宽继续既有px合同，不为凑倍数改线。根字号200%时default命中72、图标32、圆面56、焦点外径62px；真实浏览器200%保持CSS尺寸并整体物理放大。宿主自定义button-height或button-icon-inset时需验证图标不被挤压、焦点和真实外沿点击；不以视觉圆面取代点击区。改造后在工具栏、表格、弹层及Card actions/footerActions所有实际实例验收，不只验单一卡片。参见[纯图标逐项检查](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)。
+
+4.2.33补齐组合容器边界：SearchToolbar.actions/advanced及复用同一框架的QueryForm继续原有统一control-height/SVG归一化，但必须使用button-icon-padding，不能归零。SidebarFooter中的文字按钮可以居中、隐藏标签、使用导航最小宽度，纯图标不继承文字按钮的左对齐、横向零padding或单边min-width；其size/等宽高/图标中心与圆面继续由Button拥有，展开/收拢/窄屏抽屉一致。收拢Footer含纯图标时，在既有rail内居中保留至少nav-collapsed-item-size/control-height-lg中的较大净宽，避免40px目标被36px轨道单向压扁；行内纯图标也不强占100% flex-basis。rail宽度与普通文字Footer不变。验收同时量横纵圆面、glyph中心、透明target外沿、内边界及focus，不能只测独立按钮或Card，也不能仅凭focus外径正确判整圈正确。实际layout slot清单见[ICON-ACTION-005](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)。同理，workspace edge/ScrollArea inset的@scope和顶栏/侧栏通用内描规则须排除纯图标Button，不依靠scope proximity覆盖其圆形配方；排除不增加选择器优先级，普通invalid输入及InputGroup继续原额外偏移。Dialog/gutter边界和ScrollArea自身的focus offset保留，嵌套滚动区各自拥有策略；宿主业务头部挤压内容的布局问题不伪装成公共按钮尺寸缺陷。
 
 行内、输入区和工具栏内不需要常驻表面边界的菜单入口，标准组合为 Menu.Trigger render={Button variant="text"}：图标、当前名称、箭头在同一文字按钮内容槽，默认/hover/pressed/展开保持透明，hover/pressed/展开用action-primary前景并由图标继承。使用既有text变体与Menu owner，不复制颜色配方或另设菜单封装。宿主显式primary/destructive等呈现优先；普通表单Select/Input继续其输入边界，不因这条行内菜单规则移除背景或边框。关闭、键盘与回焦仍由现有Menu负责。
 

@@ -3,7 +3,7 @@ import {createRoot} from 'react-dom/client';
 import {flushSync} from 'react-dom';
 import {MenuLayout,NavigationMenu} from '@coffeehc/xui-react/menu-layout';
 import {AppShell,HeaderBrand,SidebarFooterContent,SidebarFooterRow,Stack,Section,Toolbar,PageHeader,type SidebarTogglePlacement} from '@coffeehc/xui-react/layout';
-import {Button} from '@coffeehc/xui-react/button';
+import {Button,IconButton} from '@coffeehc/xui-react/button';
 import {Field,Input} from '@coffeehc/xui-react/forms';
 import {Tabs} from '@coffeehc/xui-react/tabs';
 import {Dialog} from '@coffeehc/xui-react/dialog';
@@ -61,7 +61,8 @@ function App(){
     </Section>
     <Section title="独立正文滚动">{Array.from({length:50},(_,index)=><p key={index}>第 {index+1} 条合成记录：导航更新保留草稿、底部动作与主内容。</p>)}</Section>
   </Stack>;
-  const sidebarFooter=footerKind==='none'?null:footerKind==='plain'?<SidebarFooterContent data-testid="footer-plain">{copy.plain}</SidebarFooterContent>:footerKind==='replacement'?<SidebarFooterContent icon={<Symbol/>} data-testid="footer-replacement">{copy.replacement}</SidebarFooterContent>:original;
+  const iconFooter=<>{(['xs','sm','default','lg'] as const).map(size=><IconButton key={size} size={size} variant="outline" data-testid={'footer-icon-'+size} aria-label={'侧栏 '+size+' 编辑'}><Symbol/></IconButton>)}<Button variant="ghost" data-testid="footer-text-control"><SidebarFooterContent icon={<Symbol/>}>返回会话</SidebarFooterContent></Button></>;
+  const sidebarFooter=new URLSearchParams(location.search).has('icon-actions')?iconFooter:footerKind==='none'?null:footerKind==='plain'?<SidebarFooterContent data-testid="footer-plain">{copy.plain}</SidebarFooterContent>:footerKind==='replacement'?<SidebarFooterContent icon={<Symbol/>} data-testid="footer-replacement">{copy.replacement}</SidebarFooterContent>:original;
   const headerKind=new URLSearchParams(location.search).get('header');
   const tabLayout=new URLSearchParams(location.search).get('tabLayout')==='equal'?'equal':'content';
   const headerButtons=<><Button size="sm" data-testid="header-session">{headerKind==='long'?'创建新的跨团队协作会话':'新会话'}</Button><Button size="sm" data-testid="header-team">{headerKind==='long'?'创建具有很长中文名称的研发团队':'新团队'}</Button><Button size="sm" data-icon="true" aria-label="刷新会话" data-testid="header-refresh"><Symbol/></Button></>;
@@ -74,7 +75,7 @@ function App(){
   const navigationMenu=<NavigationMenu {...options} label="工作导航" compactLabel="紧凑导航" expandLabel="展开导航" navigation={{navigate}}/>;
   const shellSidebar=headerKind==='tabs'?<><Tabs.Panel value="active" keepMounted>{navigationMenu}</Tabs.Panel><Tabs.Panel value="archived" keepMounted><NavigationMenu {...options} label="已归档工作导航" showCollapseToggle={false} navigation={{navigate}}/></Tabs.Panel></>:navigationMenu;
   const brand=new URLSearchParams(location.search).get('brand')==='long'?<HeaderBrand logo={<Symbol/>}>具有很长中文名称的研发协作与运营管理工作空间</HeaderBrand>:<strong>{copy.title}</strong>;
-  const shellProps={sidebarHeader,sidebarTogglePlacement:placement,sidebarFooter,headerSlots:{brand},scrollMode:config.scrollMode,sidebarOpen:open,onSidebarOpenChange:setOpen,closeLabel:'关闭导航'};
+  const shellProps={sidebarRevealOnHover:!new URLSearchParams(location.search).has('no-reveal'),sidebarHeader,sidebarTogglePlacement:placement,sidebarFooter,headerSlots:{brand},scrollMode:config.scrollMode,sidebarOpen:open,onSidebarOpenChange:setOpen,closeLabel:'关闭导航'};
   const view=<>{config.composition==='shell'
     ?<AppShell {...shellProps} navigationLabel="工作导航" collapsed={collapsed} onCollapsedChange={requestCollapsed} compactLabel="紧凑导航" expandLabel="展开导航" sidebar={shellSidebar}>{content}</AppShell>
     :<MenuLayout {...options} {...shellProps} collapsed={collapsed} onCollapsedChange={requestCollapsed} title={copy.title} label="工作导航" compactLabel="紧凑导航" expandLabel="展开导航" navigation={{navigate}}>{content}</MenuLayout>}

@@ -1059,7 +1059,7 @@ TriangleAlert 与 SessionLink 由宿主提供，link 必须转发 props/ref；�
 
 ### 纯图标按钮轮廓（4.2.18）
 
-`@coffeehc/xui-react/button` 的 IconButton / IconButtonProps / Button / ButtonProps 既有调用与事件入口保持。IconButton已设置公开data-icon="true"；Button显式使用相同标记时采用同一圆形容器，直接消费已有radius-full，文字按钮继续button-radius。4.2.18轮廓不新增属性/状态/Service；4.2.32补充button-icon-inset/button-icon-padding公共Token，视觉圆面和焦点内收而命中区/SVG不缩小，具体几何见[统一轮廓合同](DESIGN.md#纯图标按钮的统一轮廓4218)。ButtonProps与IconButtonProps调用保持，所有正式CSS入口同源；可选危险tone见后文。
+`@coffeehc/xui-react/button` 的 IconButton / IconButtonProps / Button / ButtonProps 既有调用与事件入口保持。IconButton已设置公开data-icon="true"；Button显式使用相同标记时采用同一圆形容器，直接消费已有radius-full，文字按钮继续button-radius。4.2.18轮廓不新增属性/状态/Service；4.2.32补充button-icon-inset/button-icon-padding公共Token，视觉圆面和焦点内收而命中区/SVG不缩小，具体几何见[统一轮廓合同](DESIGN.md#纯图标按钮的统一轮廓4218)。4.2.33修复SearchToolbar/QueryForm和SidebarFooter组合的内部覆盖，不新增API/Token或改变请求/展开owner。ButtonProps与IconButtonProps调用保持，所有正式CSS入口同源；可选危险tone见后文。
 
 ```tsx
 <IconButton aria-label="发送"><SendHorizontal/></IconButton>
