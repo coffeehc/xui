@@ -149,6 +149,11 @@ export async function auditDesignSources({ root = process.cwd(), availableTokens
     const unwrap = node => ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isTypeAssertionExpression(node) ? unwrap(node.expression) : node;
     function expression(prop, original, seen = new Set()) {
       const node = unwrap(original);
+      // This invisible OS-copy surface needs nonzero native selection geometry,
+      // independent of UI theme/scale. It is not a component dimension token.
+      if(file==='packages/runtime/src/clipboard-service.ts'&&['width','height'].includes(prop)&&ts.isStringLiteralLike(node)&&node.text==='1px'){
+        exceptions.add(`${file}: native clipboard selection surface`);return;
+      }
       if (ts.isStringLiteralLike(node) || ts.isNumericLiteral(node)) { check(prop, node.text, loc(node)); return; }
       if (ts.isPrefixUnaryExpression(node) && ts.isNumericLiteral(node.operand)) { check(prop, node.getText(ast), loc(node)); return; }
       if (ts.isConditionalExpression(node)) { expression(prop, node.whenTrue, seen); expression(prop, node.whenFalse, seen); return; }

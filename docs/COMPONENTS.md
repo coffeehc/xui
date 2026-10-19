@@ -463,6 +463,8 @@ const noticeColor = 'var(--action-primary)';
 
 value 必填，展示完整值且仅复制这个值。用户点击后默认复用 runtime 剪贴板服务，优先调用 Clipboard API writeText；仅 API 缺失时才尝试临时 textarea/execCommand 回退。不读取剪贴板，不因权限拒绝或写入失败自动再次写入。失败显示安全的就地文字，不泄露异常消息；调用方可注入 `(value:string)=>void|Promise<void>`，宿主可注入同一 writer 合同。
 
+4.2.28修复普通HTTP回退的零尺寸原生选区：保持不可见、脱离文档流、焦点/选区/滚动恢复和临时DOM清理。copied代表所用平台接口确认，服务不读回剪贴板；正式系统验收应使用原生浏览器和合成中文/多段/Markdown文本完整核对OS内容，mock execCommand只能证明调用及恢复流程。
+
 idle/copying/copied/error 是当前交互事实。按钮 disabled 与 copying 独立于外部业务。
 重复点击不并发写剪贴板；销毁/取消可停止本地等待，但不承诺撤回已经交给 OS 的写入。服务会等真实 writer settle 后才开始下一项，不能让后续写入越过仍未完成的 OS 操作。
 value、writer 或 disabled 改变使旧结果失效；仍等待旧 write 结束后才能发起下一次复制，以免旧复制晚到覆盖新值。旧结果不会显示新值“已复制”。

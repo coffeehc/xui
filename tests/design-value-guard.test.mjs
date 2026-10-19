@@ -67,6 +67,17 @@ test('source audit catches bracket writes, cssText, arithmetic and inline doc fr
   ]) await fixture({ [file]: content }, async root => assert.rejects(auditDesignSources({ root }), /Design value audit failed/));
 });
 
+test('clipboard platform selection permits only its nonzero invisible surface dimensions',async()=>{
+ const source="Object.assign(textarea.style,{width:'1px',height:'1px',opacity:'0'});";
+ await fixture({'packages/runtime/src/clipboard-service.ts':source},async root=>assert.doesNotReject(auditDesignSources({root})));
+ for(const [file,value] of [
+  ['packages/runtime/src/sample.ts',source],
+  ['packages/runtime/src/clipboard-service.ts',source.replace("width:'1px'","width:'2px'")],
+  ['packages/runtime/src/clipboard-service.ts',source.replace("height:'1px'","top:'1px'")],
+ ])await fixture({[file]:value},async root=>assert.rejects(auditDesignSources({root}),/Literal/));
+ assert.throws(()=>checkDesignDeclaration('width','1px'),/Literal/);
+});
+
 test('unreviewed UI positioning has no measured-offset exception', async () => {
   for(const source of ['popup.style.left=`${Math.max(0,anchor.left+8)}px`;','popup.style.left=`${Math.max(0,anchor.left)}px`;'])
     await fixture({ 'packages/ui-react/src/sample.tsx': source }, async root => assert.rejects(auditDesignSources({ root }), /Unreviewed dynamic/));

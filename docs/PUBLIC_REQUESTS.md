@@ -4,9 +4,9 @@
 
 核查报告的4.2.18及最新4.2.26：BusinessLogExplorer固定七列，actor拼接kind/name/id，时间原样ISO，没有列表列与formatter入口。4.2.27以可选list展示slot补齐列选择/顺序与actor/action/occurredAt纯字符串格式化；推荐actor、occurredAt、summary、result、detail，兼容旧七列。默认helper保留headers/cells形状并新增columnIds，原服务/请求、事件/筛选/详情不改。调用及验收见[组件合同](COMPONENTS.md#业务日志列表展示配置4227)与[验证记录](VALIDATION.md)。宿主仍负责真实业务摘要、操作者投影和locale，库示例不代表xAgent实际验收。本轮不修改xAgent/业务API/部署。
 
-## xAgent HTTP剪贴板假成功（已确认，待独立修复）
+## xAgent HTTP剪贴板假成功（4.2.28）
 
-4.2.18到4.2.26公共fallback与CopyController源码相同。无shim的原生Chrome155.0.8059.80、普通HTTP、isSecureContext=false且navigator.clipboard缺失下，正式包Controller/Copyable显示copied但macOS系统剪贴板文本不符。原生对照0×0失败，1×1/2×2且opacity=0均完整写入相同中文多段/Markdown；收敛到零尺寸临时textarea。`.artifacts/clipboard-confirm-4.2.26`保留系统种子前置、完整文本比对、原生能力/用户激活及对照数据；没有调用CUA Tab.clipboard或用其快捷键作为证据。4.2.27优先交付审计列配置，尚未修改Clipboard实现，不得据此宣称复制问题已修复。
+4.2.18到4.2.27公共fallback原生选区均为0×0。无shim的普通HTTP原生Chrome中，Controller/Copyable显示copied但OS文本不符；早期0×0/1×1对照及4.2.27正式包新系统回归已分别复现。4.2.28最小修复为不可见、脱离文档流的非零选区，不改默认writer选择、FIFO/取消/失败和焦点/选区/滚动恢复，不读回剪贴板或新建通知owner。精确平台几何例外由设计门禁限定，普通组件仍禁私有尺寸。正式系统回归、旧基线与限制见[VALIDATION](VALIDATION.md)，宿主仍须独立升级并验收实际复制入口；不修改xAgent/业务API/部署。
 
 ## xLetter DataTable无溢出滚轮陷阱（4.2.26）
 

@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.27。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.28。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1898,6 +1898,8 @@ NavigationMenu的名称槽占满主项剩余宽度。富内容仍由renderLabel�
 状态的统一边界：布局组件不请求、不缓存、不猜权限；交互组件拥有局部 focus/open/checked 等公开状态；resource/auth/业务 controller 拥有请求与确认事实。`busy` 不等于 `disabled`，`readOnly` 不等于 `disabled`，错误不等于空数据。正常 React render 是更新，切换 key、清空 DOM 或条件卸载是重建，不能用后者实现同范围刷新。刷新与范围切换、取消、失败恢复按下方连续性合同执行。
 
 应用基础设施按单例 Service 组织，统一在 React 挂载前调用 `bootstrap(overrides)`。唯一默认值来源为 runtime 正式包的 `config.json`；参数只覆盖项目需要变化的字段：对象递归合并、数组整体替换、undefined 保留默认，未知公共键及非法值必须拒绝，`extensions` 留给宿主校验业务配置。JSON 不承载函数、实例、密钥或权限事实；可替换的平台实例在独立 environment 参数声明。ConfigService 提供不可变启动快照，ThemeService 管理文档主题，RouteService 管理 History URI，MenuService 管理菜单内容，I18nService 管理语言和纯文本资源，HTTP/Auth/Clipboard/Download/Upload 复用各自唯一基础设施；UtilService 仅组织纯函数。不另设万能事件总线、业务缓存、查询或全局表单状态。
+
+Clipboard的HTTP回退使用不可见、脱离文档流的1×1 CSS px原生选区，这是OS复制必需的平台几何，不属于视觉尺寸/主题缩放Token；设计值门禁仅在clipboard-service.ts的width/height放行精确1px。服务不读取系统剪贴板验证成功，也不创建反馈或通知owner。真实回归须用无shim平台及合成文本完整比对OS内容，不能以execCommand返回true或copied状态代替，见[剪贴板服务](PUBLIC_API.md#剪贴板复制服务)。
 
 bootstrap 只完成配置注册及首绘主题、缩放、初始语言/标题；其余 Service 实现由对应窄模块导入，并在首用读取同一配置。导入不发请求、不启动查询或会话恢复；不通过全量 service 汇总入口隐式拉入所有功能。依赖按职责单向递进：Menu → I18n → Config，Upload/Download/Auth → 同一 HTTP，组件 View → Controller → Service。基础 Service 使用稳定单例引用；局部队列/草稿/分页仍逐实例，不设复制所有事实的 StateService。启用认证的 HTTP 首次请求必须先绑定唯一认证 owner，缺失模块在发送前明确失败。依赖与迁移的逐项检查见 SERVICE-010～013。
 

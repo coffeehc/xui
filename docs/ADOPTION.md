@@ -168,6 +168,8 @@ pnpm preview
 
 ### 实际页面验收
 
+普通HTTP且Clipboard API缺失的复制入口，4.2.28修复原生fallback零尺寸选区。定向升级沿用原ClipboardService/CopyController/Copyable，无新增writer或请求owner；按STATE-COPY-001～002验证完整中文/多段/Markdown的真实系统复制、失败及焦点/选区/滚动恢复。不得以copied文字或mock execCommand=true判定完整复制。
+
 使用BusinessLogExplorer的项目如需“操作者/时间/摘要/结果＋详情”主视图，4.2.27通过list.columns选择同序列，用formatActor/formatAction/formatOccurredAt提供纯显示文本。保留原Controller/loader、原字段/筛选代码及详情事实，不用显示名改写wire。按BIZ-LIST-001～005验证格式/语言/时区更新零查询、原始详情、精确筛选、节点/回焦及窄屏/放大；默认七列调用无需更改。示例与调用方式见[组件规范](COMPONENTS.md#业务日志列表展示配置4227)。
 
 DataTable在4.2.26修正无纵向溢出时的滚轮陷阱，现有props/布局无需改变。按TABLE-SCROLL-001～003，在实际受影响页把指针放在表格内部测试上下滚动：无独立纵向范围时应滚动页面所属内容；固定高度表体仍内部滚动并保留首末边界；横向滚动不能拖动整页，sticky和键盘入口保持。不要在消费方转发wheel、覆盖私有overscroll样式或新增滚动容器。此升级不改变请求、认证或分页owner，库示例不代替产品页面复验。

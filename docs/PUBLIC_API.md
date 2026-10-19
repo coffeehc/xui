@@ -882,7 +882,7 @@ const selection=createSelectionController<string|null>({defaultValue:null});
 
 ## 剪贴板复制服务
 
-正式入口 `@coffeehc/xui-runtime/clipboard` 和 runtime 根入口提供共享 `getClipboardService()`。剪贴板基础服务的 `createClipboardService` 工厂在 2.0.0 中已从 public exports 移除；日常浏览器应用通过 bootstrap/服务注册表获取唯一服务，隔离测试或 SSR 容器可用 `new XuiServices({clipboard:{options}})`。服务只写文本，不读取剪贴板，不持久化、不创建通知/权限状态。`writeText(value,{signal?})` 返回 `Promise<void>`；成功代表平台写入完成，取消以 AbortError 拒绝，平台失败直接拒绝。用户消息/复制状态归调用组件。
+正式入口 `@coffeehc/xui-runtime/clipboard` 和 runtime 根入口提供共享 `getClipboardService()`。剪贴板基础服务的 `createClipboardService` 工厂在 2.0.0 中已从 public exports 移除；日常浏览器应用通过 bootstrap/服务注册表获取唯一服务，隔离测试或 SSR 容器可用 `new XuiServices({clipboard:{options}})`。服务只写文本，不读取剪贴板，不持久化、不创建通知/权限状态。`writeText(value,{signal?})` 返回 `Promise<void>`；成功代表所用平台写接口确认写入（legacy为execCommand返回true，不是读回OS内容），取消以 AbortError 拒绝，平台失败直接拒绝。用户消息/复制状态归调用组件。
 
 ```ts
 import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
@@ -892,7 +892,7 @@ const clipboard = ClipboardService;
 await clipboard.writeText(text,{signal});
 ```
 
-默认优先用实际 navigator.clipboard.writeText；仅该能力缺失时使用临时 textarea/execCommand 的平台回退，始终清除临时DOM并恢复原焦点、input选区、文本选区与滚动。权限拒绝/实际写入失败不自动再次写入。无 navigator/document 的环境在调用时拒绝，不在 import 阶段访问 DOM。options 的 navigator/document/execCommand 是显式平台测试/宿主注入边界。
+默认优先用实际 navigator.clipboard.writeText；仅该能力缺失时使用临时 textarea/execCommand 的平台回退，始终清除临时DOM并恢复原焦点、input选区、文本选区与滚动。权限拒绝/实际写入失败不自动再次写入。无 navigator/document 的环境在调用时拒绝，不在 import 阶段访问 DOM。options 的 navigator/document/execCommand 是显式平台测试/宿主注入边界。4.2.28修复HTTP原生零尺寸选区假成功；临时选区保留非零、不可见、脱离文档流的几何。系统回归见[原生剪贴板用例](../tests/browser/clipboard-system.spec.mjs)，macOS显式设置XUI_SYSTEM_CLIPBOARD=1后运行；它使用正式包、原生Chrome/execCommand和pbcopy/pbpaste，仅写合成内容并比较布尔结果，不记录其他剪贴板内容。不启用该平台用例时不能把mock或UI状态当成系统复制验收。
 
 同服务 FIFO 串行执行实际写入；取消队列中尚未开始的任务不会调用 writer，取消正在等待的调用会停止本地等待，但后续写入必须等真实 writer settle 才执行，不能越过未完成的 OS 操作。`disposeXuiServices(window)` 只释放注册表创建并拥有的内部剪贴板服务；经 `services.clipboard.instance` 借用的 `SharedClipboardService` 只有 `writeText` 合同，调用方无须提供 `dispose`，registry 也不会销毁借用实例。注入 `services.clipboard.options` 时，options 中的 `writeText` 是借用的平台 writer seam，内部服务使用但不拥有或 dispose 它。调用方不能据此声称已撤回 OS 剪贴板。`createCopyController` 是组件 Controller factory，保留并默认复用共享剪贴板服务；原显式 writeText 注入仍兼容并保留自身反馈代次隔离。
 

@@ -26,7 +26,9 @@ function copyThroughTextarea(document:Document,value:string,execCommand:(documen
  const selection=view?.getSelection(),ranges:Range[]=[];
  if(selection)for(let i=0;i<selection.rangeCount;i++)ranges.push(selection.getRangeAt(i).cloneRange());
  const textarea=document.createElement('textarea');textarea.value=value;textarea.setAttribute('aria-hidden','true');textarea.tabIndex=-1;
- Object.assign(textarea.style,{position:'fixed',left:'0',top:'0',width:'0',height:'0',padding:'0',border:'0',opacity:'0',pointerEvents:'none'});
+ // Native Chrome can acknowledge copy for a zero-size selection without
+ // copying its text. Keep a nonzero, invisible platform selection surface.
+ Object.assign(textarea.style,{position:'fixed',left:'0',top:'0',width:'1px',height:'1px',padding:'0',border:'0',opacity:'0',pointerEvents:'none'});
  let copied=false;
  try{
   (document.body??document.documentElement).appendChild(textarea);textarea.focus({preventScroll:true});textarea.select();textarea.setSelectionRange(0,textarea.value.length);copied=execCommand(document,'copy');

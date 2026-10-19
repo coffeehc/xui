@@ -1,5 +1,21 @@
 # 验证证据与限制
 
+## 普通HTTP原生剪贴板完整复制（4.2.28，2026-10-19）
+
+核对4.2.18至4.2.27的公共fallback，均使用零尺寸textarea。早期无shim原生Chrome155对照中，0×0失败而1×1/2×2且opacity=0完整写入同一合成内容，证据`.artifacts/clipboard-confirm-4.2.26`。本轮新增系统回归先运行4.2.27正式tarball（sourceGeneration `6b899b4f543a588a964449c1a99c3b0df0ab939755d7520d5c83931f5c0b13cc`），原生Chrome156.0.8078.4、HTTP页面、isSecureContext=false、navigator.clipboard缺失、execCommand为native时，种子前置通过且service状态copied，但OS全文相等为false，得到预期失败；见`.artifacts/clipboard-4.2.28/baseline.log`和baseline.json。仅拦截页面合成HTML，不替换clipboard/execCommand，不用CUA剪贴板或快捷键作为系统证据。
+
+4.2.28只把公共回退选区改为不可见、脱离文档流的非零几何；保留Clipboard API优先及失败不自动回退、FIFO、取消/迟到/释放、原焦点/输入选区/DOM Range/滚动和临时DOM清理。没有读回、持久化、通知或第二个writer owner。设计门禁仅对clipboard-service.ts的width/height精确1px允许平台例外，正反测试防止扩散为普通组件尺寸许可。公开方法/类型不变，三包及规范仅递增末位；STATE-COPY-001～002明确系统复制与mock调用的证据边界。
+
+
+最终build、431 Token图/指纹、typecheck、指定7文件定向Node测试54/54、正式ESM/CSS/types消费者通过；sourceGeneration为`1540357fec672a76a5ebd779e97f3ea738aa1bbadae2143197618ca3625499ab`，React/ReactDOM19.2.8及Base UI1.7.0单实例，无源码alias。初始JS gzip144640、关键CSS22190 bytes，预算未改。receipt/performance与三包同代。
+
+最终浏览器4/4全部通过：新增macOS普通HTTP原生系统用例（内部四次显式动作：ClipboardService、默认CopyController、默认React Copyable及重复复制）与既有fallback恢复、显示成功/失败和SSR hydration复制回归。系统用例使用headful原生Chrome156.0.8078.4、可信click且userActivation为true，不注入writer、不改navigator.clipboard/Document.execCommand；每次先写并核对合成种子，再把OS全文与合成中文/多段/emoji/Markdown原文精确比较，四次均相等。公开反馈copied只作等待条件，不作OS结果断言。只保存相等布尔值和合成原文hash，不输出其他剪贴板内容；临时textarea零残留，已检查合成页面截图，测试结束清理仍属于本测试的剪贴板和自有浏览器。焦点/原输入选区方向/内外滚动由既有独立恢复回归验证。
+
+最终原始报告browser-final.json、case-summary.json、原生能力/激活/每次OS结果及截图proof存于`.artifacts/clipboard-4.2.28`。复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`；`node --test tests/clipboard.test.mjs tests/display.test.mjs tests/config-services.test.mjs tests/service-modules.test.mjs tests/design-value-guard.test.mjs tests/contract.test.mjs tests/docs.test.mjs`；`pnpm test:consumer`；macOS明确允许写合成系统剪贴板后执行`XUI_SYSTEM_CLIPBOARD=1 pnpm exec playwright test tests/browser/clipboard-system.spec.mjs tests/browser/clipboard.spec.mjs tests/browser/display.spec.mjs --grep 'clipboard|copy' --workers=1`。系统用例缺少显式开关或非macOS时跳过，不能记作系统验收通过。
+
+未跑全仓unit/browser、watch/cold-start、其他OS/浏览器、真实HTTPS Clipboard API权限或任何消费项目/业务后端/部署。主题和文字样式未改；业务日志列表与TableContainer焦点能力沿用4.2.27独立验收，未在4.2.28重复其22项浏览器。新归档包含两项改动，仍须xAgent等项目独立升级并验收自己的实际复制/审计入口。公开API/Controller调用和认证/请求owner保持，无需宿主复制内部DOM/CSS或新增writer。
+
+
 ## 业务日志列表列与显示格式（4.2.27，2026-10-19）
 
 核对xAgent报告的4.2.18与当前main90f6f397/4.2.26，原getBusinessLogTable仍固定七列。先用新增“list presentation selects”断言运行4.2.26 dist，实际为Summary/Result/Actor/Action/Event time/Business object/Detail七列而期望Actor/Event time/Summary/Result/Detail五列，得到预期失败，证据`.artifacts/business-log-list-4.2.27/baseline.log`。没有切换历史checkout或修改消费项目。

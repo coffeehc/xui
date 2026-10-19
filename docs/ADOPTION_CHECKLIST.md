@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.27）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.28）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -395,6 +395,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | AUTH-UI-008 | 管理员用户名规则 | 需附加规则时使用可选validateUsername同步纯函数：原值输入，null通过/非空本地化字符串拒绝；注入模式只在Controller配置；缺省仅非空。失败零写入、关联错误并聚焦，修正/clear后可恢复，未知结果仍锁定；不在宿主复制字段或私有DOM补丁 | 默认/注入、无规则、语言更新、异常回调、Enter、错误关联和零请求证据；核对未改写提交值 | [用户名校验](COMPONENTS.md#宿主用户名校验) |
 | AUTH-UI-009 | 已认证后的宿主交接失败与重试 | 失败保留认证，主按钮普通文案/禁用/非busy，不同时声称opening；仅重试导航，保留字段/密码清理与回焦；阶段订阅不携带异常正文或秘密 | 同步throw/Promise拒绝、失败→重试等待→再失败→成功，Network次数/节点/焦点及阶段事实 | [完整登录页](COMPONENTS.md#完整页面与扩展) |
 | STATE-COPY-001 | 复制文本或显式writer | 使用runtime剪贴板服务或既有平台writer，写入串行、取消/迟到隔离；失败就地反馈，不读剪贴板/持久化/自动重试 | 真实指针、fallback焦点/选区/scroll、队列/失败/取消计数 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
+| STATE-COPY-002 | 普通HTTP回退复制/系统验收 | 无Clipboard API时用原生平台及合成中文、多段/Markdown完整核对OS文本；仅copied/execCommand=true不算通过；不要求产品加读回或私有补丁 | 固定正式包、HTTP/secure能力、原生execCommand、种子前置及完整文本相等布尔值；无shim证据 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-003 | 展示警告/等待/人工介入状态 | tone 与真实状态分类逐条映射，不只用颜色传达状态 | 领域状态映射表和可访问文本 | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
