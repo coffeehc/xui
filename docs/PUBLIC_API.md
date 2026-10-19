@@ -872,6 +872,8 @@ const selection=createSelectionController<string|null>({defaultValue:null});
 
 `createLoginViewController({auth,config,extensions?,onAuthenticated?})` 必须借用实际 AuthClient，View 不创建认证协议/client。绑定的 `readCredentials` 只提供瞬时读取边界，校验/扩展只保留用户名或安全错误，异步扩展完成后才读取用于 auth 的密码。交给 AuthClient 的参数属于其 IO 边界；本模型不在任何快照/缓存/日志保留密码，不破坏自定义 AuthClient 异步读取其参数的合同。实际 DOM 在提交、pagehide、替换和卸载时清理。Secret-safe 子模型与管理员初始化 form 聚合见组件矩阵。
 
+4.2.25修正ConfigurableLoginPage在导航失败后仍显示opening的问题；失败保留认证事实、禁重复登录和局部导航重试，公开类型、labels与认证端点未变。LoginViewController已有navigationPhase订阅仅提供无凭据阶段事实，不能据此分类宿主内部失败原因，详见[完整登录页](COMPONENTS.md#完整页面与扩展)。
+
 3.0.0 的 Toast 由 xui 公开 Controller 拥有唯一集合/计时/关闭阶段；不再使用 Base UI ToastStore。以下为正式迁移合同。
 
 ## 剪贴板复制服务

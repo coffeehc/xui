@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.24）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.25）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -393,6 +393,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | AUTH-UI-006 | 登录视觉升级 | AuthClient、导航、密码清理和扩展回调归属不变；提交无取消、无重复写，切主题/缩放不重挂表单 | Network顺序、受控/注入、焦点/选区、pagehide及迟到结果 | [认证会话](PUBLIC_API.md#认证会话) |
 | AUTH-UI-007 | 检查/错误切换到管理员初始化 | 保留同一AuthPage与品牌/卡片节点；children使用AdminSetupForm，AuthPage从首次挂载省略form；检查阶段零form、初始化阶段唯一form，不复制校验/提交或嵌套完整页面；busy/清密/未知结果仍按原合同 | 阶段切换前后node identity、form计数、请求与密码清理轨迹 | [初始化组合](COMPONENTS.md#可组合初始化表单) |
 | AUTH-UI-008 | 管理员用户名规则 | 需附加规则时使用可选validateUsername同步纯函数：原值输入，null通过/非空本地化字符串拒绝；注入模式只在Controller配置；缺省仅非空。失败零写入、关联错误并聚焦，修正/clear后可恢复，未知结果仍锁定；不在宿主复制字段或私有DOM补丁 | 默认/注入、无规则、语言更新、异常回调、Enter、错误关联和零请求证据；核对未改写提交值 | [用户名校验](COMPONENTS.md#宿主用户名校验) |
+| AUTH-UI-009 | 已认证后的宿主交接失败与重试 | 失败保留认证，主按钮普通文案/禁用/非busy，不同时声称opening；仅重试导航，保留字段/密码清理与回焦；阶段订阅不携带异常正文或秘密 | 同步throw/Promise拒绝、失败→重试等待→再失败→成功，Network次数/节点/焦点及阶段事实 | [完整登录页](COMPONENTS.md#完整页面与扩展) |
 | STATE-COPY-001 | 复制文本或显式writer | 使用runtime剪贴板服务或既有平台writer，写入串行、取消/迟到隔离；失败就地反馈，不读剪贴板/持久化/自动重试 | 真实指针、fallback焦点/选区/scroll、队列/失败/取消计数 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务) |
 | COLOR-001 | 展示普通归属/来源类别 | 使用中性 Badge/tone，不以 success/warning/error 颜色代替分类 | Badge props、light/dark computed colors | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |
 | COLOR-002 | 展示成功/运行状态 | 只有后端或业务状态明确成功时使用 success 语义 | 状态来源字段与 DOM tone | [DESIGN 逐组件外观与状态映射](DESIGN.md#逐组件外观与状态映射) |

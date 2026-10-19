@@ -1,5 +1,13 @@
 # 验证证据与限制
 
+## 登录交接失败后的主动作状态（4.2.25，2026-10-19）
+
+仅修正ConfigurableLoginPage的呈现判断：onAuthenticated抛出或拒绝后，认证事实保留，主登录按钮恢复既有submit文案并保持disabled、aria-busy=false；局部错误与retryNavigation可用。只有真正再次等待导航时显示opening。没有新增props、文案键、认证/请求owner或诊断存储；已有Controller.navigationPhase可说明交接阶段，宿主具体失败步骤仍由原owner记录脱敏固定阶段/代码，不向公共状态传递原始异常、凭据或响应体。
+
+旧4.2.24正式消费者先运行新增断言，实际主按钮仍为“正在进入…”而预期“登录”，形成预期失败；证据为`.artifacts/login-handoff-4.2.25/baseline.log`及results-baseline。修复后指定单测67/67、正式包浏览器94/94（91项登录/布局/交接与3项light/dark/system真实浏览器200%缩放）通过。包含登录和既有会话两条路径、同步throw/异步reject、失败→pending重试→再次失败→成功；只有一次登录POST，导航重试请求集合不变，密码为空、认证仍有效、字段/按钮DOM保留、错误及重试焦点可达；桌面/390px窄屏、200%根字号和真实缩放分别检查。实际查看失败截图，未以静态截图替代请求/节点断言。
+
+构建、Token、类型、文档检查及正式ESM/CSS/types消费者通过；sourceGeneration为`19b7f1c93801b1b491dc9766729cca2b91da14bb2ccff88a3d96bac509f5b3a6`，React/ReactDOM19.2.8与Base UI1.7.0单实例，初始JS gzip144519 bytes、关键CSS gzip22152 bytes，未调整预算。复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`、`node --test tests/contract.test.mjs tests/docs.test.mjs tests/auth.test.mjs tests/login-layout.test.mjs tests/interaction-controller.test.mjs`、`pnpm test:consumer`及`pnpm exec playwright test tests/browser/login-navigation.spec.mjs tests/browser/login.spec.mjs tests/browser/login-layout.spec.mjs --workers=2`。日志、报告与截图在`.artifacts/login-handoff-4.2.25`；未跑完整全库套件、xLead实际冷登录、BaseService集成或任何部署，不据此判定宿主最初交接失败根因。
+
 ## 临时通知归属与页面跳动自查（文档澄清，2026-10-19）
 
 仅更新DESIGN的反馈位置/保留时间、刷新合同、ADOPTION、逐项清单与adopt-xui路由；没有修改组件、CSS、TypeScript接口、请求或认证，也未重发包，正式组件产物仍为4.2.24/e3fe0c0e的固定归档。本次将既有“临时反馈用Toast、刷新不挤动正文”的要求明确到show/hide整块通知的反例：页面级普通成功、复制完成等必须复用公共Toast；持续字段错误、失败/重试、权限阻断、未知写入与重要结果仍归所属入口，控件自身原位反馈遵守原合同，不额外重复通知。轮询不逐次报成功，不以大留白、固定提示高度、裁切或隐藏正文掩盖跳动。

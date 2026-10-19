@@ -1205,6 +1205,12 @@ owner确认有效authenticated后，无论来自初始session检查还是主动l
 
 `onAuthenticated(user, returnTo)`兼容void，也可显式返回Promise<void>。宿主负责真正导航或替换为目标内容。同步抛错/返回Promise拒绝时，保留已确认的认证事实，局部显示navigationError与retryNavigation；重试只再次打开目标，不调用login/refresh/logout。void回调自行启动的异步任务无法由页面观测，其错误由宿主处理；需要页面处理失败则返回该Promise。pagehide/unmount后迟到的回调结果不再修改登录页；已经开始的宿主副作用仍由宿主按自身生命周期取消。opening期间禁重复且清空密码，没有虚假的完成卡。真正卸载后alive失效；StrictMode探测性cleanup/replay沿用同一次回调而不再次启动；更换auth owner会失效旧导航revision。pagehide使当前激活失效；pageshow.persisted恢复交互，并在owner仍确认authenticated时开始该次激活的一次目标导航，不补session/refresh/login请求。宿主需遵循bfcache生命周期，不能在persisted pagehide无条件销毁要恢复的owner。
 
+4.2.25明确区分导航就绪、opening与failed：failed时主登录按钮显示原labels.submit、disabled=true、aria-busy=false，不继续显示/播报labels.opening；字段仍锁定，密码仍为空，navigationError和可用的retryNavigation留在所属反馈槽。显式重试进入opening后才恢复忙态文案；再次失败回到相同失败呈现，成功由宿主进入目标内容，不增加登录、refresh或logout请求，也不新增确认卡或文案键。
+
+既有[正式登录示例](../examples/login-react/app.tsx)的`?handoff=throw`/`?handoff=reject`复现失败，`?handoff=hold`演示交接等待；示例为合成认证，不代表产品首次启动联调。
+
+现有公开LoginViewController的subscribe/getState可观察navigationPhase（idle/opening/failed），它仅表示交接阶段，不提供宿主内部失败步骤分类或原始Error/body/credentials。需要定位加载模块、业务上下文等步骤时，宿主在自身onAuthenticated与原请求/资源owner中记录经过脱敏的固定步骤/错误码，并把需页面处理的Promise返回；不要把异常正文放入Toast、公共state、URL或storage。公共层不根据任意异常猜网络/权限根因，不新增并行诊断owner。
+
 没有onAuthenticated时，直接使用经过 `resolveLoginReturnTo` 的根相对location.assign；若目标path/query就是当前页，则显示局部导航失败而不重复reload。回跳拒绝规范化及多次解码后的外部路径、控制字符、双斜杠、默认/login循环；去fragment与明确密码/token/code/api_key等query。其它自定义登录路由或含秘密业务query仍由宿主验证。
 
 `extensions.beforeSubmit/actions/errorLabel` 和beforeFields/afterFields仍只接收username与AbortSignal，不接收密码/token/原始响应。宿主标准SSO、服务地址与账户来源保留同一认证owner。重复提交、扩展卸载中止、迟到导航和密码节点清空仍受页面generation控制；修改真实服务由产品安全策略决定。

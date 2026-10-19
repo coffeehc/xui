@@ -4,8 +4,15 @@ import * as React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {readFile} from 'node:fs/promises';
 import {ConfigurableLoginPage} from '../packages/ui-react/dist/login.js';
+import {createLoginViewController} from '../packages/runtime/dist/login-view.js';
 
 const theme=new Proxy({},{get(){throw new Error('Login must inherit root theme without reading or mutating the owner.');}});
+for(const labels of [undefined,{submit:'登录',opening:'正在进入工作空间…',navigationError:'已登录，但未能打开工作空间。',retryNavigation:'重试进入'}])test(`rejected authenticated handoff is idle and locked, with safe phase state (${labels?'zh':'en'})`,async()=>{
+ const state={status:'authenticated',user:{id:'42',username:'demo',display_name:'Demo'},busy:null,error:null},auth={getState:()=>state,subscribe:()=>()=>{}},phases=[];
+ const controller=createLoginViewController({auth,config:{productName:'Test',labels},onAuthenticated:()=>{throw Error('FAKE_PRIVATE_HANDOFF_DETAIL');}});controller.subscribe(()=>phases.push(controller.getState().navigationPhase));const release=controller.bind({readCredentials:()=>({username:'demo',password:''}),clearPassword(){},focus(){},navigate(){}});await Promise.resolve();
+ assert.deepEqual(phases,['idle','opening','failed']);assert.equal(controller.getState().navigationPhase,'failed');assert.doesNotMatch(JSON.stringify(controller.getState()),/FAKE_PRIVATE_HANDOFF_DETAIL/);
+ const markup=renderToStaticMarkup(React.createElement(ConfigurableLoginPage,{controller,theme})),actions=section(markup,'xui-login-actions','footer'),primary=actions.match(/<button\b[\s\S]*?<\/button>/)?.[0];assert.ok(primary);assert.match(primary,/disabled=""/);assert.match(primary,/aria-busy="false"/);assert.ok(primary.includes(`<span>${labels?.submit??'Sign in'}</span>`));assert.doesNotMatch(markup,/role="status"/);assert.equal(auth.getState().status,'authenticated');release();controller.destroy();
+});
 function render(state={status:'anonymous',user:null,busy:null,error:null},config={},props={}){
   const auth={getState:()=>state,subscribe:()=>()=>{}};
   return renderToStaticMarkup(React.createElement(ConfigurableLoginPage,{auth,theme,config:{productName:'产品名称',title:'登录产品',description:'品牌说明',...config},...props}));

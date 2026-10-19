@@ -1,5 +1,11 @@
 # 公共能力维护清单
 
+## xLead 登录交接失败呈现（4.2.25）
+
+来源xLead固定4.2.20/5aeefe73；核对最新main 53b9c182/4.2.24仍把导航failed归入navigating，主按钮因此误显示opening。4.2.25只修正公共展示派生，失败时保留认证、字段锁定和空密码，主按钮普通文案/disabled/非busy，仅次动作重试导航；原Controller、认证和请求owner未改。正式包结果见[验证记录](VALIDATION.md)。xLead首次启动的模块/上下文失败步骤仍未确定，刷新后进入或另一轮200响应不能证明首次链路正常；本轮不修改xLead/BaseService，也不将宿主根因归为库缺陷。
+
+诊断评估：现有公开Controller阶段订阅已可提供idle/opening/failed的无凭据事实，不提供任意宿主步骤分类。宿主内部步骤由onAuthenticated及原资源/请求owner记录脱敏固定码；库不保存或展示原始Error/body/credentials，不新增猜测分类或并行诊断owner。
+
 ## xLead 公共链接默认无下划线（4.2.24）
 
 xLead报告固定4.2.20/5aeefe73的Typography.Link消息标题与来源链接显示下划线，要求由xui公共CSS统一处理。最新main 4.2.23仍为underline；4.2.24将Typography.Link、LinkedText、xui/xui-layer内原生a及Button link统一为默认无下划线，保持主题色、导航/外链属性、独立focus-visible与原点击合同。导航和控件forced-colors选中标记仍保留。无新增props/owner；正式包结果见[验证记录](VALIDATION.md)，宿主须升级后复验自己的实际列表，库验收不等于xLead产品验收通过。本轮不修改xLead或BaseService。
