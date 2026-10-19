@@ -1,5 +1,13 @@
 # 公共能力维护清单
 
+## xAgent 业务日志列表展示配置（4.2.27）
+
+核查报告的4.2.18及最新4.2.26：BusinessLogExplorer固定七列，actor拼接kind/name/id，时间原样ISO，没有列表列与formatter入口。4.2.27以可选list展示slot补齐列选择/顺序与actor/action/occurredAt纯字符串格式化；推荐actor、occurredAt、summary、result、detail，兼容旧七列。默认helper保留headers/cells形状并新增columnIds，原服务/请求、事件/筛选/详情不改。调用及验收见[组件合同](COMPONENTS.md#业务日志列表展示配置4227)与[验证记录](VALIDATION.md)。宿主仍负责真实业务摘要、操作者投影和locale，库示例不代表xAgent实际验收。本轮不修改xAgent/业务API/部署。
+
+## xAgent HTTP剪贴板假成功（已确认，待独立修复）
+
+4.2.18到4.2.26公共fallback与CopyController源码相同。无shim的原生Chrome155.0.8059.80、普通HTTP、isSecureContext=false且navigator.clipboard缺失下，正式包Controller/Copyable显示copied但macOS系统剪贴板文本不符。原生对照0×0失败，1×1/2×2且opacity=0均完整写入相同中文多段/Markdown；收敛到零尺寸临时textarea。`.artifacts/clipboard-confirm-4.2.26`保留系统种子前置、完整文本比对、原生能力/用户激活及对照数据；没有调用CUA Tab.clipboard或用其快捷键作为证据。4.2.27优先交付审计列配置，尚未修改Clipboard实现，不得据此宣称复制问题已修复。
+
 ## xLetter DataTable无溢出滚轮陷阱（4.2.26）
 
 xLetter报告固定4.2.22在`MenuLayout scrollMode="viewport"`的长表格内滚轮不动，表体没有纵向范围却无条件contain；最新4.2.25源码仍有相同规则。公共修复按实际纵向范围切换边界，复用既有布局观察器，无新props、私有宿主补丁或请求owner。原4.2.25正式消费者已用真实wheel复现同类祖先滚动阻断；正式修复证据见[VALIDATION](VALIDATION.md)。本任务不访问xLetter已登录线上标签页、不改业务/部署，产品升级后的实际页面验收由xLetter独立完成。

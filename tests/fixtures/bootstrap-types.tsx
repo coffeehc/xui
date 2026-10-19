@@ -2,7 +2,7 @@ import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
 import {resolveConfig,resolveDefaultPages,type XuiConfigOverrides,type XuiConfig} from '@coffeehc/xui-runtime/config';
 import {ConfigurableLoginPage,type AuthClient} from '@coffeehc/xui-react/login';
 import {AdminSetupPage,type AdminSetupSubmit} from '@coffeehc/xui-react/admin-setup';
-import {BusinessLogExplorer,type BusinessLogLoader} from '@coffeehc/xui-react/business-log';
+import {BusinessLogExplorer,type BusinessLogLoader,type BusinessLogListPresentation,type BusinessLogListColumnId} from '@coffeehc/xui-react/business-log';
 import {ApiKeyManager,type ApiKeyManagerController} from '@coffeehc/xui-react/api-key';
 import type {ThemeController} from '@coffeehc/xui-runtime/theme';
 const partial:XuiConfigOverrides={theme:{scale:1.25},app:{name:'Example'}};
@@ -12,10 +12,17 @@ declare const auth:AuthClient,theme:ThemeController,submit:AdminSetupSubmit,load
 export const defaultLogin=<ConfigurableLoginPage auth={auth} theme={theme} config={pages.login.config}/>;
 export const defaultSetup=<AdminSetupPage config={pages.adminSetup.config} state={{status:'idle'}} onSubmit={submit}/>;
 export const defaultLog=<BusinessLogExplorer options={{...pages.businessLog.options,loader}}/>;
+const activityColumns:readonly BusinessLogListColumnId[]=['actor','occurredAt','summary','result','detail'];
+export const activityPresentation:BusinessLogListPresentation={columns:activityColumns,formatActor:(actor,event)=>actor.display_name??event.actor.id,formatAction:action=>action,formatOccurredAt:iso=>new Intl.DateTimeFormat('zh-CN').format(new Date(iso))};
+export const activityLog=<BusinessLogExplorer options={{...pages.businessLog.options,loader}} list={activityPresentation}/>;
 export const defaultKeys=<ApiKeyManager controller={keys} pagination={pages.apiKeys.pagination}/>;
 declare const priorConfig:Omit<XuiConfig,'pages'>;
 export const compatiblePriorConfig:XuiConfig=priorConfig;
 if(false){
+ // @ts-expect-error List presentation cannot expose arbitrary wire/payload columns.
+ const invalidColumn:BusinessLogListPresentation={columns:['payload']};
+ // @ts-expect-error Formatters return plain text, never JSX or rewritten event DTOs.
+ const invalidFormatter:BusinessLogListPresentation={formatActor:actor=>({actor})};
  bootstrap();bootstrap(partial);
  // @ts-expect-error Configuration remains serializable.
  bootstrap({extensions:{callback:()=>0}});

@@ -617,6 +617,8 @@ baseservice 的 apikeyservice/webfacade 配套严格 v2。共享 [decimal](../te
 
 ## 业务日志
 
+4.2.27新增纯展示合同：React `BusinessLogExplorer.list`与runtime `getBusinessLogTable(state,labels,list?)`接受`BusinessLogListPresentation`（`columns`、`formatActor`、`formatAction`、`formatOccurredAt`），列键类型`BusinessLogListColumnId`。runtime/React `/business-log`及根入口均正式导出类型；既有props、默认七列及helper缺省headers/cells不变。detail省略时自动追加；formatter返回纯文本，原事件/筛选/详情不改。完整五列接线、locale/时区、动态更新和helper新增columnIds合同见[组件规范](COMPONENTS.md#业务日志列表展示配置4227)。
+
 用途是随时调取查阅领域业务记录，提供通用字段、可扩展payload、筛选分页和详情。用户所说的“审计”指这个业务日志用途，不是正式审计体系；旧BusinessAudit命名在同一实现上统一改为BusinessLog，没有增加另一套页面。公共事件描述谁在何时对哪个业务对象做了什么、结果如何、关联哪些请求及允许披露的业务细节。现有 [错误观察功能](PUBLIC_API.md#程序错误观察) 是独立功能，severity/错误分组/首次代表不能充当业务日志。完整通用规则仅在 [DESIGN.md](DESIGN.md)。
 
 runtime/business-log 提供 DTO、严格解析、loader 和单一 controller；React `/business-log` 的 `BusinessLogExplorer` 使用这些 TypeScript 能力，并组合公开 Layout/Field/Table/Dialog/反馈与公共 CSS。

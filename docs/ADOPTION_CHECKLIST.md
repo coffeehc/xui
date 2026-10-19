@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.26）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.27）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -749,6 +749,16 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | LOG-QUERY-006 | 不合法筛选与时间 | 无请求，错误在所属summary可见；原RFC3339Nano/半开区间与显式offset保留，无隐式时区 | 非法/纳秒/offset正负例与错误截图 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
 | LOG-QUERY-007 | 新范围/取消/迟到/可选records | 原service拥有查询、游标和代次；缺省records不展示/请求，旧响应不污染新范围 | 各模式请求、取消及迟到回归 | [PUBLIC_API](PUBLIC_API.md#程序错误观察) |
 | LOG-QUERY-008 | 三主题/窄屏/长中文/放大 | 公开字段宽度、动作对齐、原字号继承；局部横滚与详情回焦可达，无页面横裁 | 浅深system、320/390、根字号/真实zoom分别记录 | [设计合同](DESIGN.md#手动查询页布局与状态合同4220) |
+
+## 业务日志列表展示逐项检查
+
+| ID | 操作 | 必须结果 | 证据 | 合同 |
+| --- | --- | --- | --- | --- |
+| BIZ-LIST-001 | 配置列表列/顺序 | 仅公开列ID、非空唯一；五列主视图按actor/occurredAt/summary/result/detail；detail缺省追加，旧默认七列保留 | 正式types、表头/每行同序、默认对照 | [组件合同](COMPONENTS.md#业务日志列表展示配置4227) |
+| BIZ-LIST-002 | actor/action/time格式化 | 只返回显示字符串，已选列才执行；宿主Intl选择locale/本地或明确时区；原纳秒ISO、ID、代码和对象保持 | 不同时区/语言文本、state及详情原文 | [组件合同](COMPONENTS.md#业务日志列表展示配置4227) |
+| BIZ-LIST-003 | 动态替换list配置 | 不换Controller/loader、不请求、不清草稿/筛选/快照/详情；按行/列ID保留节点与有效焦点 | 配置前后请求/节点/草稿/焦点、各Controller模式 | [状态归属](COMPONENTS.md#状态所有权与-controller-模式) |
+| BIZ-LIST-004 | 应用筛选/打开关闭详情 | 筛选仍发送原始action/actor ID；详情保留技术事实与权限/过期分支；键盘关闭回同一按钮 | 实际请求参数、详情原字段、Enter/Escape与回焦 | [业务日志](PUBLIC_API.md#业务日志) |
+| BIZ-LIST-005 | 三主题/窄屏/长中文/两种200% | 继承公共表格文字和颜色，横滚只在表体，全部列与详情按钮可达，Tab及详情关闭回焦后按钮/焦点环完整位于表格可视边界，不以部分相交判通过；不裁文字/缩字/套私有皮肤 | 明暗system、桌面/390、根字号/真实zoom、实际几何与截图 | [设计合同](DESIGN.md#业务日志列表展示4227) |
 
 ## 四类默认页面逐项检查
 

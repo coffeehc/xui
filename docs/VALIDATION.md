@@ -1,5 +1,17 @@
 # 验证证据与限制
 
+## 业务日志列表列与显示格式（4.2.27，2026-10-19）
+
+核对xAgent报告的4.2.18与当前main90f6f397/4.2.26，原getBusinessLogTable仍固定七列。先用新增“list presentation selects”断言运行4.2.26 dist，实际为Summary/Result/Actor/Action/Event time/Business object/Detail七列而期望Actor/Event time/Summary/Result/Detail五列，得到预期失败，证据`.artifacts/business-log-list-4.2.27/baseline.log`。没有切换历史checkout或修改消费项目。
+
+4.2.27新增可选BusinessLogExplorer.list与纯getBusinessLogTable第三参数，公开列ID和actor/action/occurredAt纯文本formatter；保留既有默认七列与缺省headers/cells，新增columnIds标明同序列。detail未选时追加，不丢完整事实入口；格式错误是宿主展示错误，不转换为查询错误。原BusinessLogController/ViewController、loader、wire/筛选、详情、权限/快照/取消/迟到owner保持。更新DESIGN、COMPONENTS、PUBLIC_API、ADOPTION和BIZ-LIST-001～005；既有正式示例?activity演示五列及宿主Intl本地时间/明确time-zone，默认URL保持旧视图。
+
+构建、Token、类型、定向单测88/88（原5文件及5个表格直接测试）、正式ESM/CSS/types/正负类型消费者通过；sourceGeneration为`6b899b4f543a588a964449c1a99c3b0df0ab939755d7520d5c83931f5c0b13cc`，React/ReactDOM19.2.8和Base UI1.7.0单实例、无源码alias。初始JS gzip144640、关键CSS gzip22190 bytes，未改预算。最终同代浏览器22个唯一用例全部通过（12项新合同、6项原业务日志及4项表格动作/焦点回归）：Asia/Shanghai、America/New_York和UTC分别显示20:30、08:30和12:30，详情仍保留原纳秒ISO；动态列/语言更新不请求，行/actor单元格/详情按钮节点、焦点和草稿保持；action筛选仍发送approve，详情保留原ID/actor/action/object/ISO。覆盖旧七列、任意列顺序、detail自动补齐、未知结果、纯文本注入、游标/快照、取消/错误/过期/权限、三主题/桌面/390px长中文、200%根字号和真实浏览器200%缩放、键盘详情及回焦。
+
+首轮18项及三主题截图检查后，实际查看真实zoom截图发现详情按钮仅部分露出，原toBeInViewport断言不足。改为真实Tab及按钮/焦点环完整边界断言；候选6过/1失败复现Chrome200%聚焦而未揭示。TableContainer现在仅对DOM内被裁切子控件作nearest揭示，先执行宿主onFocus并尊重preventDefault，跳过portal焦点；scroll-padding复用focus-width/offset及surface边框Token。第二候选21过/1失败检出焦点环约0.148CSSpx边界裁切，补边框余量后最终22/22，未降低断言。动态列仍保节点/焦点。中途consumer因源码变更触发generation保护失败，稳定源码的final4成功；候选日志均保留且不计为最终通过。
+
+实际查看最终light/dark常态五列及长值/真实zoom截图；原始报告、截图、逐例和generation摘要在`.artifacts/business-log-list-4.2.27`，最终报告browser-final2.json、截图proof-final。复现：`pnpm build`、`pnpm check:tokens`、`pnpm typecheck`、原5文件及table-actions/data-table/data-table-sizing/data-table-row-events/data-table-layout的`node --test`、`pnpm test:consumer`、`pnpm exec playwright test tests/browser/business-log-list.spec.mjs tests/browser/business-log.spec.mjs tests/browser/table-actions.spec.mjs tests/browser/data-table-focus.spec.mjs --workers=2`。未跑全库套件、真实xAgent/后端或部署，库结果不代表其事件语义/操作者投影/实际页面完成。已确认的HTTP剪贴板问题单列PUBLIC_REQUESTS，未包含在本次实现中。
+
 ## DataTable无纵向溢出的滚轮链（4.2.26，2026-10-19）
 
 xLetter反馈4.2.22长表格内部滚轮不能带动viewport的main；4.2.25源码仍无条件双轴contain。先在4.2.25正式tarball消费者的workspace＋document表格运行新wheel回归，纵向输入450后内容owner仍为0，得到预期失败，见`.artifacts/data-table-scroll-4.2.26/baseline.log`、baseline.json与results-baseline。没有切换历史checkout、修改xLetter或操作其已登录线上标签页。

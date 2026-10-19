@@ -53,7 +53,45 @@ export function validateBusinessLogFilter(value:BusinessLogFilter={}):Readonly<B
   for(const key of ['actor','object'] as const){const raw=value[key];if(raw==null){result[key]=null;continue;}const pair=object(raw);if(Object.keys(pair).some(name=>!['kind','id'].includes(name)))throw invalid();const kind=text(pair.kind,256),id=text(pair.id,256);if(key==='actor'&&!actorKinds.includes(kind))throw invalid();(result as Record<string,unknown>)[key]=Object.freeze({kind,id});}return Object.freeze(result);}
 export const businessLogDefaultLabels={title:'Business logs',refresh:'Refresh logs',filters:'Log filters',apply:'Apply filters',clear:'Clear filters',since:'Event since (inclusive)',until:'Event until (exclusive)',actorKind:'Actor kind',actorId:'Actor ID',objectKind:'Object kind',objectId:'Object ID',eventType:'Event type',action:'Action',result:'Result',correlationId:'Correlation ID',requestId:'Request ID',all:'All',user:'User',agent:'Agent',service:'Service',succeeded:'Succeeded',failed:'Failed',denied:'Denied',unknown:'Unknown',occurredAt:'Event time',recordedAt:'Recorded time',actor:'Actor',object:'Business object',summary:'Summary',detail:'View log detail',detailTitle:'Business log detail',eventId:'Event ID',schemaVersion:'Payload schema version',payload:'Business payload',empty:'No log events',loading:'Loading log…',readError:'Could not read log events.',contractError:'The log adapter returned an invalid contract.',invalidFilter:'Invalid log filter or interval.',forbidden:'Log detail permission denied.',notFound:'Log event not found in this scope.',expired:'Log payload retention has ended.',unavailable:'Log payload is unavailable.',rendererError:'The registered renderer failed. Showing JSON.',previous:'Previous',next:'Next',page:'Visited page',snapshot:'Snapshot',retry:'Retry read',cancel:'Cancel read',close:'Close'} as const;
 export type BusinessLogLabels={ [Key in keyof typeof businessLogDefaultLabels]:string };
-export function getBusinessLogTable(state:Readonly<BusinessLogState>,labels:Readonly<BusinessLogLabels>){return {headers:[labels.summary,labels.result,labels.actor,labels.action,labels.occurredAt,labels.object,labels.detail],rows:state.data?.list.map(event=>({id:event.id,cells:[event.summary,labels[event.result],`${labels[event.actor.kind]} · ${event.actor.display_name?event.actor.display_name+' · ':''}${event.actor.id}`,event.action,event.occurred_at,event.object?`${event.object.kind}: ${event.object.id}${event.object.display_name?' · '+event.object.display_name:''}`:labels.unknown]}))??[]};}
+const businessLogListColumns=['summary','result','actor','action','occurredAt','object','detail'] as const;
+/** Stable presentation keys; these never rename event fields or filter keys. */
+export type BusinessLogListColumnId=typeof businessLogListColumns[number];
+/** Pure list presentation, independent of the service/query owner and raw detail facts. */
+export interface BusinessLogListPresentation {
+ /** Selected columns in display order. Omit for the existing seven columns.
+  * Nonempty and unique; detail is appended if omitted so full facts remain reachable. */
+ columns?:readonly BusinessLogListColumnId[];
+ /** Return plain display text. The original immutable actor/event remain unchanged. */
+ formatActor?:(actor:Readonly<BusinessLogActor>,event:Readonly<BusinessLogEvent>)=>string;
+ /** Localize the action code for display only; filters/details retain the original code. */
+ formatAction?:(action:string,event:Readonly<BusinessLogEvent>)=>string;
+ /** Host chooses locale/time zone explicitly (or its own local policy); default is raw ISO. */
+ formatOccurredAt?:(iso:string,event:Readonly<BusinessLogEvent>)=>string;
+}
+function businessLogListValue(column:Exclude<BusinessLogListColumnId,'detail'>,event:Readonly<BusinessLogEvent>,labels:Readonly<BusinessLogLabels>,presentation:BusinessLogListPresentation):string {
+ let value:string;
+ switch(column){
+  case 'summary':value=event.summary;break;
+  case 'result':value=labels[event.result];break;
+  case 'actor':value=presentation.formatActor?presentation.formatActor(event.actor,event):`${labels[event.actor.kind]} · ${event.actor.display_name?event.actor.display_name+' · ':''}${event.actor.id}`;break;
+  case 'action':value=presentation.formatAction?presentation.formatAction(event.action,event):event.action;break;
+  case 'occurredAt':value=presentation.formatOccurredAt?presentation.formatOccurredAt(event.occurred_at,event):event.occurred_at;break;
+  case 'object':value=event.object?`${event.object.kind}: ${event.object.id}${event.object.display_name?' · '+event.object.display_name:''}`:labels.unknown;break;
+ }
+ if(typeof value!=='string')throw new TypeError('Business log formatters must return text');
+ return value;
+}
+/** Selected list text only. Existing headers/cells remain compatible when presentation is omitted.
+ * columnIds includes the detail action; row.cells contains only non-detail values in that order.
+ * Formatters run only for selected columns; errors propagate to the host render boundary. */
+export function getBusinessLogTable(state:Readonly<BusinessLogState>,labels:Readonly<BusinessLogLabels>,presentation:BusinessLogListPresentation={}){
+ const selected=presentation.columns===undefined?businessLogListColumns:presentation.columns;
+ if(!Array.isArray(selected)||!selected.length||new Set(selected).size!==selected.length||selected.some(id=>!businessLogListColumns.includes(id)))throw new TypeError('Invalid business log columns');
+ for(const key of ['formatActor','formatAction','formatOccurredAt'] as const)if(presentation[key]!==undefined&&typeof presentation[key]!=='function')throw new TypeError('Business log formatters must be functions');
+ const columnIds:readonly BusinessLogListColumnId[]=Object.freeze(selected.includes('detail')?[...selected]:[...selected,'detail']);
+ const values=columnIds.filter(id=>id!=='detail');
+ return {columnIds,headers:columnIds.map(id=>labels[id]),rows:state.data?.list.map(event=>({id:event.id,cells:values.map(id=>businessLogListValue(id,event,labels,presentation))}))??[]};
+}
 export function getBusinessLogFacts(event:Readonly<BusinessLogEvent>,labels:Readonly<BusinessLogLabels>){return [[labels.eventId,event.id],[labels.eventType,event.event_type],[labels.schemaVersion,String(event.schema_version)],[labels.occurredAt,event.occurred_at],[labels.recordedAt,event.recorded_at],[labels.actor,`${labels[event.actor.kind]} · ${event.actor.id}${event.actor.display_name?' · '+event.actor.display_name:''}`],[labels.action,event.action],[labels.result,labels[event.result]],[labels.correlationId,event.correlation_id??labels.unknown],[labels.requestId,event.request_id??labels.unknown]];}
 export interface BusinessLogOptions {loader:BusinessLogLoader;pageSize?:number;filter?:BusinessLogFilter;labels?:Partial<BusinessLogLabels>;resolveObject?:(object:Readonly<BusinessLogObject>)=>string|null;baseURL?:string;referenceOrigins?:readonly string[]}
 export interface BusinessLogState {filter:Readonly<BusinessLogFilter>;filterError:string|null;data:Readonly<BusinessLogPage>|null;busy:boolean;error:string|null;pageIndex:number;canNext:boolean;canPrevious:boolean;detailOpen:boolean;detailId:string|null;detailBusy:boolean;detail:Readonly<BusinessLogDetail>|null;detailError:string|null;detailState:'idle'|'available'|'expired'|'unavailable'|'forbidden'|'not_found'|'error'}

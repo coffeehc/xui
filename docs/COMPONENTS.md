@@ -982,6 +982,8 @@ ContextMenu支持鼠标右键、Shift+F10/ContextMenu键、方向键、disabled�
 
 Table与DataTable全表默认仅行分割线，所有普通/左固定/右固定/双侧固定的th/td都不画列线；sticky不附带边框、阴影或伪元素分隔。沿用现有sticky/stickyOffset/stickyHeader接口，无需新prop或消费方CSS；当前没有行列网格模式。整体frame、表头/行底线与footer分隔保持各自唯一归属，最后数据行不与footer叠边。
 
+TableContainer在子控件获焦且超出自身可视边界时以nearest滚动揭示，保留公共focus Token空间；宿主onFocus仍先执行，preventDefault可阻止该补充行为。它不更换焦点、不新增行交互或滚动owner。真实浏览器缩放下检查完整按钮和焦点环，部分进入视口不足以验收。
+
 表格为语义table，条纹排除expanded内容行，hover/selected优先级明确；sticky cell继承所属行的非透明背景，避免滚动穿透。多个同侧sticky列的offset由宿主显式给出，不测量/推断列宽；仅所属TableContainer横向滚动。展开按钮是正常button，不截获行所有点击，也不实现查询、虚拟化、权限、排序或选择引擎。
 
 全部组合使用已有 motion token/reduced-motion，动画不延后操作；受控变化、可取消意图与 React 生命周期沿用[接入与组件分层](ADOPTION.md#组件层次与扩展原则)。键盘/焦点/长中文/窄屏/200%根字体的实际检查见[验证记录](VALIDATION.md#chromium-浏览器结果)，真实移动OS、读屏器和其他浏览器未验。
@@ -1591,6 +1593,31 @@ const series = [{id:'tasks',label:'任务',color:1 as const,values:[12,null]}];
 options.labels新增可翻译resetDraft（默认Reset draft）、appliedFilters（默认Applied filters）；旧的手写Controller.labels可省略这两个新字段，View使用相同英文默认；既有clear保留默认Clear filters及宿主覆盖，中文示例保留“清除筛选”并明确此动作为查询。Controller类型、factory、HTTP/DTO/认证、可选records、snapshot/游标/详情清理行为保持。React时间Input保留原RFC3339Nano字符串，未换成分钟型DateTimePicker或做时区转换。
 
 完整正式包示例为[log-react](../examples/log-react/app.tsx)：默认借用原service；`?injected&slots`展示完整ViewController与pageToolbar，使用同一service和高级Overlay。`?network&grouped`仅供浏览器拦截测试真实POST wire，没有后端或基础设施；默认仍为注入内存transport的合成观察，不代表产品联调。
+
+## 业务日志列表展示配置（4.2.27）
+
+`BusinessLogExplorer.list?: BusinessLogListPresentation`是实时生效的展示slot：只选择/排列列表列并格式化文本，不是`BusinessLogOptions`或查询参数。runtime `/business-log`和React `/business-log`及其根入口公开`BusinessLogListColumnId`、`BusinessLogListPresentation`；纯helper `getBusinessLogTable(state, labels, list?)`使用同一合同。
+
+列ID为`summary | result | actor | action | occurredAt | object | detail`。省略columns保留原七列及原始文本；配置必须非空、唯一且只有公开ID，顺序即表头/单元格顺序。`detail`可放在任意位置，省略时自动追加末列，不能因隐藏技术列失去完整事实入口。helper新增columnIds；headers与其同序，rows.cells只包含非detail列值，缺省时原headers/cells保持兼容。不要按旧固定数字索引猜新列含义。
+
+`formatActor(actor,event)`、`formatAction(action,event)`、`formatOccurredAt(iso,event)`只对选中的列执行，返回纯字符串，React按文本呈现。参数来自原不可变事件；回调不得改写wire或把显示名写进id/action/filter。未配置时仍为原actor组合、action代码和完整ISO；具体locale/本地时区由宿主的Intl.DateTimeFormat选择，库不隐式转换。格式化错误/非字符串是宿主展示配置错误，传播给宿主render boundary，不伪装成读取失败或触发重试。
+
+```tsx
+import {BusinessLogExplorer, type BusinessLogListPresentation} from '@coffeehc/xui-react/business-log';
+const activityList: BusinessLogListPresentation = {
+  columns: ['actor', 'occurredAt', 'summary', 'result', 'detail'],
+  formatActor: actor => actor.display_name ?? actor.id,
+  // locale由项目选择；不传timeZone时沿用宿主本地时区政策。
+  formatOccurredAt: iso => new Intl.DateTimeFormat(locale, {
+    dateStyle: 'short', timeStyle: 'medium',
+  }).format(new Date(iso)),
+};
+<BusinessLogExplorer controller={logs} list={activityList} />;
+```
+
+主视图的四项事实为谁、何时、做了什么、结果，detail列只放原详情动作；业务摘要及操作者投影由宿主数据owner提供。summary使用主文字轨道，actor/result使用正文标签，时间/action沿现有技术值轨道，所有字体/颜色/横滚继续由公共Table/Theme负责。详情始终使用原事件ID、action、actor kind/id、原始时间、对象、关联/请求标识和授权payload，不应用列表formatter。列重排、语言/格式回调更新不重建Controller、不请求、不清除筛选草稿/快照/当前详情；以列ID及行ID维持节点，关闭详情回原按钮。列表配置独立适用于借用controller、注入viewController和options模式。
+
+正式[示例](../examples/business-log-react/app.tsx)的`?activity`使用五列，`&locale=en-GB`改变显示语言，`&time-zone=Asia/Shanghai`显式选择时区；不传time-zone使用浏览器本地时区。默认URL继续演示兼容七列。实际验收执行BIZ-LIST-001～005，库合成示例不代替产品事件可靠性、权限和真实请求验收。
 
 ## 默认完整页面与配套接线（4.2.23）
 

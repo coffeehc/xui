@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {HttpError} from '../packages/runtime/dist/http.js';
-import {createBusinessLogController,parseBusinessLogEvent,parseBusinessLogPage,parseBusinessLogDetail,parseBusinessLogPayload,validateBusinessLogFilter,findBusinessLogRenderer} from '../packages/runtime/dist/business-log.js';
+import {createBusinessLogController,parseBusinessLogEvent,parseBusinessLogPage,parseBusinessLogDetail,parseBusinessLogPayload,validateBusinessLogFilter,findBusinessLogRenderer,getBusinessLogTable} from '../packages/runtime/dist/business-log.js';
 const stamp='2026-10-11T12:00:00.000000123Z',secret='FAKE_PRIVATE_BUSINESS_LOG_VALUE';
 const event=(extra={})=>({id:'demo:1',event_type:'order.approved',schema_version:1,occurred_at:stamp,recorded_at:stamp,actor:{kind:'user',id:'demo-user',display_name:null},object:{kind:'order',id:'order-1',display_name:null},action:'approve',result:'succeeded',summary:'Approved',correlation_id:null,request_id:null,...extra});
 const page=(extra={})=>({list:[event()],page:{next_cursor:null,snapshot_id:'snapshot-1'},...extra});
@@ -9,6 +9,22 @@ const detail=(extra={})=>({event:event(),state:'available',payload:{approval:{re
 const make=(extra={})=>createBusinessLogController({loader:{list:async()=>page(),detail:async()=>detail()},...extra});
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
 const tick=async()=>{await Promise.resolve();await Promise.resolve();};
+test('business log list presentation selects ordered facts without changing wire state or requests',async()=>{
+ let reads=0;const controller=make({loader:{list:async()=>{reads++;return page();},detail:async()=>detail()}});try{
+  await controller.refresh();const state=controller.getState(),before=JSON.stringify(state),labels=controller.labels;
+  const legacy=getBusinessLogTable(state,labels);assert.equal(legacy.headers.length,7);assert.equal(legacy.rows[0].cells.length,6);
+  const columns=['actor','occurredAt','summary','result','detail'],formatted=getBusinessLogTable(state,labels,{columns,formatActor:actor=>'友好名称：'+actor.id,formatOccurredAt:iso=>new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso))});
+  assert.deepEqual(formatted.headers,[labels.actor,labels.occurredAt,labels.summary,labels.result,labels.detail]);assert.deepEqual(formatted.columnIds,columns);assert.deepEqual(formatted.rows[0].cells,['友好名称：demo-user','20:00','Approved',labels.succeeded]);assert.equal(JSON.stringify(state),before);assert.equal(reads,1);
+  const reordered=getBusinessLogTable(state,labels,{columns:['detail','action'],formatActor:()=>{throw Error('hidden actor formatter');},formatOccurredAt:()=>{throw Error('hidden time formatter');},formatAction:(action,event)=>`${action} / ${event.summary}`});assert.deepEqual(reordered.columnIds,['detail','action']);assert.deepEqual(reordered.rows[0].cells,['approve / Approved']);assert.equal(state.data.list[0].action,'approve');
+ }finally{controller.destroy();}
+});
+test('business log column configuration keeps a detail entry and rejects ambiguous columns',()=>{
+ const controller=make();try{
+  const columns=['actor','summary'],table=getBusinessLogTable(controller.getState(),controller.labels,{columns});assert.deepEqual(columns,['actor','summary']);assert.deepEqual(table.columnIds,['actor','summary','detail']);
+  for(const value of [[],['actor','actor'],['payload'],null])assert.throws(()=>getBusinessLogTable(controller.getState(),controller.labels,{columns:value}),TypeError);
+  assert.throws(()=>getBusinessLogTable(controller.getState(),controller.labels,{formatActor:'invalid'}),TypeError);
+ }finally{controller.destroy();}
+});
 test('business log common fields are exact immutable metadata; domain payload is never in list snapshots',()=>{
  const parsed=parseBusinessLogEvent(event({payload:secret,stack:secret,schema_version:42,actor:{kind:'agent',id:'a',display_name:'Agent'}}));assert.equal(parsed.schema_version,42);assert.equal(parsed.actor.kind,'agent');assert.equal(parsed.correlation_id,null);assert.ok(Object.isFrozen(parsed.actor));assert.ok(!JSON.stringify(parsed).includes(secret));
  for(const change of [{schema_version:0},{actor:{kind:'system',id:'a',display_name:null}},{result:'error'},{occurred_at:'2026-02-30T00:00:00Z'},{object:undefined},{request_id:undefined},{id:''}])assert.throws(()=>parseBusinessLogEvent(event(change)),TypeError);

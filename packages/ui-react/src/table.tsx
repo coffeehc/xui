@@ -1,7 +1,13 @@
 import * as React from 'react';
 import {cx} from './shared.js';
 export function Table({className,striped,stickyHeader,...props}:React.ComponentProps<'table'>&{striped?:boolean;stickyHeader?:boolean}){return <table {...props} className={cx('xui-table',className)} data-striped={striped} data-sticky-header={stickyHeader}/>;}
-export function TableContainer({className,...props}:React.ComponentProps<'div'>){return <div tabIndex={0} role="region" {...props} className={cx('xui-table-container',className)}/>;}
+export function TableContainer({className,onFocus,...props}:React.ComponentProps<'div'>){return <div tabIndex={0} role="region" {...props} className={cx('xui-table-container',className)} onFocus={event=>{
+ onFocus?.(event);if(event.defaultPrevented||event.target===event.currentTarget||!event.currentTarget.contains(event.target))return;
+ // Chrome page zoom can focus a clipped cell action without revealing it.
+ // Keep that action and its focus paint in this table's own scrollport.
+ const target=event.target,box=target.getBoundingClientRect(),viewport=event.currentTarget.getBoundingClientRect();
+ if(box.left<viewport.left||box.right>viewport.right||box.top<viewport.top||box.bottom>viewport.bottom)target.scrollIntoView({block:'nearest',inline:'nearest'});
+ }}/>;}
 export function TableCaption({className,...props}:React.ComponentProps<'caption'>){return <caption {...props} className={cx('xui-table-caption',className)}/>;}
 export function TableHead(props:React.ComponentProps<'thead'>){return <thead {...props}/>;}
 export function TableBody(props:React.ComponentProps<'tbody'>){return <tbody {...props}/>;}
