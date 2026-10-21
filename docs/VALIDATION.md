@@ -1558,3 +1558,19 @@ DateTime证据：.artifacts/date-time-browser-aggregated-final.json（及其原�
 本轮其余定向 Chromium 自动用例另有 72/72 个唯一用例通过，覆盖 widgets、menu、input、choice、nav、focus boundaries、登录/认证、管理员初始化、workspace、link 与 icon-button；重跑首轮未通过的 14 个用例后，10+4 均通过。token-scaling 的 widget/group 边界用例再通过 1/1，因此自动浏览器结果合计 94 个唯一通过用例（关键 21 + 其余 72 + widget/group 1）。另由主线程在 layout-typography 实际 Field.error 输入上定向核验 6/6：light/dark/system 下 thin/emphasis 与 semantic-primary，保持聚焦及 `aria-invalid=true`，outline 为 none/0、边线宽度不变、错误边线颜色保持原 status-error 色。该核验补足了完整 token-scaling non-type 用例未能触达焦点断言的范围。
 
 `node --check tests/browser/*.mjs` 通过；合同与文档 Node 检查 38/38 通过：`node --test tests/contract.test.mjs tests/design-state-contract.test.mjs tests/choice-state-contract.test.mjs tests/input-typography-contract.test.mjs tests/design-value-guard.test.mjs tests/text-inputs.test.mjs tests/docs.test.mjs`。token-scaling non-type root families 扩展用例停在既有侧栏几何断言：spacing 6 下当前实际宽度 288px，旧断言为 324px，发生在本轮焦点断言之前；未修改侧栏实现或该断言，也未将此用例计作通过。浏览器验证范围是本仓库 Chromium 与已构建 fixture，不代表完整浏览器套件、正式 tarball 消费者或消费产品现场验收。
+
+## XUI 4.2.35 正式归档准备（2026-10-21）
+
+本次版本提交只更新三包版本、React 包的精确 runtime peer、设计合同版本/变更归属、ADOPTION迁移说明和对应合同断言，没有新增运行时代码或改动焦点行为；焦点边线实现属于前一提交 `4894cb7`。三包均为 **4.2.35**，完整构建 `sourceGeneration` 为 `27b27b7117bcee29c898c9e8fe892c34dbabec5fd43de779139770b10b0da94d`。`pnpm build`、`pnpm check:tokens`、`pnpm typecheck` 及合同/文档 Node 检查 **38/38** 通过。
+
+`pnpm test:consumer` 通过；正式 tarball 在固定 consumer cache 安装后构建公开 ESM/CSS/types 并由 React fixture 消费，无源码 alias。Consumer receipt 为 `.artifacts/consumer-validation.json`，性能门禁为 `.artifacts/performance-baseline.json`。包摘要：
+
+| 正式包 | 版本 | SHA-256 |
+| --- | --- | --- |
+| `@coffeehc/xui-theme` | `4.2.35` | `744beb1fde869770787b50bf5ff350b83b8db8a3487cab2f8de04954355f2119` |
+| `@coffeehc/xui-runtime` | `4.2.35` | `7e30bd3798645024f7a0f26401dcb6c01a471d87e6cac22a83d8cf75c9e50b18` |
+| `@coffeehc/xui-react` | `4.2.35` | `c8936be008d3cd4b13c18f41ec73d662d1dbba499481e8e96aa7087372fe5e84` |
+
+Consumer gzip 门禁通过：critical CSS 22,604/22,656 bytes，React 初始 JS 144,665/153,600 bytes，Button-only 6,631/16,384 bytes，Charts CSS 22,484/24,576 bytes。安装树中 React `19.2.8`、ReactDOM `19.2.8`、Base UI `1.7.0` 各为单实例；`@coffeehc/xui-react` 对 `@coffeehc/xui-runtime` 使用 exact `4.2.35` peer。基于正式 consumer 包构建的 `tests/browser/design-state-regressions.spec.mjs` 在 Chromium **21/21 通过**，覆盖 light/dark/system、输入与错误优先、各按钮边线、登录密码错误及 workspace/ToggleGroup 的窄宽视口。验收图 [登录密码错误聚焦](../output/playwright/focus-border-login.png) 已更新为本轮正式 consumer 产物。
+
+本次完成本地归档准备；未推送或发布 npm，未修改 xAgent，也未据此声称消费产品已升级或现场验收。

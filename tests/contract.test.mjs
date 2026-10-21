@@ -46,8 +46,8 @@ test('Violet default, uploaded source and semantic CSS fingerprint are versioned
   const source=await readFile(metadata.source.path,'utf8');
   assert.equal(createHash('sha256').update(source).digest('hex'),metadata.source.sha256);
   assert.equal(createHash('sha256').update(css).digest('hex'),metadata.defaultCssSha256);
-  assert.equal(metadata.contractVersion,'4.2.34');
-  assert.match(doc,/规范版本：4\.2\.34。/);
+  assert.equal(metadata.contractVersion,'4.2.35');
+  assert.match(doc,/规范版本：4\.2\.35。/);
   assert.equal(metadata.defaultMode,'dark');
   assert.equal(Object.keys(dark).length,metadata.defaultTokenCount);
   assert.equal(dark['--palette-canvas'],'#09070f');
