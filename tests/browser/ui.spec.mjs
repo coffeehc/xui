@@ -78,12 +78,12 @@ for (const entry of ['navigation','style']) for (const mode of ['light','dark'])
     }
     await page.mouse.move(1200,700);await page.keyboard.press('Tab');await expect(selected).toBeFocused();
     expect(await selected.evaluate(el=>el.matches(':focus-visible'))).toBe(true);
-    expect(await selected.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');
+    expect(await selected.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('none');
     expect(await navigationState(selected)).toEqual(before);
     await selected.hover();expect(await navigationState(selected)).toEqual(before);
     await page.keyboard.press('Tab');await expect(ordinary).toBeFocused();
-    expect(await selected.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('solid');
-    expect(await ordinary.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');
+    expect(await selected.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('none');
+    expect(await ordinary.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('none');
     expect(await navigationState(ordinary)).toMatchObject({...defaultTokens,indicator:{opacity:'0'},border:'0px'});
   });
 }
@@ -164,8 +164,8 @@ for (const kind of ['react']) {
     const selected=await navigationState(item);
     expect(selected.indicator.opacity).toBe('1');expect(selected.border).toBe('0px');
     await other.hover();expect(await other.evaluate(el=>getComputedStyle(el,'::before').opacity)).toBe('0');
-    await page.keyboard.press('Tab');await item.focus();await expect(item).toBeFocused();expect(await item.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');
-    await other.focus();expect(await item.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('solid');
+    await page.keyboard.press('Tab');await item.focus();await expect(item).toBeFocused();expect(await item.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('none');
+    await other.focus();expect(await item.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('none');
     expect(await item.boundingBox()).toEqual(before);
     await other.click();await expect(other).toHaveAttribute('aria-current','page');await other.hover();await expect.poll(()=>other.evaluate(el=>getComputedStyle(el,'::before').opacity)).toBe('1');
   });

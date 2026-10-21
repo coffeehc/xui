@@ -49,13 +49,13 @@ async function pressDisabled(page,node){
  await node.scrollIntoViewIfNeeded();await page.mouse.move(0,0);const before=await painted(node);await node.hover();expect(await painted(node)).toEqual(before);
  const box=await node.boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();expect(await painted(node)).toEqual(before);await page.mouse.up();
 }
-async function ring(node){
+async function focusBoundary(node){
  // WebKit scrolls a newly focused control on the next rendering frame. Measure
- // the painted state, retaining the same four-edge clipping assertions.
+ // the actual boundary after focus; there is no outer focus outline.
  await node.page().evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  return node.evaluate(node=>{
- const s=getComputedStyle(node),r=node.getBoundingClientRect(),extent=parseFloat(s.outlineWidth)+parseFloat(s.outlineOffset),clips=[];
- for(let p=node.parentElement;p;p=p.parentElement){const ps=getComputedStyle(p),b=p.getBoundingClientRect();if(/auto|scroll|hidden|clip/.test(ps.overflowX)&&(r.left-extent<b.left+p.clientLeft-.5||r.right+extent>b.left+p.clientLeft+p.clientWidth+.5))clips.push('horizontal');if(/auto|scroll|hidden|clip/.test(ps.overflowY)&&(r.top-extent<b.top+p.clientTop-.5||r.bottom+extent>b.top+p.clientTop+p.clientHeight+.5))clips.push('vertical');}
+ const s=getComputedStyle(node),r=node.getBoundingClientRect(),clips=[];
+ for(let p=node.parentElement;p;p=p.parentElement){const ps=getComputedStyle(p),b=p.getBoundingClientRect(),left=b.left+p.clientLeft,top=b.top+p.clientTop;if(/auto|scroll|hidden|clip/.test(ps.overflowX)&&(r.left<left-.5||r.right>left+p.clientWidth+.5))clips.push('horizontal');if(/auto|scroll|hidden|clip/.test(ps.overflowY)&&(r.top<top-.5||r.bottom>top+p.clientHeight+.5))clips.push('vertical');}
  return {style:s.outlineStyle,width:parseFloat(s.outlineWidth),visible:node.matches(':focus-visible'),clips};
  });}
 for(const theme of ['light','dark','system']){
@@ -97,9 +97,9 @@ for(const theme of ['light','dark','system']){
   for(const scale of [1,2]){
    await page.evaluate(scale=>document.documentElement.style.fontSize=`${scale*100}%`,scale);
    const region=page.getByRole('region',{name:'Independent scroll',exact:true}),first=page.getByRole('button',{name:'Scroll first',exact:true}),middle=page.getByRole('textbox',{name:'Scroll middle',exact:true}),last=page.getByRole('button',{name:'Scroll last',exact:true});
-   await region.focus();await page.keyboard.press(forward);await expect(first).toBeFocused();let p=await ring(first);expect(p).toMatchObject({style:'solid',visible:true,clips:[]});expect(p.width).toBeGreaterThan(0);
-   await page.keyboard.press(forward);await expect(middle).toBeFocused();const group=middle.locator('..');p=await ring(group);expect(p).toMatchObject({style:'solid',clips:[]});expect(p.width).toBeGreaterThan(0);
-   await page.keyboard.press(forward);await expect(last).toBeFocused();p=await ring(last);expect(p).toMatchObject({style:'solid',visible:true,clips:[]});expect(await region.evaluate(node=>node.scrollTop)).toBeGreaterThan(0);await expect(middle).toHaveValue('草稿不变');
+   await region.focus();await page.keyboard.press(forward);await expect(first).toBeFocused();let p=await focusBoundary(first);expect(p).toMatchObject({style:'none',visible:true,clips:[]});
+   await page.keyboard.press(forward);await expect(middle).toBeFocused();const group=middle.locator('..');p=await focusBoundary(group);expect(p).toMatchObject({style:'none',clips:[]});
+   await page.keyboard.press(forward);await expect(last).toBeFocused();p=await focusBoundary(last);expect(p).toMatchObject({style:'none',visible:true,clips:[]});expect(await region.evaluate(node=>node.scrollTop)).toBeGreaterThan(0);await expect(middle).toHaveValue('草稿不变');
    await region.screenshot({path:info.outputPath(`${theme}-scroll-root-${scale}.png`)});
    await page.keyboard.press(backward);await expect(middle).toBeFocused();await page.keyboard.press(backward);await expect(first).toBeFocused();
   }

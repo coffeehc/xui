@@ -21,7 +21,7 @@ for(const name of ['calendar-month','menu-danger','row-events','date-time','rich
     await expect(page.locator('.xui-calendar[aria-label="受控日期"]').getByRole('gridcell',{name:'2020-01-02',exact:true})).toBeFocused();
    } else if(name==='menu-danger') {
     const trigger=page.getByRole('button',{name:'打开菜单'});await trigger.focus();await trigger.press('ArrowDown');await page.keyboard.press('ArrowDown');
-    const danger=page.getByRole('menuitem',{name:'删除记录',exact:true});await expect(danger).toBeFocused();await expect(danger).toHaveCSS('outline-style','solid');
+    const danger=page.getByRole('menuitem',{name:'删除记录',exact:true});await expect(danger).toBeFocused();await expect(danger).toHaveCSS('outline-style','none');
     await info.attach('danger-focus.png',{body:await captureZoomViewport(page),contentType:'image/png'});
     await page.keyboard.press('Enter');await expect(page.getByLabel('执行次数')).toHaveText('1');await expect(trigger).toBeFocused();
    }
@@ -32,7 +32,7 @@ for(const name of ['calendar-month','menu-danger','row-events','date-time','rich
     await expect(toggle).toHaveAttribute('aria-expanded','true');
     await page.evaluate(()=>window.navigationLabelsDemo.update({expandBranchLabel:item=>`展开 ${item.label}`,collapseBranchLabel:item=>`收起 ${item.label}`}));
     await expect(toggle).toHaveAccessibleName('收起 跨区域协作与知识交付项目：保留完整中文名称、负责人及当前业务状态');
-    await expect(toggle).toBeFocused();await expect(toggle).toHaveCSS('outline-style','solid');
+    await expect(toggle).toBeFocused();await expect(toggle).toHaveCSS('outline-style','none');
     await info.attach('navigation-branch-focus.png',{body:await captureZoomViewport(page),contentType:'image/png'});
     const geometry=await toggle.evaluate(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom,outline:s.outline,viewport:{width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth}};});
     expect(geometry.width).toBeGreaterThan(0);expect(geometry.height).toBeGreaterThan(0);expect(geometry.x).toBeGreaterThanOrEqual(0);expect(geometry.right).toBeLessThanOrEqual(after.width+1);expect(geometry.bottom).toBeLessThanOrEqual(after.height+1);expect(geometry.viewport.scrollWidth).toBeLessThanOrEqual(geometry.viewport.width+1);

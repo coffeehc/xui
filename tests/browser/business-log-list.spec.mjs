@@ -8,7 +8,7 @@ async function open(page,flags=''){await page.goto('/business-log-react/?activit
 const requests=page=>page.evaluate(()=>window.businessLogDemo.getRequests());
 async function tabToDetail(page){await table(page).locator('..').focus();await page.keyboard.press('Tab');await expect(detail(page)).toBeFocused();}
 async function expectDetailExposed(page){
- await expect.poll(()=>detail(page).evaluate(node=>{const box=node.getBoundingClientRect(),region=node.closest('.xui-table-container').getBoundingClientRect(),style=getComputedStyle(node),paint=parseFloat(style.outlineWidth)+parseFloat(style.outlineOffset);return box.left-paint>=Math.max(0,region.left)+1&&box.right+paint<=Math.min(innerWidth,region.right)-1&&box.top-paint>=0&&box.bottom+paint<=innerHeight;})).toBe(true);
+ await expect.poll(()=>detail(page).evaluate(node=>{const box=node.getBoundingClientRect(),region=node.closest('.xui-table-container').getBoundingClientRect(),style=getComputedStyle(node);return style.outlineStyle==='none'&&box.left>=Math.max(0,region.left)+1&&box.right<=Math.min(innerWidth,region.right)-1&&box.top>=0&&box.bottom<=innerHeight;})).toBe(true);
 }
 
 for(const timezoneId of ['Asia/Shanghai','America/New_York','UTC'])test(`activity list uses the host local timezone ${timezoneId} without changing raw facts`,async({browser},info)=>{

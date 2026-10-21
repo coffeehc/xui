@@ -141,7 +141,7 @@ HTML语义元素、React NativeSelect、浏览器/OS控件及HTTP nativeOrigin�
 
 以上是设计与验收方向，不默认授权框架迁移、布局重构或性能工程。信息优先、可读性、可访问性和事实准确始终保留。
 
-表现保持克制：以细边线和表面灰度区分层级，避免装饰 glow、厚投影和亮外框；微图标只在帮助识别时出现，反馈表达真实状态，密码强度按已有本地建议合同可视化。UI 正文使用 sans，数值、hash、时间与代码按职责使用 mono/tabular-nums，优先靠字重与对比分层而非扩充字号。同一任务突出一个明确主动作，轻反馈、清楚 focus ring、键盘与 reduced-motion 共存。可复用表单内容与布局壳分开，按需求在独立页、Dialog、Sheet 或宿主步骤中组合；这不新增向导、认证能力、token 或评分事实。
+表现保持克制：以细边线和表面灰度区分层级，避免装饰 glow、厚投影和亮外框；微图标只在帮助识别时出现，反馈表达真实状态，密码强度按已有本地建议合同可视化。UI 正文使用 sans，数值、hash、时间与代码按职责使用 mono/tabular-nums，优先靠字重与对比分层而非扩充字号。同一任务突出一个明确主动作，轻反馈、边框焦点变色、键盘与 reduced-motion 共存。可复用表单内容与布局壳分开，按需求在独立页、Dialog、Sheet 或宿主步骤中组合；这不新增向导、认证能力、token 或评分事实。
 
 ### 规范强度与职责
 
@@ -204,7 +204,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
 | 主题配方 | selected-weight/base、状态soft/line权重 | 浅深配方见CSS，合成不透明表面。它们是默认主题内部参数，不是页面API |
 | 语义颜色 | action-*、foreground、layer-*、interaction-*、status-*、input、separator/surface-line | 由基础调色板和配方派生，名称不随色相变化；产品优先覆盖这一层 |
 | 文字 | font-sans/mono/heading/document、font-weight-body/control/heading、font-size-*、line-height-* | 字体栈别名；400/500/600；七个角色的默认字号/行高。图表轴和图例引用文字角色 |
-| 共享尺度 | spacing、space-*、control-height[-xs/-sm/-lg]、control-icon-size[-xs]、radius-*、line-width-*、focus-* | gap4/8/12/16及图文6；高36/24/32/40；图标16/12；圆角2/4/6/8/8；线1/1/2；焦点2+2px |
+| 共享尺度 | spacing、space-*、control-height[-xs/-sm/-lg]、control-icon-size[-xs]、radius-*、line-width-*、focus-* | gap4/8/12/16及图文6；高36/24/32/40；图标16/12；圆角2/4/6/8/8；线1/1/2；焦点清距Token保留2+2px |
 | 层级 | shadow-flat/subtle/surface/raised/overlay、z-shell/sticky/overlay/menu/notice | 普通none、浮层成对阴影；z为10/20/50/70/80。只在公共portal/层级适配中消费 |
 | 布局 | layout-content-inset[-narrow]/max、section/toolbar/field-gap、field[-long]-min、header-height、dialog/confirm/drawer-width、viewport-inset | 横20/16px，max none，gap16/8/16，字段240/288，顶栏48，弹层宽度按40%/30%/60%及各自rem上下限，视口边16；是可覆盖默认约束，不强制所有产品同一页面骨架 |
 | 动效 | motion-duration[-fast/-enter/-exit]、motion-easing[-exit]、motion-distance-small、motion-press/enter-scale | 150/100/180/120ms，进入/状态与退出曲线，4px、0.98；减少动效为0ms/0px/1，保留即时反馈 |
@@ -226,7 +226,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
 
 [Stitch 架构参考](design-sources/stitch-token-architecture.v1.txt)提供三层 Token、自包含组件与视图连续性的方向；实际合同采用本文件已公开名称、尺度、三模式和无障碍规则。参考中的原始色值不替换现有品牌；普通正文不统一 mono，不新增 10/11px 提示角色；密码显隐保留键盘入口、label/错误关联，密码评分沿用公开建议而非安全熵事实。错误可自然增高或使用已有反馈槽，不能绝对定位遮住字段；管理员创建后的认证与导航由真实宿主事实决定，不内置自动登录承诺。
 
-公共链接自4.2.24默认无下划线：Typography.Link、LinkedText、xui/xui-layer样式范围内原生a及Button的link变体在默认、hover、pressed、focus和visited均不添加下划线。品牌色和真实链接语义保留，键盘focus-visible继续绘制独立焦点环；字体继承所属文字槽。导航/控件在forced-colors下表达选中事实的下划线不是链接装饰，仍保留；不影响xui范围外的普通HTML。消费者不复制局部链接皮肤。
+公共链接自4.2.24默认无下划线：Typography.Link、LinkedText、xui/xui-layer样式范围内原生a及Button的link变体在默认、hover、pressed、focus和visited均不添加下划线。品牌色和真实链接语义保留，键盘focus-visible不新增外框，无边框链接保持原外观；字体继承所属文字槽。导航/控件在forced-colors下表达选中事实的下划线不是链接装饰，仍保留；不影响xui范围外的普通HTML。消费者不复制局部链接皮肤。
 
 Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停期间pressed使用成对的interaction-hover / interaction-hover-foreground，图标继承currentColor。普通字号文字按实际合成背景达到4.5:1，不能只验证静态主色对白底；disabled仍只采用禁用配方，busy不改变交互权限。
 
@@ -1503,7 +1503,7 @@ Precision 保留的公共 hover 配方由正文固定色 #22d3ee 改为 action-p
 
 必须保留浅色、深色、跟随系统。跟随系统响应 OS 改变，固定主题不被 OS 覆盖。根节点统一初始化与存储，portal 同样继承主题和所采用的尺寸设置；业务页不维护第三套主题。首屏初始化保持轻量，不移入重型业务包、不等待业务资源，不引入主题闪烁。
 
-普通 hover 使用中性底；selected 使用主色浅底与强调前景interaction-selected-foreground，hover 后仍有持续选中反馈。持续选中不另增 border、outline 或 ring；结构边界可以保留。focus-visible 使用 2px 实色环与 2px 表面间隔，在裁切区域采用 inset，失焦即消失。pressed 是瞬时按下反馈，不等于持久 selected。不得降低整块透明度来掩盖对比问题。
+普通 hover 使用中性底；selected 使用主色浅底与强调前景interaction-selected-foreground，hover 后仍有持续选中反馈。持续选中不另增 border、outline 或 ring；结构边界可以保留。焦点（包括鼠标、键盘及组合控件的 focus-within）不新增 outline、ring 或 box-shadow，也不增加或加粗边框；已有可见边框的控件仅将原边框改为 interaction-focus，失焦恢复，invalid 错误边框优先。透明边框、无边框控件及链接保持原边界外观；圆形 outline 图标按钮只改变已有内收边线颜色，不在命中区外沿补线。键盘顺序、方向键、激活、选中和回焦语义不变。focus-width/offset 保留既有滚动清距与布局几何，不再用来绘制默认焦点环。pressed 是瞬时按下反馈，不等于持久 selected。不得降低整块透明度来掩盖对比问题。
 
 导航当前项的主名称、富标签说明和公共文字/图标槽统一继承 `menu-item-selected-foreground`（默认映射主题强调色），不能只依赖左侧竖线表示选中。选中时普通 muted 文字不覆盖当前项强调色；hover、pressed 与 keyboard focus 保持该文字色，禁用前景仍优先。宿主不为这些文字槽另设颜色或字号，竖线与浅底只作辅助识别。
 
@@ -1866,11 +1866,11 @@ CardGroup的自然/文档布局在body无滚动范围时必须将真实wheel交�
 
 #### 业务日志列表展示（4.2.27）
 
-主视图围绕操作者、发生时间、业务摘要和结果，默认完整页保留七列。4.2.34统一为列定义：每列id/header确定位置与标题，不指定cell读取对应原值，指定cell完全使用返回内容。自定义Button/Badge/链接只占该单元格，不因业务内容新增专用公共列。原值不隐式转换时区/翻译代码；字段真实含义及显式attributes投影由宿主提供，原ID、代码、ISO和详情保持。custom列需要完整事实入口时显式保留detail，库不自动追加。查询额外字段进入queryFields/QueryField，确认范围进入querySummary，页面动作进入headerActions；公共应用/清除在QueryForm动作区，原刷新/取消保留标题次要动作，沿现有字段宽度与底部对齐，不把筛选混入标题动作。固定列宽复用DataTable长度；ellipsis使用公共OverflowText，hover/已有动作focus揭示，reduced-motion/触屏换行，字体与颜色继承表格角色。TableContainer就近揭示键盘动作并为焦点环保留Token空间。list/labels变化不重建Controller、不请求、不清草稿/详情/游标；scope更换则由同一Controller明确取消并清旧范围，不假装同范围refresh。具体API和旧展示配置迁移见[组件规范](COMPONENTS.md#业务日志列定义与查询-slot4234)。
+主视图围绕操作者、发生时间、业务摘要和结果，默认完整页保留七列。4.2.34统一为列定义：每列id/header确定位置与标题，不指定cell读取对应原值，指定cell完全使用返回内容。自定义Button/Badge/链接只占该单元格，不因业务内容新增专用公共列。原值不隐式转换时区/翻译代码；字段真实含义及显式attributes投影由宿主提供，原ID、代码、ISO和详情保持。custom列需要完整事实入口时显式保留detail，库不自动追加。查询额外字段进入queryFields/QueryField，确认范围进入querySummary，页面动作进入headerActions；公共应用/清除在QueryForm动作区，原刷新/取消保留标题次要动作，沿现有字段宽度与底部对齐，不把筛选混入标题动作。固定列宽复用DataTable长度；ellipsis使用公共OverflowText，hover/已有动作focus揭示，reduced-motion/触屏换行，字体与颜色继承表格角色。TableContainer就近揭示键盘动作并保留既有Token滚动清距。list/labels变化不重建Controller、不请求、不清草稿/详情/游标；scope更换则由同一Controller明确取消并清旧范围，不假装同范围refresh。具体API和旧展示配置迁移见[组件规范](COMPONENTS.md#业务日志列定义与查询-slot4234)。
 
 #### 业务日志整页语言（4.2.29）
 
-BusinessLogExplorer的整页文案属于实时展示slot，宿主语言owner把当前labels传给同一个组件，不使用key=locale、重新创建Controller或再次查询换语言。标题、筛选字段/枚举、表头、结果、加载/空/错误、分页与快照前缀、详情事实标签和动作共同更新；原业务摘要、payload、ID、action、ISO和snapshot是事实，不翻译或改写。保留同一个service/view、已生效范围、未提交草稿、详情、游标/已访问页、节点和有效焦点，在途请求不因语言改变而取消或重发。超长详情动作译文受所属表格净宽约束并自然换行，焦点环不能因动作宽于滚动区而被裁。优先级、部分覆盖替换和错误语义见[组件合同](COMPONENTS.md#业务日志整页标签热更新4229)，按[BIZ-LABEL清单](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)验收。
+BusinessLogExplorer的整页文案属于实时展示slot，宿主语言owner把当前labels传给同一个组件，不使用key=locale、重新创建Controller或再次查询换语言。标题、筛选字段/枚举、表头、结果、加载/空/错误、分页与快照前缀、详情事实标签和动作共同更新；原业务摘要、payload、ID、action、ISO和snapshot是事实，不翻译或改写。保留同一个service/view、已生效范围、未提交草稿、详情、游标/已访问页、节点和有效焦点，在途请求不因语言改变而取消或重发。超长详情动作译文受所属表格净宽约束并自然换行，控件边界不能因动作宽于滚动区而被裁。优先级、部分覆盖替换和错误语义见[组件合同](COMPONENTS.md#业务日志整页标签热更新4229)，按[BIZ-LABEL清单](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)验收。
 
 #### 四类默认公共页面（4.2.23）
 
@@ -2034,14 +2034,14 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 
 | 组件/适用状态 | 默认尺寸和外观 | 状态到变量的映射及交互 |
 | --- | --- | --- |
-| 垂直导航菜单 D/H/S/F/X；B/E仅所属业务存在时 | 高nav-item-height=36px、gap8、radius4；默认透明。内容始终保留12px内距 | D用menu-item-background/foreground；H用menu-item-hover-background/foreground，无位移且无左指示；S用menu-item-selected-background/foreground并显示nav-selected-indicator-*，无四周外框；S+H保持S。F用focus-width/offset和interaction-focus，失焦消失；X文字muted且不可操作，不以hover伪造可用 |
-| Dropdown/ContextMenu项 D/H/S/F/X；非选择项S不适用 | overlay+1px边界+shadow-overlay；menu-min-width128、item-min-height28、padding4、项内横8/gap8、radius-md、body-xs | D透明，H轻底不位移；radio/checkbox持久S用menu-item-selected-*和勾选语义，不画导航左竖线。F独立焦点，禁用不执行。方向键/Home/End/子菜单/Esc规则如下；业务B/E/空结果不是普通可执行选项 |
-| Button/图标按钮 D/H/P/F/X/B/E；真实切换才S | 高button-height36、padding12、gap6；文字按钮radius4、纯图标按钮radius-full；背景button-background、文字button-foreground；图标16（xs12） | H用button-hover-background，P用button-pressed-background且松开恢复，适用按压反馈沿下方动效矩阵。F用focus-*；X用button-disabled-*并禁用执行。B保留已有忙碌文案，防重由业务拥有。outline=raised+surface-line；secondary=muted；ghost默认透明、H=interaction-hover；危险用status-error-soft/foreground及原确认 |
-| Input/Textarea/搜索 D/H/F/X/E/readOnly；B由业务拥有；S不适用 | input-height36、radius4、input-background/foreground、1px input-border-color；label→control→help→error，8/4/4px | H保持input-border-color的必要对比；F独立focus-*；E的必要控件边界用status-error-foreground，status-error-line只用于有文字/图标伴随的辅助分隔；关联aria-invalid/describedby，E+F均可见。readOnly可选择复制；X不可编辑；loading不自行改请求。placeholder不代替label |
+| 垂直导航菜单 D/H/S/F/X；B/E仅所属业务存在时 | 高nav-item-height=36px、gap8、radius4；默认透明。内容始终保留12px内距 | D用menu-item-background/foreground；H用menu-item-hover-background/foreground，无位移且无左指示；S用menu-item-selected-background/foreground并显示nav-selected-indicator-*，无四周外框；S+H保持S。F不新增外框，沿用原选中与键盘语义；X文字muted且不可操作，不以hover伪造可用 |
+| Dropdown/ContextMenu项 D/H/S/F/X；非选择项S不适用 | overlay+1px边界+shadow-overlay；menu-min-width128、item-min-height28、padding4、项内横8/gap8、radius-md、body-xs | D透明，H轻底不位移；radio/checkbox持久S用menu-item-selected-*和勾选语义，不画导航左竖线。F不新增外框，禁用不执行。方向键/Home/End/子菜单/Esc规则如下；业务B/E/空结果不是普通可执行选项 |
+| Button/图标按钮 D/H/P/F/X/B/E；真实切换才S | 高button-height36、padding12、gap6；文字按钮radius4、纯图标按钮radius-full；背景button-background、文字button-foreground；图标16（xs12） | H用button-hover-background，P用button-pressed-background且松开恢复，适用按压反馈沿下方动效矩阵。F仅改变已有可见边线颜色；X用button-disabled-*并禁用执行。B保留已有忙碌文案，防重由业务拥有。outline=raised+surface-line；secondary=muted；ghost默认透明、H=interaction-hover；危险用status-error-soft/foreground及原确认 |
+| Input/Textarea/搜索 D/H/F/X/E/readOnly；B由业务拥有；S不适用 | input-height36、radius4、input-background/foreground、1px input-border-color；label→control→help→error，8/4/4px | H保持input-border-color的必要对比；F仅改变已有边线颜色，错误优先；E的必要控件边界用status-error-foreground，status-error-line只用于有文字/图标伴随的辅助分隔；关联aria-invalid/describedby，E+F保留错误边线。readOnly可选择复制；X不可编辑；loading不自行改请求。placeholder不代替label |
 | InputGroup D/H/F/X/E；S/B按内部控件 | 同输入，一层边界和焦点，addon/清除与内容gap8 | 外层映射内部真实focus/invalid，内部不重复border/ring；帮助和错误不撑偏相邻控件，不制造第二层皮肤 |
 | Combobox/自定义选择 D/H/S/F/X/B/E | 搜索复用输入、选项复用menu-item-*；弹层popover-width288、padding12 | 持续S与键盘活动项分开，活动项F只在键盘阶段存在。搜索输入保留焦点，方向键/Enter选择；无结果与错误不同，不自动选首项、不改查询防抖；NativeSelect由平台负责面板 |
-| Checkbox/Switch/Toggle D/H/S/F/X/E；B仅业务已有 | Checkbox默认16×16px（control-icon-size）、radius-sm、1px input-border-color；Switch宽28/高16.6px、拇指14.4px，圆形轨道；Toggle使用toggle-height默认28px、gap4，放大文字可自然增高 | S用action-primary及成对前景或interaction-selected-*，必须有真实checked；H不盖S，F独立，E相关错误可见，X不可切换。Space/方向键遵循角色；不得仅换颜色模拟checked |
-| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 项至少control-height-sm32、轨道内padding3、项radius-md；label body-sm，常规body400、选中heading600；可选装饰图标16px、图文间距space-icon-gap，文字与图标颜色继承所属Tab | 轨道layer-support与一层surface-line，项间space-text-gap，默认按内容宽度且不越过容器；显式equal在单项上限内分配。未选文字muted-foreground，H用interaction-hover，S用layer-raised、surface-line细边界与action-primary形成内嵌选中层，非选中项预留同宽透明边界，F使用独立内部focus环。没有额外selected外圈或左竖线；可选line移除外槽/项内框，项预留line-width-emphasis底边，只有当前项以currentColor着色；F仍独立内部环，H不覆盖当前文字/线，普通尺寸/文字继承不变。单项上限tabs-item-max-inline-size，Label复用OverflowText且只滚名称；方向键及panel关联完整，禁用项跳过，panel加载不禁用Tab |
+| Checkbox/Switch/Toggle D/H/S/F/X/E；B仅业务已有 | Checkbox默认16×16px（control-icon-size）、radius-sm、1px input-border-color；Switch宽28/高16.6px、拇指14.4px，圆形轨道；Toggle使用toggle-height默认28px、gap4，放大文字可自然增高 | S用action-primary及成对前景或interaction-selected-*，必须有真实checked；H不盖S，F仅改变已有边线颜色，E相关错误优先，X不可切换。Space/方向键遵循角色；不得仅换颜色模拟checked |
+| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 项至少control-height-sm32、轨道内padding3、项radius-md；label body-sm，常规body400、选中heading600；可选装饰图标16px、图文间距space-icon-gap，文字与图标颜色继承所属Tab | 轨道layer-support与一层surface-line，项间space-text-gap，默认按内容宽度且不越过容器；显式equal在单项上限内分配。未选文字muted-foreground，H用interaction-hover，S用layer-raised、surface-line细边界与action-primary形成内嵌选中层，非选中项预留同宽透明边界，F不新增边线或焦点环。没有额外selected外圈或左竖线；可选line移除外槽/项内框，项预留line-width-emphasis底边，只有当前项以currentColor着色；F同样不新增外框，H不覆盖当前文字/线，普通尺寸/文字继承不变。单项上限tabs-item-max-inline-size，Label复用OverflowText且只滚名称；方向键及panel关联完整，禁用项跳过，panel加载不禁用Tab |
 | 表格/列表 D/H/S/F/B/E；X属于行控件 | cell padding8、动作gap4，表头body-xs/500、正文body-sm，分隔separator-line；opaque条纹 | H用interaction-hover，S/expanded用interaction-selected背景；sticky与整行不透明底一致。F只归焦点控件/确有键盘行，不给被动行造焦点。B/空/E保留所属状态和恢复入口，排序/分页真实禁用 |
 | Card/Section/连续Item | Card单层raised+surface-line、radius6、按三段消费card-padding14；图标tile的size/offset/background及Footer背景由组件Token定义，Footer仅一条separator-line；Section/连续Item不复制卡片分区 | Card可选plain图标/Footer，Badge有中性soft标签；默认自然高，公开stretch/equal让正文增长/Footer靠底。被动仅D/B/E，交互仍归内部控件；不加被动hover/伪按钮、不固定摘要行数或编造指标 |
 | 统计/指标 D/B/E；H/S仅已有tooltip或范围控件 | metric-padding12/gap4，label13/muted，主值24/600/tabular、单位13 | 0/未知/无数据/B/E分开，核心统计才进首屏；不以disabled表达缺数据。范围S沿选择器，tooltip H/F使用overlay；指标本体无按钮hover、焦点或选中 |
@@ -2056,7 +2056,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 
 选中导航使用左侧独立短竖线、浅底和强调文字/图标，不是四周外框。默认指示颜色nav-selected-indicator-color→action-primary，宽2px、高16px、圆角1px，离菜单项左边4px，指示与内容的保留间距6px。文字区域左内距由inset4+width2+gap6=12px计算，所有状态都保留此内距；指示absolute垂直居中，不参与布局，不令选中切换横向跳动。
 
-收起图标导航默认项36×36px、图标16px居中；指示离左边2px、高16px、宽2px，图标左边10px，间隔6px。使用nav-collapsed-item-size和nav-selected-indicator-inset-collapsed，不给选中项增加padding。采用项目若改变项/图标尺寸，必须核对剩余间距，不能压住图标、焦点环或点击区。完整名称保留可访问入口，键盘/触屏可通过明确的展开导航或帮助获得，不只依赖hover。
+收起图标导航默认项36×36px、图标16px居中；指示离左边2px、高16px、宽2px，图标左边10px，间隔6px。使用nav-collapsed-item-size和nav-selected-indicator-inset-collapsed，不给选中项增加padding。采用项目若改变项/图标尺寸，必须核对剩余间距，不能压住图标或点击区。完整名称保留可访问入口，键盘/触屏可通过明确的展开导航或帮助获得，不只依赖hover。
 
 hover-only不出现指示；selected+hover仍保持指示与选中浅底；keyboard focus独立可见，blur移除焦点而不移除当前项指示。disabled不可激活；若当前项同时disabled，保留当前项归属，弱化文字而不伪造可用。该指示用于垂直导航，不外推为横向Tabs、普通下拉项或表格必须画左竖线。
 
@@ -2243,7 +2243,7 @@ SSR/预渲染和客户端首次hydration必须给出相同文本与结构；轻�
 
 应用头部按brand、breadcrumb、status、actions角色组合。收起/展开入口由公共AppShell/MenuLayout持有并管理位置：sidebarTogglePlacement默认top位于全局Header品牌单元行尾，与Logo/品牌名称保持同一行，不占侧栏顶部独立辅助行；显式bottom将同一个控件放在侧栏菜单与可选业务sidebarFooter之后，菜单独立滚动，顶部不留占位。业务sidebarFooter需要同行时用公开SidebarFooterRow，自然宽度并按空间换行，长事实不截断；默认非Row组合保持全宽，紧凑rail按组纵排。bottom展开时沿侧栏内距靠末端，紧凑rail中居中；top紧凑时保持品牌Logo与开关相邻，不把全局Header压成一个60px图标槽。窄屏两种配置均将同一入口置于顶栏品牌行尾以打开已有导航抽屉；不在两处复制按钮或另建抽屉。公共层统一其按钮尺寸、位置、动效、键盘焦点、可访问名称和aria-expanded/controls，跨断点复用同一个控件节点，宿主仅传状态与事件，受控请求不能冒充已确认状态。导航入口和品牌/路径为左侧主组，状态和动作在右侧；采用方提供内容、名称、链接语义及实际动作，不在公共库写入产品权限或版本规则。主组保留layout-header-primary-min的合理宽度，窄屏优先完整保留导航入口，品牌与路径各在所属空间省略长文字；链接可聚焦，完整名称保留可访问语义，宿主可提供title或明确详情入口。状态/动作空间不足时整组换到下一行，动作组内部按需换行，不能盖住品牌、互相重叠或令整页横向溢出。不静默隐藏状态或重要动作，不用缩小字体解决空间问题；没有动作时不预留空白占位。旧任意header内容继续支持，迁移后通用排列由公共组合负责。
 
-展开侧栏用nav-sidebar-width，按视口16%动态计算，在nav-sidebar-min-width与nav-sidebar-max-width之间夹取，默认根16px下192–224px，再以50vw封顶（视口约束优先于最小宽度）；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。焦点环和短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
+展开侧栏用nav-sidebar-width，按视口16%动态计算，在nav-sidebar-min-width与nav-sidebar-max-width之间夹取，默认根16px下192–224px，再以50vw封顶（视口约束优先于最小宽度）；内距nav-sidebar-padding，默认两侧各12px。紧凑栏用nav-collapsed-width，等于一份nav-collapsed-item-size加两侧内距，默认60px，36px图标项对称居中；不得多计一份图标项宽度。带独立展开按钮的链接在紧凑栏中把该按钮放在同一项下一行，不用横向加宽整栏。控件与选中短竖线在保留内距内可见；viewport模式侧栏独立滚动，当前项在状态更新后可见；窄屏同一抽屉继续完整显示标签。
 
 AppShell/MenuLayout 的 sidebarRevealOnHover 默认 true。仅桌面 hover＋fine pointer 的紧凑侧栏，在鼠标进入或键盘焦点进入时临时揭示完整宽度；同一 aside/导航/底部节点叠在正文上方，正文轨道、滚动和草稿不变。该显示态不写 Controller.collapsed、不触发 onCollapsedChange、不持久化；显式收起/展开按钮仍确认原有折叠事实，aria-expanded 表达当前实际可见状态。独立 NavigationMenu 不拥有 Shell 展开宽度或预览行为。
 
@@ -2386,7 +2386,7 @@ AppHeader/AppShell/MenuLayout在右侧默认提供一个主题图标按钮，lig
 
 公共scrollMode保留document默认自然滚动与viewport独立main滚动，新增workspace显式工作区模式：shell默认100dvh，header自然换行，main按自然pageHeader/pageToolbar/pageFooter占用分配剩余确定高度给content；库默认维护min-block-size:0与弹性收缩链，layout-workspace-content-min-block-size是显式可覆盖的内容下限（默认0px、受100dvh约束），业务区域通过公开内容组合选择内部滚动owner。不得要求消费者减固定header高度、修私有selector或绝对定位发送区。大于可用高度且不可拆分的内容保留滚动可达兜底，不把文字或操作裁掉。公开root尺寸可由已知宿主窗口大小覆盖，不更改既有默认尺度。
 
-公共 `contentInset` 使用共享 `ShellContentInset = 'standard' | 'edge'`，默认 standard。edge 仅在 workspace 移除 shell main 的页面内距与 content 的焦点 gutter；header、品牌、sidebar、页内槽自己的布局以及控件/卡片内距保持各自合同。document/viewport 保留原间距并记住选择，切回 workspace 生效。`ScrollArea.Viewport.focusMode='inset'` 是独立显式选项，默认 gutter，不由 edge 递归推断。零 gutter 与原宽度/颜色的内部焦点指示在同一 CSS @scope 增强中启用；最近 ScrollArea、弹层及其他公共滚动边界拥有自己的策略，嵌套默认 gutter 不受外层 edge/inset 覆盖。不支持 @scope 的旧引擎保留原有安全绘制空间，不以缺失焦点换取贴边；这里不构成各浏览器或旧 WebView 的实测声明。Surface 可显式 `padding='none'`，仅省略该表面的 card-padding，保留背景、边线和圆角，不新增裁切。
+公共 `contentInset` 使用共享 `ShellContentInset = 'standard' | 'edge'`，默认 standard。edge 仅在 workspace 移除 shell main 的页面内距与 content 的焦点 gutter；header、品牌、sidebar、页内槽自己的布局以及控件/卡片内距保持各自合同。document/viewport 保留原间距并记住选择，切回 workspace 生效。`ScrollArea.Viewport.focusMode='inset'` 是独立显式选项，默认 gutter，不由 edge 递归推断。零 gutter 在 CSS @scope 增强中启用，焦点仅改变已有可见边线颜色；最近 ScrollArea、弹层及其他公共滚动边界拥有自己的策略，嵌套默认 gutter 不受外层 edge/inset 覆盖。不支持 @scope 的旧引擎保留原有安全绘制空间，保留键盘和回焦语义；这里不构成各浏览器或旧 WebView 的实测声明。Surface 可显式 `padding='none'`，仅省略该表面的 card-padding，保留背景、边线和圆角，不新增裁切。
 
 headerSlots.leading是可选、默认空且不收缩的最前区域，位于自动导航按钮之前；品牌继续独立。库负责顺序与窄屏布局，不内置macOS窗口控件尺寸或平台检测。平台/全屏状态、安全区真实尺寸、drag/no-drag由宿主集成提供，不把业务/OS规则带入默认皮肤。完整合同及React正式消费者见[布局插槽](COMPONENTS.md#布局与顶栏)。
 
@@ -2425,7 +2425,7 @@ HeaderBrand logo盒使用control-height-sm，图片/SVG以contain限于盒内，
 
 SearchToolbar 是 Toolbar、输入与按钮之上的纯布局/披露组合。search、actions 和 advanced 是公开内容入口，不增加查询、分页、权限或请求 owner。宽屏搜索轨道采用 flex 剩余空间与 min-inline-size:0，主操作在行末；Input 的 100% 默认宽度只相对于搜索轨道，不把操作挤到下一行。操作组按 control-height、button-padding-inline、button-gap、control-icon-size 统一按钮尺寸；长标签可自然增高，不以固定高度裁切。search 与 actions 轨道以及 actions 内的公开 Toolbar 采用控件底边对齐；带标签 Field 的控制项与普通按钮对齐。嵌套 Toolbar 可独立换行，高级筛选按钮保持自身内容高度，不能被整组多行高度 stretch 拉高。简单无帮助字段以控制边框底边对齐；含帮助/错误的复杂字段放在 advanced，不以内部 DOM 测量猜测其控制位置。工具栏按自身容器 40rem 既有断点换行，搜索独占一行，操作仍完整可达，不只依赖窗口宽度。
 
-高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 绘制空间，没有 overflow 裁切或另一套焦点皮肤。具体接口和生命周期见 [弹层与工具栏](COMPONENTS.md#searchtoolbar)。
+高级内容显示于下方，defaultExpanded 默认 false，可为 true；expanded/onExpandedChange 受控时只请求下一状态，宿主回传后才改变展示。只有非空 advanced 槽才显示一个具有可访问名称、aria-expanded/controls 的原生按钮，Enter/Space 采用按钮默认激活。折叠保留内容节点和值，并以 hidden/inert 同时退出绘制、键盘及辅助技术；程序收起时仅在焦点仍属于该区域时返回触发器，不抢走宿主已移走的焦点。更新不重挂搜索/动作/高级节点，也不重复绑定事件。四边保留 focus-width + focus-offset 既有滚动清距，没有 overflow 裁切或另一套焦点皮肤。具体接口和生命周期见 [弹层与工具栏](COMPONENTS.md#searchtoolbar)。
 
 
 ### 受控成组选项
@@ -2456,7 +2456,7 @@ Calendar共享model独立管理查看月份与已选日期。公开month/onMonth
 
 ### 菜单危险语义
 
-普通Menu/ContextMenu动作Item可选tone=danger。默认危险文字与图标使用status-error-foreground，hover及键盘高亮使用status-error-soft/foreground，pressed使用action-danger/action-danger-foreground；disabled和独立focus继续沿菜单公共变量。无新颜色或产品皮肤，确认及权限归宿主。见[菜单危险操作语义](COMPONENTS.md#菜单危险操作语义)。
+普通Menu/ContextMenu动作Item可选tone=danger。默认危险文字与图标使用status-error-foreground，hover及键盘高亮使用status-error-soft/foreground，pressed使用action-danger/action-danger-foreground；disabled继续沿菜单公共变量，焦点不新增外框。无新颜色或产品皮肤，确认及权限归宿主。见[菜单危险操作语义](COMPONENTS.md#菜单危险操作语义)。
 
 ### DataTable 行交互扩展
 
@@ -2510,7 +2510,7 @@ LinkedText 使用正文/元信息所属文字角色与既有 Link 颜色，不�
 
 ### 透明文字动作（4.2.17）
 
-Button.variant=text 为可选呈现；Disclosure自4.2.18默认text，显式variant=default保留历史外观。默认/hover/pressed/展开及disabled均无底色或下划线；文字与箭头继承 foreground，hover/pressed/aria-expanded=true 时采用 action-primary，disabled采用原禁用前景并阻断动作。透明文字Button不做按压缩放，保留原size的padding、最小点击区和字体；Disclosure保留原全宽trigger、自然标题/indicator/body与分隔线，不创建第二个Overlay或关闭owner。focus-visible仍由原独立focus配方绘制，不能以hover颜色替代。默认ghost/link与显式Disclosure variant=default保留既有背景合同，不全局删除交互反馈。
+Button.variant=text 为可选呈现；Disclosure自4.2.18默认text，显式variant=default保留历史外观。默认/hover/pressed/展开及disabled均无底色或下划线；文字与箭头继承 foreground，hover/pressed/aria-expanded=true 时采用 action-primary，disabled采用原禁用前景并阻断动作。透明文字Button不做按压缩放，保留原size的padding、最小点击区和字体；Disclosure保留原全宽trigger、自然标题/indicator/body与分隔线，不创建第二个Overlay或关闭owner。focus-visible不新增外框，无可见边线时保持原外观。默认ghost/link与显式Disclosure variant=default保留既有背景合同，不全局删除交互反馈。
 
 ### 导航文字呈现与warning前景（4.2.17）
 
@@ -2522,9 +2522,9 @@ NavItem与NavigationItem的tone=warning只投影宿主事实；标题、主图�
 
 IconButton 与 Button data-icon="true" 使用同一纯图标配方：等宽高不变、radius-full，默认/hover/pressed/disabled/busy/expanded 都保持圆形容器。ghost/link/text 默认透明时同样保留圆形几何，背景出现不切换轮廓；图标自身形状不变，例如停止仍用方形图标。文字Button继续原button-radius，不变成圆形或胶囊。保留原size、点击区、前景/背景/危险/禁用/忙态、独立focus、render/ref/键盘和业务owner。不要用data-icon标记带可见文字的按钮，也不要通过产品私有CSS重新实现圆角。头像、缩略图和其他组件不适用这条按钮规则。
 
-4.2.32将纯图标的视觉圆面与命中布局分开：尺寸仍为default36/sm32/xs24/lg40px，图标仍16px（xs12px），button-icon-inset默认由space-text-gap派生4px，button-icon-padding扣除原1px边界后为3px。圆面净径分别28/24/16/32px，outline/busy边界同样内移；背景按content-box绘制，不能裁内容或焦点。键盘焦点沿用focus-width与interaction-focus，offset为line-width-surface减button-icon-inset，以原线宽保留可见间隙，默认外径分别34/30/22/38px；文字Button及Card头部图标tile不适用。普通文字按钮仍用共享focus-offset。全主题/variant一致，text仍透明且危险前景不变；disabled不执行，busy本身不禁用。公开Token只控制视觉留白，不缩小真实target，不使用消费方wrapper、私有CSS或放大SVG。
+4.2.32将纯图标的视觉圆面与命中布局分开：尺寸仍为default36/sm32/xs24/lg40px，图标仍16px（xs12px），button-icon-inset默认由space-text-gap派生4px，button-icon-padding扣除原1px边界后为3px。圆面净径分别28/24/16/32px，outline/busy边界同样内移；背景按content-box绘制，不能裁内容或焦点。焦点不新增外圈；outline变体仅将已有内收边线改为interaction-focus，其余无可见边线的变体保留原边界外观。文字Button及Card头部图标tile不适用内收几何。全主题/variant一致，text仍透明且危险前景不变；disabled不执行，busy本身不禁用。公开Token只控制视觉留白，不缩小真实target，不使用消费方wrapper、私有CSS或放大SVG。
 
-文字根字号/公开setInterfaceScale整体阅读缩放会同比例放大rem几何；focus-width及线宽继续既有px合同，不为凑倍数改线。根字号200%时default命中72、图标32、圆面56、焦点外径62px；真实浏览器200%保持CSS尺寸并整体物理放大。宿主自定义button-height或button-icon-inset时需验证图标不被挤压、焦点和真实外沿点击；不以视觉圆面取代点击区。改造后在工具栏、表格、弹层及Card actions/footerActions所有实际实例验收，不只验单一卡片。参见[纯图标逐项检查](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)。
+文字根字号/公开setInterfaceScale整体阅读缩放会同比例放大rem几何；focus-width及线宽继续既有px合同，不为凑倍数改线。根字号200%时default命中72、图标32、圆面56px；真实浏览器200%保持CSS尺寸并整体物理放大。宿主自定义button-height或button-icon-inset时需验证图标不被挤压、焦点和真实外沿点击；不以视觉圆面取代点击区。改造后在工具栏、表格、弹层及Card actions/footerActions所有实际实例验收，不只验单一卡片。参见[纯图标逐项检查](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)。
 
 4.2.33补齐组合容器边界：SearchToolbar.actions/advanced及复用同一框架的QueryForm继续原有统一control-height/SVG归一化，但必须使用button-icon-padding，不能归零。SidebarFooter中的文字按钮可以居中、隐藏标签、使用导航最小宽度，纯图标不继承文字按钮的左对齐、横向零padding或单边min-width；其size/等宽高/图标中心与圆面继续由Button拥有，展开/收拢/窄屏抽屉一致。收拢Footer含纯图标时，在既有rail内居中保留至少nav-collapsed-item-size/control-height-lg中的较大净宽，避免40px目标被36px轨道单向压扁；行内纯图标也不强占100% flex-basis。rail宽度与普通文字Footer不变。验收同时量横纵圆面、glyph中心、透明target外沿、内边界及focus，不能只测独立按钮或Card，也不能仅凭focus外径正确判整圈正确。实际layout slot清单见[ICON-ACTION-005](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)。同理，workspace edge/ScrollArea inset的@scope和顶栏/侧栏通用内描规则须排除纯图标Button，不依靠scope proximity覆盖其圆形配方；排除不增加选择器优先级，普通invalid输入及InputGroup继续原额外偏移。Dialog/gutter边界和ScrollArea自身的focus offset保留，嵌套滚动区各自拥有策略；宿主业务头部挤压内容的布局问题不伪装成公共按钮尺寸缺陷。
 
@@ -2548,7 +2548,7 @@ IconButton 与 Button data-icon="true" 使用同一纯图标配方：等宽高�
 
 ### 表格与重复行操作的透明语义（4.2.18）
 
-所有同组表格操作入口统一以Button/IconButton variant=text表达，不混用带底色ghost/outline/primary/destructive。普通动作default用foreground，hover/pressed/expanded用action-primary；删除等危险动作显式tone=danger，所有可用状态用status-error-foreground，绝不退回品牌色或实心红底。disabled使用原禁用前景；default/hover/pressed/expanded/disabled/busy背景始终透明，独立focus保持。tone只影响text，不重写显式非text变体；警告/成功等业务事实仍使用原状态槽，未增加虚假tone。宿主逐表按真实动作给props，权限、确认、busy防重、行事件与提交owner不变，不新增TableAction业务包装或私有CSS。
+所有同组表格操作入口统一以Button/IconButton variant=text表达，不混用带底色ghost/outline/primary/destructive。普通动作default用foreground，hover/pressed/expanded用action-primary；删除等危险动作显式tone=danger，所有可用状态用status-error-foreground，绝不退回品牌色或实心红底。disabled使用原禁用前景；default/hover/pressed/expanded/disabled/busy背景始终透明，焦点不新增边界。tone只影响text，不重写显式非text变体；警告/成功等业务事实仍使用原状态槽，未增加虚假tone。宿主逐表按真实动作给props，权限、确认、busy防重、行事件与提交owner不变，不新增TableAction业务包装或私有CSS。
 
 ### 公共图表布局与状态合同（4.2.21）
 

@@ -31,7 +31,7 @@ for(const mode of ['light','dark','system'])test(`native controls ${mode}: theme
  await expect(mixed).toHaveCSS('background-color',primary);
  const file=page.getByLabel('file default',{exact:true});expect(await file.evaluate(node=>getComputedStyle(node,'::file-selector-button').backgroundColor)).toBe(muted);
  await file.setInputFiles({name:'audit.txt',mimeType:'text/plain',buffer:Buffer.from('synthetic audit')});expect(await file.evaluate(node=>node.files[0].name)).toBe('audit.txt');
- const input=page.getByLabel('text invalid',{exact:true});await input.focus();await expect(input).toHaveCSS('border-top-color',error);await expect(input).toHaveCSS('outline-style','solid');
+ const input=page.getByLabel('text invalid',{exact:true});await input.focus();await expect(input).toHaveCSS('border-top-color',error);await expect(input).toHaveCSS('outline-style','none');
  const progress=page.getByRole('progressbar',{name:'Determinate progress',exact:true});await expect(progress).toHaveAttribute('value','40');await expect(progress).toHaveCSS('appearance','none');await expect(progress).toHaveCSS('height','8px');
  const unknown=page.getByRole('progressbar',{name:'Indeterminate progress',exact:true});expect(await unknown.getAttribute('value')).toBeNull();await expect(unknown).toHaveCSS('animation-name','none');
  for(const width of [1280,390]){

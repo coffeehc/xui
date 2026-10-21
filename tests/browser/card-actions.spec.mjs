@@ -30,7 +30,7 @@ async function reachable(page){
   const controls=[page.getByRole('switch',{name:'启用 record-1',exact:true}),...['详情 record-1','编辑 record-1','删除 record-1'].map(name=>page.getByRole('button',{name,exact:true}))];
   for(const control of controls){
     await control.focus();await expect(control).toBeFocused();await expect(control).toBeInViewport({ratio:1});
-    expect(await control.evaluate(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node),outset=parseFloat(s.outlineWidth)+parseFloat(s.outlineOffset),body=node.closest('.xui-card-group-body').getBoundingClientRect();return s.outlineStyle!=='none'&&r.left-outset>=Math.max(body.left,0)&&r.right+outset<=Math.min(body.right,innerWidth)&&r.top-outset>=Math.max(body.top,0)&&r.bottom+outset<=Math.min(body.bottom,innerHeight);})).toBe(true);
+    expect(await control.evaluate(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node),body=node.closest('.xui-card-group-body').getBoundingClientRect();return node.matches(':focus-visible')&&s.outlineStyle==='none'&&r.left>=Math.max(body.left,0)&&r.right<=Math.min(body.right,innerWidth)&&r.top>=Math.max(body.top,0)&&r.bottom<=Math.min(body.bottom,innerHeight);})).toBe(true);
   }
 }
 

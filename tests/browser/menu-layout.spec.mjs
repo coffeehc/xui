@@ -23,7 +23,7 @@ for(const kind of ['react']){
     await control(page,'tools').focus();await page.keyboard.press('ArrowRight');await page.keyboard.press('ArrowRight');await expect(control(page,'preferences')).toBeFocused();await page.keyboard.press('ArrowDown');await expect(control(page,'new-tab')).toBeFocused();
     await page.evaluate(()=>document.documentElement.dir='rtl');await control(page,'tools').focus();await page.keyboard.press('ArrowRight');await expect(control(page,'preferences')).toBeHidden();await page.keyboard.press('ArrowLeft');await expect(control(page,'preferences')).toBeVisible();
     await page.keyboard.press('Home');await expect(control(page,'overview')).toBeFocused();await page.keyboard.press('End');await expect(control(page,'browser')).toBeFocused();
-    const outline=await control(page,'browser').evaluate(node=>getComputedStyle(node).outlineStyle);expect(outline).not.toBe('none');await expect(control(page,'archive')).not.toHaveAttribute('href');
+    const outline=await control(page,'browser').evaluate(node=>getComputedStyle(node).outlineStyle);expect(outline).toBe('none');await expect(control(page,'archive')).not.toHaveAttribute('href');
     await control(page,'archive').dispatchEvent('click');expect(await page.evaluate(()=>window.menuDemo.calls())).toEqual([]);
     await control(page,'overview').focus();await page.keyboard.down('Enter');await expect(control(page,'overview')).toHaveAttribute('data-pressed','true');await page.keyboard.up('Enter');await expect(control(page,'overview')).not.toHaveAttribute('data-pressed');
     expect(await page.locator('[data-menu-control][tabindex="0"]').count()).toBe(1);

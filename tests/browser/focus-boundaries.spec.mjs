@@ -30,26 +30,28 @@ async function touchScrollToEnd(page,owner,cdp){
 async function assertFocusPaint(control){
  await control.focus();
  const result=await control.evaluate(node=>{
-  const paint=node.closest('.xui-input-group')??node,style=getComputedStyle(paint),rect=paint.getBoundingClientRect(),reach=Math.max(0,parseFloat(style.outlineWidth)+parseFloat(style.outlineOffset));
+  const paint=node.closest('.xui-input-group')??node,style=getComputedStyle(paint),rect=paint.getBoundingClientRect();
   const violations=[];
   // Root/body scroll locking propagates overflow to the viewport. A fixed portal
   // is not clipped by the body's short in-flow content box (the opener button).
-  // Check viewport paint explicitly, then every actual component clipping box.
+  // Check the actual control boundary; focus no longer paints an outer outline.
   const viewport=window.visualViewport,leftEdge=viewport?.offsetLeft??0,topEdge=viewport?.offsetTop??0,rightEdge=leftEdge+(viewport?.width??document.documentElement.clientWidth),bottomEdge=topEdge+(viewport?.height??document.documentElement.clientHeight);
-  if(rect.left-reach<leftEdge-1||rect.right+reach>rightEdge+1)violations.push('viewport:inline');
-  if(rect.top-reach<topEdge-1||rect.bottom+reach>bottomEdge+1)violations.push('viewport:block');
+  if(rect.left<leftEdge-1||rect.right>rightEdge+1)violations.push('viewport:inline');
+  if(rect.top<topEdge-1||rect.bottom>bottomEdge+1)violations.push('viewport:block');
   for(let parent=paint.parentElement;parent;parent=parent.parentElement){
    if(parent===document.body||parent===document.documentElement)continue;
    const css=getComputedStyle(parent),box=parent.getBoundingClientRect();const left=box.left+parent.clientLeft,top=box.top+parent.clientTop,right=left+parent.clientWidth,bottom=top+parent.clientHeight;
-   if(/auto|scroll|hidden|clip/.test(css.overflowX)&&(rect.left-reach<left-1||rect.right+reach>right+1))violations.push(`${parent.className}:inline`);
-   if(/auto|scroll|hidden|clip/.test(css.overflowY)&&(rect.top-reach<top-1||rect.bottom+reach>bottom+1))violations.push(`${parent.className}:block`);
+   if(/auto|scroll|hidden|clip/.test(css.overflowX)&&(rect.left<left-1||rect.right>right+1))violations.push(`${parent.className}:inline`);
+   if(/auto|scroll|hidden|clip/.test(css.overflowY)&&(rect.top<top-1||rect.bottom>bottom+1))violations.push(`${parent.className}:block`);
   }
-  return {violations,outline:parseFloat(style.outlineWidth),boxSizing:getComputedStyle(node).boxSizing};
+  const invalid=node.getAttribute('aria-invalid')==='true'||paint.matches('[data-invalid="true"]')||!!paint.querySelector('[aria-invalid="true"]'),probe=document.createElement('span');probe.style.color=invalid?'var(--status-error-foreground)':'var(--interaction-focus)';document.body.append(probe);const expectedBorderColor=getComputedStyle(probe).color;probe.remove();
+  return {violations,outline:style.outlineStyle,borderColor:style.borderTopColor,expectedBorderColor,boxSizing:getComputedStyle(node).boxSizing};
  });
- expect(result.boxSizing).toBe('border-box');expect(result.outline).toBeGreaterThan(0);expect(result.violations).toEqual([]);
+ expect(result.boxSizing).toBe('border-box');expect(result.outline).toBe('none');expect(result.violations).toEqual([]);
+ expect(result.borderColor).toBe(result.expectedBorderColor);
 }
 for(const mode of ['light','dark','system'])for(const viewport of [{width:1280,scale:1},{width:390,scale:1},{width:390,scale:2}])for(const kind of ['dialog','sheet','card']){
- test(`React ${kind} focus paint ${mode} ${viewport.width}px ${viewport.scale*100}%`,async({page},info)=>{
+test(`React ${kind} focus boundary has no outer outline ${mode} ${viewport.width}px ${viewport.scale*100}%`,async({page},info)=>{
   await setup(page,{kind,mode,...viewport});const scope=kind==='card'?page.getByRole('region',{name:'Card form',exact:true}):page.getByRole('dialog');
   const fields=scope.locator('input');for(const index of [0,1,17])await assertFocusPaint(fields.nth(index));
   const first=fields.first();await assertFocusPaint(first);await expect(first).toHaveAttribute('aria-invalid','true');expect(await first.evaluate(node=>getComputedStyle(node).borderTopColor)).not.toBe(await first.evaluate(node=>getComputedStyle(node).outlineColor));
@@ -123,13 +125,13 @@ for(const side of ['top','bottom'])test(`React ${side} sheet respects its actual
  await pointAtScrollOwner(page,dialog);await page.mouse.wheel(0,await dialog.evaluate(node=>node.scrollHeight));const cancel=dialog.getByRole('button',{name:'Cancel form',exact:true});await expect.poll(async()=>{const c=await cancel.boundingBox(),d=await dialog.boundingBox();return c.y>=d.y&&c.y+c.height<=d.y+d.height;}).toBe(true);await info.attach('fixed-height-sheet-footer.png',{body:await page.screenshot(),contentType:'image/png'});await cancel.click();await expect(dialog).toBeHidden();
 });
 
-test(`React last-field focus remains painted through both scroll-owner transitions`,async({page},info)=>{
+test(`React last-field boundary remains visible through both scroll-owner transitions`,async({page},info)=>{
  await setup(page,{kind:'dialog',mode:'light',width:390});const dialog=page.getByRole('dialog'),body=dialog.locator('.xui-dialog-body'),last=body.locator('input').nth(17);await expect(dialog.getByRole('button',{name:'Dismiss form',exact:true})).toBeFocused();
  for(let index=0;index<18;index++){await page.keyboard.press('Tab');await expect(body.locator('input').nth(index)).toBeFocused();}
  await last.fill('Last field remains');
  for(const [scale,text,mode] of [[2,'很长的标题用于检查表单标题轨道不会盖住关闭按钮以及在窄屏放大后仍可完整换行','whole'],[1,'Short title','body']]){
   await dialog.locator('.xui-dialog-title').evaluate((node,text)=>node.textContent=text,text);await page.evaluate(scale=>document.documentElement.style.fontSize=`${scale*100}%`,scale);await expect(dialog).toHaveAttribute('data-dialog-scroll',mode);await expect(last).toBeFocused();await expect(last).toHaveValue('Last field remains');
-  await expect.poll(()=>last.evaluate(node=>{const dialog=node.closest('[role="dialog"],dialog'),owner=dialog.dataset.dialogScroll==='body'?node.closest('.xui-dialog-body'):dialog,r=node.getBoundingClientRect(),s=getComputedStyle(node),reach=parseFloat(s.outlineWidth)+parseFloat(s.outlineOffset),o=owner.getBoundingClientRect(),top=o.top+owner.clientTop,left=o.left+owner.clientLeft;return r.top-reach>=Math.max(0,top)&&r.bottom+reach<=Math.min(innerHeight,top+owner.clientHeight)&&r.left-reach>=left&&r.right+reach<=left+owner.clientWidth;})).toBe(true);
+  await expect.poll(()=>last.evaluate(node=>{const dialog=node.closest('[role="dialog"],dialog'),owner=dialog.dataset.dialogScroll==='body'?node.closest('.xui-dialog-body'):dialog,r=node.getBoundingClientRect(),s=getComputedStyle(node),o=owner.getBoundingClientRect(),top=o.top+owner.clientTop,left=o.left+owner.clientLeft;return s.outlineStyle==='none'&&r.top>=Math.max(0,top)&&r.bottom<=Math.min(innerHeight,top+owner.clientHeight)&&r.left>=left&&r.right<=left+owner.clientWidth;})).toBe(true);
   await info.attach(`last-focus-${mode}.png`,{body:await page.screenshot(),contentType:'image/png'});
  }
  await page.keyboard.press('Escape');await expect(dialog).toBeHidden();

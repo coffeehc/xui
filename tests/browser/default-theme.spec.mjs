@@ -25,7 +25,7 @@ for(const [mode,scheme] of [['light','light'],['dark','dark'],['system','light']
   const opener=page.getByRole('button',{name:'创建研究任务',exact:true});await opener.click();const dialog=page.getByRole('dialog',{name:'创建研究任务',exact:true});await expect(dialog).toBeVisible();
   const select=dialog.getByRole('combobox',{name:'冻结模板'});await select.focus();await select.press('ArrowDown');await expect(page.getByRole('listbox')).toBeVisible();await save('select');
   await page.keyboard.press('Escape');await expect(page.getByRole('listbox')).toHaveCount(0);await expect(select).toBeFocused();
-  const cancel=dialog.getByRole('button',{name:'取消',exact:true});await cancel.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await expect(cancel).toHaveCSS('outline-style','solid');
+  const cancel=dialog.getByRole('button',{name:'取消',exact:true});await cancel.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await expect(cancel).toHaveCSS('outline-style','none');
   await save('form-focus');await cancel.click();await expect(opener).toBeFocused();
   await writeFile(join(output,`${mode}-${scheme}-${width}.json`),JSON.stringify(result,null,2));await info.attach('computed-colors.json',{body:JSON.stringify(result,null,2),contentType:'application/json'});
   if(mode==='system'){await page.emulateMedia({colorScheme:scheme==='light'?'dark':'light'});await expect(page.locator('html')).toHaveAttribute('data-theme','system');await expect(page.locator('html')).toHaveAttribute('data-theme-effective',scheme==='light'?'dark':'light');}

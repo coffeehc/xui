@@ -42,4 +42,6 @@
   .xui-button[data-icon="true"]:is([data-variant="outline"],[aria-busy="true"]) {position:relative;border-color:transparent;}
   .xui-button[data-icon="true"]:is([data-variant="outline"],[aria-busy="true"])::before {content:"";position:absolute;inset:var(--button-icon-inset);border:var(--line-width-surface) solid var(--surface-line);border-radius:inherit;pointer-events:none;}
   .xui-button[data-icon="true"][aria-busy="true"]::before {border-color:var(--surface-line-strong);}
+  .xui-button[data-variant="outline"]:where(:not([data-icon="true"])):focus:not(:disabled,[aria-disabled="true"],[data-disabled]) {border-color:var(--interaction-focus);}
+  .xui-button[data-icon="true"][data-variant="outline"]:focus:not(:disabled,[aria-disabled="true"],[data-disabled])::before {border-color:var(--interaction-focus);}
 }

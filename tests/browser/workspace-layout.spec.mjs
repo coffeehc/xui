@@ -185,7 +185,7 @@ for(const kind of kinds){
       expect(await leading.evaluate(node=>getComputedStyle(node).flexShrink)).toBe('0');expect(await action.evaluate(node=>node.scrollWidth<=node.clientWidth+1)).toBe(true);
       expect(await leading.evaluate(node=>!!(node.compareDocumentPosition(node.closest('.xui-app-header-primary').querySelector('.xui-app-header-brand'))&Node.DOCUMENT_POSITION_FOLLOWING)),'leading precedes the brand within the header').toBe(true);
       await action.focus();await tabTo(page,toggle,'Tab');await expect(toggle).toBeFocused();await toggle.focus();await tabTo(page,action,'Shift+Tab');await expect(action).toBeFocused();
-      expect(await action.evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle!=='none')).toBe(true);
+      expect(await action.evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle==='none')).toBe(true);
       await page.evaluate(()=>window.workspaceDemo.navigate());await expect(action).toBeFocused();await assertRetained(page);
       await draft(page).focus();await page.evaluate(()=>window.workspaceDemo.setLeading(false));await expect(action).toHaveCount(0);await expect(draft(page)).toBeFocused();await assertRetained(page);
       near((await brand.boundingBox()).x,emptyBrand.x,'removing leading restores the original brand position');

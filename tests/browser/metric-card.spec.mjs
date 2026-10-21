@@ -56,7 +56,7 @@ for(const kind of ['react']){
     const action=page.getByRole('button',{name:'查看说明',exact:true}),update=page.getByRole('button',{name:'更新示例',exact:true});
     await update.focus();await page.keyboard.press(browserName==='webkit'?'Alt+Tab':'Tab');await expect(action).toBeFocused();await page.keyboard.press('Enter');await expect(page.getByTestId('marker-result')).toHaveText('说明已查看 1 次');
     await page.keyboard.press('Space');await expect(page.getByTestId('marker-result')).toHaveText('说明已查看 2 次');
-    expect(await action.evaluate(node=>getComputedStyle(node).outlineStyle)).not.toBe('none');
+    expect(await action.evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle==='none')).toBe(true);
     await page.evaluate(()=>{window.metricAction=document.querySelector('[data-testid="action-card"] button');});
     await update.click();await expect(page.getByTestId('zero-card').locator('.xui-metric-card-value')).toHaveText('1,234.50');await expect(page.getByTestId('zero-card').locator('.xui-metric-card-label')).toHaveText('更新后的记录数');await expect(page.getByTestId('zero-card').getByText('已同步')).toBeVisible();
     await update.click();await expect(page.getByTestId('zero-card').locator('.xui-metric-card-value')).toHaveText('0');await expect(page.getByTestId('zero-card').locator('.xui-metric-card-marker')).toHaveCount(0);

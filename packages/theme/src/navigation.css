@@ -1,6 +1,5 @@
 @layer xui-components {
   .xui-breadcrumbs,.xui-disclosure-body,.xui-tab-panel {font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);}
-  .xui-nav-item:focus-visible {outline-color:var(--menu-item-focus-color);}
 
   .xui-nav { display: grid; gap: var(--space-text-gap); align-content: start; }
   .xui-nav-item {

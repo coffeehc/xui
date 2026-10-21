@@ -87,7 +87,7 @@ for(const kind of ['react']){
 
   test(`${kind} footer keyboard actions respect disabled, busy and same-tick duplicate guards`,async({page},info)=>{
     await setup(page,kind,'?collapsed=true');await nav(page,'overview').focus();await page.keyboard.press('Tab');await expect(action(page)).toBeFocused();
-    expect(await action(page).evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle==='solid')).toBe(true);
+    expect(await action(page).evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle==='none')).toBe(true);
     await page.keyboard.press('Enter');await expect(action(page)).toBeDisabled();await expect(action(page)).toHaveAttribute('aria-busy','true');expect(await page.evaluate(()=>window.sidebarFooterDemo.snapshot().calls)).toBe(1);
     await action(page).dispatchEvent('click');await action(page).dispatchEvent('click');expect(await page.evaluate(()=>window.sidebarFooterDemo.snapshot().calls)).toBe(1);
     await page.evaluate(()=>{window.sidebarFooterDemo.finish();window.sidebarFooterDemo.setActionState({disabled:true});});await expect(action(page)).toBeDisabled();await action(page).dispatchEvent('click');expect(await page.evaluate(()=>window.sidebarFooterDemo.snapshot().calls)).toBe(1);

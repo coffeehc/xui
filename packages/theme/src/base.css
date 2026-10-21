@@ -6,7 +6,9 @@
   :where(.xui,.xui-layer),:where(.xui,.xui-layer) *,:where(.xui,.xui-layer) *::before,:where(.xui,.xui-layer) *::after {box-sizing:border-box;}
   .xui h1 {font:var(--font-weight-heading) var(--font-size-page-title)/var(--line-height-page-title) var(--font-heading);}
   :where(.xui,.xui-layer) h2 {font:var(--font-weight-heading) var(--font-size-section-title)/var(--line-height-section-title) var(--font-heading);}
-  :where(.xui,.xui-layer) :where(button,a,input,textarea,select,[tabindex]):focus-visible {outline:var(--focus-width) solid var(--interaction-focus);outline-offset:var(--focus-offset);}
+  /* Focus never adds another boundary, including the browser's native outline. */
+  :where(.xui,.xui-layer):focus,:where(.xui,.xui-layer) :focus {outline:0;}
+  :is(.xui-surface,.xui-table-container,.xui-floating):focus {border-color:var(--interaction-focus);}
   .xui [hidden],.xui-layer[hidden],.xui-layer [hidden] {display:none;}
   @keyframes xui-feedback {from{opacity:var(--motion-feedback-opacity-start);}to{opacity:1;}}
   .xui-icon {display:inline-flex;align-items:center;justify-content:center;flex:none;inline-size:var(--control-icon-size);block-size:var(--control-icon-size);vertical-align:middle;color:var(--icon-color);}
@@ -26,9 +28,8 @@
 }
 
 @layer xui-components {
-  /* Scroll boundaries own focus paint space. Keep this identical for modal
-     bodies and general scroll containers; scroll-padding alone cannot paint
-     an outline outside a clipped scrollport. No change to focus tokens. */
+  /* Preserve the public scroll gutters and control reveal geometry when focus
+     changes only the existing border color. */
   :is(.xui-dialog-body,.xui-scroll-viewport),
   :where(.xui-shell[data-scroll-mode='workspace']>.xui-shell-main)>.xui-shell-content {
     padding:calc(var(--focus-width) + var(--focus-offset));
@@ -38,15 +39,14 @@
   :where(.xui-shell[data-scroll-mode='workspace']>.xui-shell-main)>.xui-shell-content :is(button,a,input,textarea,select,[tabindex],.xui-input-group) {
     scroll-margin:calc(var(--focus-width) + var(--focus-offset));
   }
-  /* Geometry and inset paint are one progressive enhancement. Older engines
-     retain the safe gutter above. A nested public scroll boundary owns its own
-     policy, including the default gutter; an edge shell never opts it in. */
+  /* A nested public scroll boundary owns its spacing policy. The inset offsets
+     remain available for hosts that explicitly supply their own focus paint. */
   @scope (.xui-shell[data-scroll-mode='workspace'][data-content-inset='edge']>.xui-shell-main,.xui-scroll-viewport[data-focus-mode='inset']) to (:scope :is(.xui-scroll-viewport,.xui-shell,.xui-dialog,.xui-dialog-body,.xui-floating,.xui-feedback-slot,.xui-table-container,.xui-data-table-placeholder)) {
     :scope,:scope>.xui-shell-content {padding:0;scroll-padding:0;}
     :scope :is(button,a,input,textarea,select,[tabindex],.xui-input-group) {scroll-margin:0;}
     :scope:focus-visible,
     :scope :is(button,a,input,textarea,select,[tabindex]):where(:not(.xui-button[data-icon="true"])):focus-visible {outline-offset:calc(-1 * var(--focus-width));}
-    /* Keep an invalid control's boundary visible beside its inset indicator. */
+    /* Preserve invalid boundaries if a host explicitly supplies focus paint. */
     :scope :is(.xui-input,.xui-textarea,.xui-select)[aria-invalid='true']:focus-visible,
     :scope .xui-input-group:focus-within {outline-offset:calc(calc(-1 * var(--focus-width)) - var(--line-width-surface));}
   }

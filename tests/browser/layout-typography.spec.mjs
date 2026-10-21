@@ -137,7 +137,7 @@ for(const kind of kinds){
     // The single toggle is now in the header. Follow its ordinary links/actions
     // before entering the sidebar's one roving tab stop.
     for(let step=0;step<8&&!await selected.evaluate(node=>node===document.activeElement);step++)await page.keyboard.press('Tab');await expect(selected).toBeFocused();
-    expect(await selected.evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle==='solid')).toBe(true);expect(await appearance(selected)).toEqual(initial);
+    expect(await selected.evaluate(node=>node.matches(':focus-visible')&&getComputedStyle(node).outlineStyle==='none')).toBe(true);expect(await appearance(selected)).toEqual(initial);
     await page.keyboard.press('ArrowDown');await expect(other).toBeFocused();await expect(selected).toHaveAttribute('aria-current','page');await capture(page,info,'compact-keyboard-focus');
   });
   test(`${kind} viewport mode independently scrolls long menu and content with current item visible`,async({page},info)=>{
@@ -183,7 +183,7 @@ for(const kind of kinds){
     const [l,i,h,e]=await Promise.all([label,input,help,error].map(bounds));expect(l).toMatchObject({fontSize:'13px',lineHeight:'20px',fontWeight:'500'});expect(i.y-l.bottom).toBeCloseTo(8,1);expect(h.y-i.bottom).toBeCloseTo(4,1);expect(e.y-h.bottom).toBeCloseTo(4,1);
     const id=await input.getAttribute('id');await expect(label).toHaveAttribute('for',id);await expect(input).toHaveAttribute('aria-invalid','true');await expect(input).toHaveAttribute('required','');
     const description=(await input.getAttribute('aria-describedby')).split(/\s+/);expect(description).toEqual([await help.getAttribute('id'),await error.getAttribute('id')]);
-    await label.click();await expect(input).toBeFocused();expect(await input.evaluate(node=>getComputedStyle(node).outlineStyle)).toBe('solid');
+    await label.click();await expect(input).toBeFocused();expect(await input.evaluate(node=>getComputedStyle(node).outlineStyle)).toBe('none');
     expect(await bounds(page.locator('legend.xui-label'))).toMatchObject({fontSize:'13px',lineHeight:'20px',fontWeight:'500'});
     for(const type of ['checkbox','radio','switch']){const text=page.getByTestId(`${type}-label-text`),choice=text.locator('..').locator('input');const hit=await bounds(text.locator('..'));expect(hit.height).toBeGreaterThanOrEqual(36);await expect(choice).not.toBeChecked();await text.click();await expect(choice).toBeChecked();}
     await capture(page,info,'field-spacing-and-choice-labels');
@@ -202,7 +202,8 @@ test('React AppHeader and AppShell expose the same role composition without cons
 for(const kind of kinds)test(`${kind} breadcrumb keyboard focus stays inside its clipping wrapper`,async({page},info)=>{
   await setup(page,kind,'','light',{width:390,height:844});
   await page.getByRole('button',{name:'工作导航',exact:true}).focus();await page.keyboard.press('Tab');const breadcrumb=page.getByRole('link',{name:'团队项目与知识资料',exact:true});await expect(breadcrumb).toBeFocused();
-  const focus=await breadcrumb.evaluate(node=>{const s=getComputedStyle(node),r=node.getBoundingClientRect();return {visible:node.matches(':focus-visible'),style:s.outlineStyle,width:parseFloat(s.outlineWidth),offset:parseFloat(s.outlineOffset),rectWidth:r.width,rectHeight:r.height};});
-  expect(focus.visible).toBe(true);expect(focus.style).toBe('solid');expect(focus.width).toBeGreaterThan(0);expect(focus.offset).toBeLessThanOrEqual(-focus.width);expect(focus.rectWidth).toBeGreaterThan(focus.width*2);expect(focus.rectHeight).toBeGreaterThan(focus.width*2);
+  const focus=await breadcrumb.evaluate(node=>{const s=getComputedStyle(node),r=node.getBoundingClientRect(),wrapper=node.closest('.xui-app-header-breadcrumb').getBoundingClientRect();return {visible:node.matches(':focus-visible'),style:s.outlineStyle,width:parseFloat(s.outlineWidth),offset:parseFloat(s.outlineOffset),rect:{left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height},wrapper:{left:wrapper.left,top:wrapper.top,right:wrapper.right,bottom:wrapper.bottom}};});
+  expect(focus.visible).toBe(true);expect(focus.style).toBe('none');expect(focus.width).toBe(0);expect(focus.offset).toBeLessThan(0);
+  expect(focus.rect.width).toBeGreaterThan(0);expect(focus.rect.height).toBeGreaterThan(0);expect(focus.rect.left).toBeGreaterThanOrEqual(focus.wrapper.left-1);expect(focus.rect.right).toBeLessThanOrEqual(focus.wrapper.right+1);expect(focus.rect.top).toBeGreaterThanOrEqual(focus.wrapper.top-1);expect(focus.rect.bottom).toBeLessThanOrEqual(focus.wrapper.bottom+1);
   await capture(page,info,'header-keyboard-focus');
 });

@@ -3,7 +3,6 @@
   .xui-menu-icon {display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;inline-size:var(--control-icon-size);block-size:var(--control-icon-size);}
   .xui-menu-icon > svg {display:block;inline-size:100%;block-size:100%;}
   .xui-menu-separator {flex:none;block-size:0;margin:var(--space-text-gap) var(--menu-item-padding-inline);border:0;border-block-start:var(--line-width-surface) solid var(--separator-line);}
-  .xui-combobox-item[data-highlighted][data-keyboard-active]:not(:disabled,[data-disabled],[aria-disabled='true']) {outline:var(--focus-width) solid var(--menu-item-focus-color);outline-offset:var(--focus-offset);}
   /* Both Menu.Item and ContextMenu.Item project this public tone. */
   .xui-menu-item[data-tone='danger']:not(:disabled,[data-disabled],[aria-disabled='true']) {color:var(--status-error-foreground);}
   .xui-menu-item[data-tone='danger']:where(:hover,[data-highlighted]):not(:disabled,[data-disabled],[aria-disabled='true']) {background:var(--status-error-soft);color:var(--status-error-foreground);}

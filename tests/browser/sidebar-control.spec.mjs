@@ -23,7 +23,7 @@ for(const kind of ['react'])for(const mode of ['light','dark','system'])for(cons
   await page.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(toggle).toBeFocused();await expect(toggle).toHaveAttribute('aria-expanded','false');
  }
  await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await expect(toggle).toBeFocused();
- const focus=await toggle.evaluate(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node),out=Math.max(0,parseFloat(s.outlineOffset)+parseFloat(s.outlineWidth));return {x:r.x-out,right:r.right+out,y:r.y-out,bottom:r.bottom+out,style:s.outlineStyle,width:parseFloat(s.outlineWidth)};});expect(focus.style).toBe('solid');expect(focus.width).toBeGreaterThan(0);expect(focus.x).toBeGreaterThanOrEqual(0);expect(focus.right).toBeLessThanOrEqual(width);expect(focus.y).toBeGreaterThanOrEqual(0);expect(focus.bottom).toBeLessThanOrEqual(900);
+ const focus=await toggle.evaluate(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return {x:r.x,right:r.right,y:r.y,bottom:r.bottom,style:s.outlineStyle};});expect(focus.style).toBe('none');expect(focus.x).toBeGreaterThanOrEqual(0);expect(focus.right).toBeLessThanOrEqual(width);expect(focus.y).toBeGreaterThanOrEqual(0);expect(focus.bottom).toBeLessThanOrEqual(900);
  await expect(page.getByRole('textbox',{name:'草稿',exact:true})).toHaveValue('位置切换仍保留这份草稿');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);await info.attach('owned-navigation-control.png',{body:await page.screenshot(),contentType:'image/png'});
 });
 for(const kind of ['react'])test(`${kind} responsive control keeps one DOM node, focus and host state`,async({page})=>{

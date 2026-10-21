@@ -8,11 +8,12 @@ async function setup(page,kind,theme){
 async function token(page,name,property='color'){return page.evaluate(({name,property})=>{const probe=document.createElement('span');probe.style.setProperty(property,`var(--${name})`);document.body.append(probe);const value=getComputedStyle(probe).getPropertyValue(property);probe.remove();return value;},{name,property});}
 async function focusPaint(page,control){
  await expect(control).toBeFocused();expect(await control.evaluate(node=>node.matches(':focus-visible'))).toBe(true);
- await expect(control).toHaveCSS('outline-style','solid');await expect(control).toHaveCSS('outline-width',await token(page,'focus-width','width'));await expect(control).toHaveCSS('outline-offset',await token(page,'focus-offset','width'));await expect(control).toHaveCSS('outline-color',await token(page,'interaction-focus'));
- const readEdges=()=>control.evaluate(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node),ring=parseFloat(s.outlineWidth)+parseFloat(s.outlineOffset);return {left:r.left-ring,right:r.right+ring,top:r.top-ring,bottom:r.bottom+ring,width:innerWidth,height:innerHeight};});
+ await expect(control).toHaveCSS('outline-style','none');
+ await expect(control).toHaveCSS('border-top-color',await token(page,await control.getAttribute('aria-invalid')==='true'?'status-error-foreground':'interaction-focus'));
+ const readEdges=()=>control.evaluate(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:innerWidth,height:innerHeight};});
  const before=await readEdges();
  // Native editable focus reveals the caret, not necessarily the whole textarea.
- // Keep genuine Tab focus and use ordinary wheel scrolling to inspect its ring.
+ // Keep genuine Tab focus and use ordinary wheel scrolling to inspect the field boundary.
  expect(before.bottom).toBeGreaterThan(0);expect(before.top).toBeLessThan(before.height);
  expect(before.bottom-before.top).toBeLessThanOrEqual(before.height);
  if(before.top<0||before.bottom>before.height){await page.mouse.move(1,before.height/2);await page.mouse.wheel(0,(before.top+before.bottom-before.height)/2);await expect.poll(async()=>{const e=await readEdges();return e.top>=0&&e.bottom<=e.height;}).toBe(true);}

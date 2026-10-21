@@ -38,7 +38,7 @@ async function overlays(page,info){
  for(const name of ['打开对话框','打开抽屉']){
   const trigger=page.getByRole('button',{name,exact:true});await trigger.click();const panel=page.getByRole('dialog');await expect(panel).toBeVisible();await inspect(page,info,name);
   const draft=panel.getByRole('textbox',{name:'弹层草稿'});await draft.fill('放大后依然完整的中文草稿');await draft.focus();
-  const close=panel.getByRole('button',{name:'关闭面板'});await close.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await expect(close).toBeFocused();await expect(close).toBeInViewport();await expect(close).toHaveCSS('outline-style','solid');
+  const close=panel.getByRole('button',{name:'关闭面板'});await close.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await expect(close).toBeFocused();await expect(close).toBeInViewport();await expect(close).toHaveCSS('outline-style','none');
   expect(await panel.evaluate(n=>n.scrollWidth<=n.clientWidth+1)).toBe(true);
   await info.attach(`${name}.png`,{body:await page.screenshot(),contentType:'image/png'});
   await page.keyboard.press('Enter');await expect(panel).not.toBeVisible();await expect(trigger).toBeFocused();

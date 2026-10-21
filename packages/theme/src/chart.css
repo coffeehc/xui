@@ -15,7 +15,6 @@
   .xui-chart-axis-measure {visibility:hidden;}
   .xui-chart-tick {position:absolute;inset-inline-end:0;white-space:nowrap;transform:translateY(var(--chart-tick-offset));}
   .xui-chart-plot {display:block;inline-size:100%;block-size:var(--chart-plot-block-size);overflow:visible;font-size:var(--chart-axis-font-size);}
-  .xui-chart-plot:focus-visible {outline:var(--focus-width) solid var(--interaction-focus);outline-offset:var(--focus-offset);}
   .xui-chart-grid {stroke:var(--chart-grid-color);stroke-width:var(--line-width-surface);}
   .xui-chart-grid[data-zero='true'] {stroke:var(--surface-line-strong);}
   .xui-chart-line {fill:none;stroke:currentColor;stroke-width:var(--chart-line-width);}

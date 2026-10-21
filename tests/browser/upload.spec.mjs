@@ -12,8 +12,8 @@ async function select(page,files){const chooser=page.waitForEvent('filechooser')
 async function noOverflow(page){expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);}
 async function focusPaintInside(page,button){
  await expect(button).toBeFocused();
- const bounds=await button.evaluate(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node),ring=parseFloat(s.outlineWidth)+parseFloat(s.outlineOffset);return {left:r.left-ring,right:r.right+ring,top:r.top-ring,bottom:r.bottom+ring,width:innerWidth,height:innerHeight};});
- expect(bounds.left).toBeGreaterThanOrEqual(0);expect(bounds.right).toBeLessThanOrEqual(bounds.width);expect(bounds.top).toBeGreaterThanOrEqual(0);expect(bounds.bottom).toBeLessThanOrEqual(bounds.height);
+ const bounds=await button.evaluate(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:innerWidth,height:innerHeight,outline:s.outlineStyle};});
+ expect(bounds.outline).toBe('none');expect(bounds.left).toBeGreaterThanOrEqual(0);expect(bounds.right).toBeLessThanOrEqual(bounds.width);expect(bounds.top).toBeGreaterThanOrEqual(0);expect(bounds.bottom).toBeLessThanOrEqual(bounds.height);
 }
 
 const wire=(payload,success=true)=>({success,payload,message:'',code:success?0:40001,request_id:'upload-browser'});

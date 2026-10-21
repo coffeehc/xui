@@ -4,6 +4,7 @@
  .xui-toggle-group[data-orientation='vertical'] {flex-direction:column;align-items:stretch;}
  .xui-toggle-item {min-block-size:var(--toggle-height);padding-block:0;background:var(--layer-raised);color:var(--foreground);border-color:var(--surface-line);}
  .xui-toggle-item:is([data-pressed],[aria-pressed='true']):not(:disabled,[data-disabled],[aria-disabled='true']) {background:var(--interaction-selected);color:var(--interaction-selected-foreground);border-color:var(--action-primary);}
+ .xui-toggle-item:focus:not(:disabled,[data-disabled],[aria-disabled='true']) {border-color:var(--interaction-focus);}
  .xui-avatar {position:relative;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;inline-size:var(--control-height);block-size:var(--control-height);overflow:hidden;border-radius:var(--radius-full);background:var(--layer-support);color:inherit;vertical-align:middle;}
  .xui-avatar[data-size='sm'] {inline-size:var(--control-height-sm);block-size:var(--control-height-sm);}
  .xui-avatar[data-size='lg'] {inline-size:var(--avatar-size-lg);block-size:var(--avatar-size-lg);}

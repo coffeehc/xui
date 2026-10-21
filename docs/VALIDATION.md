@@ -1544,3 +1544,17 @@ DateTime证据：.artifacts/date-time-browser-aggregated-final.json（及其原�
 | 真 Chrome 页面缩放 | 6/6：React/native × light/dark/system，Chrome 设置 Zoom 200%，DPR 1→2、CSS 视口 1280×813→640×406、根字号仍 16px、CSS zoom=1、pinch scale=1；检查分支键盘展开、中文名称、焦点和横向溢出 | `.artifacts/navigation-labels-validation/navigation-zoom-final.json`、`navigation-zoom.log`、对应 PNG/JSON 附件 |
 
 实际查看浅色桌面、深色窄屏 200% 根字号、system 窄屏 200% 根字号，以及真页面缩放下的深浅主题截图。窄屏侧栏用公开“工作导航”按钮打开；焦点保持在分支按钮，图标与右侧独立动作仍可见。首轮浏览器运行的 14 项失败是测试脚本未序列化 Node 变量、窄屏没有打开抽屉；修正测试编排后整批 40/40 通过，生产实现未因该首轮失败修改。既有 rich-navigation 回归覆盖主链接、独立配置 action、ContextMenu、Escape 回焦点和菜单键盘顺序。其它浏览器、读屏器及消费产品集成未在本轮执行。
+
+## 焦点仅改变已有边线（2026-10-21）
+
+范围为公共主题：统一移除默认焦点外圈，以及 InputGroup、Menu、Combobox、Chart 的独立外圈；已有边线仅变色，错误边线优先，透明边线和无边线组件不新增边界。保留现有滚动清距、尺寸及键盘和回焦语义；设计合同与受影响的旧外圈断言同步更新。
+
+`node scripts/dev-build.mjs` 的构建、类型与设计值检查通过；最后仅同步文档后 `pnpm build` 再次通过，generation 为 `9a23d5542cf8`。浏览器使用当前已构建公开入口及 CSS；测试 fixture 从原文件直接编译到既有 `dist/react`，没有复制源码另建项目版本。
+
+关键浏览器用例 `tests/browser/design-state-regressions.spec.mjs` **21/21 通过**：light/dark/system、1280/390px，验证有效和错误 Input/Textarea、组合输入、普通及圆形按钮变体、选中 Toggle，以及登录密码错误后的鼠标、Tab、显隐动作。断言 outline 为 none/0、原边线宽度与控件尺寸不变、错误优先及无边线按钮原边界不变。
+
+实际查看 [登录密码错误聚焦截图](../output/playwright/focus-border-login.png)：同一 password input 保持聚焦和 `aria-invalid=true`，组边界为 1px 错误色，outline 为 none/0，box-shadow 为 none。这里是仓库 Chromium 示例验收；正式 tarball 独立消费者、Firefox/WebKit 与消费产品升级、发布或部署未在本轮执行。
+
+本轮其余定向 Chromium 自动用例另有 72/72 个唯一用例通过，覆盖 widgets、menu、input、choice、nav、focus boundaries、登录/认证、管理员初始化、workspace、link 与 icon-button；重跑首轮未通过的 14 个用例后，10+4 均通过。token-scaling 的 widget/group 边界用例再通过 1/1，因此自动浏览器结果合计 94 个唯一通过用例（关键 21 + 其余 72 + widget/group 1）。另由主线程在 layout-typography 实际 Field.error 输入上定向核验 6/6：light/dark/system 下 thin/emphasis 与 semantic-primary，保持聚焦及 `aria-invalid=true`，outline 为 none/0、边线宽度不变、错误边线颜色保持原 status-error 色。该核验补足了完整 token-scaling non-type 用例未能触达焦点断言的范围。
+
+`node --check tests/browser/*.mjs` 通过；合同与文档 Node 检查 38/38 通过：`node --test tests/contract.test.mjs tests/design-state-contract.test.mjs tests/choice-state-contract.test.mjs tests/input-typography-contract.test.mjs tests/design-value-guard.test.mjs tests/text-inputs.test.mjs tests/docs.test.mjs`。token-scaling non-type root families 扩展用例停在既有侧栏几何断言：spacing 6 下当前实际宽度 288px，旧断言为 324px，发生在本轮焦点断言之前；未修改侧栏实现或该断言，也未将此用例计作通过。浏览器验证范围是本仓库 Chromium 与已构建 fixture，不代表完整浏览器套件、正式 tarball 消费者或消费产品现场验收。

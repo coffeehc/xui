@@ -31,7 +31,7 @@ for(const mode of ['light','dark'])test(`NavItem: aria-current alone supplies de
   expect(parseFloat(before.indicator.width)).toBeGreaterThan(0);expect(parseFloat(before.indicator.height)).toBeGreaterThan(0);
   await item.hover();expect(await appearance(item)).toEqual(before);
   await page.mouse.move(1200,700);await page.keyboard.press('Tab');await expect(item).toBeFocused();
-  expect(await item.evaluate(el=>el.matches(':focus-visible')&&getComputedStyle(el).outlineStyle==='solid')).toBe(true);
+  expect(await item.evaluate(el=>el.matches(':focus-visible')&&getComputedStyle(el).outlineStyle==='none')).toBe(true);
   expect(await appearance(item)).toEqual(before);await item.hover();expect(await appearance(item)).toEqual(before);
 });
 

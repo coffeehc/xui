@@ -24,7 +24,7 @@ async function geometry(page){return page.getByTestId('default-toolbar').evaluat
 async function noOverflow(page){expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);const clipped=await page.locator('.xui-search-toolbar').evaluateAll(roots=>roots.flatMap(root=>[root,...root.querySelectorAll('input,textarea,button')]).filter(node=>node.getClientRects().length).filter(node=>node.getBoundingClientRect().right>innerWidth+1||node.getBoundingClientRect().left<0).map(node=>node.outerHTML));expect(clipped).toEqual([]);}
 async function focusPaint(control){
   await control.focus();await control.evaluate(node=>node.scrollIntoView({block:'center',inline:'nearest'}));
-  return control.evaluate(node=>{const rect=node.getBoundingClientRect(),style=getComputedStyle(node),outset=parseFloat(style.outlineWidth)+parseFloat(style.outlineOffset),clipped=[];for(let p=node.parentElement;p;p=p.parentElement){const s=getComputedStyle(p),r=p.getBoundingClientRect();if(/hidden|clip|auto|scroll/.test(s.overflowX)&& (rect.left-outset<r.left-1||rect.right+outset>r.right+1))clipped.push(p.className);if(/hidden|clip|auto|scroll/.test(s.overflowY)&&(rect.top-outset<r.top-1||rect.bottom+outset>r.bottom+1))clipped.push(p.className);}return {clipped,left:rect.left-outset,right:rect.right+outset,viewport:innerWidth,outline:style.outlineStyle};});
+  return control.evaluate(node=>{const rect=node.getBoundingClientRect(),style=getComputedStyle(node),clipped=[];for(let p=node.parentElement;p;p=p.parentElement){const s=getComputedStyle(p),r=p.getBoundingClientRect();if(/hidden|clip|auto|scroll/.test(s.overflowX)&& (rect.left<r.left-1||rect.right>r.right+1))clipped.push(p.className);if(/hidden|clip|auto|scroll/.test(s.overflowY)&&(rect.top<r.top-1||rect.bottom>r.bottom+1))clipped.push(p.className);}return {clipped,left:rect.left,right:rect.right,viewport:innerWidth,outline:style.outlineStyle};});
 }
 for(const kind of ['react']){
   for(const mode of ['light','dark','system'])test(`${kind} SearchToolbar ${mode}: wide row, uniform buttons, container wrapping and focus`,async({page},info)=>{
@@ -38,7 +38,7 @@ for(const kind of ['react']){
       // Keyboard modality paints actual browser focus-visible outlines.
       await page.keyboard.press('Tab');
       for(const control of [page.getByLabel('Search records',{exact:true}),page.getByRole('button',{name:'高级筛选',exact:true}),page.getByLabel('Default owner',{exact:true}),page.getByLabel('Default notes',{exact:true})]){
-        const result=await focusPaint(control);expect(result.clipped).toEqual([]);expect(result.outline).not.toBe('none');expect(result.left).toBeGreaterThanOrEqual(0);expect(result.right).toBeLessThanOrEqual(result.viewport+1);
+        const result=await focusPaint(control);expect(result.clipped).toEqual([]);expect(result.outline).toBe('none');expect(result.left).toBeGreaterThanOrEqual(0);expect(result.right).toBeLessThanOrEqual(result.viewport+1);
       }
       await info.attach(`${kind}-${mode}-${width}.png`,{body:await page.screenshot({fullPage:true}),contentType:'image/png'});
     }

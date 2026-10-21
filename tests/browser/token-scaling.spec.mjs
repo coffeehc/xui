@@ -153,7 +153,7 @@ async function designMetrics(locator,pseudo=null){
     return {width:pseudo?number('width'):rect.width,height:pseudo?number('height'):rect.height,
       minHeight:number('minHeight'),paddingTop:number('paddingTop'),paddingRight:number('paddingRight'),paddingBottom:number('paddingBottom'),paddingLeft:number('paddingLeft'),
       gap:style.gap,borderTopWidth:number('borderTopWidth'),borderRightWidth:number('borderRightWidth'),borderBottomWidth:number('borderBottomWidth'),borderLeftWidth:number('borderLeftWidth'),
-      radius:style.borderRadius,color:style.color,background:style.backgroundColor,outlineWidth:number('outlineWidth'),outlineColor:style.outlineColor,
+      radius:style.borderRadius,color:style.color,background:style.backgroundColor,borderTopColor:style.borderTopColor,outlineStyle:style.outlineStyle,outlineWidth:number('outlineWidth'),outlineColor:style.outlineColor,
       transform:style.transform,translateX:style.transform==='none'?0:new DOMMatrixReadOnly(style.transform).m41,fontSize:number('fontSize'),lineHeight:style.lineHeight};
   },pseudo);
 }
@@ -239,13 +239,13 @@ for(const kind of kinds){
         }},
         {name:'border-and-emphasis',values:{'--base-line-thin':'3px','--base-line-emphasis':'4px'},check:actual=>{
           for(const role of ['input','button','checkbox','switch'])for(const edge of ['borderTopWidth','borderRightWidth','borderBottomWidth','borderLeftWidth'])expect(actual[role][edge],`${role} ${edge}`).toBe(3);
-          expect(actual.checkmark.borderRightWidth).toBe(4);expect(actual.checkmark.borderBottomWidth).toBe(4);expect(actual.indicator.width).toBe(4);expect(actual.input.outlineWidth).toBe(4);
+          expect(actual.checkmark.borderRightWidth).toBe(4);expect(actual.checkmark.borderBottomWidth).toBe(4);expect(actual.indicator.width).toBe(4);expect(actual.input.outlineStyle).toBe('none');expect(actual.input.outlineWidth).toBe(0);expect(actual.input.borderTopColor).toBe(baseline.input.borderTopColor);
           expect(actual.input.height).toBeGreaterThanOrEqual(actual.input.minHeight);expect(actual.button.height).toBeGreaterThanOrEqual(actual.button.minHeight);
           expect(actual.input.paddingTop).toBe(baseline.input.paddingTop);expect(actual.input.radius).toBe(baseline.input.radius);
         }},
         {name:'semantic-primary',values:{'--action-primary':'rgb(96, 65, 170)'},check:actual=>{
           const color='rgb(96, 65, 170)';
-          expect(actual.checkbox.background).toBe(color);expect(actual.switch.background).toBe(color);expect(actual.nav.color).toBe(color);expect(actual.indicator.background).toBe(color);expect(actual.breadcrumb.color).toBe(color);expect(actual.input.outlineColor).toBe(color);
+          expect(actual.checkbox.background).toBe(color);expect(actual.switch.background).toBe(color);expect(actual.nav.color).toBe(color);expect(actual.indicator.background).toBe(color);expect(actual.breadcrumb.color).toBe(color);expect(actual.input.outlineStyle).toBe('none');expect(actual.input.outlineWidth).toBe(0);expect(actual.input.borderTopColor).toBe(baseline.input.borderTopColor);
           expect(actual.input.height).toBe(baseline.input.height);expect(actual.input.radius).toBe(baseline.input.radius);expect(actual.input.borderTopWidth).toBe(baseline.input.borderTopWidth);
         }},
       ];
@@ -296,7 +296,7 @@ for(const kind of kinds){
     expect(changed.switches.sm.thumb.translateX).toBe(15);expect(changed.switches.lg.thumb.translateX).toBe(24);
     expect(changed.switches.sm.box.background).toBe('rgb(96, 65, 170)');expect(changed.switches.lg.box.background).toBe('rgb(96, 65, 170)');
     expect(changed.button.background).toBe('rgb(96, 65, 170)');expect(changed.button.radius).toBe('12px');expect(changed.button.borderTopWidth).toBe(3);expect(changed.button.paddingLeft).toBe(18);expect(changed.button.minHeight).toBe(54);expect(changed.button.height).toBeGreaterThanOrEqual(54);
-    expect(changed.group.radius).toBe('12px');expect(changed.group.borderTopWidth).toBe(3);expect(changed.group.outlineWidth).toBe(4);expect(changed.group.outlineColor).toBe('rgb(96, 65, 170)');expect(changed.checkmark.borderRightWidth).toBe(4);
+    expect(changed.group.radius).toBe('12px');expect(changed.group.borderTopWidth).toBe(3);expect(changed.group.outlineStyle).toBe('none');expect(changed.group.outlineWidth).toBe(0);expect(changed.group.borderTopColor).toBe('rgb(96, 65, 170)');expect(changed.checkmark.borderRightWidth).toBe(4);
     await attachMetrics(info,'widgets-root-overrides',changed);await snapshot(page,info,'widgets-root-overrides');
     await overrideRoot(page,Object.fromEntries(Object.keys(values).map(key=>[key,null])));expect(await read()).toEqual(baseline);
     await snapshot(page,info,'widgets-restored');

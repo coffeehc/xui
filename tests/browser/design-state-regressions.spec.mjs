@@ -1,9 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-// Regression assertions intentionally describe DESIGN's required behavior.
-// At baseline 75ef6e3 the workspace gutter and selected-toggle hover cases are
-// expected to fail. Do not use test.fail(), skip(), or invert these assertions
-// to turn that baseline into an apparent pass.
+// Assert the public focus and persistent-selection contract at actual controls.
 const settle=page=>page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
 const modes=['light','dark','system'];
 const sizes=[{name:'wide',width:1280,height:800},{name:'narrow',width:390,height:844}];
@@ -43,7 +40,8 @@ async function focusPaint(control){return control.evaluate(input=>{
   const boundary={element:parent.tagName,className:parent.className,overflowX:s.overflowX,overflowY:s.overflowY,clip,sides};
   boundaries.push(boundary);if(sides.length)clipped.push(boundary);
  }
- return {focused:input===document.activeElement,focusVisible:input.matches(':focus-visible'),paintElement:node.className,rect,paint,outlineStyle:style.outlineStyle,outlineWidth,outlineOffset,tokens:{width:root.getPropertyValue('--focus-width').trim(),offset:root.getPropertyValue('--focus-offset').trim()},boundaries,clipped,viewport:{width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth}};
+ const probe=document.createElement('span');probe.style.color='var(--interaction-focus)';document.body.append(probe);const focusColor=getComputedStyle(probe).color;probe.remove();
+ return {focused:input===document.activeElement,focusVisible:input.matches(':focus-visible'),paintElement:node.className,rect,paint,outlineStyle:style.outlineStyle,outlineWidth,outlineOffset,borderColor:style.borderColor,focusColor,tokens:{width:root.getPropertyValue('--focus-width').trim(),offset:root.getPropertyValue('--focus-offset').trim()},boundaries,clipped,viewport:{width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth}};
 });}
 async function togglePaint(control){return control.evaluate(node=>{
  const style=getComputedStyle(node),root=getComputedStyle(document.documentElement),probe=document.createElement('span');
@@ -52,8 +50,56 @@ async function togglePaint(control){return control.evaluate(node=>{
  try{return {pressed:node.getAttribute('aria-pressed'),hover:node.matches(':hover'),focusVisible:node.matches(':focus-visible'),background:style.backgroundColor,color:style.color,borderColor:style.borderColor,outlineStyle:style.outlineStyle,outlineWidth:style.outlineWidth,outlineOffset:style.outlineOffset,tokens:Object.fromEntries(['--interaction-selected','--interaction-selected-foreground','--button-hover-background'].map(token=>[token,{specified:root.getPropertyValue(token).trim(),resolved:resolved(token)}]))};}finally{probe.remove();}
 });}
 
+async function boundary(control){return control.evaluate(node=>{
+ const s=getComputedStyle(node),r=node.getBoundingClientRect(),part=getComputedStyle(node,'::before');
+ return {width:r.width,height:r.height,border:[s.borderTopWidth,s.borderRightWidth,s.borderBottomWidth,s.borderLeftWidth],borderColor:s.borderColor,radius:s.borderRadius,background:s.backgroundColor,shadow:s.boxShadow,outline:s.outlineStyle,outlineWidth:s.outlineWidth,part:{content:part.content,width:part.borderWidth,color:part.borderColor,inset:part.inset}};
+});}
+
+for(const mode of modes){
+ test(`focus ${mode}: valid and invalid text fields preserve border geometry and error priority`,async({page})=>{
+  await appearance(page,mode);await page.goto('/react/input-foundation-contract.html');
+  await page.evaluate(()=>document.documentElement.style.setProperty('--interaction-focus','#336699'));
+  for(const kind of ['input','textarea'])for(const invalid of [false,true]){
+   const control=page.locator(`#${kind}-default-${invalid?'invalid':'valid'}`);
+   await control.scrollIntoViewIfNeeded();await page.mouse.move(0,0);const before=await boundary(control);
+   await page.keyboard.press('Tab');await control.focus();await expect(control).toHaveCSS('border-color',invalid?before.borderColor:'rgb(51, 102, 153)');const after=await boundary(control);
+   await expect(control).toBeFocused();expect(after.outline).toBe('none');expect(after.outlineWidth).toBe('0px');
+   expect(after).toMatchObject({width:before.width,height:before.height,border:before.border,radius:before.radius,background:before.background,shadow:before.shadow});
+   expect(after.borderColor).toBe(invalid?before.borderColor:'rgb(51, 102, 153)');
+   await control.blur();await expect(control).toHaveCSS('border-color',before.borderColor);
+  }
+ });
+ test(`focus ${mode}: buttons preserve transparent borders and recolor only existing outline variants`,async({page})=>{
+  await appearance(page,mode);await page.goto('/react/button-state-contract.html');
+  await page.evaluate(()=>document.documentElement.style.setProperty('--interaction-focus','#336699'));
+  for(const round of [false,true])for(const variant of ['primary','secondary','outline','ghost','destructive','link',...(round?['text']:[])]){
+   const control=page.getByTestId(`${round?'round-':''}${variant}-enabled`);
+   await control.scrollIntoViewIfNeeded();await page.mouse.move(0,0);const before=await boundary(control);
+   await page.keyboard.press('Tab');await control.focus();await settle(page);const after=await boundary(control);
+   await expect(control).toBeFocused();expect(after.outline).toBe('none');expect(after.outlineWidth).toBe('0px');
+   expect(after).toMatchObject({width:before.width,height:before.height,border:before.border,radius:before.radius,background:before.background,shadow:before.shadow});
+   expect(after.borderColor).toBe(variant==='outline'&&!round?'rgb(51, 102, 153)':before.borderColor);
+   expect(after.part).toEqual({...before.part,color:variant==='outline'&&round?'rgb(51, 102, 153)':before.part.color});
+   await control.blur();const restored=await boundary(control);expect(restored.borderColor).toBe(before.borderColor);expect(restored.part.color).toBe(before.part.color);
+  }
+ });
+ test(`focus ${mode}: login password errors retain one border through pointer and keyboard focus`,async({page},info)=>{
+  await appearance(page,mode);await page.setViewportSize({width:390,height:844});await page.goto('/login-react/');
+  const username=page.locator('input[name="username"]'),password=page.locator('input[name="password"]'),group=page.locator('.xui-input-group').filter({has:password});
+  await username.fill('admin');await page.getByRole('button',{name:'登录',exact:true}).click();
+  await expect(password).toHaveAttribute('aria-invalid','true');const error=await boundary(group);
+  await password.click();await expect(password).toBeFocused();const pointer=await boundary(group);
+  expect(pointer.outline).toBe('none');expect(pointer.outlineWidth).toBe('0px');expect(pointer.borderColor).toBe(error.borderColor);expect(pointer.border).toEqual(error.border);
+  await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await expect(password).toBeFocused();
+  expect(await boundary(group)).toEqual(pointer);await expect(password).toHaveCSS('outline-style','none');
+  const toggle=group.getByRole('button');await page.keyboard.press('Tab');await expect(toggle).toBeFocused();await expect(toggle).toHaveCSS('outline-style','none');
+  expect((await boundary(group)).borderColor).toBe(error.borderColor);await password.click();
+  await info.attach(`${mode}-login-one-border`,{body:await page.screenshot(),contentType:'image/png'});
+ });
+}
+
 for(const kind of ['react'])for(const mode of modes)for(const size of sizes){
- test(`${kind} workspace ${mode} ${size.name}: first/grouped/last controls retain all four focus edges`,async({page},info)=>{
+ test(`${kind} workspace ${mode} ${size.name}: first/grouped/last controls change only their existing border`,async({page},info)=>{
   await page.setViewportSize({width:size.width,height:size.height});await appearance(page,mode);
   await page.goto('/react/foundation-contract.html');
   await page.waitForFunction(()=>typeof window.renderWorkspaceFocusCase==='function');
@@ -65,7 +111,8 @@ for(const kind of ['react'])for(const mode of modes)for(const size of sizes){
    await expect(control).toBeFocused();await expect(control).toHaveValue(value);
    const result=await focusPaint(control);await evidence(page,info,`${kind}-${mode}-${size.name}-${label.replaceAll(' ','-')}`,result);
    expect.soft(result.focusVisible).toBe(true);
-   expect.soft(result.outlineStyle).toBe('solid');expect.soft(result.outlineWidth).toBeCloseTo(parseFloat(result.tokens.width),2);
+   expect.soft(result.outlineStyle).toBe('none');expect.soft(result.outlineWidth).toBe(0);
+   expect.soft(result.borderColor).toBe(result.focusColor);
    expect.soft(result.clipped,'every painted focus edge must fit inside every clipping ancestor').toEqual([]);
    expect.soft(result.paint.left).toBeGreaterThanOrEqual(-.5);expect.soft(result.paint.right).toBeLessThanOrEqual(result.viewport.width+.5);
    expect.soft(result.paint.top).toBeGreaterThanOrEqual(-.5);expect.soft(result.paint.bottom).toBeLessThanOrEqual(result.viewport.height+.5);
@@ -81,7 +128,7 @@ for(const kind of ['react'])for(const mode of modes)for(const size of sizes){
   await expect(two).toHaveAttribute('aria-pressed','true');await expect(one).toHaveAttribute('aria-pressed','false');
   await page.mouse.move(0,0);await settle(page);
   const selected=await togglePaint(two);await evidence(page,info,`${kind}-${mode}-${size.name}-selected-keyboard`,selected);
-  expect.soft(selected.focusVisible).toBe(true);expect.soft(selected.outlineStyle).toBe('solid');
+  expect.soft(selected.focusVisible).toBe(true);expect.soft(selected.outlineStyle).toBe('none');
   expect.soft(selected.background).toBe(selected.tokens['--interaction-selected'].resolved);
   expect.soft(selected.color).toBe(selected.tokens['--interaction-selected-foreground'].resolved);
   await two.hover();await settle(page);

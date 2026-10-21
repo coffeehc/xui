@@ -27,7 +27,7 @@ window.mountLongCombobox=()=>{const react=createRoot(root);react.render(<App/>);
   fixtureSource = result.outputFiles[0].text;
 });
 
-test('long Combobox keyboard focus outline stays inside its scrollport after real scrolling', async ({ page }, info) => {
+test('long Combobox keyboard selection stays inside its scrollport after real scrolling without an outer outline', async ({ page }, info) => {
   await page.goto('/react/foundation-contract.html');
   await page.addScriptTag({ content: fixtureSource });
   await page.evaluate(() => window.mountLongCombobox());
@@ -55,13 +55,12 @@ test('long Combobox keyboard focus outline stays inside its scrollport after rea
   await expect(active).toHaveText('Long option 28');
   await expect(active).toHaveAttribute('data-highlighted', '');
   await expect(active).toHaveAttribute('data-keyboard-active', '');
-  await expect(active).toHaveCSS('outline-style', 'solid');
+  await expect(active).toHaveCSS('outline-style','none');
 
   const geometry = await popup.evaluate((scrollport, item) => {
     const viewport = scrollport.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
     const style = getComputedStyle(item);
-    const extent = parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
     const clip = {
       left: viewport.left + scrollport.clientLeft,
       right: viewport.left + scrollport.clientLeft + scrollport.clientWidth,
@@ -70,25 +69,24 @@ test('long Combobox keyboard focus outline stays inside its scrollport after rea
     };
     return {
       clip,
-      outline: {
-        left: itemRect.left - extent,
-        right: itemRect.right + extent,
-        top: itemRect.top - extent,
-        bottom: itemRect.bottom + extent,
+      item: {
+        left: itemRect.left,
+        right: itemRect.right,
+        top: itemRect.top,
+        bottom: itemRect.bottom,
       },
       scrollTop: scrollport.scrollTop,
       scrollHeight: scrollport.scrollHeight,
       clientHeight: scrollport.clientHeight,
       outlineStyle: style.outlineStyle,
-      outlineWidth: style.outlineWidth,
-      outlineOffset: style.outlineOffset,
     };
   }, await active.elementHandle());
   expect(geometry.scrollTop).toBeGreaterThan(0);
   expect(geometry.scrollHeight).toBeGreaterThan(geometry.clientHeight);
-  expect(geometry.outline.left).toBeGreaterThanOrEqual(geometry.clip.left - 0.5);
-  expect(geometry.outline.right).toBeLessThanOrEqual(geometry.clip.right + 0.5);
-  expect(geometry.outline.top).toBeGreaterThanOrEqual(geometry.clip.top - 0.5);
-  expect(geometry.outline.bottom).toBeLessThanOrEqual(geometry.clip.bottom + 0.5);
+  expect(geometry.outlineStyle).toBe('none');
+  expect(geometry.item.left).toBeGreaterThanOrEqual(geometry.clip.left - 0.5);
+  expect(geometry.item.right).toBeLessThanOrEqual(geometry.clip.right + 0.5);
+  expect(geometry.item.top).toBeGreaterThanOrEqual(geometry.clip.top - 0.5);
+  expect(geometry.item.bottom).toBeLessThanOrEqual(geometry.clip.bottom + 0.5);
   await info.attach('long-combobox-scrollport-focus.png', { body: await page.screenshot(), contentType: 'image/png' });
 });

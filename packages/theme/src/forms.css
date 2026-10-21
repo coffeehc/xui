@@ -49,6 +49,7 @@
   }
   .xui-choice[type="radio"] { border-radius: var(--radius-full); }
   .xui-choice:where(:checked, [type="checkbox"]:not([role="switch"]):indeterminate) { background: var(--action-primary); border-color: var(--action-primary); }
+  .xui-choice:where(:focus):where(:not(:disabled,[data-disabled],[aria-disabled="true"])) { border-color: var(--interaction-focus); }
   .xui-choice[type="checkbox"]:not([role="switch"])::after {
     content: ""; width: var(--choice-check-width); height: var(--choice-check-height);
     border: solid currentColor; border-width: 0 var(--line-width-emphasis) var(--line-width-emphasis) 0;
@@ -103,10 +104,10 @@
  .xui-choice[role='switch'][data-control-size='lg']:checked:dir(rtl)::before {transform:translateX(calc(var(--switch-travel-lg) * -1));}
  .xui-choice[aria-readonly='true'] {cursor:default;}
  .xui-input-group {display:flex;align-items:center;min-inline-size:0;border:var(--line-width-surface) solid var(--input-border-color);border-radius:var(--input-radius);background:var(--input-background);transition:border-color var(--motion-duration-fast) var(--motion-easing);}
- .xui-input-group:focus-within {border-color:var(--interaction-focus);outline:var(--focus-width) solid var(--interaction-focus);outline-offset:var(--focus-offset);}
+ .xui-input-group:focus-within {border-color:var(--interaction-focus);outline:0;}
  .xui-input-group[data-invalid='true'],.xui-input-group:has(>.xui-input[aria-invalid='true'],>.xui-textarea[aria-invalid='true']) {border-color:var(--status-error-foreground);}
  .xui-input-group:has(>.xui-input:disabled,>.xui-textarea:disabled) {background:var(--muted);}
- .xui-input-group>:is(.xui-input,.xui-textarea) {border:0;background:transparent;flex:1;outline:none;scroll-margin:calc(var(--focus-width) + var(--focus-offset) + var(--line-width-surface));}
+ .xui-input-group>:is(.xui-input,.xui-textarea) {border:0;background:transparent;flex:1;outline:0;scroll-margin:calc(var(--focus-width) + var(--focus-offset) + var(--line-width-surface));}
  .xui-input-group>.xui-input {min-block-size:var(--input-group-control-min-height);}
  .xui-input-group>.xui-textarea {min-block-size:var(--input-group-textarea-min-height);}
  .xui-input-group[data-layout='stacked'] {flex-direction:column;align-items:stretch;}

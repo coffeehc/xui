@@ -141,12 +141,11 @@ for(const kind of ['react']){
         return {rect:{x:rect.x,y:rect.y,width:rect.width,height:rect.height,right:rect.right,bottom:rect.bottom},outline:{style:style.outlineStyle,width:parseFloat(style.outlineWidth),offset:parseFloat(style.outlineOffset),color:style.outlineColor},viewport:{width:innerWidth,height:innerHeight,scrollWidth:root.scrollWidth,rootFont:getComputedStyle(root).fontSize},active:document.activeElement===node};
       });
       expect(metrics.rect.width).toBeGreaterThan(0);expect(metrics.rect.height).toBeGreaterThan(0);
-      expect(metrics.rect.x-metrics.outline.offset).toBeGreaterThanOrEqual(-1);
-      expect(metrics.rect.right+metrics.outline.offset).toBeLessThanOrEqual(width+1);
-      expect(metrics.rect.y-metrics.outline.offset).toBeGreaterThanOrEqual(-1);
-      expect(metrics.rect.bottom+metrics.outline.offset).toBeLessThanOrEqual(metrics.viewport.height+1);
-      expect(metrics.outline.style).toBe('solid');expect(metrics.outline.width).toBeGreaterThan(0);
-      expect(metrics.outline.color).not.toBe('rgba(0, 0, 0, 0)');
+      expect(metrics.rect.x).toBeGreaterThanOrEqual(-1);
+      expect(metrics.rect.right).toBeLessThanOrEqual(width+1);
+      expect(metrics.rect.y).toBeGreaterThanOrEqual(-1);
+      expect(metrics.rect.bottom).toBeLessThanOrEqual(metrics.viewport.height+1);
+      expect(metrics.outline.style).toBe('none');
       expect(metrics.active).toBe(true);expect(metrics.viewport.scrollWidth).toBeLessThanOrEqual(metrics.viewport.width+1);
       expect(metrics.viewport.rootFont).toBe(rootSize==='200'?'32px':'16px');
       await info.attach(`navigation-${kind}-${mode}-${width}-root-${rootSize}-focus.json`,{body:JSON.stringify(metrics),contentType:'application/json'});

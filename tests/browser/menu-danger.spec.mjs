@@ -14,7 +14,7 @@ for(const kind of ['react'])for(const family of ['menu','context']){
   await expect(trigger).toBeFocused();await open(page);await disabled.click({force:true});await expect(page.getByLabel('执行次数')).toHaveText('1');await expect(popup).toBeVisible();
   expect(await disabled.evaluate(el=>getComputedStyle(el).color)).not.toBe(color);
   await normal.focus();await page.keyboard.press('ArrowDown');await expect(danger).toBeFocused();
-  await expect(danger).toHaveCSS('outline-style','solid');await page.keyboard.press('ArrowDown');
+  await expect(danger).toHaveCSS('outline-style','none');await page.keyboard.press('ArrowDown');
   // The disabled item remains readable and rejects execution without closing the menu.
   await expect(disabled).toBeFocused();await page.keyboard.press('Enter');await page.keyboard.press('Space');await expect(page.getByLabel('执行次数')).toHaveText('1');await expect(popup).toBeVisible();
   await page.keyboard.press('Escape');await expect(popup).not.toBeVisible();await expect(trigger).toBeFocused();

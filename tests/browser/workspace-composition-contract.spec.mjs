@@ -11,39 +11,19 @@ async function tabTo(page,target){
 }
 
 async function metrics(node){return node.evaluate(element=>{
- const rect=element.getBoundingClientRect(),style=getComputedStyle(element);
- return {rect:{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom},width:parseFloat(style.outlineWidth),offset:parseFloat(style.outlineOffset),style:style.outlineStyle,color:style.outlineColor};
+ const rect=element.getBoundingClientRect(),style=getComputedStyle(element),scrollports=[];let clipped=false;
+ for(let parent=element.parentElement;parent;parent=parent.parentElement){const css=getComputedStyle(parent),box=parent.getBoundingClientRect(),left=box.left+parent.clientLeft,top=box.top+parent.clientTop,right=left+parent.clientWidth,bottom=top+parent.clientHeight,clipsX=/auto|scroll|hidden|clip/.test(css.overflowX),clipsY=/auto|scroll|hidden|clip/.test(css.overflowY);if(clipsX||clipsY){scrollports.push({className:parent.className,left,top,right,bottom,clipsX,clipsY});if(clipsX&&(rect.left<left-1||rect.right>right+1)||clipsY&&(rect.top<top-1||rect.bottom>bottom+1))clipped=true;}}
+ const invalid=element.matches('[aria-invalid="true"],[data-invalid="true"]')||!!element.querySelector('[aria-invalid="true"]'),probe=document.createElement('span');probe.style.color=invalid?'var(--status-error-foreground)':'var(--interaction-focus)';document.body.append(probe);const expectedBorderColor=getComputedStyle(probe).color;probe.remove();
+ return {rect:{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom},outline:style.outlineStyle,outlineWidth:parseFloat(style.outlineWidth),focused:element.matches(':focus,:focus-within'),border:{style:style.borderTopStyle,width:parseFloat(style.borderTopWidth),color:style.borderTopColor},expectedBorderColor,viewport:{width:innerWidth,height:innerHeight},scrollports,clipped};
 });}
 
-async function assertPaintedFocus(page,node,info,name){
- const outline=await metrics(node);expect(outline.style).toBe('solid');expect(outline.width).toBeGreaterThan(0);
- const center=outline.offset>=0?-(outline.offset+outline.width/2):-outline.offset-outline.width/2;
- const points=[
-  [outline.rect.left+center,(outline.rect.top+outline.rect.bottom)/2],
-  [outline.rect.right-center,(outline.rect.top+outline.rect.bottom)/2],
-  [(outline.rect.left+outline.rect.right)/2,outline.rect.top+center],
-  [(outline.rect.left+outline.rect.right)/2,outline.rect.bottom-center],
- ];
- const png=await page.screenshot({animations:'disabled'});
- const pixels=await page.evaluate(async({encoded,points,color})=>{
-  const image=new Image();image.src=`data:image/png;base64,${encoded}`;await image.decode();
-  const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
-  const context=canvas.getContext('2d');context.drawImage(image,0,0);
-  const sx=image.width/innerWidth,sy=image.height/innerHeight;
-  const samples=points.map(([x,y])=>{
-   const cx=Math.round(x*sx),cy=Math.round(y*sy),result=[];
-   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)result.push(Array.from(context.getImageData(cx+dx,cy+dy,1,1).data));
-   return result;
-  });
-  context.fillStyle=color;context.fillRect(0,0,1,1);
-  return {samples,expected:Array.from(context.getImageData(0,0,1,1).data)};
- },{encoded:png.toString('base64'),points,color:outline.color});
- await info.attach(`${name}-focus-pixels.json`,{body:JSON.stringify({outline,points,...pixels},null,2),contentType:'application/json'});
- await info.attach(`${name}-focus.png`,{body:png,contentType:'image/png'});
- for(const [side,samples] of pixels.samples.entries()){
-  const delta=Math.min(...samples.map(pixel=>Math.max(...pixel.map((channel,index)=>Math.abs(channel-pixels.expected[index])))));
-  expect(delta,`${name}: ${['left','right','top','bottom'][side]} focus outline is painted`).toBeLessThanOrEqual(20);
- }
+async function assertFocusBoundary(page,node,info,name){
+ const initial=await metrics(node);if(initial.border.width>0&&initial.border.style!=='none')await expect(node).toHaveCSS('border-top-color',initial.expectedBorderColor);
+ const boundary=await metrics(node);expect(boundary.outline).toBe('none');expect(boundary.outlineWidth).toBe(0);expect(boundary.focused).toBe(true);expect(boundary.clipped).toBe(false);
+ expect(boundary.rect.left).toBeGreaterThanOrEqual(0);expect(boundary.rect.top).toBeGreaterThanOrEqual(0);expect(boundary.rect.right).toBeLessThanOrEqual(boundary.viewport.width);expect(boundary.rect.bottom).toBeLessThanOrEqual(boundary.viewport.height);
+ if(boundary.border.width>0&&boundary.border.style!=='none')expect(boundary.border.color).toBe(boundary.expectedBorderColor);
+ await info.attach(`${name}-focus-geometry.json`,{body:JSON.stringify(boundary,null,2),contentType:'application/json'});
+ await info.attach(`${name}-focus.png`,{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'});
 }
 
 async function assertPaintedErrorBorder(page,node,info,name,color){
@@ -80,7 +60,7 @@ for(const kind of ['react'])test(`${kind} workspace insets keep nested paint bou
  await expect(page.getByRole('region',{name:'Nested inset',exact:true})).toHaveAttribute('data-focus-mode','inset');
 
  await draft.fill('Keep this draft while the workspace changes');await tabTo(page,draft);await expect(draft).toBeFocused();
- await assertPaintedFocus(page,draftGroup,info,`${kind}-workspace-standard`);
+ await assertFocusBoundary(page,draftGroup,info,`${kind}-workspace-standard`);
  await page.evaluate(()=>window.workspaceDemo.navigate());const active=page.locator('[data-menu-id="settings"][aria-current="page"]');await expect(active).toHaveCount(1);
  await history.evaluate(node=>node.scrollTop=Math.min(320,node.scrollHeight-node.clientHeight));
  await inspector.evaluate(node=>node.scrollTop=Math.min(180,node.scrollHeight-node.clientHeight));
@@ -107,11 +87,11 @@ for(const kind of ['react'])test(`${kind} workspace insets keep nested paint bou
  expect(await page.evaluate(()=>({sameDraft:document.querySelector('[aria-label="Message draft"]')===window.__focusWorkspaceDraft,value:window.__focusWorkspaceDraft.value,focused:document.activeElement===window.__focusWorkspaceDraft}))).toEqual({sameDraft:true,value:before.value,focused:true});
  const after=await page.evaluate(()=>({history:document.querySelector('[data-testid="history"]').scrollTop,inspector:document.querySelector('[data-testid="inspector"]').scrollTop,menu:document.querySelector('.xui-shell-sidebar').scrollTop,activeId:document.querySelector('[data-menu-id="settings"][aria-current="page"]')?.getAttribute('data-menu-id'),sameActive:document.querySelector('[data-menu-id="settings"][aria-current="page"]')===window.__activeWorkspaceNav}));
  expect(after.history).toBe(before.history);expect(after.inspector).toBe(before.inspector);expect(after.menu).toBe(before.menu);expect(after.activeId).toBe(before.activeId);expect(after.sameActive).toBe(true);
- await assertPaintedFocus(page,draftGroup,info,`${kind}-workspace-edge-inset`);
+ await assertFocusBoundary(page,draftGroup,info,`${kind}-workspace-edge-inset`);
  const nestedTable=page.getByRole('region',{name:'Nested inset table',exact:true});await expect(nestedTable).toHaveAttribute('tabindex','0');await tabTo(page,nestedTable);await expect(nestedTable).toBeFocused();
- await assertPaintedFocus(page,nestedTable,info,`${kind}-nested-table-root-inset-focus`);
- const insetField=page.getByRole('textbox',{name:'First inset field',exact:true});await tabTo(page,insetField);await expect(insetField).toBeFocused();await assertPaintedFocus(page,insetField,info,`${kind}-nested-inset-control-focus`);
- const gutterField=page.getByRole('textbox',{name:'First gutter field',exact:true});await tabTo(page,gutterField);await expect(gutterField).toBeFocused();await assertPaintedFocus(page,gutterField,info,`${kind}-nested-gutter-control-focus`);
+ await assertFocusBoundary(page,nestedTable,info,`${kind}-nested-table-root-inset-focus`);
+ const insetField=page.getByRole('textbox',{name:'First inset field',exact:true});await tabTo(page,insetField);await expect(insetField).toBeFocused();await assertFocusBoundary(page,insetField,info,`${kind}-nested-inset-control-focus`);
+ const gutterField=page.getByRole('textbox',{name:'First gutter field',exact:true});await tabTo(page,gutterField);await expect(gutterField).toBeFocused();await assertFocusBoundary(page,gutterField,info,`${kind}-nested-gutter-control-focus`);
  await page.evaluate(()=>{window.workspaceDemo.setContentInset('standard');window.workspaceDemo.setFocusMode('gutter');window.workspaceDemo.setSurfacePadding('default');});
  await expect(shell).toHaveAttribute('data-content-inset','standard');await expect(history).toHaveAttribute('data-focus-mode','gutter');await expect(surface).toHaveAttribute('data-padding','default');
  await expect(draft).toHaveValue(before.value);
@@ -135,7 +115,7 @@ for(const kind of ['react'])test(`${kind} stacked InputGroup.Textarea preserves 
  await expect(textarea).toHaveAttribute('aria-describedby','multiline-draft-help');
  await page.evaluate(()=>window.widgetsDemo.setComposerState({layout:'stacked',invalid:true}));await expect(group).toHaveAttribute('data-layout','stacked');await expect(textarea).toHaveAttribute('aria-invalid','true');await expect(textarea).toHaveAttribute('aria-describedby','multiline-draft-help multiline-draft-error');await expect(error).toHaveText('草稿需要修正');
  const errorColor=await group.evaluate(node=>{const probe=document.createElement('span');probe.style.color='var(--status-error-foreground)';node.append(probe);const color=getComputedStyle(probe).color;probe.remove();return color;});await expect(group).toHaveCSS('border-top-color',errorColor);
- await textarea.evaluate(node=>node.setSelectionRange(2,2));await group.scrollIntoViewIfNeeded();await assertPaintedFocus(page,group,info,`${kind}-textarea-invalid-focus`);await assertPaintedErrorBorder(page,group,info,`${kind}-textarea-invalid-focus`,errorColor);
+ await textarea.evaluate(node=>node.setSelectionRange(2,2));await group.scrollIntoViewIfNeeded();await assertFocusBoundary(page,group,info,`${kind}-textarea-invalid-focus`);await assertPaintedErrorBorder(page,group,info,`${kind}-textarea-invalid-focus`,errorColor);
  await page.evaluate(()=>window.widgetsDemo.setComposerState({invalid:false,sendDisabled:true}));await expect(textarea).not.toHaveAttribute('aria-invalid','true');await expect(error).toBeHidden();await expect(textarea).toHaveAttribute('aria-describedby','multiline-draft-help');
  const send=group.getByRole('button',{name:'发送草稿',exact:true});await expect(send).toBeDisabled();await expect(textarea).toBeEnabled();
  const enabledBackground=await group.evaluate(node=>getComputedStyle(node).backgroundColor);await expect(group).not.toHaveAttribute('data-disabled','true');

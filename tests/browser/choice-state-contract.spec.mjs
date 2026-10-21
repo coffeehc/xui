@@ -74,8 +74,8 @@ for(const kind of kinds)for(const theme of themes){
   for(const row of initial.filter(row=>!row.disabled)){
    await page.keyboard.press('Tab');const control=page.locator(`#${row.id}`);await expect(control).toBeFocused();
    expect(await control.evaluate(node=>node.matches(':focus-visible')),row.id).toBe(true);
-   await expect(control).toHaveCSS('outline-style','solid');await expect(control).toHaveCSS('outline-width',expected.focusWidth);await expect(control).toHaveCSS('outline-offset',expected.focusOffset);await expect(control).toHaveCSS('outline-color',expected['interaction-focus']);
-   if(row.invalid)await expect(control).toHaveCSS('border-top-color',expected['status-error-foreground']);
+   await expect(control).toHaveCSS('outline-style','none');
+   await expect(control).toHaveCSS('border-top-color',expected[row.invalid?'status-error-foreground':'interaction-focus']);
    if(row.readonly){
     await expect(control).toHaveAttribute('aria-readonly','true');await page.keyboard.press('Space');
     if(row.kind==='radio'){await page.keyboard.press('ArrowRight');await page.keyboard.press('ArrowLeft');}

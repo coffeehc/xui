@@ -221,7 +221,7 @@ value 是 number|null，空白提交 null，绝不转为 0。min/max 必须有�
 
 ### PasswordInput
 
-传 value 时为字符串受控模式，onValueChange 必填；不传 value 时为非受控模式，不接受初始秘密 defaultValue。prefix/suffix 通过 InputGroup 前后缀组合；仅显隐在组件内，真实同一 input 在 password/text 间切换，保留 selection，按钮以 eye/eye-off 描边图标显示，保留 showLabel/hideLabel 可访问名称与 aria-pressed；静态 muted、hover primary，仍可 Tab 停靠。InputGroup 子 input 的自然滚动清距覆盖组边框与焦点轮廓，不用独立输入的边界代替整组。autocomplete 由调用点明确 current-password/new-password；没有 storage、日志、复制或请求。React 在 pagehide 同步清空 DOM value/defaultValue/隐藏密码并通知 onValueChange('')、onClear('pagehide')；真实卸载在一个 microtask 清空捕获的旧节点并通知 onClear('unmount')，避免 StrictMode 的检查性重挂造成伪清理。宿主必须接受清空并同步删除其受控秘密；组件不能清理宿主拒绝删除的 state，也不能保证浏览器密码管理器、自动填充或内存取证清除。不要把真实秘密用于示例、SSR 初始 HTML、URL 或诊断。controlRef 提供 clear()，ref 仍指向 input。固定新设校验与强度输入见 [密码输入](COMPONENTS.md#密码输入)，普通输入不限制既有账号登录密码。
+传 value 时为字符串受控模式，onValueChange 必填；不传 value 时为非受控模式，不接受初始秘密 defaultValue。prefix/suffix 通过 InputGroup 前后缀组合；仅显隐在组件内，真实同一 input 在 password/text 间切换，保留 selection，按钮以 eye/eye-off 描边图标显示，保留 showLabel/hideLabel 可访问名称与 aria-pressed；静态 muted、hover primary，仍可 Tab 停靠。InputGroup 子 input 的自然滚动清距覆盖组边框，不用独立输入的边界代替整组。autocomplete 由调用点明确 current-password/new-password；没有 storage、日志、复制或请求。React 在 pagehide 同步清空 DOM value/defaultValue/隐藏密码并通知 onValueChange('')、onClear('pagehide')；真实卸载在一个 microtask 清空捕获的旧节点并通知 onClear('unmount')，避免 StrictMode 的检查性重挂造成伪清理。宿主必须接受清空并同步删除其受控秘密；组件不能清理宿主拒绝删除的 state，也不能保证浏览器密码管理器、自动填充或内存取证清除。不要把真实秘密用于示例、SSR 初始 HTML、URL 或诊断。controlRef 提供 clear()，ref 仍指向 input。固定新设校验与强度输入见 [密码输入](COMPONENTS.md#密码输入)，普通输入不限制既有账号登录密码。
 
 ### SearchInput
 
@@ -299,7 +299,7 @@ required 复选组表示至少选择一个当前已知选项，通过首个可�
 | ToggleGroup | `/toggle-group` 的 `ToggleGroup.Root/Item` | 单选默认，value/defaultValue是字符串数组；multiple/allowEmpty/disabled/orientation按公开props。方向键/Home/End只移动焦点，Space/Enter选择；不冒用Tabs语义 |
 | Accordion | `/accordion` 的 `Accordion.Root/Item/Header/Trigger/Panel` | value/defaultValue为id数组，默认single，可multiple。Tab/Enter/Space按按钮语义；peer 1.7 已弃用强制箭头roving，不编造键盘默认。展开内容由宿主提供 |
 | ScrollArea | `/scroll-area` 的 `ScrollArea.Root/Viewport/Content` | 浏览器原生滚动与滚动条，无第二JS引擎。Root由宿主给blockSize/maxBlockSize等界限；Viewport=min-size:0/overflow:auto，默认tabIndex=0、role=region、focusMode=gutter；宿主给aria-label。内容同节点更新保留滚动 |
-| InputGroup | `/forms` 的 `InputGroup.Root/Addon/Input/Textarea/Button`，复用Field/Input | 一个Field仍只有一个control，Addon不领id；label/help/error由Field关联。focus-within仅组边界，输入自身无第二outline；内嵌Button type=button，显式disabled不猜busy |
+| InputGroup | `/forms` 的 `InputGroup.Root/Addon/Input/Textarea/Button`，复用Field/Input | 一个Field仍只有一个control，Addon不领id；label/help/error由Field关联。focus-within仅改变已有组边界颜色，invalid优先，输入自身无第二边框或outline；内嵌Button type=button，显式disabled不猜busy |
 
 Command复用已安装的Combobox：inline列表、搜索、分组、空态、disabled、选择与键盘；只声明上述稳定组合，不照搬cmdk。React 输入节点保持稳定身份，aria-controls/activedescendant/selected/multiselectable 与同一受控事实一致；ArrowUp/Down/Home/End跳过disabled，Enter执行，Escape清过滤而保留选择。action不作权限/副作用校验，也不自动等待/重放业务。需要远端搜索或更细peer部件时组合已有Combobox/Select，不能用私有默认样式补丁。
 
@@ -309,7 +309,7 @@ Calendar使用共享 TypeScript 日期模型；React 更新一次发布一致快
 
 ToggleGroup 的紧凑高度使用 `--toggle-height`，不继承普通 Button 的高度；文字放大仍可自然增高。InputGroup 的边框属于组外壳，内部单行/多行控件分别消费 `--input-group-control-min-height` / `--input-group-textarea-min-height`，扣除外壳边线后与独立 Input/Textarea 对齐；内嵌动作复用同一内部高度。默认值与覆盖由 [DESIGN](DESIGN.md#组件尺寸与职责) 定义，不在组件硬编码像素。
 
-Calendar 的禁用日期不出现可操作的 hover/pressed 底色；选中端点在 hover 后保留选中底色。forced-colors 下 Calendar 和 ToggleGroup 用额外下划线保留选择事实，焦点仍由独立 outline 表达。
+Calendar 的禁用日期不出现可操作的 hover/pressed 底色；选中端点在 hover 后保留选中底色。forced-colors 下 Calendar 和 ToggleGroup 用额外下划线保留选择事实，焦点不添加outline或新边线；有可见边框时仅改变原边框颜色。
 
 
 ### 多行输入与上下工具区域
@@ -326,7 +326,7 @@ Calendar 的禁用日期不出现可操作的 hover/pressed 底色；选中端�
 </Field>
 ```
 
-Textarea 位于 `.xui-input-group[data-layout='stacked']` 中时，label/help/error 与 aria-describedby/aria-invalid/required 仍由 Field 关联到真实 textarea。唯一背景、边线和 focus-within 在组外壳；直接 Input/Textarea 不再画边线/背景/outline，Textarea 自身的 padding、字体、最小高度与浏览器 resize 保留。焦点中的工具按钮仍有可辨指示；invalid 与 focus 共存。组的 invalid/disabled 只由直接真实 Input/Textarea 与既有 Field error 投影，单独禁用发送按钮不会灰掉可编辑区域；没有第二个 Root.disabled/invalid owner。readOnly 保留浏览器选择/复制和焦点语义。
+Textarea 位于 `.xui-input-group[data-layout='stacked']` 中时，label/help/error 与 aria-describedby/aria-invalid/required 仍由 Field 关联到真实 textarea。唯一背景、边线和 focus-within 在组外壳；直接 Input/Textarea 不再画边线/背景/outline，Textarea 自身的 padding、字体、最小高度与浏览器 resize 保留。工具按钮聚焦不新增外框；组边线随focus-within变色，invalid错误边线优先。组的 invalid/disabled 只由直接真实 Input/Textarea 与既有 Field error 投影，单独禁用发送按钮不会灰掉可编辑区域；没有第二个 Root.disabled/invalid owner。readOnly 保留浏览器选择/复制和焦点语义。
 
 库不处理 Enter/IME/提交策略、发送 busy、草稿和附件状态。正式 [React](../examples/widgets-react/app.tsx) 的“多行字段组合”给出合成示例；`widgetsDemo.setComposerState` 可改变 layout/disabled/readOnly/invalid/sendDisabled/emptyAddons，`getComposerControl` 返回真实 Textarea，`getComposerEvents` 仅计合成 composition start/update/end 事件，不构成 OS IME 验收。没有具体产品域模型或网络调用。
 
@@ -452,7 +452,7 @@ const noticeColor = 'var(--action-primary)';
 
 字体、字号、行高和字重由 xui 的[公共文字槽映射](DESIGN.md#公共文字槽验收)统一定义，消费项目非必要不得自行设置内容字号。Heading 分开指定 `level` 与 `visualRole`，Text 为正文、Link 继承所属文字槽，Code 为技术值；slot 的裸文本自动继承它的角色，嵌套 Button/Badge/Field 保留自身规则。不要在 meta 里包一层正文 Text 再用 CSS 改小；直接传字符串或无样式 span。
 
-4.2.24起，Typography.Link、LinkedText、xui/xui-layer范围内原生a及Button的link变体默认无下划线，hover/pressed/focus/visited不另加装饰。Link保留action-primary和原文字槽字体；Button link保留原hover成对前景/背景、禁用和点击区。键盘focus-visible仍绘制独立焦点环，原生href/target/download/rel/修饰键与导航owner不变。访问后不切换到浏览器默认紫色，xui范围外HTML不受此规则覆盖。forced-colors的导航/控件选中下划线仍表示选中事实，不在本次删除范围；没有新增装饰props或要求消费者写私有CSS。
+4.2.24起，Typography.Link、LinkedText、xui/xui-layer范围内原生a及Button的link变体默认无下划线，hover/pressed/focus/visited不另加装饰。Link保留action-primary和原文字槽字体；Button link保留原hover成对前景/背景、禁用和点击区。键盘focus-visible不新增外框，无边框链接保持原外观，原生href/target/download/rel/修饰键与导航owner不变。访问后不切换到浏览器默认紫色，xui范围外HTML不受此规则覆盖。forced-colors的导航/控件选中下划线仍表示选中事实，不在本次删除范围；没有新增装饰props或要求消费者写私有CSS。
 
 `TypographyTextProps.color`支持直接指定语义颜色变量，只覆盖前景，不改变tone以外的文字角色；省略时保留旧行为。颜色参数优先于style.color与tone的默认前景。
 
@@ -512,7 +512,7 @@ React `/display` 及根入口公开 `Card / CardProps / CardBadge / CardHeadingL
 
 空间确实不够时，Footer将动作组放到下一行；动作组自身仍容不下则按原Toolbar换行，绝不裁动作、缩字号或强制同行。actions-only保持右侧动作且不预留meta空间，meta-only不造按钮/焦点，全部空仍无footer。业务不需要版本/来源时直接省略footerMeta；示例不是必须恢复该信息行。正式[CardGroup示例](../examples/card-group-react/app.tsx)的?footer-meta展示可选元信息与Switch/详情/删除，&actions-only、&meta-only、&plain-meta、&draft分别展示槽位缺省/纯文本/保留草稿；不改变业务请求或权限。
 
-4.2.31起，头部actions及footerActions组统一使用card-actions-gap，默认依赖space-text-gap（100%阅读比例时4px），与普通Toolbar的layout-toolbar-gap分开。默认IconButton命中区仍36px，相邻图标按钮中心距由44px收紧到40px；Switch、按钮字号/图标、焦点环及危险tone不改。主题可在公共Token层调整card-actions-gap，不需要新增密度prop或穿透内部DOM/CSS。外层Footer的meta与动作分区间距、空间不足时换行、无meta时右对齐等合同保留；紧凑不承诺所有净宽均强制同行。
+4.2.31起，头部actions及footerActions组统一使用card-actions-gap，默认依赖space-text-gap（100%阅读比例时4px），与普通Toolbar的layout-toolbar-gap分开。默认IconButton命中区仍36px，相邻图标按钮中心距由44px收紧到40px；Switch、按钮字号/图标、焦点语义及危险tone不改。主题可在公共Token层调整card-actions-gap，不需要新增密度prop或穿透内部DOM/CSS。外层Footer的meta与动作分区间距、空间不足时换行、无meta时右对齐等合同保留；紧凑不承诺所有净宽均强制同行。
 
 [正式CardGroup示例](../examples/card-group-react/app.tsx)的?footer-meta&icon-actions使用默认尺寸Switch、详情/编辑/删除IconButton；&actions-only省略meta、&header-actions同时展示头部动作，&draft用于刷新保草稿。图标为宿主合成内容，实际动作、disabled和busy仍由原业务owner提供；普通表单/搜索Toolbar没有改变。
 
@@ -661,7 +661,7 @@ workspace的顶栏和page slots不覆盖正文；主内容的业务布局通常�
 ### 工作区正文贴边
 
 
-几何贴边与焦点内部绘制是同一 CSS @scope 增强：不改 focus-width/color，ordinary focus-visible 与 InputGroup 外壳 focus-within 向内绘制，组内输入仍不重复 outline。旧引擎不支持 @scope 时保留原有安全 gutter。嵌套 ScrollArea 默认仍为 gutter；需要它也贴边时显式选 `focusMode='inset'`，最近公共滚动边界决定策略。边界统一处理 scroll-padding/scroll-margin，首末控制项仍可通过 Tab 和 scrollIntoView 到达。不要改私有 DOM/CSS 或把 focus-width 设为零。
+几何贴边使用 CSS @scope 增强；默认焦点仅改变已有边线颜色，不绘制outline或新增边框。focus-width/offset保留既有滚动清距和布局几何，组内输入不重复绘制边界。旧引擎不支持 @scope 时保留原有安全 gutter。嵌套 ScrollArea 默认仍为 gutter；需要它也贴边时显式选 `focusMode='inset'`，最近公共滚动边界决定策略。边界统一处理 scroll-padding/scroll-margin，首末控制项仍可通过 Tab 和 scrollIntoView 到达。不要改私有 DOM/CSS 或把 focus-width 设为零。
 
 完整消费者的 `?edge`、`?inset`、`?focus`、`?surface`、`?long-menu` 可组合，React `?direct` 同时覆盖 AppShell。`workspaceDemo.setContentInset` / `setFocusMode` 仅更新公开状态，正文草稿、节点、各滚动区和导航状态保留；`?surface` 用公开 Surface，`setSurfacePadding('default'|'none')` 可切换其自身内距。Surface none 只省略该表面 padding，不裁切内容，也不改变内部卡片默认内距。
 
@@ -869,7 +869,7 @@ workspace额外让content获得扣除真实顶栏和pageHeader/pageToolbar/pageF
 `AppShell` 未传 `headerSlots` 时保留旧header直接排列，显式传角色对象才启用新组合。`MenuLayout` 的 `title` 仍可用：未提供 `headerSlots.brand` 时作为品牌回退；显式 `null` 隐藏回退。旧 `header` 仍渲染在兼容区域，可和新角色并存。品牌/面包屑组成左侧主组，状态/动作在右侧；窄屏先保留导航/品牌，breadcrumb在主组内独占下一行，再将状态和动作换行，避免200%文字把路径挤成单个字。长中文品牌和 breadcrumb 在自己的空间省略，不挤散另一组；完整文本不从 DOM/可访问名称删除。动作只换行，不自动隐藏。必要业务反馈仍由宿主决定放置，库没有授权、版本、返回等业务规则。
 
 
-公开 CSS 结构为 `xui-app-header`、`xui-app-header-primary/secondary` 和 `xui-app-header-navigation/brand/breadcrumb/status/actions/legacy`。React 使用正式 `theme/layout.css`；普通采用应使用 props/Node，不穿透结构改排列。`AppHeader` 是 div 组合，独立使用时由宿主提供所属语义 header。breadcrumb 内容可以使用公开 `Breadcrumbs` / `.xui-breadcrumbs` 的 nav/ol/li/a 结构；链接的焦点轮廓保持在截断边界内。
+公开 CSS 结构为 `xui-app-header`、`xui-app-header-primary/secondary` 和 `xui-app-header-navigation/brand/breadcrumb/status/actions/legacy`。React 使用正式 `theme/layout.css`；普通采用应使用 props/Node，不穿透结构改排列。`AppHeader` 是 div 组合，独立使用时由宿主提供所属语义 header。breadcrumb 内容可以使用公开 `Breadcrumbs` / `.xui-breadcrumbs` 的 nav/ol/li/a 结构；链接保留键盘焦点语义，不新增外框。
 
 展开侧栏按视口16%响应，在公开 `--nav-sidebar-min-width` / `--nav-sidebar-max-width`（默认192/224px）之间夹取，再以视口50%封顶；普通1280px桌面为204.8px，1600px及1920px桌面为224px。收起仍为60px；这些默认数值是根16px下的 CSS 像素，非设备像素。产品若确需统一调整上下限，只在product-overrides的根Token层声明，不能穿透侧栏DOM；视口上限优先，200%界面缩放时不挤掉正文。公开token `--nav-sidebar-width`、`--nav-sidebar-padding`、`--nav-collapsed-width` 与 `--nav-collapsed-item-size` 在 DESIGN 中定义，默认36px项+左右各12px；图标仍16px，选中短竖线/hover/独立focus不改变宽度。独立支路开关收起时移到所属链接下一行，窄屏抽屉恢复完整标签与既有键盘/路由合同。独立使用 NavigationMenu 的外层宽度由宿主布局决定，MenuLayout 才拥有完整侧栏宽度。
 
@@ -992,7 +992,7 @@ ContextMenu支持鼠标右键、Shift+F10/ContextMenu键、方向键、disabled�
 
 Table与DataTable全表默认仅行分割线，所有普通/左固定/右固定/双侧固定的th/td都不画列线；sticky不附带边框、阴影或伪元素分隔。沿用现有sticky/stickyOffset/stickyHeader接口，无需新prop或消费方CSS；当前没有行列网格模式。整体frame、表头/行底线与footer分隔保持各自唯一归属，最后数据行不与footer叠边。
 
-TableContainer在子控件获焦且超出自身可视边界时以nearest滚动揭示，保留公共focus Token空间；宿主onFocus仍先执行，preventDefault可阻止该补充行为。它不更换焦点、不新增行交互或滚动owner。真实浏览器缩放下检查完整按钮和焦点环，部分进入视口不足以验收。
+TableContainer在子控件获焦且超出自身可视边界时以nearest滚动揭示，保留公共focus Token空间；宿主onFocus仍先执行，preventDefault可阻止该补充行为。它不更换焦点、不新增行交互或滚动owner。真实浏览器缩放下检查完整按钮边界，部分进入视口不足以验收。
 
 表格为语义table，条纹排除expanded内容行，hover/selected优先级明确；sticky cell继承所属行的非透明背景，避免滚动穿透。多个同侧sticky列的offset由宿主显式给出，不测量/推断列宽；仅所属TableContainer横向滚动。展开按钮是正常button，不截获行所有点击，也不实现查询、虚拟化、权限、排序或选择引擎。
 
@@ -1019,9 +1019,9 @@ Menu / ContextMenu 的 Item、LinkItem、CheckboxItem、RadioItem、SubmenuTrigg
 
 ### 表单焦点绘制与关闭入口
 
-Dialog.Body 与 ScrollArea.Viewport 是滚动边界：两轴裁切需要给焦点外环预留 `focus-width + focus-offset` 的四边绘制空间，仅设置 scroll-padding 不够。公共 base.css 统一拥有 padding / scroll-padding 与子控件 scroll-margin；Dialog.Body 用等值负 margin 消耗 Content 已有内距，因此字段仍与标题和 footer 对齐，长正文保持有界滚动，Content 的圆角裁切不变。ScrollArea.Viewport 默认 focusMode=gutter，在自己的内容盒中留空间，不扩宽 Root；其自身键盘焦点使用 inset 指示。显式 focusMode=inset把几何余量与控制项内部焦点绘制一起放在 CSS @scope 增强内，旧引擎保留 gutter；最近公共滚动边界拥有策略，嵌套默认 gutter 不被外层 edge/inset 覆盖。可聚焦的 ScrollArea.Viewport 与 TableContainer 自身使用内部焦点绘制，贴在外层零 gutter 滚动口边缘仍保持完整；其内部控制项继续采用各自边界策略。InputGroup 仍只有外层一套边框和焦点，invalid 边框不被 focus 覆盖。
+Dialog.Body 与 ScrollArea.Viewport 是滚动边界：继续保留 `focus-width + focus-offset` 的四边滚动清距，焦点不新增外框。公共 base.css 统一拥有 padding / scroll-padding 与子控件 scroll-margin；Dialog.Body 用等值负 margin 消耗 Content 已有内距，因此字段仍与标题和 footer 对齐，长正文保持有界滚动，Content 的圆角裁切不变。ScrollArea.Viewport 默认 focusMode=gutter，在自己的内容盒中留空间，不扩宽 Root；其自身键盘焦点不新增边界。显式 focusMode=inset通过 CSS @scope 移除几何余量，旧引擎保留 gutter；最近公共滚动边界拥有策略，嵌套默认 gutter 不被外层 edge/inset 覆盖。可聚焦的 ScrollArea.Viewport 不新增边界，TableContainer 仅改变已有边线颜色，贴在外层零 gutter 滚动口边缘仍保持完整；其内部控制项继续采用各自边界策略。InputGroup 仍只有外层一套边框和焦点，invalid 边框不被 focus 覆盖。
 
-Surface（无预设内容槽的表面）、Field、Grid 本身并不裁切：Surface 默认已有 card-padding，显式 padding=none只去除此表面的内距，背景/边线/圆角保留且不增加裁切，内部卡片与控件仍保留自己的默认 padding。Card 内套 ScrollArea、Dialog/Sheet 内套 Card 与滚动表单则由对应滚动边界承担绘制空间。宿主自行增加 overflow:hidden/auto、零内距或固定窄宽度，会建立新的裁切边界；应使用正式 ScrollArea，不通过输入框逐个补丁、全局 overflow:visible、缩小 focus token 或移除 outline 处理。
+Surface（无预设内容槽的表面）、Field、Grid 本身并不裁切：Surface 默认已有 card-padding，显式 padding=none只去除此表面的内距，背景/边线/圆角保留且不增加裁切，内部卡片与控件仍保留自己的默认 padding。Card 内套 ScrollArea、Dialog/Sheet 内套 Card 与滚动表单则由对应滚动边界承担绘制空间。宿主自行增加 overflow:hidden/auto、零内距或固定窄宽度，会建立新的裁切边界；应使用正式 ScrollArea，不通过输入框逐个补丁、全局 overflow:visible、缩小 focus token 处理。
 
 工作区主内容贴边使用公开 [contentInset=edge](COMPONENTS.md#工作区正文贴边)，只在 workspace 生效。多行草稿与上下工具区域使用 [InputGroup stacked/Textarea](COMPONENTS.md#多行输入与上下工具区域)，唯一组表面/焦点仍由 InputGroup 拥有，不用 Surface 再套一层输入框皮肤。
 
@@ -1125,7 +1125,7 @@ const sizing=createDataTableColumnSizingController();
 
 百分比及混合表达式（如 `'calc(50% - 1rem)'`）统一以表体可用宽度为基准，不以自身表格已经扩出的总宽为基准。组件内部用非交互、`aria-hidden` 的零高测量块交给浏览器解析，并由单个 `ResizeObserver` 将结果同步为 `colgroup` 的像素宽度；宿主无需查询内部 DOM、计算百分比或维护自己的观察器。此内部结构不是公共定位或样式入口。
 
-长中文、长英文及无空格文本沿用公共表格的 `overflow-wrap:anywhere` 换行，不默认截断或省略内容。宿主 slot 若强制 `nowrap`、放置不可收缩的大控件或更大的最小宽度，仍须按内容选择合适列宽或适配 slot；库不会为满足指定宽度默认裁切按钮、操作内容或焦点轮廓。`sticky:'start'|'end'` 仍是既有单侧零 offset 合同，列宽配置不自动累加多个 sticky 列的偏移；需要多列冻结组合时使用已有 Table 原语的显式 `stickyOffset`。
+长中文、长英文及无空格文本沿用公共表格的 `overflow-wrap:anywhere` 换行，不默认截断或省略内容。宿主 slot 若强制 `nowrap`、放置不可收缩的大控件或更大的最小宽度，仍须按内容选择合适列宽或适配 slot；库不会为满足指定宽度默认裁切按钮、操作内容或控件边界。`sticky:'start'|'end'` 仍是既有单侧零 offset 合同，列宽配置不自动累加多个 sticky 列的偏移；需要多列冻结组合时使用已有 Table 原语的显式 `stickyOffset`。
 
 全指定列与主要内容列省略 width 的正式消费者对比及实际矩形检查入口见 [浏览器列宽合同](../tests/browser/data-table-widths.spec.mjs)，实际执行范围见 [VALIDATION.md](VALIDATION.md)。
 
@@ -1516,7 +1516,7 @@ renderLabel 内把名称放入 NavigationMenu.Label，尾随无动作警告 Icon
 
 ### 纯图标按钮（4.2.18）
 
-公开IconButton与Button data-icon="true"沿用同一等宽高target及radius-full。4.2.32默认将视觉圆面内收，由button-icon-inset/button-icon-padding维护背景、outline/busy边界和内部焦点位置；size、SVG、点击外沿、危险/disabled/busy事实及render/ref键盘合同保持。具体几何、缩放和覆盖限制只由[DESIGN轮廓合同](DESIGN.md#纯图标按钮的统一轮廓4218)定义。所有variant与工具栏/表格/Card槽共用，不只修Card；表面裁剪只影响背景，不裁glyph或focus。带文字Button和Card头部图标tile不变。升级不新增prop/Controller/业务owner，消费方不写私有CSS或改SVG来缩圆。已有纯图标圆角补丁在升级并实际验收后可移除，本轮不要求消费项目立即升级。4.2.33同时覆盖SearchToolbar/QueryForm的actions与advanced，以及SidebarFooter的直放图标/行内图标；文字按钮布局规则不得覆盖纯图标内距、居中或等宽高；通用inset/@scope规则同样不能覆盖纯图标环的offset，普通输入和滚动边界的政策仍保留。[搜索组合示例](../examples/search-toolbar-react/app.tsx)的`?icon-actions`和[侧栏示例](../examples/sidebar-footer-react/app.tsx)的`?icon-actions&no-reveal`/`?row&collapsed=true&no-reveal`展示这些公开组合。
+公开IconButton与Button data-icon="true"沿用同一等宽高target及radius-full。4.2.32默认将视觉圆面内收，由button-icon-inset/button-icon-padding维护背景与outline/busy已有边界；size、SVG、点击外沿、危险/disabled/busy事实及render/ref键盘合同保持。具体几何、缩放和覆盖限制只由[DESIGN轮廓合同](DESIGN.md#纯图标按钮的统一轮廓4218)定义。所有variant与工具栏/表格/Card槽共用，不只修Card；表面裁剪只影响背景，不裁glyph或focus。带文字Button和Card头部图标tile不变。升级不新增prop/Controller/业务owner，消费方不写私有CSS或改SVG来缩圆。已有纯图标圆角补丁在升级并实际验收后可移除，本轮不要求消费项目立即升级。4.2.33同时覆盖SearchToolbar/QueryForm的actions与advanced，以及SidebarFooter的直放图标/行内图标；文字按钮布局规则不得覆盖纯图标内距、居中或等宽高；焦点仅改变outline变体已有内收边线颜色，不绘制纯图标焦点环，普通输入和滚动边界的几何政策仍保留。[搜索组合示例](../examples/search-toolbar-react/app.tsx)的`?icon-actions`和[侧栏示例](../examples/sidebar-footer-react/app.tsx)的`?icon-actions&no-reveal`/`?row&collapsed=true&no-reveal`展示这些公开组合。
 
 行内模型/语言等菜单入口使用既有 `Menu.Trigger render={<Button variant="text"/>}`，在Button内容中依次放装饰图标、当前名称和箭头；Menu负责展开、键盘和关闭回焦，Button负责透明与前景。这个已公开组合就是推荐标准，无需新建同义Trigger或竞争Menu组件。需要显式primary/destructive时仍由宿主选择；表单Select/Input不适用。正式消费者 `/react/button-state-contract.html` 的 Inline menu trigger 区域提供可操作示例。
 
@@ -1661,7 +1661,7 @@ const labels: Partial<BusinessLogLabels> = translations[locale];
 
 整页标题/筛选字段/枚举/表头/结果/读取反馈/分页/快照前缀/详情标签/按钮及可访问名称同步更新，包括已显示的错误和仍在途的读取。原`controller.labels/options`和旧state.error/detailError字符串保留构造时合同；默认Controller新增可选errorKey/detailErrorKey，取值readError/contractError/forbidden/notFound或null，清除反馈时原子清空。filterError新增可选filterErrorKey=invalidFilter或null，同样在清除时原子清空。React按各自语义键取当前词典。手写旧Controller未提供对应键时继续显示其原安全错误字符串；要热翻译这类自定义错误，由该Controller提供对应公开语义键，不能按旧文字猜类别。
 
-换语言不发布service/view状态、不执行请求/重试/取消，不重置已生效筛选、草稿、开合、当前详情、分页、快照和已访问页缓存。原事件摘要/payload/代码/ISO、领域renderer及headerActions内容由宿主负责，词典不改写这些事实；列表时间格式仍走对应列的cell。表格行/列、表单字段和详情动作使用稳定语义键，切换后保留节点、选区、滚动和有效焦点，不同译文重排时允许原生滚动锚点调整，不人为归零或重建滚动区。关闭详情回原按钮。详情动作按内容优先，超长译文按表格自身可视净宽换行，不能压成逐字竖排，使用公共间距为焦点环保留空间；不裁切文字或要求宿主限字/CSS覆盖。禁止key=locale、重挂载或复制公共DOM/CSS。
+换语言不发布service/view状态、不执行请求/重试/取消，不重置已生效筛选、草稿、开合、当前详情、分页、快照和已访问页缓存。原事件摘要/payload/代码/ISO、领域renderer及headerActions内容由宿主负责，词典不改写这些事实；列表时间格式仍走对应列的cell。表格行/列、表单字段和详情动作使用稳定语义键，切换后保留节点、选区、滚动和有效焦点，不同译文重排时允许原生滚动锚点调整，不人为归零或重建滚动区。关闭详情回原按钮。详情动作按内容优先，超长译文按表格自身可视净宽换行，不能压成逐字竖排，保留公共间距和滚动清距；不裁切文字或要求宿主限字/CSS覆盖。禁止key=locale、重挂载或复制公共DOM/CSS。
 
 [既有正式示例](../examples/business-log-react/app.tsx)的`?labels&activity`展示中文/English按钮；`&owner=view`注入完整ViewController，`&owner=options`演示默认模式（先点刷新）；不传owner借用service。示例使用合成loader，无业务后端。定向验收只执行[BIZ-LABEL-001～006](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)及实际受影响项，不因语言变化重跑认证或写入流程。
 

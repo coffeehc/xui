@@ -764,7 +764,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | BIZ-LIST-002 | 单元格默认/自定义 | 无cell或null读取event[id]、其次attributes[id]，0/false保留、缺失为空、对象为JSON文本；有cell完全使用返回内容，返回null不回退；context.content可复用原详情按钮，宿主明确时间/标签/动作；原事实保持 | 不同时区/语言文本、state及详情原文 | [组件合同](COMPONENTS.md#业务日志列定义与查询-slot4234) |
 | BIZ-LIST-003 | 动态替换list配置 | 不换Controller/loader、不请求、不清草稿/筛选/快照/详情；按行/列ID保留节点与有效焦点 | 配置前后请求/节点/草稿/焦点、各Controller模式 | [状态归属](COMPONENTS.md#状态所有权与-controller-模式) |
 | BIZ-LIST-004 | 应用筛选/打开关闭详情 | 筛选仍发送原始action/actor ID；详情保留技术事实与权限/过期分支；键盘关闭回同一按钮 | 实际请求参数、详情原字段、Enter/Escape与回焦 | [业务日志](PUBLIC_API.md#业务日志) |
-| BIZ-LIST-005 | 三主题/窄屏/长中文/两种200% | 继承公共表格文字和颜色，横滚只在表体，全部列与详情按钮可达，Tab及详情关闭回焦后按钮/焦点环完整位于表格可视边界，不以部分相交判通过；不裁文字/缩字/套私有皮肤 | 明暗system、桌面/390、根字号/真实zoom、实际几何与截图 | [设计合同](DESIGN.md#业务日志列表展示4227) |
+| BIZ-LIST-005 | 三主题/窄屏/长中文/两种200% | 继承公共表格文字和颜色，横滚只在表体，全部列与详情按钮可达，Tab及详情关闭回焦后按钮边界完整位于表格可视边界，不以部分相交判通过；不裁文字/缩字/套私有皮肤 | 明暗system、桌面/390、根字号/真实zoom、实际几何与截图 | [设计合同](DESIGN.md#业务日志列表展示4227) |
 | BIZ-LIST-006 | 宿主增加查询字段/额外scope | QueryField放queryFields，确认范围放querySummary，页面动作放headerActions；应用/清除留公共QueryForm，刷新/取消保留原标题动作，清除公共filter不冒充重置草稿/额外scope | DOM槽位、字段宽度/按钮对齐、实际参数和零重复请求 | [组件合同](COMPONENTS.md#业务日志列定义与查询-slot4234) |
 | BIZ-LIST-007 | 资源scope切换、在途列表/详情、缓存页 | 稳定loader先更新scope，同一Controller.setFilter重置代次和旧数据/详情/缓存/快照；新scope首段一次请求，旧代迟到不复活；禁止key=scope重挂载 | 请求/abort、旧响应释放、detail/page/cache与Controller身份 | [组件合同](COMPONENTS.md#业务日志列定义与查询-slot4234) |
 | BIZ-LIST-008 | 自定义cell动作与宿主投影 | attributes是显式授权的不可变JSON，不解析显示名猜ID；Button/Badge等用公开组合。复制只写真实ID一次、不导航/筛选，Toast不挤动行；语言/cell更新零请求且焦点保持 | 真实剪贴板、URL/请求不变、空会话、DOM/布局/focus、原详情事实 | [组件合同](COMPONENTS.md#业务日志列定义与查询-slot4234) |
@@ -792,7 +792,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | BIZ-LABEL-003 | 已筛选、未提交草稿、非首页、打开详情时换语言 | 生效filter、草稿、Disclosure、详情、游标/快照/缓存及原事件事实保持；字段/行/动作/弹层节点、选区/滚动和有效焦点连续 | state/节点identity、输入选区/滚动、page/snapshot、Enter/Escape回焦 | [整页语言](COMPONENTS.md#业务日志整页标签热更新4229) |
 | BIZ-LABEL-004 | 已有错误、空/加载/过期状态和在途请求时换语言 | 所有公共文案/可访问名称使用当前词典；已显示错误按语义键翻译；旧自定义Controller无键保留安全字符串 | 列表/详情读取与合同错误、403/404、无效筛选、空态、过期/不可用、加载及取消/迟到 | [整页语言](COMPONENTS.md#业务日志整页标签热更新4229) |
 | BIZ-LABEL-005 | 换语言前后记录请求/取消 | 语言本身零list/detail请求、零retry/cancel，不改变在途signal/generation；旧迟到不复活，已访问上一页不因翻译失去缓存 | 请求参数/次数、abort计数、在途和取消后释放；原loader owner | [业务日志](PUBLIC_API.md#业务日志) |
-| BIZ-LABEL-006 | 三主题、宽窄、长中文、根字号及真实200%缩放 | 继承公共layout/slot/文字，不裁剪或自写皮肤；弹层滚动和按钮/焦点环完整可达，关闭回同一动作 | 实际几何、焦点/scroll与浅深system截图；库示例不代替产品现场 | [设计合同](DESIGN.md#业务日志整页语言4229) |
+| BIZ-LABEL-006 | 三主题、宽窄、长中文、根字号及真实200%缩放 | 继承公共layout/slot/文字，不裁剪或自写皮肤；弹层滚动和按钮边界完整可达，关闭回同一动作 | 实际几何、焦点/scroll与浅深system截图；库示例不代替产品现场 | [设计合同](DESIGN.md#业务日志整页语言4229) |
 
 ## 四类默认页面逐项检查
 
