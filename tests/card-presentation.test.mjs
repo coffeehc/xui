@@ -25,7 +25,7 @@ test('Card renders one ordered header, content, and footer region with public sl
  assert.ok(header<content&&content<footer,'the three public regions keep their reading order');
  assert.match(html,/data-padding="none"/);
  assert.match(html,/data-stretch="true"/);
- assert.match(html,/class="xui-card-icon" data-variant="plain" style="color:var\(--status-info-foreground\)"/);
+ assert.match(html,/class="[^"]*\bxui-card-icon\b[^"]*" data-variant="plain" style="color:var\(--status-info-foreground\)"/);
  assert.match(html,/data-tone="info" data-variant="plain" style="color:var\(--status-info-foreground\)"[^>]*>Active/);
  assert.match(html,/class="xui-text xui-card-description"[^>]*>A short summary/);
  assert.match(html,/class="xui-card-body">.*>Open</);

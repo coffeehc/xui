@@ -33,7 +33,7 @@ export const Menu = {
  Heading:function Heading({className,...props}:React.ComponentProps<'div'>){return <div role="presentation" {...props} className={cx('xui-help',className)}/>;},
  Separator:function Separator({className,...props}:MenuSeparatorProps){return <Base.Separator {...props} className={branded('xui-menu-separator',className)}/>;},
  /** Decorative icon slot. Its direct SVG child follows the shared control icon size. */
- Icon: function Icon({className,...props}:React.ComponentProps<'span'>){return <span aria-hidden="true" {...props} className={cx('xui-menu-icon',className)}/>;},
+ Icon: function Icon({className,...props}:React.ComponentProps<'span'>){return <span aria-hidden="true" {...props} className={cx('xui-icon-container xui-menu-icon',className)}/>;},
  SubmenuTrigger:function SubmenuTrigger({className,...props}:React.ComponentProps<typeof Base.SubmenuTrigger>){return <Base.SubmenuTrigger {...props} className={branded('xui-menu-item',className)}/>;},
  Item: function Item({className,tone='default',...props}:MenuItemProps){return <Base.Item {...props} data-tone={tone} className={branded('xui-menu-item',className)}/>;},
  LinkItem: function LinkItem({className,...props}:React.ComponentProps<typeof Base.LinkItem>){return <Base.LinkItem {...props} className={branded('xui-menu-item',className)}/>;},

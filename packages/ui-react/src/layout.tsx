@@ -87,7 +87,7 @@ export function AppHeader(props:AppHeaderProps){return <AppHeaderFrame {...props
 export type SidebarFooterContentProps=Omit<React.ComponentProps<'span'>,'children'> & {icon?:React.ReactNode;children:React.ReactNode};
 export function SidebarFooterContent({icon,children,className,...props}:SidebarFooterContentProps){
   return <span {...props} className={cx('xui-sidebar-footer-content',className)}>
-    {icon!==undefined&&icon!==null&&typeof icon!=='boolean'&&<span className="xui-sidebar-footer-icon" aria-hidden="true">{icon}</span>}
+    {icon!==undefined&&icon!==null&&typeof icon!=='boolean'&&<span className="xui-icon-container xui-sidebar-footer-icon" aria-hidden="true">{icon}</span>}
     <span className="xui-sidebar-footer-label">{children}</span>
   </span>;
 }

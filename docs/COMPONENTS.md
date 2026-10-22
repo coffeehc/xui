@@ -417,7 +417,7 @@ React Disclosure 由组件维护装饰性 chevron；自定义 indicator 应自�
 
 Icon从1.2.0提供，固定1.1.3归档不含此入口。
 
-React `/display` 及根入口公开 `Icon / IconProps`。组件承载已有图标库或SVG，不内置升级图形、版本判断、网络或权限。默认图标采用control-icon-size，SVG描边采用共享icon-stroke-width，xs Button内自动使用control-icon-size-xs；不设置独立字号。图形采用currentColor，保留图标本身的fill/stroke语义，未指定颜色时经icon-color继承所属文字/控件状态。
+React `/display` 及根入口公开 `Icon / IconProps / IconShape`。组件承载已有图标库或SVG，不内置升级图形、版本判断、网络或权限。默认图标采用control-icon-size，SVG描边采用共享icon-stroke-width，xs Button内自动使用control-icon-size-xs；不设置独立字号。图形采用currentColor，保留图标本身的fill/stroke语义，未指定颜色时经icon-color继承所属文字/控件状态。
 
 | 参数 | 合同 |
 |---|---|
@@ -504,7 +504,7 @@ React `/display` 及根入口公开 `Card / CardProps / CardBadge / CardHeadingL
 
 | 区域 | 公开内容 | 合同 |
 | --- | --- | --- |
-| Header | `title`、`headingLevel`、`icon`、`iconVariant`、`iconColor`、`badge`、`actions` | 必填非空标题；headingLevel 2–6，默认3。图标为装饰，默认tile+主题强调色，plain适合已有头像/图像表现；badge默认neutral+soft，可显式color/variant。辅助动作与标题、Badge分离，窄屏可换行 |
+| Header | `title`、`headingLevel`、`icon`、`iconVariant`、`iconShape`、`iconColor`、`badge`、`actions` | 必填非空标题；headingLevel 2–6，默认3。图标为装饰，默认tile+主题强调色，plain适合已有头像/图像表现；badge默认neutral+soft，可显式color/variant。辅助动作与标题、Badge分离，窄屏可换行 |
 | Content | `description` 与 `children` | 唯一内容区 `.xui-card-content`。description 是可选 muted/body-sm 文本，children 是领域正文；两者按顺序放在同一容器，不新增第四块、独立边框或另一套正文布局 |
 | Footer | `footerMeta`、`footerActions`、`footerVariant` | 次要事实与业务动作属于同一页尾区，分别分组；默认band有公共支持表面和唯一分隔线，plain保留朴素呈现。元信息优先收缩，动作组放不下时才换行；具体边界见下文4.2.30规则；两者都空时整个页尾不占位 |
 
@@ -1721,3 +1721,21 @@ StructuredLogExplorer 另公开 `StructuredLogExplorerColumnId` 及 `columnOptio
 ApiKeyManager 的内置 actions 与两类日志的内置详情/操作列均不显示手柄，其他列默认可调；Chart 数据视图全部数据列可调。操作列初始采用公共 field-min 轨道，调整其他列后保留其实际宽度。记录内容在单元内换行，长内容仍使用原有 OverflowText/公开 overflow 规则。库不显示“重置列宽”按钮，原 Controller.reset() 编程接口保持可用。
 
 `DataTableColumn<T>.cellClassName?: string` 将现有语义排版角色放在 td 上，不改变 cell 返回内容、事件或业务 owner。DataTable 行向内部 OverflowText 提供已有交互面；焦点不增加额外 Tab 停靠，调宽或刷新后已聚焦动作保持可见。
+
+
+## 图标背景基础模型（4.2.37）
+
+图形与背景容器分开，统一形状由基础 CSS 维护。`IconShape = 'circle' | 'square'` 从 React `/display` 及根入口导出；圆形为缺省，square 显式使用 radius-md 方形圆角。glyph路径/描边、颜色、焦点和事件owner不变。默认背景直径统一为icon-container-size，根16px时32px、根200%时64px；显式size才保留尺寸级别。
+
+| 入口 | 公开选项 | 默认与边界 |
+| --- | --- | --- |
+| Icon | `variant?: 'plain' | 'tile'`、`shape?: IconShape` | plain 默认无背景且沿用 glyph 尺寸；tile 使用 icon-container-size/background，默认圆形，glyph 仍是 control-icon-size |
+| Card、CardGroup 模板 | `iconShape?: IconShape` | 默认 tile 背景圆形，所有资源卡片继承；iconVariant=plain 继续不添加背景，嵌入 Avatar 或图像拥有自己的形状 |
+| IconButton、Button data-icon=true | `shape?: IconShape` | 默认圆面与Card相同，button-icon-inset从默认命中区与基础直径派生；36px命中区、字形和状态保留；显式size有意改变级别，普通文字Button不应用该形状 |
+| Avatar.Root | `shape?: IconShape` | 默认圆形且直径使用基础尺寸；显式sm/lg继续已有尺寸；square选择方形圆角；Image/Fallback加载、裁切、ref、render和状态不变 |
+| InputGroup.Button | `data-icon="true"`、`shape?: IconShape` | 只有明确的图标动作采用基础形状；密码显隐、搜索清除、数字步进已接入，命中宽度至少为基础直径，文字动作保留；内部背景层居中且使用统一基础直径 |
+| 原生/parts 容器 | `className="xui-icon-container"`、`data-icon-shape="square"` | 类只选择默认圆形，不添加底色/大小或交互；现有图标槽、紧凑导航和 data-icon=true 动作统一由同一基础规则处理 |
+
+Menu.Icon、Toast.Icon、EmptyState.icon、SidebarFooter.icon 的被动包装复用基础容器标记；Tabs.Icon 本身沿用 Icon。未加背景的菜单/标签/通知图形不自动加底色。普通完整导航行、品牌图片和图表序列形状保留本身用途，不按 SVG 外观猜测为图标按钮。
+
+基础Token icon-container-size默认依赖control-height-sm，icon-container-background默认依赖muted；nav-icon-background-inset从导航目标与基础尺寸派生；icon-paint-z-index默认-1且只作用于内部隔离绘制层。现有 card-icon-size/card-icon-background 改为尺寸和背景 Token 的兼容别名，卡片专用覆盖继续优先，原 card-icon-offset/标题对齐和自然高度保留。按需 CSS 的 base.css/critical.css、完整 style.css 共享同一规则；使用 Avatar/widgets 或 Button 分片时仍按原方式加载基础 CSS。该模型不新增 runtime Service、动画或查询状态。

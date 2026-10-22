@@ -1,3 +1,4 @@
+import type {IconShape} from './icon-shape.js';
 import * as React from 'react';
 import {bindTextareaAutoResize,type TextareaAutoResizeOptions} from './textarea.js';
 import {SimpleSelectControl} from './simple-select.js';
@@ -71,5 +72,5 @@ export const InputGroup={
  Addon:function InputGroupAddon({className,...props}:React.ComponentProps<'span'>){return <span {...props} className={cx('xui-input-addon',className)}/>;},
  Input,
  Textarea,
- Button:function InputGroupButton({className,type='button',...props}:React.ComponentProps<'button'>){return <button {...props} type={type} className={cx('xui-input-action',className)}/>;},
+ Button:function InputGroupButton({className,type='button',shape,'data-icon':icon,...props}:React.ComponentProps<'button'>&{shape?:IconShape;'data-icon'?:boolean|'true'|'false'}){return <button {...props} data-icon={icon} {...(shape?{'data-icon-shape':shape}:{})} type={type} className={cx('xui-input-action',icon===true||icon==='true'?'xui-icon-paint':undefined,className)}/>;},
 };

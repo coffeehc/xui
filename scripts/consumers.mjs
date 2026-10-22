@@ -118,7 +118,11 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // footer track for large icon targets. Add +128 bytes; every other cap stays fixed.
 // 4.2.34 adds scoped column tracks, overflow and cell-action constraints (+about 60 gzip bytes).
 // Bound the feature to +64 bytes; retain all JavaScript, Button and service caps.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22656, reactInitialJsGzip: 153600, narrowServiceGzip: 4608,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
+// 4.2.37 centralizes circular icon backgrounds, a shared default diameter, and
+// contained InputGroup paint. The formal probe grows 22,629 -> 22,931 gzip bytes
+// (+302); allow a bounded +320 bytes, including the mobile full-row exception.
+// Every JavaScript, Button, service and chart cap remains unchanged.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22976, reactInitialJsGzip: 153600, narrowServiceGzip: 4608,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // Recreate one generated cache so npm cannot reuse a stale same-version tarball.
 const runDirectory = resolve('.consumers/current');

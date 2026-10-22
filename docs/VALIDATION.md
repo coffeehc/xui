@@ -1597,3 +1597,27 @@ BusinessLogExplorer 与 StructuredLogExplorer 的表体统一迁入 DataTable；
 实际查看[桌面列宽与固定详情](../output/playwright/composed-data-tables-business.png)及[390px、200% 字号聚焦动作](../output/playwright/composed-data-tables-narrow.png)。后者 activeElement 仍为原复制按钮，按钮左右 38/352px 位于表体 33/357px 内，outline=none，页面无横向溢出。consumer 首轮曾被共享 npm cache 缺失 blob 阻断；npm cache verify 后沿原参数成功，未放宽 peer、预算或安装校验。
 
 上述证据仅为本仓库合成示例、正式包和 Chromium；未运行全量浏览器、Firefox/WebKit 或消费产品现场测试。本轮仅在 xui 完成本地提交与正式归档，不推送、不发布 npm，也未修改或部署 xAgent。生成的临时 consumer 与浏览器报告在归档后清理，验收图和必要归档保留。
+
+## XUI 4.2.37 图标背景基础模型与统一直径（2026-10-23）
+
+所有默认资源卡片使用公共基础形状，圆形为缺省，只有显式shape/iconShape/data-icon-shape=square选择方形圆角。Icon的plain默认和菜单、通知、空态、侧栏的无底色glyph不增加背景。Card保留原span与glyph呈现，不裁SVG；CardGroup直接继承，未按资源类型增加实现。IconShape从display及根入口导出，Button/IconButton、Avatar、InputGroup.Button复用该类型。
+
+按用户补充要求，默认背景直径统一由icon-container-size管理，根16px时32px、根200%时64px：Card/Icon tile、默认图标按钮圆面、输入辅助动作、紧凑导航背景与默认Avatar一致。Button默认命中区仍36px、glyph仍16px；输入辅助动作至少32px宽，背景在原按钮内居中绘制，清除/步进的字符宽度不再决定圆径。显式size、Card专用尺寸覆盖保留有意差异。原Card size/background Token为兼容别名，导航内距由目标与基础尺寸派生；手机完整文字行恢复原半径及背景范围。
+
+最终sourceGeneration为`ecfe2dd0b63627010fcdc995af128a6bd59a4ca1ff36ec2050ddfd30dda81101`。三包及runtime exact peer为4.2.37。build、440 Token图/指纹、typecheck和123项定向Node检查通过，覆盖Card/Avatar、图标呈现、按钮/输入、导航/菜单/Tabs/Toast、设计值审计和文档。正式consumer安装三份真实tarball，校验全部公开ESM/CSS/types、正负类型fixture和init；React/ReactDOM19.2.8、Base UI1.7.0各一份，无src alias。
+
+| 包 | 4.2.37 tarball SHA256 |
+| --- | --- |
+| @coffeehc/xui-theme | `6720b890680f6a1831ee0c3e606d01b66bf11775d7df146ee1978853249527b7` |
+| @coffeehc/xui-runtime | `4c58f6571045980c2b7d6ffa64ec1a3f3aedc5030a9dbaacaadb00a6878c2916` |
+| @coffeehc/xui-react | `33b67de7fcb32923b3c0539ddbebe3c9a8b917329ce7a78fc37f7fa761cbd314` |
+
+正式性能门禁通过：关键CSS gzip22933/22976、初始JS144699/153600、Button-only6654/16384、Charts CSS22814/24576 bytes。统一形状、直径和内部绘制层使关键CSS较4.2.36的22629增加304 bytes；本能力仅有界增加320 bytes预算，其余JS/Button/service/chart门禁不变。候选曾分别超出旧CSS预算，未将这些失败计为最终通过。
+
+最终同代正式包单批Chromium **236/236通过**，零跳过、零重试，包含23项背景模型、61项图标密度/组合及Card三域、按钮、输入、导航、通知、display和21项焦点回归。覆盖light/dark/system、1280/390、根200%及真实Chrome设置200%缩放；默认圆径一致、显式square/size、无背景槽、Card专用覆盖、单一基础直径改为24px时各默认入口同步、手机文字导航恢复、真实键盘/单次回调、disabled/busy、原节点/草稿/焦点与形状切换连续性均通过。
+
+输入辅助动作在三种主题与100%/200%根字号下，逐项截取hover/pressed真实背景像素：清除、步进和密码动作均为32px或64px统一圆径，抗锯齿边缘容差不超过1px，状态切换不改变命中区。紧凑导航曾被组合中的旧padding=0覆盖成36px，已改为同一公共内距并通过32px及24px覆盖验收。两项旧CSS/SSR断言及图标密度的旧焦点offset断言已按当前合同维护；早期两组浏览器进程共用临时目录造成的追踪文件冲突已改为串行执行，候选失败不计本批结果。
+
+已查看最终[桌面默认背景](../output/playwright/icon-background-default.png)、[深色390px/200%](../output/playwright/icon-background-narrow.png)和[密码动作hover](../output/playwright/icon-background-password-hover.png)。[简要结果与像素测量](../output/playwright/icon-background-metrics.json)保留逐例状态和六组测量。复现使用pnpm build/check:tokens/typecheck/test:consumer；浏览器使用icon-container-shape、icon-button-density、button-state-contract、card-actions/footer/group、design-state-regressions、display及display-foundation-contract、rich-navigation、text-inputs、toast这12个spec，workers=2。
+
+本轮只交付xui，库级合成示例不代表xAgent实际产品已接入或部署。未运行全仓unit/browser、watch/cold-start、Firefox/WebKit或真实领域后端。本次修改按授权提交并推送main，正式归档包含源码、三包及验证证据；临时consumer、浏览器中间产物和松散打包副本随后清理。

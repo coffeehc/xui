@@ -434,3 +434,12 @@ BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 和 Chart 数据视�
 需要列宽偏好时直接向组合传 `columnSizing` 的受控或注入配置，不新建第二个列宽 owner。业务日志用 `list.columns[].resize`；结构化日志用 `columnOptions` 的稳定语义 id 指定宽度/上下限，actions 仅固定。接口与 id 见[公共契约](PUBLIC_API.md#组合表格列宽4236)。只使用完整 style.css 时无需增加 CSS；按分片使用 table.css 的项目须同步加载 table-resize.css。
 
 按 TABLE-COMPOSE-001～004 验证实际使用页面：调整零请求且不变页/重挂已有行、刷新保留宽度、固定操作列没有手柄且不随其他列变宽、分组/记录切换和详情回焦保持。窄屏/大字在表体内横滚、单元内容不覆盖相邻列，筛选/空态/错误/重试/权限仍按原页面验收。库示例通过不等于消费产品已接入或部署。
+
+
+### 图标背景统一升级（4.2.37）
+
+固定 4.2.37 的同代 ESM/CSS/types/init 后，所有默认 Card/CardGroup tile 图标背景自动变为圆形；IconButton、复合图标动作、紧凑导航与 Avatar 使用同一基础形状规则。默认图标背景统一32px（根字号200%时64px），仅显式size/卡片size覆盖例外。Button原36px命中区不缩小；输入辅助动作使用至少32px命中宽度；Avatar默认直径同步基础尺寸。原无背景glyph保持无背景，普通文字按钮和完整导航行保持原样。不要逐资源类型覆盖 Card 内部圆角，也不在宿主再建一套背景容器。
+
+确有方形用途时，Icon/IconButton/Button/Avatar.Root/InputGroup.Button 显式 shape=square，Card/CardGroup 模板显式 iconShape=square；高级 parts 或原生容器用公开 data-icon-shape=square。真实头像继续 Card.iconVariant=plain 并使用同一个 Avatar；它拥有自己的形状，不通过外层 Card.iconShape 裁切。Card 原 size/background Token 覆盖保留；新的 icon-container-size/background 可统一基础 tile，既有自定义主题不被替换。
+
+按 ICON-BG-001～004 验证实际使用页面的所有资源类型、图标按钮/组合槽、输入辅助动作和紧凑导航：默认圆形、显式方形、无底色 glyph、主题/窄屏/大字、原尺寸/颜色/焦点/回调及 Card 草稿/记录身份。库级正式消费者证据不代替消费产品升级、真实页面验收或部署。

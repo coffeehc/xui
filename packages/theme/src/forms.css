@@ -116,8 +116,9 @@
  .xui-input-group>.xui-input-addon:empty {display:none;}
  .xui-input-addon {font-size:var(--font-size-body-xs);line-height:var(--line-height-body-xs);display:inline-flex;align-items:center;gap:var(--space-text-gap);padding-inline:var(--space-control-gap);color:var(--muted-foreground);}
  .xui-input-action {border:0;background:transparent;color:var(--action-primary);font:var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans);min-block-size:var(--input-group-control-min-height);padding-inline:var(--space-control-gap);border-radius:var(--input-radius);cursor:pointer;transition:background-color var(--motion-duration-fast) var(--motion-easing);}
- .xui-input-action:hover:not(:disabled) {background:var(--interaction-hover);}
- .xui-input-action:active:not(:disabled) {background:var(--interaction-pressed);}
+ .xui-input-action[data-icon='true'] {min-inline-size:var(--icon-container-size);min-block-size:max(var(--input-group-control-min-height),var(--icon-container-size));flex:none;}
+ .xui-input-action:not([data-icon='true']):hover:not(:disabled),.xui-input-action[data-icon='true']:hover:not(:disabled)::before {background:var(--interaction-hover);}
+ .xui-input-action:not([data-icon='true']):active:not(:disabled),.xui-input-action[data-icon='true']:active:not(:disabled)::before {background:var(--interaction-pressed);}
  .xui-input-action:disabled {color:var(--muted-foreground);cursor:not-allowed;}
  .xui-password-toggle {display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--muted-foreground);transition:background-color var(--motion-duration-fast) var(--motion-easing),color var(--motion-duration-fast) var(--motion-easing);}
  .xui-password-toggle:hover:not(:disabled) {color:var(--action-primary);}

@@ -827,3 +827,13 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | TABLE-COMPOSE-002 | 含详情/操作列 | 内置操作列无手柄；调整业务列后操作宽度保持，无重置列宽按钮 | 手柄数量、调整前后宽度和动作可达性 | [组合数据表格](COMPONENTS.md#内部数据表格与列宽4236) |
 | TABLE-COMPOSE-003 | 调宽、刷新、切换视图 | 调宽零查询、保留页码与 keyed 行；刷新保留宽度；语义 id 不错配，详情关闭返回原动作 | 请求计数、节点 identity、页码/列宽和焦点 | [组合数据表格](COMPONENTS.md#内部数据表格与列宽4236) |
 | TABLE-COMPOSE-004 | 窄屏/大字与各列表状态 | 表体内横滚，文字不覆盖相邻单元；加载/空/错误/重试与原筛选/权限接线有效 | 受影响页面状态、几何与操作证据 | [组合数据表格](COMPONENTS.md#内部数据表格与列宽4236) |
+
+
+### 图标背景逐项检查
+
+| ID | 适用入口 | 必须结果 | 证据 | 公共合同来源 |
+| --- | --- | --- | --- | --- |
+| ICON-BG-001 | 所有 Card、CardGroup 资源图标与 Icon.tile | 背景默认圆形且基础直径一致，所有资源类型继承；保留glyph、颜色和内容结构，只有显式size才有尺寸差异 | 各实际模板、computed radius/geometry、默认截图 | [基础模型](COMPONENTS.md#图标背景基础模型4237) |
+| ICON-BG-002 | 明确方形用途 | 使用公开 shape、iconShape 或 data-icon-shape 标记；不按资源类型另写皮肤 | 公开 props、显式方形与缺省对照 | [公开接口](PUBLIC_API.md#图标容器形状4237) |
+| ICON-BG-003 | 图标动作、复合槽、紧凑导航、Avatar、plain Card | 默认图标背景统一圆形及基础直径；无背景glyph不加底色，plain Avatar 维持自己的框；文字动作/完整导航行保留 | 默认/hover/focus/disabled/busy、geometry、Avatar/文字对照 | [设计合同](DESIGN.md#图标背景的统一形状4237) |
+| ICON-BG-004 | 主题、窄屏、大字及动态变更 | public Token 覆盖有效；切换形状不改布局/草稿/身份/业务 owner，真实键盘和单次动作有效 | theme/viewport/scale矩阵、DOM identity、焦点和回调记录 | [基础模型](COMPONENTS.md#图标背景基础模型4237) |

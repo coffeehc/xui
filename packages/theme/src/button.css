@@ -24,7 +24,7 @@
   .xui-button[data-size="sm"] { min-height: var(--control-height-sm); padding-inline: var(--button-padding-inline-sm); }
   .xui-button[data-size="xs"] { min-height: var(--control-height-xs); padding-block:var(--button-padding-block-xs); padding-inline: var(--space-control-gap); gap: var(--space-text-gap); }
   .xui-button[data-size="lg"] { min-height: var(--control-height-lg); padding-inline: var(--space-section-gap); gap: var(--space-control-gap); }
-  .xui-button[data-icon="true"] { width: var(--button-height); height: var(--button-height); padding: var(--button-icon-padding); flex-shrink: 0; border-radius: var(--radius-full); background-clip: content-box; }
+  .xui-button[data-icon="true"] { width: var(--button-height); height: var(--button-height); padding: var(--button-icon-padding); flex-shrink: 0; background-clip: content-box; }
   .xui-button[data-icon="true"][data-size="xs"] { width: var(--control-height-xs); height: var(--control-height-xs); }
   .xui-button[data-icon="true"][data-size="sm"] { width: var(--control-height-sm); height: var(--control-height-sm); }
   .xui-button[data-icon="true"][data-size="lg"] { width: var(--control-height-lg); height: var(--control-height-lg); }

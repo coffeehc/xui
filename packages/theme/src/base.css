@@ -11,8 +11,16 @@
   :is(.xui-surface,.xui-table-container,.xui-floating):focus {border-color:var(--interaction-focus);}
   .xui [hidden],.xui-layer[hidden],.xui-layer [hidden] {display:none;}
   @keyframes xui-feedback {from{opacity:var(--motion-feedback-opacity-start);}to{opacity:1;}}
+  /* One background-shape contract for decorative frames, icon actions and avatars. */
+  :is(.xui-icon,.xui-icon-container,[data-icon='true'],.xui-nav-item[data-collapsed='true'],.xui-avatar) {border-radius:var(--radius-full);}
+  :is(.xui-icon,.xui-icon-container,[data-icon='true'],.xui-nav-item[data-collapsed='true'],.xui-avatar)[data-icon-shape='square'] {border-radius:var(--radius-md);}
+  /* A contained paint layer keeps rectangular hit areas while painting a true circle. */
+  .xui-icon-paint {position:relative;isolation:isolate;}
+  .xui-icon-paint::before {content:"";position:absolute;top:50%;left:50%;inline-size:var(--icon-container-size);block-size:var(--icon-container-size);transform:translate(-50%,-50%);border-radius:inherit;z-index:var(--icon-paint-z-index);pointer-events:none;transition:inherit;}
   .xui-icon {display:inline-flex;align-items:center;justify-content:center;flex:none;inline-size:var(--control-icon-size);block-size:var(--control-icon-size);vertical-align:middle;color:var(--icon-color);}
   .xui-icon>svg {display:block;inline-size:100%;block-size:100%;stroke-width:var(--icon-stroke-width);}
+  .xui-icon[data-variant='tile'] {inline-size:var(--icon-container-size);block-size:var(--icon-container-size);background:var(--icon-container-background);}
+  .xui-icon[data-variant='tile']>svg {inline-size:var(--control-icon-size);block-size:var(--control-icon-size);}
   .xui-icon[data-blink='true'] {animation:xui-feedback var(--motion-duration-pulse) var(--motion-easing) infinite alternate;}
   .xui-icon:where([data-blink='true'][data-colored='false']) {color:var(--action-primary);}
   :is(:disabled,[aria-disabled='true'],[data-disabled]) .xui-icon {color:inherit;animation:none;}
@@ -93,7 +101,7 @@
  .xui-card .xui-card-heading {flex:1 1 var(--card-title-min-inline-size);flex-wrap:nowrap;align-items:flex-start;}
  .xui-card-title {flex:1;min-inline-size:0;}
  .xui-card-icon {display:inline-flex;align-items:center;justify-content:center;flex:none;min-block-size:var(--line-height-section-title);color:var(--action-primary);}
- .xui-card-icon[data-variant='tile'] {inline-size:var(--card-icon-size);block-size:var(--card-icon-size);min-block-size:0;margin-block-start:var(--card-icon-offset);background:var(--card-icon-background);border-radius:var(--radius-md);}
+ .xui-card-icon[data-variant='tile'] {inline-size:var(--card-icon-size);block-size:var(--card-icon-size);min-block-size:0;margin-block-start:var(--card-icon-offset);background:var(--card-icon-background);}
  .xui-card-icon[data-variant='tile']>* {max-inline-size:100%;max-block-size:100%;}
  .xui-card-icon>svg {inline-size:var(--control-icon-size);block-size:var(--control-icon-size);}
  .xui-card-heading:has(>.xui-card-icon[data-variant='tile'])>.xui-card-title {display:flex;align-items:center;min-block-size:var(--card-icon-size);}

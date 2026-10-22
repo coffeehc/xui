@@ -22,7 +22,9 @@ test('Badge has a closed five-tone public vocabulary while neutral stays passive
  const base=mapping('.xui-badge',{'font-size':'var(--font-size-body-xs)','line-height':'var(--line-height-body-xs)',gap:'var(--space-text-gap)'});assert.equal(base.background,undefined);assert.equal(base.border,undefined);
 });
 test('Avatar consumes existing size, shape, surface and content fitting roles',()=>{
- mapping('.xui-avatar',{'inline-size':'var(--control-height)','block-size':'var(--control-height)','border-radius':'var(--radius-full)',background:'var(--layer-support)',color:'inherit',overflow:'hidden'});
+ const avatar=mapping('.xui-avatar',{'inline-size':'var(--icon-container-size)','block-size':'var(--icon-container-size)',background:'var(--layer-support)',color:'inherit',overflow:'hidden'});assert.equal(avatar['border-radius'],undefined);
+ const shape=":is(.xui-icon,.xui-icon-container,[data-icon='true'],.xui-nav-item[data-collapsed='true'],.xui-avatar)";
+ mapping(shape,{'border-radius':'var(--radius-full)'});mapping(shape+"[data-icon-shape='square']",{'border-radius':'var(--radius-md)'});
  for(const [size,token]of [['sm','control-height-sm'],['lg','avatar-size-lg']])mapping(`.xui-avatar[data-size='${size}']`,{'inline-size':`var(--${token})`,'block-size':`var(--${token})`});
  mapping('.xui-avatar-image',{'inline-size':'100%','block-size':'100%','object-fit':'cover'});mapping('.xui-avatar-fallback',{font:'var(--font-weight-control) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans)'});
 });

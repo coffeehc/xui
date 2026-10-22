@@ -1142,3 +1142,22 @@ const sizing = createDataTableColumnSizingController();
 ```
 
 注入实例由创建者销毁；不会保存偏好、重置查询或增加“重置列宽”按钮。按需 CSS 入口在 critical.css/table.css 外还须加载既有 table-resize.css；完整 style.css 已包含该分片。
+
+
+### 图标容器形状（4.2.37）
+
+`@coffeehc/xui-react/display` 与根入口新增 `IconShape`，IconProps 新增 `variant?:'plain'|'tile'`、`shape?:IconShape`。原 Icon 的 plain 无背景呈现保留；带背景的基础模型默认圆形，显式 square 使用共享方形圆角。CardProps 新增 iconShape；CardGroupCardProps 继承。ButtonProps/IconButtonProps、AvatarRootProps 和 InputGroup.Button 新增 shape，Button 的该选项仅用于 data-icon=true 的图标动作。原控制器、ref/render、事件、disabled/busy 与 Avatar peer 生命周期保留。
+
+```tsx
+import {Icon, Card, type IconShape} from '@coffeehc/xui-react/display';
+import {IconButton} from '@coffeehc/xui-react/button';
+import {Avatar} from '@coffeehc/xui-react/avatar';
+<Icon variant="tile"><ResourceGlyph/></Icon>;
+<Icon variant="tile" shape="square"><ResourceGlyph/></Icon>;
+<Card title="资源" icon={<ResourceGlyph/>} />;
+<Card title="明确方形" icon={<ResourceGlyph/>} iconShape="square" />;
+<Card title="真实头像" iconVariant="plain" icon={<Avatar.Root><Avatar.Fallback>研</Avatar.Fallback></Avatar.Root>} />;
+<IconButton aria-label="设置" shape="square"><SettingsGlyph/></IconButton>;
+```
+
+公开 CSS 标记 xui-icon-container / data-icon=true 默认圆形，data-icon-shape=square 为显式例外；不自动添加背景、尺寸、按钮角色或焦点停靠。被动槽与紧凑导航由库内部统一接入，宿主按[组件合同](COMPONENTS.md#图标背景基础模型4237)选择公开选项，不用按资源类型复制 CSS。新增尺寸、背景、导航内距和绘制层四个基础 Token 及 Card 原 Token 兼容别名见[设计合同](DESIGN.md#图标背景的统一形状4237)。

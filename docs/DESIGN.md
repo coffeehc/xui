@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.36。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.37。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -488,7 +488,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --button-padding-inline: var(--space-content-gap);
     --button-gap: var(--space-icon-gap);
     --button-radius: var(--radius-md);
-    --button-icon-inset: var(--space-text-gap);
+    --button-icon-inset: max(0px, calc((var(--button-height) - var(--icon-container-size)) / 2));
     --button-icon-padding: max(0px, calc(var(--button-icon-inset) - var(--line-width-surface)));
     --button-background: var(--action-primary);
     --button-foreground: var(--action-primary-foreground);
@@ -502,9 +502,9 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --card-radius: var(--radius-lg);
     --card-padding: calc(var(--spacing) * 3.5);
     --card-actions-gap: var(--space-text-gap);
-    --card-icon-size: var(--control-height-sm);
+    --card-icon-size: var(--icon-container-size);
     --card-icon-offset: max(0px, calc((var(--line-height-section-title) - var(--card-icon-size)) / 2));
-    --card-icon-background: var(--muted);
+    --card-icon-background: var(--icon-container-background);
     --card-footer-background: var(--muted);
     --card-footer-meta-min-inline-size: var(--control-height);
     --card-group-body-min: var(--feedback-slot-block-size);
@@ -584,6 +584,10 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --radius-full: 50%;
     --icon-stroke-width: 2;
     --icon-color: currentColor;
+    --icon-container-size: var(--control-height-sm);
+    --icon-container-background: var(--muted);
+    --nav-icon-background-inset: max(0px, calc((var(--nav-collapsed-item-size) - var(--icon-container-size)) / 2));
+    --icon-paint-z-index: -1;
     --nav-icon-stroke-width: 1.5;
     --illustration-icon-size: 1.5rem;
     --nav-sidebar-header-max: 50%;
@@ -2522,9 +2526,9 @@ NavItem与NavigationItem的tone=warning只投影宿主事实；标题、主图�
 
 IconButton 与 Button data-icon="true" 使用同一纯图标配方：等宽高不变、radius-full，默认/hover/pressed/disabled/busy/expanded 都保持圆形容器。ghost/link/text 默认透明时同样保留圆形几何，背景出现不切换轮廓；图标自身形状不变，例如停止仍用方形图标。文字Button继续原button-radius，不变成圆形或胶囊。保留原size、点击区、前景/背景/危险/禁用/忙态、独立focus、render/ref/键盘和业务owner。不要用data-icon标记带可见文字的按钮，也不要通过产品私有CSS重新实现圆角。头像、缩略图和其他组件不适用这条按钮规则。
 
-4.2.32将纯图标的视觉圆面与命中布局分开：尺寸仍为default36/sm32/xs24/lg40px，图标仍16px（xs12px），button-icon-inset默认由space-text-gap派生4px，button-icon-padding扣除原1px边界后为3px。圆面净径分别28/24/16/32px，outline/busy边界同样内移；背景按content-box绘制，不能裁内容或焦点。焦点不新增外圈；outline变体仅将已有内收边线改为interaction-focus，其余无可见边线的变体保留原边界外观。文字Button及Card头部图标tile不适用内收几何。全主题/variant一致，text仍透明且危险前景不变；disabled不执行，busy本身不禁用。公开Token只控制视觉留白，不缩小真实target，不使用消费方wrapper、私有CSS或放大SVG。
+4.2.32将纯图标的视觉圆面与命中布局分开，4.2.37再将默认圆面统一到icon-container-size：命中尺寸仍为default36/sm32/xs24/lg40px，图标仍16px（xs12px），button-icon-inset由默认命中区与基础直径的差派生2px，button-icon-padding扣除原1px边界后为1px。圆面净径分别32/28/20/36px，显式size保留尺寸级别；outline/busy边界同样内移。背景按content-box绘制，不能裁内容或焦点。焦点不新增外圈；outline变体仅将已有内收边线改为interaction-focus，其余无可见边线的变体保留原边界外观。文字Button及Card头部图标tile不适用内收几何。全主题/variant一致，text仍透明且危险前景不变；disabled不执行，busy本身不禁用。公开Token只控制视觉留白，不缩小真实target，不使用消费方wrapper、私有CSS或放大SVG。
 
-文字根字号/公开setInterfaceScale整体阅读缩放会同比例放大rem几何；focus-width及线宽继续既有px合同，不为凑倍数改线。根字号200%时default命中72、图标32、圆面56px；真实浏览器200%保持CSS尺寸并整体物理放大。宿主自定义button-height或button-icon-inset时需验证图标不被挤压、焦点和真实外沿点击；不以视觉圆面取代点击区。改造后在工具栏、表格、弹层及Card actions/footerActions所有实际实例验收，不只验单一卡片。参见[纯图标逐项检查](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)。
+文字根字号/公开setInterfaceScale整体阅读缩放会同比例放大rem几何；focus-width及线宽继续既有px合同，不为凑倍数改线。根字号200%时default命中72、图标32、圆面64px；真实浏览器200%保持CSS尺寸并整体物理放大。宿主自定义button-height或button-icon-inset时需验证图标不被挤压、焦点和真实外沿点击；不以视觉圆面取代点击区。改造后在工具栏、表格、弹层及Card actions/footerActions所有实际实例验收，不只验单一卡片。参见[纯图标逐项检查](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)。
 
 4.2.33补齐组合容器边界：SearchToolbar.actions/advanced及复用同一框架的QueryForm继续原有统一control-height/SVG归一化，但必须使用button-icon-padding，不能归零。SidebarFooter中的文字按钮可以居中、隐藏标签、使用导航最小宽度，纯图标不继承文字按钮的左对齐、横向零padding或单边min-width；其size/等宽高/图标中心与圆面继续由Button拥有，展开/收拢/窄屏抽屉一致。收拢Footer含纯图标时，在既有rail内居中保留至少nav-collapsed-item-size/control-height-lg中的较大净宽，避免40px目标被36px轨道单向压扁；行内纯图标也不强占100% flex-basis。rail宽度与普通文字Footer不变。验收同时量横纵圆面、glyph中心、透明target外沿、内边界及focus，不能只测独立按钮或Card，也不能仅凭focus外径正确判整圈正确。实际layout slot清单见[ICON-ACTION-005](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)。同理，workspace edge/ScrollArea inset的@scope和顶栏/侧栏通用内描规则须排除纯图标Button，不依靠scope proximity覆盖其圆形配方；排除不增加选择器优先级，普通invalid输入及InputGroup继续原额外偏移。Dialog/gutter边界和ScrollArea自身的focus offset保留，嵌套滚动区各自拥有策略；宿主业务头部挤压内容的布局问题不伪装成公共按钮尺寸缺陷。
 
@@ -2567,3 +2571,12 @@ LineChart、BarChart、PieChart 是 React 数据展示组合，复用 Card 的 t
 BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 与图表数据视图统一复用公共 DataTable；前两者移除独立 Table 拼装。Table 与 DataTable 自身的底层语义 table 实现保留，CardGroup 等非表格呈现保持其职责。组合组件默认开启数据列调宽，内置 detail/actions 列固定且不提供调整手柄；没有重置列宽按钮。自定义操作列显式 resize=false，不按单元格内容猜测操作语义。
 
 DataTable 是表格渲染、列宽、行交互表面与滚动边界的唯一 owner；日志与 Key 的原 Controller 继续管理查询、草稿、权限、游标、快照、详情及关闭回焦。已有公开 columnSizing 支持本地、受控和完整 Controller 注入，组合不再建立另一份列宽状态。受调宽的记录列应自然换行，不能绘制覆盖相邻列；操作按钮仍受表体可视净宽约束。日志的领域游标工具条通过 DataTable.footer 组合，不伪造 DataTable cursor token。改列宽不得请求、刷新、清理草稿或重新挂载查询 owner。
+
+
+### 图标背景的统一形状（4.2.37）
+
+图形 glyph 与其背景容器分开：SVG 路径、字体符号、图表数据标记、品牌图片保持自身语义；已有无背景图标默认不增加底色。所有公共图标背景统一采用基础形状规则，默认 radius-full 圆形，只有显式 `shape="square"` / `iconShape="square"` 或 `data-icon-shape="square"` 才用 radius-md 方形圆角。普通文字按钮、完整导航行、Badge/状态文字和 Card 本身不属于图标背景。
+
+Icon 保留 plain 默认；显式 variant=tile 使用 icon-container-size（默认 control-height-sm，即根16px时32px）与 icon-container-background（默认 muted），glyph 仍为 control-icon-size。Card tile、默认IconButton的实际圆面、InputGroup图标动作背景、紧凑图标导航背景与默认Avatar统一使用该直径；根字号200%时统一64px。显式size或卡片专用size覆盖是有意的尺寸例外。Button保留36px默认命中区；输入辅助动作至少为基础直径宽，避免字符宽度造成不同大小的圆。原card-icon-size/background为兼容别名；Card原glyph、颜色、标题与正文结构保持。CardGroup与其他组合直接继承Card，不按资源类型追加皮肤。
+
+同一基础 CSS owner 覆盖 Icon、公开 xui-icon-container、data-icon=true 的动作（含 IconButton、弹层/通知关闭、主题/导航开关、InputGroup 的显隐/清除/步进）、紧凑态图标导航与 Avatar；Menu.Icon、Toast.Icon、EmptyState 和 SidebarFooter 的装饰槽复用同一容器标记。无底色的 Tabs/菜单/通知图形、品牌 logo 和图表序列编码不因这一规则添加背景或重绘路径。InputGroup在原按钮内使用居中的基础尺寸绘制层，横纵直径相等，矩形命中区不随hover/pressed改变；icon-paint-z-index默认-1，仅位于自身隔离层glyph后方。nav-icon-background-inset从导航命中区与基础直径派生，手机完整文字行恢复原背景范围。颜色、glyph、focus、disabled/busy与业务回调仍由原组件负责，背景模型不建立新交互或请求owner。

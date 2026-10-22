@@ -4,7 +4,7 @@ import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/style.css';
 import {Typography,Copyable,Separator,Tag,Image,OverflowText,Card,Icon} from '@coffeehc/xui-react/display';
 import {Button,IconButton} from '@coffeehc/xui-react/button';
-import {Input,Checkbox,Field,SimpleSelect} from '@coffeehc/xui-react/forms';
+import {Input,InputGroup,Checkbox,Field,SimpleSelect} from '@coffeehc/xui-react/forms';
 import {Surface,Badge} from '@coffeehc/xui-react/feedback';
 import {Avatar} from '@coffeehc/xui-react/avatar';
 bootstrapBrowserExample();
@@ -14,7 +14,7 @@ function App(){
  const [tags,setTags]=React.useState([1,2]),[source,setSource]=React.useState('./display-image-a.svg'),[retry,setRetry]=React.useState(0),input=React.useRef<HTMLInputElement>(null);
  return <main className="xui-stack"><Typography.Heading level={1} visualRole="page">文字、复制与媒体</Typography.Heading><Typography.Text as="p">长中文与完整标识保留：这是一段供窄屏和放大阅读的说明文字。</Typography.Text><Typography.Link href="#details">查看详情</Typography.Link><Typography.Code value={'<script>仅按文本显示</script>'} block/><Copyable value="explicit-id-中文-0123456789" writeText={value=>{(window as any).copied=value;}}/><Copyable value="rejected-copy" writeText={()=>Promise.reject(Error('unavailable'))}/><Separator/><input ref={input} aria-label="标签输入" className="xui-input"/><div>{tags.map(id=><Tag key={id} label="重复长标签中文完整值" removeLabel={`移除标签 ${id}`} onRemove={()=>setTags(current=>current.filter(value=>value!==id))} onRemoveFocus={()=>input.current?.focus()}/>)}</div><Tag label="不可移除" disabled onRemove={()=>{}} removeLabel="禁用移除"/><Image src={source} alt="合成图片" aspectRatio={2} retryKey={retry}/><Button onClick={()=>setSource(current=>current==='./display-image-a.svg'?'./display-image-b.svg':'./display-image-a.svg')}>更换图片</Button><Button onClick={()=>setRetry(value=>value+1)}>重试图片</Button><section id="details"><Typography.Heading level={2}>详情</Typography.Heading></section></main>;
 }
-createRoot(document.getElementById('root')!).render(<React.StrictMode>{new URLSearchParams(location.search).has('icons')?<IconSample/>:new URLSearchParams(location.search).has('card')?<CardSample/>:new URLSearchParams(location.search).has('overflow')?<OverflowSample/>:<><App/><SeparatorSample/><FoundationSample/></>}</React.StrictMode>);
+createRoot(document.getElementById('root')!).render(<React.StrictMode>{new URLSearchParams(location.search).has('icon-shapes')?<IconShapes/>:new URLSearchParams(location.search).has('icons')?<IconSample/>:new URLSearchParams(location.search).has('card')?<CardSample/>:new URLSearchParams(location.search).has('overflow')?<OverflowSample/>:<><App/><SeparatorSample/><FoundationSample/></>}</React.StrictMode>);
 
 function UpdateGlyph(){return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 17V7m-4 4 4-4 4 4"/></svg>;}
 function IconSample(){
@@ -42,4 +42,26 @@ function CardSample(){
  Object.assign(window,{cardDemo:{setTitle,setEmpty,setBadge,setLevel,getCalls:()=>calls}});
  const params=new URLSearchParams(location.search);
  return <Card aria-label="标准资源卡片" title={title} headingLevel={level} icon={params.has('avatar')?<Avatar.Root size="sm" color={params.get('avatarColor')??undefined}><Avatar.Fallback>研</Avatar.Fallback></Avatar.Root>:<span>◇</span>} iconVariant={params.get('icon')==='plain'?'plain':'tile'} iconColor={params.get('iconColor')??undefined} badge={badge?{label:'公共',color:'var(--action-primary)',variant:params.get('badge')==='plain'?'plain':'soft'}:undefined} footerVariant={params.get('footer')==='plain'?'plain':'band'} actions={empty?null:<Button variant="ghost" size="xs" onClick={()=>setCalls(n=>n+1)}>更多</Button>} description={empty?undefined:'这段摘要使用公共次要文字，避免把归属标签和操作混入正文。'} footerMeta={empty?null:'更新于 10/15'} footerActions={empty?null:<Button variant="ghost" size="xs" onClick={()=>setCalls(n=>n+1)}>查看资源</Button>}>{empty?<></>:<Input aria-label="卡片业务草稿"/>}</Card>;
+}
+
+
+function IconShapes(){
+ const [square,setSquare]=React.useState(false),[calls,setCalls]=React.useState(0);
+ Object.assign(window,{iconShapesDemo:{setSquare,getCalls:()=>calls}});
+ return <main className="xui-stack"><Typography.Heading level={1} visualRole="page">图标背景的基础模型</Typography.Heading>
+  <Surface aria-label="基础图标" className="xui-toolbar">
+   <Icon data-testid="plain-icon"><UpdateGlyph/></Icon>
+   <Icon data-testid="tile-icon" variant="tile"><UpdateGlyph/></Icon>
+   <Icon data-testid="square-icon" variant="tile" shape="square" aria-label="方形背景示例"><UpdateGlyph/></Icon>
+   <span className="xui-icon-container" data-testid="native-icon" style={{display:'inline-flex',alignItems:'center',justifyContent:'center',inlineSize:'var(--icon-container-size)',blockSize:'var(--icon-container-size)',background:'var(--icon-container-background)'}}><Icon><UpdateGlyph/></Icon></span>
+   <IconButton data-testid="icon-action" shape={square?'square':undefined} variant="outline" aria-label="基础图标动作" onClick={()=>setCalls(value=>value+1)}><UpdateGlyph/></IconButton>
+   <Button data-testid="native-action" data-icon="true" data-icon-shape="square" variant="secondary" aria-label="显式方形动作"><UpdateGlyph/></Button>
+   <Button data-testid="text-action" shape="square" variant="outline">普通文字动作</Button>
+   <Avatar.Root data-testid="avatar-circle"><Avatar.Fallback>圆</Avatar.Fallback></Avatar.Root>
+   <Avatar.Root data-testid="avatar-square" shape="square"><Avatar.Fallback>方</Avatar.Fallback></Avatar.Root>
+  </Surface>
+  <InputGroup.Root><Input aria-label="输入组的原有控件" readOnly value=""/><InputGroup.Button data-testid="input-icon" data-icon="true" aria-label="输入组图标动作"><Icon><UpdateGlyph/></Icon></InputGroup.Button><InputGroup.Button data-testid="input-text">定位</InputGroup.Button></InputGroup.Root>
+  <Card data-testid="resource-card" title="继承基础图标的资源卡片" icon={<UpdateGlyph/>} iconShape={square?'square':undefined} actions={<IconButton aria-label="卡片辅助动作" variant="text"><UpdateGlyph/></IconButton>} description="相同尺寸与颜色，只改变背景轮廓。"><Input aria-label="形状切换时保留的草稿"/></Card>
+  <Card data-testid="plain-avatar-card" title="保留真实头像框" iconVariant="plain" iconShape="square" icon={<Avatar.Root><Avatar.Fallback>研</Avatar.Fallback></Avatar.Root>}/>
+ </main>;
 }

@@ -342,7 +342,7 @@ function Icon({children, ...props}: ToastIconProps) {
     const {toast} = useToastItemContext(), tone = ['success','error','warning','info'].includes(toast.type ?? '') ? toast.type : 'default';
     const path = tone === 'success' ? 'm6 10 3 3 5-6' : tone === 'error' ? 'm7 7 6 6m0-6-6 6' : 'M10 9v5m0-9v1';
     const glyph = <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)" aria-hidden="true" focusable="false">{tone === 'warning' ? <path d="m10 2 9 16H1Z"/> : <circle cx="10" cy="10" r="8"/>}<path d={path}/></svg>;
-    return usePart('span',props,{type:toast.type},'xui-toast-icon',{'aria-hidden':true,'data-tone':tone,children:children??glyph});
+    return usePart('span',props,{type:toast.type},'xui-icon-container xui-toast-icon',{'aria-hidden':true,'data-tone':tone,children:children??glyph});
 }
 export type ToastTitleProps = PartProps<'h2', TextState>;
 function useToastLabelElement(element: React.ReactElement, defaultId: string, setId: React.Dispatch<React.SetStateAction<string | undefined>>) {
