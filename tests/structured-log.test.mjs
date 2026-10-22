@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {HttpError} from '../packages/runtime/dist/http.js';
 import {isolatedHttp,disposeServices} from './helpers/runtime-services.mjs';
-import {createStructuredLogController,createStructuredLogHttpAdapter,parseLogCount,parseLogGroupsPage,parseLogRecordsPage,parseLogDetail,validateLogFilter,compareLogTimestamps} from '../packages/runtime/dist/structured-log.js';
+import {createStructuredLogController,createStructuredLogHttpAdapter,parseLogCount,parseLogGroupsPage,parseLogRecordsPage,parseLogDetail,validateLogFilter,compareLogTimestamps,getStructuredLogTable} from '../packages/runtime/dist/structured-log.js';
 const stamp='2026-10-11T12:00:00.000000123Z',privateText='FAKE_PRIVATE_LOG_VALUE';
 const facts=(extra={})=>({source:'demo',nature:'system',category:'demo',severity:'error',component:'demo-worker',operation:'run',code:'demo_error',summary:'First representative',retryable:null,user_fixable:false,request_id:null,trace_id:null,subject:null,...extra});
 const record=(extra={})=>({id:'demo:r1',group_id:'demo:g1',occurred_at:stamp,recorded_at:stamp,details_retained:true,facts:facts(),...extra});
@@ -14,6 +14,15 @@ const detail=(extra={})=>({schema_version:1,record:{...record(),detail:privateTe
 const make=(extra={})=>createStructuredLogController({adapter:{groups:async()=>groups(),records:async()=>records(),groupRecords:async()=>({...records(),group:group()}),record:async()=>detail()},...extra});
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
 const tick=async()=>{await Promise.resolve();await Promise.resolve();};
+test('table tracks have stable semantic identities across group and record queries',async()=>{
+ const controller=make();try{
+  await controller.refresh();const grouped=getStructuredLogTable(controller.getState(),controller.labels);
+  assert.deepEqual(grouped.columnIds,['summary','severity','source','entry_count','matched_entry_count','last_seen_at','actions']);
+  assert.equal(grouped.headers.length,grouped.columnIds.length);assert.equal(grouped.rows[0].cells.length,grouped.columnIds.length-1);
+  await controller.showGroup('demo:g1');const listed=getStructuredLogTable(controller.getState(),controller.labels);
+  assert.deepEqual(listed.columnIds,['summary','severity','source','occurred_at','retryable','user_fixable','actions']);assert.equal(listed.rows[0].cells.length,listed.columnIds.length-1);
+ }finally{controller.destroy();}
+});
 test('log v1 list DTOs preserve uint64, null and tri-state while dropping detail and raw extras',()=>{
  const parsed=parseLogGroupsPage(groups());assert.equal(parsed.list[0].group.entry_count,'9007199254740993');assert.equal(parsed.list[0].group.representative.retryable,null);assert.equal(parsed.list[0].group.representative.user_fixable,false);assert.ok(Object.isFrozen(parsed.list));assert.equal(parseLogCount('18446744073709551615'),'18446744073709551615');for(const value of [9007199254740992,'18446744073709551616','01','-1'])assert.throws(()=>parseLogCount(value),TypeError);
  const safe=parseLogRecordsPage(records({list:[record({detail:privateText,stack:privateText,facts:facts({Detail:privateText,Stack:privateText})})]}));assert.ok(!JSON.stringify(safe).includes(privateText));assert.ok(!Object.hasOwn(safe,'total'));assert.throws(()=>parseLogRecordsPage({schema_version:1,items:[],page:page()}));assert.throws(()=>parseLogGroupsPage(groups({schema_version:2})));assert.throws(()=>parseLogRecordsPage(records({list:[record({facts:facts({retryable:undefined})})]})));assert.throws(()=>parseLogRecordsPage(records({page:page({next_cursor:'中'.repeat(1366)})})));

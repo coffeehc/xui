@@ -425,3 +425,12 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 4.2.32调整所有IconButton及Button data-icon=true的公共视觉圆面和焦点，保留原target、glyph、props与动作owner。按[ICON-ACTION-001～006](ADOPTION_CHECKLIST.md#纯图标动作紧凑呈现逐项检查)验收实际使用的工具栏、表格、Card槽及弹层，不能只验卡片。无纯图标实例时不执行此专项；正式包/peer证据同构建复用。保留自定义主题，通过已有公共Token继承；不在消费方复制按钮、添加wrapper或私有CSS缩圆，不把Card头部tile误改。公共验收不代替产品实际页面，也不要求无关认证/日志全流程重跑。
 
 4.2.33补齐组合内部覆盖：SearchToolbar/QueryForm的actions与advanced、SidebarFooter直放或行内图标须分别执行ICON-ACTION-005；workspace edge/ScrollArea inset、顶栏/侧栏及Dialog嵌套另验ICON-ACTION-006，不能用独立按钮或Card截图替代。使用固定正式版本验收，消费方不补padding/圆角/居中CSS，也不因修外观重接查询或导航owner。
+
+
+### 组合数据表格定向升级（4.2.36）
+
+BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 和 Chart 数据视图均已由 DataTable 统一表体、行、状态与列宽调整。组合默认启用业务数据列手柄，内置详情/操作列固定；宿主继续使用原领域 Controller、过滤/分页与详情接线，不将请求移入 DataTable。库不提供“重置列宽”按钮。宿主自己的表格应使用公开 DataTable、显式 `columnSizing`，固定操作列用 `resize:false`，移除宿主自建的重置列宽按钮。
+
+需要列宽偏好时直接向组合传 `columnSizing` 的受控或注入配置，不新建第二个列宽 owner。业务日志用 `list.columns[].resize`；结构化日志用 `columnOptions` 的稳定语义 id 指定宽度/上下限，actions 仅固定。接口与 id 见[公共契约](PUBLIC_API.md#组合表格列宽4236)。只使用完整 style.css 时无需增加 CSS；按分片使用 table.css 的项目须同步加载 table-resize.css。
+
+按 TABLE-COMPOSE-001～004 验证实际使用页面：调整零请求且不变页/重挂已有行、刷新保留宽度、固定操作列没有手柄且不随其他列变宽、分组/记录切换和详情回焦保持。窄屏/大字在表体内横滚、单元内容不覆盖相邻列，筛选/空态/错误/重试/权限仍按原页面验收。库示例通过不等于消费产品已接入或部署。

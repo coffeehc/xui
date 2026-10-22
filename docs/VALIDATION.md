@@ -1574,3 +1574,26 @@ DateTime证据：.artifacts/date-time-browser-aggregated-final.json（及其原�
 Consumer gzip 门禁通过：critical CSS 22,604/22,656 bytes，React 初始 JS 144,665/153,600 bytes，Button-only 6,631/16,384 bytes，Charts CSS 22,484/24,576 bytes。安装树中 React `19.2.8`、ReactDOM `19.2.8`、Base UI `1.7.0` 各为单实例；`@coffeehc/xui-react` 对 `@coffeehc/xui-runtime` 使用 exact `4.2.35` peer。基于正式 consumer 包构建的 `tests/browser/design-state-regressions.spec.mjs` 在 Chromium **21/21 通过**，覆盖 light/dark/system、输入与错误优先、各按钮边线、登录密码错误及 workspace/ToggleGroup 的窄宽视口。验收图 [登录密码错误聚焦](../output/playwright/focus-border-login.png) 已更新为本轮正式 consumer 产物。
 
 本次完成本地归档准备；未推送或发布 npm，未修改 xAgent，也未据此声称消费产品已升级或现场验收。
+
+
+## XUI 4.2.36 内部 DataTable 统一与列宽（2026-10-23）
+
+BusinessLogExplorer 与 StructuredLogExplorer 的表体统一迁入 DataTable；ApiKeyManager 和三类 Chart 数据视图沿用同一 DataTable 并默认启用列宽。业务列默认可调，内置详情/操作列固定，无重置列宽按钮。公共 columnSizing 支持既有 local/controlled/injected owner；BusinessLog 的列 resize、StructuredLog 的稳定 columnIds/columnOptions 与 DataTable.cellClassName 已同步文档和正反类型用例。领域 Controller、请求、分页/游标、权限、labels 和详情回焦继续由原 owner 负责。
+
+三包与 runtime exact peer 均为 **4.2.36**，最终 `sourceGeneration` 为 `e75f021b4e96a1dd0cc1f5e6fc9e788817a5999da650521bb4f3469a4d71ad5a`。`pnpm build`、`pnpm check:tokens`、`pnpm typecheck` 通过。定向 Node 覆盖 **106 个唯一用例**：contract/docs、business-log、structured-log/query、data-table/sizing/row-events/layout、api-key/v2 和 chart；焦点几何修复后 table/layout/row-events 的 28 项及最后 layout 的 8 项复验通过，未把重复运行累加为唯一用例数。
+
+`pnpm test:consumer` 在最终 generation 通过。使用同一 main 的示例/fixture 链接及正式 tarball 安装，无源码 alias；公开 ESM/CSS/types、正反类型、动态入口、布局和性能门禁通过。React 19.2.8、ReactDOM 19.2.8、Base UI 1.7.0 各单实例。critical CSS gzip 22,629/22,656 bytes，React initial JS 144,641/153,600 bytes，Button-only gzip 6,631/16,384 bytes，Chart CSS 22,509/24,576 bytes。
+
+| 正式包 | 版本 | SHA-256 |
+| --- | --- | --- |
+| `@coffeehc/xui-theme` | `4.2.36` | `5b34fc076a83dbc6d6eef852bb76cc0f6212a74d3a438d56fc2defe34c92f151` |
+| `@coffeehc/xui-runtime` | `4.2.36` | `57e9da2cfa525775db01f56b7553fa8e84a710798731bd9bebf7134f006e9d36` |
+| `@coffeehc/xui-react` | `4.2.36` | `5a7e40079023637f1303a4ff64fbcb5154178ffaf1bb1e8c0d44c9365d4e3c3a` |
+
+最终正式包 Chromium 验收 **165 个唯一用例通过**：组合/业务日志/列表/cell/labels、结构化日志/查询/列布局、API Key/v2、行事件、列调整、表头焦点共 152 项，另有 13 项图表数据表/窄屏/键盘/刷新/错误/触屏检查。覆盖 light/dark/system、1280/390/320px、200% 根字号与真实 Chrome 页面缩放、RTL、真实触屏拖动、受控拒绝/注入更新/列重排和卸载。直接验证调宽零查询、固定操作宽度、刷新后保留列宽与 keyed 行、详情关闭回原按钮；完整筛选/分页/快照、取消/迟到、空态/失败重试与业务 cell/复制语义继续通过。
+
+扩展验收曾发现窄屏焦点动作被裁切：DataTable 异步列/字号测量，以及原生 scrollIntoView 在按钮接近表体宽度时仍保留过大的 scroll-padding。现统一由既有 DataTable layout owner 监听活动作与表格几何，按实际剩余空间修正横向滚动；无额外行级 observer 或焦点 Tab 停靠。对应窄屏、长标签、刷新/重排及焦点用例复验通过。旧一次 Tab 直达详情的测试已适配新增列手柄；列重排几何曾出现 1/64px 舍入，现对 Controller 确认值做严格相等、浏览器轨道做 0.05px 容差，单项复验通过。最终 152 项由同一正式产物运行得到 151 通过及该项舍入断言失败，修正断言后只复验该项；不宣称一次整批 152/152。
+
+实际查看[桌面列宽与固定详情](../output/playwright/composed-data-tables-business.png)及[390px、200% 字号聚焦动作](../output/playwright/composed-data-tables-narrow.png)。后者 activeElement 仍为原复制按钮，按钮左右 38/352px 位于表体 33/357px 内，outline=none，页面无横向溢出。consumer 首轮曾被共享 npm cache 缺失 blob 阻断；npm cache verify 后沿原参数成功，未放宽 peer、预算或安装校验。
+
+上述证据仅为本仓库合成示例、正式包和 Chromium；未运行全量浏览器、Firefox/WebKit 或消费产品现场测试。本轮仅在 xui 完成本地提交与正式归档，不推送、不发布 npm，也未修改或部署 xAgent。生成的临时 consumer 与浏览器报告在归档后清理，验收图和必要归档保留。

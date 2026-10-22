@@ -6,7 +6,7 @@ const detail=page=>page.getByRole('button',{name:'查看日志详情 business-lo
 const headers=['操作者','事件时间','摘要','结果','查看日志详情'];
 async function open(page,flags=''){await page.goto('/business-log-react/?activity'+flags);await expect(table(page).getByRole('cell',{name:'示例审核员',exact:true})).toBeVisible();await expect(table(page).getByRole('columnheader')).toHaveText(headers);}
 const requests=page=>page.evaluate(()=>window.businessLogDemo.getRequests());
-async function tabToDetail(page){await table(page).locator('..').focus();await page.keyboard.press('Tab');await expect(detail(page)).toBeFocused();}
+async function tabToDetail(page){await table(page).locator('..').focus();for(let stop=0;stop<64;stop++){await page.keyboard.press('Tab');if(await detail(page).evaluate(node=>node.ownerDocument.activeElement===node))return;}throw new Error('Business log detail action was not reached within 64 Tab stops');}
 async function expectDetailExposed(page){
  await expect.poll(()=>detail(page).evaluate(node=>{const box=node.getBoundingClientRect(),region=node.closest('.xui-table-container').getBoundingClientRect(),style=getComputedStyle(node);return style.outlineStyle==='none'&&box.left>=Math.max(0,region.left)+1&&box.right<=Math.min(innerWidth,region.right)-1&&box.top>=0&&box.bottom<=innerHeight;})).toBe(true);
 }

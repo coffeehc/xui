@@ -1,4 +1,5 @@
 import {bindOverflowTextPresentation} from './overflow-text.js';
+import {OverflowTextInteraction} from './overflow-text-context.js';
 import {linkifyText} from '@coffeehc/xui-runtime/text-links';
 import * as React from 'react';
 import {createCopyController,copyableLabels,validateImageOptions,type HeadingLevel,type HeadingRole,type TextTone,type CopyStatus,type CopyableLabels,type ClipboardWriter,type ImageOptions,type ImageStatus} from '@coffeehc/xui-runtime/display';
@@ -84,7 +85,6 @@ export function Image({src,alt,width,height,aspectRatio,fit='contain',retryKey,f
   return <span {...props} className={cx('xui-image',className)} data-fit={fit} style={{...style,width:width===undefined?'100%':width,aspectRatio:aspectRatio??width!/height!}}><ImageResource key={JSON.stringify([src,retryKey])} {...{src,alt,retryKey,fallback,loadingLabel,onStatusChange}}/></span>;
 }
 
-const CardTextInteraction=React.createContext<React.RefObject<HTMLElement|null>|undefined>(undefined);
 /** A non-interactive text part. Keep headings, icons, badges and actions outside it. */
 export type OverflowTextProps=Omit<React.ComponentProps<'span'>,'children'|'dangerouslySetInnerHTML'>&{
  text:string;
@@ -92,7 +92,7 @@ export type OverflowTextProps=Omit<React.ComponentProps<'span'>,'children'|'dang
  interactionRef?:React.RefObject<HTMLElement|null>;
 };
 export function OverflowText({text,interactionRef,ref,className,...props}:OverflowTextProps){
- const inheritedInteraction=React.useContext(CardTextInteraction),interaction=interactionRef??inheritedInteraction;
+ const inheritedInteraction=React.useContext(OverflowTextInteraction),interaction=interactionRef??inheritedInteraction;
  const viewport=React.useRef<HTMLSpanElement>(null),track=React.useRef<HTMLSpanElement>(null),target=React.useRef(interaction);target.current=interaction;
  const binding=React.useRef<ReturnType<typeof bindOverflowTextPresentation>|null>(null);
  React.useImperativeHandle(ref,()=>viewport.current!,[]);
@@ -126,5 +126,5 @@ export function Card({title,headingLevel=3,icon,iconVariant='tile',iconColor,bad
  if(typeof title!=='string'||!title.trim()||!Number.isInteger(headingLevel)||headingLevel<2||headingLevel>6)throw new TypeError('Card requires a nonempty title and heading level 2–6');
  if(badge&&(typeof badge.label!=='string'||!badge.label.trim()||badge.tone&&!['neutral','info','success','warning','error'].includes(badge.tone)||badge.variant&&!['plain','soft'].includes(badge.variant)))throw new TypeError('Invalid Card badge');
  const root=React.useRef<HTMLElement>(null);React.useImperativeHandle(ref,()=>root.current!,[]);
- return <Surface {...props} padding="none" data-stretch={stretch} ref={root} className={cx('xui-card',className)}><header className="xui-toolbar xui-card-header"><div className="xui-toolbar xui-card-heading">{hasContent(icon)&&<span className="xui-card-icon" data-variant={iconVariant} style={iconColor===undefined?undefined:{color:iconColor}} aria-hidden="true">{icon}</span>}<Typography.Heading level={headingLevel} className="xui-card-title"><OverflowText text={title} interactionRef={root}/></Typography.Heading></div>{(badge||hasContent(actions))&&<div className="xui-toolbar xui-card-trailing">{badge&&<Badge tone={badge.tone??'neutral'} variant={badge.variant??'soft'} color={badge.color}>{badge.label}</Badge>}{hasContent(actions)&&<div className="xui-toolbar xui-card-actions">{actions}</div>}</div>}</header>{(description||hasContent(children))&&<div className="xui-card-content">{description&&<Typography.Text as="p" tone="muted" className="xui-card-description">{description}</Typography.Text>}{hasContent(children)&&<div className="xui-card-body">{children}</div>}</div>}{(hasContent(footerMeta)||hasContent(footerActions))&&<footer className="xui-toolbar xui-card-footer" data-variant={footerVariant}>{hasContent(footerMeta)&&<div className="xui-text xui-card-meta" data-tone="muted"><CardTextInteraction.Provider value={root}>{footerMeta}</CardTextInteraction.Provider></div>}{hasContent(footerActions)&&<div className="xui-toolbar xui-card-actions">{footerActions}</div>}</footer>}</Surface>;
+ return <Surface {...props} padding="none" data-stretch={stretch} ref={root} className={cx('xui-card',className)}><header className="xui-toolbar xui-card-header"><div className="xui-toolbar xui-card-heading">{hasContent(icon)&&<span className="xui-card-icon" data-variant={iconVariant} style={iconColor===undefined?undefined:{color:iconColor}} aria-hidden="true">{icon}</span>}<Typography.Heading level={headingLevel} className="xui-card-title"><OverflowText text={title} interactionRef={root}/></Typography.Heading></div>{(badge||hasContent(actions))&&<div className="xui-toolbar xui-card-trailing">{badge&&<Badge tone={badge.tone??'neutral'} variant={badge.variant??'soft'} color={badge.color}>{badge.label}</Badge>}{hasContent(actions)&&<div className="xui-toolbar xui-card-actions">{actions}</div>}</div>}</header>{(description||hasContent(children))&&<div className="xui-card-content">{description&&<Typography.Text as="p" tone="muted" className="xui-card-description">{description}</Typography.Text>}{hasContent(children)&&<div className="xui-card-body">{children}</div>}</div>}{(hasContent(footerMeta)||hasContent(footerActions))&&<footer className="xui-toolbar xui-card-footer" data-variant={footerVariant}>{hasContent(footerMeta)&&<div className="xui-text xui-card-meta" data-tone="muted"><OverflowTextInteraction.Provider value={root}>{footerMeta}</OverflowTextInteraction.Provider></div>}{hasContent(footerActions)&&<div className="xui-toolbar xui-card-actions">{footerActions}</div>}</footer>}</Surface>;
 }

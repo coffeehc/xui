@@ -78,9 +78,10 @@ export const structuredLogDefaultLabels={title:'Structured errors',groups:'Group
 /** New query labels are optional for existing manually implemented controllers; the React view supplies defaults. */
 export type StructuredLogLabels={ [Key in Exclude<keyof typeof structuredLogDefaultLabels,'resetDraft'|'appliedFilters'>]:string }&{resetDraft?:string;appliedFilters?:string};
 export function getStructuredLogTable(state:Readonly<StructuredLogState>,labels:Readonly<StructuredLogLabels>){
+  const columnIds=state.view==='groups'?['summary','severity','source','entry_count','matched_entry_count','last_seen_at','actions'] as const:['summary','severity','source','occurred_at','retryable','user_fixable','actions'] as const;
   const groups=state.view==='groups',headers=groups?[labels.representative,labels.severity,labels.source,labels.entryCount,labels.matchedCount,labels.lastSeen,labels.records]:[labels.summary,labels.severity,labels.source,labels.occurredAt,labels.retryable,labels.userFixable,labels.detail];
   const rows=groups?(state.data as LogGroupsPage|null)?.list.map(row=>({id:row.group.id,cells:[row.group.representative.summary,row.group.representative.severity,row.group.representative.source,row.group.entry_count,row.matched_entry_count,row.group.last_seen_at??labels.unknown]})):(state.data as LogRecordsPage|null)?.list.map(row=>({id:row.id,cells:[row.facts.summary,row.facts.severity,row.facts.source,row.occurred_at??labels.unknown,row.facts.retryable===null?labels.unknown:row.facts.retryable?labels.yes:labels.no,row.facts.user_fixable===null?labels.unknown:row.facts.user_fixable?labels.yes:labels.no]}));
-  return {headers,rows:rows??[],action:groups?labels.viewRecords:labels.viewDetail};
+  return {columnIds,headers,rows:rows??[],action:groups?labels.viewRecords:labels.viewDetail};
 }
 export interface StructuredLogOptions {adapter:GroupedStructuredLogAdapter;pageSize?:number;filter?:StructuredLogFilter;labels?:Partial<StructuredLogLabels>;sources?:readonly string[];categories?:readonly string[];resolveRef?:(ref:Readonly<LogRef>)=>string|null;baseURL?:string;referenceOrigins?:readonly string[]}
 export type LogPage=Readonly<LogGroupsPage|LogRecordsPage|LogGroupRecordsPage>;

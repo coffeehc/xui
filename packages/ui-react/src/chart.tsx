@@ -2,7 +2,7 @@ import * as React from 'react';
 import {validateChartData,getChartDomain,scaleChartValue,getPieArcs,type ChartCategory,type ChartSeries,type ChartSlice,type ChartStatus} from '@coffeehc/xui-runtime/chart';
 import {Card,type CardProps} from './display.js';
 import {DataRegion,LoadingState,EmptyState,ErrorState} from './feedback.js';
-import {DataTable,type DataTableColumn} from './data-table.js';
+import {DataTable,type DataTableColumn,type DataTableColumnSizingProps} from './data-table.js';
 import {Button} from './button.js';
 import {ScrollArea} from './scroll-area.js';
 import {cx} from './shared.js';
@@ -15,6 +15,8 @@ export interface ChartLabels {
 }
 const defaults:ChartLabels={loading:'Loading…',refreshing:'Refreshing…',empty:'No chart data',idle:'Run a query to view data',error:'Unable to load chart data',retry:'Retry',viewData:'View data',hideData:'Hide data',category:'Category',series:'Series',value:'Value',percentage:'Percentage',missing:'Missing',keyboardHelp:'Use arrow keys to inspect values; Home/End for first/last; Escape to clear. The data table provides all values.',chart:'Chart'};
 export interface ChartProps extends Pick<CardProps,'title'|'headingLevel'|'description'|'actions'|'footerMeta'|'footerActions'|'className'|'id'> {
+  /** Data view widths belong to DataTable; plot geometry and selection are unaffected. */
+  columnSizing?:DataTableColumnSizingProps;
   /** Keep same-scope data during loading/refresh/error. Clear old data on a new scope. */
   status?:ChartStatus;
   /** Host-approved text. Never pass an exception or secrets. */
@@ -54,7 +56,7 @@ function markerPath(x:number,y:number,r:number,shape:number){
   switch(shape%3){case 1:return `M${x-r},${y-r}h${r*2}v${r*2}h${-r*2}Z`;case 2:return `M${x},${y-r*1.4}l${r*1.4},${r*1.4}l${-r*1.4},${r*1.4}l${-r*1.4},${-r*1.4}Z`;default:return `M${x-r},${y}a${r},${r} 0 1,0 ${r*2},0a${r},${r} 0 1,0 ${-r*2},0`;}
 }
 function ChartFrame({hasData,rows,children,inspection,pie=false,props}:{hasData:boolean;rows:readonly DataRow[];children:React.ReactNode;inspection:string|null;pie?:boolean;props:ChartProps}){
-  const {title,status='ready',labels:overrides,error,onRetry,formatValue=number,className,actions,...card}=props,labels={...defaults,...overrides};
+  const {title,status='ready',labels:overrides,error,onRetry,formatValue=number,className,actions,columnSizing={},...card}=props,labels={...defaults,...overrides};
   if(!['idle','loading','ready','refreshing','error'].includes(status))throw new TypeError('Invalid chart status');
   const [tableOpen,setTableOpen]=React.useState(false),tableId=React.useId();
   const busy=status==='loading'||status==='refreshing',failure=<ErrorState title={error||labels.error} onRetry={onRetry} retryLabel={labels.retry} retryDisabled={busy}/>;
@@ -65,7 +67,7 @@ function ChartFrame({hasData,rows,children,inspection,pie=false,props}:{hasData:
         {hasData?children:<div className="xui-chart-placeholder">{busy?<LoadingState>{labels.loading}</LoadingState>:status==='error'?failure:<EmptyState title={status==='idle'?labels.idle:labels.empty} align="center"/>}</div>}
       </div>
     </DataRegion>
-    <div id={tableId} hidden={!tableOpen} className="xui-chart-data">{tableOpen&&<DataTable label={`${title} — ${labels.viewData}`} rows={rows} rowKey={row=>row.id} columns={columns} status={status} emptyState={<EmptyState title={labels.empty} align="center"/>} errorState={failure} layout="natural"/>}</div>
+    <div id={tableId} hidden={!tableOpen} className="xui-chart-data">{tableOpen&&<DataTable columnSizing={columnSizing} label={`${title} — ${labels.viewData}`} rows={rows} rowKey={row=>row.id} columns={columns} status={status} emptyState={<EmptyState title={labels.empty} align="center"/>} errorState={failure} layout="natural"/>}</div>
   </Card>;
 }
 function CartesianChart({categories,series,kind,...props}:CartesianChartProps&{kind:'line'|'bar'}){

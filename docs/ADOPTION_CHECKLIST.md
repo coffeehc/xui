@@ -817,3 +817,13 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | ICON-ACTION-004 | 主题、缩放或视觉Token覆盖 | light/dark/system、桌面/窄屏、长中文、文字200%及真实浏览器200%分别可达；系统偏好更新，焦点完整；自定义不挤图标或缩target | 正式包/peer、几何、缩放事实及实际未跑范围 | [DESIGN](DESIGN.md#纯图标按钮的统一轮廓4218) |
 | ICON-ACTION-005 | 图标处于公共layout/slot组合 | 分别验SearchToolbar.actions/advanced、QueryForm对应槽、SidebarFooter直放/行内及展开/收拢/抽屉；横纵圆面一致且glyph居中，文字按钮原布局保留；不能以Card通过代替 | 每slot的target/圆面两轴/内边界/focus、根200与原生200、实际独立回调和草稿/展开连续性 | [DESIGN](DESIGN.md#纯图标按钮的统一轮廓4218) |
 | ICON-ACTION-006 | workspace edge、ScrollArea inset/gutter、顶栏/侧栏、Dialog嵌套 | IconButton保留自身圆形offset；普通文字/输入/invalid及滚动区自身保留各自内描/留白政策；不因@scope proximity放大纯图标环 | 各边界default/根200/native200的offset、完整focus、嵌套停止边界及关闭回焦；区分宿主空间不足 | [DESIGN](DESIGN.md#纯图标按钮的统一轮廓4218) |
+
+
+### 组合表格列宽逐项检查
+
+| ID | 适用页面 | 必须满足 | 证据 | 公共合同来源 |
+| --- | --- | --- | --- | --- |
+| TABLE-COMPOSE-001 | 业务日志、结构化日志、API Key、图表数据视图及宿主数据列表 | 使用 DataTable；组合默认启用列宽，宿主普通 DataTable 显式 columnSizing；沿用唯一请求/分页 owner | 公共 props、真实表格与请求记录 | [组合数据表格](COMPONENTS.md#内部数据表格与列宽4236) |
+| TABLE-COMPOSE-002 | 含详情/操作列 | 内置操作列无手柄；调整业务列后操作宽度保持，无重置列宽按钮 | 手柄数量、调整前后宽度和动作可达性 | [组合数据表格](COMPONENTS.md#内部数据表格与列宽4236) |
+| TABLE-COMPOSE-003 | 调宽、刷新、切换视图 | 调宽零查询、保留页码与 keyed 行；刷新保留宽度；语义 id 不错配，详情关闭返回原动作 | 请求计数、节点 identity、页码/列宽和焦点 | [组合数据表格](COMPONENTS.md#内部数据表格与列宽4236) |
+| TABLE-COMPOSE-004 | 窄屏/大字与各列表状态 | 表体内横滚，文字不覆盖相邻单元；加载/空/错误/重试与原筛选/权限接线有效 | 受影响页面状态、几何与操作证据 | [组合数据表格](COMPONENTS.md#内部数据表格与列宽4236) |

@@ -49,6 +49,9 @@ test('business log columns read exact raw fields without changing state or reque
 test('business log column definitions validate identities, widths and explicit overflow',()=>{
  const controller=make(),table=columns=>getBusinessLogTable(controller.getState(),controller.labels,{columns});try{
   assert.deepEqual(table([{id:'custom',header:'自定义',width:'20rem',overflow:'ellipsis'}]).columnIds,['custom']);
+  const sized=table([{id:'summary',header:'摘要',resize:{minWidth:100,maxWidth:500,label:'调整摘要'}},{id:'detail',header:'详情',resize:{minWidth:100}}]);
+  assert.deepEqual(sized.columns[0].resize,{minWidth:100,maxWidth:500,label:'调整摘要'});assert.equal(sized.columns[1].resize,false);
+  for(const resize of [{minWidth:-1},{minWidth:200,maxWidth:100}])assert.throws(()=>table([{id:'summary',header:'摘要',resize}]),TypeError);
   for(const columns of [[],['actor'],null,[{id:'x',header:'X'},{id:'x',header:'Y'}],[{id:'',header:'X'}],[{id:'x',header:''}],[{id:'x',header:'X',width:-1}],[{id:'x',header:'X',overflow:'ellipsis'}],[{id:'x',header:'X',overflow:'clip'}]])assert.throws(()=>table(columns),TypeError);
   for(const key of ['formatActor','formatAction','formatOccurredAt'])assert.throws(()=>getBusinessLogTable(controller.getState(),controller.labels,{[key]:()=>''}),TypeError);
  }finally{controller.destroy();}

@@ -9,6 +9,7 @@ import {Field,type FieldProps} from './forms.js';
 import {DataRegion,LoadingState} from './feedback.js';
 import {cx,hasContent} from './shared.js';
 import {useCollectionView,CollectionFooter} from './collection-view.js';
+import {OverflowTextInteraction} from './overflow-text-context.js';
 export type {DataTablePagination,DataTableCursorPagination,DataTableLabels,DataTableCount,DataTableStatus,DataTableLayout,DataTableViewOptions,DataTableColumnWidth,DataTableRowContext,DataTableColumnResizeOptions} from '@coffeehc/xui-runtime/data-table';
 export type {DataTableColumnSizingProps} from './data-table-sizing.js';
 export interface DataTableCellContext extends DataTableRowContext {}
@@ -25,6 +26,8 @@ export interface DataTableColumn<T> {
   width?:DataTableColumnWidth;
   /** Enabled when the table opts into columnSizing; false excludes this handle. */
   resize?:DataTableColumnResizeOptions|false;
+  /** Semantic cell text/layout class; the table retains its native td and row identity. */
+  cellClassName?:string;
   ariaSort?:React.AriaAttributes['aria-sort']; sticky?:'start'|'end';
 }
 export interface DataTableProps<T> extends DataTableViewOptions {
@@ -43,6 +46,11 @@ export interface DataTableProps<T> extends DataTableViewOptions {
 }
 export function DataTableToolbar({className,...props}:React.ComponentProps<typeof Toolbar>) {return <Toolbar {...props} className={cx('xui-data-table-toolbar',className)}/>;}
 export function DataTableFilter({className,grow=false,...props}:FieldProps&{grow?:boolean}) {return <Field {...props} data-grow={grow} className={cx('xui-data-table-filter',className)}/>;}
+/** One stable row surface lends existing actions to passive text reveal. */
+function DataRow<T>({row,columns,context,state,events}:{row:T;columns:readonly DataTableColumn<T>[];context:DataTableCellContext;state?:{selected?:boolean;expanded?:boolean};events:React.HTMLAttributes<HTMLTableRowElement>}){
+  const interaction=React.useRef<HTMLTableRowElement>(null);
+  return <OverflowTextInteraction.Provider value={interaction}><TableRow ref={interaction} {...state} {...events}>{columns.map(column=><TableCell key={column.id} sticky={column.sticky} className={column.cellClassName}>{column.cell(row,context)}</TableCell>)}</TableRow></OverflowTextInteraction.Provider>;
+}
 /** Query facts stay controlled. Optional local sizing never requests data or changes page facts. */
 export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,idleState,emptyState,errorState,feedback,footer,striped=false,stickyHeader=true,className,id,columnSizing:resizeOptions,...options}:DataTableProps<T>) {
   const keys=validateDataTableKeys(rows,columns,rowKey),view=useCollectionView(options,rows.length),{state}=view,{labels}=state;
@@ -89,13 +97,13 @@ export function DataTable<T>({rows,columns,rowKey,rowState,rowEvents,toolbar,idl
         <div ref={widthProbes} className="xui-data-table-widths" aria-hidden="true" hidden={!columnSizing&&!resizeOptions}>{columns.map(column=><div key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}{resizeOptions&&<><div ref={minimum} style={{width:'var(--data-table-column-resize-min)'}}/><div ref={maximum} style={{width:'var(--data-table-column-resize-max)'}}/></>}</div>
         <Table ref={layoutTable} data-column-sizing={columnSizing} striped={striped} stickyHeader={stickyHeader} data-resizable={!!resizeOptions||undefined} aria-label={options.label}>
           <colgroup ref={columnGroup}>{columns.map(column=><col key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</colgroup>
-          <thead><TableRow>{columns.map(column=><TableHeaderCell key={column.id} sticky={column.sticky} data-resizable={resizeOptions&&column.resize!==false||undefined} aria-sort={column.ariaSort}>{column.header}{resizeOptions&&column.resize!==false&&<ColumnResizeHandle columnId={column.id} label={column.resize?.label??`Resize ${typeof column.header==='string'?column.header:column.id}`} bounds={column.resize} blocked={state.blocked} controller={sizing.controller} table={layoutTable} ids={columns.map(column=>column.id)} minimum={minimum} maximum={maximum}/>}</TableHeaderCell>)}</TableRow></thead>
-          <tbody>{hasRows?rows.map((row,index)=><TableRow key={keys[index]} {...rowState?.(row)}
-            onClick={rowEvents?.onClick?event=>rowEvent(row,index,event,rowEvents.onClick):undefined}
-            onDoubleClick={rowEvents?.onDoubleClick?event=>rowEvent(row,index,event,rowEvents.onDoubleClick):undefined}
-            onContextMenu={rowEvents?.onContextMenu?event=>rowEvent(row,index,event,rowEvents.onContextMenu):undefined}
-            onKeyDown={rowEvents?.onKeyDown?event=>rowEvent(row,index,event,rowEvents.onKeyDown):undefined}
-          >{columns.map(column=><TableCell key={column.id} sticky={column.sticky}>{column.cell(row,{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked})}</TableCell>)}</TableRow>):<TableRow aria-hidden={loading||undefined}><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{loading?null:showError&&!state.hasValue?error:state.status==='idle'?idleState??<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
+          <thead><TableRow>{columns.map(column=><TableHeaderCell key={column.id} sticky={column.sticky} aria-label={typeof column.header==='string'?column.header:undefined} data-resizable={resizeOptions&&column.resize!==false||undefined} aria-sort={column.ariaSort}>{column.header}{resizeOptions&&column.resize!==false&&<ColumnResizeHandle columnId={column.id} label={column.resize?.label??`Resize ${typeof column.header==='string'?column.header:column.id}`} bounds={column.resize} blocked={state.blocked} controller={sizing.controller} table={layoutTable} ids={columns.map(column=>column.id)} minimum={minimum} maximum={maximum}/>}</TableHeaderCell>)}</TableRow></thead>
+          <tbody>{hasRows?rows.map((row,index)=><DataRow key={keys[index]} row={row} columns={columns} context={{rowIndex:index,rowKey:keys[index],busy:state.busy,disabled:state.blocked}} state={rowState?.(row)} events={{
+            onClick:rowEvents?.onClick?event=>rowEvent(row,index,event,rowEvents.onClick):undefined,
+            onDoubleClick:rowEvents?.onDoubleClick?event=>rowEvent(row,index,event,rowEvents.onDoubleClick):undefined,
+            onContextMenu:rowEvents?.onContextMenu?event=>rowEvent(row,index,event,rowEvents.onContextMenu):undefined,
+            onKeyDown:rowEvents?.onKeyDown?event=>rowEvent(row,index,event,rowEvents.onKeyDown):undefined,
+          }}/>):<TableRow aria-hidden={loading||undefined}><TableCell colSpan={columns.length}><div className="xui-data-table-placeholder">{loading?null:showError&&!state.hasValue?error:state.status==='idle'?idleState??<div className="xui-state" role="status">{labels.idle}</div>:empty}</div></TableCell></TableRow>}</tbody>
         </Table>
       </TableContainer>
       {/* Share the visible body track, not the horizontally overflowing table.

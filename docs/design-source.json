@@ -1,5 +1,5 @@
 {
-  "contractVersion": "4.2.35",
+  "contractVersion": "4.2.36",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
   "defaultTokenCount": 436,
@@ -119,7 +119,8 @@
     "4.2.32 insets icon-button surfaces and focus without shrinking hit targets or glyphs. All variants retain semantic colors, busy/disabled behavior and rem-based interface scaling; text buttons and Card icon tiles are unchanged.",
     "4.2.33 keeps the public icon-button padding inside SearchToolbar/QueryForm actions and advanced slots, and excludes icon-only targets from sidebar-footer text-button alignment/minimum overrides and generic inset focus scopes. Compact footer tracks retain large square targets inside the existing rail. Ordinary field and scroll-region focus policies remain intact. No geometry token or state owner changes.",
     "4.2.34 composes BusinessLogExplorer queryFields/querySummary through QueryForm and uses one column-definition/cell model: raw keyed values without a renderer, authoritative React results with one. Optional immutable JSON attributes retain host projections; existing Controller, loader, snapshot and cancellation owners remain. Column widths and overflow inherit public Table and OverflowText recipes. Legacy string columns/formatters are removed by explicit authorization.",
-    "4.2.35 removes default focus outlines from public controls, grouped inputs, menus, combobox options and charts. Focus changes only existing visible border colors; invalid borders retain the error color and borderless controls keep their original boundary. Existing geometry, scroll clearance, keyboard interaction and state owners remain unchanged."
+    "4.2.35 removes default focus outlines from public controls, grouped inputs, menus, combobox options and charts. Focus changes only existing visible border colors; invalid borders retain the error color and borderless controls keep their original boundary. Existing geometry, scroll clearance, keyboard interaction and state owners remain unchanged.",
+    "4.2.36 unifies internal data-table compositions on DataTable with resizable business columns and fixed action columns. ApiKey and chart data views use the same sizing owner; structured-log semantic cell classes remain available. Column sizing reuses DataTable local, controlled or injected state and does not create a query owner."
   ],
   "defaultPreset": "violet",
   "themePresets": [

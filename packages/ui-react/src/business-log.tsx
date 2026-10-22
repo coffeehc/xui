@@ -10,8 +10,8 @@ import {Field,Input,SimpleSelect} from './forms.js';
 import {PageHeader,Toolbar,FormGrid,Stack} from './layout.js';
 import {QueryForm,QueryField} from './search-toolbar.js';
 import {OverflowText} from './display.js';
-import {DataRegion,LoadingState,ErrorState,EmptyState,Alert,RenderBoundary} from './feedback.js';
-import {Table,TableContainer,TableHead,TableBody,TableRow,TableHeaderCell,TableCell} from './table.js';
+import {LoadingState,ErrorState,EmptyState,Alert,RenderBoundary} from './feedback.js';
+import {DataTable,type DataTableColumn,type DataTableColumnSizingProps} from './data-table.js';
 import {Dialog} from './dialog.js';
 import {cx} from './shared.js';
 export type {BusinessLogController,BusinessLogEvent,BusinessLogDetail,BusinessLogFilter,BusinessLogLoader,BusinessLogRenderer,BusinessLogLabels,BusinessLogListColumnId,BusinessLogListColumn,BusinessLogListPresentation,BusinessLogCellContext,JSONValue} from '@coffeehc/xui-runtime/business-log';
@@ -24,6 +24,8 @@ export interface BusinessLogExplorerListPresentation extends Omit<BusinessLogLis
  columns?:readonly BusinessLogExplorerColumn[];
 }
 interface BusinessLogExplorerSlots {className?:string;headerActions?:React.ReactNode;renderers?:readonly BusinessLogRenderer<React.ReactNode>[];
+ /** DataTable owns local sizing by default; optional controlled widths or an injected sizing controller. */
+ columnSizing?:DataTableColumnSizingProps;
  /** Live list-only presentation; updating it does not recreate or query the controller. */
  list?:BusinessLogExplorerListPresentation;
  /** Additional direct QueryField children. The host retains their values and query-scope owner. */
@@ -36,16 +38,6 @@ interface BusinessLogExplorerSlots {className?:string;headerActions?:React.React
 const jsonStyle={whiteSpace:'pre-wrap',overflowWrap:'anywhere'} as const;
 function Payload({detail,renderers}:{detail:Readonly<BusinessLogDetail>;renderers:readonly BusinessLogRenderer<React.ReactNode>[]}){const renderer=findBusinessLogRenderer(renderers,detail);return renderer?renderer.render(detail):<pre className="xui-code" style={jsonStyle}>{JSON.stringify(detail.payload,null,2)}</pre>;}
 export type BusinessLogExplorerProps=BusinessLogExplorerSlots&({viewController:BusinessLogViewController;controller?:never;options?:never;pagination?:never}|{viewController?:undefined;controller:BusinessLogController;options?:never}|{viewController?:undefined;controller?:undefined;options:BusinessLogOptions});
-function LogRow({row,columns,cells,viewport,onDetail,detailLabel}:{row:ReturnType<typeof getBusinessLogTable>['rows'][number];columns:ReturnType<typeof getBusinessLogTable>['columns'];cells:ReadonlyMap<string,BusinessLogExplorerColumn['cell']>;viewport:React.RefObject<HTMLDivElement|null>;onDetail:(event:React.MouseEvent<HTMLButtonElement>,id:string)=>void;detailLabel:string}){
- const interaction=React.useRef<HTMLTableRowElement>(null);
- // Live cell/label updates can widen the already focused action without another focus event.
- React.useLayoutEffect(()=>{const action=interaction.current?.ownerDocument.activeElement;if(!(action instanceof HTMLElement)||!interaction.current?.contains(action)||!viewport.current)return;const box=action.getBoundingClientRect(),region=viewport.current.getBoundingClientRect(),style=getComputedStyle(action),paint=parseFloat(style.outlineWidth)+parseFloat(style.outlineOffset);if(box.left-paint<region.left||box.right+paint>region.right||box.top-paint<region.top||box.bottom+paint>region.bottom)action.scrollIntoView({block:'nearest',inline:'nearest'});});
- return <TableRow ref={interaction}>{columns.map((column,index)=>{
-  const detail=column.id==='detail',value=row.values[index],text=detail?detailLabel:value==null?'':typeof value==='object'?JSON.stringify(value):String(value);
-  const content=detail?<Button variant="ghost" size="xs" aria-label={`${detailLabel} ${row.id}`} onClick={event=>onDetail(event,row.id)}>{detailLabel}</Button>:column.overflow==='ellipsis'?<OverflowText text={text} interactionRef={interaction}/>:text,context=Object.freeze({rowId:row.id,columnId:column.id,event:row.event,value,text,content}),cell=cells.get(column.id);
-  return <TableCell key={column.id} className={column.id==='summary'?'xui-table-primary':['action','occurred_at'].includes(column.id)?'xui-code xui-table-value':detail?undefined:'xui-table-label'}><span className="xui-business-log-cell" data-overflow={column.overflow}>{cell?cell(context):context.content}</span></TableCell>;
- })}</TableRow>;
-}
 function defaultColumns(labels:Readonly<BusinessLogLabels>):readonly BusinessLogExplorerColumn[]{return [
  {id:'summary',header:labels.summary},
  {id:'result',header:labels.result,cell:({event})=>labels[event.result]},
@@ -55,7 +47,7 @@ function defaultColumns(labels:Readonly<BusinessLogLabels>):readonly BusinessLog
  {id:'detail',header:labels.detail},
 ];}
 /** Read-only log presentation; the host owns loader, permissions and event reliability. */
-export function BusinessLogExplorer({viewController:injected,controller:borrowed,options:initialOptions,className,headerActions,queryFields,querySummary,renderers=[],list,labels:labelOverrides}:BusinessLogExplorerProps){
+export function BusinessLogExplorer({viewController:injected,controller:borrowed,options:initialOptions,className,headerActions,queryFields,querySummary,renderers=[],list,labels:labelOverrides,columnSizing={}}:BusinessLogExplorerProps){
   assertControllerProps(injected,{controller:borrowed,options:initialOptions},['controller','options']);
   if(borrowed&&initialOptions)throw new TypeError('controller cannot be combined with options');
   const viewController=useOwnedController(injected,()=>createBusinessLogViewController(borrowed?{service:borrowed}:{options:initialOptions!}),borrowed);
@@ -65,8 +57,18 @@ export function BusinessLogExplorer({viewController:injected,controller:borrowed
   const labels=resolveBusinessLogLabels(labelOverrides,initialOptions?resolveBusinessLogLabels(initialOptions.labels):controller.labels);
   const error=state.errorKey?labels[state.errorKey]:state.error,detailError=state.detailErrorKey?labels[state.detailErrorKey]:state.detailError;
   const draft=viewState.draft,setDraft=viewController.setDraft,toDraft=businessLogFilterDraft;
-  const lastTrigger=React.useRef<HTMLButtonElement|null>(null),refresh=React.useRef<HTMLButtonElement>(null),viewport=React.useRef<HTMLDivElement>(null),table=getBusinessLogTable(state,labels,list),detail=state.detail;
+  const lastTrigger=React.useRef<HTMLButtonElement|null>(null),refresh=React.useRef<HTMLButtonElement>(null),table=getBusinessLogTable(state,labels,list),detail=state.detail;
   const cells=new Map((list?.columns??defaultColumns(labels)).map(column=>{if(column.cell!=null&&typeof column.cell!=='function')throw new TypeError('Business log cell must be a function or null');return [column.id,column.cell] as const;}));
+  const columns:readonly DataTableColumn<typeof table.rows[number]>[]=table.columns.map((column,index)=>({
+    id:column.id,header:column.header,width:column.width??(column.id==='detail'?'var(--layout-field-min)':undefined),resize:column.resize,
+    cellClassName:column.id==='summary'?'xui-table-primary':['action','occurred_at'].includes(column.id)?'xui-code xui-table-value':column.id==='detail'?undefined:'xui-table-label',
+    cell:row=>{
+      const detail=column.id==='detail',value=row.values[index],text=detail?labels.detail:value==null?'':typeof value==='object'?JSON.stringify(value):String(value);
+      const content=detail?<Button variant="ghost" size="xs" aria-label={`${labels.detail} ${row.id}`} onClick={event=>{lastTrigger.current=event.currentTarget;void controller.openDetail(row.id);}}>{labels.detail}</Button>:column.overflow==='ellipsis'?<OverflowText text={text}/>:text;
+      const context=Object.freeze({rowId:row.id,columnId:column.id,event:row.event,value,text,content}),cell=cells.get(column.id);
+      return <span className="xui-business-log-cell" data-overflow={column.overflow}>{cell?cell(context):context.content}</span>;
+    },
+  }));
   useViewRelease(controller,()=>{controller.closeDetail();controller.cancel();});
   const input=(key:Exclude<keyof typeof draft,'actorKind'|'result'>,label:string)=><Field key={key} label={label}><Input value={draft[key]} autoComplete="off" onChange={event=>setDraft({...draft,[key]:event.target.value})}/></Field>;
   const eventField=(key:'event_type',label:string)=><QueryField label={label} width="standard"><Input value={draft[key]} autoComplete="off" onChange={event=>setDraft({...draft,[key]:event.target.value})}/></QueryField>;
@@ -80,9 +82,11 @@ export function BusinessLogExplorer({viewController:injected,controller:borrowed
       advancedLabel={labels.filters} disclosure={{controller:viewController.filters}}
       advanced={<FormGrid>{input('since',labels.since)}{input('until',labels.until)}{select('actorKind',labels.actorKind,['user','agent','service'])}{input('actorId',labels.actorId)}{input('objectKind',labels.objectKind)}{input('objectId',labels.objectId)}{input('action',labels.action)}{input('correlation_id',labels.correlationId)}{input('request_id',labels.requestId)}</FormGrid>}
       summary={<>{querySummary}{state.filterError&&<Alert tone="error">{state.filterErrorKey?labels[state.filterErrorKey]:state.filterError}</Alert>}</>}/>
-    <DataRegion busy={state.busy} aria-label={labels.title} feedback={!state.data&&state.busy||state.error?<>{!state.data&&state.busy&&<LoadingState>{labels.loading}</LoadingState>}{state.error&&<ErrorState title={error!} onRetry={()=>controller.retry()} retryLabel={labels.retry}/>}</>:undefined}>
-      {state.data&&<>{table.rows.length?<TableContainer ref={viewport} className="xui-business-log-table" aria-label={labels.title}><Table className="xui-record-table" data-column-sizing={table.columns.some(column=>column.width!==undefined)?'fixed':undefined} aria-label={labels.title}><colgroup>{table.columns.map(column=><col key={column.id} style={column.width===undefined?undefined:{width:column.width}}/>)}</colgroup><TableHead><TableRow>{table.columns.map(column=><TableHeaderCell key={column.id}>{column.header}</TableHeaderCell>)}</TableRow></TableHead><TableBody>{table.rows.map(row=><LogRow key={row.id} row={row} columns={table.columns} cells={cells} viewport={viewport} detailLabel={labels.detail} onDetail={(event,id)=>{lastTrigger.current=event.currentTarget;void controller.openDetail(id);}}/>)}</TableBody></Table></TableContainer>:<EmptyState title={labels.empty}/>}<Toolbar><Button variant="outline" disabled={state.busy||!state.canPrevious||!!state.error||!!state.filterError} onClick={()=>controller.previous()}>{labels.previous}</Button><span data-business-log-page>{labels.page} {state.pageIndex+1}</span><Button variant="outline" disabled={state.busy||!state.canNext||!!state.error||!!state.filterError} onClick={()=>controller.next()}>{labels.next}</Button>{getBusinessLogSnapshot(state.data)!==null&&<span className="xui-code" data-business-log-snapshot>{labels.snapshot}: {getBusinessLogSnapshot(state.data)}</span>}</Toolbar></>}
-    </DataRegion>
+    <DataTable className="xui-record-table xui-business-log-table" label={labels.title} layout="document" rows={table.rows} columns={columns} rowKey={row=>row.id} columnSizing={columnSizing}
+      status={state.busy?(state.data?'refreshing':'loading'):state.error?'error':state.data?'ready':'idle'} hasValue={state.data!==null}
+      labels={{loading:labels.loading,refreshing:labels.loading,idle:labels.loading,empty:labels.empty,retry:labels.retry,count:()=>''}}
+      emptyState={<EmptyState title={labels.empty}/>} errorState={<ErrorState title={error??labels.readError} onRetry={()=>controller.retry()} retryLabel={labels.retry}/>}
+      footer={state.data?<Toolbar><Button variant="outline" disabled={state.busy||!state.canPrevious||!!state.error||!!state.filterError} onClick={()=>controller.previous()}>{labels.previous}</Button><span data-business-log-page>{labels.page} {state.pageIndex+1}</span><Button variant="outline" disabled={state.busy||!state.canNext||!!state.error||!!state.filterError} onClick={()=>controller.next()}>{labels.next}</Button>{getBusinessLogSnapshot(state.data)!==null&&<span className="xui-code" data-business-log-snapshot>{labels.snapshot}: {getBusinessLogSnapshot(state.data)}</span>}</Toolbar>:undefined}/>
     <PeerDialog.Root open={state.detailOpen} onOpenChange={open=>{if(!open)controller.closeDetail();}}><Dialog.Content finalFocus={()=>lastTrigger.current?.isConnected?lastTrigger.current:refresh.current}><Dialog.Title>{labels.detailTitle}</Dialog.Title><Dialog.Body><Stack><div className="xui-feedback-slot" hidden={!state.detailBusy&&!state.detailError}>{state.detailBusy&&<LoadingState>{labels.loading}</LoadingState>}{state.detailError&&<ErrorState title={detailError!} retryLabel={labels.retry} onRetry={state.detailState==='error'?()=>controller.retryDetail():undefined}/>}</div>
       {detail&&<><strong className="xui-strong">{detail.event.summary}</strong><dl className="xui-details">{getBusinessLogFacts(detail.event,labels).map(([label,value],index)=><React.Fragment key={index}><dt>{label}</dt><dd className={index!==5&&index!==7?'xui-code':undefined}>{value}</dd></React.Fragment>)}<dt>{labels.object}</dt><dd>{object?(href?<a href={href}>{object.kind}: {object.id}</a>:<span>{object.kind}: {object.id}</span>):labels.unknown}</dd></dl>{detail.state==='available'?<><h3 className="xui-detail-heading">{labels.payload}</h3><RenderBoundary resetKey={detail} fallback={()=><><Alert tone="error">{labels.rendererError}</Alert><pre className="xui-code" style={jsonStyle}>{JSON.stringify(detail.payload,null,2)}</pre></>}><Payload detail={detail} renderers={renderers}/></RenderBoundary></>:<Alert tone="warning">{detail.state==='expired'?labels.expired:labels.unavailable}</Alert>}</>}
     </Stack></Dialog.Body><Dialog.Footer><Button variant="outline" onClick={()=>controller.closeDetail()}>{labels.close}</Button></Dialog.Footer></Dialog.Content></PeerDialog.Root>

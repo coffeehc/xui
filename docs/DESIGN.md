@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.35。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.36。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -2561,3 +2561,9 @@ LineChart、BarChart、PieChart 是 React 数据展示组合，复用 Card 的 t
 折线每类别对应有限数值或显式null，null断开且不插值/补0；柱图始终包含0基线，正负值按实际方向绘制，0柱高度为0。饼仅接受有限非负数，零项不画扇区，全零显示居中空态而非等分；单项全占比为完整圆。原值和数据表不经过日期/时区转换，默认原数值字符串；格式化只影响显示。无数据的idle/loading/ready/error分别显示引导/居中加载/居中空态/可重试错误；保有同范围数据时loading/refreshing/error继续保图，反馈在固定既有反馈槽，不遮罩/透明化/重挂SVG。新范围由宿主清除旧数据并执行取消/迟到隔离。
 
 绘图区是一个独立键盘停靠点：左右查看类别，笛卡尔图上下切系列，Home/End查看首末，Escape清除读值；饼方向键按输入次序巡检（含零值），不触发业务动作。鼠标/触屏在图中读值，同一就近文本区播报；查看数据入口保留所有类别/系列/原值与缺失标识，使用公开DataTable。数据/名称更新用稳定ID重新定位读值，删除后不继续播报旧记录。刷新不抢焦点，ResizeObserver随SVG节点卸载释放；不是全局Controller或独立原生UI。
+
+### 内部数据列表统一 DataTable（4.2.36）
+
+BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 与图表数据视图统一复用公共 DataTable；前两者移除独立 Table 拼装。Table 与 DataTable 自身的底层语义 table 实现保留，CardGroup 等非表格呈现保持其职责。组合组件默认开启数据列调宽，内置 detail/actions 列固定且不提供调整手柄；没有重置列宽按钮。自定义操作列显式 resize=false，不按单元格内容猜测操作语义。
+
+DataTable 是表格渲染、列宽、行交互表面与滚动边界的唯一 owner；日志与 Key 的原 Controller 继续管理查询、草稿、权限、游标、快照、详情及关闭回焦。已有公开 columnSizing 支持本地、受控和完整 Controller 注入，组合不再建立另一份列宽状态。受调宽的记录列应自然换行，不能绘制覆盖相邻列；操作按钮仍受表体可视净宽约束。日志的领域游标工具条通过 DataTable.footer 组合，不伪造 DataTable cursor token。改列宽不得请求、刷新、清理草稿或重新挂载查询 owner。

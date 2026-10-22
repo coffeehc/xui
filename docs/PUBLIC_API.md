@@ -1119,3 +1119,26 @@ React `/toast` 新增 `Toast.Icon` / `ToastIconProps`：装饰状态槽，缺省
 ### 查询页公开编排（4.2.20）
 
 `/search-toolbar` 与根入口新增 QueryForm/QueryFormProps、QueryField/QueryFieldProps、QueryFieldWidth；`/data-table` 的 DataTableProps 新增可选 idleState；`/feedback` 的 EmptyStateProps 新增可选 align/icon。均为兼容扩展，无新 package subentry、Service 或查询 owner。未确认集合的 count 不再调用或播报假0；已确认空结果保留0计数，真实分页仍由宿主提供。类型、槽位、原生表单行为与迁移边界见 [组件合同](COMPONENTS.md#手动查询页-queryform--queryfield4220)，区域/宽度/八种状态见 [DESIGN](DESIGN.md#手动查询页布局与状态合同4220)，[示例](../examples/query-page-react/app.tsx)仅消费正式公共入口。
+
+
+### 组合表格列宽（4.2.36）
+
+React `/business-log`、`/structured-log`、`/api-key`、`/chart` 的组合新增 `columnSizing?: DataTableColumnSizingProps`，默认启用 DataTable 列宽调整，支持既有本地/受控/注入模式。React `/data-table` 的 `DataTableColumn<T>` 新增 `cellClassName?: string`；runtime `/business-log` 的 `BusinessLogListColumn` 新增 `resize?: DataTableColumnResizeOptions | false`。现有入口与根入口同步导出，原 Controller、查询、分页、详情、labels 与 cell 回调接线保持。
+
+React `/structured-log` 新增 `StructuredLogExplorerColumnId`，`StructuredLogExplorerSlots.columnOptions` 按稳定语义 id 提供 `width/resize`；actions 仅允许 width 与 resize:false。纯 helper `getStructuredLogTable` 在原 headers/rows/action 外新增 columnIds。业务日志 detail、结构化日志 actions、API Key actions 在运行时始终固定；Chart 数据列均可调。具体 id 与组件默认见[组件合同](COMPONENTS.md#内部数据表格与列宽4236)。
+
+```tsx
+import {BusinessLogExplorer} from '@coffeehc/xui-react/business-log';
+import {StructuredLogExplorer} from '@coffeehc/xui-react/structured-log';
+import {createDataTableColumnSizingController} from '@coffeehc/xui-runtime/data-table';
+const sizing = createDataTableColumnSizingController();
+<BusinessLogExplorer controller={businessLogs} columnSizing={{controller:sizing}}
+  list={{columns:[
+    {id:'summary',header:'摘要',width:'20rem',resize:{minWidth:120,maxWidth:800}},
+    {id:'detail',header:'详情',width:'8rem'},
+  ]}} />;
+<StructuredLogExplorer controller={structuredLogs}
+  columnOptions={{summary:{width:'20rem',resize:{minWidth:120}},actions:{width:'8rem'}}} />;
+```
+
+注入实例由创建者销毁；不会保存偏好、重置查询或增加“重置列宽”按钮。按需 CSS 入口在 critical.css/table.css 外还须加载既有 table-resize.css；完整 style.css 已包含该分片。

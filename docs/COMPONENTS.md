@@ -1066,7 +1066,7 @@ React 推荐组合：`<Dialog.Header closeButtonProps={{'aria-label':'关闭设�
 
 ## 数据表格
 
-通用记录页复用 Table 原语与公共 `xui-record-table` 排版：`xui-table-primary` 显式标识任务主列，使用 `--table-primary-min-inline-size`；`xui-table-label` 保留完整元数据词组，`xui-code xui-table-value` 组合采用 mono/tabular 与单行时间/计数。次要列在表内横滚，不压成逐字竖排。StructuredLogExplorer所有表头及records的三态标签复用完整词组角色，计数/时间仍用单行数值角色；不向宿主新增列宽或私有CSS配置。行操作复用 ghost/xs Button，真正危险确认仍在 Dialog 中；不新增请求、排序或权限 owner。表格通过准确的可访问名称识别，不重复可见页标题。这些角色只在有阅读需要的列显式采用，不为普通 Table 强制列宽。一次性 Key 的读取区域消费既有 mono/tabular 文字角色，保留 Textarea 的尺寸、焦点与选择复制语义。
+通用记录页复用 DataTable 与公共 `xui-record-table` 排版：`xui-table-primary` 显式标识任务主列，使用 `--table-primary-min-inline-size`；`xui-table-label` 保留完整元数据词组，`xui-code xui-table-value` 组合采用 mono/tabular 与单行时间/计数。次要列在表内横滚，不压成逐字竖排。StructuredLogExplorer所有表头及records的三态标签复用完整词组角色，计数/时间采用数值角色；启用列宽调整时内容可在所属单元内换行。行操作复用 text/xs Button，真正危险确认仍在 Dialog 中；不新增请求、排序或权限 owner。表格通过准确的可访问名称识别，不重复可见页标题。这些角色只在有阅读需要的列显式采用，不为普通 Table 强制列宽。一次性 Key 的读取区域消费既有 mono/tabular 文字角色，保留 Textarea 的尺寸、焦点与选择复制语义。
 
 正式 UI 入口为 React `@coffeehc/xui-react/data-table`；纯分页事实与类型由 `@coffeehc/xui-runtime/data-table` 共享。默认皮肤属于公共 `@coffeehc/xui-theme/table.css`，完整 `style.css` 已包含它。原有 Table/TableContainer、Toolbar/Field、Pagination、DataRegion/反馈原语保持原语合同，不会自动升级所有旧表格。
 
@@ -1612,7 +1612,7 @@ ConfigurableLoginPage对auth.refresh或auth.session的network/timeout/HTTP 5xx�
 
 ## 业务日志列定义与查询 slot（4.2.34）
 
-React `/business-log` 的 `BusinessLogExplorer.list?: BusinessLogExplorerListPresentation`统一使用列定义。`columns`每项为`{id, header, width?, overflow?, cell?}`；id是稳定列标识，也是默认字段名，非空且唯一；header由宿主提供当前语言。没有指定columns时仍显示公共七列，公共默认列用同一cell路径呈现操作者、结果和对象；一旦指定columns，顺序与数量完全由配置决定，不自动追加detail。
+React `/business-log` 的 `BusinessLogExplorer.list?: BusinessLogExplorerListPresentation`统一使用列定义。`columns`每项为`{id, header, width?, resize?, overflow?, cell?}`；id是稳定列标识，也是默认字段名，非空且唯一；header由宿主提供当前语言。没有指定columns时仍显示公共七列，公共默认列用同一cell路径呈现操作者、结果和对象；一旦指定columns，顺序与数量完全由配置决定，不自动追加detail。
 
 **只有两条渲染规则**：不指定cell（或null）时读取原值；指定`cell(context)`时完全使用其React返回值，包括null/undefined留空。无全局defaultCell、无formatActor/formatAction/formatOccurredAt。原值先读事件自身`event[id]`，没有该字段才读显式`event.attributes[id]`，不猜别名、不走点路径、不解析显示文本、不读取payload。0/false显示为0/false，null/undefined为空；对象/数组默认是安全JSON文本。原ISO/状态码不自动格式化或翻译，需要时在对应cell明确处理。`detail`是公共动作列，缺省cell提供原详情Button，宿主可用`context.content`保留这个动作；覆盖或省略它时，宿主需保留必要事实的可达入口。
 
@@ -1708,3 +1708,16 @@ const keys = createApiKeyManagerController({...capabilities, adapter, labels: pa
 上述创建仅在原装配/作用域执行一次，不放入每次render，不并存第二个service/ViewController；借用Controller时初始读取仍由宿主显式执行，卸载和身份切换按原合同清理。官方端点/method/DTO/认证/错误由[服务前置表](PUBLIC_API.md#默认适配器的服务前置)定义，不在pages开放第二套配置。现有特殊SSO/领域协议先保留其真实owner与AuthPage等公开布局，记录默认完整页不匹配的合同，不能为外观升级改协议。
 
 正式包示例沿用四个现有页面的`?defaults`模式：[登录](../examples/login-react/app.tsx)、[初始化](../examples/admin-setup-react/app.tsx)、[业务日志](../examples/business-log-react/app.tsx)、[Key](../examples/api-key-react/app.tsx)。它们消费bootstrap配置投影和原单一Controller，仅使用合成transport/回调，不代表真实BaseService部署。接入步骤见[默认页面专项](../.agents/skills/adopt-xui/references/default-pages.md)，初始化缺口提示词见[维护清单](PUBLIC_REQUESTS.md#baseservice-管理员初始化合同提示词)。
+
+
+## 内部数据表格与列宽（4.2.36）
+
+BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 及 LineChart/BarChart/PieChart 的数据视图统一使用公共 DataTable。四类组合新增可选 `columnSizing?: DataTableColumnSizingProps`，默认 `{}` 启用本地调整；受控 `widths/onWidthsChange` 或注入 `controller` 沿用[交互列宽调整](#交互列宽调整)合同。通用 DataTable 自身仍须显式传入该对象。各组合的请求、筛选、分页、详情与权限由原 Controller/宿主负责；调宽和刷新不重建已有行，也不创建查询。域分页置于同一 DataTable.footer，不再包第二个表体/状态区域。
+
+BusinessLogExplorer 的 `list.columns[].resize` 复用 `DataTableColumnResizeOptions | false`，可给业务列定义可访问名称、上下限或明确禁用。内置 `detail` 列始终固定；即使 JavaScript 输入提供调整配置，也不产生手柄。`width` 与 `overflow`、完整 `cell` 回调语义继续有效。
+
+StructuredLogExplorer 另公开 `StructuredLogExplorerColumnId` 及 `columnOptions`。两种视图共用 `summary/severity/source/actions`；分组另有 `entry_count/matched_entry_count/last_seen_at`，记录另有 `occurred_at/retryable/user_fixable`。业务列按 id 可给 `width/resize`；`actions` 只接受 `width` 和 `resize:false`。切换视图沿同一个 sizing owner 按语义 id 保留宽度，不将分组计数错配为记录时间。
+
+ApiKeyManager 的内置 actions 与两类日志的内置详情/操作列均不显示手柄，其他列默认可调；Chart 数据视图全部数据列可调。操作列初始采用公共 field-min 轨道，调整其他列后保留其实际宽度。记录内容在单元内换行，长内容仍使用原有 OverflowText/公开 overflow 规则。库不显示“重置列宽”按钮，原 Controller.reset() 编程接口保持可用。
+
+`DataTableColumn<T>.cellClassName?: string` 将现有语义排版角色放在 td 上，不改变 cell 返回内容、事件或业务 owner。DataTable 行向内部 OverflowText 提供已有交互面；焦点不增加额外 Tab 停靠，调宽或刷新后已聚焦动作保持可见。

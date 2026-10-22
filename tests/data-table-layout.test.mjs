@@ -15,7 +15,7 @@ function fixture() {
     addEventListener:(name,fn) => listeners.set(name,fn),
     removeEventListener:(name,fn) => {if(listeners.get(name)===fn)listeners.delete(name);},
   };
-  const body = {offsetHeight:240,clientHeight:224,scrollHeight:1000,dataset:{}};
+  const body = {addEventListener:win.addEventListener,removeEventListener:win.removeEventListener,clientLeft:0,clientWidth:500,scrollLeft:0,offsetHeight:240,clientHeight:224,scrollHeight:1000,dataset:{}};
   const table = {ownerDocument:{defaultView:win},offsetWidth:500,offsetHeight:1000,tHead:head,tBodies:[{rows:[first,last]}]};
   const tools={offsetHeight:100},footer={offsetHeight:50};
   for(const node of [tools,body,footer])node.classList={contains:()=>false};
@@ -29,6 +29,21 @@ function fixture() {
     restore(){if(prior)Object.defineProperty(globalThis,'ResizeObserver',prior);else delete globalThis.ResizeObserver;},
   };
 }
+
+test('asynchronous geometry reveals only the focused body action and releases its observation',()=>{
+ const f=fixture();let owner,scrolls=0,box={left:550,right:650,top:50,bottom:90};
+ const action={getBoundingClientRect:()=>box,scrollIntoView:options=>{assert.deepEqual(options,{block:'nearest',inline:'nearest'});scrolls++;}};
+ f.body.getBoundingClientRect=()=>({left:0,right:500,top:0,bottom:240});f.table.tBodies[0].contains=node=>node===action;
+ try{
+  owner=observeDataTableLayout(f.frame,f.body,f.table);f.tick();assert.equal(scrolls,0);
+  f.table.ownerDocument.activeElement=action;f.listeners.get('focusin')();f.tick();assert.equal(scrolls,1);assert.equal(f.observed.has(action),true);
+  assert.equal(f.body.scrollLeft,150);
+  box={left:450,right:490,top:50,bottom:90};f.resize();f.tick();assert.equal(scrolls,1);
+  box={left:450,right:590,top:50,bottom:90};f.resize();f.tick();assert.equal(scrolls,2);
+  f.table.ownerDocument.activeElement={};owner.update();f.tick();assert.equal(scrolls,2);assert.equal(f.observed.has(action),false);
+  owner.destroy();assert.equal(f.listeners.size,0);
+ }finally{owner?.destroy();f.restore();}
+});
 
 test('layout minimum uses actual header, edge rows, computed clearance and scrollbar, capped by content',()=>{
   const f=fixture();let owner;

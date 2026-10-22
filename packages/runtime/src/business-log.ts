@@ -1,5 +1,5 @@
 import {isHttpError} from './http.js';
-import {validateDataTableKeys,type DataTableColumnWidth} from './data-table.js';
+import {validateDataTableKeys,type DataTableColumnWidth,type DataTableColumnResizeOptions} from './data-table.js';
 
 export type JSONValue=null|boolean|number|string|readonly JSONValue[]|{readonly [key:string]:JSONValue};
 export type BusinessLogActorKind='user'|'agent'|'service';
@@ -70,6 +70,8 @@ export interface BusinessLogListColumn {
  id:string;header:string;
  /** Same length validation as DataTable; explicit tracks use fixed table layout. */
  width?:DataTableColumnWidth;
+ /** DataTable resize bounds/label, or false for a host-defined action column. Built-in detail is always fixed. */
+ resize?:DataTableColumnResizeOptions|false;
  /** Public OverflowText recipe; reduced motion/touch retain complete wrapping. Requires width. */
  overflow?:'wrap'|'ellipsis';
 }
@@ -86,7 +88,7 @@ export function getBusinessLogTable(state:Readonly<BusinessLogState>,labels:Read
  if(!Array.isArray(selected)||!selected.length)throw new TypeError('Business log needs column definitions');
  const columns=selected.map(column=>{
   if(!column||typeof column!=='object'||typeof column.id!=='string'||!column.id.trim()||typeof column.header!=='string'||!column.header.trim()||column.overflow!==undefined&&!['wrap','ellipsis'].includes(column.overflow)||column.overflow==='ellipsis'&&column.width===undefined)throw new TypeError('Invalid business log column');
-  return {id:column.id,header:column.header,width:column.width,overflow:column.overflow};
+  return {id:column.id,header:column.header,width:column.width,overflow:column.overflow,resize:column.id==='detail'?false:column.resize};
  });
  validateDataTableKeys([],columns,()=> '');
  return {columns,columnIds:columns.map(column=>column.id),headers:columns.map(column=>column.header),rows:state.data?.list.map(event=>({id:event.id,event,values:columns.map(column=>columnValue(column.id,event))}))??[]};

@@ -12,15 +12,16 @@ import {Field,Input,Textarea,SimpleSelect,Fieldset,Checkbox} from './forms.js';
 import {PageHeader,Stack} from './layout.js';
 import {ErrorState,EmptyState,Alert,Badge} from './feedback.js';
 import {TableActions} from './table.js';
-import {DataTable,type DataTableColumn,type DataTableLabels} from './data-table.js';
+import {DataTable,type DataTableColumn,type DataTableLabels,type DataTableColumnSizingProps} from './data-table.js';
 import {Dialog} from './dialog.js';
 import {cx} from './shared.js';
-const metadataHeader=(label:string)=><span className="xui-table-label">{label}</span>;
 export type {ApiKeyMetadata,ApiKeyManagerController,ApiKeyManagerOptions,ApiKeyAdapter,ApiKeyDraft,CreatedApiKey,ApiKeyWriteContext,ApiKeyUpdateDraft} from '@coffeehc/xui-runtime/api-key';
 /** Client pagination over the complete metadata collection returned by adapter.list. */
 export type {ApiKeyManagerPagination} from '@coffeehc/xui-runtime/component-views';
 import type {ApiKeyManagerPagination} from '@coffeehc/xui-runtime/component-views';
 interface ApiKeyManagerSlots {className?:string;headerActions?:React.ReactNode;writeClipboard?:(value:string)=>Promise<void>;
+ /** DataTable owns widths; data columns resize by default and actions stay fixed. */
+ columnSizing?:DataTableColumnSizingProps;
  /** Defaults to 10 rows with 10/25/50 choices. false displays the complete loaded collection. */
 
  /** Public DataTable footer/count and status labels; never server pagination facts. */
@@ -28,7 +29,7 @@ interface ApiKeyManagerSlots {className?:string;headerActions?:React.ReactNode;w
 }
 export type ApiKeyManagerProps=ApiKeyManagerSlots&({viewController:ApiKeyManagerViewController;controller?:never;options?:never;pagination?:never}|{viewController?:undefined;controller:ApiKeyManagerController;options?:never;pagination?:ApiKeyManagerPagination|false}|{viewController?:undefined;controller?:undefined;options:ApiKeyManagerOptions;pagination?:ApiKeyManagerPagination|false});
 /** The caller owns the controller and backend. Unmount releases the transient result. */
-export function ApiKeyManager({viewController:injected,controller:borrowed,options:initialOptions,className,headerActions,writeClipboard,pagination,tableLabels}:ApiKeyManagerProps){
+export function ApiKeyManager({viewController:injected,controller:borrowed,options:initialOptions,className,headerActions,writeClipboard,pagination,tableLabels,columnSizing={}}:ApiKeyManagerProps){
   assertControllerProps(injected,{controller:borrowed,options:initialOptions,pagination},['controller','options','pagination']);
   if(borrowed&&initialOptions)throw new TypeError('controller cannot be combined with options');
   const viewController=useOwnedController(injected,()=>createApiKeyManagerViewController(borrowed?{service:borrowed,pagination}:{options:initialOptions!,pagination}),borrowed);
@@ -57,18 +58,18 @@ export function ApiKeyManager({viewController:injected,controller:borrowed,optio
   React.useLayoutEffect(()=>{if(!injected)viewController.updatePagination(pagination);},[viewController,injected,pagination]);
   const visibleRows=!viewState.pagination?state.rows:state.rows.slice(pageIndex*pageSize,(pageIndex+1)*pageSize);
   const columns:readonly DataTableColumn<Readonly<ApiKeyMetadata>>[]=React.useMemo(()=>[
-    {id:'name',header:metadataHeader(labels.name),cell:key=><div className="xui-table-primary">{key.name}</div>},
-    {id:'status',header:metadataHeader(labels.status),cell:key=><Badge className="xui-table-label" tone={key.status==='active'?'success':key.status==='expired'?'warning':'neutral'}>{key.status===null?labels.unknown:labels[key.status]}</Badge>},
-    {id:'prefix',header:metadataHeader(labels.prefix),cell:key=><span className="xui-code xui-table-value">{key.prefix===null?labels.unknown:`${key.prefix}…`}</span>},
-    {id:'permissions',header:metadataHeader(labels.permissions),cell:key=>key.permissionIds.length?key.permissionIds.map(id=>options.permissions.find(item=>item.id===id)?.label??id).join(', '):'—'},
-    {id:'createdAt',header:metadataHeader(labels.createdAt),cell:key=><span className="xui-code xui-table-value">{key.createdAt??labels.unknown}</span>},
-    {id:'expiresAt',header:metadataHeader(labels.expiry),cell:key=><span className="xui-code xui-table-value">{key.expiresAt??labels.unknown}</span>},
-    {id:'lastUsedAt',header:metadataHeader(labels.lastUsedAt),cell:key=><><span className="xui-code xui-table-value">{key.lastUsedAt??labels.unknown}</span>{key.lastUsedAtPending===true&&<> <Badge>{labels.lastUsedAtPending}</Badge></>}</>},
-    {id:'actions',header:metadataHeader(labels.actions),cell:key=><TableActions>{options.adapter.update&&<Button variant="text" size="xs" disabled={!controller.canUpdate(key)} aria-label={`${labels.edit} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openUpdate(key.id);}}>{labels.edit}</Button>}<Button variant="text" tone="danger" size="xs" disabled={!controller.canRevoke(key)} aria-label={`${labels.revoke} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openRevoke(key.id);}}>{labels.revoke}</Button>{controller.canDeleteRecord(key)&&<Button variant="text" tone="danger" size="xs" aria-label={`${labels.deleteRecord} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openDeleteRecord(key.id);}}>{labels.deleteRecord}</Button>}</TableActions>},
+    {id:'name',header:labels.name,cell:key=><div className="xui-table-primary">{key.name}</div>},
+    {id:'status',header:labels.status,cell:key=><Badge className="xui-table-label" tone={key.status==='active'?'success':key.status==='expired'?'warning':'neutral'}>{key.status===null?labels.unknown:labels[key.status]}</Badge>},
+    {id:'prefix',header:labels.prefix,cell:key=><span className="xui-code xui-table-value">{key.prefix===null?labels.unknown:`${key.prefix}…`}</span>},
+    {id:'permissions',header:labels.permissions,cell:key=>key.permissionIds.length?key.permissionIds.map(id=>options.permissions.find(item=>item.id===id)?.label??id).join(', '):'—'},
+    {id:'createdAt',header:labels.createdAt,cell:key=><span className="xui-code xui-table-value">{key.createdAt??labels.unknown}</span>},
+    {id:'expiresAt',header:labels.expiry,cell:key=><span className="xui-code xui-table-value">{key.expiresAt??labels.unknown}</span>},
+    {id:'lastUsedAt',header:labels.lastUsedAt,cell:key=><><span className="xui-code xui-table-value">{key.lastUsedAt??labels.unknown}</span>{key.lastUsedAtPending===true&&<> <Badge>{labels.lastUsedAtPending}</Badge></>}</>},
+    {id:'actions',header:labels.actions,resize:false,width:'var(--layout-field-min)',cell:key=><TableActions>{options.adapter.update&&<Button variant="text" size="xs" disabled={!controller.canUpdate(key)} aria-label={`${labels.edit} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openUpdate(key.id);}}>{labels.edit}</Button>}<Button variant="text" tone="danger" size="xs" disabled={!controller.canRevoke(key)} aria-label={`${labels.revoke} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openRevoke(key.id);}}>{labels.revoke}</Button>{controller.canDeleteRecord(key)&&<Button variant="text" tone="danger" size="xs" aria-label={`${labels.deleteRecord} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openDeleteRecord(key.id);}}>{labels.deleteRecord}</Button>}</TableActions>},
   ],[controller,options,labels]);
   return <section className={cx('xui-stack',className)}>
     <PageHeader title={labels.title} actions={<><RefreshAction ref={refreshRef} variant="outline" disabled={state.listBusy} busy={state.listBusy} onClick={()=>controller.refresh()}>{labels.refresh}</RefreshAction><Button ref={createRef} disabled={state.actionBusy} hidden={options.canCreate!==true} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openCreate();}}>{labels.create}</Button>{headerActions}</>}/>
-    <DataTable className="xui-record-table" rows={visibleRows} columns={columns} rowKey={key=>key.id} label={labels.title} status={state.listBusy?(state.hasLoaded?'refreshing':'loading'):state.listError?'error':state.hasLoaded?'ready':'idle'} disabled={state.actionBusy} hasValue={state.hasLoaded}
+    <DataTable className="xui-record-table" columnSizing={columnSizing} rows={visibleRows} columns={columns} rowKey={key=>key.id} label={labels.title} status={state.listBusy?(state.hasLoaded?'refreshing':'loading'):state.listError?'error':state.hasLoaded?'ready':'idle'} disabled={state.actionBusy} hasValue={state.hasLoaded}
       pagination={!viewState.pagination||!state.hasLoaded?undefined:{pageIndex,pageIndexOffset:0,pageSize,total:state.rows.length,pageSizeOptions:pageSizes,onPageChange:viewController.setPage,onPageSizeChange:viewController.setPageSize}}
       labels={{empty:labels.empty,idle:labels.loading,loading:labels.loading,refreshing:labels.loading,error:labels.listError,retry:labels.retry,...tableLabels,count:facts=>state.hasLoaded?(tableLabels?.count??dataTableDefaultLabels.count)(facts):''}}
       emptyState={<EmptyState title={labels.empty}/>} errorState={<ErrorState title={state.listError??labels.listError} retryLabel={labels.retry} onRetry={()=>controller.refresh()}/>}/>

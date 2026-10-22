@@ -1,6 +1,7 @@
 /**
  * @internal One geometry owner per rendered DataTable. Writes the body's track,
  * component minimum, actual vertical scroll boundary and no-records loading offset below the measured header.
+ * Focused body actions follow asynchronous column/font and cell geometry changes.
  * Host heights, column sizing,
  * pagination and full-content document flow stay outside this owner.
  */
@@ -59,6 +60,20 @@ export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, ta
     if (root.style.minBlockSize !== rootMinimum) root.style.minBlockSize = rootMinimum;
     written = tracks;
     writtenMinimum = rootMinimum;
+    const active = table.ownerDocument.activeElement as HTMLElement | null;
+    if (active && table.tBodies[0]?.contains(active)) {
+      const box = active.getBoundingClientRect(), port = body.getBoundingClientRect();
+      if (box.left < port.left || box.right > port.right || box.top < port.top || box.bottom > port.bottom) {
+        active.scrollIntoView({block:'nearest', inline:'nearest'});
+        // Native nearest scrolling keeps scroll-padding even when the action
+        // nearly fills the body. Reduce that clearance to the available room.
+        const moved = active.getBoundingClientRect(), viewport = body.getBoundingClientRect();
+        const gap = Math.min(number(style.scrollPaddingLeft), Math.max(0, (body.clientWidth - (moved.right - moved.left)) / 2));
+        const left = viewport.left + body.clientLeft + gap, right = viewport.left + body.clientLeft + body.clientWidth - gap;
+        if (moved.left < left) body.scrollLeft += moved.left - left;
+        else if (moved.right > right) body.scrollLeft += moved.right - right;
+      }
+    }
   };
   const schedule = () => {
     if (!dead && !pending) pending = win.requestAnimationFrame(() => { pending = 0; measure(); });
@@ -71,12 +86,15 @@ export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, ta
     const loading = Array.from(frame.children).find(node => node.classList.contains('xui-data-table-loading'));
     if (loading) for (const node of Array.from(loading.children)) targets.add(node);
     if (table.tHead) targets.add(table.tHead);
+    const active = table.ownerDocument.activeElement;
+    if (active && table.tBodies[0]?.contains(active)) targets.add(active);
     if (rows?.length) { targets.add(rows[0]); targets.add(rows[rows.length - 1]); }
     for (const node of watched) if (!targets.has(node)) { observer?.unobserve(node); watched.delete(node); }
     for (const node of targets) if (!watched.has(node)) { observer?.observe(node); watched.add(node); }
     schedule();
   };
   win.addEventListener('resize', schedule);
+  body.addEventListener('focusin', update);
   update();
   return {
     update,
@@ -87,6 +105,7 @@ export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, ta
       watched.clear();
       win.cancelAnimationFrame(pending);
       win.removeEventListener('resize', schedule);
+      body.removeEventListener('focusin', update);
       if (written !== undefined && frame.style.gridTemplateRows === written) frame.style.gridTemplateRows = original;
       if (writtenMinimum !== undefined && root.style.minBlockSize === writtenMinimum) root.style.minBlockSize = originalMinimum;
       if (writtenScrollable !== undefined && body.dataset.scrollableY === writtenScrollable) {
