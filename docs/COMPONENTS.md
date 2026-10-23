@@ -676,7 +676,7 @@ Wails/Electron等drag/no-drag机制属于宿主桥接。仅对宿主自有非交
 ### 默认主题与可选i18n
 
 
-未传受控 `ThemeOptions.mode` 时，文档owner使用非受控模式，默认持久化键为 `ui.theme.mode`；bootstrap config `theme.mode` 是默认，已有有效sessionStorage值优先，无值才回到config默认。无显式保存值和config覆盖时默认dark；显式system跟随系统变化，matchMedia不可用时effective为light，存储不可用仍可内存切换。显式注入 `ThemeOptions.mode` 是受控owner，`setMode`只请求，直到宿主 `syncMode` 才确认事实。公开init.js不创建主题owner；`bootstrap`/`getThemeService`取得同一文档owner。组件卸载只解除 `useTheme` 订阅，不销毁共享owner。登录页继续只继承外观，不显示这个顶栏控件。
+未传受控 `ThemeOptions.mode` 时，文档owner使用非受控模式，默认持久化键为 `ui.theme.mode`；bootstrap config `theme.mode` 是默认，已有有效sessionStorage值优先，无值才回到config默认。无显式保存值和config覆盖时默认dark；显式system跟随系统变化，matchMedia不可用时effective为light，存储不可用仍可内存切换。显式注入 `ThemeOptions.mode` 是受控owner，`setMode`只请求，直到宿主 `syncMode` 才确认事实。公开init.js不创建主题owner；`bootstrap`/`getThemeService`取得同一文档owner。组件卸载只解除 `useTheme` 订阅，不销毁共享owner。默认共享owner在html替换或主题属性被清空后自动恢复当前模式/配色/缩放；useTheme不需要重挂或再次订阅，细节见[根节点恢复](PUBLIC_API.md#主题根节点恢复4238)。登录页继续只继承外观，不显示这个顶栏控件。
 
 locale由共享I18nService提供；config默认禁用，`defaultLocale`为启动语言、`locales`为可选项，宿主通过config messages或已声明locale的 `registerMessages` 加入翻译资源。xui不附带全量翻译词典。`useI18n`提供当前locale、locales、`t`与 `setLocale`；查找顺序为当前资源、fallback资源、显式fallback、原key。禁用切换或不支持的语言不改变locale；成功更新同步 `document.lang` 并通知订阅者。`ServicesProvider`注入的i18n实例由宿主持有，View只订阅，不自行存储语言。
 

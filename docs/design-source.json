@@ -1,5 +1,5 @@
 {
-  "contractVersion": "4.2.37",
+  "contractVersion": "4.2.38",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
   "defaultTokenCount": 440,
@@ -121,7 +121,8 @@
     "4.2.34 composes BusinessLogExplorer queryFields/querySummary through QueryForm and uses one column-definition/cell model: raw keyed values without a renderer, authoritative React results with one. Optional immutable JSON attributes retain host projections; existing Controller, loader, snapshot and cancellation owners remain. Column widths and overflow inherit public Table and OverflowText recipes. Legacy string columns/formatters are removed by explicit authorization.",
     "4.2.35 removes default focus outlines from public controls, grouped inputs, menus, combobox options and charts. Focus changes only existing visible border colors; invalid borders retain the error color and borderless controls keep their original boundary. Existing geometry, scroll clearance, keyboard interaction and state owners remain unchanged.",
     "4.2.36 unifies internal data-table compositions on DataTable with resizable business columns and fixed action columns. ApiKey and chart data views use the same sizing owner; structured-log semantic cell classes remain available. Column sizing reuses DataTable local, controlled or injected state and does not create a query owner.",
-    "4.2.37 centralizes circular icon backgrounds and one default 32px diameter across Card/Icon tiles, default icon-button paint, InputGroup icon actions, compact navigation backgrounds and default avatars. Explicit sizes remain deliberate exceptions. Button hit targets and glyphs stay unchanged; input icon targets gain a shared minimum width so character advance cannot change circle size. Shape square is explicit, plain glyphs gain no background, and existing state owners remain. Card size/background tokens are compatibility aliases; shared icon size/background, navigation inset and isolated paint-layer tokens own the recipe."
+    "4.2.37 centralizes circular icon backgrounds and one default 32px diameter across Card/Icon tiles, default icon-button paint, InputGroup icon actions, compact navigation backgrounds and default avatars. Explicit sizes remain deliberate exceptions. Button hit targets and glyphs stay unchanged; input icon targets gain a shared minimum width so character advance cannot change circle size. Shape square is explicit, plain glyphs gain no background, and existing state owners remain. Card size/background tokens are compatibility aliases; shared icon size/background, navigation inset and isolated paint-layer tokens own the recipe.",
+    "4.2.38 keeps the existing ThemeService bound to the current Document root. A bounded document/root MutationObserver repairs replaced roots and cleared owned attributes; idempotent projection preserves logical snapshot identity and notifications. Existing interface-scale utilities retain the live reading size without re-reading or writing preferences during recovery. Destroy disconnects DOM/media observation. No palette, geometry, public API or hydration-mismatch ownership change."
   ],
   "defaultPreset": "violet",
   "themePresets": [

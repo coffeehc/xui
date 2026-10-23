@@ -1,5 +1,11 @@
 # 公共能力维护清单
 
+## 主题根节点与属性恢复（4.2.38，已解决）
+
+xAgent固定4.2.37/196e28c反馈document恢复后主题回退。核对公共ThemeService在创建时捕获documentElement；原根被替换后仍写入脱离文档的节点。真实React 19.2.8的hydrateRoot(document)恢复还会复用同一html并清空属性，不能仅靠下次setMode解析新根解决。4.2.38沿用原ThemeService和缩放方法的内存状态，用Document直接子节点及当前html指定属性的有界观察自动重新投影；逻辑不变时保留state身份、零通知、不读写storage，不重建bootstrap/HTTP/认证或请求owner。destroy释放观察，后续动作始终解析当前根。
+
+公开接法不变，消费者不用新增Observer或复制data属性。恢复仅覆盖xui的主题与缩放，不恢复宿主任意DOM，不修复SCRIPT注入/标记不一致导致的hydration根因。原4.2.37的三种模式根替换Node回归先失败；最终42项定向Node及18项正式包浏览器检查通过，包含真实React同html恢复、根替换、存储拒绝、销毁和真实200%缩放。准确合同见[PUBLIC_API](PUBLIC_API.md#主题根节点恢复4238)，证据与未跑范围见[VALIDATION](VALIDATION.md#主题根节点与属性恢复42382026-10-23)。本轮仅修改xui，消费项目升级和部署仍须独立验收。
+
 ## 业务日志查询 slot 与统一单元格扩展（4.2.34）
 
 核对正式4.2.33/f69aabf与当前源码，BusinessLogExplorer原list只有字符串列和专用format*，无额外QueryField槽；领域操作者/会话等真实投影不能通过普通列cell组合。4.2.34按用户明确决定统一为列定义＋cell，不继续扩充专用formatter、会话列或复制接口。未指定cell读取对应原值，指定时完整使用返回内容；旧展示配置需要按COMPONENTS迁移表调整，不称兼容。queryFields/querySummary复用既有QueryForm，Controller/loader、HTTP、分页、快照与原始事件不换owner。可选attributes显式保留宿主授权的不可变JSON投影，不推断任意DTO，不改xAgent。

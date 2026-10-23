@@ -290,7 +290,7 @@ const theme = app.services.getThemeService();
 // useTheme 订阅；应用关闭时由 app/services owner 统一释放。
 ```
 
-有效 `ui.interface.scale` 同样优先于 config 的 `theme.scale` 默认。无存储值时才采用 config 默认缩放；首屏脚本负责预绘制恢复，bootstrap 安装服务后再次读取相同有效值不会产生第二个 owner。存储不可用时保留当前页内存操作。ESM 导入本身不创建浏览器 owner。
+有效 `ui.interface.scale` 同样优先于 config 的 `theme.scale` 默认。无存储值时才采用 config 默认缩放；首屏脚本负责预绘制恢复，bootstrap 安装服务后再次读取相同有效值不会产生第二个 owner。存储不可用时保留当前页内存操作。ESM 导入本身不创建浏览器 owner。4.2.38默认owner自动处理同Document根节点替换或公共属性被清空，原模式/配色/缩放及服务身份保持；无逻辑变化不通知、不重读写偏好。宿主保持原init→bootstrap→hydrateRoot顺序，不新增DOM观察/属性复制兜底。按[恢复边界](PUBLIC_API.md#主题根节点恢复4238)执行THEME-011～012，实际hydration的根因仍由宿主处理。
 
 ### 公共文字槽
 

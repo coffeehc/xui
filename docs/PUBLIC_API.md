@@ -241,6 +241,15 @@ ThemeService.setMode('light');  // 沿用明暗偏好的 sessionStorage 合同
 
 首绘前项目应由**同一份项目配置**生成轻量 `window.xuiThemeOptions={preset,defaultMode}`，放在公开 `init.js` 和 CSS 前执行，再以同一配置调用 bootstrap。init 不会读取宿主 config.json URL，不创建 owner，也不请求网络；不要用另一个硬编码色板与 bootstrap 竞争。实际例子见 [主题示例的项目配置](../examples/theme-presets-react/config.json)、[首绘脚本](../examples/theme-presets-react/prepaint.ts)及[React 页面](../examples/theme-presets-react/app.tsx)。仅使用默认值时不需此项目脚本。已存在有效 owner 时，init 保留它当前的 mode/preset。
 
+### 主题根节点恢复（4.2.38）
+
+公开bootstrap、ThemeService/getThemeService、ThemeController和setInterfaceScale接法不变。同一Document内documentElement被替换，或React恢复复用同一html但清空其公共主题/缩放属性时，既有默认ThemeService在MutationObserver交付时自动重新投影当前mode/effective/preset及已生效scale，不用再次bootstrap、不重建服务。没有逻辑变化时保留原ThemeState对象，不调用订阅者/onModeChange，不重新读取或写入storage，不发请求；系统变化及后续setMode/syncMode/setPreset继续作用于当前根。scale复用现有文档方法的内存事实，保留首绘值、config默认及storage拒绝时的最后有效选择。
+
+观察仅限Document直接子节点和当前html的data-theme/data-theme-effective/data-theme-preset/data-interface-scale/style；不观察页面子树、不轮询。投影写入比较现值，自己的属性写入最多产生后续空操作，不形成恢复循环；其他style属性不被覆盖。临时没有根时保留事实，重新插入后应用。destroy或容器释放断开DOM/media监听及订阅，已排队的回调不再写DOM。缺少MutationObserver的特殊环境不能承诺自动恢复，但显式主题动作仍解析当前root。
+
+此合同恢复的是xui拥有的主题属性与--interface-scale，不恢复宿主丢失的lang/class/样式表/任意DOM，也不修复导致hydration失败的SCRIPT/扩展注入或服务端标记差异。完整自定义注入ThemeController由其owner承担同等恢复或明确限制，不能由消费者另写Observer、复制data属性或创建第二主题owner兜底。定向执行THEME-011～012；正式[bootstrap示例](../examples/bootstrap-react/app.tsx)的`?recover-document`故意制造document hydration不一致，使用真实hydrateRoot验证恢复，非产品推荐启动方式。
+
+
 项目的 `theme.css` 仍用既有 `product-overrides` 层覆盖公开变量；其优先级高于六套默认配方，弹层与正文继承同一根主题。不重新导出 CSS 皮肤，不要求复制内部 DOM。保留旧青色请配置 `theme.preset="precision"`，而非恢复旧包或添加私有选择器。
 
 默认 `i18n.enabled=false`，默认 `locales` 只有语言选项元数据，默认 `messages` 为空；xui 不随包承诺完整翻译词典。启用后 `defaultLocale` 是初始语言，`locales` 提供受支持语言；`t` 依次查当前语言、fallbackLocale、调用时的 fallback，仍未命中则返回 key。宿主可在 config 提供 messages，或对已声明 locale 调用 `registerMessages`。React `useI18n` 订阅 locale 并提供 `t/setLocale/locales`；禁用切换或未知 locale 返回 false。locale 更新同步 document lang，并使使用 `labelKey` 的 MenuService 文本随当前语言更新。`ServicesProvider` 可在 SSR 或隔离应用中显式借用 i18n/menu 实例；它不拥有销毁权。

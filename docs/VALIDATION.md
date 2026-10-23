@@ -1,5 +1,17 @@
 # 验证证据与限制
 
+## 主题根节点与属性恢复（4.2.38，2026-10-23）
+
+基线为main 196e28c/4.2.37，公共ThemeService创建时捕获html，后续替换根会丢失主题投影。新增三种模式根替换Node回归先在未改动的4.2.37 dist上全部预期失败，原始baseline-unit.log及基线正式消费者回执保留。旧浏览器消费者缓存存在失效链接，未取得有效的旧版浏览器复现，不将无效尝试写成基线通过。候选沿用同一owner，以Document直接childList和当前html限定属性观察恢复mode/effective/preset及最后有效scale；幂等写入、不观察子树、不轮询、无逻辑变化不换state或通知、不因恢复读写storage。destroy与排队回调、临时无根和缺少MutationObserver的显式动作均有定向覆盖。无公开API、色板、Token或布局变化。
+
+最终build、typecheck、440 Token图/指纹和42项定向Node检查全部通过。正式三包均为4.2.38，sourceGeneration为`51cf092d0682c097c7d03e4501fcdc80218e9edfe8f477d6a7f0801c9560612c`；独立tarball ESM/CSS/types及正负类型消费者通过，React/ReactDOM19.2.8、Base UI1.7.0单实例，无src alias。初始JS gzip144930/153600、关键CSS22933/22976，未提高预算，CSS保持原产物。
+
+浏览器18/18通过，0 skipped/unexpected/flaky：新增15项覆盖light/dark/system、1280/390、读取缩放200%、同html属性清空、替换根、后续模式/配方/系统变化、存储拒绝、销毁以及真实浏览器200%缩放；另3项原session偏好回归通过。正式bootstrap示例`?recover-document`真实调用hydrateRoot(document)，三种模式均发生一次恢复，html身份保留，ThemeService/HTTP/bootstrap应用身份不变，forest和scale2恢复，后续公共按钮和草稿继续可用。仅属性清空场景另验证原输入节点、草稿和焦点保持及MutationObserver写入次数停止增长；不把React整棵恢复误称为保留原业务DOM。真实Chrome设置200%测得DPR1→2、视口1280→640，根字体16px不变、CSS zoom1、visualViewport.scale1，恢复后键盘操作可达。
+
+主线程已查看proof中的宽屏、窄屏、真实hydration与浏览器缩放截图，核对主题、控件及恢复后的操作。light/system切换深色后的即时截图可能仍处CSS背景过渡，最终主题属性/Token断言与深色缩放截图分别保留，不据即时截图宣称过渡已结束；原200%主题示例的密集列换行不在本次布局验收范围。小结、选定截图及指标见`.artifacts/theme-root-4.2.38/case-summary.json`、`proof/`与`visual-proof.json`；构建、类型、Token、Node、消费者、浏览器最终日志保留，重复完整浏览器报告和临时输出在提取证据后清理。
+
+复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`；`node --test tests/theme-root.test.mjs tests/theme-control.test.mjs tests/theme-session.test.mjs tests/theme-presets.test.mjs tests/interface-scale.test.mjs tests/config-services.test.mjs tests/service-architecture.test.mjs tests/contract.test.mjs tests/docs.test.mjs`；`pnpm test:consumer`；`pnpm exec playwright test tests/browser/theme-root.spec.mjs tests/browser/theme-session.spec.mjs --config .artifacts/theme-root-4.2.38/playwright.config.mjs --workers=2`。本机4173已有其他预览，本轮使用同一dist在4328的临时静态服务；无额外源码副本。未跑全仓unit/browser、watch/cold-start、其他浏览器/平台、实际xAgent/Cloudflare页面或部署；此修复不处理导致hydration失败的SCRIPT/宿主标记根因，不修改或部署消费项目。正式归档仍由提交后`pnpm archive --evidence .artifacts/theme-root-4.2.38`与`pnpm archive:verify <归档目录>`生成并验证。
+
 ## 业务日志列定义、cell 与查询槽（4.2.34，2026-10-19）
 
 核对正式4.2.33/f69aabf及最新main：原完整页仅有字符串列和专用format*，无queryFields。按用户最后决定，4.2.34只保留列定义＋cell：无cell/null读取event自身字段、其次显式attributes原值；有cell则使用完整React结果（包括null/undefined留空）。不增加全局defaultCell或会话/用户/复制专用接口，不保留旧展示兼容分支。普通列无需回调，时间键为occurred_at，custom列按需显式detail；runtime helper返回原event和逐列values。未传list的默认七列仍由公共默认列定义渲染。attributes经现有JSON边界深冻结，未知顶层字段继续丢弃，真实身份/会话投影由宿主授权提供。

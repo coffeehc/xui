@@ -1,5 +1,6 @@
 export {setInterfaceScale,type InterfaceScale,type InterfaceScaleOptions} from './interface-scale.js';
 import {isThemePreset,type ThemePreset} from './theme-preset.js';
+import {reapplyInterfaceScale} from './interface-scale.js';
 export type {ThemePreset} from './theme-preset.js';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -40,7 +41,7 @@ function valid(value: unknown): value is ThemeMode { return value === 'light' ||
 /** Internal factory; public consumers obtain the document/application owner from services.ts. */
 export function buildThemeController(options: ThemeOptions = {}): ThemeController {
   const win = options.window === undefined ? (typeof window === 'undefined' ? undefined : window) : options.window;
-  const root = win?.document.documentElement;
+  const document = win?.document;
   const key = options.storageKey ?? DEFAULT_STORAGE_KEY;
   const controlled = options.mode !== undefined;
   let media: MediaQueryList | undefined;
@@ -50,19 +51,31 @@ export function buildThemeController(options: ThemeOptions = {}): ThemeControlle
   if (!controlled && options.persist !== false) try { const stored = win?.sessionStorage.getItem(key); if (valid(stored)) mode = stored; } catch { /* Memory choice stays usable. */ }
   let state: Readonly<ThemeState>;
   let destroyed = false;
+  let observer:MutationObserver|undefined,observedRoot:Element|null|undefined;
   const listeners = new Set<(state: Readonly<ThemeState>) => void>();
+  function observeRoot() {
+    if(!observer||!document||observedRoot===document.documentElement)return;
+    observer.disconnect();
+    observer.observe(document,{childList:true});
+    observedRoot=document.documentElement;
+    if(observedRoot)observer.observe(observedRoot,{attributes:true,attributeFilter:['data-theme','data-theme-effective','data-theme-preset','data-interface-scale','style']});
+  }
   function apply() {
     if (destroyed) return;
     const effective: EffectiveTheme = mode === 'system' ? media?.matches ? 'dark' : 'light' : mode;
     const changed = !state || state.mode !== mode || state.effective !== effective || state.preset!==preset;
-    state = Object.freeze({ mode, effective, preset });
+    if(changed)state = Object.freeze({ mode, effective, preset });
+    const root=document?.documentElement;
+    if(win)reapplyInterfaceScale(win);
     if (root) {
       // CSS system media and matchMedia normally agree. When matchMedia fails,
       // force the documented light fallback rather than leaving CSS to guess.
-      root.dataset.theme = mode === 'system' && !media ? 'light' : mode;
-      root.dataset.themeEffective = effective;
-      root.dataset.themePreset = preset;
+      const projectedMode=mode === 'system' && !media ? 'light' : mode;
+      if(root.dataset.theme!==projectedMode)root.dataset.theme = projectedMode;
+      if(root.dataset.themeEffective!==effective)root.dataset.themeEffective = effective;
+      if(root.dataset.themePreset!==preset)root.dataset.themePreset = preset;
     }
+    observeRoot();
     if (changed) listeners.forEach(listener => {try{listener(state);}catch{/* A view subscriber cannot prevent other views or persistence. */}});
   }
   apply();
@@ -71,6 +84,10 @@ export function buildThemeController(options: ThemeOptions = {}): ThemeControlle
     if (media?.addEventListener) { media.addEventListener('change',apply); unsubscribeMedia = () => media?.removeEventListener('change',apply); }
     else if (media?.addListener) { media.addListener(apply); unsubscribeMedia = () => media?.removeListener(apply); }
   } catch { /* Initial selection works if listener registration fails. */ }
+  try {
+    const Observer=(win as (Window&{MutationObserver?:typeof MutationObserver})|undefined)?.MutationObserver;
+    if(Observer&&document){observer=new Observer(apply);observeRoot();}
+  } catch {observer?.disconnect();observer=undefined;/* Explicit changes still target the current root. */}
   return {
     getState: () => state,
     setMode(value) {
@@ -85,7 +102,7 @@ export function buildThemeController(options: ThemeOptions = {}): ThemeControlle
     setPreset(value) {if(!destroyed){preset=isThemePreset(value)?value:'violet';apply();}},
     isDestroyed: () => destroyed,
     subscribe(listener) { if (destroyed) return () => {}; listeners.add(listener); return () => { listeners.delete(listener); }; },
-    destroy() { if(destroyed)return;destroyed = true; listeners.clear(); try { unsubscribeMedia(); } catch { /* No retained subscriptions. */ } },
+    destroy() { if(destroyed)return;destroyed = true; listeners.clear(); observer?.disconnect();observer=undefined;observedRoot=undefined;try { unsubscribeMedia(); } catch { /* No retained subscriptions. */ } },
   };
 }
 

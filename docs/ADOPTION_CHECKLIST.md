@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.34）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.38）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -82,6 +82,9 @@
 | SERVICE-009 | 应用退出或文档owner结束 | 从 `/bootstrap` 窄入口导入 `disposeXuiServices(window)` 释放该Window registry；同Window可重新启动、重复释放安全、借用实例保留，不让组件卸载销毁共享服务 | owner destroy计数与多个view卸载对照 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
 | THEME-009 | 有有效 sessionStorage 主题且 config 默认值不同 | 恢复存储偏好，config只作为无效/缺失偏好时的默认；显式受控 `ThemeOptions.mode` 单独按受控合同测试 | init前后root属性、bootstrap ThemeState、storage值 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
 | THEME-010 | 加载 `@coffeehc/xui-runtime/init.js` | 首绘脚本不创建 `window.xuiTheme`/ThemeController；正式owner由bootstrap/getThemeService建立 | 运行脚本后、bootstrap前后owner实例与ThemeState | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
+| THEME-011 | document根替换/同html公共属性清空，含hydration恢复 | 同一默认ThemeService恢复当前mode/effective/preset/scale；逻辑未变时State对象/订阅/偏好不变，零storage读写及请求；之后setMode/syncMode/setPreset与system继续有效，无第二Observer/owner | 根身份、前后属性/computed、State/服务identity、偏好/通知/请求计数，真实hydrateRoot与模式/缩放 | [恢复合同](PUBLIC_API.md#主题根节点恢复4238) |
+| THEME-012 | storage拒绝、临时无root、销毁/重新启动 | 内存最后有效scale及受控确认保留；临时空根不崩溃，插入恢复；destroy断开DOM/media观察，迟到不写，按原bootstrap释放后重建规则启动；宿主SCRIPT mismatch单独修复 | 异常/插入/系统变化/销毁迟到及无循环证据；未支持Observer环境明确限制 | [恢复合同](PUBLIC_API.md#主题根节点恢复4238) |
+
 | SCALE-007 | 有效 sessionStorage scale 与 config `theme.scale` 不同 | 首绘与bootstrap都采用已保存scale；config仅提供无有效存储值时的默认 | init前后document scale属性、bootstrap后值和storage | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
 | I18N-001 | 默认 config启动且未启用i18n | 服务初始locale为配置 `defaultLocale`，切换开关为false；顶栏语言入口不被默认为已启用 | config、I18nState与实际入口DOM | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |
 | I18N-002 | 产品需要非默认翻译 | 由宿主config `messages` 或已声明locale的 `registerMessages` 提供；不得宣称xui自带全量翻译词典 | 实际messages来源、catalog条目与固定包内容 | [PUBLIC_API 启动配置与服务](PUBLIC_API.md#启动配置与应用服务) |

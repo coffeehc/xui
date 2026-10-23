@@ -6,10 +6,18 @@ export interface InterfaceScaleOptions {
 }
 const storageKey = 'ui.interface.scale';
 const values: readonly number[] = [1, 1.25, 1.5, 2];
+const currentScales = new WeakMap<Window, InterfaceScale>();
 function apply(scale: InterfaceScale, win: Window) {
+  currentScales.set(win,scale);
   const root = win.document.documentElement, value = String(scale);
+  if (!root) return;
   if (root.style.getPropertyValue('--interface-scale') !== value) root.style.setProperty('--interface-scale', value);
   if (root.dataset.interfaceScale !== value) root.dataset.interfaceScale = value;
+}
+/** Internal DOM projection recovery. Retain pre-paint state once; never read/write storage. */
+export function reapplyInterfaceScale(win: Window): void {
+  const scale=currentScales.get(win)??Number(win.document.documentElement?.dataset.interfaceScale);
+  if(values.includes(scale))apply(scale as InterfaceScale,win);
 }
 /** Set the current document's scale and remember it for this browser tab.
  * The host owns any setting UI. This does not remount views, navigate or fetch data.
