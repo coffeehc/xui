@@ -6,7 +6,7 @@ const saved: Record<string, ModelProfileEditorData> = {
   'example-embedding': {schema_version: 1, profile_id: 'example-embedding', version: '1', config: {...defaults[3], model_name: '知识检索向量', real_name: 'example-embedding'}, defaults, has_api_key: true, header_names: [], can_save: true},
 };
 export const mockModelAPI = {
-  behavior: 'success' as 'success' | 'empty' | 'failure' | 'slow' | 'unknown',
+  behavior: 'success' as 'success' | 'empty' | 'failure' | 'slow' | 'unknown' | 'test_failed' | 'completion_failed' | 'both_failed' | 'committed_no_id',
   requests: [] as {method: string; path: string; fields: string[]; usesSavedKey: boolean}[],
   /** Transport-level mock: the real public client still serializes, validates and handles HTTP errors. */
   fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -15,7 +15,7 @@ export const mockModelAPI = {
     mockModelAPI.requests.push({method, path: url.pathname, fields: Object.keys(body?.config ?? {}), usesSavedKey: !!body?.profile_id && (body?.config.api_key === modelProfileStoredKey || !Object.hasOwn(body?.config ?? {}, 'api_key'))});
     const behavior = mockModelAPI.behavior;
     await new Promise<void>((resolve, reject) => {const timer = setTimeout(done, behavior === 'slow' ? 3000 : 400); function abort() {clearTimeout(timer); init?.signal?.removeEventListener('abort', abort); reject(new DOMException('Cancelled', 'AbortError'));} function done() {init?.signal?.removeEventListener('abort', abort); resolve();} if (init?.signal?.aborted) abort(); else init?.signal?.addEventListener('abort', abort, {once: true});});
-    const response = (payload: unknown, status = 200) => new Response(JSON.stringify({success: status === 200, message: status === 200 ? '' : 'Mock rejection', payload, request_id: 'mock-model-request', code: status === 200 ? 1 : status === 503 ? 50301 : 40901}), {status, headers: {'Content-Type': 'application/json'}});
+    const response = (payload: unknown, status = 200, code = status === 200 ? 1 : status === 503 ? 50301 : 40901) => new Response(JSON.stringify({success: status === 200, message: status === 200 ? '' : 'Mock rejection', payload, request_id: 'mock-model-request', code}), {status, headers: {'Content-Type': 'application/json'}});
     if (behavior === 'failure') return response(null, 409);
     if (method === 'GET') {
       const id = url.searchParams.get('profile_id');
@@ -35,6 +35,11 @@ export const mockModelAPI = {
     const {api_key, headers, ...config} = effective;
     saved[id] = {schema_version: 1, profile_id: id, version: String(Number(existing?.version ?? 0) + 1), config, defaults, has_api_key: api_key === undefined || api_key === modelProfileStoredKey ? !!existing?.has_api_key : !!api_key, header_names: headers === undefined ? existing?.header_names ?? [] : Object.keys(headers), can_save: true};
     // Committed mock write with a lost acknowledgement: exercises no blind replay.
-    return behavior === 'unknown' ? response(null, 503) : response(saved[id]);
+    if (behavior === 'unknown') return response({outcome: 'unknown', operation_id: 'mock-operation', ...(body!.profile_id ? {profile_id: body!.profile_id} : {}), test_failed: false, completion_failed: false}, 503, 50310);
+    if (['test_failed', 'completion_failed', 'both_failed', 'committed_no_id'].includes(behavior)) {
+      const testFailed = behavior === 'test_failed' || behavior === 'both_failed', completionFailed = behavior !== 'test_failed';
+      return response({outcome: 'committed', operation_id: 'mock-operation', ...(behavior === 'committed_no_id' ? {} : {profile_id: id}), test_failed: testFailed, completion_failed: completionFailed, ...(!completionFailed ? {editor: saved[id]} : {})}, 503, completionFailed ? 50311 : 50312);
+    }
+    return response(saved[id]);
   }) as typeof fetch,
 };

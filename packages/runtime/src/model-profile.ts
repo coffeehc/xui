@@ -1,8 +1,8 @@
 import {createResource} from './resource.js';
 import {isHttpError} from './http.js';
 import {ModelProfileService} from './model-profile-service.js';
-import {parseModelProfileEditorData, parseModelPolicy, parseModelHeaders, parseModelCatalog, parseModelProfileTest} from './model-profile-parse.js';
-import {modelProfileStoredKey, modelProfileProviders, type ModelProfileAdapter, type ModelProfileCandidate, type ModelProfileConfig, type ModelProfileCredentials, type ModelProfileEditorData, type ModelProfileField, type ModelProfileOperation, type ModelProfileState, type ModelCredentialMode} from './model-profile-types.js';
+import {parseModelProfileEditorData, parseModelPolicy, parseModelHeaders, parseModelCatalog, parseModelProfileTest, parseModelProfileSaveReceipt} from './model-profile-parse.js';
+import {modelProfileStoredKey, modelProfileProviders, type ModelProfileAdapter, type ModelProfileCandidate, type ModelProfileConfig, type ModelProfileCredentials, type ModelProfileEditorData, type ModelProfileField, type ModelProfileOperation, type ModelProfileState, type ModelCredentialMode, type ModelProfileSaveReceipt} from './model-profile-types.js';
 export * from './model-profile-types.js';
 export {ModelProfileClient, ModelProfileService, modelProfileEndpoints, type ModelProfileClientOptions} from './model-profile-service.js';
 export {parseModelProfileEditorData} from './model-profile-parse.js';
@@ -31,7 +31,8 @@ export interface ModelProfileController {
   setEmbeddingTest(input: string, dimensions: string): void;
   catalog(): Promise<void>;
   test(): Promise<void>;
-  save(): Promise<void>;
+  /** Returns only this operation's receipt; cancellation/scope exit cannot return another save's result. */
+  save(): Promise<Readonly<ModelProfileSaveReceipt> | undefined>;
   cancel(): void;
   reset(): void;
   /** Clear private view data immediately on identity/scope exit, including injected controllers. */
@@ -39,7 +40,7 @@ export interface ModelProfileController {
   update(gates: {disabled?: boolean; readOnly?: boolean}): void;
   destroy(): void;
 }
-const initialState = (): ModelProfileState => ({data: null, draft: null, policyText: '', dirty: false, operation: null, catalog: null, testResult: null, errors: {}, error: null, apiKeyMode: 'keep', headersMode: 'keep', embeddingInput: '', embeddingDimensions: '', disabled: false, readOnly: false, credentialRevision: 0});
+const initialState = (): ModelProfileState => ({data: null, draft: null, policyText: '', dirty: false, operation: null, catalog: null, testResult: null, saveReceipt: null, errors: {}, error: null, apiKeyMode: 'keep', headersMode: 'keep', embeddingInput: '', embeddingDimensions: '', disabled: false, readOnly: false, credentialRevision: 0});
 
 /** Per-editor draft owner. Sends explicit patches only; effective profile merge belongs to the backend. */
 export function createModelProfileController(options: ModelProfileControllerOptions = {}): ModelProfileController {
@@ -48,41 +49,58 @@ export function createModelProfileController(options: ModelProfileControllerOpti
   let patch: Partial<ModelProfileConfig> = {}, dead = false, reader: (() => ModelProfileCredentials) | undefined;
   const listeners = new Set<() => void>();
   const publish = (next: Partial<ModelProfileState>) => {state = Object.freeze({...state, ...next}); for (const listener of listeners) {try {listener();} catch {/* A view observer cannot change an operation outcome. */}}};
-  const install = (input: ModelProfileEditorData) => {
+  const install = (input: ModelProfileEditorData, saveReceipt: Readonly<ModelProfileSaveReceipt> | null = null) => {
     const data = parseModelProfileEditorData(input); profileId = data.profile_id ?? undefined; patch = {};
-    publish({data, draft: data.config, policyText: JSON.stringify(data.config.default_policy, null, 2), dirty: false, operation: null, errors: {}, error: null, catalog: null, testResult: null, embeddingInput: '', embeddingDimensions: '', apiKeyMode: 'keep', headersMode: 'keep', credentialRevision: state.credentialRevision + 1});
+    publish({data, draft: data.config, policyText: JSON.stringify(data.config.default_policy, null, 2), dirty: false, operation: null, errors: {}, error: null, catalog: null, testResult: null, saveReceipt, embeddingInput: '', embeddingDimensions: '', apiKeyMode: 'keep', headersMode: 'keep', credentialRevision: state.credentialRevision + 1});
   };
   type OperationResult = {operation: ModelProfileOperation; value: unknown};
   let generation = 0;
   let pending: ((signal: AbortSignal) => Promise<unknown>) | undefined;
   const resource = createResource<OperationResult>({timeoutMs: options.timeoutMs ?? 180000, loader: async (operation, signal) => {if (signal.aborted) throw new DOMException('Cancelled', 'AbortError'); const task = pending; pending = undefined; if (!task || signal.aborted) throw new DOMException('Cancelled', 'AbortError'); return {operation: operation as ModelProfileOperation, value: await task(signal)};}});
-  const allowed = () => !dead && !state.disabled && !state.readOnly && !!state.draft && state.operation !== 'save' && state.operation !== 'load';
-  const cancel = () => {const operation = state.operation; generation++; resource.cancel(); pending = undefined; publish({operation: null, ...(operation === 'save' ? {error: 'save_unknown' as const} : {})});};
+  const needsRead = () => state.saveReceipt?.status === 'committed' && !state.saveReceipt.editor;
+  const allowed = () => !needsRead() && !dead && !state.disabled && !state.readOnly && !!state.draft && state.operation !== 'save' && state.operation !== 'load';
+  const cancel = () => {const operation = state.operation; generation++; resource.cancel(); pending = undefined; publish({operation: null, ...(operation === 'save' ? {error: 'save_unknown' as const, saveReceipt: Object.freeze({status: 'unknown' as const})} : {})});};
   const invalidate = (connection = false) => {if (state.operation) cancel(); publish({testResult: null, ...(connection ? {catalog: null} : {}), errors: {}, error: state.error === 'save_unknown' ? state.error : null, dirty: true});};
-  async function run(operation: ModelProfileOperation, task: (signal: AbortSignal) => Promise<unknown>) {
+  async function run(operation: ModelProfileOperation, task: (signal: AbortSignal) => Promise<unknown>): Promise<Readonly<ModelProfileSaveReceipt> | undefined> {
     if (dead || state.operation) return;
-    const turn = ++generation; pending = task; publish({operation, error: null});
+    const turn = ++generation; pending = task; publish({operation, error: null, ...(operation === 'save' ? {saveReceipt: null} : {})});
     await resource.load(operation);
     if (dead || turn !== generation || state.operation !== operation) return;
     const result = resource.getState();
     if (result.status === 'error') {
       // A timeout, cancellation, parse failure or server crash cannot prove a save did not commit.
       const rejected = isHttpError(result.error) && (result.error.kind === 'business' && typeof result.error.code === 'number' && result.error.code >= 40000 && result.error.code < 50000 || result.error.status === 400 || result.error.status === 403 || result.error.status === 409 || result.error.status === 422);
-      publish({operation: null, error: operation === 'save' && !rejected ? 'save_unknown' : operation}); return;
+      publish({operation: null, error: operation === 'save' && !rejected ? 'save_unknown' : operation, ...(operation === 'save' && !rejected ? {saveReceipt: Object.freeze({status: 'unknown' as const})} : {})}); return;
     }
     if (result.status !== 'ready') return;
     try {
-      if (operation === 'load' || operation === 'save') {
+      if (operation === 'load') {
         const data = parseModelProfileEditorData(result.value!.value);
-        if (operation === 'load' && data.profile_id !== (profileId ?? null) || operation === 'save' && (data.profile_id === null || profileId !== undefined && data.profile_id !== profileId)) throw new TypeError('Mismatched model identity');
+        if (data.profile_id !== (profileId ?? null)) throw new TypeError('Mismatched model identity');
         install(data);
+      }
+      else if (operation === 'save') {
+        const value = result.value!.value;
+        let receipt = parseModelProfileSaveReceipt(value && typeof value === 'object' && Object.hasOwn(value, 'status') ? value : {status: 'committed', editor: value, test_failed: false, completion_failed: false});
+        if (profileId !== undefined && receipt.profile_id !== undefined && receipt.profile_id !== profileId) throw new TypeError('Mismatched saved identity');
+        if (receipt.profile_id === undefined && profileId !== undefined) receipt = Object.freeze({...receipt, profile_id: profileId});
+        if (receipt.profile_id !== undefined) profileId = receipt.profile_id;
+        if (receipt.status === 'unknown') {publish({operation: null, error: 'save_unknown', saveReceipt: receipt}); return turn === generation && state.saveReceipt === receipt ? receipt : undefined;}
+        if (receipt.editor) install(receipt.editor, receipt);
+        else {
+          // Commit is authoritative, but the old draft is not a saved projection.
+          // Clear secrets/dirty state and lock edits until a deliberate read confirms the version.
+          patch = {};
+          publish({operation: null, error: null, dirty: false, errors: {}, catalog: null, testResult: null, apiKeyMode: 'clear', headersMode: 'clear', saveReceipt: receipt, credentialRevision: state.credentialRevision + 1});
+        }
+        return turn === generation && state.saveReceipt === receipt ? receipt : undefined;
       }
       else if (operation === 'catalog') publish({catalog: parseModelCatalog(result.value!.value).models, operation: null});
       else {const test = parseModelProfileTest(result.value!.value); if (test.kind !== modelProfileProviders.find(item => item.id === state.draft!.provider_type)!.kind) throw new TypeError('Mismatched test protocol'); publish({testResult: test, operation: null});}
-    } catch {publish({operation: null, error: operation === 'save' ? 'save_unknown' : operation});}
+    } catch {publish({operation: null, error: operation === 'save' ? 'save_unknown' : operation, ...(operation === 'save' ? {saveReceipt: Object.freeze({status: 'unknown' as const})} : {})});}
   }
   function request(operation: 'catalog' | 'test' | 'save'): ModelProfileCandidate | null {
-    if (!allowed() || state.operation || operation === 'save' && (!state.data!.can_save || state.error === 'save_unknown')) return null;
+    if (!allowed() || state.operation || operation === 'save' && (!state.data!.can_save || state.error === 'save_unknown' || state.saveReceipt?.status === 'committed' && !state.dirty)) return null;
     const draft = state.draft!, errors: Partial<Record<ModelProfileField, import('./model-profile-types.js').ModelProfileIssue>> = {};
     if (!draft.base_url.trim()) errors.base_url = 'required';
     else {try {const url = new URL(draft.base_url); if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) errors.base_url = 'url';} catch {errors.base_url = 'url';}}
@@ -105,7 +123,7 @@ export function createModelProfileController(options: ModelProfileControllerOpti
   const controller: ModelProfileController = {
     getState: () => state,
     subscribe(listener) {if (dead) return () => {}; listeners.add(listener); return () => {listeners.delete(listener);};},
-    async load(id: string | null | undefined = profileId) {if (dead || state.error === 'save_unknown' && state.data?.profile_id === null && !id) return; cancel(); profileId = id ?? undefined; patch = {}; publish({...initialState(), disabled: state.disabled, readOnly: state.readOnly, credentialRevision: state.credentialRevision + 1}); await run('load', signal => service.read(profileId, {signal}));},
+    async load(id: string | null | undefined = profileId) {if (dead || (state.error === 'save_unknown' || needsRead()) && state.data?.profile_id === null && !id) return; cancel(); profileId = id ?? undefined; patch = {}; publish({...initialState(), disabled: state.disabled, readOnly: state.readOnly, credentialRevision: state.credentialRevision + 1}); await run('load', signal => service.read(profileId, {signal}));},
     setField(key, value) {
       if (!allowed()) return;
       if (!Object.hasOwn(state.draft!, key)) throw new TypeError('Unknown model field');
@@ -141,9 +159,9 @@ export function createModelProfileController(options: ModelProfileControllerOpti
       const test = {...input, ...(embedding ? {embedding: {input: [state.embeddingInput], ...(state.embeddingDimensions ? {dimensions: Number(state.embeddingDimensions)} : {})}} : {})};
       await run('test', signal => service.test(test, {signal}));
     },
-    async save() {const input = request('save'); if (input) await run('save', signal => service.save(input, {signal}));},
+    async save() {const input = request('save'); if (input) return run('save', signal => service.save(input, {signal}));},
     cancel,
-    reset() {if (!allowed() || state.error === 'save_unknown') return; cancel(); install(state.data!);},
+    reset() {if (!allowed() || state.error === 'save_unknown') return; cancel(); install(state.data!, state.saveReceipt);},
     clear() {if (dead) return; cancel(); patch = {}; publish({...initialState(), disabled: state.disabled, readOnly: state.readOnly, credentialRevision: state.credentialRevision + 1});},
     update(gates) {if (dead) return; publish({disabled: gates.disabled ?? state.disabled, readOnly: gates.readOnly ?? state.readOnly});},
     destroy() {if (dead) return; controller.clear(); dead = true; resource.destroy(); reader = undefined; listeners.clear();},

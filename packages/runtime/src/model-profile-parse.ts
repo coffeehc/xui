@@ -1,4 +1,4 @@
-import {modelProfileProviders, type ModelProfileConfig, type ModelProfileEditorData, type ModelCatalogResult, type ModelProfileTestResult, type ModelPolicyValue} from './model-profile-types.js';
+import {modelProfileProviders, type ModelProfileConfig, type ModelProfileEditorData, type ModelCatalogResult, type ModelProfileTestResult, type ModelPolicyValue, type ModelProfileSaveReceipt} from './model-profile-types.js';
 
 const fail = (): never => {throw new TypeError('Invalid model profile contract');};
 function object(value: unknown): Record<string, unknown> {
@@ -53,7 +53,7 @@ export function parseModelProfileEditorData(value: unknown): Readonly<ModelProfi
   const defaults = row.defaults.map(parseModelProfileConfig), config = parseModelProfileConfig(row.config);
   if (new Set(defaults.map(item => item.provider_type)).size !== defaults.length || !defaults.some(item => item.provider_type === config.provider_type)) return fail();
   const id = row.profile_id === null ? null : string(row.profile_id, 256), version = row.version === null ? null : string(row.version, 256);
-  if ((id === null) !== (version === null) || id === '' || version === '') return fail();
+  if ((id === null) !== (version === null) || [id, version].some(value => value !== null && (!value.trim() || /[\u0000-\u001f\u007f]/.test(value)))) return fail();
   if (id === null && row.has_api_key === true) return fail();
   const names = row.header_names.map(value => string(value, 256));
   if (names.length > 100 || names.some(name => !/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(name))) return fail();
@@ -99,4 +99,33 @@ export function parseModelProfilePatch(value: unknown): import('./model-profile-
     else result[key] = string(value, key === 'api_key' ? 16384 : 4096);
   }
   return Object.freeze(result);
+}
+
+/** Validate safe save facts separately from generic HTTP errors. Unknown results never carry a saved editor. */
+export function parseModelProfileSaveReceipt(value: unknown): Readonly<ModelProfileSaveReceipt> {
+  const input = object(value);
+  if (input.status !== 'committed' && input.status !== 'unknown') return fail();
+  const committed = input.status === 'committed';
+  const row = fields(input, committed ? ['status', 'test_failed', 'completion_failed'] : ['status'], committed ? ['operation_id', 'profile_id', 'editor'] : ['operation_id', 'profile_id']);
+  const identity = (value: unknown) => {const id = string(value, 256); if (!id.trim() || /[\u0000-\u001f\u007f]/.test(id)) return fail(); return id;};
+  const ids = {...(row.operation_id === undefined ? {} : {operation_id: identity(row.operation_id)}), ...(row.profile_id === undefined ? {} : {profile_id: identity(row.profile_id)})};
+  if (!committed) return Object.freeze({status: 'unknown', ...ids});
+  const editor = row.editor === undefined ? undefined : parseModelProfileEditorData(row.editor);
+  if (editor && (!editor.profile_id || ids.profile_id !== undefined && editor.profile_id !== ids.profile_id) || !editor && !ids.operation_id) return fail();
+  return Object.freeze({status: 'committed', ...ids, ...(editor ? {profile_id: editor.profile_id!, editor} : {}), test_failed: bool(row.test_failed), completion_failed: bool(row.completion_failed)});
+}
+/** BaseService llmservice's exact error payload. Never project arbitrary error bodies into state. */
+export function parseModelProfileSaveFailure(value: unknown, code: number): Readonly<ModelProfileSaveReceipt> {
+  if (![50310, 50311, 50312].includes(code)) return fail();
+  const row = fields(value, ['outcome', 'operation_id', 'test_failed', 'completion_failed'], ['profile_id', 'editor']);
+  if (typeof row.operation_id !== 'string' || !row.operation_id.trim()) return fail();
+  const testFailed = bool(row.test_failed), completionFailed = bool(row.completion_failed);
+  const ids = {operation_id: row.operation_id, ...(row.profile_id === undefined ? {} : {profile_id: row.profile_id})};
+  if (code === 50310) {
+    if (row.outcome !== 'unknown' || testFailed || completionFailed || row.editor !== undefined) return fail();
+    return parseModelProfileSaveReceipt({status: 'unknown', ...ids});
+  }
+  if (row.outcome !== 'committed') return fail();
+  if (code === 50311 && (!completionFailed || row.editor !== undefined) || code === 50312 && (!testFailed || completionFailed || row.editor === undefined || row.profile_id === undefined)) return fail();
+  return parseModelProfileSaveReceipt({status: 'committed', ...ids, ...(row.editor === undefined ? {} : {editor: row.editor}), test_failed: testFailed, completion_failed: completionFailed});
 }

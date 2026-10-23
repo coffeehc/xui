@@ -1,5 +1,20 @@
 # 验证证据与限制
 
+## 模型配置保存回执与测试结果（4.2.40，2026-10-24）
+
+在 4.2.39 基础上对齐 BaseService `16125c0b62a057922386176f4975eca09672c25b` 的 llmservice 合同；其 AgentCore 固定依赖为 `aeea6c2c7255021a0d77b7a3a0865a69031b5709`。HTTP 503 的 50310 为保存结果未知，50311 为已提交但后置处理失败，50312 为已提交但测试失败。公共 Client 严格解析官方 AjaxResponse 和安全回执，不再把后三种事实都归成未知。矛盾/损坏回执仍阻断重写；没有扩大通用 HTTP 错误载荷或增加请求 owner。
+
+新增 onCommitted 对所有确认提交通知一次；onSaved 仅在有权威 editor 时通知，宿主列表刷新使用前者避免重复请求。已提交无 editor 时清理脏状态、私有密钥及 Headers，锁定旧视图直至显式重读；新增记录使用回执中的真实 ID，没有 ID 时由宿主核对 operation_id。测试失败不假装通过，后置失败不被测试失败覆盖。完整规则见随包 [README](../packages/ui-react/model-profile/README.md#保存结果与-baseservice-合同4240)。
+
+- `pnpm build`、`pnpm typecheck`：通过；构建内 440 个 Token/主题依赖和设计值检查通过。
+- `node --test tests/model-profile.test.mjs tests/docs.test.mjs`：27/27，通过 25 项模型配置和 2 项文档检查。覆盖精确 code/status/flags、坏回执、保存身份、六星号与秘密清理、已提交/未知区别、取消/迟到、同步订阅者切换身份、阻止未核对的新增配置退回默认值。
+- `pnpm test:consumer`：正式三包 ESM/CSS/types、随包 README、正负类型消费者与性能门禁通过。React/ReactDOM 19.2.8、Base UI 1.7.0 各单实例，无源码 alias。
+- `pnpm exec playwright test tests/browser/model-profile.spec.mjs --max-failures=3 --reporter=list,json` 加定向 `--grep 'committed test failure|postcommit failure|committed create without|cancel and scope'`：26 个唯一用例全部通过。初轮 22 项通过；另 3 项脚本失败及 1 项未运行在修正脚本后 4/4 通过，未重复累计。首轮误把点击滚动后的 viewport 坐标变化当布局变化，已改为同时检查表单内相对位置和总高度；异步重读改为等待非空数据，手输模型后用真实 Escape 关闭 Combobox 再操作。没有修改组件代码、强制点击或放宽布局阈值来通过复验。
+
+浏览器覆盖新增/编辑、准确请求次数、已提交但测试失败的 Toast、无 editor 锁定/重读、无 ID 与未知不重放、取消和身份切换零旧回调，以及原目录、向量、密钥、Sheet 确认/回焦回归。light/dark/system、1280/390px、长中文、100%/200% 阅读缩放及三模式真实 Chrome 200% 缩放通过；原生缩放经设置页改变，DPR 翻倍、CSS 净宽减半、根字号和 CSS zoom/pinch 不变。已查看深色窄屏完整表单及浅深色原生缩放截图，核对只读字段、Toast、持久重读入口和操作可达；Toast 不占文档流，需重读的持久限制位于操作区。
+
+sourceGeneration：`3595647d75a7daf3b38c2080dd0458819db9f6535473fcd5df75a702e4a9b7b1`。原始首轮/复验报告、逐例汇总及上述截图归档到正式产物 validation；manifest、public-api.json、sourceGeneration、SHA256SUMS 继续自动生成并校验。本轮所有 API 均为合成 mock，未执行真实 BaseService/AgentCore 联调、消费项目实际页面、全仓 unit/browser、Firefox/WebKit 或部署。库验证不代表 xAgent 接入完成。
+
 ## 主题根节点与属性恢复（4.2.38，2026-10-23）
 
 基线为main 196e28c/4.2.37，公共ThemeService创建时捕获html，后续替换根会丢失主题投影。新增三种模式根替换Node回归先在未改动的4.2.37 dist上全部预期失败，原始baseline-unit.log及基线正式消费者回执保留。旧浏览器消费者缓存存在失效链接，未取得有效的旧版浏览器复现，不将无效尝试写成基线通过。候选沿用同一owner，以Document直接childList和当前html限定属性观察恢复mode/effective/preset及最后有效scale；幂等写入、不观察子树、不轮询、无逻辑变化不换state或通知、不因恢复读写storage。destroy与排队回调、临时无根和缺少MutationObserver的显式动作均有定向覆盖。无公开API、色板、Token或布局变化。

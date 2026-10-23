@@ -73,7 +73,7 @@ test('create validates fields and marker before POST; a new secret is cleared on
   expect((await requests(page)).filter(r => r.method !== 'GET')).toHaveLength(0);
   await field(page, 'API Key').fill('synthetic-create-key');
   await button(page, '保存模型').click();
-  await expect.poll(async () => (await state(page)).data.profile_id).toBe('example-new');
+  await expect.poll(async () => (await state(page)).data?.profile_id).toBe('example-new');
   const writes = (await requests(page)).filter(r => r.method === 'POST');
   expect(writes).toHaveLength(1);
   expect(writes[0].path).toBe('/api/v1/model-profiles');
@@ -241,6 +241,15 @@ for (const mode of ['light', 'dark', 'system']) test(`genuine browser zoom 200% 
     await page.getByRole('alertdialog').getByRole('button', {name: '放弃并关闭', exact: true}).click();
     await expect(sheet).toHaveCount(0);
     await expect(page.getByRole('button', {name: '抽屉预览', exact: true})).toBeFocused();
+    await field(page, '模型名称').fill('保存后仍需检查的长中文模型配置名称');
+    await behavior(page, mode === 'light' ? 'test_failed' : mode === 'dark' ? 'both_failed' : 'completion_failed');
+    await button(page, '保存模型').focus(); await page.keyboard.press('Enter');
+    await expect.poll(async () => (await state(page)).saveReceipt?.status).toBe('committed');
+    expect((await state(page)).error).toBeNull();
+    expect((await notifications(page)).committed).toHaveLength(1);
+    await expect(button(page, '保存模型')).toBeDisabled();
+    if (mode !== 'light') {await button(page, '重新读取').focus(); await expect(button(page, '重新读取')).toBeInViewport();}
+    await noOverflow(page);
     await info.attach('zoom.json', {body: JSON.stringify({before, after}), contentType: 'application/json'});
     const body = await captureZoomViewport(page);
     await mkdir('output/playwright/model-profile', {recursive: true});
@@ -248,4 +257,90 @@ for (const mode of ['light', 'dark', 'system']) test(`genuine browser zoom 200% 
     await writeFile(`output/playwright/model-profile/${mode}-browser-200.png`, body);
     await info.attach('zoom.png', {body, contentType: 'image/png'});
   } finally {await context.close();}
+});
+
+const notifications = page => page.evaluate(() => window.modelProfileDemo.notifications);
+test('committed test failure refreshes host once, clears secrets and preserves a new ID without a reread', async ({page}) => {
+  await open(page, 'light', '&create=1');
+  await field(page, '模型名称').fill('测试未通过仍已保存');
+  await field(page, '真实模型名').fill('example-chat');
+  await field(page, 'API Key').fill('synthetic-committed-key');
+  await behavior(page, 'test_failed');
+  const layout = async () => ({field: (await field(page, 'Base URL').boundingBox()).y - (await form(page).boundingBox()).y, height: (await form(page).boundingBox()).height});
+  const before = await layout();
+  await button(page, '保存模型').click();
+  await expect.poll(async () => (await notifications(page)).committed.length).toBe(1);
+  expect((await notifications(page)).saved).toEqual(['example-new']);
+  await expect(page.getByText('模型已保存，但测试未通过。请检查配置后修改。', {exact: true})).toBeVisible();
+  expect((await state(page)).data.profile_id).toBe('example-new');
+  expect((await state(page)).saveReceipt.test_failed).toBe(true);
+  expect((await state(page)).testResult).toBeNull();
+  expect((await state(page)).dirty).toBe(false);
+  await expect(field(page, 'API Key')).toHaveValue('******');
+  await expect(button(page, '保存模型')).toBeDisabled();
+  expect((await requests(page)).filter(r => r.method === 'GET')).toHaveLength(1);
+  expect((await requests(page)).filter(r => r.method === 'POST')).toHaveLength(1);
+  const after = await layout();
+  expect(after.field).toBeCloseTo(before.field, 1);
+  expect(after.height).toBeCloseTo(before.height, 1);
+  await field(page, '模型名称').fill('修正后的配置');
+  await expect(button(page, '保存模型')).toBeEnabled();
+});
+
+test('postcommit failure without editor clears dirty state, reports both failures and reconciles the created ID', async ({page}, info) => {
+  await page.setViewportSize({width: 390, height: 800});
+  await open(page, 'dark', '&create=1');
+  await field(page, '模型名称').fill('已保存等待重新读取');
+  await field(page, '真实模型名').fill('manual-model');
+  await field(page, 'API Key').fill('synthetic-postcommit-key');
+  await behavior(page, 'both_failed');
+  await button(page, '保存模型').click();
+  await expect.poll(async () => (await notifications(page)).committed.length).toBe(1);
+  expect((await notifications(page)).saved).toEqual([]);
+  expect((await state(page)).dirty).toBe(false);
+  await expect(field(page, 'API Key')).toHaveValue('');
+  await expect(field(page, '模型名称')).toHaveAttribute('readonly', '');
+  await expect(button(page, '保存模型')).toBeDisabled();
+  await expect(button(page, '重置草稿')).toBeDisabled();
+  await expect(page.getByText('模型已保存，但测试未通过，后续处理也未完成。请核对状态。', {exact:true})).toBeVisible();
+  await noOverflow(page); await evidence(page, info, 'committed-without-editor');
+  await behavior(page, 'success');
+  await button(page, '重新读取').click();
+  await expect.poll(async () => (await state(page)).data?.profile_id).toBe('example-new');
+  expect((await state(page)).data.version).toBe('1');
+  await expect(field(page, 'API Key')).toHaveValue('******');
+  await expect(button(page, '保存模型')).toBeEnabled();
+  expect((await requests(page)).filter(r => r.method === 'POST')).toHaveLength(1);
+  expect((await notifications(page)).committed).toHaveLength(1);
+});
+
+test('committed create without ID exposes receipt to host; unknown never emits committed/saved', async ({page}) => {
+  await open(page, 'light', '&create=1');
+  await field(page, '模型名称').fill('等待宿主核对');await field(page, '真实模型名').fill('manual');await page.keyboard.press('Escape');
+  await behavior(page, 'committed_no_id');await button(page, '保存模型').click();
+  await expect.poll(async () => (await notifications(page)).committed.length).toBe(1);
+  expect((await state(page)).saveReceipt.operation_id).toBe('mock-operation');
+  await expect(button(page, '重新读取')).toHaveCount(0);
+  await expect(button(page, '保存模型')).toBeDisabled();
+  await page.evaluate(() => window.modelProfileDemo.controller.load());
+  expect((await requests(page)).filter(r => r.method === 'GET')).toHaveLength(1);
+  await open(page, 'light', '&create=1');
+  await field(page, '模型名称').fill('未知提交');await field(page, '真实模型名').fill('manual');await page.keyboard.press('Escape');
+  await behavior(page, 'unknown');await button(page, '保存模型').click();
+  await expect.poll(async () => (await state(page)).error).toBe('save_unknown');
+  expect((await notifications(page)).committed).toEqual([]);expect((await notifications(page)).saved).toEqual([]);
+  await expect(button(page, '保存模型')).toBeDisabled();await expect(button(page, '重新读取')).toHaveCount(0);
+});
+
+test('cancel and scope exit during save cannot emit stale commit callbacks or success Toast', async ({page}) => {
+  await open(page);await field(page, 'API Key').fill('synthetic-cancel-key');
+  await behavior(page, 'slow');await button(page, '保存模型').click();await button(page, '停止等待').click();
+  await expect.poll(async () => (await state(page)).error).toBe('save_unknown');
+  await page.evaluate(() => window.modelProfileDemo.controller.clear());
+  await behavior(page, 'success');
+  await page.getByRole('button', {name:'修改向量模型',exact:true}).click();
+  await expect(field(page, '模型名称')).toHaveValue('知识检索向量');
+  expect((await notifications(page)).committed).toEqual([]);expect((await notifications(page)).saved).toEqual([]);
+  expect(JSON.stringify(await state(page))).not.toContain('synthetic-cancel-key');
+  await expect(page.getByText('模型已保存', {exact:true})).toHaveCount(0);
 });

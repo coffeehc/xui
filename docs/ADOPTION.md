@@ -446,4 +446,4 @@ BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 和 Chart 数据视�
 
 ### 模型配置定向接入
 
-仅有模型配置业务的项目使用公共ModelProfileForm/Editor，通过[模型配置slot合同](COMPONENTS.md#公共模型配置)和MODEL-001～008验收。默认Http client按[后端实施提示词](PUBLIC_API.md#模型配置后端实施提示词)接线，4.2.39起通过正式包提供组件及随包README。项目后端负责权限、读取旧配置、合并、六星号密钥解析、CAS及调用agentCore；AgentCore只接收完整明文Profile，不负责掩码、合并或存储；前端不加第二层DTO适配，不把默认值复制到config.json或组件。暂未提供统一后端时可以用明确mock预览，不能声称已完成生产接入。
+仅有模型配置业务的项目使用公共ModelProfileForm/Editor，通过[模型配置slot合同](COMPONENTS.md#公共模型配置)和MODEL-001～008验收。默认Http client按[后端实施提示词](PUBLIC_API.md#模型配置后端实施提示词)接线，4.2.39起通过正式包提供组件及随包README。项目后端负责权限、读取旧配置、合并、六星号密钥解析、CAS及调用agentCore；AgentCore只接收完整明文Profile，不负责掩码、合并或存储；前端不加第二层DTO适配，不把默认值复制到config.json或组件。采用BaseService的项目由llmservice统一处理后端合同，宿主仅接权限/存储；缺少正式后端时可mock预览，不能声称产品接入完成。4.2.40保存结果按随包README区分提交与测试：宿主列表刷新使用onCommitted，onSaved只消费权威editor，避免双重刷新；已提交缺editor和真正未知分别处理，不能在前端私改503响应。

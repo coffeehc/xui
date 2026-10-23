@@ -104,3 +104,79 @@ test('unknown create cannot be retried by reloading defaults; reconciliation nee
  await controller.save();assert.equal(controller.getState().error,'save_unknown');await controller.load();await controller.load(null);await controller.save();assert.equal(reads,0);assert.equal(writes,1);
  await controller.load('confirmed-created-id');assert.equal(reads,1);assert.equal(controller.getState().data.profile_id,'confirmed-created-id');controller.destroy();
 });
+
+// Exercise the real shared HTTP owner with synthetic responses, not a product DTO shim.
+import {isolatedHttp} from './helpers/runtime-services.mjs';
+const failure = (code, extra = {}) => ({outcome: code === 50310 ? 'unknown' : 'committed', operation_id: 'operation-safe', profile_id: 'p1', test_failed: code === 50312, completion_failed: code === 50311, ...(code === 50312 ? {editor: {...data(), version: '2'}} : {}), ...extra});
+const envelope = (payload, code) => ({success: false, message: 'synthetic-private-upstream-detail', payload, request_id: 'request-safe', code});
+function httpSetup(code, payload, options = {}) {
+ let writes = 0, reads = [];
+ const http = isolatedHttp({baseURL: 'https://fixture.example', fetch: async (url, init) => {
+  if (init.method === 'GET') {const id = new URL(url).searchParams.get('profile_id'); reads.push(id);return Response.json({success:true,code:1,message:'',request_id:'read',payload:{...data(id),version:'2'}});}
+  writes++;return Response.json(envelope(payload, code), {status:503});
+ }});
+ const controller = createModelProfileController({service: new ModelProfileClient({http}), initial:data(), ...options});
+ return {controller, http, writes:()=>writes, reads};
+}
+
+test('confirmed test failure installs the saved version, clears credentials and blocks an unchanged replay',async()=>{
+ const {controller,http,writes}=httpSetup(50312,failure(50312));
+ controller.setField('model_name','Draft');controller.setCredentialMode('api_key','replace');controller.bindCredentials(()=>({api_key:'synthetic-private-secret'}));
+ const before=controller.getState().credentialRevision,receipt=await controller.save(),s=controller.getState();
+ assert.equal(receipt.status,'committed');assert.equal(receipt.test_failed,true);assert.equal(receipt.completion_failed,false);
+ assert.equal(s.saveReceipt,receipt);assert.equal(s.error,null);assert.equal(s.dirty,false);assert.equal(s.data.version,'2');assert.equal(s.draft.model_name,'Example');
+ assert.equal(s.apiKeyMode,'keep');assert(s.credentialRevision>before);assert.equal(s.testResult,null);assert(!JSON.stringify(s).includes('synthetic-private'));
+ await controller.save();assert.equal(writes(),1);controller.setField('model_name','Corrected');assert.equal(controller.getState().dirty,true);
+ controller.destroy();http.destroy();
+});
+
+test('committed create completion failure keeps its real ID; no editor means read-only until explicit read',async()=>{
+ const {controller,http,writes,reads}=httpSetup(50311,failure(50311,{profile_id:'created-identity',test_failed:true}),{initial:data(null)});
+ controller.setCredentialMode('api_key','replace');controller.bindCredentials(()=>({api_key:'synthetic-private-secret'}));
+ const receipt=await controller.save();assert.equal(receipt.status,'committed');assert.equal(receipt.profile_id,'created-identity');assert.equal(receipt.test_failed,true);assert.equal(receipt.completion_failed,true);assert.equal(receipt.editor,undefined);
+ const s=controller.getState();assert.equal(s.error,null);assert.equal(s.dirty,false);assert.equal(s.apiKeyMode,'clear');assert.equal(s.headersMode,'clear');
+ controller.setField('model_name','Must not edit');assert.equal(controller.getState().draft.model_name,'Example');controller.reset();await controller.save();assert.equal(writes(),1);assert.equal(reads.length,0);await controller.load(null);assert.equal(reads.length,0);
+ await controller.load();assert.deepEqual(reads,['created-identity']);assert.equal(controller.getState().data.profile_id,'created-identity');assert.equal(controller.getState().data.version,'2');assert.equal(controller.getState().saveReceipt,null);
+ controller.destroy();http.destroy();
+});
+
+test('committed create without safe identity cannot reset into another create; host must reconcile operation ID',async()=>{
+ const payload=failure(50311);delete payload.profile_id;
+ const {controller,http,writes,reads}=httpSetup(50311,payload,{initial:data(null)});
+ const receipt=await controller.save();assert.equal(receipt.profile_id,undefined);assert.equal(receipt.operation_id,'operation-safe');assert.equal(controller.getState().dirty,false);
+ controller.reset();await controller.load();await controller.load(null);await controller.save();assert.equal(writes(),1);assert.equal(reads.length,0);
+ await controller.load('confirmed-new');assert.deepEqual(reads,['confirmed-new']);assert.equal(controller.getState().data.profile_id,'confirmed-new');controller.destroy();http.destroy();
+});
+
+test('explicit unknown retains draft and does not claim committed; receipt identity permits only deliberate reconciliation',async()=>{
+ const {controller,http,writes,reads}=httpSetup(50310,failure(50310));controller.setField('model_name','Uncertain');
+ const receipt=await controller.save();assert.equal(receipt.status,'unknown');assert.equal(controller.getState().error,'save_unknown');assert.equal(controller.getState().dirty,true);
+ controller.reset();await controller.save();assert.equal(writes(),1);assert.equal(reads.length,0);await controller.load();assert.equal(controller.getState().error,null);controller.destroy();http.destroy();
+});
+
+test('contradictory receipts, mismatched identities and secret-bearing projections never become confirmed saves',async()=>{
+ const cases=[
+  [50312,failure(50312,{outcome:'unknown'})], [50312,failure(50312,{completion_failed:true})],
+  [50312,failure(50312,{editor:undefined})], [50312,failure(50312,{editor:{...data(),api_key:'synthetic-private-secret'}})],
+  [50312,failure(50312,{editor:{...data(),version:' '}})], [50312,failure(50312,{profile_id:'different'})], [50311,failure(50311,{editor:data()})],
+  [50311,failure(50311,{completion_failed:false})], [50310,failure(50310,{test_failed:true})],
+  [50310,failure(50310,{editor:data()})], [50312,failure(50312,{operation_id:''})], [50312,failure(50312,{extra:'private'})],
+ ];
+ for(const [code,payload] of cases){const {controller,http,writes}=httpSetup(code,payload);await controller.save();assert.equal(controller.getState().error,'save_unknown');assert.notEqual(controller.getState().saveReceipt?.status,'committed');await controller.save();assert.equal(writes(),1);controller.destroy();http.destroy();}
+});
+
+test('cancel, identity exit and a later save isolate a delayed committed receipt',async()=>{
+ const late=defer();let call=0,aborted=false;
+ const {controller}=setup({save:async(_candidate,{signal})=>{signal.addEventListener('abort',()=>{aborted=true;},{once:true});return ++call===1?late.promise:{...data('next'),version:'2'};}});
+ const old=controller.save();await Promise.resolve();controller.cancel();assert.equal(aborted,true);assert.equal(controller.getState().error,'save_unknown');
+ controller.clear();await controller.load('next');const current=await controller.save();assert.equal(current.profile_id,'next');
+ late.resolve({status:'committed',operation_id:'old-op',profile_id:'p1',editor:{...data(),version:'2'},test_failed:true,completion_failed:false});
+ assert.equal(await old,undefined);assert.equal(controller.getState().saveReceipt,current);assert.equal(controller.getState().data.profile_id,'next');controller.destroy();
+});
+
+
+test('identity clear inside a commit observer cannot resurrect receipt or return an obsolete completion',async()=>{
+ const {controller}=setup();let cleared=false;
+ controller.subscribe(()=>{if(!cleared&&controller.getState().saveReceipt?.status==='committed'){cleared=true;controller.clear();}});
+ assert.equal(await controller.save(),undefined);assert.equal(controller.getState().data,null);assert.equal(controller.getState().saveReceipt,null);controller.destroy();
+});

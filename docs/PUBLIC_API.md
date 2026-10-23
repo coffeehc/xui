@@ -1171,7 +1171,7 @@ import {Avatar} from '@coffeehc/xui-react/avatar';
 
 公开 CSS 标记 xui-icon-container / data-icon=true 默认圆形，data-icon-shape=square 为显式例外；不自动添加背景、尺寸、按钮角色或焦点停靠。被动槽与紧凑导航由库内部统一接入，宿主按[组件合同](COMPONENTS.md#图标背景基础模型4237)选择公开选项，不用按资源类型复制 CSS。新增尺寸、背景、导航内距和绘制层四个基础 Token 及 Card 原 Token 兼容别名见[设计合同](DESIGN.md#图标背景的统一形状4237)。
 
-## 模型配置（4.2.39）
+## 模型配置（4.2.40）
 
 | import/script | 源码与导出 | 使用合同 | 示例 |
 | --- | --- | --- | --- |
@@ -1180,11 +1180,15 @@ import {Avatar} from '@coffeehc/xui-react/avatar';
 
 `ModelProfileService.read/catalog/test/save` 复用 HTTPService；模块导入不请求。隔离的已有 HTTP 可通过 `new ModelProfileClient({http})` 借用。`createModelProfileController` 每编辑器一份；默认 UI 自建或通过 controller 注入，二者互斥。未配置 HTTP/后端不偷偷 fallback。
 
-六个 Provider ID 与 agentCore 对应：openai_completions、openai_responses、openai_images、openai_embeddings、gemini、anthropic。目录支持前四种；Gemini/Anthropic保留手工真实模型名。向量专用测试输入 `{input:string[],dimensions?:number}` 属于单次测试，不能放进聊天 default_policy 或保存向量索引配置。预览阶段核对的 agentCore `6c71d63` 已有 ListModels 与 TestModelProfile，后者拒绝 embedding；采用项目必须核对其实际版本的统一向量测试入口及 Embed，不将该历史检查视作最新能力结论。xui 不实现 SDK/测试协议。
+六个 Provider ID 与 agentCore 对应：openai_completions、openai_responses、openai_images、openai_embeddings、gemini、anthropic。目录支持前四种；Gemini/Anthropic保留手工真实模型名。向量专用测试输入 `{input:string[],dimensions?:number}` 属于单次测试，不能放进聊天 default_policy 或保存向量索引配置。已核对 agentCore `aeea6c2c7255021a0d77b7a3a0865a69031b5709` 的 llmprovider.Service：ListModels、TestModelProfile、Embed，以及 TestEmbeddingModelProfile。聊天/图片与向量测试各用对应入口；采用项目仍核对实际依赖，xui 不实现 SDK/测试协议。
 
-默认配置由 agentCore提供、项目后端投影；本地核对的 agentCore `6c71d63` 尚未找到统一导出完整默认 Profile 的入口。xAgent 的部分模板仍是产品私有，不能复制成 xui 默认。示例默认值全是合成 mock。配置合并、授权、并发版本和凭据存储均归项目后端。AgentCore 执行入口仅接收后端已合并、包含真实明文凭据的有效 Profile；不接收前端 patch、掩码或 profile_id 查库请求。详见[后端实施提示词](#模型配置后端实施提示词)。
+默认配置由 agentCore `llmprovider.Service.GetDefaultProfile(providerType, model)` 提供并由项目后端投影；model 可为空且默认值不能从产品私有模板复制。示例默认值全是合成 mock。配置合并、授权、并发版本和凭据存储均归项目后端。AgentCore 执行入口仅接收后端已合并、包含真实明文凭据的有效 Profile；不接收前端 patch、掩码或 profile_id 查库请求。详见[后端实施提示词](#模型配置后端实施提示词)。
 
 ### 模型配置后端实施提示词
+
+BaseService 固定提交 `16125c0b62a057922386176f4975eca09672c25b` 的 `llmservice.SaveFailure` / webfacade 提供上述保存分类，引用 AgentCore `aeea6c2c7255021a0d77b7a3a0865a69031b5709`；消费项目仍须验收实际固定依赖和接线。
+
+4.2.40 新增 `ModelProfileSaveReceipt` / `ModelProfileCommittedSave`、Controller `saveReceipt` 与 React `onCommitted`；原 EditorData 和 onSaved 保留。保存异常的 wire payload 与分类、回调、显式重读边界由[随包README](../packages/ui-react/model-profile/README.md#保存结果与-baseservice-合同4240)统一定义。
 
 组件使用及逐动作处理逻辑见 [模型配置 README](../packages/ui-react/model-profile/README.md)，下方为后端接线合同。
 
@@ -1195,10 +1199,10 @@ import {Avatar} from '@coffeehc/xui-react/avatar';
 > 1. `GET /api/v1/model-profiles/editor?profile_id=...`：省略 ID 返回新增初态；传 ID 鉴权并返回当前已保存版本。payload 为 `{schema_version:1,profile_id:string|null,version:string|null,config,defaults,has_api_key:boolean,header_names:string[],can_save:boolean}`。has_api_key仅声明是否已保存密钥，前端显示固定六星号；不返回原密钥或前缀。config 不含 api_key/headers/id/is_test/is_default；defaults 是允许使用的六种协议子集，各条为 agentCore 默认配置的无秘密投影。config 字段：provider_type/model_name/real_name/base_url/timeout_seconds/max_concurrency/disable_stream/capabilities/default_policy。不存在对象返回明确错误，不冒充新增。
 > 2. `POST /api/v1/model-profiles/actions/catalog`：请求 `{profile_id?,expected_version?,config:{...显式修改字段}}`；返回 `{schema_version:1,models:[{id,owned_by?,created_at?}]}`。真实模型名不是目录前置；不保存、不标记测试通过，不从目录推断模型能力。代理支持/不支持目录要真实反馈。
 > 3. `POST /api/v1/model-profiles/actions/test`：相同候选请求，向量另带 `embedding:{input:string[],dimensions?:number}`。返回 `{schema_version:1,kind:'chat'|'image_generation'|'embedding',passed:boolean,elapsed_ms:number,summary:string,embedding?:{count,dimensions}}`。summary 必须安全脱敏。向量通过时必须返回实际 count/dimensions，不回完整向量。测试产生上游成本，但本合同不保存配置或测试状态；禁止自动重放。agentCore 聊天/图片测试与向量编码能力不能混用。
-> 4. `POST /api/v1/model-profiles` 新增、`PUT /api/v1/model-profiles/{id}` 修改：请求仍为候选；修改的路径 ID/请求 ID/expected_version 一致并做 CAS；返回最新 editor payload。保存不隐式调用模型测试，不伪造 is_test，影响执行的配置变更由后端清理旧验证事实。默认模型选择、引用约束等属于项目业务，非此组件的新 owner。
+> 4. `POST /api/v1/model-profiles` 新增、`PUT /api/v1/model-profiles/{id}` 修改：请求仍为候选；修改的路径 ID/请求 ID/expected_version 一致并做 CAS；返回最新 editor payload。默认保存不隐式调用模型测试；宿主明确采用BaseService SaveWithTest/TestBeforeSave时由后端在事务外先测再保存，明确测试失败仍可保存为未测试。不伪造 is_test，影响执行的配置变更由后端清理旧验证事实。默认模型选择、引用约束等属于项目业务，非此组件的新 owner。
 >
 > 统一候选构建：有 ID 时读取并授权该配置，无 ID 时从 agentCore 对应 Provider 默认配置开始；仅覆盖请求明确存在的字段。未传保留，0/false是有效覆盖；api_key为固定六星号`******`时必须读取该已授权profile_id的原密钥；新增/原记录无密钥时拒绝此标记，绝不把它传给AgentCore或上游。空字符串明确不用密钥，其他值替换本次候选；省略沿用该已授权记录，新建省略没有历史密钥。六星号是保留标记，不能设置为真实密钥。headers/default_policy/capabilities按整个对象替换，headers={}清空，default_policy=null清空，不做隐式深合并。Provider切换时按目标协议规范校验和清理；未知协议拒绝。公共编辑器只投影后端初态并追踪显式草稿，不负责后端合并。项目后端完成上述步骤后，将完整有效的明文Profile交给AgentCore；AgentCore不解析掩码、不按profile_id查密钥、不合并配置、不处理项目存储。
 >
-> 秘密只在后端凭据存储和本次请求作用域短暂持有；配置ID、权限、默认模型、测试标记不允许从config覆盖。服务端校验Base URL、出口与凭据使用权限，禁止读取任意ID后把旧密钥发送到未经授权的目标。请求体与上游错误不得进入普通日志。以有限总预算传递取消；客户端取消不代表服务端写入回滚。超时/50301/响应丢失等保存结果未知需权威查询后处理；不盲目重试。明确拒绝返回400/403/409/422或已确认未提交的业务错误，其他不确定错误不能伪装成明确拒绝。
+> 秘密只在后端凭据存储和本次请求作用域短暂持有；配置ID、权限、默认模型、测试标记不允许从config覆盖。服务端校验Base URL、出口与凭据使用权限，禁止读取任意ID后把旧密钥发送到未经授权的目标。请求体与上游错误不得进入普通日志。以有限总预算传递取消；客户端取消不代表服务端写入回滚。按[保存结果合同](../packages/ui-react/model-profile/README.md#保存结果与-baseservice-合同4240)严格区分50310未知、50311已提交后置失败、50312已提交测试失败；50312包含安全editor，50311不含，二者不可当未知。超时/未识别503/响应丢失等保存结果未知需权威查询后处理；不盲目重试。明确拒绝返回400/403/409/422或已确认未提交的业务错误，其他不确定错误不能伪装成明确拒绝。
 >
-> 验收：六协议枚举一致；新增/修改、有旧密钥/替换/清空、headers删除、0/false、目录无需model、测试不保存、向量路径、版本冲突、越权ID、取消迟到、已提交但响应丢失、秘密脱敏与真实请求数量。当前xui demo全部mock，不代表任何项目或agentCore接口已完成接线。
+> 验收：六协议枚举一致；新增/修改、有旧密钥/替换/清空、headers删除、0/false、目录无需model、测试不保存、向量路径、版本冲突、越权ID、取消迟到、已提交测试失败、已提交后置失败（可同时测试失败）、已提交但响应丢失、新增ID与onCommitted/onSaved恰好一次、秘密脱敏与真实请求数量。当前xui demo全部mock，不代表任何项目或agentCore接口已完成接线。

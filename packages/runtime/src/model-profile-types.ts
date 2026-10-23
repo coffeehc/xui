@@ -63,13 +63,31 @@ export interface ModelProfileTestRequest extends ModelProfileCandidate {
   /** Embedding test input is a request parameter, never a saved profile policy. */
   embedding?: {input: readonly string[]; dimensions?: number};
 }
+/** Confirmed persistence is independent from probe/completion success. No raw errors or credentials. */
+export interface ModelProfileCommittedSave {
+  status: 'committed';
+  /** Present for classified backend completion failures. Never replay this operation. */
+  operation_id?: string;
+  /** May be absent only when the backend could not safely identify a committed create. */
+  profile_id?: string;
+  /** Authoritative saved projection, never a client merge of the submitted draft. */
+  editor?: Readonly<ModelProfileEditorData>;
+  test_failed: boolean;
+  completion_failed: boolean;
+}
+/** A safe receipt can confirm a write without claiming the model passed verification. */
+export type ModelProfileSaveReceipt = ModelProfileCommittedSave | {
+  status: 'unknown';
+  operation_id?: string;
+  profile_id?: string;
+};
 export interface ModelProfileRequestContext {signal: AbortSignal}
 /** No persistence merge, SDK, auth owner or cross-editor draft cache is added by this client. */
 export interface ModelProfileAdapter {
   read(profileId: string | undefined, context: ModelProfileRequestContext): Promise<ModelProfileEditorData>;
   catalog(candidate: ModelProfileCandidate, context: ModelProfileRequestContext): Promise<ModelCatalogResult>;
   test(candidate: ModelProfileTestRequest, context: ModelProfileRequestContext): Promise<ModelProfileTestResult>;
-  save(candidate: ModelProfileCandidate, context: ModelProfileRequestContext): Promise<ModelProfileEditorData>;
+  save(candidate: ModelProfileCandidate, context: ModelProfileRequestContext): Promise<ModelProfileEditorData | ModelProfileSaveReceipt>;
 }
 export type ModelCredentialMode = 'keep' | 'replace' | 'clear';
 /** Read once at an explicit operation boundary. Never store these values in controller snapshots. */
@@ -85,6 +103,8 @@ export interface ModelProfileState {
   readonly operation: ModelProfileOperation | null;
   readonly catalog: readonly Readonly<ModelCatalogEntry>[] | null;
   readonly testResult: Readonly<ModelProfileTestResult> | null;
+  /** Last save receipt. A committed receipt without editor requires a read before further writes. */
+  readonly saveReceipt: Readonly<ModelProfileSaveReceipt> | null;
   readonly errors: Readonly<Partial<Record<ModelProfileField, ModelProfileIssue>>>;
   readonly error: 'load' | 'catalog' | 'test' | 'save' | 'save_unknown' | null;
   readonly apiKeyMode: ModelCredentialMode;

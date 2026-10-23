@@ -38,7 +38,7 @@ export function EditModel() {
 
 `options` 是自建 Controller 的初始化参数；需要在同一编辑器切换记录时，注入稳定的 `controller`，显式调用 `load(id)`，不要依靠变化的初始参数或重挂表单。`controller` 与 `options` 互斥。宿主已取得安全初态时，可使用 `options.initial` 避免再次读取。
 
-抽屉使用 `ModelProfileEditor` 的 `open`、`onOpenChange`、`trigger` 和可选 `finalFocus`；不复制一份表单。`labels` 可热更新，`disabled`/`readOnly` 限制编辑、目录、测试与保存，`onSaved` 只在收到有效保存结果后触发。后端仍必须独立鉴权。
+抽屉使用 `ModelProfileEditor` 的 `open`、`onOpenChange`、`trigger` 和可选 `finalFocus`；不复制一份表单。`labels` 可热更新，`disabled`/`readOnly` 限制编辑、目录、测试与保存，`onCommitted` 在本次确认提交后触发，包括测试或后续处理失败；`onSaved` 仅在同时取得权威保存配置时触发。宿主列表刷新选用 `onCommitted`，不要在两个回调重复刷新；`onSaved` 可以用于消费确认配置或关闭编辑器。后端仍必须独立鉴权。
 
 ## 固定 API
 
@@ -120,7 +120,36 @@ export function EditModel() {
 
 向量测试额外提交 `embedding:{input:string[],dimensions?:number}`；表单当前提供一条测试文本和可选正整数维度。它们属于单次测试，不保存进 Profile。向量策略为 `null`，不展示聊天能力与聊天策略。测试返回 `kind:'embedding'`；成功时必须有实际 `embedding:{count,dimensions}`，不返回完整向量。
 
-后端复用 AgentCore 的 `ListModels`、`TestModelProfile` 和 `Embed` 能力；接入时核对所用版本是否已提供按 Provider 获取默认 Profile 及统一向量测试入口，缺口交 AgentCore，不复制默认参数或探测算法。不能把不支持 embedding 的聊天测试直接用于向量协议。连接测试可能产生上游费用，但本 API 不持久化配置或测试状态；保存也不隐式测试。后端应在影响执行的配置变更后失效旧验证事实。
+后端复用 AgentCore 的 `ListModels`、`TestModelProfile` 和 `Embed` 能力；接入时核对所用版本是否已提供按 Provider 获取默认 Profile 及统一向量测试入口，缺口交 AgentCore，不复制默认参数或探测算法。不能把不支持 embedding 的聊天测试直接用于向量协议。连接测试可能产生上游费用，但本 API 不持久化配置或测试状态；默认保存不隐式测试；宿主明确选择 BaseService `SaveWithTest` / `TestBeforeSave` 时，后端在事务外先测试再保存，前端仍只发一次保存请求。明确测试失败仍可保存为未测试；不能把“已保存”展示为“测试通过”。后端应在影响执行的配置变更后失效旧验证事实。
+
+## 保存结果与 BaseService 合同（4.2.40）
+
+HTTP 200 / AjaxResponse `success:true` 仍返回原 `ModelProfileEditorData`。BaseService `llmservice` 的三个保存异常使用 HTTP 503 / `success:false`，安全 payload 为：
+
+```ts
+{
+  outcome: 'committed' | 'unknown';
+  operation_id: string;
+  profile_id?: string;
+  test_failed: boolean;
+  completion_failed: boolean;
+  editor?: ModelProfileEditorData;
+}
+```
+
+| code | 事实与严格组合 | 公共组件行为 |
+| --- | --- | --- |
+| 50310 | `outcome:'unknown'`；两失败标志为 false，无 editor | 保留结果未知和禁止重写；不调用 onCommitted/onSaved，不推断保存成功或回滚 |
+| 50311 | `outcome:'committed'`、completion_failed=true；test_failed 可同时为 true；无 editor | 清理脏状态与私有凭据；调用 onCommitted；锁定旧视图，要求显式重读后继续编辑 |
+| 50312 | `outcome:'committed'`、test_failed=true、completion_failed=false；必须带 profile_id 与已验证 editor | 安装权威配置和版本、清理草稿/凭据；调用 onCommitted 和 onSaved；Toast 明确已保存但测试未通过 |
+
+50311 同时携带 test_failed=true 时，两个失败事实都保留；测试失败不能掩盖后置失败。异常响应不能回传原始上游错误、明文 API Key 或 Headers 值。Client 只解析固定 code/status 和上述 payload，矛盾、越界 ID、非法快照、损坏响应仍按未知保存处理，不能靠一段错误文案猜测是否提交。普通 HTTP 行为和全局错误反馈保持原合同。
+
+`ModelProfileAdapter.save` 支持原 EditorData 或公开 `ModelProfileSaveReceipt`。Client 把上述异常映射为安全 receipt：`status:'committed'|'unknown'`，保留 operation_id/profile_id 和已提交分支的 test_failed/completion_failed/editor。Controller 的 `saveReceipt` 持有最近结果；`save()` 返回本次 receipt，未取得有效结果、取消或退出作用域时返回 undefined。普通成功也产生 committed receipt，但不代表测试通过。所有保存行为只由一个 Controller 和服务处理，宿主不自行改写 DTO。
+
+已提交但没有 editor 时，旧字段仍只是原草稿的只读视图，不能当新版本继续写。后端若提供可信 profile_id（包括新增），组件的“重新读取”调用该 ID；缺少 ID 时只有 operation_id，宿主先核对真实创建结果，再 `load(确认的ID)`，不能 reset/load(null) 开启重复新增。未知提交同样不允许盲重放。重读是显式用户/宿主动作，组件不自动查询或重试。
+
+有效 editor 的已提交结果在未产生新编辑前禁用重复保存；编辑后使用返回的新版本。收到确认后显示安全 Toast，不插入成功块挤动布局；需要重读才能继续的持久限制留在操作区域。回调观察者抛错不会改变提交事实。取消、卸载、身份切换和旧代迟到结果不能触发旧 onCommitted/onSaved 或通知；语言/主题变化不重发通知或请求。宿主回调若关闭视图，建议注入现有 toastController，使错误反馈保持可见。
 
 ## Controller 处理流程
 
@@ -137,7 +166,8 @@ export function EditModel() {
 | 测试/保存等待 | 防止重复操作；保存锁定编辑；取消入口可达 |
 | 取消、切对象、退出后迟到响应 | Resource 与请求代次隔离，不能覆盖新对象或弹出旧成功反馈 |
 | `reset()` | 无请求地恢复最近确认配置，清理秘密与测试结果；不是重新读后端 |
-| 保存成功 | 安装响应中的新版本，清理秘密、重置草稿，Toast 反馈并调用 `onSaved` |
+| 保存确认 | 产生 committed receipt；有 editor 安装新版本并调用 onSaved；所有确认提交调用 onCommitted。失败标志分别反馈，不假装测试通过 |
+| 已提交但缺 editor | 清理脏状态与秘密，锁定编辑/重写；已知 ID 可显式读取，缺 ID 先由宿主核对 operation_id |
 | 保存明确拒绝 | 保留草稿，反馈失败；根据权限、校验或版本冲突处理 |
 | 保存结果未知 | 超时、断连、取消等待或无效成功响应不能证明未提交；阻止重复保存，不自动重放 |
 | 未知结果核对 | 修改记录可显式重读已知 ID；新增需宿主查明创建结果后 `load(确认的ID)`，不能靠重读默认配置解除阻断 |
@@ -167,7 +197,7 @@ export function EditModel() {
 
 ## 示例与验收入口
 
-仓库 `examples/model-profile-react/` 提供新增/修改、聊天/向量、Sheet、慢响应/失败/结果未知、只读/禁用、长中文、主题和阅读缩放的 Mock 页面。构建后访问 `/model-profile-react/`。
+仓库 `examples/model-profile-react/` 提供新增/修改、聊天/向量、Sheet、慢响应/失败/已提交测试失败/后置失败/结果未知、只读/禁用、长中文、主题和阅读缩放的 Mock 页面。构建后访问 `/model-profile-react/`。
 
 - `pnpm build`、`pnpm typecheck`：构建与类型。
 - `node --test tests/model-profile.test.mjs`：候选、秘密、取消、并发、未知结果等针对性回归。
