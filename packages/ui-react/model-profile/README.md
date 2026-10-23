@@ -2,7 +2,7 @@
 
 `ModelProfileForm` 提供新增、修改模型配置的完整表单；`ModelProfileEditor` 在同一表单外组合公共 Sheet。本目录随 `@coffeehc/xui-react` 安装包交付，说明组件使用的 API 及处理流程。
 
-当前示例使用合成 Mock 响应，不连接后端或上游模型。本轮没有实现任何消费项目的后端 API。真实接入前，项目后端必须实现下述合同，并核对所用 agentCore 的能力。
+本组件自 4.2.39 起通过正式 ESM/CSS/types 及独立 tarball 交付。当前示例使用合成 Mock 响应，不连接后端或上游模型。本轮没有实现任何消费项目的后端 API。真实接入前，项目后端必须实现下述合同，并核对所用 agentCore 的能力。
 
 ## 入口与职责
 
@@ -11,7 +11,7 @@
 | `@coffeehc/xui-react/model-profile` | `ModelProfileForm`、`ModelProfileEditor`、labels 和 slot，负责展示、输入、字段反馈与焦点 |
 | `@coffeehc/xui-runtime/model-profile` | `ModelProfileService`、`ModelProfileClient`、`createModelProfileController`、公开类型与 Provider 枚举 |
 | 项目后端 | 权限、读取已有配置、候选合并、密钥解析、并发版本校验、持久化及调用 agentCore |
-| agentCore | Provider 协议实现、权威默认配置、上游模型目录及测试/向量调用 |
+| agentCore | Provider 协议实现、权威默认配置、上游模型目录及测试/向量调用；执行入口仅接收已合并的完整明文 Profile |
 
 Service 复用项目现有 `HTTPService` 和认证链路，导入模块不发请求。Controller 每个编辑器一份，不能用全局单例共享不同对象的草稿。前端不直连上游、不保存原密钥、不复制 Provider SDK，不新增业务模型列表、默认模型选择或业务引用 owner。
 
@@ -88,11 +88,13 @@ export function EditModel() {
 
 后端先鉴权：有 ID 时加载对应记录及版本，无 ID 时使用对应 Provider 的权威默认配置，再覆盖请求中明确出现的字段。`0`、`false` 是有效值；`headers`、`capabilities`、`default_policy` 整项替换，不做隐式深合并；`default_policy:null` 表示清空策略。后端校验 Provider、URL、出口与凭据使用权限，然后按操作执行目录、测试或保存。
 
+**AgentCore 执行入口只接收后端处理完成的明文 Profile**，其中 API Key 和敏感 Headers 已还原为本次实际使用值。`ModelProfileCandidate` 是 xui 与项目后端之间的协议，不能原样转发给 AgentCore；AgentCore 不接收掩码、不按 `profile_id` 查密钥、不合并草稿、不读写项目存储。完整流程是：鉴权 → 读取原配置或 AgentCore 默认配置 → 应用显式 patch → 解析凭据 → 校验有效配置 → 调用 AgentCore。目录和测试不写入配置，保存走项目既有 CAS/持久化 owner。
+
 ### 密钥与 Headers
 
 | 输入 / 请求 | 处理规则 |
 | --- | --- |
-| API Key 为 `******` | 固定六星号保留标记，后端按授权 `profile_id` 读取原密钥；新增或记录无原密钥必须拒绝，不能发送标记到上游 |
+| API Key 为 `******` | 固定六星号保留标记，后端按授权 `profile_id` 读取原密钥；新增或记录无原密钥必须拒绝，不能将标记传给 AgentCore 或上游 |
 | API Key 为 `""` | 明确不使用密钥；保存时清空 |
 | API Key 为其他字符串 | 作为本次候选的新密钥；只有保存操作持久化 |
 | 底层候选省略 `api_key` | 沿用基础配置；默认表单会根据是否已有密钥明确提交六星号或空字符串 |
@@ -118,7 +120,7 @@ export function EditModel() {
 
 向量测试额外提交 `embedding:{input:string[],dimensions?:number}`；表单当前提供一条测试文本和可选正整数维度。它们属于单次测试，不保存进 Profile。向量策略为 `null`，不展示聊天能力与聊天策略。测试返回 `kind:'embedding'`；成功时必须有实际 `embedding:{count,dimensions}`，不返回完整向量。
 
-后端复用 agentCore 的 `ListModels`、聊天/图片测试和 `Embed` 能力；不能把不支持 embedding 的聊天测试直接用于向量协议。连接测试可能产生上游费用，但本 API 不持久化配置或测试状态；保存也不隐式测试。后端应在影响执行的配置变更后失效旧验证事实。
+后端复用 AgentCore 的 `ListModels`、`TestModelProfile` 和 `Embed` 能力；接入时核对所用版本是否已提供按 Provider 获取默认 Profile 及统一向量测试入口，缺口交 AgentCore，不复制默认参数或探测算法。不能把不支持 embedding 的聊天测试直接用于向量协议。连接测试可能产生上游费用，但本 API 不持久化配置或测试状态；保存也不隐式测试。后端应在影响执行的配置变更后失效旧验证事实。
 
 ## Controller 处理流程
 
@@ -170,6 +172,7 @@ export function EditModel() {
 - `pnpm build`、`pnpm typecheck`：构建与类型。
 - `node --test tests/model-profile.test.mjs`：候选、秘密、取消、并发、未知结果等针对性回归。
 - `pnpm test:consumer`：独立 tarball 的 ESM/CSS/types、React peers 单实例和示例构建。
+- `pnpm exec playwright test tests/browser/model-profile.spec.mjs`：在 `test:consumer` 之后验收正式包示例、主题、窄屏、阅读缩放与真实浏览器缩放。
 - 按 [MODEL-001～008](https://github.com/coffeehc/xui/blob/main/docs/ADOPTION_CHECKLIST.md#模型配置逐项检查) 验收实际页面和真实后端请求；Mock 成功不代表产品接入完成。
 
 源码实现为 `packages/ui-react/src/model-profile.tsx`，运行态位于 `packages/runtime/src/model-profile*.ts`。组件目录 README、公开类型、既有规范和示例应随合同变更同步更新。

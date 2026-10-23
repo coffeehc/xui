@@ -40,7 +40,8 @@ export interface ModelProfileEditorData {
   can_save: boolean;
 }
 export const modelProfileStoredKey = '******' as const;
-/** api_key=****** reuses the authorized saved key, empty clears, other values replace. Omission preserves the base. */
+/** Host-backend DTO, never an agentCore input. The backend merges and resolves plaintext credentials first.
+ * api_key=****** reuses the authorized saved key, empty clears, other values replace. Omission preserves the base. */
 export interface ModelProfileCandidate {
   profile_id?: string;
   expected_version?: string;

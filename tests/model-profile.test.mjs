@@ -56,6 +56,11 @@ test('invalid JSON keeps draft text and blocks requests; reset restores confirme
  const {controller,calls}=setup();controller.setPolicyText('{invalid');await controller.test();assert.equal(calls.length,0);assert.equal(controller.getState().errors.default_policy,'json');assert.equal(controller.getState().policyText,'{invalid');
  controller.reset();assert.equal(controller.getState().dirty,false);assert.equal(controller.getState().policyText,'{}');controller.destroy();
 });
+test('invalid Headers JSON does not misdiagnose a replacement key when the view reader cannot return',async()=>{
+ const {controller,calls}=setup();controller.setCredentialMode('api_key','replace');controller.setCredentialMode('headers','replace');
+ controller.bindCredentials(()=>{throw new SyntaxError('Invalid JSON');});await controller.test();
+ assert.deepEqual(controller.getState().errors,{headers:'json'});assert.equal(calls.length,0);controller.destroy();
+});
 test('disabled and readonly block edits/IO; clear removes private scope and ignores late result',async()=>{
  const waiting=defer();const {controller,calls}=setup({test:async()=>waiting.promise});controller.update({readOnly:true});controller.setField('model_name','Forbidden');await controller.catalog();assert.equal(calls.length,0);assert.equal(controller.getState().draft.model_name,'Example');
  controller.update({readOnly:false});const job=controller.test();await Promise.resolve();controller.clear();waiting.resolve({schema_version:1,kind:'chat',passed:true,elapsed_ms:1,summary:'old'});await job;assert.equal(controller.getState().data,null);assert.equal(controller.getState().testResult,null);controller.destroy();

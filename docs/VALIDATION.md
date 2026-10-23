@@ -1646,3 +1646,21 @@ BusinessLogExplorer 与 StructuredLogExplorer 的表体统一迁入 DataTable；
 未执行：完整发布级浏览器矩阵（390px、真实浏览器200%缩放、Firefox/WebKit）、全仓unit/browser、真实后端/上游测试及消费项目验收。所有请求使用示例注入的mock fetch，未连接或修改后端/agentCore/消费项目。本记录是预览阶段证据，不是正式发布或产品接入完成声明。
 
 补充：组件README位于 `packages/ui-react/model-profile/README.md`，随React包交付并纳入sourceGeneration及安装内容一致性检查。连接区改用公共FormGrid自动分列：818px视口、672px网格净宽为两列各328px；200%阅读缩放下630px净宽回落单列，页面宽度仍为818px。截图为 `.artifacts/model-profile-preview/connection-wide.png` 与 `connection-200.png`；这是阅读缩放验证，不等同于浏览器原生缩放。
+
+## 公共模型配置正式交付（4.2.39，2026-10-24）
+
+三包及 DESIGN 统一为 4.2.39；正式入口为 `@coffeehc/xui-react/model-profile` 的 ModelProfileForm/ModelProfileEditor，以及 runtime 同名子入口的 Controller/Client/Service。组件 README 随 React tarball 交付，PUBLIC_API、COMPONENTS、ADOPTION 和 MODEL-001～008 已同步明确：项目后端读取/授权原配置或 AgentCore 默认值，应用显式 patch，解析六星号标记和真实凭据，再将完整明文 Profile 交给 AgentCore。AgentCore 不接受前端 patch/掩码，不按 ID 查密钥，不合并或存储项目配置。
+
+本轮浏览器发现并修复：输入新密钥同时填写非法 Headers JSON 时，读取私有输入的回调先因 JSON 失败而退出，旧校验把未取得的密钥误报为空。现在仅标记 Headers 错误并聚焦该字段；请求仍被阻止，秘密不进入公开快照。针对性单元和正式包浏览器路径均通过。
+
+验证命令与结果：
+
+- `pnpm build`、`pnpm typecheck`、`pnpm check:tokens`：通过；最终构建再次校验 440 个 Token 及主题依赖图。
+- `node --test tests/model-profile.test.mjs tests/docs.test.mjs`：**20/20 通过**（18 项模型配置、2 项文档）；覆盖默认值投影、六协议、显式 patch、六星号/清空/替换、秘密快照、取消/迟到、有限等待、向量参数、保存去重/未知结果及字段错误归属。
+- `pnpm test:consumer`：通过。三包正式 tarball 独立安装；全部 ESM/CSS/types 及随包 README 一致，零源码 alias。React/ReactDOM `19.2.8`、Base UI `1.7.0` 各单实例，runtime peer exact `4.2.39`。CSS gzip 23,007/23,040 bytes，React 初始 JS 144,929/153,600 bytes，Button-only 6,654/16,384 bytes。
+- `pnpm exec playwright test tests/browser/model-profile.spec.mjs --max-failures=3`：最终 **22/22 通过**。真实 Chromium 运行上述独立正式包产物，涵盖新增/编辑、目录真实指针选择及滚动、手工输入、Headers 错误聚焦和清空、向量测试、只读/禁用、Controller 连续性、停止等待、保存未知核对、Sheet 确认/清密/回焦；light/dark/system、1280/390px、长中文、100%/200% 阅读缩放与三主题真实浏览器 200% 缩放。
+- 为避免把弹层过渡动画截成最终状态，截图等待确认框完全显示/Sheet 关闭完成后，对 Sheet 和三主题浏览器缩放 **4/4 复验通过**。真实浏览器缩放经 Chrome 设置完成：CSS 视口减半、DPR 翻倍、根字号不变、CSS zoom=1、visualViewport.scale=1；不是 CSS zoom 或 pinch 替代。
+
+sourceGeneration：`e7ab9b6afdb4b9ff908e8ad1072dd59b0e566e2f62c58af14b79559a82ac860c`。可复现浏览器测试见 [model-profile.spec.mjs](../tests/browser/model-profile.spec.mjs)，完整报告保存到正式归档 validation，截图包括 [浅色桌面](../output/playwright/model-profile/light-1280-1.png)、[深色桌面](../output/playwright/model-profile/dark-1280-1.png)、[390px/200% 阅读](../output/playwright/model-profile/light-390-2.png)、[确认弹层](../output/playwright/model-profile/sheet-confirmation.png)、[真实浏览器 200%](../output/playwright/model-profile/light-browser-200.png)。已实际查看这些截图核对布局、状态和层叠。
+
+范围与限制：本轮没有未解决的适用失败项；首次脚本把 label 中可视必填星号当作可访问名称、并错误假设 1280px/200% 必须单列，已按真实字段标签和净宽合同修正。未执行全仓 unit/browser、watch/cold-start、Firefox/WebKit、移动 OS/读屏器、真实后端/上游和消费项目验收。示例所有 API 均为合成 mock；公共库交付不代表 xAgent 或 AgentCore 已完成接口接线。未修改其他项目，未发布 npm 或部署。正式归档沿用 `pnpm archive` 自动生成并核验 manifest、public-api.json、sourceGeneration 和 SHA256SUMS。

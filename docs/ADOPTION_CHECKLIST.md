@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.38）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.39）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -849,8 +849,8 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | --- | --- | --- | --- | --- |
 | MODEL-001 | 模型配置Form/Editor | 正式model-profile入口、六种Provider与实际agentCore一致；默认配置由agentCore经后端提供，未复制xAgent私有模板 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
 | MODEL-002 | 模型配置Form/Editor | 逐slot映射identity/connection/settings/capabilities/policy/advanced/result/actions；两列按容器净宽回落，长中文与200%无裁切 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
-| MODEL-003 | 模型配置Form/Editor | profile_id+config显式patch；0/false、缺省、空密钥、headers={}、policy=null各自语义；后端唯一合并/权限/CAS owner | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
-| MODEL-004 | 模型配置Form/Editor | 原密钥只在后端；六星号标记只解析授权记录，新增无原值拒绝；空值清除/其他值替换；替换值不在state、URL、storage、日志/错误；关闭/卸载/身份切换清理 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-003 | 模型配置Form/Editor | profile_id+config显式patch；0/false、缺省、空密钥、headers={}、policy=null各自语义；后端唯一合并/权限/CAS owner；仅将完整明文Profile交AgentCore，不能传patch或profile_id查密钥 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-004 | 模型配置Form/Editor | 原密钥只在后端；六星号标记只解析授权记录，新增无原值拒绝；标记在后端解析，不进入AgentCore/上游；空值清除/其他值替换；替换值不在state、URL、storage、日志/错误；关闭/卸载/身份切换清理 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
 | MODEL-005 | 模型配置Form/Editor | 目录无需real_name、可手动输入、刷新保留列表与焦点；连接变化取消旧请求、迟到隔离 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
 | MODEL-006 | 模型配置Form/Editor | 向量协议可选、无聊天策略、Embed输入/维度仅用于测试；不把聊天测试拒绝误报为向量不可用 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
 | MODEL-007 | 模型配置Form/Editor | 测试/目录不保存；save无自动重放，失败/取消/结果未知有不同恢复，版本冲突不覆盖旧配置 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |

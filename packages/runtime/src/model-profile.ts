@@ -90,9 +90,11 @@ export function createModelProfileController(options: ModelProfileControllerOpti
     if (!Number.isSafeInteger(draft.timeout_seconds) || draft.timeout_seconds < 0) errors.timeout_seconds = 'integer';
     if (!Number.isSafeInteger(draft.max_concurrency) || draft.max_concurrency < -1 || draft.max_concurrency === 0) errors.max_concurrency = 'integer';
     if (draft.provider_type !== 'openai_embeddings') {try {parseModelPolicy(JSON.parse(state.policyText));} catch {errors.default_policy = 'json';}}
-    let credentials: ModelProfileCredentials = {};
-    try {credentials = reader?.() ?? {};} catch {errors.headers = 'json';}
-    if (state.apiKeyMode === 'replace' && (!credentials.api_key?.trim() || credentials.api_key.length > 16384 || credentials.api_key === modelProfileStoredKey && !state.data!.has_api_key)) errors.api_key = 'credentials';
+    let credentials: ModelProfileCredentials = {}, credentialsRead = false;
+    try {credentials = reader?.() ?? {}; credentialsRead = true;} catch {errors.headers = 'json';}
+    // Invalid Headers JSON aborts the view reader before it can return the key.
+    // An unavailable key is not evidence that its input is invalid.
+    if (credentialsRead && state.apiKeyMode === 'replace' && (!credentials.api_key?.trim() || credentials.api_key.length > 16384 || credentials.api_key === modelProfileStoredKey && !state.data!.has_api_key)) errors.api_key = 'credentials';
     if (state.headersMode === 'replace') {try {parseModelHeaders(credentials.headers);} catch {errors.headers = 'json';}}
     if (Object.keys(errors).length) {publish({errors: Object.freeze(errors)}); return null;}
     const config: ModelProfileCandidate['config'] = {...patch};
