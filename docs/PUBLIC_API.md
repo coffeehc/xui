@@ -1170,3 +1170,35 @@ import {Avatar} from '@coffeehc/xui-react/avatar';
 ```
 
 公开 CSS 标记 xui-icon-container / data-icon=true 默认圆形，data-icon-shape=square 为显式例外；不自动添加背景、尺寸、按钮角色或焦点停靠。被动槽与紧凑导航由库内部统一接入，宿主按[组件合同](COMPONENTS.md#图标背景基础模型4237)选择公开选项，不用按资源类型复制 CSS。新增尺寸、背景、导航内距和绘制层四个基础 Token 及 Card 原 Token 兼容别名见[设计合同](DESIGN.md#图标背景的统一形状4237)。
+
+## 模型配置（待界面确认）
+
+| import/script | 源码与导出 | 使用合同 | 示例 |
+| --- | --- | --- | --- |
+| `@coffeehc/xui-runtime/model-profile` <!-- public-entry: @coffeehc/xui-runtime/model-profile --> | [TypeScript Controller 与 Service](../packages/runtime/src/model-profile.ts) | [模型配置合同](COMPONENTS.md#公共模型配置) | [Mock 示例](../examples/model-profile-react/app.tsx) |
+| `@coffeehc/xui-react/model-profile` <!-- public-entry: @coffeehc/xui-react/model-profile --> | [React 表单与编辑器](../packages/ui-react/src/model-profile.tsx) | [模型配置合同](COMPONENTS.md#公共模型配置) | [Mock 示例](../examples/model-profile-react/app.tsx) |
+
+`ModelProfileService.read/catalog/test/save` 复用 HTTPService；模块导入不请求。隔离的已有 HTTP 可通过 `new ModelProfileClient({http})` 借用。`createModelProfileController` 每编辑器一份；默认 UI 自建或通过 controller 注入，二者互斥。未配置 HTTP/后端不偷偷 fallback。
+
+六个 Provider ID 与 agentCore 对应：openai_completions、openai_responses、openai_images、openai_embeddings、gemini、anthropic。目录支持前四种；Gemini/Anthropic保留手工真实模型名。向量专用测试输入 `{input:string[],dimensions?:number}` 属于单次测试，不能放进聊天 default_policy 或保存向量索引配置。当前 agentCore 的 ListModels 与 TestModelProfile 已存在，但 TestModelProfile 拒绝 embedding；向量可调用 Embed，或由 agentCore 补齐统一测试入口后接线。xui 不实现 SDK/测试协议。
+
+默认配置由 agentCore提供、项目后端投影；本地核对的 agentCore `6c71d63` 尚未找到统一导出完整默认 Profile 的入口。xAgent 的部分模板仍是产品私有，不能复制成 xui 默认。示例默认值全是合成 mock。配置合并、授权、并发版本和凭据存储均归项目后端。详见[后端实施提示词](#模型配置后端实施提示词)。
+
+### 模型配置后端实施提示词
+
+组件使用及逐动作处理逻辑见 [模型配置 README](../packages/ui-react/model-profile/README.md)，下方为后端接线合同。
+
+> 在当前项目实现 XUI ModelProfileService 的后端合同，只改本项目被授权的后端，不修改 xui、不在前端加转换层。先核对当前 agentCore 的 Provider、默认 Profile、ListModels、TestModelProfile 和 Embed 公开能力；复用它们，缺口交 agentCore，不能在产品复制协议 SDK、Provider 默认数值或另一套探测算法。
+>
+> 所有响应使用当前标准 AjaxResponse：`{success,message,payload,request_id,code}`。下列 payload schema_version 固定 1，字段以 XUI 正式 types 为准。实体 ID 和版本作为不透明非空字符串，不转 JS Number。仅授权的配置管理身份可调用；读取/响应/日志禁止带真实密钥、Headers 值及原始上游错误。
+>
+> 1. `GET /api/v1/model-profiles/editor?profile_id=...`：省略 ID 返回新增初态；传 ID 鉴权并返回当前已保存版本。payload 为 `{schema_version:1,profile_id:string|null,version:string|null,config,defaults,has_api_key:boolean,header_names:string[],can_save:boolean}`。has_api_key仅声明是否已保存密钥，前端显示固定六星号；不返回原密钥或前缀。config 不含 api_key/headers/id/is_test/is_default；defaults 是允许使用的六种协议子集，各条为 agentCore 默认配置的无秘密投影。config 字段：provider_type/model_name/real_name/base_url/timeout_seconds/max_concurrency/disable_stream/capabilities/default_policy。不存在对象返回明确错误，不冒充新增。
+> 2. `POST /api/v1/model-profiles/actions/catalog`：请求 `{profile_id?,expected_version?,config:{...显式修改字段}}`；返回 `{schema_version:1,models:[{id,owned_by?,created_at?}]}`。真实模型名不是目录前置；不保存、不标记测试通过，不从目录推断模型能力。代理支持/不支持目录要真实反馈。
+> 3. `POST /api/v1/model-profiles/actions/test`：相同候选请求，向量另带 `embedding:{input:string[],dimensions?:number}`。返回 `{schema_version:1,kind:'chat'|'image_generation'|'embedding',passed:boolean,elapsed_ms:number,summary:string,embedding?:{count,dimensions}}`。summary 必须安全脱敏。向量通过时必须返回实际 count/dimensions，不回完整向量。测试产生上游成本，但本合同不保存配置或测试状态；禁止自动重放。agentCore 聊天/图片测试与向量编码能力不能混用。
+> 4. `POST /api/v1/model-profiles` 新增、`PUT /api/v1/model-profiles/{id}` 修改：请求仍为候选；修改的路径 ID/请求 ID/expected_version 一致并做 CAS；返回最新 editor payload。保存不隐式调用模型测试，不伪造 is_test，影响执行的配置变更由后端清理旧验证事实。默认模型选择、引用约束等属于项目业务，非此组件的新 owner。
+>
+> 统一候选构建：有 ID 时读取并授权该配置，无 ID 时从 agentCore 对应 Provider 默认配置开始；仅覆盖请求明确存在的字段。未传保留，0/false是有效覆盖；api_key为固定六星号`******`时必须读取该已授权profile_id的原密钥；新增/原记录无密钥时拒绝此标记，绝不把它发送上游。空字符串明确不用密钥，其他值替换本次候选；省略沿用该已授权记录，新建省略没有历史密钥。六星号是保留标记，不能设置为真实密钥。headers/default_policy/capabilities按整个对象替换，headers={}清空，default_policy=null清空，不做隐式深合并。Provider切换时按目标协议规范校验和清理；未知协议拒绝。公共编辑器只投影后端初态并追踪显式草稿，不负责后端合并。
+>
+> 秘密只在后端凭据存储和本次请求作用域短暂持有；配置ID、权限、默认模型、测试标记不允许从config覆盖。服务端校验Base URL、出口与凭据使用权限，禁止读取任意ID后把旧密钥发送到未经授权的目标。请求体与上游错误不得进入普通日志。以有限总预算传递取消；客户端取消不代表服务端写入回滚。超时/50301/响应丢失等保存结果未知需权威查询后处理；不盲目重试。明确拒绝返回400/403/409/422或已确认未提交的业务错误，其他不确定错误不能伪装成明确拒绝。
+>
+> 验收：六协议枚举一致；新增/修改、有旧密钥/替换/清空、headers删除、0/false、目录无需model、测试不保存、向量路径、版本冲突、越权ID、取消迟到、已提交但响应丢失、秘密脱敏与真实请求数量。当前xui demo全部mock，不代表任何项目或agentCore接口已完成接线。

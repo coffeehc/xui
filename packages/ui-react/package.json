@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "model-profile/README.md"
   ],
   "sideEffects": false,
   "exports": {
@@ -191,6 +192,10 @@
     "./chart": {
       "types": "./dist/chart.d.ts",
       "import": "./dist/chart.js"
+    },
+    "./model-profile": {
+      "types": "./dist/model-profile.d.ts",
+      "import": "./dist/model-profile.js"
     }
   },
   "types": "./dist/index.d.ts",

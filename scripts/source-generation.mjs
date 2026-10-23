@@ -4,7 +4,7 @@ import {resolve} from 'node:path';
 
 /** The existing build identity: sorted UTF-8 relative path, then exact file bytes. */
 export async function sourceGeneration(root=process.cwd()){
-  const files=['docs/DESIGN.md','package.json','tsconfig.json',
+  const files=['docs/DESIGN.md','package.json','tsconfig.json','packages/ui-react/model-profile/README.md',
     ...(await readdir(resolve(root,'scripts'))).filter(name=>name.endsWith('.mjs')).map(name=>`scripts/${name}`),
     ...(await readdir(resolve(root,'packages/theme/src'))).map(name=>`packages/theme/src/${name}`),'packages/theme/package.json'];
   for(const name of ['runtime','ui-react'])files.push(...(await readdir(resolve(root,`packages/${name}/src`))).filter(file=>/\.(?:tsx?|json)$/.test(file)).map(file=>`packages/${name}/src/${file}`),`packages/${name}/package.json`);

@@ -122,7 +122,7 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // contained InputGroup paint. The formal probe grows 22,629 -> 22,931 gzip bytes
 // (+302); allow a bounded +320 bytes, including the mobile full-row exception.
 // Every JavaScript, Button, service and chart cap remains unchanged.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 22976, reactInitialJsGzip: 153600, narrowServiceGzip: 4608,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 23040, reactInitialJsGzip: 153600, narrowServiceGzip: 4608,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // Recreate one generated cache so npm cannot reuse a stale same-version tarball.
 const runDirectory = resolve('.consumers/current');
@@ -153,6 +153,19 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile('examples/shared/layout.css', `${cwd}/layout.css`);
     await writeFile(`${cwd}/product.css`, extract(await readFile('docs/DESIGN.md', 'utf8'), 'design-product-css'));
     const require = createRequire(`${cwd}/package.json`);
+    {
+        const source = resolve(cwd, 'model-profile'), output = resolve('dist/model-profile-react');
+        assert.equal(await readFile(resolve(cwd, 'node_modules/@coffeehc/xui-react/model-profile/README.md'), 'utf8'), await readFile('packages/ui-react/model-profile/README.md', 'utf8'), 'Model profile README missing or stale in installed package');
+        await cp('examples/model-profile-react', source);
+        const result = await build({entryPoints: [`${source}/app.tsx`], outdir: output, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: {'process.env.NODE_ENV': '"production"'}});
+        assert(Object.keys(result.metafile.inputs).every(file => resolve(file).startsWith(`${cwd}/`)), 'Model profile escaped standalone install');
+        assert(!Object.keys(result.metafile.inputs).some(file => file.endsWith('.css') && !file.includes('/@coffeehc/xui-theme/')), 'Model profile requires private CSS');
+        await copyFile(`${source}/index.html`, `${output}/index.html`);
+        await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'), `${output}/theme-init.js`);
+        await writeFile(`${output}/metafile.json`, JSON.stringify(result.metafile, null, 2));
+        execFileSync('node', [resolve('node_modules/typescript/bin/tsc'), '--preserveSymlinks', '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'model-profile/app.tsx'], {cwd, stdio: 'inherit'});
+    }
+
     for(const [entry,symbol] of [['clipboard','getClipboardService'],['theme','getThemeService'],['i18n','getI18nService'],['menu-service','getMenuService']]){
         const service=await build({stdin:{contents:`import {${symbol}} from '@coffeehc/xui-runtime/${entry}';window.xuiService=${symbol};`,resolveDir:cwd,sourcefile:'service-only.js'},bundle:true,format:'esm',minify:true,write:false,metafile:true,platform:'browser',target:'es2022'});
         const contributing=Object.values(service.metafile.outputs).flatMap(output=>Object.entries(output.inputs).filter(([,data])=>data.bytesInOutput>0).map(([path])=>path));

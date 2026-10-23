@@ -443,3 +443,7 @@ BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 和 Chart 数据视�
 确有方形用途时，Icon/IconButton/Button/Avatar.Root/InputGroup.Button 显式 shape=square，Card/CardGroup 模板显式 iconShape=square；高级 parts 或原生容器用公开 data-icon-shape=square。真实头像继续 Card.iconVariant=plain 并使用同一个 Avatar；它拥有自己的形状，不通过外层 Card.iconShape 裁切。Card 原 size/background Token 覆盖保留；新的 icon-container-size/background 可统一基础 tile，既有自定义主题不被替换。
 
 按 ICON-BG-001～004 验证实际使用页面的所有资源类型、图标按钮/组合槽、输入辅助动作和紧凑导航：默认圆形、显式方形、无底色 glyph、主题/窄屏/大字、原尺寸/颜色/焦点/回调及 Card 草稿/记录身份。库级正式消费者证据不代替消费产品升级、真实页面验收或部署。
+
+### 模型配置定向接入
+
+仅有模型配置业务的项目使用公共ModelProfileForm/Editor，通过[模型配置slot合同](COMPONENTS.md#公共模型配置)和MODEL-001～008验收。默认Http client按[后端实施提示词](PUBLIC_API.md#模型配置后端实施提示词)接线，项目后端负责权限、读取旧配置、合并、CAS及调用agentCore；前端不加第二层DTO适配，不把默认值复制到config.json或组件。暂未提供统一后端时可以用明确mock预览，不能声称已完成生产接入。

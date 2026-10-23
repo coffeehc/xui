@@ -1739,3 +1739,26 @@ ApiKeyManager 的内置 actions 与两类日志的内置详情/操作列均不�
 Menu.Icon、Toast.Icon、EmptyState.icon、SidebarFooter.icon 的被动包装复用基础容器标记；Tabs.Icon 本身沿用 Icon。未加背景的菜单/标签/通知图形不自动加底色。普通完整导航行、品牌图片和图表序列形状保留本身用途，不按 SVG 外观猜测为图标按钮。
 
 基础Token icon-container-size默认依赖control-height-sm，icon-container-background默认依赖muted；nav-icon-background-inset从导航目标与基础尺寸派生；icon-paint-z-index默认-1且只作用于内部隔离绘制层。现有 card-icon-size/card-icon-background 改为尺寸和背景 Token 的兼容别名，卡片专用覆盖继续优先，原 card-icon-offset/标题对齐和自然高度保留。按需 CSS 的 base.css/critical.css、完整 style.css 共享同一规则；使用 Avatar/widgets 或 Button 分片时仍按原方式加载基础 CSS。该模型不新增 runtime Service、动画或查询状态。
+
+## 公共模型配置
+
+组件目录的 [README](../packages/ui-react/model-profile/README.md) 随 React 安装包交付，说明 HTTP API、候选合并、秘密与 Controller 处理流程；这里维护 layout/slot 合同。
+
+`ModelProfileForm` 是完整表单；`ModelProfileEditor` 在同一实现外组合公共 Sheet。Provider 固定六项与 agentCore 一致，可用子集和默认值来自 editor API。新增/修改共用表单和 Controller；`load(null)` 明确新增，`load(id)` 切换对象，`load()` 重新读取当前对象，均丢弃草稿。同范围目录刷新保留旧目录，连接/协议/凭据变化取消旧请求并清旧目录；真实模型名始终允许手工输入。组件不定义完整模型管理列表、默认模型选择或业务引用 owner。
+
+| 区域 | 默认内容/正式扩展 | 状态与排版 |
+| --- | --- | --- |
+| identity | 模型名称、Provider、真实模型 | FormGrid 两列；真实模型跨列，目录按钮同行/窄屏换行 |
+| connection | Base URL、单一API Key输入框；slots.afterConnection | 净宽允许时两列同行，不足时单列；密钥明文只在原生控件和提交作用域 |
+| settings | 首字超时、并发 | 单位/特殊值就近标明；流式行为沿用后端配置，不提供表单开关 |
+| capabilities/policy | 聊天能力、常用策略 | 紧凑公共Checkbox；向量不显示聊天字段/策略 |
+| advanced | Headers JSON默认`{}`、策略JSON；slots.advanced | 直接编辑，无Headers处理选择器；Disclosure按需披露，长编辑器跨列 |
+| embedding | 测试文本、可选维度 | 单次Embed请求参数，不保存成Profile策略 |
+| result | 安全测试摘要/耗时/向量数量与维度；slots.result | 真实结果、不虚构token/价格，原始异常禁止带入 |
+| actions | 重置、测试、保存；slots.actions | FormActions主次动作；成功Toast，不挤动页面 |
+
+`labels` 是实时文字投影，变化不重建Controller/请求/草稿。`options` 与注入 `controller` 互斥；默认模型通过现有生命周期桥清理，注入模型不销毁。视图实际退出清除秘密及本次私有编辑状态，身份切换必须立即调用 `clear()` 或卸载旧作用域。禁用/只读不允许业务动作，取消保留可达。调用方可注入现有 toastController，默认自建局部通知。
+
+API Key和Headers明文不进入快照。API Key未配置时为空，已配置时显示固定六星号`******`，提交同一标记由后端按已授权的profile_id解析原密钥；空字符串清除，其他值替换。该标记为保留值；新增或原记录无密钥时必须拒绝，不能当作真实密钥发送上游。Headers JSON默认显示`{}`，未编辑时不提交该字段并保留后端配置；直接编辑后提交完整对象进行整项替换，显式提交`{}`清空。Headers仅返回名称，不回填已有值；重置/保存后恢复空对象编辑框。目录/测试不持久化配置；保存确认后清理秘密并采用新版本。保存结果未知禁重复保存；修改可重新读取已知ID，新建未知不能以读取默认配置解除阻断，宿主先核对创建结果再load(确认的ID)；重新读取是显式丢弃当前草稿，不把取消视为失败回滚。控制器getState返回不可变非秘密状态；外部扩展通过setField等动作修改。
+
+示例：[模型配置 Mock](../examples/model-profile-react/app.tsx)。当前为待用户视觉确认实现，mock fixture 参数不是正式协议默认值；HTTP及后端提示词见[PUBLIC_API](PUBLIC_API.md#模型配置后端实施提示词)。

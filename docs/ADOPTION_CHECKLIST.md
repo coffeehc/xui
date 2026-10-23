@@ -840,3 +840,18 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | ICON-BG-002 | 明确方形用途 | 使用公开 shape、iconShape 或 data-icon-shape 标记；不按资源类型另写皮肤 | 公开 props、显式方形与缺省对照 | [公开接口](PUBLIC_API.md#图标容器形状4237) |
 | ICON-BG-003 | 图标动作、复合槽、紧凑导航、Avatar、plain Card | 默认图标背景统一圆形及基础直径；无背景glyph不加底色，plain Avatar 维持自己的框；文字动作/完整导航行保留 | 默认/hover/focus/disabled/busy、geometry、Avatar/文字对照 | [设计合同](DESIGN.md#图标背景的统一形状4237) |
 | ICON-BG-004 | 主题、窄屏、大字及动态变更 | public Token 覆盖有效；切换形状不改布局/草稿/身份/业务 owner，真实键盘和单次动作有效 | theme/viewport/scale矩阵、DOM identity、焦点和回调记录 | [基础模型](COMPONENTS.md#图标背景基础模型4237) |
+
+### 模型配置逐项检查
+
+仅使用模型配置能力时执行，不扩展到无关页面。
+
+| ID | 适用入口 | 必须结果 | 证据 | 公共合同来源 |
+| --- | --- | --- | --- | --- |
+| MODEL-001 | 模型配置Form/Editor | 正式model-profile入口、六种Provider与实际agentCore一致；默认配置由agentCore经后端提供，未复制xAgent私有模板 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-002 | 模型配置Form/Editor | 逐slot映射identity/connection/settings/capabilities/policy/advanced/result/actions；两列按容器净宽回落，长中文与200%无裁切 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-003 | 模型配置Form/Editor | profile_id+config显式patch；0/false、缺省、空密钥、headers={}、policy=null各自语义；后端唯一合并/权限/CAS owner | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-004 | 模型配置Form/Editor | 原密钥只在后端；六星号标记只解析授权记录，新增无原值拒绝；空值清除/其他值替换；替换值不在state、URL、storage、日志/错误；关闭/卸载/身份切换清理 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-005 | 模型配置Form/Editor | 目录无需real_name、可手动输入、刷新保留列表与焦点；连接变化取消旧请求、迟到隔离 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-006 | 模型配置Form/Editor | 向量协议可选、无聊天策略、Embed输入/维度仅用于测试；不把聊天测试拒绝误报为向量不可用 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-007 | 模型配置Form/Editor | 测试/目录不保存；save无自动重放，失败/取消/结果未知有不同恢复，版本冲突不覆盖旧配置 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-008 | 模型配置Form/Editor | 同Controller切语言/主题/缩放不请求；键盘/浮层/Sheet关闭回焦、disabled/readOnly；成功反馈Toast，验真实页面及实际请求 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |

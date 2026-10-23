@@ -1633,3 +1633,16 @@ BusinessLogExplorer 与 StructuredLogExplorer 的表体统一迁入 DataTable；
 已查看最终[桌面默认背景](../output/playwright/icon-background-default.png)、[深色390px/200%](../output/playwright/icon-background-narrow.png)和[密码动作hover](../output/playwright/icon-background-password-hover.png)。[简要结果与像素测量](../output/playwright/icon-background-metrics.json)保留逐例状态和六组测量。复现使用pnpm build/check:tokens/typecheck/test:consumer；浏览器使用icon-container-shape、icon-button-density、button-state-contract、card-actions/footer/group、design-state-regressions、display及display-foundation-contract、rich-navigation、text-inputs、toast这12个spec，workers=2。
 
 本轮只交付xui，库级合成示例不代表xAgent实际产品已接入或部署。未运行全仓unit/browser、watch/cold-start、Firefox/WebKit或真实领域后端。本次修改按授权提交并推送main，正式归档包含源码、三包及验证证据；临时consumer、浏览器中间产物和松散打包副本随后清理。
+
+
+## 公共模型配置 Mock 预览（2026-10-23，尚未发布）
+
+本轮只修改 xui；按用户要求先交互预览，版本仍为 4.2.38，交付范围为源码和Mock预览，未发布新版本或建立正式归档。新增 model-profile runtime/React 入口、公共表单与 Sheet 编辑器、合成 HTTP mock 示例。移除说明字段、密钥处理选择器、关闭流式输出开关和Headers处理选择器；Headers JSON默认显示{}，未编辑保留，编辑后整项替换。流式行为沿用后端配置。已有密钥显示固定六星号，提交该标记由后端按授权 profile_id 解析旧值，空值清除、其他值替换。新增/无原密钥拒绝六星号。默认参数为合成 fixture，不能视作 agentCore 正式默认值或真实测试结果。
+
+验证：pnpm build、pnpm typecheck、node --test tests/model-profile.test.mjs（17/17）、tests/docs.test.mjs（2/2）和 pnpm test:consumer 通过。独立 consumer 安装三包 tarball，校验真实 ESM/CSS/types 与 React/ReactDOM/Base UI 单实例，没有源码 alias。sourceGeneration 为 `cf1601d3c6545f95287d1577b0e931b619817877fc9a4f2b408c50842789e0f7`。新增局部表单样式令关键 CSS gzip 为 23007 bytes，原 22976 上限不足31 bytes；预算有界增加64至23040，其余门禁未放宽。
+
+实际浏览器使用上述独立包预览：目录拉取/指针选择、聊天与向量测试、密钥保留/替换/清除、mock保存后秘密清理、只读、慢请求取消无假成功Toast、Sheet的Escape确认/继续编辑/放弃回焦均通过。查看浅色、深色、system选择与长中文200%阅读缩放；883px可视宽度下文档宽度仍为883px，字段回落单列、目录动作自然换行。控制台没有error/warn。浅色最终截图保留在 `.artifacts/model-profile-preview/light.png`。Headers处理选择器移除后，另验默认{}、直接编辑、非法JSON聚焦阻断、保存后恢复{}和显式空对象清空；截图为 `.artifacts/model-profile-preview/headers.png`。
+
+未执行：完整发布级浏览器矩阵（390px、真实浏览器200%缩放、Firefox/WebKit）、全仓unit/browser、真实后端/上游测试及消费项目验收。所有请求使用示例注入的mock fetch，未连接或修改后端/agentCore/消费项目。本记录是预览阶段证据，不是正式发布或产品接入完成声明。
+
+补充：组件README位于 `packages/ui-react/model-profile/README.md`，随React包交付并纳入sourceGeneration及安装内容一致性检查。连接区改用公共FormGrid自动分列：818px视口、672px网格净宽为两列各328px；200%阅读缩放下630px净宽回落单列，页面宽度仍为818px。截图为 `.artifacts/model-profile-preview/connection-wide.png` 与 `connection-200.png`；这是阅读缩放验证，不等同于浏览器原生缩放。

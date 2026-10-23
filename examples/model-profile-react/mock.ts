@@ -1,0 +1,40 @@
+import {modelProfileStoredKey, modelProfileProviders, type ModelProfileConfig, type ModelProfileEditorData, type ModelProfileCandidate} from '@coffeehc/xui-runtime/model-profile';
+/** Synthetic fixture only. These numbers are NOT xui/agentCore defaults. No storage or upstream calls. */
+const defaults: ModelProfileConfig[] = modelProfileProviders.map((provider): ModelProfileConfig => ({provider_type: provider.id, model_name: '', real_name: '', base_url: 'https://models.example.test/v1', timeout_seconds: 0, max_concurrency: 6, disable_stream: provider.kind !== 'chat', capabilities: provider.kind === 'chat' ? {supports_chat: true, supports_tool_calls: true} : provider.kind === 'embedding' ? {supports_embedding: true} : {supports_image_generation: true}, default_policy: provider.kind === 'embedding' ? null : provider.kind === 'chat' ? {max_context_tokens: 128000, max_completion_tokens: 8192} : {}}));
+const saved: Record<string, ModelProfileEditorData> = {
+  'example-chat': {schema_version: 1, profile_id: 'example-chat', version: '1', config: {...defaults[1], model_name: '团队日常助手', real_name: 'example-chat'}, defaults, has_api_key: true, header_names: ['X-Workspace'], can_save: true},
+  'example-embedding': {schema_version: 1, profile_id: 'example-embedding', version: '1', config: {...defaults[3], model_name: '知识检索向量', real_name: 'example-embedding'}, defaults, has_api_key: true, header_names: [], can_save: true},
+};
+export const mockModelAPI = {
+  behavior: 'success' as 'success' | 'empty' | 'failure' | 'slow' | 'unknown',
+  requests: [] as {method: string; path: string; fields: string[]; usesSavedKey: boolean}[],
+  /** Transport-level mock: the real public client still serializes, validates and handles HTTP errors. */
+  fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input : input.url), method = init?.method ?? 'GET';
+    const body = init?.body ? JSON.parse(String(init.body)) as ModelProfileCandidate : undefined;
+    mockModelAPI.requests.push({method, path: url.pathname, fields: Object.keys(body?.config ?? {}), usesSavedKey: !!body?.profile_id && (body?.config.api_key === modelProfileStoredKey || !Object.hasOwn(body?.config ?? {}, 'api_key'))});
+    const behavior = mockModelAPI.behavior;
+    await new Promise<void>((resolve, reject) => {const timer = setTimeout(done, behavior === 'slow' ? 3000 : 400); function abort() {clearTimeout(timer); init?.signal?.removeEventListener('abort', abort); reject(new DOMException('Cancelled', 'AbortError'));} function done() {init?.signal?.removeEventListener('abort', abort); resolve();} if (init?.signal?.aborted) abort(); else init?.signal?.addEventListener('abort', abort, {once: true});});
+    const response = (payload: unknown, status = 200) => new Response(JSON.stringify({success: status === 200, message: status === 200 ? '' : 'Mock rejection', payload, request_id: 'mock-model-request', code: status === 200 ? 1 : status === 503 ? 50301 : 40901}), {status, headers: {'Content-Type': 'application/json'}});
+    if (behavior === 'failure') return response(null, 409);
+    if (method === 'GET') {
+      const id = url.searchParams.get('profile_id');
+      return response(id ? saved[id] : {schema_version: 1, profile_id: null, version: null, config: defaults[1], defaults, has_api_key: false, header_names: [], can_save: true});
+    }
+    if (url.pathname.endsWith('/catalog')) return response({schema_version: 1, models: behavior === 'empty' ? [] : ['example-chat','example-reasoning','example-vision','example-embedding',...Array.from({length: 24}, (_, i) => `example-model-${i + 1}`)].map(id => ({id, owned_by: 'Mock provider'}))});
+    if (body?.config.api_key === modelProfileStoredKey && (!body.profile_id || !saved[body.profile_id]?.has_api_key)) return response(null, 409);
+    const base = body?.profile_id ? saved[body.profile_id].config : defaults[1];
+    const effective = {...base, ...body!.config};
+    if (url.pathname.endsWith('/test')) {
+      const kind = modelProfileProviders.find(item => item.id === effective.provider_type)!.kind;
+      const request = body as ModelProfileCandidate & {embedding?: {input: string[]; dimensions?: number}};
+      return response({schema_version: 1, kind, passed: true, elapsed_ms: 428, summary: kind === 'embedding' ? '已完成文本编码，向量维度与请求一致。' : kind === 'image_generation' ? '图片生成协议返回有效结果。' : '已收到有效回复，连接可用。', ...(kind === 'embedding' ? {embedding: {count: request.embedding?.input.length ?? 1, dimensions: request.embedding?.dimensions ?? 768}} : {})});
+    }
+    const id = body!.profile_id ?? 'example-new', existing = saved[id];
+    if (existing && body!.expected_version !== existing.version) return response(null, 409);
+    const {api_key, headers, ...config} = effective;
+    saved[id] = {schema_version: 1, profile_id: id, version: String(Number(existing?.version ?? 0) + 1), config, defaults, has_api_key: api_key === undefined || api_key === modelProfileStoredKey ? !!existing?.has_api_key : !!api_key, header_names: headers === undefined ? existing?.header_names ?? [] : Object.keys(headers), can_save: true};
+    // Committed mock write with a lost acknowledgement: exercises no blind replay.
+    return behavior === 'unknown' ? response(null, 503) : response(saved[id]);
+  }) as typeof fetch,
+};

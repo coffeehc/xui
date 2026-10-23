@@ -2580,3 +2580,7 @@ DataTable 是表格渲染、列宽、行交互表面与滚动边界的唯一 own
 Icon 保留 plain 默认；显式 variant=tile 使用 icon-container-size（默认 control-height-sm，即根16px时32px）与 icon-container-background（默认 muted），glyph 仍为 control-icon-size。Card tile、默认IconButton的实际圆面、InputGroup图标动作背景、紧凑图标导航背景与默认Avatar统一使用该直径；根字号200%时统一64px。显式size或卡片专用size覆盖是有意的尺寸例外。Button保留36px默认命中区；输入辅助动作至少为基础直径宽，避免字符宽度造成不同大小的圆。原card-icon-size/background为兼容别名；Card原glyph、颜色、标题与正文结构保持。CardGroup与其他组合直接继承Card，不按资源类型追加皮肤。
 
 同一基础 CSS owner 覆盖 Icon、公开 xui-icon-container、data-icon=true 的动作（含 IconButton、弹层/通知关闭、主题/导航开关、InputGroup 的显隐/清除/步进）、紧凑态图标导航与 Avatar；Menu.Icon、Toast.Icon、EmptyState 和 SidebarFooter 的装饰槽复用同一容器标记。无底色的 Tabs/菜单/通知图形、品牌 logo 和图表序列编码不因这一规则添加背景或重绘路径。InputGroup在原按钮内使用居中的基础尺寸绘制层，横纵直径相等，矩形命中区不随hover/pressed改变；icon-paint-z-index默认-1，仅位于自身隔离层glyph后方。nav-icon-background-inset从导航命中区与基础直径派生，手机完整文字行恢复原背景范围。颜色、glyph、focus、disabled/busy与业务回调仍由原组件负责，背景模型不建立新交互或请求owner。
+
+### 模型配置编辑器
+
+模型配置沿用公共FormGrid/Fieldset/Field、PasswordInput、Combobox、Disclosure、FormActions和Sheet，不增加第二套皮肤。名称与协议优先，连接其次，运行参数及能力紧凑分组，高级Headers/JSON按需展开。真实模型名与目录动作属于同一字段区域，窄屏动作自然换行。向量协议显示专用测试输入及可选维度，隐藏聊天策略；不把协议固定能力伪装为探测结果。默认参数由agentCore经项目后端返回，xui只投影与跟踪显式修改。不提供说明字段，临时成功用Toast，保存未知结果保留简短阻断提示。详细API/slot及mock限制见[组件合同](COMPONENTS.md#公共模型配置)。

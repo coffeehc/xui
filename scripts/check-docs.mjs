@@ -21,7 +21,7 @@ export function checkAdoptionChecklist(source) {
   return ids.size;
 }
 export async function checkDocs() {
-  const files = [(await readdir(root)).filter(name=>name.endsWith('.md')),
+  const files = ['packages/ui-react/model-profile/README.md', (await readdir(root)).filter(name=>name.endsWith('.md')),
     (await readdir(resolve(root,'docs'),{recursive:true})).filter(name=>name.endsWith('.md')).map(name=>`docs/${name}`),
     (await readdir(resolve(root,'.agents/skills'),{recursive:true})).filter(name=>name.endsWith('.md')).map(name=>`.agents/skills/${name}`)].flat();
   let links = 0;

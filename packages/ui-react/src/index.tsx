@@ -47,3 +47,5 @@ export * from './services.js';
 export * from './route.js';
 
 export * from './upload.js';
+
+export * from './model-profile.js';
