@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {bindDemoPreferences} from '../shared/demo-preferences';
 import {createRoot} from 'react-dom/client';
 import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
 import {createModelProfileController, type ModelProfileCommittedSave, type ModelProfileEditorData} from '@coffeehc/xui-runtime/model-profile';
@@ -15,6 +16,7 @@ import {mockModelAPI} from './mock';
 import '@coffeehc/xui-theme/style.css';
 
 bootstrap({app: {title: '模型配置 · XUI Preview'}}, {services: {http: {options: {baseURL: window.location.origin, fetch: mockModelAPI.fetch}}}});
+bindDemoPreferences(ThemeService);
 const params = new URLSearchParams(location.search);
 if (['light','dark','system'].includes(params.get('mode') ?? '')) ThemeService.setMode(params.get('mode') as 'light'|'dark'|'system');
 const controller = createModelProfileController({profileId: params.get('create') === '1' ? undefined : 'example-chat'});
@@ -28,7 +30,7 @@ function App() {
   const [sheet, setSheet] = React.useState(false), [readOnly, setReadOnly] = React.useState(false), [disabled, setDisabled] = React.useState(false), [long, setLongLabels] = React.useState(false);
   React.useLayoutEffect(() => {Object.assign(demo, {setReadOnly, setDisabled, setLongLabels});}, []);
   return <Container style={{maxInlineSize: 'var(--layout-dialog-max-width)', padding: 'var(--layout-content-inset)'}}><Stack>
-    <PageHeader title="模型配置" meta={<Badge>Mock 预览</Badge>} actions={<ThemeModeButton/>}/>
+    <PageHeader title="模型配置" meta={params.has('embed')?undefined:<Badge>Mock 预览</Badge>} actions={params.has('embed')?undefined:<ThemeModeButton/>}/>
     <Toolbar aria-label="示例场景">
       <Button variant="outline" onClick={() => void controller.load(null)}>新增模型</Button>
       <Button variant="outline" onClick={() => void controller.load('example-chat')}>修改聊天模型</Button>

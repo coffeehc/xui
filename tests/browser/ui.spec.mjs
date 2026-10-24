@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
+import postcss from 'postcss';
 import { chooseSelect, expectSelectValue } from './select-interaction.mjs';
 
 async function navigationState(item) {
@@ -37,7 +38,8 @@ for (const entry of ['navigation','style']) for (const mode of ['light','dark'])
     const css=await Promise.all(names.map(async name=>{
       const installed=await readFile(require.resolve(`@coffeehc/xui-theme/${name}.css`),'utf8');
       expect(installed).toBe(await readFile(`packages/theme/dist/${name}.css`,'utf8'));
-      if(name === 'navigation' || name === 'style') expect(installed).toContain(sourceNavigation);
+      if(name === 'navigation') expect(installed).toBe(sourceNavigation);
+      if(name === 'style'){const aggregate=postcss.parse(installed).nodes.find(node=>node.type==='atrule'&&node.name==='layer'&&node.params==='xui-components');const exported=postcss.parse(sourceNavigation).first;for(const node of exported.nodes)expect(aggregate.nodes.some(actual=>actual.toString()===node.toString())).toBe(true);}
       return installed;
     }));
     const icon='<svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor"><path d="M2 2h16v16H2z"/></svg>';

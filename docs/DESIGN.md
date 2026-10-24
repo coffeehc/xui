@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.40。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.41。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -207,7 +207,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
 | 共享尺度 | spacing、space-*、control-height[-xs/-sm/-lg]、control-icon-size[-xs]、radius-*、line-width-*、focus-* | gap4/8/12/16及图文6；高36/24/32/40；图标16/12；圆角2/4/6/8/8；线1/1/2；焦点清距Token保留2+2px |
 | 层级 | shadow-flat/subtle/surface/raised/overlay、z-shell/sticky/overlay/menu/notice | 普通none、浮层成对阴影；z为10/20/50/70/80。只在公共portal/层级适配中消费 |
 | 布局 | layout-content-inset[-narrow]/max、section/toolbar/field-gap、field[-long]-min、header-height、dialog/confirm/drawer-width、viewport-inset | 横20/16px，max none，gap16/8/16，字段240/288，顶栏48，弹层宽度按40%/30%/60%及各自rem上下限，视口边16；是可覆盖默认约束，不强制所有产品同一页面骨架 |
-| 动效 | motion-duration[-fast/-enter/-exit]、motion-easing[-exit]、motion-distance-small、motion-press/enter-scale | 150/100/180/120ms，进入/状态与退出曲线，4px、0.98；减少动效为0ms/0px/1，保留即时反馈 |
+| 动效 | motion-duration[-fast/-enter/-exit/-chart]、motion-easing[-exit]、motion-distance-small、motion-press/enter-scale | 150/100/180/120/900ms，图表、进入/状态与退出曲线，4px、0.98；减少动效为0ms/0px/1，保留即时反馈 |
 | 必要组件 | button-*、input-*、card-*、menu-*、nav-*、floating-offset、popover-*、tooltip-max-width、table-*、metric-* | 共用语义和尺度；只有确实需要独立调整的组件参数另设入口，不给每个属性或每页建立变量 |
 | 图形 | chart-color-1…6、chart-axis/grid/tooltip-*、chart-*-font-size、chart-line-width[-emphasis]、chart-min-block-size、diagram-* | 默认六序列、语义轴/网格/浮层，轴12/图例13、线2/2.5px、图高默认224；diagram引用选中/文字/边线 |
 | 文档 | document-canvas、document-diagram-*、document-chart-1…6 | 独立文档调色板，不引用UI主题色；浅深切换不改变下载图形配色 |
@@ -414,6 +414,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --motion-duration: 150ms;
     --motion-duration-fast: 100ms;
     --motion-duration-enter: 180ms;
+    --motion-duration-chart: 900ms;
     --motion-duration-exit: 120ms;
     --motion-easing-exit: cubic-bezier(0.4, 0, 1, 1);
     --motion-distance-small: 0.25rem;
@@ -523,6 +524,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --tooltip-max-width: 20rem;
     --table-cell-padding: var(--space-control-gap);
     --table-action-gap: var(--space-text-gap);
+    --api-key-status-inline-size: 6rem;
     --table-action-max-inline-size: calc(100cqi - (var(--focus-width) + var(--focus-offset) + var(--line-width-surface)) * 2);
     --metric-padding: var(--space-content-gap);
     --metric-gap: var(--space-text-gap);
@@ -594,6 +596,8 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --a11y-hidden-size: 1px;
     --a11y-hidden-offset: calc(var(--a11y-hidden-size) * -1);
     --a11y-skip-hidden-offset: -200%;
+    --progress-height: var(--space-text-gap);
+    --progress-radius: 0;
     /* Forced-color progress roles retain the user-agent system palette. */
     --progress-forced-track: Canvas;
     --progress-forced-border: CanvasText;
@@ -608,6 +612,8 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --button-danger-hover-background: color-mix(in oklab, var(--action-danger) 92%, var(--foreground));
     --button-danger-pressed-background: color-mix(in oklab, var(--action-danger) 88%, var(--foreground));
     --backdrop-background: color-mix(in oklab, var(--foreground) 24%, transparent);
+    --carousel-min-block-size: var(--feedback-empty-min-block-size);
+    --carousel-rtl-transform: rotate(180deg);
     --feedback-empty-min-block-size: calc(var(--control-height) * 4);
     --feedback-slot-block-size: calc(var(--control-height) + var(--space-content-gap) * 2 + (var(--focus-width) + var(--focus-offset)) * 2);
     --data-region-min-block-size: calc(var(--control-height) * 8);
@@ -1350,6 +1356,7 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
       --motion-duration: 0ms;
       --motion-duration-fast: 0ms;
       --motion-duration-enter: 0ms;
+      --motion-duration-chart: 0ms;
       --motion-duration-exit: 0ms;
       --motion-distance-small: 0px;
       --motion-press-scale: 1;
@@ -2144,7 +2151,7 @@ Icon的可选blink只表达宿主提供的关注事实：默认关闭；开启�
 
 所有实际用户操作必须有可感知且与真实状态匹配的动效反馈，不能只给少数组件加装饰。鼠标、键盘Enter/Space/方向键和触屏都应得到对应反馈。立即开始本地反馈，业务请求/导航/保存不等待动画完成；异步结果未知时只表达等待，不预演成功。保持焦点、滚动锚点和区域尺寸稳定，不重复抢焦点、不布局抖动、不全页遮罩拖慢刷新。
 
-默认参数：状态过渡motion-duration150ms、按压/输入motion-duration-fast100ms、进入180ms、退出120ms；状态/进入曲线motion-easing=cubic-bezier(0.2,0,0,1)，退出motion-easing-exit=cubic-bezier(0.4,0,1,1)。小幅进入位移上限motion-distance-small4px，按压/进入缩放0.98；只在合适对象中使用，不能全部同时叠加。重复操作可衔接当前过渡，不排队延迟真实动作；不以计时器猜请求完成。
+默认参数：状态过渡motion-duration150ms、按压/输入motion-duration-fast100ms、进入180ms、退出120ms、图表motion-duration-chart900ms；状态/进入曲线motion-easing=cubic-bezier(0.2,0,0,1)，退出motion-easing-exit=cubic-bezier(0.4,0,1,1)。小幅进入位移上限motion-distance-small4px，按压/进入缩放0.98；只在合适对象中使用，不能全部同时叠加。单个图表实例显式采用标准短动效时，可将motion-duration-chart绑定到var(--motion-duration-enter)，只复用集中语义值；不在实例定义另一组毫秒常量。重复操作可衔接当前过渡，不排队延迟真实动作；不以计时器猜请求完成。
 
 | 用户操作 | 真实状态变化 | 默认反馈动效 | 不允许 |
 | --- | --- | --- | --- |
@@ -2319,6 +2326,8 @@ React使用layout/forms/feedback正式子入口；纯排版不增加表单或请
 
 ### 数据刷新与视图连续性
 
+刷新按钮闲置且没有可见图标时，文字相对整个按钮居中；忙时 Spinner 与文字作为一组居中，图标继承按钮前景。公共完整页保留刷新前后的按钮宽高、节点及相邻动作位置，隐藏图标不能造成文字单边偏移。
+
 刷新更新的是当前范围内的数据与相关状态。正常重新渲染可以更新已有DOM，不等于卸载重建。首次加载、已有内容刷新、可用、空结果、失败与显式重试必须区分；请求、鉴权、超时、幂等及可重试语义继续由既有宿主owner持有，展示组件不接管这些事实。
 
 | 场景 | 必须保持的行为 |
@@ -2419,7 +2428,7 @@ DataTable默认横向铺满，通常省略列宽；仅在列内容或用户尺�
 
 实体身份的固定认证/Key HTTP 合同默认正 int64 decimal，可显式 idEncoding="hex" 选择严格小写无前导零 hex，前后端同配；未知编码、非规范值拒绝，不按外观猜测或转 JS Number。公开解析入口与纯视图不透明 ID 边界见[身份编码](PUBLIC_API.md#显式实体身份编码)。
 
-原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。Progress轨道与填充使用radius-sm，维持等高条形而非50%椭圆；不改变圆形Spinner的radius-full。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止。forced-colors下progress保持原生元素、真实value/max与未知语义，采用浏览器提供的Canvas轨道、CanvasText边界与填充；颜色只由progress-forced-track/border/fill集中定义，design-accessibility层保证它们继续取系统色，不接受品牌覆盖。使用既有line-width-surface与radius-full，保留轨道形状并补可识别边界；确定状态按原生比例填充，无value仅显示由progress-forced-pending-border-style声明的空心虚线轨道，不画合成分数或全满填充，且保留已有状态脉冲及reduced-motion静止。forced-color-adjust继续为auto，不关闭用户强制颜色机制；appearance:none仅保留原生progress内部的真实比例布局与可控CSS动效，不能把computed appearance:auto当作浏览器原生绘制已恢复的证据。Checkbox/range等选择标记继续恢复各自的浏览器绘制。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
+原生输入外壳、文件选择按钮、range轨道/拇指、color色块边界和progress轨道/填充由同一语义变量提供；文件按钮复用muted/foreground、button-disabled-*和交互状态，range轨道用space-control-gap、拇指用control-icon-size，range-thumb-offset集中定义其垂直居中关系。color色块保留真实选择值。Checkbox indeterminate必须显示横线，不能以checked或仅颜色代替；choice/fieldset错误边界仍用status-error-foreground。Progress与密码强度meter共用progress-height（默认4px）及progress-radius（默认0），轨道和填充全程等厚、直边呈现；不改变圆形Spinner的radius-full。progress有value时按真实value/max绘制，无value保留原生indeterminate语义，用状态脉冲而不虚构百分比；reduced-motion静止。forced-colors下progress保持原生元素、真实value/max与未知语义，采用浏览器提供的Canvas轨道、CanvasText边界与填充；颜色只由progress-forced-track/border/fill集中定义，design-accessibility层保证它们继续取系统色，不接受品牌覆盖。使用既有line-width-surface与progress-radius，保留轨道形状并补可识别边界；确定状态按原生比例填充，无value仅显示由progress-forced-pending-border-style声明的空心虚线轨道，不画合成分数或全满填充，且保留已有状态脉冲及reduced-motion静止。forced-color-adjust继续为auto，不关闭用户强制颜色机制；appearance:none仅保留原生progress内部的真实比例布局与可控CSS动效，不能把computed appearance:auto当作浏览器原生绘制已恢复的证据。Checkbox/range等选择标记继续恢复各自的浏览器绘制。文件/日期/颜色系统窗口、密码管理器、自动填充建议及移动键盘属于浏览器/OS，不承诺CSS统一其界面，不移除number/date/search原生编辑能力；file/range/color不支持HTML readonly，不得只加属性就声称只读。
 
 公共 SimpleSelect（包含顶栏语言入口）的浮层选项之间使用 space-text-gap（默认 4px），选项组与组内标题/选项同样保留该间距；选中与悬停背景不得垂直贴合。间距由公共样式负责，不改变选项最小高度、弹层定位或隐藏语义。
 
@@ -2556,13 +2565,15 @@ IconButton 与 Button data-icon="true" 使用同一纯图标配方：等宽高�
 
 ### 公共图表布局与状态合同（4.2.21）
 
-LineChart、BarChart、PieChart 是 React 数据展示组合，复用 Card 的 title/description/actions/content/footerMeta/footerActions 和 DataRegion/LoadingState/EmptyState/ErrorState。标题、操作与页尾沿用现有文字/布局角色，不加第二个边框、装饰标题条或虚拟指标；默认“查看数据”动作位于 Card.actions，宿主 actions 在它之前。内容依次为图例、绘图区、共用既有反馈槽的就近读值区与反馈，数据表在内容后按需展开。查询、缓存、筛选、单位、业务时区、聚合、总数及范围切换归宿主，图表没有请求/选择/提交 owner。
+LineChart、BarChart、PieChart 的内部几何使用按模块引入的 D3 纯计算，React 独占 SVG 节点与生命周期；D3不拥有DOM、主题、请求或动画计时。刻度可由nice/ticks选择间隔，原值、零基线、缺失与有限极值合同不变。横轴仍为等距类别，时间/单位不隐式推断。三类组件是 React 数据展示组合，复用 Card 的 title/description/actions/content/footerMeta/footerActions 和 DataRegion/LoadingState/EmptyState/ErrorState。标题、操作与页尾沿用现有文字/布局角色，不加第二个边框、装饰标题条或虚拟指标；默认“查看数据”动作位于 Card.actions，宿主 actions 在它之前。内容依次为图例、绘图区、共用既有反馈槽的就近读值区与反馈，数据表在内容后按需展开。查询、缓存、筛选、单位、业务时区、聚合、总数及范围切换归宿主，图表没有请求/选择/提交 owner。
 
 既有 chart-color-1～6 是分类色，负柱不自动变红；标题/轴/图例/网格/焦点分别继承 Card、chart-axis-foreground、foreground、chart-grid-color 与 interaction-focus。普通文字不着系列色；色点/线条仅作非文字标记。折线以圆/方/菱形和实/虚/点线辅助区分，分组柱按图例序号排列，饼图从上端顺时针按图例顺序呈现，并提供标签/原值/占比及完整数据表。主色和状态色不会代替分类事实。宿主重排系列/扇区且需保色时显式提供 color=1～6；省略时按当前输入顺序循环映射，超过六项不承诺颜色/线型唯一，不自动合并类别。
 
 集中几何 Token 规定默认绘图区14rem、最小可读净宽18rem、每类别轨至少5rem；坐标轴 caption、图例/读值 body-xs，数值用 mono/tabular-nums。SVG 无缩放 viewBox，按 ResizeObserver 测得的 CSS 像素绘制；轴标签用同一角色的 HTML，点形半径从实际轴字号派生。数据轨数、等距刻度和分组柱宽是数据几何，不是另一套字号/尺寸。窄屏与200%文字/界面比例下保留字体和可读轨宽，只在所属绘图区横滚；图例/页头/操作/读值自然换行，饼图与图例按净宽换行。不加渐变遮罩、缩字、整页横滚或被截断的浮层。
 
-折线每类别对应有限数值或显式null，null断开且不插值/补0；柱图始终包含0基线，正负值按实际方向绘制，0柱高度为0。饼仅接受有限非负数，零项不画扇区，全零显示居中空态而非等分；单项全占比为完整圆。原值和数据表不经过日期/时区转换，默认原数值字符串；格式化只影响显示。无数据的idle/loading/ready/error分别显示引导/居中加载/居中空态/可重试错误；保有同范围数据时loading/refreshing/error继续保图，反馈在固定既有反馈槽，不遮罩/透明化/重挂SVG。新范围由宿主清除旧数据并执行取消/迟到隔离。
+折线curve可选linear/monotone/step，缺省linear；单调平滑穿点且不增加相邻点间极值，阶梯在相邻横坐标中点跳变。曲线只影响连线，真实采样点、原值与读值保持。每类别对应有限数值或显式null，三种curve均在null处断开且不跨缺失插值/补0；柱图始终包含0基线，正负值按实际方向绘制，0柱高度为0。饼仅接受有限非负数，零项不画扇区，全零显示居中空态而非等分；单项全占比为完整圆。原值和数据表不经过日期/时区转换，默认原数值字符串；格式化只影响显示。无数据的idle/loading/ready/error分别显示引导/居中加载/居中空态/可重试错误；保有同范围数据时loading/refreshing/error继续保图，反馈在固定既有反馈槽，不遮罩/透明化/重挂SVG。新范围由宿主清除旧数据并执行取消/迟到隔离。
+
+三类图的animation缺省开启，可用false关闭。所有图表首次进入与同拓扑、同坐标范围的数据更新统一用motion-duration-chart（默认900ms），均复用motion-easing；不增加循环动效、整图透明化或布局过渡。首次折线/曲线沿各连续段真实路径长度从起点绘制至终点，点形随路径到达显现，保留原线型；null处保持空隙，再依次绘制下一段。柱从0基线生长、饼顺序展开；更新从当前显示坐标接续，不从0重播。null始终断线；结构、缺失、曲线、范围与尺寸变化直接投影，避免错误路径形变。所有可读原值/比例/数据表立即反映最新确认数据，用户开始读值时立即完成动画。仅忙碌/语言/主题/同值更新不启动动画；减少动态效果、0时长、关闭动效及后台状态立即呈现，运行中取消后不补播。React拥有局部帧与卸载清理，D3仅计算路径；不新增请求owner。详见[图表呈现合同](COMPONENTS.md#公共图表)。
 
 绘图区是一个独立键盘停靠点：左右查看类别，笛卡尔图上下切系列，Home/End查看首末，Escape清除读值；饼方向键按输入次序巡检（含零值），不触发业务动作。鼠标/触屏在图中读值，同一就近文本区播报；查看数据入口保留所有类别/系列/原值与缺失标识，使用公开DataTable。数据/名称更新用稳定ID重新定位读值，删除后不继续播报旧记录。刷新不抢焦点，ResizeObserver随SVG节点卸载释放；不是全局Controller或独立原生UI。
 

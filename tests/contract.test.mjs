@@ -8,7 +8,7 @@ const doc = await readFile('docs/DESIGN.md','utf8');
 test('complete token graph, summary and generated CSS',async()=>{checkContract(doc);await generate(true);});
 test('aggregate styles preserve the complete ordered cascade of independently exported parts',async()=>{
  const shape=node=>node.type==='decl'?[node.prop,node.value,node.important??false]:node.type==='rule'?[node.selector,node.nodes.filter(n=>n.type!=='comment').map(shape)]:[node.name,node.params,node.nodes?.filter(n=>n.type!=='comment').map(shape)];
- for(const [file,names] of [['components',styleParts],['critical',styleParts.filter(name=>!['floating','table-resize','chart'].includes(name))]]){
+ for(const [file,names] of [['components',styleParts],['critical',styleParts.filter(name=>!['floating','table-resize','chart','carousel'].includes(name))]]){
   const expected=[];
   for(const name of names){const source=postcss.parse(await readFile(`packages/theme/src/${name}.css`,'utf8'));for(const layer of source.nodes)expected.push(...layer.nodes.filter(n=>n.type!=='comment').map(shape));}
   const aggregate=postcss.parse(await readFile(`packages/theme/dist/${file}.css`,'utf8')),layers=aggregate.nodes.filter(n=>n.type==='atrule'&&n.name==='layer'&&n.params==='xui-components');
@@ -46,9 +46,14 @@ test('Violet default, uploaded source and semantic CSS fingerprint are versioned
   const source=await readFile(metadata.source.path,'utf8');
   assert.equal(createHash('sha256').update(source).digest('hex'),metadata.source.sha256);
   assert.equal(createHash('sha256').update(css).digest('hex'),metadata.defaultCssSha256);
-  assert.equal(metadata.contractVersion,'4.2.38');
-  assert.equal(metadata.defaultTokenCount,440);
-  assert.match(doc,/规范版本：4\.2\.38。/);
+  assert.equal(metadata.contractVersion,'4.2.41');
+  assert.equal(metadata.defaultTokenCount,446);
+  assert.equal(dark['--motion-duration-chart'],'900ms');
+  assert.equal(dark['--motion-duration-enter'],'180ms');
+  assert.equal(dark['--motion-duration'],'150ms');
+  assert.match(css,/--motion-duration-chart: 0ms/);
+  const version=JSON.parse(await readFile('packages/theme/package.json','utf8')).version;
+  assert(doc.includes(`规范版本：${version}。`));
   assert.equal(metadata.defaultMode,'dark');
   assert.equal(Object.keys(dark).length,metadata.defaultTokenCount);
   assert.equal(dark['--palette-canvas'],'#09070f');

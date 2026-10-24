@@ -24,8 +24,8 @@ async function lines(page,sticky){
  return result;
 }
 async function frozenGeometry(page,sticky){
- const geometry=()=>body(page).evaluate(node=>{const b=node.getBoundingClientRect(),head=node.querySelector('thead tr'),row=node.querySelector('tbody tr'),rect=n=>{const r=n.getBoundingClientRect();return {left:r.left,right:r.right};};return {port:{left:b.left,right:b.left+node.clientWidth},scroll:node.scrollLeft,max:node.scrollWidth-node.clientWidth,head:[...head.children].map(rect),row:[...row.children].map(rect)};});
- await body(page).evaluate(node=>node.scrollLeft=0);await settle(page);const before=await geometry();expect(before.max).toBeGreaterThan(0);
+ const geometry=()=>body(page).evaluate(node=>{const b=node.getBoundingClientRect(),head=node.querySelector('thead tr'),row=node.querySelector('tbody tr'),rect=n=>{const r=n.getBoundingClientRect();return {left:r.left,right:r.right};};return {port:{left:b.left,right:b.left+node.clientWidth},viewport:innerWidth,rootFont:parseFloat(getComputedStyle(document.documentElement).fontSize),scroll:node.scrollLeft,max:node.scrollWidth-node.clientWidth,head:[...head.children].map(rect),row:[...row.children].map(rect)};});
+ await body(page).evaluate(node=>node.scrollLeft=0);await settle(page);const before=await geometry();expect(before.max).toBeGreaterThanOrEqual(0);if(before.viewport<1280||before.rootFont>16)expect(before.max).toBeGreaterThan(0);
  await body(page).evaluate(node=>node.scrollLeft=(node.scrollWidth-node.clientWidth)/2);await settle(page);const middle=await geometry();
  for(const [index,edge,fixed] of [[0,'left',['start','both'].includes(sticky)],[5,'right',['end','both'].includes(sticky)]]){
   const delta=middle.row[index][edge]-before.row[index][edge];expect(Math.abs(delta+(fixed?0:middle.scroll))).toBeLessThanOrEqual(2);

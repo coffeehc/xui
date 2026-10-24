@@ -6,9 +6,9 @@ const Select={Root:Base.Root,Trigger:SelectTrigger,Item:SelectItem,List:SelectLi
 import {cx} from './shared.js';
 
 type Item={value:string;label:string;disabled:boolean;hidden:boolean;group?:string;groupId?:number};
-export type SimpleSelectControlProps=React.ComponentProps<'select'>&{controlSize?:'sm'|'default'|'lg';controller?:OverlayController};
+export type SimpleSelectControlProps=React.ComponentProps<'select'>&{controlSize?:'sm'|'default'|'lg';controller?:OverlayController;placeholder?:string};
 /** React owns the popup; the original HTML select retains form and change semantics. */
-export function SimpleSelectControl({controller:injected,ref,className,controlSize='default',id,onInvalid,...props}:SimpleSelectControlProps){
+export function SimpleSelectControl({controller:injected,ref,className,controlSize='default',placeholder,id,onInvalid,...props}:SimpleSelectControlProps){
  const select=React.useRef<HTMLSelectElement>(null),trigger=React.useRef<HTMLButtonElement>(null);
  const [items,setItems]=React.useState<Item[]>([]),[selected,setSelected]=React.useState<string[]>([]),[label,setLabel]=React.useState(''),[labelId,setLabelId]=React.useState<string>();
  const [effectiveDisabled,setEffectiveDisabled]=React.useState(!!props.disabled);
@@ -43,7 +43,7 @@ export function SimpleSelectControl({controller:injected,ref,className,controlSi
  return <span className="xui-select-control">
   {enhanced&&<Select.Root value={props.multiple?selected:selected[0]??null} multiple={props.multiple} onValueChange={change} open={open} onOpenChange={model.onOpenChange} disabled={props.disabled||effectiveDisabled}>
    <Select.Trigger ref={trigger} id={id} className={cx('xui-select',className)} data-control-size={controlSize} aria-label={name} aria-labelledby={labelledBy} aria-describedby={props['aria-describedby']} aria-invalid={props['aria-invalid']??(invalid||undefined)} aria-required={props.required||undefined} aria-readonly={props['aria-readonly']} title={props.title} tabIndex={props.tabIndex} autoFocus={props.autoFocus}>
-    <span>{selected.map(value=>items.find(item=>item.value===value)?.label??'').join(', ')}</span><svg className="xui-select-control-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"><path d="m1 6 9 8 9-8"/></svg>
+    <span>{selected.length?selected.map(value=>items.find(item=>item.value===value)?.label??'').join(', '):placeholder}</span><svg className="xui-select-control-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"><path d="m1 6 9 8 9-8"/></svg>
    </Select.Trigger>
    <Select.Content className="xui-select-control-popup"><Select.List aria-label={name} aria-labelledby={labelledBy}>{visible.map((item,index)=>{
     if(item.groupId===undefined)return option(item);

@@ -181,7 +181,9 @@ function Viewport({ ref, ...props }: ToastViewportProps) {
     }, [controller, returnFocus]);
     React.useLayoutEffect(()=>{if(state.toasts.length||!focusWithin.current)return;const node=local.current,target=returnFocus.current;queueMicrotask(()=>{if((document.activeElement===document.body||document.activeElement===node)&&target?.isConnected)target.focus({preventScroll:true});});},[state.toasts.length,returnFocus]);
     return usePart('div', { ...props, ref: [ref, local] as unknown as React.Ref<HTMLDivElement> }, { expanded: state.expanded }, 'xui-layer xui-toast-viewport', {
-        role: 'region', 'aria-label': 'Notifications', tabIndex: -1, 'data-expanded': state.expanded ? '' : undefined,
+        // Keep the permanent announcement region available while modal isolation
+        // hides page content. Each Toast.Root supplies its own live priority.
+        role: 'region', 'aria-label': 'Notifications', 'aria-live':'off', tabIndex: -1, 'data-expanded': state.expanded ? '' : undefined,
         onPointerEnter: () => { lease.current?.setPaused('hover', true); lease.current?.setExpanded(true); },
         onPointerLeave: () => { lease.current?.setPaused('hover', false); if (!local.current?.contains(document.activeElement))
             lease.current?.setExpanded(false); },

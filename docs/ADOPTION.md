@@ -1,5 +1,31 @@
 # xui 通用组件接入手册
 
+## 内置页面对照 Demo（4.2.41）
+
+运行 `pnpm build`、`pnpm test:consumer` 和 `pnpm preview` 后，打开 `http://127.0.0.1:4173/pages-react/?page=api-key&mode=light`。统一导航的“内置页面”包含 API Key、业务日志、结构化错误日志、模型配置、登录、管理员初始化和修改密码；“基础组件”包含按钮、表单与选择（含日期时间）、状态与进度、Tabs 与容器、弹窗与浮层、菜单、文字与媒体、表格、面包屑、走马灯、图表和上传十二组；通过顶栏切换主题，通过侧栏底部调整阅读比例、重置当前演示或独立打开页面。演示源为 [pages-react](../examples/pages-react/app.tsx)，复用各独立示例和同一批正式包，嵌入时只省略重复的示例 Shell，不复制公共页面实现。主题/比例更新仅发送展示偏好，不重载当前表单或传递认证数据。
+
+基础组件的统一状态对照维护在 [components-react](../examples/components-react/app.tsx)，各组按公共组件组合常用场景，不更改组件皮肤或状态合同；右上“完整交互示例”保留原独立示例入口。所有 loading/错误场景为固定合成事实或 mock Controller/HTTP，不连接业务后端。
+
+| 对照组 | 已展示的适用组合与状态 |
+| --- | --- |
+| 表单与选择 | QueryForm 草稿/已生效分离、FormGrid、前后缀、输入/多行/搜索/数字/密码、NativeSelect/SimpleSelect、选择组、Command/分组目录、Calendar/日期时间；正常、禁用、只读和错误，以及候选读取中 |
+| 状态与进度 | Badge/Alert、已测/未知进度、块/行内加载、骨架、空态、错误/重试及禁用重试、Toast 自动和手动关闭 |
+| Tabs 与容器 | line/segmented、禁用项、加载/错误内容、Card 槽位与只读/禁用操作、MetricCard 未知/加载/错误、CardGroup 同范围刷新保卡片、Disclosure/Accordion |
+| 弹窗与浮层 | Dialog/Sheet 正常、加载、只读字段、错误字段和禁用触发；Popover 加载/错误、Tooltip、危险操作确认与关闭回焦 |
+| 菜单 | 配置/普通/勾选/单选/危险项、禁用触发和动作、候选加载/失败、只读权限组合、右键与 Shift+F10、选中/禁用导航 |
+| 文字与媒体 | 文字角色、图标/头像及回退、标签及禁用移除、复制正常/等待/禁用/失败、图片/骨架/失败及区域滚动 |
+| 面包屑 | 数据式与具名 parts、当前项/禁用/只读上级、长路径省略、语言更新和宿主加载/错误/空路径 |
+| 走马灯 | 卡片/图片、受控与 Controller、前后/指示/键盘/触屏、可暂停自动播放、状态/草稿保留及 RTL |
+| 数据表格 | 排序、分页、选中、行内动作；首次加载、刷新保行、空/无匹配、读取错误与恢复、刷新失败保行、禁用操作和无修改入口的只读列表 |
+| 图表 | 折线/柱状/饼图与数据表；首次加载、刷新保图、空态、错误与局部恢复、未知/未查询；图表本身只读，不发明 disabled 属性 |
+| 上传 | 公共 UploadController + mock HTTP；待上传、等待、成功、禁用、只读、失败未知与类型校验；支持本地取消等待 |
+
+不适用的状态不伪造：Select 没有原生只读时以只读 Input 展示已确认值；菜单以权限禁用修改动作；Card/MetricCard/图表/文字不会因展示只读或错误而变成伪按钮。上述是统一 demo 的覆盖范围，发布验证见 VALIDATION；不代替消费项目验收。
+
+API Key 使用独立密钥列展示短前缀＋掩码，保留紧凑时间、完整时间弹层及创建/编辑/撤销。示例“点击密钥复制”开关控制 keyCopy 配置；关闭时密钥为被动文本，开启后点击/Enter/Space 复制完整合成凭据。列表复制只演示合成凭据；只存哈希的记录禁用后续复制，不能将 prefix 或掩码当作完整密钥。真实列表取密钥仍等待正式后端能力/权限合同，本预览不增加 URL、不缓存真实秘密，也不表示 BaseService 或产品已经支持。所有页面均为 mock，不连接业务后端。
+
+4.2.41 统一交付上述公共能力和 demo；所有请求为合成 mock，库验收不等同于消费项目接入或部署完成。
+
 xui 为新产品 UI 统一采用 React：公共组件从 `@coffeehc/xui-react` 导入，`@coffeehc/xui-runtime` 保持 TypeScript 的主题、服务、模型与工具能力。宿主项目负责业务页面、领域图形、产品布局与业务流程，以及领域数据、鉴权、路由和接口适配。项目局部差异先在宿主自有 React 组合中表达；只有可复用的通用能力缺口才反馈 xui，不把业务特例扩成公共 API。
 
 本手册引用公共规范、正式类型与示例，不另定义组件或品牌合同。采用前核对实际消费版本、Git SHA、本地依赖或 tarball，以及 [全部公开入口与默认行为](PUBLIC_API.md)。Codex 流程的唯一源随 checkout 维护，见 [adopt-xui](../.agents/skills/adopt-xui/SKILL.md)；全局发现入口可以链接同一源，物理路径解析遵循该 skill。
@@ -152,6 +178,8 @@ pnpm preview
 | 实际文本复制入口及其平台writer | 沿用公开ClipboardService/CopyController/Copyable或正式注入的平台writer，在项目真实入口以合成或已授权测试内容验证完整中文、多段、emoji/Markdown、重复复制及失败。先设不同种子再实际粘贴并全文比较，另核焦点、选区和滚动恢复；copied文字、mock writer或execCommand=true不能替代OS结果，不在生产代码加读回或记录敏感文本 | [剪贴板服务](PUBLIC_API.md#剪贴板复制服务)、[Copyable](COMPONENTS.md#copyable)、[STATE-COPY-001～002](ADOPTION_CHECKLIST.md#剪贴板复制逐项检查)；Copyable接线改变时补CTRL-012 |
 | 已采用BusinessLogExplorer或getBusinessLogTable的列表展示 | 4.2.34使用列定义，普通列读原值，特殊展示用cell；旧字符串列和format*按组件迁移表一次替换，时间键为occurred_at，detail显式配置。额外字段进入queryFields，scope切换按同一Controller取消/清理。记录格式/语言/时区或列顺序更新前后的查询次数、原始详情/筛选参数、Controller与行/列节点、草稿/快照/焦点；验证分页、刷新、错误/权限和详情键盘关闭回焦，按钮及焦点环完整可见。只改列表展示不重新装配app/pages或loader | [列表展示合同与示例](COMPONENTS.md#业务日志列定义与查询-slot4234)、[业务日志请求](PUBLIC_API.md#业务日志)、[BIZ-LIST-001～008](ADOPTION_CHECKLIST.md#业务日志列表展示逐项检查)；实际更改服务接线时补BLOG-LIST/BLOG-DETAIL的REQ/OK/ERR |
 | 已采用BusinessLogExplorer且支持运行中换语言 | 使用当前labels；默认模式options.labels也实时生效。保留原Controller/view和组件身份，禁止key=locale。逐一核对整页、已有反馈及在途状态文案，草稿/详情/页/快照/节点/选区/滚动和有效焦点保持，语言更新请求与取消增量均为零；不改原事件事实/请求参数 | [整页语言合同](COMPONENTS.md#业务日志整页标签热更新4229)、[BIZ-LABEL-001～006](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)；同时改列表列/cell才补BIZ-LIST，改服务接线才补BLOG请求检查 |
+
+ApiKeyManager 一次性值及 StructuredLogExplorer 标识复制的临时结果由组件 Toast 呈现。已有全局通知队列时通过可选 toastController 接入，并只渲染该队列的一个 Toast.View；检查弹窗打开时通知仍可播报、快速重复操作与复制失败均不插入正文块。控件级 Copyable 原位状态和持续错误沿原合同，不用隐藏正文或固定留白规避位移。
 
 复制按项目实际支持的HTTP、HTTPS或Desktop平台分别取证。普通HTTP且Clipboard API缺失时执行STATE-COPY-002的原生回退检查；仅支持HTTPS的产品不为本轮新增HTTP入口。库的macOS显式系统测试只证明其已验平台，其他平台须用自己的实际系统粘贴结果，不能把跳过或平台mock算通过。未使用BusinessLogExplorer不新增业务日志页，不把StructuredLogExplorer或程序异常数据当业务日志。
 
@@ -409,6 +437,10 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 4.2.20 为同一版本线的可选维护。新增接口可选，旧 SearchToolbar/EmptyState 默认布局保持；DataTable/CardGroup 在尚未确认数据时取消假0播报，可能改变该阶段的页脚显示。正式产物与公开包浏览器证据只说明库样例，不能代替消费项目真实页面验收；本轮不要求其他项目必须升级。
 
 ### 公共图表接入（4.2.21）
+
+4.2.41 的 D3 内核保留原React接口与slot，LineChart仅新增可选curve=linear/monotone/step（默认linear）；单调平滑与阶梯不改变原值，三种模式null均断线。项目只消费正式/chart与CSS，不增加D3适配层、peer或业务请求。按CHART-001检查实际构建图与声明依赖；未用图表的Button/窄服务入口不应加载D3。D3刻度间隔可变化，按数值/零基线/可读性验收，不能把旧截图上的某个刻度步长当作业务事实。
+
+三类图新增可选animation，默认开启Token动效，false关闭；所有图表首次进入和数据更新统一采用motion-duration-chart900ms；减少动态效果始终优先。仅使用图表的页面按CHART-015～018核对首次/更新/取消、真实读值与刷新保图，未用图表不扩大验收。宿主同范围刷新保留原data，不通过key、隐藏图形或清空数组制造重新入场；结构/坐标范围变化由库直接投影。统一demo保留折线（linear）并单列曲线（monotone），均使用LineChart；可在同组数据上切换动效并比较立即呈现。首次按实际路径长度从起点绘制至终点，采样点随到达显示，null段之间不补线。读取和请求owner保持。
 
 采用[LineChart / BarChart / PieChart](COMPONENTS.md#公共图表)时，先将已有后端/Resource结果投影为categories/series或slices，保留现有请求、缓存、单位、时区、范围隔离与权限owner，不复制示例loader。图表共用Card的title/description/actions/content/footerMeta/footerActions；按[图表清单](ADOPTION_CHECKLIST.md#公共图表逐项检查)逐页检查图例、绘图区、读值、数据表和反馈槽。已有自定义chart-color/axis/grid/文字Token覆盖继续继承；不在页面覆写私有SVG或另加一套图例/tooltip。窄入口按critical.css + chart.css加载，正式style.css已包含图表。
 

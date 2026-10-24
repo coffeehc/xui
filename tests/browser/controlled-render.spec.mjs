@@ -1,13 +1,12 @@
 import {test,expect} from '@playwright/test';
-import {readFile,copyFile} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {build} from 'esbuild';
 let production,development,css;
 test.beforeAll(async()=>{
  const latest=JSON.parse(await readFile('.consumers/latest.json','utf8')),cwd=resolve(process.env.XUI_CONSUMER??resolve(latest.runDirectory,'react'));
- await copyFile('tests/fixtures/controlled-render.tsx',`${cwd}/controlled-render.tsx`);
  for(const mode of ['production','development']){
-  const result=await build({entryPoints:[`${cwd}/controlled-render.tsx`],bundle:true,write:false,outdir:resolve('.artifacts/controlled-render-bundle'),metafile:true,format:'iife',platform:'browser',jsx:'automatic',target:'es2022',define:{'process.env.NODE_ENV':JSON.stringify(mode)}});
+  const result=await build({preserveSymlinks:true,entryPoints:[`${cwd}/controlled-render.tsx`],bundle:true,write:false,outdir:resolve('.artifacts/controlled-render-bundle'),metafile:true,format:'iife',platform:'browser',jsx:'automatic',target:'es2022',define:{'process.env.NODE_ENV':JSON.stringify(mode)}});
   expect(Object.keys(result.metafile.inputs).every(file=>resolve(file).startsWith(cwd+'/'))).toBe(true);
   const js=result.outputFiles.find(file=>file.path.endsWith('.js')).text;css=result.outputFiles.find(file=>file.path.endsWith('.css')).text;
   if(mode==='production')production=js;else development=js;

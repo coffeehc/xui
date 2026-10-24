@@ -20,9 +20,9 @@ function Editor({kind}:{kind:'dialog'|'sheet'}){
  const events=React.useRef<boolean[]>([]),portalRef=React.useRef<HTMLDivElement|null>(null),searchRef=React.useRef<HTMLInputElement|null>(null),pickerTrigger=React.useRef<HTMLButtonElement|null>(null);
  const modalRef=React.useCallback((node:HTMLDivElement|null)=>{containerRef.current=node;setContainer(node);},[]);
  React.useEffect(()=>{
-  const api={setOpen:setPickerOpen,setAccept,update:()=>setRevision(n=>n+1),getEvents:()=>events.current,getPortal:()=>portalRef.current};
+  const api={setOpen:setPickerOpen,setAccept,getAccept:()=>accept,update:()=>setRevision(n=>n+1),getEvents:()=>events.current,getPortal:()=>portalRef.current};
   Object.assign(window,{popoverPortal:api});
- },[container]);
+ },[container,accept]);
  // container follows the public Portal contract: an element or RefObject, not a callback.
  const portalProps:PopoverContentProps['portalProps']=params.has('default')?undefined:{container:params.get('container')==='ref'?containerRef:container,...(params.has('keep')?{keepMounted:true}:{}),...(params.has('unmount')?{keepMounted:false}:{}),ref:portalRef,id:'picker-portal'};
  return <Modal.Root><Modal.Trigger render={<Button/>}>{kind==='sheet'?'打开抽屉':'打开对话框'}</Modal.Trigger>

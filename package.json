@@ -25,6 +25,9 @@
   },
   "devDependencies": {
     "@base-ui/react": "1.7.0",
+    "@coffeehc/xui-react": "workspace:*",
+    "@coffeehc/xui-runtime": "workspace:*",
+    "@coffeehc/xui-theme": "workspace:*",
     "@playwright/test": "1.64.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
@@ -33,9 +36,6 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "typescript": "5.9.3",
-    "yaml": "2.8.1",
-    "@coffeehc/xui-runtime": "workspace:*",
-    "@coffeehc/xui-react": "workspace:*",
-    "@coffeehc/xui-theme": "workspace:*"
+    "yaml": "2.8.1"
   }
 }

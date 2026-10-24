@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 
 for(const kind of ['react'])for(const family of ['menu','context']){
  const triggerName=family==='menu'?'打开菜单':'右键菜单';
- const open=async page=>{const trigger=page.getByRole('button',{name:triggerName,exact:true});await trigger.focus();await trigger.press(family==='menu'?'ArrowDown':'Shift+F10');await expect(page.getByRole('menu')).toBeVisible();await page.keyboard.press('Home');await expect(page.getByRole('menuitem',{name:'查看记录',exact:true})).toBeFocused();return trigger;};
+ const open=async page=>{const trigger=page.getByRole('button',{name:triggerName,exact:true});await trigger.focus();await trigger.press(family==='menu'?'ArrowDown':'Shift+F10');const popup=page.getByRole('menu');await expect(popup).toBeVisible();await expect.poll(()=>popup.evaluate(node=>node.contains(document.activeElement))).toBe(true);await page.keyboard.press('Home');await expect(page.getByRole('menuitem',{name:'查看记录',exact:true})).toBeFocused();return trigger;};
  test(kind+' '+family+' danger default/hover/pressed/keyboard/disabled and focus restoration',async({page})=>{
   await page.goto('/menu-danger-'+kind+'/');const trigger=await open(page),popup=page.getByRole('menu'),danger=popup.getByRole('menuitem',{name:'删除记录',exact:true}),disabled=popup.getByRole('menuitem',{name:'禁止删除',exact:true});
   const normal=popup.getByRole('menuitem',{name:'查看记录',exact:true});
@@ -11,7 +11,7 @@ for(const kind of ['react'])for(const family of ['menu','context']){
   await expect(danger.locator('svg')).toHaveCSS('color',color);
   const box=await danger.boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
   await expect.poll(()=>danger.evaluate(el=>getComputedStyle(el).color)).not.toBe(color);await page.mouse.up();await expect(popup).not.toBeVisible();await expect(page.getByLabel('执行次数')).toHaveText('1');
-  await expect(trigger).toBeFocused();await open(page);await disabled.click({force:true});await expect(page.getByLabel('执行次数')).toHaveText('1');await expect(popup).toBeVisible();
+  await expect(trigger).toBeFocused();await open(page);const blockedBox=await disabled.boundingBox();await page.mouse.click(blockedBox.x+blockedBox.width/2,blockedBox.y+blockedBox.height/2);await expect(page.getByLabel('执行次数')).toHaveText('1');await expect(popup).toBeVisible();
   expect(await disabled.evaluate(el=>getComputedStyle(el).color)).not.toBe(color);
   await normal.focus();await page.keyboard.press('ArrowDown');await expect(danger).toBeFocused();
   await expect(danger).toHaveCSS('outline-style','none');await page.keyboard.press('ArrowDown');

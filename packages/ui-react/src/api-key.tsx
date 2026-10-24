@@ -7,6 +7,10 @@ import * as React from 'react';
 import {dataTableDefaultLabels} from '@coffeehc/xui-runtime/data-table';
 import type {ApiKeyMetadata,ApiKeyManagerController} from '@coffeehc/xui-runtime/api-key';
 import {Button} from './button.js';
+import {ApiKeyCell,type ApiKeyCellCopyOptions} from './api-key-cell.js';
+export type {ApiKeyCellCopyOptions} from './api-key-cell.js';
+import {Toast,type ToastController} from './toast.js';
+import {Popover} from './popover.js';
 import {RefreshAction} from './refresh-action.js';
 import {Field,Input,Textarea,SimpleSelect,Fieldset,Checkbox} from './forms.js';
 import {PageHeader,Stack} from './layout.js';
@@ -15,11 +19,16 @@ import {TableActions} from './table.js';
 import {DataTable,type DataTableColumn,type DataTableLabels,type DataTableColumnSizingProps} from './data-table.js';
 import {Dialog} from './dialog.js';
 import {cx} from './shared.js';
+import {useCopyFeedback} from './copy-feedback.js';
 export type {ApiKeyMetadata,ApiKeyManagerController,ApiKeyManagerOptions,ApiKeyAdapter,ApiKeyDraft,CreatedApiKey,ApiKeyWriteContext,ApiKeyUpdateDraft} from '@coffeehc/xui-runtime/api-key';
 /** Client pagination over the complete metadata collection returned by adapter.list. */
 export type {ApiKeyManagerPagination} from '@coffeehc/xui-runtime/component-views';
 import type {ApiKeyManagerPagination} from '@coffeehc/xui-runtime/component-views';
-interface ApiKeyManagerSlots {className?:string;headerActions?:React.ReactNode;writeClipboard?:(value:string)=>Promise<void>;
+interface ApiKeyManagerSlots {
+ /** Omit/false for passive masked values; provide the authenticated reader to enable cell copy. */
+ keyCopy?:ApiKeyCellCopyOptions|false;
+ toastController?:ToastController;
+ locale?:string;timeZone?:string;rowActions?:(key:Readonly<ApiKeyMetadata>)=>React.ReactNode;className?:string;headerActions?:React.ReactNode;writeClipboard?:(value:string)=>Promise<void>;
  /** DataTable owns widths; data columns resize by default and actions stay fixed. */
  columnSizing?:DataTableColumnSizingProps;
  /** Defaults to 10 rows with 10/25/50 choices. false displays the complete loaded collection. */
@@ -28,8 +37,15 @@ interface ApiKeyManagerSlots {className?:string;headerActions?:React.ReactNode;w
  tableLabels?:Partial<DataTableLabels>;
 }
 export type ApiKeyManagerProps=ApiKeyManagerSlots&({viewController:ApiKeyManagerViewController;controller?:never;options?:never;pagination?:never}|{viewController?:undefined;controller:ApiKeyManagerController;options?:never;pagination?:ApiKeyManagerPagination|false}|{viewController?:undefined;controller?:undefined;options:ApiKeyManagerOptions;pagination?:ApiKeyManagerPagination|false});
+function KeyTimestamp({value,unknown,locale,timeZone}:{value:string|null;unknown:string;locale?:string;timeZone?:string}){
+ if(value===null)return <span className="xui-table-label">{unknown}</span>;
+ const date=new Date(value);let text=value;
+ if(Number.isFinite(date.getTime()))text=new Intl.DateTimeFormat(locale??(typeof document==='undefined'?undefined:document.documentElement.lang||undefined),{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(date);
+ return <Popover.Root><Popover.Trigger render={<Button variant="text" size="xs"/>}><time dateTime={value}>{text}</time></Popover.Trigger><Popover.Content><span className="xui-code">{value}</span></Popover.Content></Popover.Root>;
+}
 /** The caller owns the controller and backend. Unmount releases the transient result. */
-export function ApiKeyManager({viewController:injected,controller:borrowed,options:initialOptions,className,headerActions,writeClipboard,pagination,tableLabels,columnSizing={}}:ApiKeyManagerProps){
+export function ApiKeyManager(props:ApiKeyManagerProps){const content=<ApiKeyManagerContent {...props}/>;return props.toastController?<Toast.Provider controller={props.toastController}>{content}</Toast.Provider>:<Toast.Provider>{content}<Toast.View/></Toast.Provider>;}
+function ApiKeyManagerContent({viewController:injected,controller:borrowed,options:initialOptions,className,headerActions,writeClipboard,pagination,tableLabels,columnSizing={},locale,timeZone,rowActions,keyCopy}:ApiKeyManagerProps){
   assertControllerProps(injected,{controller:borrowed,options:initialOptions,pagination},['controller','options','pagination']);
   if(borrowed&&initialOptions)throw new TypeError('controller cannot be combined with options');
   const viewController=useOwnedController(injected,()=>createApiKeyManagerViewController(borrowed?{service:borrowed,pagination}:{options:initialOptions!,pagination}),borrowed);
@@ -37,6 +53,7 @@ export function ApiKeyManager({viewController:injected,controller:borrowed,optio
   const activeOwner=React.useRef(controller);activeOwner.current=controller;
   React.useEffect(()=>viewController.start(),[viewController]);
   const state=React.useSyncExternalStore(controller.subscribe,controller.getState,controller.getState),{options,labels}=controller;
+  useCopyFeedback(controller,state=>state.phase==='result',labels);
   const formId=React.useId(),nameRef=React.useRef<HTMLInputElement>(null),secretRef=React.useRef<HTMLTextAreaElement>(null),createRef=React.useRef<HTMLButtonElement>(null),refreshRef=React.useRef<HTMLButtonElement>(null),confirmationRef=React.useRef<HTMLInputElement>(null),dialogRef=React.useRef<HTMLDivElement>(null),lastTrigger=React.useRef<HTMLElement|null>(null);
   const copyAbort=React.useRef(new Map<ApiKeyManagerController,AbortController>());
   const copyText=(value:string)=>{copyAbort.current.get(controller)?.abort();const operation=new AbortController();copyAbort.current.set(controller,operation);return getClipboardService().writeText(value,{signal:operation.signal});};
@@ -58,15 +75,15 @@ export function ApiKeyManager({viewController:injected,controller:borrowed,optio
   React.useLayoutEffect(()=>{if(!injected)viewController.updatePagination(pagination);},[viewController,injected,pagination]);
   const visibleRows=!viewState.pagination?state.rows:state.rows.slice(pageIndex*pageSize,(pageIndex+1)*pageSize);
   const columns:readonly DataTableColumn<Readonly<ApiKeyMetadata>>[]=React.useMemo(()=>[
-    {id:'name',header:labels.name,cell:key=><div className="xui-table-primary">{key.name}</div>},
-    {id:'status',header:labels.status,cell:key=><Badge className="xui-table-label" tone={key.status==='active'?'success':key.status==='expired'?'warning':'neutral'}>{key.status===null?labels.unknown:labels[key.status]}</Badge>},
-    {id:'prefix',header:labels.prefix,cell:key=><span className="xui-code xui-table-value">{key.prefix===null?labels.unknown:`${key.prefix}…`}</span>},
-    {id:'permissions',header:labels.permissions,cell:key=>key.permissionIds.length?key.permissionIds.map(id=>options.permissions.find(item=>item.id===id)?.label??id).join(', '):'—'},
-    {id:'createdAt',header:labels.createdAt,cell:key=><span className="xui-code xui-table-value">{key.createdAt??labels.unknown}</span>},
-    {id:'expiresAt',header:labels.expiry,cell:key=><span className="xui-code xui-table-value">{key.expiresAt??labels.unknown}</span>},
-    {id:'lastUsedAt',header:labels.lastUsedAt,cell:key=><><span className="xui-code xui-table-value">{key.lastUsedAt??labels.unknown}</span>{key.lastUsedAtPending===true&&<> <Badge>{labels.lastUsedAtPending}</Badge></>}</>},
-    {id:'actions',header:labels.actions,resize:false,width:'var(--layout-field-min)',cell:key=><TableActions>{options.adapter.update&&<Button variant="text" size="xs" disabled={!controller.canUpdate(key)} aria-label={`${labels.edit} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openUpdate(key.id);}}>{labels.edit}</Button>}<Button variant="text" tone="danger" size="xs" disabled={!controller.canRevoke(key)} aria-label={`${labels.revoke} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openRevoke(key.id);}}>{labels.revoke}</Button>{controller.canDeleteRecord(key)&&<Button variant="text" tone="danger" size="xs" aria-label={`${labels.deleteRecord} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openDeleteRecord(key.id);}}>{labels.deleteRecord}</Button>}</TableActions>},
-  ],[controller,options,labels]);
+    {id:'name',header:labels.name,width:'var(--layout-field-min)',cell:key=><div className="xui-table-primary">{key.name}</div>},
+    {id:'prefix',header:labels.prefix,width:'var(--query-field-compact)',cell:key=><ApiKeyCell record={key} owner={controller} copy={keyCopy} disabled={state.actionBusy||state.listBusy} labels={labels}/>},
+    {id:'status',header:labels.status,width:'var(--api-key-status-inline-size)',cell:key=><Badge className="xui-table-label" tone={key.status==='active'?'success':key.status==='expired'?'warning':'neutral'}>{key.status===null?labels.unknown:labels[key.status]}</Badge>},
+    {id:'permissions',header:labels.permissions,width:'var(--query-field-min)',cell:key=>key.permissionIds.length?key.permissionIds.map(id=>options.permissions.find(item=>item.id===id)?.label??id).join(', '):'—'},
+    {id:'createdAt',header:labels.createdAt,width:'var(--query-field-min)',cell:key=><KeyTimestamp value={key.createdAt} unknown={labels.unknown} locale={locale} timeZone={timeZone}/>},
+    {id:'expiresAt',header:labels.expiry,width:'var(--query-field-min)',cell:key=><KeyTimestamp value={key.expiresAt} unknown={labels.unknown} locale={locale} timeZone={timeZone}/>},
+    {id:'lastUsedAt',header:labels.lastUsedAt,width:'var(--query-field-min)',cell:key=><><KeyTimestamp value={key.lastUsedAt} unknown={labels.unknown} locale={locale} timeZone={timeZone}/>{key.lastUsedAtPending===true&&<> <Badge>{labels.lastUsedAtPending}</Badge></>}</>},
+    {id:'actions',header:labels.actions,resize:false,width:'var(--query-field-compact)',cell:key=><TableActions>{rowActions?.(key)}{options.adapter.update&&key.status!=='revoked'&&<Button variant="text" size="xs" disabled={!controller.canUpdate(key)} aria-label={`${labels.edit} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openUpdate(key.id);}}>{labels.edit}</Button>}{key.status!=='revoked'&&<Button variant="text" tone="danger" size="xs" disabled={!controller.canRevoke(key)} aria-label={`${labels.revoke} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openRevoke(key.id);}}>{labels.revoke}</Button>}{controller.canDeleteRecord(key)&&<Button variant="text" tone="danger" size="xs" aria-label={`${labels.deleteRecord} ${key.name}`} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openDeleteRecord(key.id);}}>{labels.deleteRecord}</Button>}</TableActions>},
+  ],[controller,options,labels,locale,timeZone,rowActions,keyCopy,state.actionBusy,state.listBusy]);
   return <section className={cx('xui-stack',className)}>
     <PageHeader title={labels.title} actions={<><RefreshAction ref={refreshRef} variant="outline" disabled={state.listBusy} busy={state.listBusy} onClick={()=>controller.refresh()}>{labels.refresh}</RefreshAction><Button ref={createRef} disabled={state.actionBusy} hidden={options.canCreate!==true} onClick={event=>{lastTrigger.current=event.currentTarget;controller.openCreate();}}>{labels.create}</Button>{headerActions}</>}/>
     <DataTable className="xui-record-table" columnSizing={columnSizing} rows={visibleRows} columns={columns} rowKey={key=>key.id} label={labels.title} status={state.listBusy?(state.hasLoaded?'refreshing':'loading'):state.listError?'error':state.hasLoaded?'ready':'idle'} disabled={state.actionBusy} hasValue={state.hasLoaded}
@@ -86,7 +103,7 @@ export function ApiKeyManager({viewController:injected,controller:borrowed,optio
             {!editing&&<Field label={labels.expiry} error={state.fieldErrors.expiry}><SimpleSelect value={state.draft.expiryId} disabled={state.actionBusy} onChange={event=>controller.setDraft({expiryId:event.target.value})}>{options.expiryOptions.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</SimpleSelect></Field>}
             {editing&&<Checkbox label={labels.enabled} checked={state.updateDraft.enabled} disabled={state.actionBusy} onChange={event=>controller.setUpdateDraft({enabled:event.target.checked})}/>}
           </form>}
-          {state.phase==='result'&&<Stack><Field label={labels.secret}><Textarea className="xui-code" style={{fontFamily:'var(--font-mono)',fontVariantNumeric:'tabular-nums'}} ref={attachSecret} readOnly autoComplete="off" spellCheck={false} value={controller.readSecret()??''}/></Field>{state.copyStatus==='error'?<Alert tone="error">{labels.copyError}</Alert>:state.copyStatus!=='idle'&&<p className="xui-text" role="status">{state.copyStatus==='copying'?labels.copying:labels.copied}</p>}</Stack>}
+          {state.phase==='result'&&<Field label={labels.secret}><Textarea className="xui-code" style={{fontFamily:'var(--font-mono)',fontVariantNumeric:'tabular-nums'}} ref={attachSecret} readOnly autoComplete="off" spellCheck={false} value={controller.readSecret()??''}/></Field>}
           {(state.phase==='revoke'||state.phase==='delete')&&state.revokeTarget&&<dl className="xui-details"><dt>{labels.name}</dt><dd>{state.revokeTarget.name}</dd><dt>{labels.prefix}</dt><dd className="xui-code">{state.revokeTarget.prefix===null?labels.unknown:`${state.revokeTarget.prefix}…`}</dd></dl>}
           <div className="xui-feedback-slot" hidden={!state.actionBusy&&!state.actionError}>
           {state.actionBusy&&<Alert tone="warning">{editing?labels.updatePending:state.phase==='create'?labels.creationPending:state.phase==='delete'?labels.deletePending:labels.revokePending}</Alert>}{state.actionError&&<Alert tone="error">{state.actionError}</Alert>}</div>
@@ -94,7 +111,7 @@ export function ApiKeyManager({viewController:injected,controller:borrowed,optio
         <Dialog.Footer>
           {state.phase!=='closed'&&<Button variant="outline" onClick={()=>controller.close()}>{state.phase==='result'?labels.close:labels.cancel}</Button>}
           {(state.phase==='create'||editing)&&<Button type="submit" form={formId} disabled={state.actionBusy} aria-busy={state.actionBusy}>{editing?(state.actionBusy?labels.saving:labels.save):(state.actionBusy?labels.creating:labels.submit)}</Button>}
-          {state.phase==='result'&&<Button disabled={state.copyStatus==='copying'} onClick={()=>controller.copySecret(writeClipboard??copyText)}>{state.copyStatus==='copying'?labels.copying:labels.copy}</Button>}
+          {state.phase==='result'&&<Button disabled={state.copyStatus==='copying'} aria-busy={state.copyStatus==='copying'} onClick={()=>controller.copySecret(writeClipboard??copyText)}>{state.copyStatus==='copying'?labels.copying:labels.copy}</Button>}
           {state.phase==='delete'&&<Button variant="destructive" disabled={state.actionBusy} aria-busy={state.actionBusy} onClick={()=>controller.confirmDeleteRecord()}>{state.actionBusy?labels.deleting:labels.confirmDelete}</Button>}
           {state.phase==='revoke'&&<Button variant="destructive" disabled={state.actionBusy} aria-busy={state.actionBusy} onClick={()=>controller.confirmRevoke()}>{state.actionBusy?labels.revoking:labels.confirmRevoke}</Button>}
         </Dialog.Footer>

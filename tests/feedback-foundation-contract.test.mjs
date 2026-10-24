@@ -47,12 +47,12 @@ test('decorative geometry and animations consume the existing feedback tokens wi
 });
 
 test('Progress maps real native states to the shared track/fill and preserves accessibility media fallbacks',()=>{
- mapping('.xui-progress',{'block-size':'var(--space-control-gap)',background:'var(--muted)',color:'var(--action-primary)','accent-color':'var(--action-primary)','border-radius':'var(--radius-sm)'});
+ mapping('.xui-progress',{'block-size':'var(--progress-height)',background:'var(--muted)',color:'var(--action-primary)','accent-color':'var(--action-primary)','border-radius':'var(--progress-radius)'});
  mapping('.xui-progress::-webkit-progress-bar',{background:'var(--muted)'});
  for(const pseudo of ['::-webkit-progress-value','::-moz-progress-bar'])mapping(`.xui-progress${pseudo}`,{background:'var(--action-primary)'});
  mapping('.xui-progress:indeterminate',{background:'var(--interaction-selected)',animation:'xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate'});
  assert.equal(rule('.xui-progress:indeterminate','(prefers-reduced-motion:reduce)').animation,'none');
- const forced=rule('.xui-progress','(forced-colors:active)');assert.equal(forced.appearance,'none');assert.equal(forced.background,'var(--progress-forced-track)');assert.equal(forced.border,'var(--line-width-surface) solid var(--progress-forced-border)');assert.equal(forced['border-radius'],undefined,'Retain the normal small-radius strip');
+ const forced=rule('.xui-progress','(forced-colors:active)');assert.equal(forced.appearance,'none');assert.equal(forced.background,'var(--progress-forced-track)');assert.equal(forced.border,'var(--line-width-surface) solid var(--progress-forced-border)');assert.equal(forced['border-radius'],undefined,'Retain the uniform-thickness strip');
  assert.equal(forced['forced-color-adjust'],undefined,'Keep default auto; never opt out of the user palette');
  for(const pseudo of ['::-webkit-progress-value','::-moz-progress-bar']){assert.equal(rule(`.xui-progress${pseudo}`,'(forced-colors:active)').background,'var(--progress-forced-fill)');assert.equal(rule(`.xui-progress:indeterminate${pseudo}`,'(forced-colors:active)').background,'transparent');}
  assert.equal(rule('.xui-progress:indeterminate','(forced-colors:active)')['border-style'],'var(--progress-forced-pending-border-style)');

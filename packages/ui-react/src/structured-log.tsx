@@ -14,10 +14,14 @@ import {LoadingState,ErrorState,EmptyState,Alert} from './feedback.js';
 import {DataTable,type DataTableColumn,type DataTableColumnSizingProps} from './data-table.js';
 import {Dialog} from './dialog.js';
 import {cx,hasContent} from './shared.js';
+import {Toast,type ToastController} from './toast.js';
+import {useCopyFeedback} from './copy-feedback.js';
 export type {StructuredLogController,StructuredLogOptions,StructuredLogAdapter,GroupedStructuredLogAdapter,StructuredLogFilter,LogRecord,LogRecordDetail,LogGroup,LogGroupsPage,LogRecordsPage} from '@coffeehc/xui-runtime/structured-log';
 /** Stable semantic tracks shared by group and record views; actions never expose a resize handle. */
 export type StructuredLogExplorerColumnId=ReturnType<typeof getStructuredLogTable>['columnIds'][number];
 export interface StructuredLogExplorerSlots {
+  /** Omit for a local notification queue/View; provide the host queue when it owns Toast.View. */
+  toastController?:ToastController;
   className?:string;
   headerActions?:React.ReactNode;
   /** Additional page-level tools beside view/group controls, outside the query form. Does not replace built-in filters or own requests. */
@@ -29,13 +33,15 @@ export interface StructuredLogExplorerSlots {
   writeClipboard?:(value:string)=>Promise<void>;
 }
 export type StructuredLogExplorerProps=StructuredLogExplorerSlots&({viewController:StructuredLogViewController;controller?:never;options?:never;pagination?:never}|{viewController?:undefined;controller:StructuredLogController;options?:never}|{viewController?:undefined;controller?:undefined;options:StructuredLogOptions});
-export function StructuredLogExplorer({viewController:injected,controller:borrowed,options:initialOptions,className,headerActions,pageToolbar,writeClipboard,columnSizing={},columnOptions}:StructuredLogExplorerProps){
+export function StructuredLogExplorer(props:StructuredLogExplorerProps){const content=<StructuredLogExplorerContent {...props}/>;return props.toastController?<Toast.Provider controller={props.toastController}>{content}</Toast.Provider>:<Toast.Provider>{content}<Toast.View/></Toast.Provider>;}
+function StructuredLogExplorerContent({viewController:injected,controller:borrowed,options:initialOptions,className,headerActions,pageToolbar,writeClipboard,columnSizing={},columnOptions}:StructuredLogExplorerProps){
   assertControllerProps(injected,{controller:borrowed,options:initialOptions},['controller','options']);
   if(borrowed&&initialOptions)throw new TypeError('controller cannot be combined with options');
   const viewController=useOwnedController(injected,()=>createStructuredLogViewController(borrowed?{service:borrowed}:{options:initialOptions!}),borrowed);
   const controller=viewController.service,viewState=React.useSyncExternalStore(viewController.subscribe,viewController.getState,viewController.getState);
   React.useEffect(()=>viewController.start(),[viewController]);
   const state=React.useSyncExternalStore(controller.subscribe,controller.getState,controller.getState),{options,labels}=controller;
+  useCopyFeedback(controller,state=>state.detailOpen,labels);
   const draft=viewState.draft,setDraft=viewController.setDraft;
   const setSubject=(key:'kind'|'id',value:string)=>{const subject={kind:draft.subject?.kind??'',id:draft.subject?.id??'',[key]:value};setDraft({...draft,subject:subject.kind||subject.id?subject:null});};
   const lastTrigger=React.useRef<HTMLElement|null>(null),refresh=React.useRef<HTMLButtonElement>(null),table=getStructuredLogTable(state,labels),detail=state.detail;
@@ -53,7 +59,7 @@ export function StructuredLogExplorer({viewController:injected,controller:borrow
     return primary?<QueryField key={key} label={label} width="primary">{control}</QueryField>:<Field key={key} label={label}>{control}</Field>;
   };
   const multiple=(key:'sources'|'natures'|'categories'|'severities',label:string,values:readonly string[],primary=false)=>{
-    const control=<SimpleSelect multiple value={[...(draft[key]??[])]} onChange={event=>setDraft({...draft,[key]:Array.from(event.target.selectedOptions).map(option=>option.value)})}>{values.map(value=><option key={value} value={value}>{value}</option>)}</SimpleSelect>;
+    const control=<SimpleSelect multiple placeholder={labels.all??structuredLogDefaultLabels.all} value={[...(draft[key]??[])]} onChange={event=>setDraft({...draft,[key]:Array.from(event.target.selectedOptions).map(option=>option.value)})}>{values.map(value=><option key={value} value={value}>{value}</option>)}</SimpleSelect>;
     return primary?<QueryField key={key} label={label} width="compact">{control}</QueryField>:<Field key={key} label={label}>{control}</Field>;
   };
   // The service filter is the submitted scope. Never describe unsubmitted draft values as the visible result's scope.
@@ -83,7 +89,7 @@ export function StructuredLogExplorer({viewController:injected,controller:borrow
       footer={state.data?<Toolbar><Button variant="outline" disabled={state.busy||!state.canPrevious||!!state.error} onClick={()=>controller.previous()}>{labels.previous}</Button><span data-log-page>{labels.page} {state.pageIndex+1}</span><Button variant="outline" disabled={state.busy||!state.canNext||!!state.error} onClick={()=>controller.next()}>{labels.next}</Button><span className="xui-code" data-log-snapshot>{labels.asOf}: {state.data.page.as_of}</span></Toolbar>:undefined}/>
     <PeerDialog.Root open={state.detailOpen} onOpenChange={open=>{if(!open)controller.closeDetail();}}><Dialog.Content finalFocus={()=>lastTrigger.current?.isConnected?lastTrigger.current:refresh.current}><Dialog.Title>{labels.detailTitle}</Dialog.Title><Dialog.Body><Stack><div className="xui-feedback-slot" hidden={!state.detailBusy&&!state.detailError}>{state.detailBusy&&<LoadingState>{labels.loading}</LoadingState>}{state.detailError&&<ErrorState title={state.detailError} onRetry={state.detailState==='error'?()=>controller.retryDetail():undefined} retryLabel={labels.retry}/>}</div>
       {detail&&<><strong className="xui-strong">{detail.facts.summary}</strong>{state.detailState==='expired'&&<Alert tone="warning">{labels.expired}</Alert>}<dl className="xui-details">{[[labels.recordId,detail.id],[labels.groupId,detail.group_id],[labels.occurredAt,detail.occurred_at??labels.unknown],[labels.recordedAt,detail.recorded_at??labels.unknown],[labels.operation,detail.facts.operation||'—'],[labels.retryable,tri(detail.facts.retryable)],[labels.userFixable,tri(detail.facts.user_fixable)]].map(([label,value],index)=><React.Fragment key={label}><dt>{label}</dt><dd className={index<5?'xui-code':undefined}>{value}</dd></React.Fragment>)}<dt>{labels.source}</dt><dd>{detail.facts.source}</dd><dt>{labels.severity}</dt><dd>{detail.facts.severity}</dd><dt>{labels.nature}</dt><dd>{detail.facts.nature}</dd><dt>{labels.category}</dt><dd>{detail.facts.category||'—'}</dd><dt>{labels.component}</dt><dd>{detail.facts.component||'—'}</dd><dt>{labels.code}</dt><dd className="xui-code">{detail.facts.code||'—'}</dd><dt>{labels.requestId}</dt><dd>{identifier(detail.facts.request_id,labels.requestId)}</dd><dt>{labels.traceId}</dt><dd>{identifier(detail.facts.trace_id,labels.traceId)}</dd><dt>{labels.subject}</dt><dd>{detail.facts.subject?reference(detail.facts.subject):labels.unknown}</dd><dt>{labels.related}</dt><dd>{detail.related.map((value,index)=><div key={index}>{reference(value)}</div>)}</dd></dl>
-      {detail.details_retained&&<><h3 className="xui-detail-heading">{labels.detail}</h3><pre className="xui-code" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{detail.detail??labels.unknown}</pre><h3 className="xui-detail-heading">{labels.stack}</h3><pre className="xui-code" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{detail.stack??labels.unknown}</pre></>}<h3 className="xui-detail-heading">{labels.attributes}</h3><dl className="xui-details">{Object.entries(detail.attributes).map(([key,value])=><React.Fragment key={key}><dt>{key}</dt><dd>{value}</dd></React.Fragment>)}</dl>{state.copyStatus!=='idle'&&<Alert tone={state.copyStatus==='error'?'error':'success'}>{state.copyStatus==='error'?labels.copyError:labels.copied}</Alert>}</>}
+      {detail.details_retained&&<><h3 className="xui-detail-heading">{labels.detail}</h3><pre className="xui-code" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{detail.detail??labels.unknown}</pre><h3 className="xui-detail-heading">{labels.stack}</h3><pre className="xui-code" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{detail.stack??labels.unknown}</pre></>}<h3 className="xui-detail-heading">{labels.attributes}</h3><dl className="xui-details">{Object.entries(detail.attributes).map(([key,value])=><React.Fragment key={key}><dt>{key}</dt><dd>{value}</dd></React.Fragment>)}</dl></>}
     </Stack></Dialog.Body><Dialog.Footer><Button variant="outline" onClick={()=>controller.closeDetail()}>{labels.close}</Button></Dialog.Footer></Dialog.Content></PeerDialog.Root>
   </section>;
 }

@@ -38,7 +38,7 @@ export function Textarea({className,autoResize,ref,...props}:TextareaProps) {
 export type ControlSize='sm'|'default'|'lg';
 export function NativeSelect({className,controlSize='default',...props}: React.ComponentProps<'select'>&{controlSize?:ControlSize}) { return <select {...props} {...useField(props)} data-control-size={controlSize} className={cx('xui-select',className)} />; }
 /** Themed popup selection with the same form values/events as NativeSelect. */
-export function SimpleSelect(props:React.ComponentProps<'select'>&{controlSize?:ControlSize}){
+export function SimpleSelect(props:React.ComponentProps<'select'>&{controlSize?:ControlSize;/** Display only when no option is selected; does not add a form value. */placeholder?:string}){
  return <SimpleSelectControl {...props} {...useField(props)}/>;
 }
 export type ChoiceProps = Omit<React.ComponentProps<'input'>,'type' | 'children'> & { label: React.ReactNode;controlSize?:ControlSize };

@@ -28,7 +28,7 @@ async function centered(region,bodySelector,headerSelector){
  expect(result.statuses).toBe(1);return result;
 }
 async function allRegions(page,info){
- const table=page.getByRole('region',{name:'加载位置表格',exact:true}),cards=page.getByRole('region',{name:'加载位置卡片集合',exact:true});
+ const table=page.locator('.xui-data-table[aria-label="加载位置表格"]'),cards=page.locator('.xui-card-group[aria-label="加载位置卡片集合"]');
  const results={
   content:await centered(page.getByRole('region',{name:'普通内容区域',exact:true})),
   firstFeedback:await centered(page.getByRole('region',{name:'首次反馈区域',exact:true})),
@@ -52,7 +52,7 @@ for(const theme of ['light','dark','system'])for(const width of [1280,390])for(c
 });
 test('loading resolves to records; same-scope refresh retains nodes and focus without transient flow feedback',async({page})=>{
  await open(page,{width:390});await page.evaluate(()=>window.setLoadingDemo('ready',true));
- const table=page.getByRole('region',{name:'加载位置表格',exact:true}),cards=page.getByRole('region',{name:'加载位置卡片集合',exact:true});
+ const table=page.locator('.xui-data-table[aria-label="加载位置表格"]'),cards=page.locator('.xui-card-group[aria-label="加载位置卡片集合"]');
  const action=table.getByRole('button',{name:'保留的研究任务',exact:true});await action.focus();
  await page.evaluate(()=>{window.keptLoadingNodes={row:document.querySelector('.xui-data-table tbody tr'),card:document.querySelector('.xui-card-group .xui-card'),active:document.activeElement};window.setLoadingDemo('refreshing',true);});
  for(const region of [table,cards]){await expect(region).toHaveAttribute('aria-busy','true');await expect(region.locator('.xui-loading-state')).toHaveCount(0);await expect(region.getByRole('status')).toHaveCount(0);}

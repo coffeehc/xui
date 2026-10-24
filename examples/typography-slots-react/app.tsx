@@ -47,7 +47,7 @@ function OverlayParts({sheet=false}:{sheet?:boolean}){
 }
 function Notifications(){
  const manager=Toast.useToastManager();
- return <><Button onClick={()=>manager.add({title:'操作已完成',description:'当前合成记录已保存。'})}>显示通知</Button><Toast.Viewport>{manager.toasts.map(toast=><Toast.Root key={toast.id} toast={toast}><Toast.Title data-type-id="toast-title" data-type-role="label">{toast.title}</Toast.Title><Toast.Description data-type-id="toast-description" data-type-role="meta">{toast.description}</Toast.Description><Toast.Close aria-label="关闭通知" render={<Button size="sm" variant="outline"/>}>关闭通知</Toast.Close></Toast.Root>)}</Toast.Viewport></>;
+ return <><Button onClick={()=>manager.add({title:'操作已完成',description:'当前合成记录已保存。'})}>显示通知</Button><Toast.Viewport>{manager.toasts.map(toast=><Toast.Root key={toast.id} toast={toast}><Toast.Title data-type-id="toast-title" data-type-role="control">{toast.title}</Toast.Title><Toast.Description data-type-id="toast-description" data-type-role="meta">{toast.description}</Toast.Description><Toast.Close aria-label="关闭通知" render={<Button size="sm" variant="outline"/>}>关闭通知</Toast.Close></Toast.Root>)}</Toast.Viewport></>;
 }
 function App(){
  const [count,setCount]=React.useState(0);

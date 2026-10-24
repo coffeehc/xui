@@ -5,8 +5,10 @@ import {Container,Grid,PageHeader,Stack} from '@coffeehc/xui-react/layout';
 import {Badge} from '@coffeehc/xui-react/feedback';
 import {Button} from '@coffeehc/xui-react/button';
 import '@coffeehc/xui-runtime/init.js';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/style.css';
 
+bootstrapBrowserExample();
 function App(){
   const [updated,setUpdated]=React.useState(false),[actions,setActions]=React.useState(0);
   return <Container><Stack>

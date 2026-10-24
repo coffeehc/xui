@@ -18,7 +18,7 @@ test('SidebarFooterContent is the same public layout/root export and forwards sp
   assert.match(markup,/^<span[^>]*id="footer-part"/);
   assert.match(markup,/class="xui-sidebar-footer-content host-marker"/);
   assert.match(markup,/data-state="ready"/);assert.match(markup,/role="status"/);assert.match(markup,/title="完整版本信息"/);
-  assert.match(markup,/<span class="xui-sidebar-footer-icon" aria-hidden="true"><span>v1<\/span><\/span><span class="xui-sidebar-footer-label">版本 1\.2\.3（合成示例）<\/span>/);
+  assert.match(markup,/<span class="xui-icon-container xui-sidebar-footer-icon" aria-hidden="true"><span>v1<\/span><\/span><span class="xui-sidebar-footer-label">版本 1\.2\.3（合成示例）<\/span>/);
   assert.doesNotMatch(markup,/tabindex|role="button"|<button|href=/);
 });
 

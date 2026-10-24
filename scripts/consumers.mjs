@@ -122,7 +122,16 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // contained InputGroup paint. The formal probe grows 22,629 -> 22,931 gzip bytes
 // (+302); allow a bounded +320 bytes, including the mobile full-row exception.
 // Every JavaScript, Button, service and chart cap remains unchanged.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 23040, reactInitialJsGzip: 153600, narrowServiceGzip: 4608,chartCssGzip:24576 }, button: [], services: [], consumers: [] };
+// Breadcrumb named parts add 118 gzip bytes (23,234 total); bound this increment to +128.
+// Candidate shared progress/meter geometry: probe 23,116 gzip bytes; bound growth to +64.
+// Full Breadcrumbs now includes the optional public overflow menu. Esbuild also
+// retains shared Base UI selector initialization in non-split consumers (+4 KiB
+// measured); bound the expanded public navigation entry to +8 KiB. Keep the
+// Button-only, narrow-service and chart CSS limits unchanged.
+// D3's pure calculation modules add about 12.5 KiB to the chart example.
+// Only its optional JS cap gains 8 KiB; foundation, Button, services and CSS keep their caps.
+// Optional chart motion/path reveal adds a bounded 2 KiB; foundation/Button/service budgets stay unchanged.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 23296, reactInitialJsGzip: 161792, narrowServiceGzip: 4608,chartCssGzip:24576,chartJsGzip:172032 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // Recreate one generated cache so npm cannot reuse a stale same-version tarball.
 const runDirectory = resolve('.consumers/current');
@@ -142,14 +151,16 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await cp(`examples/${kind}`, cwd, { recursive: true });
     await mkdir(`${cwd}/shared`,{recursive:true});
     await copyFile('examples/shared/bootstrap-browser.ts',`${cwd}/shared/bootstrap-browser.ts`);
+    await copyFile('examples/shared/demo-preferences.ts',`${cwd}/shared/demo-preferences.ts`);
     await copyFile('tests/fixtures/controller-modes.tsx',`${cwd}/controller-modes.tsx`);
+    await copyFile('tests/fixtures/breadcrumb-carousel-types.tsx',`${cwd}/breadcrumb-carousel-types.tsx`);
     await copyFile('tests/fixtures/controlled-render.tsx',`${cwd}/controlled-render.tsx`);
     await copyFile('tests/fixtures/admin-setup-form-types.tsx',`${cwd}/admin-setup-form-types.tsx`);
     await copyFile('tests/fixtures/toast-types.tsx',`${cwd}/toast-types.tsx`);
     await copyFile('tests/fixtures/upload-types.tsx',`${cwd}/upload-types.tsx`);
     await copyFile('tests/fixtures/data-table-types.tsx',`${cwd}/data-table-types.tsx`);
     await copyFile('tests/fixtures/password-change-types.tsx',`${cwd}/password-change-types.tsx`);
-    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--preserveSymlinks','--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','controller-modes.tsx','controlled-render.tsx','admin-setup-form-types.tsx','toast-types.tsx','upload-types.tsx','data-table-types.tsx','password-change-types.tsx'],{cwd,stdio:'inherit'});
+    execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--preserveSymlinks','--noEmit','--strict','--skipLibCheck','--module','esnext','--moduleResolution','bundler','--jsx','react-jsx','--target','es2022','breadcrumb-carousel-types.tsx','controller-modes.tsx','controlled-render.tsx','admin-setup-form-types.tsx','toast-types.tsx','upload-types.tsx','data-table-types.tsx','password-change-types.tsx'],{cwd,stdio:'inherit'});
     await copyFile('examples/shared/layout.css', `${cwd}/layout.css`);
     await writeFile(`${cwd}/product.css`, extract(await readFile('docs/DESIGN.md', 'utf8'), 'design-product-css'));
     const require = createRequire(`${cwd}/package.json`);
@@ -166,10 +177,34 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
         execFileSync('node', [resolve('node_modules/typescript/bin/tsc'), '--preserveSymlinks', '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'model-profile/app.tsx'], {cwd, stdio: 'inherit'});
     }
 
+    {
+        for(const name of ['pages','components']){
+        const source=resolve(cwd,name),output=resolve(`dist/${name}-react`);
+        await cp(`examples/${name}-react`,source);
+        const result=await build({entryPoints:[`${source}/app.tsx`],outdir:output,bundle:true,splitting:name==='components',chunkNames:'chunks/[name]-[hash]',format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+        assert(Object.keys(result.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'Page gallery escaped standalone install');
+        if(name==='components'){
+          const outputs=new Map(Object.entries(result.metafile.outputs).map(([path,value])=>[resolve(path),value])),initial=new Set();
+          const visit=path=>{path=resolve(path);if(initial.has(path))return;initial.add(path);for(const item of outputs.get(path)?.imports??[])if(!item.external&&item.kind==='import-statement')visit(item.path);};
+          visit(output+'/app.js');
+          const initialD3=[...initial].flatMap(path=>Object.entries(outputs.get(path)?.inputs??{}).filter(([file,value])=>value.bytesInOutput>0&&/\/node_modules\/d3(?:-[^/]+)?\//.test(file)));
+          assert.equal(initialD3.length,0,'The gallery eagerly loads the optional D3 chart kernel');
+          const charts=[...outputs].filter(([,value])=>Object.entries(value.inputs).some(([file,input])=>file.endsWith('/components/charts.tsx')&&input.bytesInOutput>0));
+          assert.equal(charts.length,1,'Gallery chart demo must be an independent optional module');
+          performance.componentCharts={initialD3Bytes:0,optionalChunk:relative(output,charts[0][0])};
+        }
+        await copyFile(`${source}/index.html`,`${output}/index.html`);
+        await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${output}/theme-init.js`);
+        await writeFile(`${output}/metafile.json`,JSON.stringify(result.metafile,null,2));
+        execFileSync('node',[resolve('node_modules/typescript/bin/tsc'),'--preserveSymlinks','--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx',`${name}/app.tsx`],{cwd,stdio:'inherit'});
+    }
+
+    }
     for(const [entry,symbol] of [['clipboard','getClipboardService'],['theme','getThemeService'],['i18n','getI18nService'],['menu-service','getMenuService']]){
         const service=await build({stdin:{contents:`import {${symbol}} from '@coffeehc/xui-runtime/${entry}';window.xuiService=${symbol};`,resolveDir:cwd,sourcefile:'service-only.js'},bundle:true,format:'esm',minify:true,write:false,metafile:true,platform:'browser',target:'es2022'});
         const contributing=Object.values(service.metafile.outputs).flatMap(output=>Object.entries(output.inputs).filter(([,data])=>data.bytesInOutput>0).map(([path])=>path));
         assert(contributing.every(file=>resolve(file).startsWith(`${cwd}/`)),'Narrow service escaped its standalone install');
+        assert(!contributing.some(file=>/\/node_modules\/d3(?:-[^/]+)?\//.test(file)),`${entry} eagerly includes the optional D3 kernel`);
         assert(!contributing.some(file=>/\/(?:services-core|http-service|auth-service|download-service)\.js$/.test(file)),`${entry} pulls unrelated service implementations`);
         const bytes=service.outputFiles[0].contents,gzip=gzipSync(bytes).length;
         assert(gzip<=performance.budgets.narrowServiceGzip,`${entry} gzip budget: ${gzip}/${performance.budgets.narrowServiceGzip}`);
@@ -228,7 +263,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     console.log(`${kind}: every installed public ESM/CSS entry, named type and runtime export checked.`);
     await mkdir(`dist/${kind}`, { recursive: true });
     const result = await build({ entryPoints: [`${cwd}/app.${'tsx'}`], outfile: `dist/${kind}/app.js`, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '"production"' } });
-    assert(Object.keys(result.metafile.inputs).every(file => !file.startsWith('packages/')), 'Build read monorepo package source');
+    assert(Object.keys(result.metafile.inputs).every(file => resolve(file).startsWith(`${cwd}/`)), 'Main example escaped its standalone installed packages');
     await copyFile(`${cwd}/index.html`, `dist/${kind}/index.html`);
     await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'), `dist/${kind}/theme-init.js`);
     const initializer = await build({ stdin: { contents: "import '@coffeehc/xui-runtime/init.js';", resolveDir: cwd, sourcefile: 'theme-init-consumer.js' }, bundle: true, format: 'iife', platform: 'browser', target: 'es2022', write: false, metafile: true });
@@ -520,7 +555,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--preserveSymlinks','--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'http/app.tsx'], { cwd, stdio: 'inherit' });
     const keys = resolve(cwd, 'api-key'), keysOutput = resolve(`dist/api-key-${kind}`);
     await cp(`examples/api-key-${kind}`, keys, { recursive: true });
-    for (const file of ['api-key-model.ts', 'api-key-labels.json'])
+    for (const file of ['api-key-model.ts', 'api-key-labels.json','api-key-showcase.ts'])
         await copyFile(`examples/shared/${file}`, `${cwd}/shared/${file}`);
     const keysBuild = await build({ entryPoints: [`${keys}/app.${'tsx'}`], outdir: keysOutput, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '\"production\"' } });
     assert(Object.keys(keysBuild.metafile.inputs).every(file => resolve(file).startsWith(`${cwd}/`)), 'API key consumer escaped its standalone install');
@@ -674,7 +709,10 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
         assert(!Object.keys(result.metafile.inputs).some(file => file.endsWith('.css') && !file.includes('/@coffeehc/xui-theme/') && !(name==='theme-presets'&&resolve(file)===directory+'/layout.css')), 'Interaction consumer requires private CSS');
         if(name==='charts'){
           const javascriptGzip=gzipSync(await readFile(output+'/app.js')).length,cssGzip=gzipSync(await readFile(output+'/app.css')).length;
-          assert(javascriptGzip<=performance.budgets.reactInitialJsGzip,'Chart consumer JS exceeds the existing React entry budget');
+          assert(javascriptGzip<=performance.budgets.chartJsGzip,`Chart consumer JS gzip budget: ${javascriptGzip}/${performance.budgets.chartJsGzip}`);
+          const contributing=Object.values(result.metafile.outputs).flatMap(file=>Object.entries(file.inputs).filter(([,value])=>value.bytesInOutput>0).map(([path])=>path));
+          for(const module of ['d3-array','d3-scale','d3-shape'])assert(contributing.some(file=>file.includes('/node_modules/'+module+'/')),`Chart does not use the installed ${module} kernel`);
+          assert(!contributing.some(file=>/\/node_modules\/d3-(?:selection|transition|axis|fetch)\//.test(file)),'Chart imported DOM or IO D3 modules');
           assert(cssGzip<=performance.budgets.chartCssGzip,'Chart + critical CSS exceeds its optional feature budget');
           performance.charts={javascriptGzip,cssGzip};
         }
@@ -749,7 +787,8 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     for (const entry of ['', '/button']) {
         const only = await build({ stdin: { contents: `import {Button} from '@coffeehc/xui-react${entry}';window.xuiButton=Button;`, resolveDir: cwd, sourcefile: 'button-only.js' }, bundle: true, format: 'esm', minify: true, write: false, metafile: true, platform: 'browser', target: 'es2022', define: { 'process.env.NODE_ENV': '"production"' } });
         const contributing = Object.values(only.metafile.outputs).flatMap(file => Object.entries(file.inputs).filter(([, data]) => data.bytesInOutput > 0).map(([path, data]) => ({ path, bytesInOutput: data.bytesInOutput })));
-        assert(!contributing.some(file => /\/(?:dialog|tabs|menu|popover|combobox|select|toast)\/|\/dist\/(?:toggle-group|avatar|accordion|scroll-area|calendar|command|widgets-dom|sheet|alert-dialog|context-menu|download|api-key-http|business-log-http|auth|login|login-dom|business-log|business-log-dom|structured-log|structured-log-dom|api-key|api-key-dom|dialog|tabs|menu|menu-layout|navigation|popover|combobox|select|toast)\.js/.test(file.path)), 'Button-only includes unrelated component code');
+        assert(!contributing.some(file => /\/(?:dialog|tabs|menu|popover|combobox|select|toast)\/|\/dist\/(?:toggle-group|avatar|accordion|scroll-area|calendar|command|widgets-dom|sheet|alert-dialog|context-menu|download|api-key-http|business-log-http|auth|login|login-dom|business-log|business-log-dom|structured-log|structured-log-dom|api-key|api-key-dom|dialog|tabs|menu|menu-layout|navigation|breadcrumbs|carousel|popover|combobox|select|toast)\.js/.test(file.path)), 'Button-only includes unrelated component code');
+        assert(!contributing.some(file=>/\/node_modules\/d3(?:-[^/]+)?\//.test(file.path)), 'Button-only includes optional D3 code');
         const bytes = only.outputFiles[0].contents, minified = bytes.length, gzip = gzipSync(bytes).length;
         assert(minified <= performance.budgets.buttonMinified && gzip <= performance.budgets.buttonGzip, 'Button-only size budget');
         performance.button.push({ entry: entry || 'root', minified, gzip, contributing: contributing.map(file => ({ ...file, path: file.path.replace(cwd + '/', '') })) });

@@ -19,6 +19,7 @@ async function fixture({large=false}={}){
   await write('package.json',JSON.stringify({private:true,devDependencies:peers}));await write('tsconfig.json','{}');
   await write('docs/DESIGN.md','规范版本：1.0.0。\n');await write('scripts/build.mjs','// source identity fixture\n');
   if(large)await write('docs/large-snapshot.txt','large-source-snapshot\n'.repeat(100000));
+  await write('packages/ui-react/model-profile/README.md','# Model profile fixture\n');
   await write('.gitignore','.artifacts/\n.consumers/\npackages/*/dist/\n');
   const manifests=[];
   for(const directory of ['theme','runtime','ui-react']){
@@ -59,7 +60,7 @@ test('archive derives complete API metadata, accepts large source snapshots, and
   try{
     // A stale convenience file must never become the formal API inventory.
     await writeJSON(resolve(root,'.artifacts/public-api.json'),{entries:[]});
-    assert.equal(generation.sourceFiles.length,10);assert.deepEqual(generation.sourceFiles,[...generation.sourceFiles].sort());
+    assert.equal(generation.sourceFiles.length,11);assert.deepEqual(generation.sourceFiles,[...generation.sourceFiles].sort());
     const expected=createHash('sha256');for(const file of generation.sourceFiles)expected.update(file).update(await readFile(resolve(root,file)));
     assert.equal(generation.sourceSha256,expected.digest('hex'),'Keep the original build generation algorithm');
     const result=await createArchive({root,evidence:['.artifacts/evidence']});assert.equal(result.sourceGeneration,generation.sourceSha256);assert.equal(result.publicEntries,3);

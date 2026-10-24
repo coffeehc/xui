@@ -72,6 +72,7 @@
     .xui-shell-sidebar[data-revealed] {inline-size:var(--nav-sidebar-width);z-index:var(--z-shell);}
     .xui-shell[data-sidebar-revealed] .xui-shell-main {isolation:isolate;}
     .xui-shell-sidebar[data-collapsed='true'] .xui-shell-sidebar-footer :is(.xui-toolbar,.xui-sidebar-footer-row) {justify-content:center;}
+    .xui-shell-sidebar[data-collapsed='true'] .xui-shell-sidebar-footer .xui-toolbar {flex-direction:column;}
     .xui-shell-sidebar[data-collapsed='true'] .xui-shell-sidebar-footer:has(.xui-button[data-icon="true"]) {align-self:center;align-items:center;min-inline-size:max(var(--nav-collapsed-item-size),var(--control-height-lg));}
     /* Keep the existing content width: the separator occupies the end padding. */
     .xui-shell-sidebar {border-inline-end:var(--line-width-surface) solid var(--separator-line);padding-inline-end:calc(var(--nav-sidebar-padding) - var(--line-width-surface));}

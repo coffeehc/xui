@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {readFile,copyFile} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {build} from 'esbuild';
 
@@ -7,9 +7,8 @@ let source,developmentSource;
 test.beforeAll(async()=>{
  const {runDirectory}=JSON.parse(await readFile('.consumers/latest.json','utf8'));
  const cwd=resolve(runDirectory,'react');
- await copyFile('tests/fixtures/controller-modes.tsx',`${cwd}/controller-modes.tsx`);
  for(const [mode,assign] of [['production',value=>source=value],['development',value=>developmentSource=value]]){
-  const result=await build({entryPoints:[`${cwd}/controller-modes.tsx`],bundle:true,write:false,metafile:true,format:'iife',platform:'browser',jsx:'automatic',target:'es2022',define:{'process.env.NODE_ENV':JSON.stringify(mode)}});
+  const result=await build({preserveSymlinks:true,entryPoints:[`${cwd}/controller-modes.tsx`],bundle:true,write:false,metafile:true,format:'iife',platform:'browser',jsx:'automatic',target:'es2022',define:{'process.env.NODE_ENV':JSON.stringify(mode)}});
   expect(Object.keys(result.metafile.inputs).every(file=>resolve(file).startsWith(cwd+'/'))).toBe(true);
   assign(result.outputFiles[0].text);
  }

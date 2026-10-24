@@ -71,7 +71,7 @@ for(const kind of ['react']){
 
 for(const kind of ['react'])test(`${kind} startup refresh timeout clears busy state and leaves ordinary login available`,async({page})=>{
   await page.goto(`/login-${kind}/?session=hold`);await expect(page.getByRole('status')).toHaveText('正在确认登录状态…');await expect(page.getByRole('button',{name:'取消等待'})).toHaveCount(0);
-  await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toHaveCount(0);
+  await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByRole('button',{name:'登录',exact:true})).toBeEnabled();await expect(page.getByRole('button',{name:'重试连接'})).toBeVisible();
   expect((await page.evaluate(()=>window.loginDemo.getRequests())).filter(request=>request.path.endsWith('/refresh'))).toHaveLength(1);await page.evaluate(()=>window.loginDemo.release('session'));expect(await page.evaluate(()=>window.loginDemo.getDestinations())).toEqual([]);
 });
 

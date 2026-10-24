@@ -78,8 +78,7 @@ async function metrics(page){
 async function assertWorkspace(page,{slots=true,long=true,shellHeight}={}){
   await settle(page);const m=await metrics(page);
   await expect(navToggle(page)).toHaveCount(1);
-  if(m.viewport.width>=768)await expect(page.locator('.xui-shell-sidebar [data-xui-menu-toggle]')).toHaveCount(1);
-  else await expect(page.locator('.xui-shell-header [data-xui-menu-toggle]')).toHaveCount(1);
+  await expect(page.locator('.xui-shell-header [data-xui-menu-toggle]')).toHaveCount(1);
   near(m.shell.height,shellHeight??m.viewport.height,'root block size');near(m.main.y,m.header.bottom,'main follows naturally measured app header');near(m.main.bottom,m.shell.bottom,'main reaches root end');
   expect(m.document.scrollWidth,'document horizontal overflow').toBeLessThanOrEqual(m.document.clientWidth+1);
   expect(m.document.scrollHeight,'document must not own workspace scrolling').toBeLessThanOrEqual(m.document.clientHeight+1);

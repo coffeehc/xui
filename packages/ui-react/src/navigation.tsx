@@ -31,7 +31,8 @@ export function NavItem({selected,'aria-current':ariaCurrent,disabled,collapsed,
   });
 }
 
-export function Breadcrumbs({className,children,...props}:React.ComponentProps<'nav'>){return <nav aria-label="Breadcrumbs" {...props} className={cx('xui-breadcrumbs',className)}><ol>{children}</ol></nav>;}
+export {Breadcrumbs} from './breadcrumbs.js';
+export type {BreadcrumbsProps,BreadcrumbItem,BreadcrumbLinkProps} from './breadcrumbs.js';
 export type PaginationProps=Omit<React.ComponentProps<'nav'>,'onChange'> & ControllerProps<PaginationController,PaginationOptions> & {previousLabel?:string;nextLabel?:string};
 export function Pagination(allProps:PaginationProps){const {controller:injected,page,defaultPage=1,pageCount,onPageChange,disabled,previousLabel='Previous page',nextLabel='Next page',className,...props}=allProps;assertControllerProps(injected,allProps,['page','defaultPage','pageCount','onPageChange','disabled']);
   const latest=React.useRef(onPageChange);latest.current=onPageChange;

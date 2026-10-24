@@ -1,4 +1,6 @@
 import * as React from 'react';
+import {bootstrap} from '@coffeehc/xui-runtime/bootstrap';
+import {bindDemoPreferences} from '../shared/demo-preferences';
 import {createRoot} from 'react-dom/client';
 import {Upload,type UploadController} from '@coffeehc/xui-react/upload';
 import {createUploadController,UploadService} from '@coffeehc/xui-runtime/upload';
@@ -10,7 +12,7 @@ import {PageHeader,Section,Stack,Toolbar} from '@coffeehc/xui-react/layout';
 import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/style.css';
 
-bootstrapBrowserExample();
+if(new URLSearchParams(location.search).has('embed')){const app=bootstrap({}, {services:{http:{options:{baseURL:location.origin,fetch:async(_input,init)=>{if(init?.signal?.aborted)throw new DOMException('Cancelled','AbortError');const file=(init?.body as FormData).get('file') as File;return new Response(JSON.stringify({success:true,code:1,message:'',request_id:'demo-upload',payload:{id:'synthetic-upload',name:file.name}}),{headers:{'Content-Type':'application/json'}});}}}}});bindDemoPreferences(app.services.getThemeService());}else bootstrapBrowserExample();
 type Result={id:string;name:string};
 const options={path:'/api/demo/upload',service:UploadService,multiple:true,accept:'.txt,.csv',maxFiles:4,maxFileSize:1024,request:{fields:{purpose:'example'}}} as const;
 const a=createUploadController<Result>(options),b=createUploadController<Result>(options);

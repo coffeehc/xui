@@ -4,8 +4,7 @@ import {test,expect} from '@playwright/test';
 // The typography contract permits natural growth for enlarged or wrapping text.
 // Consequently only a short, single-line label at default scale is compared to
 // the nominal height; the enlarged-text checks require content-driven growth.
-// Current xs text buttons are expected to expose a 32px-versus-24px regression.
-// Keep this strict: no test.fail(), skip(), fixed host height, or changed tokens.
+// Explicit icon sizes retain their target and use the shared 1px inset on each edge.
 const sizes={xs:{height:24,padding:8,gap:4,icon:12},sm:{height:32,padding:10,gap:6,icon:16},default:{height:36,padding:12,gap:6,icon:16},lg:{height:40,padding:16,gap:8,icon:16}};
 const settle=page=>page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
 async function measure(control){return control.evaluate(node=>{
@@ -24,7 +23,7 @@ for(const kind of ['react'])for(const theme of ['light','dark','system'])for(con
   expect.soft(text.height,`${size} short default-scale text button uses its documented height`).toBeCloseTo(expected.height,2);
   expect.soft(text.padding.left).toBe(expected.padding);expect.soft(text.padding.right).toBe(expected.padding);expect.soft(text.gap).toBe(expected.gap);
   expect.soft(text.icon.width).toBe(expected.icon);expect.soft(text.icon.height).toBe(expected.icon);
-  expect.soft(icon.height).toBe(expected.height);expect.soft(icon.width).toBe(expected.height);expect.soft(icon.padding.top+icon.padding.bottom+icon.padding.left+icon.padding.right).toBe(12);
+  expect.soft(icon.height).toBe(expected.height);expect.soft(icon.width).toBe(expected.height);expect.soft(icon.padding.top+icon.padding.bottom+icon.padding.left+icon.padding.right).toBe(4);
  }
  await attach(page,info,`${kind}-${theme}-${width}-default-sizes`,normal);
  await page.addStyleTag({content:'@layer product-overrides { :root { --font-scale:2; --line-height-scale:2; } }'});await settle(page);

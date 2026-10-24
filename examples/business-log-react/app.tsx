@@ -18,8 +18,12 @@ import chineseLabels from '../shared/business-log-labels.json';
 import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import {createBusinessLogExample} from '../shared/business-log-model';
 import '@coffeehc/xui-theme/critical.css';
+import '@coffeehc/xui-theme/floating.css';
 const query=new URLSearchParams(location.search),configured=query.has('defaults'),application=bootstrapBrowserExample(configured?{pages:{businessLog:{title:'公共业务日志',pageSize:3}}}:{}),pages=resolveDefaultPages(application.config);
 const example=createBusinessLogExample(location.href,configured?pages.businessLog.options:undefined),root=createRoot(document.getElementById('root')!);
+const initialList=query.get('initial-list');
+if(initialList==='hold'||initialList==='error')example.setMode('list',initialList);
+if(initialList==='empty')example.setRows([]);
 if(configured)Object.assign(window,{defaultPagesDemo:{config:application.config,pages}});
 const renderers:BusinessLogRenderer<React.ReactNode>[]=[{eventType:'order.approved',schemaVersion:1,render:detail=><p>{example.renderApproved(detail)}</p>},{eventType:'demo.renderer.fail',schemaVersion:1,render:()=>{throw Error('FAKE_PRIVATE_RENDER_ERROR');}}];
 const notifications=createToastController<ToastPayload>();
@@ -54,6 +58,7 @@ const owner=query.get('owner'),viewController=owner==='view'?createBusinessLogVi
 let updateResource:(next:string)=>void=()=>{};
 let updateList:(next:BusinessLogExplorerListPresentation|undefined)=>void=()=>{},updateLabels:(next:Partial<BusinessLogLabels>|undefined)=>void=()=>{},updateOptionsLabels:(next:Partial<BusinessLogLabels>|undefined)=>void=()=>{};
 function changeLocale(locale:string){const labels=locale==='zh-CN'?chineseLabels:businessLogDefaultLabels;updateLabels(labels);if(query.has('cells'))updateList(cellsList(locale,labels));else if(query.has('activity'))updateList(activityList(locale,labels));}
+const PreviewShell=new URLSearchParams(location.search).has('embed')?(({children}:{children:React.ReactNode})=><>{children}</>):MenuLayout;
 function App(){
  const [scope,setScope]=React.useState('');
  const changeResource=React.useCallback((next:string)=>{setScope(next);example.setScope(next);void example.controller.setFilter(example.controller.getState().filter);},[]);
@@ -62,7 +67,7 @@ function App(){
  React.useLayoutEffect(()=>{updateResource=changeResource;updateList=setList;updateLabels=setLabels;updateOptionsLabels=setOptionsLabels;return()=>{updateResource=()=>{};updateList=()=>{};updateLabels=()=>{};updateOptionsLabels=()=>{};};},[changeResource]);
  React.useEffect(()=>{if(owner!=='options')void example.controller.refresh();return()=>example.controller.cancel();},[]);
  const source=owner==='options'?{options:{...example.controller.options,labels:optionsLabels}}:viewController?{viewController}:{controller:example.controller};
- return <Toast.Provider controller={notifications}><Toast.View/><MenuLayout title="xui" label="管理导航" items={[{id:'business-log',label:'业务日志',icon:'folder',href:location.pathname}]} activeId="business-log"><Container><BusinessLogExplorer {...source} renderers={renderers} list={list} labels={labels} queryFields={query.has('cells')?<QueryField label="资源范围" width="standard"><SimpleSelect value={scope} onChange={event=>changeResource(event.target.value)}><option value="">全部资源</option><option value="order">订单</option><option value="knowledge">知识库</option></SimpleSelect></QueryField>:undefined} querySummary={query.has('cells')?<span>已生效范围：{scope||'全部资源'}</span>:undefined} headerActions={query.has('labels')?<><Button variant="outline" onClick={()=>changeLocale('zh-CN')}>中文</Button><Button variant="outline" onClick={()=>changeLocale('en')}>English</Button></>:undefined}/></Container></MenuLayout></Toast.Provider>;
+ return <Toast.Provider controller={notifications}><Toast.View/><PreviewShell title="xui" label="管理导航" items={[{id:'business-log',label:'业务日志',icon:'folder',href:location.pathname}]} activeId="business-log"><Container style={new URLSearchParams(location.search).has('embed')?{padding:'var(--layout-content-inset)'}:undefined}><BusinessLogExplorer {...source} renderers={renderers} list={list} labels={labels} queryFields={query.has('cells')?<QueryField label="资源范围" width="standard"><SimpleSelect value={scope} onChange={event=>changeResource(event.target.value)}><option value="">全部资源</option><option value="order">订单</option><option value="knowledge">知识库</option></SimpleSelect></QueryField>:undefined} querySummary={query.has('cells')?<span>已生效范围：{scope||'全部资源'}</span>:undefined} headerActions={query.has('labels')?<><Button variant="outline" onClick={()=>changeLocale('zh-CN')}>中文</Button><Button variant="outline" onClick={()=>changeLocale('en')}>English</Button></>:undefined}/></Container></PreviewShell></Toast.Provider>;
 }
 root.render(<React.StrictMode><App/></React.StrictMode>);
 Object.assign(window,{businessLogDemo:{...example,viewController,activityList,cellsList,setResource:(next:string)=>updateResource(next),setList:(next:BusinessLogExplorerListPresentation|undefined)=>updateList(next),setLabels:(next:Partial<BusinessLogLabels>|undefined)=>updateLabels(next),setOptionsLabels:(next:Partial<BusinessLogLabels>|undefined)=>updateOptionsLabels(next),setLocale:changeLocale,destroy(){root.unmount();viewController?.destroy();example.destroy();notifications.destroy();}}});

@@ -1,6 +1,6 @@
 # xui 项目接入逐项验收清单
 
-本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.40）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
+本清单用于新接入、升级、自查的改造前、实现中及交付前逐项核对，执行顺序统一见[接入手册](ADOPTION.md#新接入与升级的统一执行流程)。当前设计版本以固定 SHA 中的 [DESIGN.md](DESIGN.md)（4.2.41）、[PUBLIC_API.md](PUBLIC_API.md)、[COMPONENTS.md](COMPONENTS.md) 和正式 types 为唯一合同源；本表只把接线与验收拆成可重复检查的项目，不复制 token 默认值、DTO 或再定义一套设计系统。发现合同冲突时记录失败并交由 xui 维护者确认，不由消费项目自行发明合同。
 
 ## 使用与报告规则
 
@@ -301,7 +301,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | TOAST-002 | 通知位置与文字 | 默认右上角，Icon/Title/Description/Actions/Action/Close 使用公共槽，Close首行末端，只有实际动作才有末行；窄屏与大字默认最新1项、40dvh内滚动、焦点四边可见，宿主不写定位/字号补丁 | 三主题、长中文、200%文字与真实页面缩放截图 | [通知合同](DESIGN.md#通知队列与视图合同) |
 | TOAST-003 | 计时与关闭 | 悬停/聚焦/文档隐藏/无View/隐藏项暂停；恢复剩余时长，关闭回调各一次，旧Promise不复活关闭项 | 受控时钟、真实指针/键盘、错误与退出用例 | [通知合同](DESIGN.md#通知队列与视图合同) |
 | TOAST-004 | 通知焦点与播报 | 新增不抢焦点；F6/Tab/Escape与关闭后回焦；polite/assertive 按真实优先级，必要错误原位持续 | DOM语义、键盘与动作焦点；读屏器未测须单独注明 | [通知合同](DESIGN.md#通知队列与视图合同) |
-| TOAST-005 | 普通保存/复制等页面级临时通知 | 使用现有公共Toast及同一owner，不插入临时Alert/Card/横幅/提示行，不与页面块重复；持续错误/关键结果不只放Toast，控件原位反馈沿原合同，轮询不逐次报成功 | 每个触发点、Provider/Controller身份、持续状态入口和通知次数 | [反馈归属](DESIGN.md#反馈位置与保留时间) |
+| TOAST-005 | 普通保存/复制等页面级临时通知 | 使用现有公共Toast及同一owner，不插入临时Alert/Card/横幅/提示行，不与页面块重复；完整页复制通知在模态打开期间仍可播报、无正文位移；持续错误/关键结果不只放Toast，控件原位反馈沿原合同，轮询不逐次报成功 | 每个触发点、Provider/Controller身份、持续状态入口和通知次数 | [反馈归属](DESIGN.md#反馈位置与保留时间) |
 | TOAST-006 | 连续触发通知并等待自动关闭/手动关闭 | 同视口同范围未变化内容的几何/节点/滚动/草稿与选区保持，焦点不无故转移，主动进入通知及关闭按公共合同回焦；不以大留白/固定反馈高度/裁切/隐藏正文掩盖跳动，必要内容增长单独归因 | 出现前/显示中/两种关闭后的bounding rect、DOM身份与交互记录；不能只给截图或CLS | [几何验收](DESIGN.md#反馈位置与保留时间) |
 | CTRL-017 | 页面使用 Alert 或 ErrorState | 文案与 severity 来自真实业务结果；重试按钮只在真实可重试时出现，Alert 不吞掉表单错误关联 | HTTP/业务错误夹具、aria-describedby 与回调次数 | [COMPONENTS 局部失败反馈](COMPONENTS.md#局部失败反馈与离线边界) · [DESIGN 表单、搜索与反馈](DESIGN.md#表单搜索与反馈) |
 | CTRL-018 | 页面使用 PasswordInput 显隐按钮 | 显隐按钮保留正常 Tab 顺序及可访问名称/`aria-pressed`；不得使用 `tabIndex=-1` 或 `aria-hidden` 隐藏交互 | Tab 录像、DOM 属性与密码输入节点 identity | [COMPONENTS 密码输入](COMPONENTS.md#密码输入) |
@@ -419,7 +419,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
 | LIFE-001 | 页面第一次加载资源 | shell/header/标题稳定存在；loading 位于数据所属区域 | DOM 时间线与首个请求 waterfall | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
-| LIFE-002 | 已有数据同范围刷新 | 旧确认数据（含空态）持续可见；固定刷新按钮指示，不临时插入反馈/取消动作挤动布局，不卸载整页/组件 | 节点 identity、ready/refreshing 几何差分、快照与 Network | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
+| LIFE-002 | 已有数据同范围刷新 | 旧确认数据（含空态）持续可见；固定刷新按钮闲置文字居中、忙时图标与文字同组且宽高不变，不临时插入反馈/取消动作挤动布局，不卸载整页/组件 | 节点 identity、ready/refreshing 几何差分、快照与 Network | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
 | LIFE-EMPTY-001 | 已确认空结果刷新失败 | DataTable/CardGroup传入当前范围hasValue=true，保留emptyState并显示错误/重试；首次读取或换范围重置，不伪造空结果 | 成功空→刷新→错误与首次错误对比 | [集合生命周期](COMPONENTS.md#状态焦点与生命周期) |
 | LIFE-FOCUS-001 | 移动导航关闭并打开未保存确认 | 确认期间焦点留在AlertDialog；保留草稿后通过navigationTriggerRef/finalFocus回到可见开关，放弃则回宿主目的操作；不访问私有DOM | 指针/Enter/Space/Escape、焦点及ref生命周期 | [抽屉确认回焦](COMPONENTS.md#导航抽屉与未保存确认的最终焦点) |
 | LIFE-003 | 查询范围发生变化 | 旧数据清除或明确标为旧范围；不得把旧事实冒充新查询结果 | query key、范围标签和 rows 数据来源 | [DESIGN 数据刷新与视图连续性](DESIGN.md#数据刷新与视图连续性) · [生命周期](DESIGN.md#前端状态与资源生命周期) |
@@ -489,6 +489,9 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | KEY-LIST-OK | API Key 列表成功 | 解析严格 v2 ListData；ID/total准确、跨页稳定；metadata 不含 secret | response fixture、全页计数与行ID比对 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-LIST-ERR | 列表缺 total、重复ID、total变动、越预算或 HTTP/业务拒绝（含403） | 该轮读取失败，保留最近已确认列表并提示真实错误；不伪造总数/末页 | 故障响应、旧行 identity 与错误状态 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-LIST-001 | API Key Manager 使用本地分页 | 只对完整已确认rows分页；默认pageSize/options按公开合同，翻页或改页长不发请求；总数等于完整集合长度；显式false关闭分页 | rows/page状态、控制器请求计数、翻页前后行ID与total | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [COMPONENTS](COMPONENTS.md) |
+| KEY-COPY-001 | 列表密钥列 | 名称与API Key分列；keyCopy省略/false仅被动掩码，不触发读取或剪贴板；开关不重建原Controller/查询owner | 单元格DOM、读写计数、Controller身份 | [API Key复制](COMPONENTS.md#api-key-列与复制4241) |
+| KEY-COPY-002 | 显式启用keyCopy | 点击/Enter/Space均复制完整授权值；哈希不可恢复项禁用，不复制prefix/掩码；busy防重，反馈仅Toast | 合成完整值布尔比较、键盘、禁用与请求数 | [API Key复制](COMPONENTS.md#api-key-列与复制4241) |
+| KEY-COPY-003 | 复制中取消/卸载/记录或权限变化 | signal取消、迟到丢弃；秘密不进入state/metadata/URL/storage/日志/反馈；不增加取密钥API，实际后端读取能力单独验收 | 取消与迟到注入、秘密扫描及后端合同 | [API Key复制](COMPONENTS.md#api-key-列与复制4241) |
 | KEY-CREATE-REQ | 用户确认并提交 API Key 创建 | `POST /api/v1/api-keys` 精确发送 name/permission_ids/expiry_id/confirmed；required/disabled/confirmed 按能力控制请求 | Network body 与表单确认事实 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-CREATE-OK | 创建返回成功 metadata 与 secret | 一次性 secret 只可经 controller 的私有结果视图读取；不进入公开状态、列表缓存、URL、storage、日志或业务 payload；关闭/pagehide/卸载清 DOM 值 | response、状态/list cache/storage/log scan 与关闭后 DOM | [PUBLIC_API 一次性值与验证边界](PUBLIC_API.md#一次性值与验证边界) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-CREATE-ERR | 创建拒绝、超时、断网或写结果未知 | 不重发创建；未知结果仅普通 list 核验一次，普通读失败保留错误；不能以同名记录证明本次提交 | 写/读请求次数与实际页面状态 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
@@ -603,7 +606,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 
 | TABLE-RESIZE-001 | 需要用户调整列宽的DataTable | 使用columnSizing默认或完整Controller，不能竞争widths/defaultWidths；按稳定列id接线，列resize声明名称/限制，正确载入正式CSS | 三主题、指针/触屏/键盘/RTL、最小最大、取消/卸载清理、刷新/数据/排序/分页后保行与宽度 | [交互列宽](COMPONENTS.md#交互列宽调整) |
 
-| FEEDBACK-PROGRESS-001 | 呈现已测或未知进度 | 公共Progress真实value/max或省略value；等高小圆角，不改成椭圆；缩放/RTL/强制颜色及减弱动效保持 | 属性、窄屏几何与真实绘制截图 | [Progress](COMPONENTS.md#进度-progress) |
+| FEEDBACK-PROGRESS-001 | 呈现已测或未知进度 | 公共Progress真实value/max或省略value；与密码强度meter共用progress-height/progress-radius；端点与中间等厚，不改成椭圆；缩放/RTL/强制颜色及减弱动效保持 | 属性、窄屏几何与真实绘制截图 | [Progress](COMPONENTS.md#进度-progress) |
 
 | AUTH-PASSWORD-REQ | 提交一次改密 | 固定PUT官方JSON/唯一Bearer、omit/no-store/error redirect；零备用URL/自动重放 | Network精确方法/字段/凭据/次数 | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
 | AUTH-PASSWORD-OK | 严格确认成功 | 封闭schema1三字段全true；清access/user与旧代次；同源epoch通知，重新登录 | 正负DTO、状态时间线及跨tab | [自助改密](PUBLIC_API.md#自助改密) · [表单](COMPONENTS.md#自助改密表单) |
@@ -724,10 +727,10 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
-| CHART-001 | 正式包消费图表 | 从/chart或根入口取得三类React组件及types，runtime/chart仅纯类型/计算，CSS来自正式style或critical+chart，无新增图表库/源码alias/重复peer | 独立tarball types/ESM/CSS、module graph及peer路径 | [公开入口](PUBLIC_API.md#全部正式入口) |
+| CHART-001 | 正式包消费图表 | 从/chart或根入口取得三类React组件及types，runtime/chart仅纯类型/计算，CSS来自正式style或critical+chart；D3仅为库内部声明的计算依赖，无d3整包/DOM/IO模块、宿主D3对象/源码alias/重复peer，Button与窄服务包图不含D3 | 独立tarball types/ESM/CSS、module graph及peer路径 | [公开入口](PUBLIC_API.md#全部正式入口) |
 | CHART-002 | 图表页面slot编排 | title/description/actions/正文/页尾复用Card，图例/绘图区/就近读值/反馈各有归属，查看数据动作就近，不嵌套私有卡/表/tooltip | 每页实例slot矩阵及实际DOM/geometry | [图表组件](COMPONENTS.md#公共图表) |
 | CHART-003 | categories/series/slices变化 | 稳定唯一ID、非空名称、数值有限、长度匹配，null仅表示缺失；非法输入拒绝，不补0/截断/猜单位或时间 | 正负类型、非法数据回归及实际数据来源 | [数据合同](COMPONENTS.md#公共图表) |
-| CHART-004 | 折线缺采样/单点/全零 | null处断开而非补0/插值，单点仍有点形，合法0保留；线型/点形与分类图例对应 | SVG路径/点、键盘读值、数据表及截图 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
+| CHART-004 | 折线曲线/缺采样/单点/全零 | curve仅用linear/monotone/step，默认直线；单调平滑不产生相邻点间额外极值，阶梯中点跳变；三种模式null处断开而非补0/跨缺失插值，单点有点形，合法0保留；切换曲线不重挂SVG/采样点、不清焦点/读值/草稿、不额外请求；原值与数据表一致 | SVG路径/点、键盘读值、数据表及截图 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
 | CHART-005 | 分组柱含负/零值 | 0基线与刻度明确，正负方向和长度正确，零柱高度0；不把负数改为错误色，分组次序对应图例 | 实际柱几何、0刻度、色Token与数据表 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
 | CHART-006 | 饼图含零/单项/极值 | 有限非负值，零项无弧但可读；全零为空态，单正项完整圆，比例归一化避免溢出，不虚构总数 | 弧度/占比、全零/单项/有限极值回归与截图 | [数据合同](COMPONENTS.md#公共图表) |
 | CHART-007 | 主题或品牌变化 | 图形只用既有chart-color等语义Token，文字/轴/图例/网格/焦点同步；分类不充当状态，重排保色需求显式配color | 六preset×浅深system、实时切换、实际文字/图形对比与自定义Token继承 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
@@ -738,12 +741,16 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CHART-012 | 同范围刷新/失败 | 旧SVG/点/柱节点、焦点和横滚保留，反馈不遮罩或改变图形透明度；没有新增请求owner | 刷新前/中/后节点/滚动/几何、请求计数与错误恢复 | [状态合同](DESIGN.md#公共图表布局与状态合同4221) |
 | CHART-013 | 数据重排/删除/换范围 | 按稳定类别/系列ID读取更新值，删除后不报旧值；范围清理/取消/迟到由原Resource负责 | 重排/删除的节点与读值、范围切换及迟到回归 | [状态合同](COMPONENTS.md#公共图表) |
 | CHART-014 | SSR/挂载/卸载/减少动效/强制颜色 | SSR无DOM访问；测量随节点更新并释放，无自动请求/循环动效；强制颜色及数据表仍可用 | SSR结果、StrictMode/Observer释放、media与实际页面检查 | [设计合同](DESIGN.md#公共图表布局与状态合同4221) |
+| CHART-015 | 首次展示/显式关闭 | 所有图表首次进入和数据更新均用motion-duration-chart（默认900ms）；折线/曲线沿实际路径从起点至终点、采样点随到达显现，null连续段按序而不补线；animation=false或减少动态效果直接呈现，复用统一chart时长/easing Token，0时长不排帧 | 同组数据开启/关闭、默认Token及media测量 | [图表呈现](COMPONENTS.md#公共图表) |
+| CHART-016 | 同范围刷新与值更新 | 在途/失败保留旧图、反馈槽与焦点；确认数据更新从当前坐标过渡，相同数据不重播；不清数组/key重挂 | 刷新前中后节点/矩形/请求、连续更新轨迹 | [图表呈现](COMPONENTS.md#公共图表) |
+| CHART-017 | 动画中的读值/缺失/边界 | 文本、百分比、数据表立即读取确认原值，交互完成动画；null不跨段；结构/范围/尺寸变化直接投影，无误配索引/轴 | 三类中间帧、原值表、null段数、重排/曲线/resize | [图表呈现](COMPONENTS.md#公共图表) |
+| CHART-018 | 动画取消与生命周期 | 运行中关闭/media reduce/后台立即完成；恢复不补播；卸载释放时钟/帧/监听；不新增请求 | StrictMode、运行中切换、后台/恢复和卸载计数 | [图表呈现](COMPONENTS.md#公共图表) |
 
 ## StructuredLogExplorer 查询逐项检查
 
 | ID | 操作 | 必须结果 | 证据 | 合同 |
 | --- | --- | --- | --- | --- |
-| LOG-QUERY-001 | 渲染查询区和宿主内容 | 只一份QueryForm；fields/advanced/actions/summary按公共映射，pageToolbar与headerActions各归其位，空槽不占位 | 正式types、DOM与slot矩阵 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
+| LOG-QUERY-001 | 渲染查询区和宿主内容 | 只一份QueryForm；fields/advanced/actions/summary按公共映射，pageToolbar与headerActions各归其位，空槽不占位；空多选显示可翻译的全部文案，原值仍为空，不增加查询 | 正式types、DOM与slot矩阵 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
 | LOG-QUERY-002 | 修改后重置草稿 | 恢复最近提交filter；零请求，service/结果/游标/快照/错误保持 | 前后state身份、请求计数与参数 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
 | LOG-QUERY-003 | 清除已生效筛选 | 同一service提交空filter、首段cursor=null，仅一次当前视图请求，不伪称草稿reset | 真实POST body/次数、分组与组内模式 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
 | LOG-QUERY-004 | 提交与刷新 | Enter/应用提交草稿；刷新使用原applied，summary仅显示service.filter | 草稿/applied/网络及刷新节点 | [组件合同](COMPONENTS.md#structuredlogexplorer-查询与槽位4222) |
@@ -855,3 +862,14 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | MODEL-006 | 模型配置Form/Editor | 向量协议可选、无聊天策略、Embed输入/维度仅用于测试；不把聊天测试拒绝误报为向量不可用 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
 | MODEL-007 | 模型配置Form/Editor | 测试/目录不保存；明确后端Save或SaveWithTest策略；逐项验50310未知、50311已提交后置失败（可叠加测试失败）、50312已提交测试失败；安全editor/新增ID/operation_id；onCommitted与onSaved无重复刷新；确认提交清dirty/凭据，缺editor锁定重读；取消/身份切换迟到无旧回调；无自动重写，CAS不覆盖 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
 | MODEL-008 | 模型配置Form/Editor | 同Controller切语言/主题/缩放不请求；键盘/浮层/Sheet关闭回焦、disabled/readOnly；成功反馈Toast，验真实页面及实际请求 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+
+### 面包屑与走马灯逐项检查
+
+| ID | 适用范围 | 检查项 | 证据 | 规范 |
+| --- | --- | --- | --- | --- |
+| BREADCRUMB-001 | 完整或组合面包屑 | items与children互斥、稳定id、唯一当前项、空路径不伪造；父级URI由原路由owner提供，修饰键/target不被抢占 | 正式类型、真实链接及路由调用计数 | [面包屑](COMPONENTS.md#面包屑与走马灯4241) |
+| BREADCRUMB-002 | 长路径/省略/禁用/换语言 | 公共Menu省略入口、完整名称、禁用不导航、关闭回焦；长中文/窄屏/RTL/缩放可读，动态折叠不丢焦点 | 真实指针/键盘、aria-current、焦点与净宽 | [面包屑](COMPONENTS.md#面包屑与走马灯4241) |
+| CAROUSEL-001 | 数据与Controller接线 | value默认/受控/注入互斥、稳定itemKey、移除/重排回退准确；确认不回调、不增加请求owner | 类型正负例、Controller记录和内容身份 | [走马灯](COMPONENTS.md#面包屑与走马灯4241) |
+| CAROUSEL-002 | 切换与内容 | 前后/指示器/键盘/RTL/触屏边界准确；非当前内容不可聚焦但草稿和高度保留；独立动作不误切换 | 浏览器焦点、inert/ARIA、内容节点和几何 | [走马灯](COMPONENTS.md#面包屑与走马灯4241) |
+| CAROUSEL-003 | 自动播放和生命周期 | 默认关闭；显式开始、焦点停止、悬停/隐藏暂停、减少动态效果停播；无控件无时钟；退出/销毁零旧计时动作 | 假时钟或有界真实时钟、媒体/焦点/卸载记录 | [走马灯](COMPONENTS.md#面包屑与走马灯4241) |
+| CAROUSEL-004 | 状态和视觉 | loading/空/错误/刷新保留内容与disabled各自准确；labels热更新，CSS正式分片，主题/窄屏/200%和长中文可达 | 正式包独立消费与真实截图/操作 | [走马灯](COMPONENTS.md#面包屑与走马灯4241) |

@@ -24,7 +24,7 @@ test('query slots are optional where documented; old default EmptyState remains 
   const markup=render(h(QueryForm,{label:'Query',fields:null,actions:null}));assert.doesNotMatch(markup,/xui-query-summary|aria-expanded|xui-query-fields/);
   for(const width of ['primary','compact','standard','full'])assert.match(render(h(QueryField,{width,label:'Width'},h(Input))),new RegExp(`data-query-width="${width}"`));
   assert.match(render(h(EmptyState,{title:'Waiting'})),/data-align="start"/);
-  const centered=render(h(EmptyState,{title:'Waiting',icon:'⌕',align:'center'}));assert.match(centered,/data-align="center"/);assert.match(centered,/class="xui-state-icon" aria-hidden="true"/);
+  const centered=render(h(EmptyState,{title:'Waiting',icon:'⌕',align:'center'}));assert.match(centered,/data-align="center"/);assert.match(centered,/class="xui-icon-container xui-state-icon" aria-hidden="true"/);
 });
 
 test('unconfirmed collections do not announce fabricated zero counts; confirmed empty and refresh retain facts',()=>{

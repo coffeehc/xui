@@ -62,7 +62,13 @@ function NavigationMenuRoot(allProps:NavigationMenuProps){const {controller:inje
   const latest=React.useRef({nodes,active,expanded,setExpanded});latest.current={nodes,active,expanded,setExpanded};
   React.useLayoutEffect(()=>{presentation.current=bindNavigationPresentation(root.current!);keyboard.current=createNavigationKeyboard(root.current!,{activeId:()=>latest.current.active,node:id=>latest.current.nodes.get(id),expanded:id=>latest.current.expanded.includes(id),setExpanded:(id,open)=>latest.current.setExpanded(id,open),listen:false,fallbackFocus:()=>shell?.fallbackFocus()??null});return()=>{presentation.current?.destroy();presentation.current=null;keyboard.current?.destroy();keyboard.current=null;};},[]);
   React.useLayoutEffect(()=>{keyboard.current?.refresh();presentation.current?.refresh();});
-  React.useLayoutEffect(()=>{if(root.current?.closest('[data-scroll-mode="viewport"],[data-scroll-mode="workspace"],.xui-shell-sidebar-with-footer'))root.current?.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});},[items,active,expanded,state.collapsed]);
+  React.useLayoutEffect(()=>{
+    // AppShell projects its portal's density after child layout effects. Scroll
+    // against that final menu/footer geometry, only for confirmed navigation
+    // changes; transient hover reveal must preserve the user's scroll position.
+    const frame=requestAnimationFrame(()=>{if(root.current?.closest('[data-scroll-mode="viewport"],[data-scroll-mode="workspace"],.xui-shell-sidebar-with-footer'))root.current.querySelector('[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'});});
+    return()=>cancelAnimationFrame(frame);
+  },[items,active,expanded,state.collapsed]);
   const compact=()=>controller.setCollapsed(!collapsed);
   const renderItems=(entries:readonly NavigationItem[]):React.ReactNode=>entries.map(item=>{
     const node=nodes.get(item.id)!,hasChildren=!!item.children?.length,open=!!item.group||expanded.includes(item.id),childId=prefix+'-'+encodeURIComponent(item.id);

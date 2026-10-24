@@ -38,7 +38,7 @@ test('DataTable retains a footer feedback owner without a reserved row above its
   for(const rows of [[],[{id:'a'}]])for(const status of ['idle','ready','loading','refreshing','error']){
     const html=renderToStaticMarkup(React.createElement(DataTable,{label:'Records',rows,status,rowKey:row=>row.id,columns:[{id:'name',header:'Name',cell:row=>row.id}],onRetry(){}}));
     assert.equal((html.match(/class="xui-data-table-feedback"/g)||[]).length,1);
-    assert.match(html,/<thead>/);assert.match(html,/<footer class="xui-data-table-footer">/);assert.ok(html.indexOf('class="xui-data-table-feedback"')>html.indexOf('<footer '));
+    assert.match(html,/<thead>/);assert.match(html,/<footer class="xui-data-table-footer"(?: hidden="")?>/);assert.ok(html.indexOf('class="xui-data-table-feedback"')>html.indexOf('<footer '));
     if(!rows.length)assert.equal((html.match(/class="xui-data-table-placeholder"/g)||[]).length,1);
   }
 });
@@ -65,8 +65,8 @@ test('credential rejections never offer session retry, including an unknown prio
   }
 });
 test('only retryable session reads expose a local retry beside, not inside, their live feedback',()=>{
-  for(const [kind,status] of [['network'],['timeout'],['http',500],['http',502],['http',503],['http',599]]){
-    const html=renderLogin({status:'unknown',error:authError(kind,'auth.session',status)}),feedback=loginFeedback(html);
+  for(const endpoint of ['auth.session','auth.refresh'])for(const [kind,status] of [['network'],['timeout'],['http',500],['http',502],['http',503],['http',599]]){
+    const html=renderLogin({status:'unknown',error:authError(kind,endpoint,status)}),feedback=loginFeedback(html);
     assert.equal((html.match(/>Retry connection<\/button>/g)||[]).length,1);
     assert.match(feedback,/<div\b[^>]*role="alert"[^>]*>[^<]+<\/div>\s*<button\b[^>]*>Retry connection<\/button>/);
     noRetry(html.replace(feedback,''));assert.doesNotMatch(feedback,/>Cancel request<\/button>/);
@@ -75,8 +75,8 @@ test('only retryable session reads expose a local retry beside, not inside, thei
   noRetry(renderLogin({status:'unknown'}));noRetry(renderLogin({status:'unknown',error:authError('network',undefined)}));
   noRetry(renderLogin({status:'authenticated',user:{id:'42',username:'demo',display_name:null},error:authError('network','auth.session')}));
 });
-test('login, refresh and logout errors do not expose session retry controls',()=>{
-  for(const endpointId of ['auth.login','auth.refresh','auth.logout'])for(const [kind,status] of [['network'],['timeout'],['http',503]])noRetry(renderLogin({status:'unknown',error:authError(kind,endpointId,status)}));
+test('credential writes and logout errors do not expose session read retry controls',()=>{
+  for(const endpointId of ['auth.login','auth.logout'])for(const [kind,status] of [['network'],['timeout'],['http',503]])noRetry(renderLogin({status:'unknown',error:authError(kind,endpointId,status)}));
   for(const [kind,status] of [['network'],['timeout'],['http',500],['http',503]])noRetry(renderLogin({status:'unknown',error:authError(kind,'auth.login',status)}));
 });
 test('login, session and application logout do not expose page cancellation actions',()=>{

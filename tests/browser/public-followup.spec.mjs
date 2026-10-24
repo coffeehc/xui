@@ -32,7 +32,7 @@ for(const theme of ['light','dark','system'])for(const [width,height,font] of [[
 });
 test('API key DataTable paginates complete rows without querying and retains rows/focus during refresh',async({page},info)=>{
  await setup(page);await page.goto('/api-key-react/');await expect(page.getByRole('cell',{name:'资料读取',exact:true})).toBeVisible();
- await expectMetadataFits(page);await expect(page.locator('.xui-data-table thead .xui-table-label')).toHaveCount(8);await expect(page.locator('.xui-data-table tbody .xui-table-label').first()).toHaveCSS('white-space','nowrap');
+ await expectMetadataFits(page);await expect(page.locator('.xui-data-table').getByRole('columnheader')).toHaveCount(8);await expect(page.getByRole('columnheader',{name:'前缀',exact:true})).toBeVisible();
  await page.evaluate(()=>{const base=window.apiKeyDemo.controller.getState().rows[0];window.apiKeyDemo.setRows(Array.from({length:23},(_,index)=>({...base,id:`page-${index}`,name:`研究与运营长期可用记录 ${index}`,status:index===22?'revoked':'active'})));});await page.getByRole('button',{name:'刷新列表'}).click();
  const table=page.locator('.xui-data-table'),count=table.locator('.xui-data-table-count');await expect(count).toHaveText('本页 10 条，共 23 条');expect(await table.locator('tbody tr').count()).toBe(10);
  const requests=await page.evaluate(()=>window.apiKeyDemo.getCalls().list);await page.getByRole('button',{name:'下一页',exact:true}).click();await expect(page.getByRole('cell',{name:'研究与运营长期可用记录 10',exact:true})).toBeVisible();await page.getByRole('button',{name:'下一页',exact:true}).click();await expect(count).toHaveText('本页 3 条，共 23 条');expect(await page.evaluate(()=>window.apiKeyDemo.getCalls().list)).toBe(requests);

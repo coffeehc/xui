@@ -47,7 +47,7 @@ for(const composition of ['shell','layout'])for(const mode of ['light','dark','s
  await ready(page,'react',{mode,font,composition,long:true});await page.evaluate(direction=>document.documentElement.dir=direction,direction);
  const aside=page.locator('.xui-shell-sidebar'),toggle=control(page);await expect(aside).toBeVisible();await page.evaluate(()=>window.boundarySidebar=document.querySelector('.xui-shell-sidebar'));
  const draft=page.getByRole('textbox',{name:'草稿',exact:true});await draft.fill('分隔线、折叠和抽屉切换保留的长中文草稿');
- const facts=[await expectSidebarBoundary(page,direction)];expect(facts[0].width).toBe(font===16?324:640);
+ const facts=[await expectSidebarBoundary(page,direction)];expect(facts[0].width).toBeCloseTo(font===16?204.8:384,1);
  await toggle.focus();await page.keyboard.press('Space');await expect(toggle).toHaveAttribute('aria-expanded','false');await expect(toggle).toBeFocused();facts.push(await expectSidebarBoundary(page,direction));expect(facts[1].width).toBe(60*font/16);
  await page.keyboard.press('Enter');await expect(toggle).toHaveAttribute('aria-expanded','true');
  const menu=aside.locator('.xui-shell-sidebar-menu'),last=menu.getByRole('link').last();await last.focus();await expect(last).toBeFocused();expect(await menu.evaluate(node=>node.scrollTop)).toBeGreaterThan(0);await expectSidebarBoundary(page,direction);

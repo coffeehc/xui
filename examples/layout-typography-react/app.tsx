@@ -15,7 +15,7 @@ import {copy,fixtureOptions} from '../shared/layout-typography-model';
 
 type FixtureOwner={updateHeader:(kind:string)=>void;navigate:(id:string)=>void;setMode:(mode:ThemeMode)=>void};
 declare global {interface Window {layoutTypography:FixtureOwner}}
-const config=fixtureOptions(location.search);
+const config=fixtureOptions(location.search),revealOnHover=!new URLSearchParams(location.search).has('noReveal');
 const theme=bootstrapBrowserExample().services.getThemeService();
 function Symbol({illustration=false}:{illustration?:boolean}) {
   return <svg className={illustration?"lucide lucide-folder xui-illustration-icon":"lucide lucide-folder"} data-menu-symbol={!illustration||undefined} data-illustration={illustration||undefined} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="var(--icon-stroke-width)" aria-hidden="true"><path d="M3 7h7l2 2h9v11H3Z"/><path d="M3 7V4h6l3 3"/></svg>;
@@ -63,7 +63,7 @@ function App(){
   const header=headerKind==='legacy'?<span data-testid="legacy-header">原有自定义头部仍可使用</span>:undefined;
   const headerSlots=headerKind==='legacy'?undefined:slots;
   if(config.composition==='header')return <><AppHeader {...slots} navigation={<Button aria-label="独立导航">☰</Button>}><span data-testid="legacy-header">组合扩展内容</span></AppHeader>{content}</>;
-  if(config.composition==='shell')return <AppShell headerSlots={headerSlots} header={header} navigationLabel="工作导航" sidebar={<NavigationMenu items={config.items} activeId={activeId}/>} scrollMode={config.scrollMode}>{content}</AppShell>;
-  return <MenuLayout items={config.items} activeId={activeId} defaultCollapsed={config.collapsed} title="后备品牌标题" headerSlots={headerSlots} header={header} label="工作导航" compactLabel="紧凑导航" expandLabel="展开导航" closeLabel="关闭导航" scrollMode={config.scrollMode} navigation={{navigate:request=>setActiveId(request.id)}}>{content}</MenuLayout>;
+  if(config.composition==='shell')return <AppShell sidebarRevealOnHover={revealOnHover} headerSlots={headerSlots} header={header} navigationLabel="工作导航" sidebar={<NavigationMenu items={config.items} activeId={activeId}/>} scrollMode={config.scrollMode}>{content}</AppShell>;
+  return <MenuLayout sidebarRevealOnHover={revealOnHover} items={config.items} activeId={activeId} defaultCollapsed={config.collapsed} title="后备品牌标题" headerSlots={headerSlots} header={header} label="工作导航" compactLabel="紧凑导航" expandLabel="展开导航" closeLabel="关闭导航" scrollMode={config.scrollMode} navigation={{navigate:request=>setActiveId(request.id)}}>{content}</MenuLayout>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

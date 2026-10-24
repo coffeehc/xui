@@ -1,5 +1,122 @@
 # 验证证据与限制
 
+## 4.2.41 整体定版回归（2026-10-25）
+
+用户认可本轮统一 demo 和公共组件后，合并 main `d67ec1d5bc7ced4049678750da849e83ed7059e8` 以来的全部预览改动，三包只递增末位至 **4.2.41**。本节为定版结论；下方各“候选/未定版”章节是过程记录，不能替代最终正式产物证据。
+
+统一入口 `/pages-react/` 包含七类内置完整页和十二个基础入口（含图表），沿用既有 Controller、Resource、请求和认证 owner。正式增加 Breadcrumbs 的具名组合、按需溢出菜单，以及 CarouselController / React Carousel；API Key 独立列，可选 keyCopy、locale/timeZone、rowActions 和通知 Controller。图表计算按需引入 D3 array/scale/shape，开放直线/单调平滑/阶梯，统一默认900ms；可关闭、尊重减少动态效果、缺失断线、读原值，刷新不重放首次绘制。Progress/meter 同厚；刷新按钮闲置文字居中、忙态含 Spinner 且尺寸稳定；复制临时反馈走 Toast，SimpleSelect 增加可选 placeholder，结构化日志的空多选可翻译。
+
+本轮整体回归额外修正四类公共实现：根入口共享 Button 初始化被 tree shaking 裁掉；导航展开后的分支/行尾动作没有作为整体换行；紧凑页脚被动图标横排偏轴；AppShell 父级布局投影前滚动导致当前行在展开后被页脚裁掉。导航只在确认的状态变化后按最终几何定位当前行，悬停展开保持原滚动位置。独立 MetricCard/Input 示例接回唯一主题 owner，system 随媒体热更新。没有复制 peer 私有 DOM、叠加查询/认证 owner 或要求宿主覆盖私有 CSS。
+
+最终 sourceGeneration：`956cc65ef0d3b5e511843268baeb757b69c3bd11c297b6b720213822074d49fa`。`pnpm build`、446 Token/依赖图检查、`pnpm typecheck`、Node 单测 **689/689**、`pnpm test:consumer` 通过。正式 ESM/CSS/types 和全部115入口从独立三 tarball 安装消费，无 packages/src alias，React/ReactDOM19.2.8、Base UI1.7.0 各单实例；根 Button 真实交互正常，Button/窄服务和统一基础入口不带 D3。体积/依赖图门禁未在本轮整体回归中放宽。watch 使用当前工作区原位探针验证启动、增量、失败不发布和修复恢复，源码已恢复，无额外源码副本；不运行会复制完整源码的旧 test:watch fixture。冷启动 通过1/1（Vite默认冷/温、显式入口三种配置；未配置时的冷优化重载与声明入口的零重优化分别记录）。
+
+完整 Chromium 套件：**2,331通过、2条时序失败、2个条件跳过，0重试/0 flaky**。两条失败分别为：菜单用例在自动焦点进入前发送 Home；Popover 用例在宿主 accept 配置尚未 commit 前发送 Escape。trace 与示例调用链均已定位。测试分别等待真实焦点/已提交的宿主配置（示例只补 getAccept 观察入口），未修改公共源码。修订后 **两个完整文件53/53通过，原失败用例各20次、共40/40通过，均0重试/0跳过/0 flaky**，原全量失败与定向复验分别记录，不合并成一次全绿。统一 demo Chromium CLI 另通过 **433 项断言 / 57 组**（11组基础组件×3主题、7页×3主题、3组图表），覆盖1600px桌面、390px/公开200%阅读、长中文、焦点、弹层滚动和真实指针命中；图表900ms开关/更新不重播与原值检查通过。导航另有13项几何/滚动检查，根入口 Button 操作也通过。全仓专项覆盖真实 Chrome200%缩放、根字号200%、light/dark/system、forced-colors、reduced-motion和键盘；两类缩放分别记录，不相互代替。已查看最终统一页面、表单、按钮、嵌套弹层与真实zoom截图。
+
+未执行的两个条件用例：未启用真实系统剪贴板显式 opt-in；未设置旧4.2.13布局基线的历史缺陷复现。它们不计入通过数。此前全量/专项的中间失败已单独保留，含旧尺寸/结构断言和上述实现缺陷；修正后完成整体回归；两项时序测试修订按受影响范围复验。本轮修复和 demo 使用真实指针/键盘路径，不以 retry 或 force click 绕过缺陷。首轮统一 demo 重排探针曾在响应式布局完成前采样；最终等待目标净宽后再次完成全部33组基础检查。无未解决的适用失败项。
+
+可复现：`pnpm build && pnpm check:tokens && pnpm typecheck && pnpm test:unit && pnpm test:consumer`、`node .artifacts/release-4.2.41/watch-current.mjs`、`pnpm test:cold-start`、`pnpm exec playwright test --workers=2`；统一demo的三个 `*-probe.js` 用 Playwright CLI `run-code --filename` 执行。最终统计见 [checks.json](../.artifacts/release-4.2.41/checks.json)，详细最终报告和CLI探针位于 `.artifacts/release-4.2.41/`、[统一demo证据](../output/playwright/release-4.2.41/)。本地提交后按 `pnpm archive` 自动归档，并以 `pnpm archive:verify` 复算 manifest、public-api.json、sourceGeneration 和 SHA256SUMS，再正常推送 main。
+
+兼容性：新配置均可选；既有请求、分页、权限、DTO、密钥提交和认证行为保持原合同。默认视觉差异为进度条、刷新动作、API Key列宽/日期展示与导航排列，宿主升级后仍需按受影响范围验收。示例数据/API/剪贴板 writer 为合成mock；未验真实后端、移动OS/读屏器、Firefox/WebKit、消费项目升级或部署，未发布npm，也未修改其他项目。
+
+
+## 内置页面统一 Demo（2026-10-24，候选预览，未定版）
+
+在 main `d67ec1d5bc7ced4049678750da849e83ed7059e8` 基础上连续开发；用户要求先看 API Key，再追加统一内置页面 Demo，认可后定版。本轮改动保留在工作区，没有提交、推送或新建正式归档。三个候选包文件标记为 4.2.41，不能视作已发布版本。
+
+入口 `/pages-react/?page=api-key&mode=light`，包含 API Key、业务日志、结构化错误日志、模型配置、登录、管理员初始化和修改密码。复用各独立正式包示例，以同源 iframe 隔离页面实例；嵌入模式省略示例自己的 Shell，实测七页均无重复 Shell。每个文档继续使用自身唯一 React peers 和既有 Controller；偏好消息只同步主题、配方和阅读比例，不重载当前表单或传递凭据。演示控制位于侧栏底部，窄屏移入同一导航抽屉。
+
+首轮 API Key 候选曾把安全前缀移到名称下方；根据后续反馈，当前已恢复独立 API Key 列，安全前缀仍为可辨识片段加掩码；时间按 locale/浏览器时区展示到分钟，点击保留原始 ISO 完整精度。权限、状态和操作列明确分配净宽；窄屏操作列随表格横滚，避免固定列遮盖名称。复制演示只使用固定合成凭据；哈希不可恢复的样例禁用复制。keyCopy 提供可选的授权读取回调及启停，默认被动展示；rowActions 仅是候选展示扩展，不构成秘密读取协议；真实列表复制仍依赖正式后端能力和授权合同。未修改其他项目或连接真实后端。
+
+首轮候选 build（441 Token/依赖图）、typecheck、正式三 tarball ESM/CSS/types 消费、11 项规范/文档测试通过；sourceGeneration=`df81ddc467cee69a67220eba165e9d630232bc8a5fe2bc0a6b04858e4dbb7cc4`。React/ReactDOM 19.2.8、Base UI 1.7.0 各单实例，无源码 alias。关键 CSS gzip 23092 bytes；刷新修复最初测得 23080/23040 超限，预算仅有界增加 64 bytes 到 23104，其余门禁不变。Token 元数据和测试更新至本轮候选；原规范测试仍硬编码 4.2.38，已改为核对实际包版本，保留 Token 修订和指纹校验。
+
+首轮真实浏览器已验证七页导航、合成密钥复制的完整文本布尔比较、不可恢复样例禁用、创建后关闭弹窗进入列表、编辑保存、主题切换保留编辑草稿。浅深色截图等待有限过渡完成；390px/200% 阅读下父文档和预览均为 390px、根字号均为 32px，无整页横向溢出，导航末项可达，比例可恢复到 100%。已查看最终截图。汇总与首轮对照图见 `.artifacts/pages-gallery-preview.json`、`output/playwright/pages-gallery/review-1/`。
+
+追加预览包括十组基础组件导航、API Key 独立列与点击复制开关、Progress/密码强度 meter 共用 progress-height=4px 与 progress-radius=0。根字号放大时共同继承缩放，不再使用满圆角裁剪细轨道。该阶段验证单独记录在 review-2，不覆盖首轮截图和 sourceGeneration。 第二轮 build 的 443 Token/依赖图、typecheck、25 项规范/文档/API Key 回归及正式独立三 tarball 消费通过，sourceGeneration=`f7d7ac20fdfd6b050e73ba06c7080179f9a9005c188ade8b7f87d15724487d79`；React/ReactDOM/Base UI 各单实例。CSS gzip 23116，公共进度几何相对上一预算有界增加 64 至 23168，其余门禁不变。
+
+第二轮浏览器：十组导航均无重复Shell；独立API Key列、完整合成值的点击/Enter/Space复制、不可恢复项禁用及配置关闭/保留Controller通过；上传合成文件零后端请求；Dialog/Sheet Escape回焦、主题切换保留密码草稿通过。Progress及meter普通4px、200%阅读8px，均为0圆角；system随浅/深媒体切换通过；390px/200%父子文档均宽390/根字号32px，无整页横溢出，末项导航可达。已查看浅色API Key、管理员强度条、进度样例、深色按钮及窄屏200%最终截图，见`output/playwright/pages-gallery/review-2/checks.json`。发现示例遗漏正式floating.css导致Toast异常，已补齐API Key及两类日志示例的公开CSS；首个iframe探测发生在consumer生成尚未完成时，等待产物后重载通过。窄屏最终截图等待Drawer退出及有限过渡完成。上述仍为候选预览冒烟，不替代完整发布矩阵。
+
+刷新按钮的较早独立阶段先用正式 4.2.40 复现闲置文本偏右 11px，修复后 30 个定向浏览器用例通过（三类管理页、三主题、1280/390/320、200% 字号及三模式真实 Chrome 200% 缩放）；该阶段 sourceGeneration=`c9adfe97d001b65f3dc670b5406fa94afa331fa620a3ffc2342a1e5cfff0c0cc`。后续加入 API Key 排版和统一 Demo 后执行上述预览检查，没有把较早 30 项冒充最新候选的完整浏览器矩阵。
+
+预览中，移动侧栏 SimpleSelect 的选项名称定位一次未命中，可见选项存在；归因尚未独立复核。演示比例改用更适合四档固定选项的公共 ToggleGroup，已验证窄屏点击和回落比例；本记录不宣称原选择器问题已修复。未运行最新候选的完整发布级 unit/browser、全部页面所有状态、真实浏览器缩放矩阵、Firefox/WebKit、真实后端联调或消费项目验收。用户确认视觉后继续收口公共合同和必要回归。
+
+第三轮仅在“按钮与操作”追加前置图标、后置图标、loading及禁用的图标文字组合，复用公开Button/Icon/Spinner，不更改公共组件、Token或版本。沿用已安装正式包定向重建demo及严格类型消费通过；真实浏览器验证图标位置、点击/Enter计数、busy/disabled和Spinner，浅深色及390px/200%阅读无整页横溢出。截图和结论见`output/playwright/pages-gallery/review-3/`；没有重跑完整发布套件，仍未提交推送或定版。
+
+第四轮将其余九组基础组件统一为“常用组合＋适用状态对照”，演示范围见 [接入手册](ADOPTION.md#内置页面对照-demo候选预览)。按 demo 面板拆分 inputs、containers、overlays、menus-media、collections，均复用公共 ESM/CSS/types；保留原独立完整交互示例链接。不改公共组件、接口或版本，不将不支持的状态强塞给组件。QueryForm 的重置只清草稿，已生效条件保持；GroupedCombobox 按公开合同由 demo 显式持有 query/filter；CardGroup/DataTable/Chart 同范围刷新保留已确认节点；上传复用 UploadService/Controller 和严格限定路径的 mock HTTP。
+
+项目 typecheck、当前独立 tarball 安装的严格类型消费及两入口定向打包、2 项文档检查通过；公共包继续为前述同一 sourceGeneration，不生成新归档，不冒充重新执行完整 consumer 流程。首轮类型检查找出 demo 使用了不存在的 SortButton.direction、遗漏 GroupedCombobox.inputValue，已按公开 props 修正；浏览器脚本按实际 spinbutton/checkbox 角色和当前 popup 缩小定位范围后通过，没有 force click 或组件补丁。
+
+真实浏览器覆盖浅色桌面、深色窄屏 390px/200% 阅读；九页最终均根字号32px、clientWidth/scrollWidth=390，无整页横溢出。只读文本/选择组、禁用项、错误关联、真实 Select 指针选择、草稿重置/已生效保留、右键键盘入口、Dialog/Sheet 关闭回焦、上传等待/取消/成功/失败/校验、复制等待/失败、表格排序分页/只读、图表独立错误恢复与保图通过。最终新面板导航没有 pageerror，实际 API 网络请求为0。已查看表单、上传、卡片、两列图表及窄屏错误Dialog/专用输入截图；Dialog在200%净宽324px，无横溢出。原始结论与截图为`output/playwright/pages-gallery/review-4/`。仍未跑完整发布矩阵、真实浏览器缩放、跨引擎或真实后端/消费项目验收；未提交、推送或定版。
+
+第五轮补齐完整 Breadcrumbs 与 Carousel 公共组件，并与折线/柱状/饼图一起进入统一 demo。Breadcrumbs 沿用 navigation 入口，兼容旧 children 组合，新增完整 items、当前项、禁用、长路径省略菜单与具名部件。Carousel 的纯 TS runtime Controller 只管理稳定 ID、受控确认和播放意图；React View 管理焦点、暂停计时与可替换 controls/renderItem/状态槽，不增加业务请求 owner，也未恢复原生 UI 实现。统一展示现为七类内置页、十二组基础组件。仍为 4.2.41 候选，未提交、推送或归档定版。
+
+最终 sourceGeneration 为 `8c5743c6f240e01d980eee43e77a8a0098ccdb51b99d5f3d935b6efe8021f300`。`pnpm build`（445 Token、主题图与设计值审计）、`pnpm typecheck`、53 项定向 Node 检查与 `pnpm test:consumer` 通过。独立安装真实三 tarball，全部 ESM/CSS/types 与正负类型例通过；React/ReactDOM 19.2.8、Base UI 1.7.0 各一份，无源码 alias。公共 entry/slot、可选 carousel.css、规范、接入文档与 BREADCRUMB/CAROUSEL 逐项清单一致。
+
+首次消费者曾在初始图及图表 JS 预算失败。省略菜单现为需要时加载的独立模块，新增组合已标明无副作用供 tree shaking；原始 bundle 中共享 Base UI selector 初始化仍增加约4KiB，JS 门禁有界增加8KiB至161792，其余 Button/窄服务/图表CSS预算不变。最终 foundation 初始 JS gzip 147536，图表 156239；关键 CSS gzip 23234，新增导航/走马灯公共规则将上限有界增加128至23296。没有用失败运行代替最终同代通过。
+
+最终同代 Chromium：51 项交互检查及18组浅/深/system×三面板×桌面/390px与200%阅读缩放几何检查通过，另验证 system 实时跟随与窄屏省略弹层。覆盖真实指针与键盘选项、Escape回焦、禁用、语言更新；轮播前后/指示器/RTL/受控定位、当前指示器可聚焦但不重复执行、inactive inert/aria-hidden、输入箭头不误切换、草稿/节点与最大内容高度保持、初次错误重试/刷新失败保留/只读/禁用/单项/图片加载和注入Controller销毁。页宽与scrollWidth均为390，父子根字号均32px；弹层在iframe视口内，操作可达；零pageerror、零真实API请求。
+
+浏览器曾发现首次指针“暂停”在焦点进入先停止后又被click反转的问题，现保存按下时的播放动作，键盘仍按当前状态执行。Playwright Clock 验证首次暂停、显式恢复、悬停暂停/离开恢复、焦点停止、Space恢复、减少动态效果及手动切换通过；文档隐藏用合成visibilitychange验证，触屏分类使用合成PointerEvent，不冒充真实后台标签调度或触屏设备验收。截图等待有限弹层/主题/布局过渡后取得；早期即时断言与过渡帧未计为最终证据。
+
+原始结论、同代包SHA及可复现CLI probes见 [review-5/checks.json](../output/playwright/pages-gallery/review-5/checks.json)，预览索引为 `.artifacts/pages-gallery-preview.json`。已查看[统一走马灯](../output/playwright/pages-gallery/review-5/gallery-carousel-light.png)、[统一图表](../output/playwright/pages-gallery/review-5/gallery-charts-light.png)、[面包屑](../output/playwright/pages-gallery/review-5/breadcrumbs-light.png)、[深色窄屏省略菜单](../output/playwright/pages-gallery/review-5/breadcrumb-menu-dark-narrow-200.png)与[深色200%轮播](../output/playwright/pages-gallery/review-5/carousel-dark-narrow-200.png)。复现可用 `playwright_cli.sh run-code "$(cat output/playwright/pages-gallery/review-5/auto-probe.js)"` 等相应probe，先打开其指定demo入口。未运行全量发布unit/browser、Firefox/WebKit、真实浏览器200%缩放、读屏器/真实触屏、真实后端或消费项目验收；本轮只改xui，不宣布消费项目已升级。
+
+第六轮将图表计算内核切到按模块依赖的 D3：d3-array 3.2.4、d3-scale 4.0.2、d3-shape 3.2.0。范围/刻度/归一化、分类坐标/柱宽/指针分区、折线/点形/饼和扇区路径走同一计算职责；React继续拥有SVG、键盘、焦点和测量生命周期。原React props、runtime返回合同、Token、CSS、Card/DataRegion/DataTable slot与Resource请求owner保持。公开API清单SHA与第五轮相同，均为 `ae6abc9d62ea4739e51c2cf0e01b847544f7a03130e9a966740ff61a1347fbfe`。刻度步长与nice边界可能变化，原值/零基线/缺失语义不变，横轴仍是等距类别，未新增时间/堆叠/缩放合同。
+
+最终sourceGeneration=`a1468689512fcd0575517cfc6b0d9fdca884523f9f6d80c10095607a8e5e82cd`。`pnpm build`（445 Token/图/设计值审计）、`pnpm typecheck`、19项定向Node检查、`pnpm test:consumer`通过。三tarball独立安装正式ESM/CSS/types，React/ReactDOM 19.2.8和Base UI 1.7.0各一份；无源码alias、D3 peer或D3公开类型。D3类型声明仅是各库包的开发依赖；初次将其放到根开发依赖时，消费者preserveSymlinks类型检查误读祖先目录类型并缺少关联模块，已调整声明归属后完整复验通过，没有要求消费者补装类型或使用skipLibCheck绕过。
+
+计算单元覆盖空/零/缺失、负值、类别/系列顺序、单项/零项饼、有限极大与次正规极小数、分段路径与命中边界；初次SSR曾发现D3的空range不接受空类别，现内部绕过该分区构造，空/错误/SSR合同保持。柱位置检查按实际浮点精度使用1e-10容差。统一demo将图表移入独立动态模块，新增缺采样、正负柱/零基线和单项/零项组合，无新增说明字段或业务owner。
+
+产物图验证实际使用三个D3模块，不包含D3的selection/axis/transition/fetch实现；Button与窄服务入口不包含D3。demo初始静态图D3贡献为0，进入图表才请求 `chunks/charts-6RCLR6UR.js`，其他三个已验面板不请求该模块。图表示例JS gzip为168793 bytes，相比第五轮156239增加12554 bytes；仅可选chart JS上限有界增加8KiB至169984，foundation仍147550/161792、关键CSS23234/23296、chart CSS23115/24576，Button/窄服务/CSS门禁均未放宽。
+
+最终同代Chromium定向回归 **17/17通过**，无失败、跳过或重试：light/dark/system默认配方、390px/200%文字、公开200%阅读比例、RTL、键盘/缺失/语言/完整数据表、同范围刷新与失败保原SVG/点/焦点/横滚/Resource、重排/删除/新范围/取消迟到、空/全零/单项、初次失败与显式重试、ResizeObserver释放/自定义Token/减少动效/强制颜色及浏览器触屏上下文。三模式真实Chrome设置200%缩放均通过：DPR1→2、CSS视口1280→640、根字号16px不变、CSS zoom=1、pinch=1；不是根字号或CSS zoom替代。
+
+统一demo另通过17项真实浏览器检查：表单首屏不请求图表动态模块、导航后加载；D3断线/负柱/零柱/单项饼与数据表零项准确；重试、主题热更新保原SVG及展开的数据表；390px/200%阅读父子文档均width/scrollWidth390、根字号32px、轴caption24px；面包屑和走马灯保持独立。pageerror与真实API请求均为0。初次CLI在consumer尚未生成页面时取得404，未计为最终证据；最终完整产物后的操作和截图均通过。
+
+已查看[统一demo](../output/playwright/pages-gallery/review-6/gallery-light.png)、[状态组合](../output/playwright/pages-gallery/review-6/gallery-states-light.png)、[深色390px/200%阅读](../output/playwright/pages-gallery/review-6/chart-dark-narrow-200.png)及[真实浏览器200%](../output/playwright/pages-gallery/review-6/chart-browser-200-light.png)。报告、可复现命令、包SHA、缩放测量及CLI probe见 [review-6/checks.json](../output/playwright/pages-gallery/review-6/checks.json)；原始17项浏览器报告保留在同目录browser.json。未跑全仓unit/browser、Firefox/WebKit、物理触屏/读屏器、代表性大数据性能基准或真实后端/消费项目验收。本轮只改xui，保持4.2.41候选预览，未提交、推送、归档定版或通知其他项目升级。
+
+第七轮开放LineChart公共 `curve?: LineChartCurve`，枚举为linear/monotone/step，缺省linear。内部对应D3 curveLinear/curveMonotoneX/curveStep；阶梯在相邻横坐标中点跳变。配置仅影响连线，同图所有系列共用；不改变原值/采样点/轴/图例/读值/数据表/请求owner，Bar/Pie无此配置。null在三种模式下均结束当前段，单独采样点保留。类型从React/chart和根入口导出，JS无效配置明确拒绝；未新增D3公开类型或runtime合同。公开清单仅新增这两处的LineChartCurve类型，移除该类型名后清单SHA与第六轮完全相同。
+
+最终sourceGeneration=`74eeda0e4528b5124cfd0525a5e65b5f16fd1e6beaca39195683f7a0a75287d1`。build的445 Token/主题图/设计值审计、typecheck、22项定向Node检查及正式三tarball独立消费者通过，React/ReactDOM/Base UI保持各一份，无源码alias。新增正负类型fixture验证默认/三枚举、根入口、拒绝任意D3名称/工厂及Bar配置；计算检查覆盖默认路径不变、三模式缺失/空/单点、单调插值的段内边界和阶梯中点跳变。chart JS gzip为169413/169984，较第六轮增加620 bytes；所有预算、Token和CSS保持。
+
+最终同代Chromium **18/18通过**，无失败/跳过/重试，包含原图表定向回归及新增热切换合同。切换曲线保持原SVG/路径/采样点节点、焦点、读值，查询增量为0；在途同范围刷新仍保图且只执行宿主原有一次请求，空态切换无异常。三模式真实浏览器200%缩放分别实际遍历linear/monotone/step，DPR×2、CSS视口减半、根字号16px、CSS zoom=1、pinch=1。其余浅深/system、390px/200%文字、公开阅读比例、RTL、缺失/单项/零/错误/重排/范围迟到、数据表/语言、Observer释放、自定义Token及浏览器触屏上下文继续通过。
+
+统一demo顶部以同一组categories/series并排展示三种算法：相同原值、采样坐标、颜色和数据表，周四缺失后三图均断线，周五单点仍可读。CLI另有93项检查覆盖三主题的路径差异、缺失、原值读值/数据表相等、桌面并排、窄屏纵排、200% caption及末端点焦点局部横滚；父子文档均width/scrollWidth390，零pageerror和真实API请求。初次窄屏脚本在分别聚焦导致滚动后比较了不同视口坐标，已改为同一时刻测量所有卡片；没有修改组件规避检查。
+
+已查看[浅色对比](../output/playwright/pages-gallery/review-7/comparison-light.png)、[深色对比](../output/playwright/pages-gallery/review-7/comparison-dark.png)、[窄屏200%单调图](../output/playwright/pages-gallery/review-7/monotone-dark-narrow-200.png)和[真实浏览器200%](../output/playwright/pages-gallery/review-7/browser-200-light.png)。同代包SHA、API差异、缩放数据与CLI probe见 [review-7/checks.json](../output/playwright/pages-gallery/review-7/checks.json)，原始浏览器报告为同目录browser.json。复现沿用第六轮定向命令并增加grep `public line curve updates`；真实缩放用例已在每个主题内覆盖三种配置。未跑全仓/跨引擎、物理触屏/读屏器、大数据性能基准或真实后端/消费项目验收。保持4.2.41候选预览，只改xui，未提交、推送或归档定版。
+
+第八轮为三类图新增共同 `animation?: boolean`，默认开启Token短动效，false立即呈现。入场使用motion-duration-enter（默认180ms），更新使用motion-duration（默认150ms），共用motion-easing。React局部数值投影配合浏览器无目标计时effect读取缓动，D3仍只算路径；没有新增D3 transition/DOM/IO依赖、全局Controller或查询owner。首次折线揭示、柱从真实0基线生长、饼按顺序展开；后续同结构/坐标范围更新从当前显示位置接续，不重挂、不从0重播。类别/缺失掩码/曲线/范围/尺寸变化直接投影；null始终断线。所有文本原值、占比与数据表立即读取确认数据，交互时立即完成当前动画。关闭/reduce/后台/0时长/计时API不可用均直接呈现；卸载清理帧、时钟与监听。后台事件用模拟visibility验证，未冒充真实操作系统后台调度验收。
+
+`pnpm build`、typecheck、**41/41** 定向Node回归及独立三tarball ESM/CSS/types消费通过；445 Token、公开命名导出、根入口与单实例React 19.2.8/ReactDOM 19.2.8/Base UI 1.7.0检查通过。最终sourceGeneration=`9a62b42fc3464a259eaa327772e21b641444db472365477d1845104f99750417`，包SHA与同代API/性能收据见[review-8/checks.json](../output/playwright/pages-gallery/review-8/checks.json)。公开配置仅新增可选boolean，不向Card DOM透传；没有要求宿主D3对象、源码alias或第二套样式。动画代码与demo使独立chart JS gzip由169413增至170708（+1295）；仅可选chart JS预算由169984有界调至171008（+1024）。基础JS147550、Button gzip6948、critical CSS23234、chart CSS23115保持；初始demo模块D3贡献仍为0。
+
+同代Chromium **21/21独立场景通过**，无失败/跳过/重试；新增三项覆盖默认首次/更新、真实原值与数据表、null分段、连续更新接续、刷新/失败不重播、几何/节点/焦点保留、运行中false/reduce/0时长/模拟后台、恢复不补播、结构/曲线/尺寸直接投影、计时API缺失与卸载释放。原浅深/system、390px/200%文字、公开比例2、RTL、键盘/触屏上下文、空/零/单项/错误/范围迟到与语言回归通过。原三个真实浏览器缩放场景随后增强为no-preference下三图实际数据更新，再单独**3/3复验通过**，属于原21项中的同三个场景，不累计为24种场景。DPR1→2、视口1280→640、根字号16px、CSS zoom=1、pinch=1；长中文真实读值60，交互完成动画且无整页横溢出。生产React的StrictMode包装通过，不将它等同开发构建的effect重放实验。
+
+统一demo新增顶部动画开关、更新同一组数据按钮和三图类型Tabs；左侧可切换短动效，右侧始终立即呈现，共用稳定ID和数据。CLI **84项检查通过**，覆盖三模式、各图开关/更新/节点/矩形/原值表、200%阅读和局部横滚；真实API请求0、pageerror 0。默认Token读数按秒/ms归一化；为观察中间帧，定向测试临时覆盖同一公开duration Token为1000ms，默认产品值仍为180/150ms。已查看[浅色](../output/playwright/pages-gallery/review-8/comparison-light.png)、[深色](../output/playwright/pages-gallery/review-8/comparison-dark.png)、[system](../output/playwright/pages-gallery/review-8/comparison-system.png)、[窄屏200%柱图](../output/playwright/pages-gallery/review-8/bar-dark-narrow-200.png)及[实际浏览器200%](../output/playwright/pages-gallery/review-8/zoom-light.png)。
+
+过程中修正demo的Switch事件名、clip测量归属，以及探测对秒/ms、饼图不同标题和长中文fixture的错误假定；未为这些探测问题修改公共行为。CLI隔离浏览器不能打开Chrome设置页，实际zoom沿用项目已有persistent-context用例完成。原始browser/zoom报告、gallery.json、可复现probe和命令均在review-8；索引仍为`.artifacts/pages-gallery-preview.json`。未跑全仓发布矩阵、Firefox/WebKit、物理触屏/读屏器、大数据帧率基准或真实后端/消费项目验收。只改xui，保持4.2.41候选预览，未提交、推送、归档定版或通知消费项目。
+
+第九轮按用户更正保留折线图，并在统一demo单列曲线图：两者共用LineChart，分别为linear与monotone，原三种曲线公开配置不变，不新增CurveChart或另一套Controller。动画对照改用五个稳定类别、四个真实点和一个null，让前三个连续点能形成可辨曲线；普通趋势组并排呈现折线/曲线，柱/饼仍保留。
+
+首次进入由上一轮的横向裁切改为沿真实路径长度从起点绘制至终点。私有React子组件只在进入时测量每个连续段的SVG长度，以同一Token进度依次分配距离，点形在线条到达该采样位置后显示；三种公开curve均适用，null空隙没有连接线，单个孤立点保持真实点。内部alpha mask保留原完整路径与实/虚/点线编码，不改变原始值、读值、轴或图例；数据更新仍使用上一轮的当前坐标接续，刷新不重新入场。既有关闭/reduce/取消/卸载、焦点与原Resource请求owner保留。
+
+构建、typecheck、**42/42定向Node测试**、独立三tarball ESM/CSS/types消费和445 Token检查通过；最终sourceGeneration=`b1d1b8db9515217301a70e800a99efc9eb722e517645f6fbf65d41f77d21da25`。本轮公开导出/接口不增加，React/ReactDOM/Base UI仍各单实例。chart JS gzip由170708增至171543（+835）；仅可选chart JS门禁由171008增至172032（+1024），CSS23115、基础JS147550、Button gzip6948与critical CSS23234保持，初始demo D3贡献0。包SHA、API和性能收据见[review-9/checks.json](../output/playwright/pages-gallery/review-9/checks.json)。
+
+同代Chromium **22/22通过**，无失败/跳过/重试。新增原生路径测量检查覆盖linear/monotone/step：分段路径拼接等于原完整路径、按长度加权的已绘制距离等于浏览器缓动进度、后段等待前段、未到达的末点隐藏、点线编码保持、交互完成及单点边界。原刷新保节点/几何/焦点、减少动态效果/关闭/0时长/模拟后台/不支持计时/卸载、浅深/system、长中文/390px与200%阅读、RTL、真实触屏上下文、三模式实际浏览器200%缩放继续通过。真实缩放仍是DPR1→2、视口1280→640、根字号16px、CSS zoom=1、pinch=1；本轮用例保留三图no-preference的数据更新检查。CLI聚焦折线与曲线的独立入口、路径区别、同数据动效对照和三模式窄屏/200%，**78项通过**，真实API请求与pageerror均0；不冒充本轮重跑了柱/饼的全部demo组合。
+
+已查看[折线中间帧](../output/playwright/pages-gallery/review-9/chart-linear-entry.png)、[曲线中间帧](../output/playwright/pages-gallery/review-9/chart-monotone-entry.png)、[曲线入口](../output/playwright/pages-gallery/review-9/curve-comparison-light.png)及[深色窄屏200%](../output/playwright/pages-gallery/review-9/curve-dark-narrow-200.png)。原始报告、命令、probe与截图在review-9，预览索引已更新。未跑全仓发布矩阵、跨引擎、物理触屏/读屏器、大数据帧率基准或真实后端/消费项目验收。保持4.2.41候选预览，未提交、推送、归档定版或通知其他项目。
+
+第十轮（2026-10-25）按用户最终确认，所有图表首次进入与数据更新统一默认900ms。集中新增共享motion-duration-chart，减少动态效果为0ms，共用原motion-easing；普通控件原motion-duration/enter等不变。私有chart motion hook统一读取该Token，不增加公开时长对象或每类图的计时owner。折线/曲线仍沿真实路径进入，柱仍从0基线生长，饼仍顺序展开；刷新保图并从当前坐标更新，不重新入场。相同数据、语言或主题变化不重播，原值读数、取消/关闭/reduce/卸载合同保留。
+
+构建、typecheck、**43/43定向Node测试**、独立三tarball ESM/CSS/types及446 Token图检查通过。新增精确的公开组合别名允许将motion-duration-chart绑定到var(--motion-duration-enter)，用于显式180ms对照；审计仍拒绝实例原始毫秒常量、任意别名和反向绑定。CSS指纹与Token计数由唯一DESIGN合同同步维护。最终sourceGeneration=`f44d8fe3dc48d2b5c6b6a90f33243dd149cfdb36ecaef390109805862c4e9f76`；三包SHA、公开清单和单实例React/ReactDOM/Base UI证据见[review-10/checks.json](../output/playwright/pages-gallery/review-10/checks.json)。chart JS gzip171536、chart CSS23128、基础JS147550、critical CSS23247，既有预算全部通过，初始demo D3贡献仍0，未新增依赖。
+
+同代Chromium **22/22通过**，无失败/跳过/重试；真实浏览器计时验证三类组件首次均900ms、数据更新均900ms。原路径长度/点到达/null断线、刷新保节点/布局/焦点/滚动、关闭/reduce/0时长/卸载、真实值、浅深/system、窄屏200%文字和三模式实际浏览器200%缩放回归通过。顶部新增四种图形180ms与900ms对照及“重播首次绘制”，后者仅重挂所属两个demo实例，不作用于普通刷新；原“更新同一组数据”保持实例，实测只创建900ms更新时钟，不重播首次阶段。
+
+CLI **107项检查通过**，逐一覆盖三模式下折线/曲线/柱/饼的两档计时、300ms时旧档完成而900ms仍绘制、点等待/柱生长/饼展开、最终真实坐标一致、重播隔离与布局、更新保实例、窄屏200%键盘/局部横滚及减少动态效果零时钟；真实API请求0、pageerror 0。已查看[浅色中间帧](../output/playwright/pages-gallery/review-10/speed-light-mid.png)、[深色中间帧](../output/playwright/pages-gallery/review-10/speed-dark-mid.png)及[窄屏200%](../output/playwright/pages-gallery/review-10/speed-dark-narrow-200.png)。报告、probe、命令和包证据在review-10；预览索引已更新。未跑全仓发布矩阵、跨引擎、物理硬件、大数据帧率或真实后端/消费项目验收。用户确认900ms默认值未视为定版/发布授权；仍为4.2.41候选，只改xui，未提交、推送、归档发布或通知其他项目。
+
+第十一轮（2026-10-25）只调整统一demo与对应既有文档：移除180ms速度对照及固定关闭的一侧，每种类型只展示一个默认900ms实例。顶部开关默认开启，统一控制本面板所有图表；关闭时当前图形直接完成，重新开启不重播现有数据。“更新同一组数据”保持实例与原值读数并接续更新；“重播首次绘制”仅作为独立的显式演示动作，重挂所选图形而保留其他实例。公共组件、Token、服务、接口、包版本均未改。
+
+工作区typecheck通过；复用第十轮已安装的正式三tarball，核对sourceGeneration=`f44d8fe3dc48d2b5c6b6a90f33243dd149cfdb36ecaef390109805862c4e9f76`和安装锁SHA不变，仅重新类型检查与编译当前demo，未新建源码副本或源码alias。模块图全部来自独立安装目录，React/ReactDOM/Base UI沿用原单实例，初始D3贡献0；本轮demo/入口SHA和可选chunk见[review-11/build.json](../output/playwright/pages-gallery/review-11/build.json)。原包级43项Node/22项浏览器证据仍见review-10，本轮不重复冒充重跑。
+
+当前demo真实浏览器 **128项通过**，涵盖浅深/system四种图形：无旧对照文案/实例、每类型单图、更新仅900ms的update/idle且保节点/布局/读值、全页开关关闭无时钟/开启不重播、显式重播只影响所选图、窄屏390px/200%文字与键盘末点/局部横滚、减少动态效果零时钟。pageerror与真实API请求均0。已查看[浅色](../output/playwright/pages-gallery/review-11/uniform-light.png)、[深色](../output/playwright/pages-gallery/review-11/uniform-dark.png)和[窄屏200%](../output/playwright/pages-gallery/review-11/uniform-dark-narrow-200.png)。报告、probe及截图在review-11，预览索引已更新。未重跑全量/跨引擎/硬件/真实后端，也未重新打包发布；保持候选预览，未提交或推送。
+
 ## 模型配置保存回执与测试结果（4.2.40，2026-10-24）
 
 在 4.2.39 基础上对齐 BaseService `16125c0b62a057922386176f4975eca09672c25b` 的 llmservice 合同；其 AgentCore 固定依赖为 `aeea6c2c7255021a0d77b7a3a0865a69031b5709`。HTTP 503 的 50310 为保存结果未知，50311 为已提交但后置处理失败，50312 为已提交但测试失败。公共 Client 严格解析官方 AjaxResponse 和安全回执，不再把后三种事实都归成未知。矛盾/损坏回执仍阻断重写；没有扩大通用 HTTP 错误载荷或增加请求 owner。
@@ -1679,3 +1796,39 @@ BusinessLogExplorer 与 StructuredLogExplorer 的表体统一迁入 DataTable；
 sourceGeneration：`e7ab9b6afdb4b9ff908e8ad1072dd59b0e566e2f62c58af14b79559a82ac860c`。可复现浏览器测试见 [model-profile.spec.mjs](../tests/browser/model-profile.spec.mjs)，完整报告保存到正式归档 validation，截图包括 [浅色桌面](../output/playwright/model-profile/light-1280-1.png)、[深色桌面](../output/playwright/model-profile/dark-1280-1.png)、[390px/200% 阅读](../output/playwright/model-profile/light-390-2.png)、[确认弹层](../output/playwright/model-profile/sheet-confirmation.png)、[真实浏览器 200%](../output/playwright/model-profile/light-browser-200.png)。已实际查看这些截图核对布局、状态和层叠。
 
 范围与限制：本轮没有未解决的适用失败项；首次脚本把 label 中可视必填星号当作可访问名称、并错误假设 1280px/200% 必须单列，已按真实字段标签和净宽合同修正。未执行全仓 unit/browser、watch/cold-start、Firefox/WebKit、移动 OS/读屏器、真实后端/上游和消费项目验收。示例所有 API 均为合成 mock；公共库交付不代表 xAgent 或 AgentCore 已完成接口接线。未修改其他项目，未发布 npm 或部署。正式归档沿用 `pnpm archive` 自动生成并核验 manifest、public-api.json、sourceGeneration 和 SHA256SUMS。
+
+## 统一基础组件逐项预览复核（2026-10-25，未定版）
+
+只复核统一 demo 中图表以外的 11 个基础面板：按钮、表单、反馈、容器、弹层、菜单、文字媒体、表格、上传、面包屑和走马灯。逐项组合与状态范围见 [COMPONENTS](COMPONENTS.md#统一基础组件-demo4241)。保留所有既有候选修改，图表代码、公共组件实现和主题 Token 本轮均未改动；没有提交、推送、归档、发布或增加版本。
+
+修正 demo 接线：具名 Breadcrumbs 链接复用示例导航回调，先复现 iframe 内嵌套整页再验证修正；DataTable 工具栏使用 SearchToolbar 的 search/actions，同一 Resource 演示真实异步刷新、保行/草稿/分页，按名称实际排序；刷新失败重试保留已有行。Tabs 的草稿面板显式 keepMounted。单选组补关联错误。Dialog/Sheet 增加 SimpleSelect 与 footer 的组合，字段错误可修正后保存；Popover、菜单、图片、Tabs/Card 和 ErrorState 的重试恢复实际内容或可用动作。ScrollArea 使用现有高度 Token，真实发生组件内滚动。
+
+继续消费同一组已验证、独立安装的三包 tarball 4.2.41（候选），sourceGeneration 为 `f44d8fe3dc48d2b5c6b6a90f33243dd149cfdb36ecaef390109805862c4e9f76`；本轮重新计算并确认不变。安装锁摘要和三包 SHA 对照既有 consumer receipt，React/ReactDOM/Base UI 仍为单实例。以 preserveSymlinks 在原正式消费者缓存中重跑 strict TypeScript 和 esbuild，仅重建当前 demo；所有依赖来自独立 node_modules，没有 packages/src alias，基础页面初始 D3 bytes 仍为 0。未改写此前性能门禁或正式包验证 receipt。
+
+最终 Chromium CLI 通过 **283 项断言**：73 项交互、20 项补充控件、190 项统一外壳/几何检查；后者覆盖 11 面板 × light/dark/system 共 33 组桌面与 390px/公开阅读比例200%组合。覆盖指针/键盘、disabled/readOnly、关联错误、Calendar 单日/范围/禁用/清空、DateTime 墙上时间、Command/GroupedCombobox、菜单权限与 Shift+F10、Tooltip、AlertDialog、Tabs/Disclosure/Carousel 草稿保留、复制合成 writer、Upload 合成 HTTP、表格局部横滚及嵌套弹层操作。Dialog/Sheet 在三种模式的窄屏200%下，长中文选项真实指针命中/选择、滚动、Escape 关闭回焦均通过；无 force click、无 footer 隐藏和私有 CSS 覆盖。文档检查2/2、git diff --check 通过。
+
+首轮探针发现 Tabs 草稿缺失，修正示例后复验通过；其他首轮失败分别来自未等待弹层挂载/原生平滑滚动、未限定同名控件、错误假定 Spinner 是 SVG、把页面滚动当布局位移、错误假定受控搜索文本随选值改写，以及自动化工具拒点 disabled 日期。最终探针改为真实指针坐标点击禁用日期、按已公开语义和实际挂载/滚动状态验收；早期失败不计入最终通过。
+
+逐项证据、固定依赖和可复现 CLI 命令保存在 [review-12/checks.json](../output/playwright/pages-gallery/review-12/checks.json)、[构建记录](../output/playwright/pages-gallery/review-12/build.json) 与既有 `.artifacts/pages-gallery-preview.json`。已查看最终[表格](../output/playwright/pages-gallery/review-12/final-table-light.png)、[媒体和滚动](../output/playwright/pages-gallery/review-12/final-display-light.png)、[Dialog 窄屏200%](../output/playwright/pages-gallery/review-12/overlay-Dialog-light-narrow-200.png)、[Sheet 深色窄屏200%](../output/playwright/pages-gallery/review-12/overlay-Sheet-dark-narrow-200.png)，其他面板同目录保留截图。
+
+本轮未跑全仓 unit/browser、watch/cold-start、跨引擎、移动 OS/读屏器、浏览器设置中的200%缩放、真实剪贴板/文件选择器、真实后端或消费项目验收。所有数据和请求为本地合成 mock；公开阅读比例200%的证据不替代真实浏览器缩放。本轮只形成候选预览，不代表消费项目已升级或部署。
+
+## 统一内置页面逐项预览复核（2026-10-25，未定版）
+
+范围为统一 demo 的 API Key、业务日志、结构化错误日志、模型配置、登录、管理员初始化及改密 7 类页面。按[内置页面矩阵](COMPONENTS.md#统一内置页面-demo4241)检查 layout/slot、默认文字与主题、加载/空/失败/禁用、查询与提交、局部刷新和焦点；保留已有其他候选修改，图表未改。本轮没有提交、推送、版本递增、正式归档或发布，也没有改消费项目或真实业务 API。
+
+公共修正：SimpleSelect 增加可选 placeholder，只描述没有选中项的显示；StructuredLogLabels.all 可翻译空多选，仍保持原空数组/无过滤语义，不增加请求。模型目录/测试/保存按钮忙时增加公共 Spinner，闲置没有空图标占位。ApiKeyManager 一次性值和 StructuredLogExplorer 标识复制的临时结果改为 Toast；复用同一私有 copyStatus 订阅，保留 Controller/writer、立即重复复制、关闭和迟到隔离。结构化页可选 toastController 接宿主队列，默认组合无需宿主额外包装。通知常驻区域通过标准 aria-live=off 保持在模态期间的播报通道，各 Toast.Root 自己指定优先级；失败用可访问 alert，保留模态隔离，不改 peer 私有 DOM 属性或跳转焦点。
+
+示例修正：模型页 embed 复用外层主题入口；登录目标页用公共 Container/Stack/PageHeader，退出使用当前 auth owner。API Key showcase 的故障与等待按 list/create/update/revoke/deleteRecord 区分并响应取消，不再由一个列表开关冒充全部操作；编辑过期记录保留 expired。三类列表的 initial-list=hold/empty/error 合成预览分别展示首次加载、空结果和失败重试，均沿用原查询 owner，不新增后端或皮肤。
+
+最终同代 sourceGeneration 为 `5c7007c53ee01678b90859c682eb4e8bdb2a7ed0c4b6ef5d47059528aa2360be`，三包仍是既有候选 4.2.41。pnpm build/typecheck、针对性 Node **58/58**、pnpm test:consumer 通过；正式 ESM/CSS/types、三包 SHA、安装锁与 React/ReactDOM/Base UI 单实例核对通过，未使用 packages/src alias，性能门禁未放宽。独立安装包随后用于全部浏览器检查。
+
+最终 Chromium **95/95** 现成回归通过，零失败/跳过/重试，覆盖 select-form、structured-log-query、api-key、structured-log、model-profile、toast；明确未运行未改协议的“real browser POST wire”用例。另有统一 demo CLI **218 项断言**：69 项主流程、34 项状态/复制、115 项几何与弹层。7 页 × light/dark/system 共21组，在1600px桌面与390px/公开阅读比例200%下，单一Shell/标题、字段语义净宽、局部横滚、末尾控制可达；API Key全部有效期真实指针选择、日志详情与模型Sheet滚动/关闭回焦均通过。现成回归还覆盖日志、模型和Toast的真实浏览器200%缩放，不把它扩写成7页全部真实zoom验收。
+
+复制前后实测：旧的一次性结果弹窗高度274→312px（临时反馈增加38px），修正后成功/失败保持尺寸与位置；详情正文 scrollHeight 不因标识复制增加，原字段保留焦点。模态内错误Toast可由可访问alert定位，连续立即复制有独立反馈；复制不触发日志读取、关闭清除一次性textarea，迟到结果不恢复旧内容。认证错误/未知结果保留原持续反馈，不用Toast掩盖必需的重登或核对步骤。
+
+首轮回归的两项旧断言分别期待撤销后继续显示禁用动作、把ISO原文直接作为时间显示；按当前公共行为改为验证撤销事实与隐藏动作、time.datetime保留精确原值。复制反馈迁移时发现的模态播报隔离已在公共Toast层修正后重跑全部95项。早期CLI的空目录未打开选择浮层、错误地把一像素隐藏表单桥当作视觉焦点目标等探针问题已修正；不将这些失败计作最终通过。
+
+固定包、逐页数据、命令和截图见[检查记录](../output/playwright/pages-gallery/review-13/checks.json)、[构建记录](../output/playwright/pages-gallery/review-13/build.json)和[浏览器结果](../output/playwright/pages-gallery/review-13/regression.json)，既有 `.artifacts/pages-gallery-preview.json` 已更新为review-13。已查看[结构化查询](../output/playwright/pages-gallery/review-13/final-structured-log-light.png)、[模型配置](../output/playwright/pages-gallery/review-13/final-model-profile-light.png)、[API Key复制Toast](../output/playwright/pages-gallery/review-13/api-copy-toast.png)、[日志复制Toast](../output/playwright/pages-gallery/review-13/log-copy-toast.png)及深色窄屏200%弹窗截图。
+
+未跑全仓unit/browser、watch/cold-start、跨引擎、移动OS/读屏器、真实系统剪贴板与后端/上游模型服务或消费项目验收；所有数据、认证和请求为合成mock。现有持续认证状态、授权、提交、secret清理和请求owner不变。当前交付是可继续比较的候选预览。

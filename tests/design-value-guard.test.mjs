@@ -4,6 +4,11 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { checkDesignDeclaration, auditDesignSources } from '../scripts/design-value-guard.mjs';
+test('drawing-speed comparison permits only the documented shared entry-token alias',()=>{
+ assert.doesNotThrow(()=>checkDesignDeclaration('--motion-duration-chart','var(--motion-duration-enter)'));
+ for(const value of ['180ms','var(--motion-duration-fast)','calc(var(--motion-duration-enter) * 5)'])assert.throws(()=>checkDesignDeclaration('--motion-duration-chart',value),/central token contract/);
+ assert.throws(()=>checkDesignDeclaration('--motion-duration-enter','var(--motion-duration-chart)'),/central token contract/);
+});
 
 test('design declarations reject literals, recipes and token fallbacks', () => {
   for (const [prop, value] of [

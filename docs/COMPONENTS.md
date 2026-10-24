@@ -4,6 +4,8 @@
 
 项目自己的业务组合和布局按 [私有组合组件设计方法](DESIGN.md#项目私有组合组件的设计方法) 与 [页面信息呈现方法](DESIGN.md#首屏信息架构与信息密度) 设计，再从本手册选择已有能力；项目布局样式与公共控件内部皮肤分别由各自所有者维护。实施前按 [槽位架构](DESIGN.md#页面与组件的槽位架构)逐一填写内容归属，并执行 [接入检查清单](ADOPTION_CHECKLIST.md)。
 
+4.2.41 保留 Button 模块的初始化：包的 sideEffects 白名单仅包含 dist/button.js，防止根入口静态重导出与面包屑异步菜单共享该模块时，bundler 保留组件函数却裁掉 React/peer 初始化。窄入口及 D3 按需裁剪仍由正式消费者体积和依赖图门禁核对，宿主无需自加初始化或复制组件。
+
 按章节查阅：
 
 - [界面缩放](#界面缩放)
@@ -56,6 +58,46 @@ registry只销毁自己由 options 构造的实例，`{instance}` 注入的是�
 | 弹层 | Dialog、Sheet、AlertDialog、ContextMenu、Menu、Popover、Tooltip。Root/Trigger/Content/部件延续 peer 生命周期。Menu disabled 项可在 peer roving 顺序获得焦点但不能执行；peer roving 顺序仍允许 disabled menu item 获得焦点，但不能执行。Tooltip 增加 role 和描述 id，Root.contentId 可指定关联 id；外部 handle 触发器由宿主显式 aria-describedby 关联 |
 | 通知 | Toast Provider/controller/Root/Content/Viewport/Close 使用同一个 xui 语义队列；默认右上角，Content/Actions统一文字/末行动作排版，窄屏或大字收敛最新一项，焦点/悬停展开和暂停，必要错误原位持续。Button/render/锚定几何复用 Base UI 公开入口 |
 | 状态 | Surface/Alert、Badge/Skeleton/Spinner/Progress、Loading/Empty/ErrorState、DataRegion、RenderBoundary、useResource。错误/重试文字由宿主；render exception 重置不重试 Promise |
+
+SimpleSelect 可选 `placeholder?: string` 只在没有选中项时显示提示，不向原生 select、FormData 或 onChange 增加虚构值；`multiple value={[]}` 仍表示空选择。省略时保留原有显示。StructuredLogExplorer 的多选筛选使用可翻译的 `labels.all`（可选，缺省 `All`），空选择表示不过滤，切换文字不发起查询；中文示例配置为“全部”。明确选择的空字符串 option 仍显示该 option 的标签。
+
+### 统一内置页面 Demo（4.2.41）
+
+[统一 Demo](../examples/pages-react/app.tsx) 的 7 类内置页面直接使用完整公共组合；只有 mock 场景、品牌与数据输入归示例。嵌入模式沿用外层导航、主题和阅读比例，不再增加第二个 Shell 或主题按钮。登录成功后的示例目标页也使用公共 Container/Stack/PageHeader；退出调用当前认证 owner。
+
+| 页面 | 重点 slot/布局与状态 |
+| --- | --- |
+| API Key | PageHeader 动作、独立 key 列、DataTable 状态/分页、Dialog 字段与 footer；初次读取/空/失败恢复、刷新保行、创建/编辑/撤销/删除防重、一次性结果及关闭清理 |
+| 业务日志 | QueryForm 的 fields/advanced/actions/summary、列表/游标、详情正文与 footer；草稿与已提交范围分离，空/错误/取消/迟到、快照与详情回焦 |
+| 结构化错误日志 | pageToolbar、QueryForm/QueryField、分组/记录、详情；空多选明确显示“全部”，重置草稿零请求，清除筛选提交一次，复制只出 Toast |
+| 模型配置 | 页面动作、Card/Fieldset/FormGrid、目录、FormActions、Sheet 确认；目录空/错误保手动输入，loading 图标不留闲置空槽，只读/禁用、取消和保存结果未知 |
+| 用户登录 | 同一个 AuthPage 品牌/正文/动作/反馈；字段错误、拒绝/等待/成功与回到登录，保留用户名、清理密码，不增加认证 owner |
+| 管理员初始化 | AuthPage + AdminSetupForm；字段关联、密码确认、提交防重、未确认锁定、手动只读核对与完成；不推断 BaseService 初始化端点 |
+| 修改密码 | AuthPage + PasswordChangeForm；旧/新/确认字段、错误/等待/结果未知/完成；成功要求重登，保留原 PUT、Bearer、omit/no-store 与敏感值清理 |
+
+API Key 与两类日志示例支持 `initial-list=hold|empty|error` URL 参数，供预览首次加载、空数据和初次失败；使用各自已有 mock 和 Controller，不是公共业务参数，也不发起真实后端请求。原 `window.*Demo` 检查入口可释放等待或恢复 mock。认证的持续错误与未知结果留在原反馈区域；临时复制结果使用下面的 Toast 合同，不将关键状态仅藏进通知。
+
+ApiKeyManager 一次性值复制与 StructuredLogExplorer 标识复制统一复用公共 Toast。默认组件提供自己的通知队列和 View；已有宿主通知队列时传可选 `toastController`，由宿主渲染同一队列的一个 `Toast.View`。复制中保留原控制状态，成功/失败不插入正文块，不改变列表/弹窗尺寸或请求 owner；原始复制值不进入通知。精确订阅原 copyStatus 转换，连续快速复制也各有反馈，关闭/销毁后的迟到结果不再通知。Toast 常驻通知区域在模态打开时保持可播报，各条 Root 决定 polite/assertive，不解除页面的模态隔离或抢走表单焦点。
+
+### 统一基础组件 Demo（4.2.41）
+
+[统一 Demo](../examples/pages-react/app.tsx) 的基础组件入口逐项展示下列组合。状态只使用组件实际支持的公共合同；例如 SimpleSelect 没有只读模式，已确认值使用只读 Input，菜单通过权限禁用修改动作。图表与其他基础组件一起在 4.2.41 定版。
+
+| 面板 | 常用组合与适用状态 |
+| --- | --- |
+| 按钮与操作 | 前置/后置图标、尺寸、IconButton；loading 显示 Spinner 并显式 disabled 防重，非 loading 不留空图标槽 |
+| 表单与选择 | QueryForm/QueryField、FormGrid、InputGroup、选择/搜索/勾选组、日期时间、Calendar、密码；正常、禁用、只读和关联错误，查询草稿重置不清除已生效条件 |
+| 状态与进度 | Badge/Alert、定值/未知 Progress、骨架、加载/空/错误与重试、保留内容刷新、Toast；临时反馈不占页面流 |
+| Tabs 与容器 | line/segmented Tabs、Card 各 slot、MetricCard、CardGroup、Disclosure/Accordion；有表单草稿的 Tabs.Panel 显式使用公开 keepMounted，保留默认 peer 生命周期 |
+| 弹窗与浮层 | Dialog/Sheet 的字段、SimpleSelect 与 footer 组合；加载、只读、错误修正、禁用，嵌套 Escape 和关闭回焦；Popover/Tooltip/AlertDialog |
+| 菜单与操作配置 | 普通/配置菜单、勾选/单选/危险项、ContextMenu、NavigationMenu；加载、失败重试和权限禁用 |
+| 文字与媒体 | Typography 角色、Icon/Avatar/Tag、复制各状态、图片失败恢复、可聚焦 ScrollArea；复制使用合成 writer，不宣称真实剪贴板验收 |
+| 数据表格 | SearchToolbar search/actions、单一 Resource、真实名称排序、受控分页/列宽；首次加载、刷新保行/草稿、空/无匹配、错误恢复、禁用与只读，横滚归表格 |
+| 文件上传 | 合成 HTTP 与文件；待上传、上传中、成功、禁用、只读、未知结果和校验失败；不编造上传百分比 |
+| 面包屑 | 数据/具名 slot、长路径省略、禁用、只读、语言切换、加载/错误/空路径；两种组合复用示例导航回调，避免 iframe 内嵌套整页 |
+| 走马灯 | 卡片/图片、受控值/注入 Controller、可暂停自动轮播、键盘/RTL、草稿保留；加载、空、错误重试、保留内容刷新、禁用/只读和单项边界 |
+
+重试示例恢复对应内容或可用动作，不以成功文字或 Toast 代替数据恢复。表格示例只用本地合成 loader，宿主真实查询、权限、写入和请求 owner 不因此迁入展示组件。检查范围及未执行项见 [VALIDATION](VALIDATION.md#4241-整体定版回归2026-10-25)。
 
 ### 状态所有权与 Controller 模式
 
@@ -188,7 +230,7 @@ Sheet 使用相同接线。不要再在 Content 外包一层 Portal，也不要�
 
 React DataRegion 只在调用方提供 feedback prop（包含 null）时常驻一个反馈槽；主题为该角色提供公开 `.xui-feedback-slot` 样式。共用 `--feedback-slot-block-size`，由已有字体/控件/内距/焦点 token 派生；错误完整保留，可在局部滚动并通过键盘访问动作。`.xui-reserved-action[data-inactive='true']` 仅隐藏辅助动作的绘制，调用方同时设置 aria-hidden、tabIndex=-1 与 disabled，不得保留不可见可交互控件。
 
-React DataTable 保留其状态行；登录页空反馈/隐藏动作不占位，实际消息自然增长，并用闲置/忙状态文案的实际尺寸约束主动作。API Key 与两类日志的空反馈和闲置取消动作不占位；真实反馈仍在所属区域完整显示。API Key 的刷新与创建同属页头动作组，状态紧邻名称；业务日志把摘要与结果前置，筛选使用同一个 Disclosure 外观。列表与详情的关闭先保留所属焦点事实，再隐藏内容，避免浏览器自动失焦被误认作宿主主动转移。列表刷新仅在实际顺序改变时移动 keyed 行，失败和同记录恢复不重建行控件。API Key 写入结果未知时读取普通列表一次，结束等待后允许用户手动再试，不自动重发写请求；瞬时 secret 释放、认证与权限规则见 [API Key 管理](PUBLIC_API.md#api-key-管理)。
+React DataTable 保留其状态行；登录页空反馈/隐藏动作不占位，实际消息自然增长，并用闲置/忙状态文案的实际尺寸约束主动作。API Key 与两类日志的空反馈和闲置取消动作不占位；真实反馈仍在所属区域完整显示。API Key 的刷新与创建同属页头动作组，状态紧邻名称；三类管理页的刷新按钮闲置文字居中，忙时显示继承前景的 Spinner＋文字且按钮宽高不变；业务日志把摘要与结果前置，筛选使用同一个 Disclosure 外观。列表与详情的关闭先保留所属焦点事实，再隐藏内容，避免浏览器自动失焦被误认作宿主主动转移。列表刷新仅在实际顺序改变时移动 keyed 行，失败和同记录恢复不重建行控件。API Key 写入结果未知时读取普通列表一次，结束等待后允许用户手动再试，不自动重发写请求；瞬时 secret 释放、认证与权限规则见 [API Key 管理](PUBLIC_API.md#api-key-管理)。
 
 这保证已加载应用在请求失败时的结构稳定，不保证首次从未加载资源且完全离线时可用。核心主题 CSS/字体/图标不依赖远端 CDN，但宿主配置的 logo、图片或延迟模块仍依赖其资源可用性。不增加 Service Worker、凭据持久化或自动重放。实际验证范围见 [失败布局验证](VALIDATION.md#失败复验与限制)。
 
@@ -1477,7 +1519,7 @@ AuthClient新方法及busy的password分支是新增公开合同；使用官方S
 
 ## 进度 Progress
 
-Progress保留语义progress、真实value/max与无value的未知状态；轨道及填充统一使用radius-sm的小圆角等高条形，不能用radius-full把宽轨道变成椭圆。宽度由所在公共slot决定，主题/RTL/缩放/forced-colors和reduced-motion沿用原合同。
+Progress保留语义progress、真实value/max与无value的未知状态；轨道与填充以及密码强度 meter 共用 progress-height（100% 为 4px）、progress-radius（默认 0）；宽度方向始终等厚，不能用满圆角或原生 meter 默认外观变成椭圆。宽度由所在公共slot决定，主题/RTL/缩放/forced-colors和reduced-motion沿用原合同。
 
 ### 导航抽屉的阅读空间（4.2.14）
 
@@ -1564,11 +1606,20 @@ NavigationMenu 未提供 item.icon 时，展开态继续使用完整名称，紧
 
 ## 公共图表
 
-正式入口为 @coffeehc/xui-react/chart，包含 LineChart、BarChart、PieChart；根入口同步导出，类型/纯计算在 @coffeehc/xui-runtime/chart。样式用正式 style.css，或 critical.css + chart.css（critical不含图表配方）。不引入图表库 peer，React/ReactDOM/Base UI沿用宿主单实例。
+
+正式入口为 @coffeehc/xui-react/chart，包含 LineChart、BarChart、PieChart；根入口同步导出，类型/纯计算在 @coffeehc/xui-runtime/chart。样式用正式 style.css，或 critical.css + chart.css（critical不含图表配方）。D3是内部精确版本依赖，不增加图表库 peer，React/ReactDOM/Base UI沿用宿主单实例。
+
+4.2.41 计算内核按模块使用 d3-array 3.2.4（范围、刻度、求和）、d3-scale 4.0.2（线性/分类坐标与柱宽）和 d3-shape 3.2.0（折线、点形、饼与扇区）。只引入这些计算模块，未引入d3整包、DOM selection/axis/transition或fetch；React继续拥有SVG节点、事件、焦点及卸载。现有React props、runtime返回类型、Token和slot不变，消费者不传D3对象、不安装D3 peer、不复制路径。同步ESM由宿主bundler按使用裁剪，使用/chart的包图包含D3，Button和窄服务入口不包含D3；不是运行时加载CDN脚本。刻度采用D3 nice/ticks，具体间隔可能变化，零基线与有限极值合同保留。横轴仍为等距类别，不根据label解析时间或单位；未新增时间轴/缩放/堆叠能力。
 
 共同 props：title 必填；headingLevel/description/actions/footerMeta/footerActions/className/id复用Card；status为idle/loading/ready/refreshing/error，缺省ready；error为宿主批准的安全文字，onRetry只发重试意图；labels覆盖全部内置文字，formatValue只格式化显示。数据全受控，不提供loader、URL、周期、聚合或业务时区选项。就近读值与数据表开合仅是View内临时交互，不建立查询Controller；宿主已有Resource继续拥有请求/取消/迟到/刷新。
 
-折线/柱图传 categories: {id,label}[] 与 series: {id,label,values,color?}[]，每系列values必须与类别等长，元素是有限number或null（缺采样）。类别和系列各自ID唯一且非空，名称非空，缺项/undefined/NaN/Infinity被拒绝，不猜0。柱图为分组柱而非堆叠，零基线固定；折线直线连接有效相邻采样，null断开。饼图传 slices: {id,label,value,color?}[]，有限非负值，零项保留在图例/数据表而不绘制扇区，全零为空态，单一正项是圆；比例计算先归一化避免有限极值相加溢出，不虚构总计。color为可选1～6公开分类槽；稳定ID保留节点与读值归属，显式color可在重排时保色，缺省按输入顺序循环。
+LineChartProps新增可选 `curve?: LineChartCurve`，React `/chart` 与根入口导出 `LineChartCurve = 'linear' | 'monotone' | 'step'`。默认linear保持直线；monotone对应D3 curveMonotoneX，横坐标按类别递增，平滑穿过真实采样点且相邻点之间不产生额外极值；step对应curveStep，在相邻横坐标中点跳变，不代表业务状态发生时刻。配置作用于同图所有系列，只改变连线路径，不改变原始值、采样点、轴、图例、颜色、键盘读值、数据表或请求。三种模式均在null处结束当前段；单独采样点仍保留点形，全缺失仍为空态。JS无效配置明确拒绝，不静默替换；BarChart/PieChart没有此配置。不接受D3工厂或任意字符串，内部D3类型不暴露。
+
+三类图共用 `animation?: boolean`，缺省true，false立即呈现；不向Card/DOM透传。所有图表的首次进入和数据更新统一使用 `--motion-duration-chart`（默认900ms），全部复用 `--motion-easing`，不另开时长/速度API。首次有效测量后，折线与曲线沿真实路径长度从起点绘制到终点，采样点在路径到达时显示；null分开的连续段按顺序绘制，空隙不产生连接线。原有实/虚/点线编码保持；单个孤立点没有可绘制线段，按所属位置显示。柱从真实0基线生长、饼顺时针展开；单正项保持circle并短暂放大半径。数据更新只过渡屏幕坐标/扇区边界，不把动画中间值当采样；图例、就近读值、百分比和数据表立即使用最新确认原值。指针/键盘开始读值时立即完成当前动画，让标记与读值一致。
+
+更新以稳定ID、顺序、缺失掩码、曲线、坐标范围与测量尺寸一致为前提；连续更新从当前显示位置接续，取消旧时钟。类别/系列/正扇区增删或重排、null位置变化、曲线/范围/尺寸变化直接呈现新图，避免索引串行、跨缺失连线或轴与图形错配。仅status/语言/主题变化及同值刷新不重播；同范围loading/error保图，完成后相同数据不从0开始。新范围由宿主清空数据后再展示，视为首次。减少动态效果、显式false、0时长、不支持浏览器计时或后台文档立即呈现；运行中切换减少动态效果/进入后台取消动画，恢复后不补播，SVG卸载释放帧与监听。动画只改变图形属性，不改变绘图区/反馈槽尺寸，不重挂节点，不新增查询/Controller。SSR不访问DOM。
+
+折线/柱图传 categories: {id,label}[] 与 series: {id,label,values,color?}[]，每系列values必须与类别等长，元素是有限number或null（缺采样）。类别和系列各自ID唯一且非空，名称非空，缺项/undefined/NaN/Infinity被拒绝，不猜0。柱图为分组柱而非堆叠，零基线固定；折线缺省直线连接有效相邻采样，三种curve均在null处断开。饼图传 slices: {id,label,value,color?}[]，有限非负值，零项保留在图例/数据表而不绘制扇区，全零为空态，单一正项是圆；比例计算先归一化避免有限极值相加溢出，不虚构总计。color为可选1～6公开分类槽；稳定ID保留节点与读值归属，显式color可在重排时保色，缺省按输入顺序循环。
 
 所有槽位、文字、状态与几何见[唯一设计合同](DESIGN.md#公共图表布局与状态合同4221)。头部只有公共标题与宿主真实动作；内容为图例/绘图区/就近读值/反馈；footerMeta/footerActions仍由宿主提供；默认查看数据动作在actions内，按需展开同一正式DataTable，不再嵌套私有表格皮肤。
 
@@ -1585,11 +1636,11 @@ const series = [{id:'tasks',label:'任务',color:1 as const,values:[12,null]}];
 <PieChart title="任务分布" slices={[{id:'r',label:'研究',value:12},{id:'v',label:'复核',value:3}]} />;
 ```
 
-完整正式包示例：[charts-react](../examples/charts-react/app.tsx)。其Resource和内存延迟数据只演示正常/空/全零/缺失/单项/刷新失败/范围变化，不代表任何消费项目或后端验收。
+完整正式包示例：[charts-react](../examples/charts-react/app.tsx)。其Resource和内存延迟数据只演示正常/空/全零/缺失/单项/刷新失败/范围变化，不代表任何消费项目或后端验收。统一demo的[图表面板](../examples/components-react/charts.tsx)独立按需加载；动画区分别保留折线图（linear）和曲线图（monotone）入口，两者复用LineChart与同一组带缺失的数据，不新增CurveChart公开组件。普通趋势组同时展示折线与曲线。顶部动效示例统一采用默认900ms，动画开关控制本面板全部图表；折线、曲线、柱和饼按类型切换展示。“重播首次绘制”只重新挂载所选demo图形，模拟首次，不绑定刷新或请求；“更新同一组数据”保持实例并接续到新值。另有同一组数据并排对比linear/monotone/step，含null断线；另含常用组合、缺采样、正负/零柱、单项/零项饼和状态对照；表单、面包屑与走马灯面板不请求该图表模块。面板代码加载使用同一公共加载/错误反馈，不改变图表的数据状态或请求owner。
 
 ## StructuredLogExplorer 查询与槽位（4.2.22）
 
-正式 `/structured-log` 的 `StructuredLogExplorerProps` 与导出的 `StructuredLogExplorerSlots` 保留headerActions/className/writeClipboard，新增可选pageToolbar。它追加在原分组/全量切换与组内返回的工具区，位于QueryForm之前；空槽无占位，不替换内置筛选，不创建请求或路由owner。内置查询槽对应[唯一设计矩阵](DESIGN.md#手动查询页布局与状态合同4220)，不要求宿主复制QueryForm或穿透DOM。
+正式 `/structured-log` 的 `StructuredLogExplorerProps` 与导出的 `StructuredLogExplorerSlots` 保留headerActions/className/writeClipboard，新增可选pageToolbar。它追加在原分组/全量切换与组内返回的工具区，位于QueryForm之前；空槽无占位，不替换内置筛选，不创建请求或路由owner。复制反馈默认用组件 Toast，可选 toastController 接宿主既有队列；不重复挂同队列的 View。内置查询槽对应[唯一设计矩阵](DESIGN.md#手动查询页布局与状态合同4220)，不要求宿主复制QueryForm或穿透DOM。
 
 原ViewController.draft拥有编辑值，service.filter拥有提交范围；QueryForm复用原filters OverlayController，primary摘要与compact等级常显，其余条件进入advanced的FormGrid。收起不丢草稿，外部受控关闭从高级字段回焦唯一触发器。summary只显示service.filter与校验反馈，不把草稿冒充已展示结果的范围。
 
@@ -1664,6 +1715,14 @@ const labels: Partial<BusinessLogLabels> = translations[locale];
 换语言不发布service/view状态、不执行请求/重试/取消，不重置已生效筛选、草稿、开合、当前详情、分页、快照和已访问页缓存。原事件摘要/payload/代码/ISO、领域renderer及headerActions内容由宿主负责，词典不改写这些事实；列表时间格式仍走对应列的cell。表格行/列、表单字段和详情动作使用稳定语义键，切换后保留节点、选区、滚动和有效焦点，不同译文重排时允许原生滚动锚点调整，不人为归零或重建滚动区。关闭详情回原按钮。详情动作按内容优先，超长译文按表格自身可视净宽换行，不能压成逐字竖排，保留公共间距和滚动清距；不裁切文字或要求宿主限字/CSS覆盖。禁止key=locale、重挂载或复制公共DOM/CSS。
 
 [既有正式示例](../examples/business-log-react/app.tsx)的`?labels&activity`展示中文/English按钮；`&owner=view`注入完整ViewController，`&owner=options`演示默认模式（先点刷新）；不传owner借用service。示例使用合成loader，无业务后端。定向验收只执行[BIZ-LABEL-001～006](ADOPTION_CHECKLIST.md#业务日志整页语言逐项检查)及实际受影响项，不因语言变化重跑认证或写入流程。
+
+## API Key 列与复制（4.2.41）
+
+ApiKeyManager 的 `prefix` 为独立列；名称仅显示名称，密钥列显示可辨识片段及掩码。可选 `locale/timeZone` 控制紧凑时间，时间弹层保留原始 ISO 值。`rowActions(record)` 只补充行内动作，不持有秘密或权限 owner。
+
+默认省略 `keyCopy`（或传 `false`）只展示文本。传 `{readValue(record,{signal}),canCopy?,unavailableLabel?,labels?}` 启用密钥单元格的按钮语义，支持点击、Enter、Space。readValue 必须返回完整凭据，复用宿主已有授权读取 owner；公共库不增加读取 URL、不从 prefix/掩码还原凭据。不可恢复的哈希记录由 canCopy 禁用，不能将掩码当完整值。读取及写剪贴板期间禁重复，卸载、切换 Controller/记录/配置和 busy 变化取消等待；版本/状态变化丢弃迟到结果。明文仅在读取与剪贴板调用作用域，不进入 React state、列表元数据、URL、storage、日志或反馈。仅以安全 Toast 展示结果。注入 `toastController` 时由宿主渲染同一 Toast.View；省略时组件持有默认 Provider/View。
+
+上述接口自 4.2.41 正式提供；真实后端是否可再次读取必须由业务合同确认。示例 [统一 Demo](../examples/pages-react/app.tsx) 只使用合成凭据。
 
 ## 默认完整页面与配套接线（4.2.23）
 
@@ -1762,3 +1821,41 @@ Menu.Icon、Toast.Icon、EmptyState.icon、SidebarFooter.icon 的被动包装复
 API Key和Headers明文不进入快照。API Key未配置时为空，已配置时显示固定六星号`******`，提交同一标记由后端按已授权的profile_id解析原密钥；空字符串清除，其他值替换。该标记为保留值；新增或原记录无密钥时必须拒绝，后端还原后才能交给AgentCore，不得将标记传给AgentCore或上游。Headers JSON默认显示`{}`，未编辑时不提交该字段并保留后端配置；直接编辑后提交完整对象进行整项替换，显式提交`{}`清空。Headers仅返回名称，不回填已有值；重置/保存后恢复空对象编辑框。目录/测试不持久化配置；保存确认后清理秘密并采用权威新版本；4.2.40通过saveReceipt区分提交与测试/后置处理结果。onCommitted用于刷新所有已确认提交，onSaved只在有安全editor时触发，宿主不在两处重复刷新。已提交缺editor清dirty但只读锁定，须显式重读；有editor后未编辑不重复保存。错误Toast保留“已保存但测试未通过”等事实，不冒充测试通过。保存结果未知禁重复保存；修改可重新读取已知ID，新建未知不能以读取默认配置解除阻断，宿主先核对创建结果再load(确认的ID)；重新读取是显式丢弃当前草稿，不把取消视为失败回滚。控制器getState返回不可变非秘密状态；外部扩展通过setField等动作修改。
 
 示例：[模型配置 Mock](../examples/model-profile-react/app.tsx)。4.2.39正式提供上述入口；mock fixture 参数不是正式协议默认值；HTTP及后端提示词见[PUBLIC_API](PUBLIC_API.md#模型配置后端实施提示词)。
+
+## 面包屑与走马灯（4.2.41）
+
+本节能力自 4.2.41 正式提供；复用正式 theme Token/公开组件，统一 demo 的“面包屑”“走马灯”和“图表”均可直接查看。不增加路由、数据请求、缓存或业务提交 owner。
+
+`@coffeehc/xui-react/navigation` 的 Breadcrumbs 保留旧 children/ol 组合；新增互斥的 `items` 完整列表，条目为稳定 id、可翻译 label、可选 href/icon/disabled/render/linkProps。末项自动为非链接 Current（aria-current=page），无 href 的上级为文字；不从路由猜测路径、权限或首页。可选 maxItems>=3 保留首项、末尾及公共 Menu 省略入口；disabled 禁用所有生成动作。省略菜单需要时才加载其实现；宿主需加载正式 floating.css（或完整 style.css）。按需拆包由宿主 bundler 决定，共享依赖仍可能进入基础图。separator、overflowContent/overflowLabel 为内容槽，Root/Item/Link/Current/Separator 为正式组合部件。长名称自然换行，窄屏/RTL 不裁切当前路径；空 items 不生成假路径。onNavigate 只对普通主键点击通知宿主，宿主可 preventDefault 接自己的路由；修饰键、target、download 和原生链接行为保留。render 支持宿主链接元素；禁止把私有 DOM/ARIA 补丁作为接入。动态折叠删除焦点链接时，回到省略按钮或可用上级；语言更新不创建新路由 owner。加载/失败由宿主用所属 LoadingState/ErrorState 或 Toast 组合，不伪造路径。
+
+`@coffeehc/xui-react/carousel` 的 Carousel 接收 label、items、itemKey、renderItem；Root 拥有 viewport/slide 的稳定身份、可访问语义和隐藏策略。renderItem 的 context 提供 id/index/active/disabled，业务内容和动作由宿主负责。默认 controls 由公开 Carousel.Controls/PlayPause/Previous/Indicators/Indicator/Next 组成；可替换 controls 槽，自定义时需保留可暂停入口且先于可轮播内容进入 Tab 顺序。controls=false 抑制 View 时钟。所有可见文案和页序由 labels 翻译；不把只读内容等同禁用浏览。
+
+模型来自 `@coffeehc/xui-runtime/carousel` 的 createCarouselController，默认、受控 value/defaultValue 与注入 controller 互斥；注入时宿主持有同一顺序的 ids 与实际 items，并负责其生命周期。一个 Controller 同时绑定一个活动 Carousel View，多个控制入口使用该 View 下的 Controls 槽位，避免争用时钟和焦点。onValueChange(value,details) 为稳定 ID 意图，支持 cancel；受控值仅在 update/宿主确认后显示，不乐观切换。外部确认不回调；删除当前项时请求最近位置的存续项一次；无确认时不把其他记录冒充当前项。空值 null 表示无当前项，空集合不编造内容。数据重排保留当前 ID，旧 defaultValue 不重设状态。loop 默认 false；disabled 阻止生成导航和播放动作，renderItem 中的独立业务动作按 context.disabled 接线。busy 与 disabled 分离，已确认内容可在同范围刷新/错误时保留；新范围由宿主清空旧 items。状态/placeholder 与 onRetry 不创建请求或自动重试。
+
+自动轮播默认关闭；显式 autoPlay 或播放动作才请求开始，interval 默认5000ms且至少1000ms。Controller 仅持有播放意图，不拥有计时器或 DOM；View 时钟在悬停/文档隐藏时暂停，焦点进入和减少动态效果会停止播放，恢复须用户显式操作。减少动态效果下关闭自动轮播与入场动画，手动切换仍可用。焦点停留在触发控件；外部切换使当前内容输入失去可见性时回到 viewport，不抢夺宿主已移走的焦点。仅 viewport 自身处理左右/Home/End，RTL 方向对应；内容里的输入、按钮和链接保留自己的键盘操作。触屏/笔手势仅在非独立控件内容中接管明确的横向移动，纵向滚动保留。View 退出清理时钟与监听，不销毁注入 Controller；destroy 状态会禁用生成控件。
+
+非当前内容以 visibility/inert/aria-hidden 隐藏，但保留挂载和布局测量，避免切换销毁草稿或改变由最大内容决定的视口高度。加载占位使用 carousel-min-block-size（默认引用公共反馈最小高度）；没有私有字号/皮肤。CSS 使用完整 style.css，或 critical.css + carousel.css；carousel.css 为可选样式分片。ARIA/暂停规则参考 [WAI Carousel](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/)、[WAI Breadcrumb](https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/)，最终以本库实际浏览器证据为准。
+
+| 区域 / slot | 内容归属与公共呈现 |
+| --- | --- |
+| Breadcrumbs items / children | 二选一；父级 Link 使用公共链接色，末项 Current 使用前景与强调字重，分隔符为装饰弱化色 |
+| Breadcrumbs overflowContent / overflowLabel | 前者是按钮内容，后者是完整可翻译名称；隐藏条目使用同一公共 Menu，无宿主弹层皮肤 |
+| Carousel renderItem | 宿主业务内容；默认字号继承，Card / Image / Field 等使用原公共组件，不把操作写入选择 Controller |
+| Carousel controls | 公共动作与指示器，按容器净宽换行居中；自动播放必须保留可暂停入口，独立内容动作不触发行切换 |
+| loadingState / emptyState / errorState | 初次无内容的局部占位；已有内容刷新/失败时原节点保持，反馈使用原 DataRegion 区域；重试仍由宿主请求 owner 执行 |
+
+```tsx
+import {Breadcrumbs} from '@coffeehc/xui-react/navigation';
+import {Carousel} from '@coffeehc/xui-react/carousel';
+import {Card} from '@coffeehc/xui-react/display';
+import '@coffeehc/xui-theme/style.css';
+
+<Breadcrumbs aria-label="工作区路径" maxItems={3} overflowLabel="显示上级路径"
+  items={[{id:'home',label:'首页',href:'/'},{id:'workspace',label:'工作区',href:'/workspace'},
+    {id:'current',label:'当前任务'}]}/>;
+<Carousel label="工作区推荐" items={recommendations} itemKey={item=>item.id}
+  labels={{previous:'上一项',next:'下一项',play:'开始轮播',pause:'暂停轮播'}}
+  renderItem={item=><Card title={item.title}>{item.summary}</Card>}/>;
+```
+
+完整组合和适用状态见[统一 demo 源码](../examples/components-react/navigation-media.tsx)；图表沿用[公共图表](#公共图表)与同一 demo 导航。只读属于内容字段；未取得的数据路径不传入虚构条目。不能为了轮播获取数据而新增网络请求 owner。

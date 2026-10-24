@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 import {MenuLayout,NavigationMenu} from '@coffeehc/xui-react/menu-layout';
-import {AppShell,Grid,PageHeader} from '@coffeehc/xui-react/layout';
+import {Container,AppShell,Grid,PageHeader} from '@coffeehc/xui-react/layout';
 import {Disclosure} from '@coffeehc/xui-react/navigation';
 import {Card} from '@coffeehc/xui-react/display';
 import {Button} from '@coffeehc/xui-react/button';
@@ -48,6 +48,7 @@ const destroy=()=>{if(dead)return;dead=true;root.unmount();owner.destroy();};
 declare global {interface Window {dataTableDemo:{owner:ReturnType<typeof createDataTableExample>;restore:()=>void;destroy:()=>void;getActions:()=>string[];setColumnView:(mode:WidthMode,hidden?:string[])=>void}}}
 window.dataTableDemo={owner,restore,destroy,getActions:()=>[...actions],setColumnView:(mode,hidden)=>configureColumns(mode,hidden)};
 
+const PreviewShell=new URLSearchParams(location.search).has('embed')?(({children}:{children:React.ReactNode})=><Container style={{padding:'var(--layout-content-inset)'}}>{children}</Container>):MenuLayout;
 function App(){
   const state=React.useSyncExternalStore(owner.subscribe,owner.getState,owner.getState);
   const [sizingConfig,setSizingConfig]=React.useState({accept:true,disabled:false,reverse:false,hidden:'',enabled:true}),[controlledWidths,setControlledWidths]=React.useState<DataTableColumnWidths>({});
@@ -95,7 +96,7 @@ function App(){
   const common={style:{'--layout-workspace-content-min-block-size':'var(--data-table-min-block-size)'} as React.CSSProperties,scrollMode:query.has('viewport')?'viewport' as const:query.has('unbounded')?'document' as const:'workspace' as const,headerSlots:{brand:<strong>公共列表组合</strong>},pageHeader,pageToolbar:internal?undefined:toolbar};
   // A known-size host tests composition as a column-flex item, not just a block child.
   const content=cards?cardView:query.has('flex-host')?<div style={{display:'flex',flexDirection:'column',blockSize:'100%',minBlockSize:0}}>{table}</div>:table;
-  return query.has('direct')?<AppShell {...common} sidebar={<NavigationMenu items={items} activeId="records" label="示例导航"/>}>{content}</AppShell>:<MenuLayout {...common} items={items} activeId="records" label="示例导航">{content}</MenuLayout>;
+  return query.has('direct')?<AppShell {...common} sidebar={<NavigationMenu items={items} activeId="records" label="示例导航"/>}>{content}</AppShell>:<PreviewShell {...common} items={items} activeId="records" label="示例导航">{content}</PreviewShell>;
 }
 root.render(<App/>);
 if(!query.has('manual'))owner.load();

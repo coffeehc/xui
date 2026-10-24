@@ -1,13 +1,13 @@
 {
   "name": "@coffeehc/xui-react",
-  "version": "4.2.40",
+  "version": "4.2.41",
   "private": true,
   "type": "module",
   "files": [
     "dist",
     "model-profile/README.md"
   ],
-  "sideEffects": false,
+  "sideEffects": ["./dist/button.js"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -196,16 +196,26 @@
     "./model-profile": {
       "types": "./dist/model-profile.d.ts",
       "import": "./dist/model-profile.js"
+    },
+    "./carousel": {
+      "types": "./dist/carousel.d.ts",
+      "import": "./dist/carousel.js"
     }
   },
   "types": "./dist/index.d.ts",
   "peerDependencies": {
-    "react": ">=19.2.8 <20",
-    "react-dom": ">=19.2.8 <20",
     "@base-ui/react": ">=1.7.0 <2",
-    "@coffeehc/xui-runtime": "4.2.40"
+    "@coffeehc/xui-runtime": "4.2.41",
+    "react": ">=19.2.8 <20",
+    "react-dom": ">=19.2.8 <20"
   },
   "devDependencies": {
-    "@coffeehc/xui-runtime": "workspace:*"
+    "@coffeehc/xui-runtime": "workspace:*",
+    "@types/d3-scale": "4.0.9",
+    "@types/d3-shape": "3.2.0"
+  },
+  "dependencies": {
+    "d3-scale": "4.0.2",
+    "d3-shape": "3.2.0"
   }
 }

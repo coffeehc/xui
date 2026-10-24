@@ -14,9 +14,10 @@ const numeric = /(?<![\w-])[-+]?(?:\d*\.\d+|\d+)(?:e[-+]?\d+)?(?:[a-z]+|%)?/gi;
 export function checkDesignDeclaration(property, input, context = '') {
   const prop = kebab(property), value = String(input).trim();
   const fail = message => assert.fail(`${where(context)} ${prop}: ${value}: ${message}`.trim());
-  // One documented public composition alias, not permission to redefine defaults.
-  const workspaceTableMinimum = prop === '--layout-workspace-content-min-block-size' && value === 'var(--data-table-min-block-size)';
-  if (prop.startsWith('--') && !workspaceTableMinimum) fail('Design defaults belong only in the central token contract');
+  // Documented composition aliases reuse central values, never introduce defaults.
+  const compositionAlias = prop === '--layout-workspace-content-min-block-size' && value === 'var(--data-table-min-block-size)'
+    || prop === '--motion-duration-chart' && value === 'var(--motion-duration-enter)';
+  if (prop.startsWith('--') && !compositionAlias) fail('Design defaults belong only in the central token contract');
   if (/var\(\s*--(?:base|palette)-/i.test(value)) fail('Consumers must use semantic tokens');
   if (prop === 'content' && /^(?:["'][^"']*["']|none|normal)$/.test(value)) return;
   // Box selection is structural geometry, not a color or a size recipe.

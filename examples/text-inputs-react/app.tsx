@@ -6,6 +6,8 @@ import {Dialog} from '@coffeehc/xui-react/dialog';
 import {Sheet} from '@coffeehc/xui-react/sheet';
 import {Field,Textarea,InputGroup} from '@coffeehc/xui-react/forms';
 import '@coffeehc/xui-theme/style.css';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
+bootstrapBrowserExample();
 function App(){const [number,setNumber]=React.useState<number|null>(2),[password,setPassword]=React.useState(''),[search,setSearch]=React.useState(''),[submits,setSubmits]=React.useState(0),[clears,setClears]=React.useState(0),[revision,setRevision]=React.useState(0),[shown,setShown]=React.useState(true),[readOnly,setReadOnly]=React.useState(false);return <main className="xui-container" style={{padding:'var(--layout-content-inset)'}}><form onSubmit={event=>{event.preventDefault();setSubmits(n=>n+1);}}>
 <Field label="Capacity" help="Approximate JS number; empty is unset."><NumberInput name="capacity" value={number} min={-10} max={10} step={0.5} readOnly={readOnly} onValueChange={setNumber}/></Field>
 {shown&&<Field label="Password" help="Synthetic demo only; do not enter a real secret."><PasswordInput name="password" value={password} autoComplete="new-password" readOnly={readOnly} onValueChange={setPassword} onClear={()=>setClears(n=>n+1)}/></Field>}

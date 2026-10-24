@@ -1,15 +1,15 @@
 {
-  "contractVersion": "4.2.38",
+  "contractVersion": "4.2.41",
   "defaultTheme": "XUI Electric Violet",
   "defaultMode": "dark",
-  "defaultTokenCount": 440,
+  "defaultTokenCount": 446,
   "source": {
     "path": "docs/design-sources/precision-engineering-console.v1.txt",
     "sha256": "868135809aee6535a78beb54c495286579565a85af4ac46507e8a89f247e321f",
     "authority": "user-provided-design",
     "resolution": "Body Colors, Elevation & Depth and component states override the approximate YAML palette; light mode is derived. Button hover/pressed keep the established action-primary semantic recipes so product brand overrides inherit all states."
   },
-  "defaultCssSha256": "dd891f0d59074d719d14fc0b9e8f8ed3503800eef79a194ca748d596bc58c997",
+  "defaultCssSha256": "d7891404b1a39ed19682bd834eda5706bcc5ab8987def6bc3538db4fa9d16374",
   "protocolBoundarySha256": "3b3243d0e3c07fa2df75c967bb8f26759325501468681a56cd20da3f06fd8dad",
   "previousContract": {
     "repository": "https://github.com/coffeehc/xagent.git",
@@ -122,7 +122,8 @@
     "4.2.35 removes default focus outlines from public controls, grouped inputs, menus, combobox options and charts. Focus changes only existing visible border colors; invalid borders retain the error color and borderless controls keep their original boundary. Existing geometry, scroll clearance, keyboard interaction and state owners remain unchanged.",
     "4.2.36 unifies internal data-table compositions on DataTable with resizable business columns and fixed action columns. ApiKey and chart data views use the same sizing owner; structured-log semantic cell classes remain available. Column sizing reuses DataTable local, controlled or injected state and does not create a query owner.",
     "4.2.37 centralizes circular icon backgrounds and one default 32px diameter across Card/Icon tiles, default icon-button paint, InputGroup icon actions, compact navigation backgrounds and default avatars. Explicit sizes remain deliberate exceptions. Button hit targets and glyphs stay unchanged; input icon targets gain a shared minimum width so character advance cannot change circle size. Shape square is explicit, plain glyphs gain no background, and existing state owners remain. Card size/background tokens are compatibility aliases; shared icon size/background, navigation inset and isolated paint-layer tokens own the recipe.",
-    "4.2.38 keeps the existing ThemeService bound to the current Document root. A bounded document/root MutationObserver repairs replaced roots and cleared owned attributes; idempotent projection preserves logical snapshot identity and notifications. Existing interface-scale utilities retain the live reading size without re-reading or writing preferences during recovery. Destroy disconnects DOM/media observation. No palette, geometry, public API or hydration-mismatch ownership change."
+    "4.2.38 keeps the existing ThemeService bound to the current Document root. A bounded document/root MutationObserver repairs replaced roots and cleared owned attributes; idempotent projection preserves logical snapshot identity and notifications. Existing interface-scale utilities retain the live reading size without re-reading or writing preferences during recovery. Destroy disconnects DOM/media observation. No palette, geometry, public API or hydration-mismatch ownership change.",
+    "4.2.41: shared motion-duration-chart defaults to 900ms for every chart type and both entry/update phases, reduced to zero with reduced motion. Entry and confirmed-data update retain separate visual behavior; refresh never replays entry. Ordinary non-chart motion stays unchanged. No new public prop."
   ],
   "defaultPreset": "violet",
   "themePresets": [

@@ -7,7 +7,7 @@ import {PasswordInput, type PasswordInputHandle} from './text-inputs.js';
 import {FormGrid, FormActions, Stack} from './layout.js';
 import {Combobox} from './combobox.js';
 import {Disclosure} from './navigation.js';
-import {Alert, LoadingState} from './feedback.js';
+import {Alert, LoadingState, Spinner} from './feedback.js';
 import {Sheet} from './sheet.js';
 import {AlertDialog} from './alert-dialog.js';
 import {Toast, type ToastController} from './toast.js';
@@ -115,7 +115,7 @@ function ModelProfileFields({controller, labels: overrides, slots, disabled: vie
             <Combobox.Input id={`${id}-model`} aria-required="true" aria-invalid={!!issue('real_name')} aria-describedby={issue('real_name') ? `${id}-model-error` : undefined}/>
             <Combobox.Content><Combobox.Empty>{state.catalog ? labels.catalogEmpty : labels.catalogIdle}</Combobox.Empty><Combobox.List>{(value: string) => <Combobox.Item key={value} value={value}>{value}</Combobox.Item>}</Combobox.List></Combobox.Content>
           </Combobox.Root>
-          <Button type="button" variant="outline" disabled={locked || busy || !provider.catalog} aria-busy={state.operation === 'catalog'} onClick={() => void action('catalog')}>{labels.catalog}</Button>
+          <Button type="button" variant="outline" disabled={locked || busy || !provider.catalog} aria-busy={state.operation === 'catalog'} onClick={() => void action('catalog')}>{state.operation === 'catalog'&&<Spinner/>}{labels.catalog}</Button>
         </div>
         {!provider.catalog && <span className="xui-help">{labels.catalogUnsupported}</span>}
       </Field></FormGrid.Item>
@@ -141,9 +141,9 @@ function ModelProfileFields({controller, labels: overrides, slots, disabled: vie
     {state.testResult && <Disclosure title={labels.result}><div className="xui-model-profile-result" role="status">{slots?.result ? slots.result(context) : <><strong>{state.testResult.passed ? labels.tested : labels.testFailed}</strong><p>{state.testResult.summary}</p><dl><dt>{labels.elapsed}</dt><dd>{state.testResult.elapsed_ms}</dd>{state.testResult.embedding && <><dt>{labels.vectorCount}</dt><dd>{state.testResult.embedding.count}</dd><dt>{labels.dimensions}</dt><dd>{state.testResult.embedding.dimensions}</dd></>}</dl></>}</div></Disclosure>}
     {(state.error === 'save_unknown' || needsRead) && <Alert tone="error">{needsRead ? labels.savedReload : errorMessage}{(state.saveReceipt?.profile_id || state.data!.profile_id) && <Button type="button" variant="text" onClick={() => void controller.load()}>{labels.reload}</Button>}</Alert>}
     <FormActions secondary={<><Button type="button" variant="text" disabled={locked || busy || !state.dirty || state.error === 'save_unknown'} onClick={() => controller.reset()}>{labels.reset}</Button>{slots?.actions?.(context)}</>}>
-      <Button type="button" variant="outline" disabled={locked || busy} aria-busy={state.operation === 'test'} onClick={() => void action('test')}>{labels.test}</Button>
+      <Button type="button" variant="outline" disabled={locked || busy} aria-busy={state.operation === 'test'} onClick={() => void action('test')}>{state.operation === 'test'&&<Spinner/>}{labels.test}</Button>
       {busy && <Button type="button" variant="text" onClick={() => controller.cancel()}>{labels.cancel}</Button>}
-      <Button type="submit" disabled={locked || busy || !state.data!.can_save || state.error === 'save_unknown' || state.saveReceipt?.status === 'committed' && !state.dirty} aria-busy={state.operation === 'save'}>{labels.save}</Button>
+      <Button type="submit" disabled={locked || busy || !state.data!.can_save || state.error === 'save_unknown' || state.saveReceipt?.status === 'committed' && !state.dirty} aria-busy={state.operation === 'save'}>{state.operation === 'save'&&<Spinner/>}{labels.save}</Button>
     </FormActions>
   </form>;
 }

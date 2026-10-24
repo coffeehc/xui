@@ -1,4 +1,6 @@
 import * as React from 'react';
+import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
+bootstrapBrowserExample();
 import {createRoot} from 'react-dom/client';
 import {Menu,type MenuActionEvent,type MenuConfig,type MenuController} from '@coffeehc/xui-react/menu';
 import {createMenuController} from '@coffeehc/xui-runtime/menu';

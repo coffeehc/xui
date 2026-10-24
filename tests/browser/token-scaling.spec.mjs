@@ -230,7 +230,7 @@ for(const kind of kinds){
           expect(actual.thumb.width).toBeCloseTo(21.6,1);expect(actual.thumb.height).toBeCloseTo(21.6,1);
           expect(actual.thumb.translateX).toBeCloseTo(17.4,2);
           expect(actual.icon.width).toBe(24);expect(actual.icon.height).toBe(24);expect(actual.nav.gap).toBe('12px');
-          expect(actual.nav.minHeight).toBe(54);expect(actual.sidebar.width).toBe(324);expect(actual.sidebar.paddingLeft).toBe(18);
+          expect(actual.nav.minHeight).toBe(54);expect(actual.sidebar.width).toBe(288);expect(actual.sidebar.paddingLeft).toBe(18);
           expect(actual.input.borderTopWidth).toBe(baseline.input.borderTopWidth);expect(actual.input.radius).toBe(baseline.input.radius);
         }},
         {name:'radius',values:{'--base-radius':'12px'},check:actual=>{
@@ -396,7 +396,7 @@ for(const kind of kinds){
             const label=navItem(page,'library').locator('.xui-menu-label');await expect(label).toBeVisible();
             const box=await measure(label);expect(box.width).toBeGreaterThan(0);expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth+1);
             await assertType(navItem(page,'library'),'body-sm',scale,scale,factor);
-            const dialog=await measure(drawer);expect(dialog.x).toBeCloseTo(16*factor,1);expect(dialog.y).toBeCloseTo(16*factor,1);expect(dialog.right).toBeLessThanOrEqual(391);expect(dialog.scrollWidth).toBeLessThanOrEqual(dialog.clientWidth+1);
+            const dialog=await measure(drawer);expect(dialog.x).toBeCloseTo(0,1);expect(dialog.y).toBeCloseTo(0,1);expect(dialog.right).toBeLessThanOrEqual(391);expect(dialog.scrollWidth).toBeLessThanOrEqual(dialog.clientWidth+1);
             await assertNoOverflow(page);
             if(repeat===0)await snapshot(page,info,`font-${scale}-root-${rootPercent}-narrow-drawer`);
             await page.keyboard.press('Escape');await expect(drawer).toBeHidden();await expect(trigger).toBeFocused();

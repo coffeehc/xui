@@ -6,6 +6,8 @@
 
 4.2.7的`AppShellProps`/`MenuLayoutProps`可选`sidebarTabs?: React.ReactNode`为水平line Tabs提供统一分隔归属；Root/Panel/业务状态保持原owner，迁移与四项组合见[侧栏Tabs合同](COMPONENTS.md#侧栏快捷操作组合)。
 
+4.2.41：`/api-key` 的 ApiKeyManager 提供可选 keyCopy、toastController、locale/timeZone、rowActions；类型与秘密边界见 [API Key 列与复制](COMPONENTS.md#api-key-列与复制4241)。统一 Demo 使用合成凭据；真实后端读取能力与消费项目验收仍由宿主负责。
+
 下表链接到可读源码与合同；正式 types 路径由包 exports.types 指向 dist 声明。请固定 checkout SHA，先构建再消费，不直接把源码链接设成产品 alias。根入口是相应子入口的汇总；命名类型和运行时导出逐项记录到可再生成的 `.artifacts/public-api.json`，不手写另一份函数签名。
 
 [scripts/public-api.mjs](../scripts/public-api.mjs) 从实际 manifests/构建声明取全部名字；[文档守卫](../scripts/check-docs.mjs) 检查本表入口与 manifests 完全一致。[正式消费](../scripts/consumers.mjs) 在独立 tarball 安装中读取 ESM/CSS/init、编译命名导出的 type import、核对运行时导出并打包全部 ESM/CSS。下面的完整页面与 fixture 再证明实际组装行为，入口通过不代表未跑的产品集成通过。
@@ -33,6 +35,7 @@
 
 | import/script | 源码与导出 | 使用合同 | 示例 |
 | --- | --- | --- | --- |
+| `@coffeehc/xui-theme/carousel.css` <!-- public-entry: @coffeehc/xui-theme/carousel.css --> | [源码](../packages/theme/src/carousel.css) | [面包屑与走马灯](COMPONENTS.md#面包屑与走马灯4241) | [统一示例](../examples/components-react/navigation-media.tsx) |
 | `@coffeehc/xui-theme/style.css` <!-- public-entry: @coffeehc/xui-theme/style.css --> | [源码](../scripts/tokens.mjs) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-theme/tokens.css` <!-- public-entry: @coffeehc/xui-theme/tokens.css --> | [源码](DESIGN.md) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-theme/components.css` <!-- public-entry: @coffeehc/xui-theme/components.css --> | [源码](../packages/theme/src/components.css) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
@@ -56,6 +59,7 @@
 
 | import/script | 源码与导出 | 使用合同 | 示例 |
 | --- | --- | --- | --- |
+| `@coffeehc/xui-runtime/carousel` <!-- public-entry: @coffeehc/xui-runtime/carousel --> | [源码](../packages/runtime/src/carousel.ts) | [面包屑与走马灯](COMPONENTS.md#面包屑与走马灯4241) | [统一示例](../examples/components-react/navigation-media.tsx) |
 | `@coffeehc/xui-runtime` <!-- public-entry: @coffeehc/xui-runtime --> | [源码](../packages/runtime/src/index.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-runtime/init.js` <!-- public-entry: @coffeehc/xui-runtime/init.js --> | [源码](../packages/runtime/src/init.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-runtime/theme` <!-- public-entry: @coffeehc/xui-runtime/theme --> | [源码](../packages/runtime/src/theme.ts)；`ThemePreset`、`ThemeState.preset`、`ThemeService.setPreset`；`setInterfaceScale`、`InterfaceScale`、`InterfaceScaleOptions`，与根入口一致 | [主题与界面缩放](DESIGN.md#公共界面缩放) | [示例](../examples/page-composition-react/app.tsx) |
@@ -104,6 +108,7 @@
 
 | import/script | 源码与导出 | 使用合同 | 示例 |
 | --- | --- | --- | --- |
+| `@coffeehc/xui-react/carousel` <!-- public-entry: @coffeehc/xui-react/carousel --> | [源码](../packages/ui-react/src/carousel.tsx) | [面包屑与走马灯](COMPONENTS.md#面包屑与走马灯4241) | [统一示例](../examples/components-react/navigation-media.tsx) |
 | `@coffeehc/xui-react` <!-- public-entry: @coffeehc/xui-react --> | [源码](../packages/ui-react/src/index.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/button` <!-- public-entry: @coffeehc/xui-react/button --> | [源码](../packages/ui-react/src/button.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/forms` <!-- public-entry: @coffeehc/xui-react/forms --> | [源码](../packages/ui-react/src/forms.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
@@ -113,8 +118,8 @@
 | `@coffeehc/xui-react/dialog` <!-- public-entry: @coffeehc/xui-react/dialog --> | [源码](../packages/ui-react/src/dialog.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/feedback` <!-- public-entry: @coffeehc/xui-react/feedback --> | [源码](../packages/ui-react/src/feedback.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/metric-card` <!-- public-entry: @coffeehc/xui-react/metric-card --> | [源码](../packages/ui-react/src/metric-card.tsx) | [指标卡组合](COMPONENTS.md#metriccard) | [示例](../examples/metric-card-react/app.tsx) |
-| `@coffeehc/xui-react/chart` <!-- public-entry: @coffeehc/xui-react/chart --> | LineChart / BarChart / PieChart、ChartProps / CartesianChartProps / LineChartProps / BarChartProps / PieChartProps / ChartLabels 及数据类型；根入口同步导出 | [公共图表](COMPONENTS.md#公共图表) | [正式示例](../examples/charts-react/app.tsx) |
-| `@coffeehc/xui-runtime/chart` <!-- public-entry: @coffeehc/xui-runtime/chart --> | ChartCategory / ChartSeries / ChartSlice / ChartColor / ChartStatus / ChartDomain / PieArc；validateChartData / getChartDomain / scaleChartValue / getPieArcs；纯 TypeScript，无 DOM/请求 | [公共图表](COMPONENTS.md#公共图表) | [正式示例](../examples/charts-react/app.tsx) |
+| `@coffeehc/xui-react/chart` <!-- public-entry: @coffeehc/xui-react/chart --> | LineChart / BarChart / PieChart、ChartProps / CartesianChartProps / LineChartProps / LineChartCurve / BarChartProps / PieChartProps / ChartLabels 及数据类型；ChartProps.animation可选且默认true，复用motion Token和减少动态效果；根入口同步导出 | [公共图表](COMPONENTS.md#公共图表) | [正式示例](../examples/charts-react/app.tsx) |
+| `@coffeehc/xui-runtime/chart` <!-- public-entry: @coffeehc/xui-runtime/chart --> | ChartCategory / ChartSeries / ChartSlice / ChartColor / ChartStatus / ChartDomain / PieArc；validateChartData / getChartDomain / scaleChartValue / getPieArcs；返回合同不变，内部按需使用 D3 纯计算，无 DOM/请求或D3公开类型 | [公共图表](COMPONENTS.md#公共图表) | [正式示例](../examples/charts-react/app.tsx) |
 | `@coffeehc/xui-theme/chart.css` <!-- public-entry: @coffeehc/xui-theme/chart.css --> | 图表独立 CSS，包含于 style/components，按需配合 critical；不包含于 critical | [公共图表](COMPONENTS.md#公共图表) | [正式示例](../examples/charts-react/app.tsx) |
 | `@coffeehc/xui-react/layout` <!-- public-entry: @coffeehc/xui-react/layout --> | [源码](../packages/ui-react/src/layout.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-react/table` <!-- public-entry: @coffeehc/xui-react/table --> | [源码](../packages/ui-react/src/table.tsx) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
@@ -165,7 +170,7 @@ CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` �
 | --- | --- |
 | theme/init/useTheme | `bootstrap` 把 JSON `theme.mode` 作为非受控默认；有效的 `ui.theme.mode` sessionStorage 偏好优先，同标签页刷新保留、不主动跨页同步、不读取或迁移旧localStorage；无保存值时用配置默认 dark。`init.js` 只在首绘前恢复主题/缩放属性，不创建 controller；`bootstrap` / `getThemeService` 提供文档 owner，`useTheme` 只订阅。显式注入 `ThemeOptions.mode` 是受控模式，不读写 storage |
 | Button/IconButton | type=button、variant=primary、size=default；busy 与 disabled 分开，无隐式防重复；IconButton 要求 aria-label。render/ref/事件沿用公开 peer 合并合同 |
-| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；Textarea 可选 `autoResize={maxRows}`，只拥有尺寸，包含 stacked InputGroup 的上下 Addon 组合，默认未启用时行为不变，见[文本输入](COMPONENTS.md#textarea-可选自动增高)；Fieldset 独立关联 legend/help/error |
+| Field/Fieldset/choices | Field 自动统一已知控件 id/label/help/error；复合输入显式 controlId。Input/Textarea/SimpleSelect 与 checkbox/radio/switch 值/事件由宿主；SimpleSelect 可选 placeholder 仅呈现未选择文案，不改变值/事件/FormData。Textarea 可选 `autoResize={maxRows}`，只拥有尺寸，包含 stacked InputGroup 的上下 Addon 组合，默认未启用时行为不变，见[文本输入](COMPONENTS.md#textarea-可选自动增高)；Fieldset 独立关联 legend/help/error |
 | MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留 HTML link 导航，菜单键盘/drawer owner 由 React 组件提供 |
 | GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](COMPONENTS.md#groupedcombobox-与-disclosure) |
 | Pagination/Disclosure | Pagination 默认第 1 页，pageCount 由宿主；受控 page 只请求确认。Disclosure 默认关闭，装饰性 chevron 与公开 DisclosureIndicator 复用相同 tokens。两者不发请求、不自动路由 |
@@ -694,6 +699,8 @@ createBusinessLogHttpLoader({http,timeoutMs?}) 固定 GET /api/v1/business-logs 
 共享测试只证明合成DTO与HTTP边界一致；真实宿主权限/tenant、详情脱敏、保留政策及生产集成仍需产品验收。
 
 ## 程序错误观察
+
+4.2.41 组合补充：`StructuredLogLabels.all?: string` 给空多选提供可翻译显示，省略回退 `All`；值仍为空数组，不增加查询。`StructuredLogExplorerSlots.toastController?: ToastController` 可接宿主既有通知队列，默认自带队列/View；标识复制的瞬时结果与 ApiKeyManager 一次性值复制统一走 Toast，写入和查询 Controller 不变。接线见[内置页面示例](COMPONENTS.md#统一内置页面-demo4241)。
 
 这是独立程序错误观察功能。业务记录查询使用 [BusinessLogExplorer 合同](PUBLIC_API.md#业务日志)，不把 severity、错误分组或首次代表映射成 actor/action/result。
 

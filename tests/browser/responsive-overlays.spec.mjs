@@ -147,19 +147,19 @@ for(const kind of kinds){
     }
   }
 
-  test(`${kind} responsive overlays preserve bounded navigation, 60px rail and the separate 288px drawer cap`,async({page},info)=>{
+  test(`${kind} responsive overlays preserve bounded navigation, 60px rail and full-width navigation drawer`,async({page},info)=>{
     test.setTimeout(60000);await configure(page,viewports[0]);
     for(const viewport of viewports){
       await page.setViewportSize(viewport);await page.goto(`/layout-typography-${kind}/`);await page.waitForFunction(()=>!!window.layoutTypography);await settle(page);
       if(viewport.width>=768){
-        const sidebar=page.locator('.xui-shell-sidebar'),sidebarWidth=Math.min(clamp(324,viewport.width/4,432),viewport.width/2);expectNear((await box(sidebar)).width,sidebarWidth,'expanded navigation rail');
+        const sidebar=page.locator('.xui-shell-sidebar'),sidebarWidth=Math.min(clamp(192,viewport.width*.16,224),viewport.width/2);expectNear((await box(sidebar)).width,sidebarWidth,'expanded navigation rail');
         await capture(page,info,`nav-${viewport.width}-expanded`,{sidebarWidth});
         await page.getByRole('button',{name:'紧凑导航',exact:true}).click();await settle(page);expectNear((await box(sidebar)).width,60,'compact navigation rail');
         await capture(page,info,`nav-${viewport.width}-compact`,{sidebarWidth:60});
       }else{
         const trigger=page.getByRole('button',{name:'工作导航',exact:true});await trigger.click();const drawer=page.getByRole('dialog');
-        const actual=await assertWidth(drawer,288,viewport,16);expectNear(actual.x,16,'navigation drawer start inset');expectNear(actual.y,16,'navigation drawer top inset');
-        expect(actual.maxInlineSize).toBe('288px');await capture(page,info,`nav-${viewport.width}-drawer`,{width:288,maxInlineSize:288,inset:16});
+        const actual=await assertWidth(drawer,viewport.width,viewport);expectNear(actual.x,0,'navigation drawer start inset');expectNear(actual.y,0,'navigation drawer top inset');
+        expect(actual.maxInlineSize).toBe(viewport.width+'px');await capture(page,info,`nav-${viewport.width}-drawer`,{width:viewport.width,maxInlineSize:viewport.width,inset:0});
         await page.keyboard.press('Escape');await expect(drawer).toBeHidden();await expect(trigger).toBeFocused();
       }
       expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width+1);

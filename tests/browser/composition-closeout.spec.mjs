@@ -16,7 +16,7 @@ for(const kind of ['react'])for(const theme of ['light','dark','system'])test(`$
   await expect(table.locator('caption:visible')).toHaveCount(0);
   await expect(page.locator('.xui-feedback-slot:visible')).toHaveCount(0);
   const actions=table.locator('tbody button');expect(await actions.count()).toBeGreaterThan(0);
-  for(const action of await actions.all()){await expect(action).toHaveAttribute('data-variant','ghost');await expect(action).toHaveAttribute('data-size','xs');}
+  for(const action of await actions.all()){await expect(action).toHaveAttribute('data-variant',sample.path==='business-log'?'ghost':'text');await expect(action).toHaveAttribute('data-size','xs');}
   if(sample.path==='api-key'){
    await expect(page.getByRole('cell',{name:'有效',exact:true}).locator('.xui-badge')).toHaveAttribute('data-tone','success');
    expect(await page.getByRole('button',{name:'刷新列表',exact:true}).evaluate(node=>node.closest('.xui-page-header')!==null)).toBe(true);
@@ -27,8 +27,8 @@ for(const kind of ['react'])for(const theme of ['light','dark','system'])test(`$
    expect(bounds.y).toBeGreaterThanOrEqual(0);expect(bounds.y+bounds.height).toBeLessThanOrEqual(844);expect(first.y+first.height).toBeLessThanOrEqual(844);
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
    const primary=table.locator('tbody .xui-table-primary').first();expect((await primary.boundingBox()).width).toBeGreaterThanOrEqual(await primary.evaluate(node=>parseFloat(getComputedStyle(node).minInlineSize))-1);
-   for(const value of await table.locator('tbody .xui-table-value').all())expect(await value.evaluate(node=>{const range=document.createRange();range.selectNode(node.firstChild);return range.getClientRects().length;})).toBe(1);
-   for(const label of await table.locator('tbody .xui-table-label').all())expect(await label.evaluate(node=>{const text=node.ownerDocument.createTreeWalker(node,NodeFilter.SHOW_TEXT),range=document.createRange();let item;while(item=text.nextNode()){range.selectNode(item);if(range.getClientRects().length>1)return false;}return getComputedStyle(node).whiteSpace==='nowrap';})).toBe(true);
+   // Resizable business columns may wrap values; their row must still contain the complete content.
+   for(const value of await table.locator('tbody :is(.xui-table-value,.xui-table-label)').all())expect(await value.evaluate(node=>{const range=document.createRange();range.selectNodeContents(node);return range.getBoundingClientRect().height<=node.closest('td').getBoundingClientRect().height+1;})).toBe(true);
    await page.screenshot({path:info.outputPath(`${sample.path}-${kind}-${theme}-${width}.png`)});
   }
   const action=page.getByRole('button',{name:sample.action,exact:true});await action.click();

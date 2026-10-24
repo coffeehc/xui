@@ -59,7 +59,7 @@ test('Menu.Icon and ContextMenu.Icon expose one decorative, ref-preserving seman
   assert.equal(element.type,'span');
   assert.equal(element.props.ref,ref);
   assert.equal(element.props.children,child);
-  assert.equal(element.props.className,'xui-menu-icon host-icon');
+  assert.equal(element.props.className,'xui-icon-container xui-menu-icon host-icon');
   assert.equal(element.props['aria-hidden'],'true');
   assert.equal(element.props['data-icon'],'sample');
   assert.equal(Menu.Icon({'aria-hidden':false}).props['aria-hidden'],false);
@@ -72,7 +72,7 @@ test('Menu.Icon and ContextMenu.Icon expose one decorative, ref-preserving seman
   assert.equal(svg['block-size'],'100%');
   const css=postcss.parse(await readFile('packages/theme/dist/floating.css','utf8'));
   const svgSelectors=[];
-  css.walkRules(rule=>{if(/svg/.test(rule.selector))svgSelectors.push(rule.selector);});
+  css.walkRules(rule=>{if(/\.xui-menu-icon\b/.test(rule.selector)&&/svg/.test(rule.selector))svgSelectors.push(rule.selector);});
   assert.deepEqual(svgSelectors,['.xui-menu-icon > svg']);
 });
 

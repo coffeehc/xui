@@ -47,18 +47,18 @@ test('Tabs preserve controlled/uncontrolled value changes and cancellable activa
   }
 });
 
-test('selected Tabs retain their state under hover while unselected Tabs use the hover token', async ({ page }) => {
+test('line Tabs retain selected underline and foreground while both tabs use the hover token', async ({ page }) => {
   await setup(page);
   await page.evaluate(() => {
-    document.documentElement.style.setProperty('--interaction-selected', '#123456');
+    document.documentElement.style.setProperty('--action-primary', '#123456');
     document.documentElement.style.setProperty('--interaction-selected-foreground', '#ffffff');
     document.documentElement.style.setProperty('--interaction-hover', '#fedcba');
   });
   const selected = tab(page, 'A');
   const unselected = tab(page, 'B');
   await selected.hover();
-  await expect(selected).toHaveCSS('background-color', 'rgb(18, 52, 86)');
-  await expect(selected).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(selected).toHaveCSS('background-color', 'rgb(254, 220, 186)');
+  await expect(selected).toHaveCSS('color', 'rgb(18, 52, 86)');await expect(selected).toHaveCSS('border-bottom-color', 'rgb(18, 52, 86)');
   await unselected.hover();
   await expect(unselected).toHaveCSS('background-color', 'rgb(254, 220, 186)');
   await expect(selected).toHaveAttribute('aria-selected', 'true');

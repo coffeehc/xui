@@ -49,3 +49,5 @@ export * from './route.js';
 export * from './upload.js';
 
 export * from './model-profile.js';
+
+export * from './carousel.js';

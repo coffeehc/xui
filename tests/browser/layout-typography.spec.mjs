@@ -103,7 +103,7 @@ for(const kind of kinds){
     }
   });
   test(`${kind} exactly three compact links use 60px rail, symmetric 12px insets and stable normal-motion toggling`,async({page},info)=>{
-    await setup(page,kind,'?collapsed=true');await page.emulateMedia({reducedMotion:'no-preference'});await finishMotion(page);const sidebar=page.locator('.xui-shell-sidebar'),links=page.locator('.xui-navigation-menu [data-menu-control="primary"]');await expect(links).toHaveCount(3);
+    await setup(page,kind,'?collapsed=true&noReveal');await page.emulateMedia({reducedMotion:'no-preference'});await finishMotion(page);const sidebar=page.locator('.xui-shell-sidebar'),links=page.locator('.xui-navigation-menu [data-menu-control="primary"]');await expect(links).toHaveCount(3);
     for(let iteration=0;iteration<3;iteration++){
       const rail=await bounds(sidebar);expect(rail.width).toBeCloseTo(60,1);
       const rects=[];for(const link of await links.all()){
@@ -111,7 +111,7 @@ for(const kind of kinds){
         const icon=await bounds(link.locator('svg'));expect(icon.width).toBeCloseTo(16,1);expect(icon.height).toBeCloseTo(16,1);expect(icon.x-item.x).toBeCloseTo(10,1);
       }
       expect(rects[1].y-rects[0].bottom).toBeCloseTo(4,1);expect(rects[2].y-rects[1].bottom).toBeCloseTo(4,1);expect(rail.scrollWidth).toBeLessThanOrEqual(rail.clientWidth);
-      await page.getByRole('button',{name:'展开导航',exact:true}).click();await expect(page.locator('.xui-menu-layout')).toHaveAttribute('data-collapsed','false');await finishMotion(page);expect((await bounds(sidebar)).width).toBeCloseTo(324,1);
+      await page.getByRole('button',{name:'展开导航',exact:true}).click();await expect(page.locator('.xui-menu-layout')).toHaveAttribute('data-collapsed','false');await finishMotion(page);expect((await bounds(sidebar)).width).toBeCloseTo(204.8,1);
       const label=links.nth(1).locator('.xui-menu-label');expect(await label.evaluate(node=>getComputedStyle(node).whiteSpace)).not.toBe('nowrap');
       await page.getByRole('button',{name:'紧凑导航',exact:true}).click();await expect(page.locator('.xui-menu-layout')).toHaveAttribute('data-collapsed','true');await finishMotion(page);
     }
@@ -120,7 +120,7 @@ for(const kind of kinds){
     await capture(page,info,'three-link-compact');
   });
   test(`${kind} compact linked branch puts its toggle below the link without widening rail`,async({page},info)=>{
-    await setup(page,kind,'?collapsed=true&list=branch');const link=navItem(page,'library'),toggle=page.locator('[data-menu-id="library"][data-menu-control="toggle"]');
+    await setup(page,kind,'?collapsed=true&list=branch&noReveal');const link=navItem(page,'library'),toggle=page.locator('[data-menu-id="library"][data-menu-control="toggle"]');
     for(const expanded of ['true','false','true']){
       await toggle.click();await expect(toggle).toHaveAttribute('aria-expanded',expanded);await settle(page);
       const rail=await bounds(page.locator('.xui-shell-sidebar')),primary=await bounds(link),branch=await bounds(toggle);expect(rail.width).toBeCloseTo(60,1);contained(branch,rail);expect(branch.y).toBeGreaterThanOrEqual(primary.bottom-1);expect(rail.scrollWidth).toBeLessThanOrEqual(rail.clientWidth);
@@ -129,7 +129,7 @@ for(const kind of kinds){
     await capture(page,info,'compact-linked-branch');
   });
   test(`${kind} selected indicator survives hover and keyboard focus without moving compact icons`,async({page},info)=>{
-    await setup(page,kind,'?collapsed=true','dark');const selected=navItem(page,'overview'),other=navItem(page,'library');
+    await setup(page,kind,'?collapsed=true&noReveal','dark');const selected=navItem(page,'overview'),other=navItem(page,'library');
     const appearance=locator=>locator.evaluate(node=>{const s=getComputedStyle(node),i=getComputedStyle(node,'::before'),r=node.getBoundingClientRect();return {background:s.backgroundColor,color:s.color,border:s.borderWidth,indicator:{opacity:i.opacity,width:i.width,height:i.height,left:i.left,color:i.backgroundColor},x:r.x,width:r.width};});
     await page.mouse.move(1200,760);const initial=await appearance(selected);expect(initial.indicator).toMatchObject({opacity:'1',width:'2px',height:'16px',left:'2px'});expect(initial.border).toBe('0px');
     await selected.hover();expect(await appearance(selected)).toEqual(initial);await other.hover();expect((await appearance(other)).indicator.opacity).toBe('0');

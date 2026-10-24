@@ -1,12 +1,12 @@
 import {test,expect} from '@playwright/test';
-import {readFile,copyFile} from 'node:fs/promises';
+import {readFile,rm,symlink} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {build} from 'esbuild';
 let source;
 test.beforeAll(async()=>{
  const {runDirectory}=JSON.parse(await readFile('.consumers/latest.json','utf8')),cwd=resolve(runDirectory,'react');
- await copyFile('tests/fixtures/react-select-migration.tsx',`${cwd}/react-select-migration.tsx`);
- const result=await build({entryPoints:[`${cwd}/react-select-migration.tsx`],bundle:true,write:false,metafile:true,format:'iife',platform:'browser',jsx:'automatic',target:'es2022',define:{'process.env.NODE_ENV':'"production"'}});
+ await rm(`${cwd}/react-select-migration.tsx`,{force:true});await symlink(resolve('tests/fixtures/react-select-migration.tsx'),`${cwd}/react-select-migration.tsx`);
+ const result=await build({preserveSymlinks:true,entryPoints:[`${cwd}/react-select-migration.tsx`],bundle:true,write:false,metafile:true,format:'iife',platform:'browser',jsx:'automatic',target:'es2022',define:{'process.env.NODE_ENV':'"production"'}});
  expect(Object.keys(result.metafile.inputs).every(file=>resolve(file).startsWith(cwd+'/'))).toBe(true);
  source=result.outputFiles[0].text;
 });

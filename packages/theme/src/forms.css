@@ -185,11 +185,11 @@
 
 @layer xui-components {
  .xui-password-strength-input {display:grid;gap:var(--space-text-gap);min-inline-size:0;}
- .xui-password-strength-meter {appearance:none;display:block;inline-size:100%;block-size:var(--space-text-gap);border:0;padding:0;overflow:hidden;background:var(--muted);border-radius:var(--radius-full);}
- .xui-password-strength-meter::-webkit-meter-inner-element {display:block;}
- .xui-password-strength-meter::-webkit-meter-bar {block-size:100%;border:0;background:var(--muted);box-shadow:none;border-radius:var(--radius-full);}
- .xui-password-strength-meter::-webkit-meter-optimum-value {background:var(--status-error-foreground);border-radius:var(--radius-full);transition:width var(--motion-duration-fast) var(--motion-easing),background-color var(--motion-duration-fast) var(--motion-easing);}
- .xui-password-strength-meter::-moz-meter-bar {background:var(--status-error-foreground);border-radius:var(--radius-full);}
+ .xui-password-strength-meter {appearance:none;display:block;inline-size:100%;block-size:var(--progress-height);border:0;padding:0;overflow:hidden;background:var(--muted);border-radius:var(--progress-radius);}
+ .xui-password-strength-meter::-webkit-meter-inner-element {display:block;block-size:100%;}
+ .xui-password-strength-meter::-webkit-meter-bar {block-size:100%;border:0;background:var(--muted);box-shadow:none;border-radius:var(--progress-radius);}
+ .xui-password-strength-meter::-webkit-meter-optimum-value {background:var(--status-error-foreground);border-radius:var(--progress-radius);transition:width var(--motion-duration-fast) var(--motion-easing),background-color var(--motion-duration-fast) var(--motion-easing);}
+ .xui-password-strength-meter::-moz-meter-bar {background:var(--status-error-foreground);border-radius:var(--progress-radius);}
  .xui-password-strength-meter[data-level='medium']::-webkit-meter-optimum-value {background:var(--status-warning-foreground);}
  .xui-password-strength-meter[data-level='medium']::-moz-meter-bar {background:var(--status-warning-foreground);}
  .xui-password-strength-meter[data-level='strong']::-webkit-meter-optimum-value {background:var(--status-success-foreground);}

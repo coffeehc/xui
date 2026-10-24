@@ -26,16 +26,22 @@
   .xui-feedback-slot[data-layout='flow']:empty {display:none;}
   .xui-state[data-layout='inline'] {flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;text-align:start;padding:0;animation:none;}
   .xui-reserved-action[data-inactive='true'] {visibility:hidden;pointer-events:none;}
+  .xui-refresh-action {display:inline-grid;}
+  .xui-refresh-action>span {grid-column:1;grid-row:1;display:inline-flex;align-items:center;justify-content:center;gap:inherit;min-inline-size:0;text-align:center;}
+  /* Measure the busy content once; the visible idle label centers independently. */
+  .xui-refresh-action-measure {visibility:hidden;pointer-events:none;}
+  .xui-refresh-action-measure>.xui-spinner {animation:none;}
+  .xui-refresh-action-content>.xui-spinner {border-color:currentColor;border-inline-end-color:transparent;}
   .xui-data-region {min-inline-size:0;min-block-size:var(--data-region-min-block-size);}
   .xui-data-region[data-waiting='true'],.xui-data-region:has(>.xui-loading-state[data-layout='block']:only-child) {display:grid;}
   .xui-data-region[data-waiting='true']>.xui-feedback-slot {block-size:auto;display:grid;}
   .xui-data-region[aria-busy='true'] {border-color:var(--surface-line-strong);}
   .xui-skeleton {min-block-size:var(--control-height);inline-size:100%;background:var(--muted);border-radius:var(--radius-md);animation:xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate;}
   .xui-spinner {display:inline-block;flex:none;inline-size:var(--control-icon-size);block-size:var(--control-icon-size);border:var(--line-width-emphasis) solid var(--action-primary);border-inline-end-color:transparent;border-radius:var(--radius-full);animation:xui-spin var(--motion-duration-spin) linear infinite;}
-  .xui-progress {appearance:none;display:block;inline-size:100%;block-size:var(--space-control-gap);border:0;border-radius:var(--radius-sm);overflow:hidden;background:var(--muted);color:var(--action-primary);accent-color:var(--action-primary);}
-  .xui-progress::-webkit-progress-bar {background:var(--muted);border-radius:var(--radius-sm);}
-  .xui-progress::-webkit-progress-value {background:var(--action-primary);border-radius:var(--radius-sm);}
-  .xui-progress::-moz-progress-bar {background:var(--action-primary);border-radius:var(--radius-sm);}
+  .xui-progress {appearance:none;display:block;inline-size:100%;block-size:var(--progress-height);border:0;border-radius:var(--progress-radius);overflow:hidden;background:var(--muted);color:var(--action-primary);accent-color:var(--action-primary);}
+  .xui-progress::-webkit-progress-bar {background:var(--muted);border-radius:var(--progress-radius);}
+  .xui-progress::-webkit-progress-value {background:var(--action-primary);border-radius:var(--progress-radius);}
+  .xui-progress::-moz-progress-bar {background:var(--action-primary);border-radius:var(--progress-radius);}
   /* Omitted value remains truly indeterminate; never manufacture a percent. */
   .xui-progress:indeterminate {background:var(--interaction-selected);animation:xui-pulse var(--motion-duration-pulse) var(--motion-easing) infinite alternate;}
   .xui-progress:indeterminate::-webkit-progress-bar {background:var(--interaction-selected);}
