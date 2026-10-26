@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.41。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.42。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -2593,5 +2593,7 @@ Icon 保留 plain 默认；显式 variant=tile 使用 icon-container-size（默�
 同一基础 CSS owner 覆盖 Icon、公开 xui-icon-container、data-icon=true 的动作（含 IconButton、弹层/通知关闭、主题/导航开关、InputGroup 的显隐/清除/步进）、紧凑态图标导航与 Avatar；Menu.Icon、Toast.Icon、EmptyState 和 SidebarFooter 的装饰槽复用同一容器标记。无底色的 Tabs/菜单/通知图形、品牌 logo 和图表序列编码不因这一规则添加背景或重绘路径。InputGroup在原按钮内使用居中的基础尺寸绘制层，横纵直径相等，矩形命中区不随hover/pressed改变；icon-paint-z-index默认-1，仅位于自身隔离层glyph后方。nav-icon-background-inset从导航命中区与基础直径派生，手机完整文字行恢复原背景范围。颜色、glyph、focus、disabled/busy与业务回调仍由原组件负责，背景模型不建立新交互或请求owner。
 
 ### 模型配置编辑器
+
+策略展示按事实区分当前具体值与未配置：上下文容量未知时明确要求填写，推理强度缺省显示“未指定”，不能假称等于none/medium/high。后端已明确投影的配置/新增模板值直接展示；通用Provider模板不能冒充现有记录的生效值。必填由宿主在同一Controller声明，字段负责星号、关联错误及焦点；未满足时阻止相应提交，不增加查询或前端配置合并owner。
 
 模型配置沿用公共FormGrid/Fieldset/Field、PasswordInput、Combobox、Disclosure、FormActions和Sheet，不增加第二套皮肤。名称与协议优先，连接其次，运行参数及能力紧凑分组，高级Headers/JSON按需展开。真实模型名与目录动作属于同一字段区域，窄屏动作自然换行。向量协议显示专用测试输入及可选维度，隐藏聊天策略；不把协议固定能力伪装为探测结果。默认参数由agentCore经项目后端返回，xui只投影与跟踪显式修改。不提供说明字段，临时成功用Toast，保存未知结果保留简短阻断提示。详细API/slot及mock限制见[组件合同](COMPONENTS.md#公共模型配置)。

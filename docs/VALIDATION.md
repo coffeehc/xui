@@ -1,5 +1,18 @@
 # 验证证据与限制
 
+## 模型策略实际值与宿主必填规则（4.2.42，2026-10-26）
+
+仅修复 xui ModelProfileForm/Editor 及同一 Controller 的策略展示/校验，基于 main d27f1ba 三包递增至4.2.42；未修改 AgReady、AgentCore、BaseService、真实模型记录或部署。初始公开源码中 policyNumber 缺值和推理强度空选项均使用 providerDefault“协议默认”，本轮改为明确“未配置，请填写”/“未指定”。当前具体值直接展示，0容量保留原值并提示无有效容量，none与未指定区分；不把通用defaults回填为现有记录生效值，不猜160000或medium/high/none。后端未提供真实上下文/强度时只能保留未知、由宿主要求填写；已有editor API可表达明确值，无需新增端点或前端适配层。
+
+新增可选requiredPolicyFields（max_context_tokens/max_completion_tokens/reasoning_effort）归原Controller，默认[]保持已有可选操作。仅聊天test/save校验必填tokens为正安全整数、强度为非空字符串；catalog不受阻挡，向量/图片不套聊天规则。错误绑定公开Field并回焦。规则update保留原草稿与原owner，零请求且不取消已发操作；load/reset/clear仍按原生命周期处理草稿/取消，但保留宿主必填规则；后端继续独立验证。原HTTP DTO、认证、patch/六星号密钥/凭据清理和保存回执不变。新labels可选、旧完整labels和旧自定义state类型有正式fixture兼容检查；策略不再使用旧providerDefault文字。合同同步到随包README、PUBLIC_API、COMPONENTS、ADOPTION及MODEL-009～010。
+
+最终sourceGeneration：`2645e40f34cea6d78c01448e611eda0394f86a6f94f2e0b316739532e2a13def`。build、446 Token/指纹/依赖图、typecheck、定向Node **40/40**、正式独立三tarball ESM/CSS/types消费通过；全部115公开入口和React/ReactDOM19.2.8、Base UI1.7.0单实例核对通过，无packages/src alias，体积门禁未放宽。最终Chromium **34/34通过，0失败/跳过/重试**，其中新增策略专项8项；覆盖配置/模板值直显、不猜fallback、未指定/none、宿主必填、零无效请求、同Controller/草稿、错误关联/焦点、键盘选值及返回、labels热更新、只读/禁用、Sheet、三主题/390px/200%阅读/长中文和三种模式真实Chrome200%缩放。六张新状态截图已查看，索引含尺寸/哈希。Token与CSS默认值未修改，本轮未重跑整仓unit/browser、watch/cold-start、其他引擎或真实后端；库mock通过不代表AgReady已升级或实际模型参数正确。
+
+首轮同代并发浏览器记录为29通过/5失败（超时、teardown、目录/初始化等待），未计入最终通过。只读观测到19:26:25～19:27:03的OS休眠与最后一条Zoom超时重叠，且当时系统负载较高；不能因此断言全部失败都由休眠造成。保持源码和断言不变，单worker复验34/34通过；仅测试进程生命周期使用caffeinate -i，退出后已释放，没有修改系统配置或终止其他任务。首轮compact/失败trace、环境观察与最终报告均保留。
+
+证据：[checks.json](../.artifacts/model-profile-policy-4.2.42/checks.json)、[最终浏览器报告](../.artifacts/model-profile-policy-4.2.42/browser-policy-final.json)、[截图索引](../output/playwright/model-profile-policy-4.2.42/evidence.json)。可复现命令：pnpm build / check:tokens / typecheck；node --test tests/model-profile*.test.mjs tests/docs.test.mjs tests/contract.test.mjs；pnpm test:consumer；caffeinate -i pnpm exec playwright test tests/browser/model-profile.spec.mjs tests/browser/model-profile-policy.spec.mjs --workers=1 --retries=0。正式归档继续由pnpm archive和archive:verify自动生成并核对manifest/public-api.json/sourceGeneration/SHA256SUMS。
+
+
 ## 4.2.41 整体定版回归（2026-10-25）
 
 用户认可本轮统一 demo 和公共组件后，合并 main `d67ec1d5bc7ced4049678750da849e83ed7059e8` 以来的全部预览改动，三包只递增末位至 **4.2.41**。本节为定版结论；下方各“候选/未定版”章节是过程记录，不能替代最终正式产物证据。

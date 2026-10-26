@@ -862,6 +862,8 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | MODEL-006 | 模型配置Form/Editor | 向量协议可选、无聊天策略、Embed输入/维度仅用于测试；不把聊天测试拒绝误报为向量不可用 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
 | MODEL-007 | 模型配置Form/Editor | 测试/目录不保存；明确后端Save或SaveWithTest策略；逐项验50310未知、50311已提交后置失败（可叠加测试失败）、50312已提交测试失败；安全editor/新增ID/operation_id；onCommitted与onSaved无重复刷新；确认提交清dirty/凭据，缺editor锁定重读；取消/身份切换迟到无旧回调；无自动重写，CAS不覆盖 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
 | MODEL-008 | 模型配置Form/Editor | 同Controller切语言/主题/缩放不请求；键盘/浮层/Sheet关闭回焦、disabled/readOnly；成功反馈Toast，验真实页面及实际请求 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
+| MODEL-009 | policy 展示/后端 editor | 当前已配置或已投影进新增模板的具体 tokens/推理强度直接显示；缺上下文、0容量、未指定强度各自明确；none与未指定区分；不从通用defaults/模型名猜当前生效值，不将某实例窗口硬编码成全局默认 | config/defaults/草稿对照、字段实际显示与请求payload | [随包策略合同](../packages/ui-react/model-profile/README.md#策略值未指定与宿主必填规则4242) |
+| MODEL-010 | 宿主要求上下文/强度必填 | 同Controller的requiredPolicyFields接线；test/save缺失或非法值零请求、对应字段aria-invalid/错误关联/焦点；catalog不受阻挡；规则更新保留草稿与原owner、零请求且不取消已发操作；load/reset/clear保留必填规则但遵守原数据/取消生命周期 | Controller身份、draft、请求次数、键盘和正式types | [随包策略合同](../packages/ui-react/model-profile/README.md#策略值未指定与宿主必填规则4242) |
 
 ### 面包屑与走马灯逐项检查
 

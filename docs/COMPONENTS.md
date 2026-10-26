@@ -1816,6 +1816,8 @@ Menu.Icon、Toast.Icon、EmptyState.icon、SidebarFooter.icon 的被动包装复
 | result | 安全测试摘要/耗时/向量数量与维度；slots.result | 真实结果、不虚构token/价格，原始异常禁止带入 |
 | actions | 重置、测试、保存；slots.actions | FormActions主次动作；成功Toast，不挤动页面 |
 
+4.2.42 的 policy 区域直接显示当前具体值，缺失上下文显示“未配置，请填写”，输出和推理强度缺省显示“未指定”；明确的 `none` 单独显示。缺值不从通用defaults回填。宿主在原Controller配置 `requiredPolicyFields`，Field同步必填星号、错误关联及焦点，规则热更新保留草稿/Controller且零请求；默认不强制其他项目的业务规则，详见[随包合同](../packages/ui-react/model-profile/README.md#策略值未指定与宿主必填规则4242)。
+
 `labels` 是实时文字投影，变化不重建Controller/请求/草稿。`options` 与注入 `controller` 互斥；默认模型通过现有生命周期桥清理，注入模型不销毁。视图实际退出清除秘密及本次私有编辑状态，身份切换必须立即调用 `clear()` 或卸载旧作用域。禁用/只读不允许业务动作，取消保留可达。调用方可注入现有 toastController，默认自建局部通知。
 
 API Key和Headers明文不进入快照。API Key未配置时为空，已配置时显示固定六星号`******`，提交同一标记由后端按已授权的profile_id解析原密钥；空字符串清除，其他值替换。该标记为保留值；新增或原记录无密钥时必须拒绝，后端还原后才能交给AgentCore，不得将标记传给AgentCore或上游。Headers JSON默认显示`{}`，未编辑时不提交该字段并保留后端配置；直接编辑后提交完整对象进行整项替换，显式提交`{}`清空。Headers仅返回名称，不回填已有值；重置/保存后恢复空对象编辑框。目录/测试不持久化配置；保存确认后清理秘密并采用权威新版本；4.2.40通过saveReceipt区分提交与测试/后置处理结果。onCommitted用于刷新所有已确认提交，onSaved只在有安全editor时触发，宿主不在两处重复刷新。已提交缺editor清dirty但只读锁定，须显式重读；有editor后未编辑不重复保存。错误Toast保留“已保存但测试未通过”等事实，不冒充测试通过。保存结果未知禁重复保存；修改可重新读取已知ID，新建未知不能以读取默认配置解除阻断，宿主先核对创建结果再load(确认的ID)；重新读取是显式丢弃当前草稿，不把取消视为失败回滚。控制器getState返回不可变非秘密状态；外部扩展通过setField等动作修改。

@@ -19,7 +19,7 @@ bootstrap({app: {title: '模型配置 · XUI Preview'}}, {services: {http: {opti
 bindDemoPreferences(ThemeService);
 const params = new URLSearchParams(location.search);
 if (['light','dark','system'].includes(params.get('mode') ?? '')) ThemeService.setMode(params.get('mode') as 'light'|'dark'|'system');
-const controller = createModelProfileController({profileId: params.get('create') === '1' ? undefined : 'example-chat'});
+const controller = createModelProfileController({profileId: params.get('create') === '1' ? undefined : 'example-chat', requiredPolicyFields: params.has('require-policy') ? ['max_context_tokens', 'reasoning_effort'] : []});
 const sheetController = createModelProfileController({profileId: 'example-chat'});
 const notifications = {committed: [] as {id?: string; testFailed: boolean; completionFailed: boolean}[], saved: [] as string[]};
 const onCommitted = (receipt: ModelProfileCommittedSave) => {notifications.committed.push({id: receipt.profile_id, testFailed: receipt.test_failed, completionFailed: receipt.completion_failed});};
@@ -37,7 +37,7 @@ function App() {
       <Button variant="outline" onClick={() => void controller.load('example-embedding')}>修改向量模型</Button>
       <ModelProfileEditor onCommitted={onCommitted} onSaved={onSaved} controller={sheetController} open={sheet} onOpenChange={setSheet} title="编辑模型" trigger={<Button variant="text">抽屉预览</Button>}/>
     </Toolbar>
-    <Card title="模型参数"><ModelProfileForm onCommitted={onCommitted} onSaved={onSaved} controller={controller} disabled={disabled} readOnly={readOnly} labels={long ? {model_name: '模型名称：供多个业务应用识别与引用的完整中文名称', real_name: '真实模型名：上游目录中的准确标识或手动输入的私有部署名称'} : undefined}/></Card>
+    <Card title="模型参数"><ModelProfileForm onCommitted={onCommitted} onSaved={onSaved} controller={controller} disabled={disabled} readOnly={readOnly} labels={long ? {model_name: '模型名称：供多个业务应用识别与引用的完整中文名称', real_name: '真实模型名：上游目录中的准确标识或手动输入的私有部署名称', contextMissing: '尚未配置上下文容量，请按当前模型实际部署的窗口填写', notSpecified: '尚未指定推理强度'} : undefined}/></Card>
     <Disclosure title="测试场景"><Toolbar><Field label="Mock 响应"><SimpleSelect defaultValue="success" onChange={event => {mockModelAPI.behavior = event.target.value as typeof mockModelAPI.behavior;}}><option value="success">成功</option><option value="empty">目录为空</option><option value="slow">慢响应</option><option value="failure">请求失败</option><option value="unknown">保存结果未知</option><option value="test_failed">已保存但测试未通过</option><option value="completion_failed">已保存但后续处理失败</option><option value="both_failed">测试与后续处理都失败</option><option value="committed_no_id">已提交但尚无安全 ID</option></SimpleSelect></Field><Button variant="text" onClick={() => setReadOnly(!readOnly)}>切换只读</Button><Button variant="text" onClick={() => setDisabled(!disabled)}>切换禁用</Button><Button variant="text" onClick={() => setLongLabels(!long)}>长中文标签</Button><Button variant="text" onClick={() => setInterfaceScale(2)}>200% 阅读</Button><Button variant="text" onClick={() => setInterfaceScale(1)}>100% 阅读</Button></Toolbar></Disclosure>
   </Stack></Container>;
 }

@@ -2,7 +2,7 @@ import {createResource} from './resource.js';
 import {isHttpError} from './http.js';
 import {ModelProfileService} from './model-profile-service.js';
 import {parseModelProfileEditorData, parseModelPolicy, parseModelHeaders, parseModelCatalog, parseModelProfileTest, parseModelProfileSaveReceipt} from './model-profile-parse.js';
-import {modelProfileStoredKey, modelProfileProviders, type ModelProfileAdapter, type ModelProfileCandidate, type ModelProfileConfig, type ModelProfileCredentials, type ModelProfileEditorData, type ModelProfileField, type ModelProfileOperation, type ModelProfileState, type ModelCredentialMode, type ModelProfileSaveReceipt} from './model-profile-types.js';
+import {modelProfileStoredKey, modelProfileProviders, type ModelProfileAdapter, type ModelProfileCandidate, type ModelProfileConfig, type ModelProfileCredentials, type ModelProfileEditorData, type ModelProfileField, type ModelProfilePolicyField, type ModelProfileOperation, type ModelProfileState, type ModelCredentialMode, type ModelProfileSaveReceipt} from './model-profile-types.js';
 export * from './model-profile-types.js';
 export {ModelProfileClient, ModelProfileService, modelProfileEndpoints, type ModelProfileClientOptions} from './model-profile-service.js';
 export {parseModelProfileEditorData} from './model-profile-parse.js';
@@ -14,6 +14,8 @@ export interface ModelProfileControllerOptions {
   initial?: ModelProfileEditorData;
   disabled?: boolean;
   readOnly?: boolean;
+  /** Optional host preflight for chat test/save. Catalog remains independent; the backend still validates. */
+  requiredPolicyFields?: readonly ModelProfilePolicyField[];
   /** Finite waiting even for non-cooperative injected adapters. Default 180 seconds. */
   timeoutMs?: number;
 }
@@ -37,15 +39,21 @@ export interface ModelProfileController {
   reset(): void;
   /** Clear private view data immediately on identity/scope exit, including injected controllers. */
   clear(): void;
-  update(gates: {disabled?: boolean; readOnly?: boolean}): void;
+  /** Changes gates/required fields without replacing the draft, issuing IO or cancelling an in-flight operation. */
+  update(gates: {disabled?: boolean; readOnly?: boolean; requiredPolicyFields?: readonly ModelProfilePolicyField[]}): void;
   destroy(): void;
 }
 const initialState = (): ModelProfileState => ({data: null, draft: null, policyText: '', dirty: false, operation: null, catalog: null, testResult: null, saveReceipt: null, errors: {}, error: null, apiKeyMode: 'keep', headersMode: 'keep', embeddingInput: '', embeddingDimensions: '', disabled: false, readOnly: false, credentialRevision: 0});
+const policyFields: readonly ModelProfilePolicyField[] = ['max_context_tokens', 'max_completion_tokens', 'reasoning_effort'];
+function requiredPolicyFields(input: readonly ModelProfilePolicyField[] = []): readonly ModelProfilePolicyField[] {
+  if (!Array.isArray(input) || input.some(field => !policyFields.includes(field))) throw new TypeError('Unknown required model policy field');
+  return Object.freeze(policyFields.filter(field => input.includes(field)));
+}
 
 /** Per-editor draft owner. Sends explicit patches only; effective profile merge belongs to the backend. */
 export function createModelProfileController(options: ModelProfileControllerOptions = {}): ModelProfileController {
   const service = options.service ?? ModelProfileService;
-  let profileId = options.profileId, state: Readonly<ModelProfileState> = Object.freeze({...initialState(), disabled: !!options.disabled, readOnly: !!options.readOnly});
+  let profileId = options.profileId, state: Readonly<ModelProfileState> = Object.freeze({...initialState(), disabled: !!options.disabled, readOnly: !!options.readOnly, requiredPolicyFields: requiredPolicyFields(options.requiredPolicyFields)});
   let patch: Partial<ModelProfileConfig> = {}, dead = false, reader: (() => ModelProfileCredentials) | undefined;
   const listeners = new Set<() => void>();
   const publish = (next: Partial<ModelProfileState>) => {state = Object.freeze({...state, ...next}); for (const listener of listeners) {try {listener();} catch {/* A view observer cannot change an operation outcome. */}}};
@@ -108,6 +116,14 @@ export function createModelProfileController(options: ModelProfileControllerOpti
     if (!Number.isSafeInteger(draft.timeout_seconds) || draft.timeout_seconds < 0) errors.timeout_seconds = 'integer';
     if (!Number.isSafeInteger(draft.max_concurrency) || draft.max_concurrency < -1 || draft.max_concurrency === 0) errors.max_concurrency = 'integer';
     if (draft.provider_type !== 'openai_embeddings') {try {parseModelPolicy(JSON.parse(state.policyText));} catch {errors.default_policy = 'json';}}
+    if (operation !== 'catalog' && modelProfileProviders.find(provider => provider.id === draft.provider_type)!.kind === 'chat' && !errors.default_policy) {
+      for (const field of state.requiredPolicyFields ?? []) {
+        const value = draft.default_policy?.[field];
+        if (field === 'reasoning_effort') {if (typeof value !== 'string' || !value.trim()) errors[field] = 'required';}
+        else if (value === undefined || value === null || value === '') errors[field] = 'required';
+        else if (typeof value !== 'number' || !Number.isSafeInteger(value) || value <= 0) errors[field] = 'integer';
+      }
+    }
     let credentials: ModelProfileCredentials = {}, credentialsRead = false;
     try {credentials = reader?.() ?? {}; credentialsRead = true;} catch {errors.headers = 'json';}
     // Invalid Headers JSON aborts the view reader before it can return the key.
@@ -123,7 +139,7 @@ export function createModelProfileController(options: ModelProfileControllerOpti
   const controller: ModelProfileController = {
     getState: () => state,
     subscribe(listener) {if (dead) return () => {}; listeners.add(listener); return () => {listeners.delete(listener);};},
-    async load(id: string | null | undefined = profileId) {if (dead || (state.error === 'save_unknown' || needsRead()) && state.data?.profile_id === null && !id) return; cancel(); profileId = id ?? undefined; patch = {}; publish({...initialState(), disabled: state.disabled, readOnly: state.readOnly, credentialRevision: state.credentialRevision + 1}); await run('load', signal => service.read(profileId, {signal}));},
+    async load(id: string | null | undefined = profileId) {if (dead || (state.error === 'save_unknown' || needsRead()) && state.data?.profile_id === null && !id) return; cancel(); profileId = id ?? undefined; patch = {}; publish({...initialState(), disabled: state.disabled, readOnly: state.readOnly, requiredPolicyFields: state.requiredPolicyFields, credentialRevision: state.credentialRevision + 1}); await run('load', signal => service.read(profileId, {signal}));},
     setField(key, value) {
       if (!allowed()) return;
       if (!Object.hasOwn(state.draft!, key)) throw new TypeError('Unknown model field');
@@ -162,8 +178,13 @@ export function createModelProfileController(options: ModelProfileControllerOpti
     async save() {const input = request('save'); if (input) return run('save', signal => service.save(input, {signal}));},
     cancel,
     reset() {if (!allowed() || state.error === 'save_unknown') return; cancel(); install(state.data!, state.saveReceipt);},
-    clear() {if (dead) return; cancel(); patch = {}; publish({...initialState(), disabled: state.disabled, readOnly: state.readOnly, credentialRevision: state.credentialRevision + 1});},
-    update(gates) {if (dead) return; publish({disabled: gates.disabled ?? state.disabled, readOnly: gates.readOnly ?? state.readOnly});},
+    clear() {if (dead) return; cancel(); patch = {}; publish({...initialState(), disabled: state.disabled, readOnly: state.readOnly, requiredPolicyFields: state.requiredPolicyFields, credentialRevision: state.credentialRevision + 1});},
+    update(gates) {
+      if (dead) return;
+      const required = gates.requiredPolicyFields === undefined ? state.requiredPolicyFields : requiredPolicyFields(gates.requiredPolicyFields);
+      const errors = gates.requiredPolicyFields === undefined ? state.errors : Object.freeze(Object.fromEntries(Object.entries(state.errors).filter(([field]) => !policyFields.includes(field as ModelProfilePolicyField))));
+      publish({disabled: gates.disabled ?? state.disabled, readOnly: gates.readOnly ?? state.readOnly, requiredPolicyFields: required, errors});
+    },
     destroy() {if (dead) return; controller.clear(); dead = true; resource.destroy(); reader = undefined; listeners.clear();},
   };
   if (options.initial) install(options.initial);

@@ -94,7 +94,9 @@ export type ModelCredentialMode = 'keep' | 'replace' | 'clear';
 export interface ModelProfileCredentials {api_key?: string; headers?: Readonly<Record<string, string>>}
 export type ModelProfileOperation = 'load' | 'catalog' | 'test' | 'save';
 export type ModelProfileIssue = 'required' | 'url' | 'integer' | 'json' | 'credentials' | 'tooLong';
-export type ModelProfileField = keyof ModelProfileConfig | 'api_key' | 'headers' | 'embedding_input' | 'embedding_dimensions';
+/** Known chat policy controls. Missing values have no inferred upstream default. */
+export type ModelProfilePolicyField = 'max_context_tokens' | 'max_completion_tokens' | 'reasoning_effort';
+export type ModelProfileField = keyof ModelProfileConfig | ModelProfilePolicyField | 'api_key' | 'headers' | 'embedding_input' | 'embedding_dimensions';
 export interface ModelProfileState {
   readonly data: Readonly<ModelProfileEditorData> | null;
   readonly draft: Readonly<ModelProfileConfig> | null;
@@ -113,6 +115,8 @@ export interface ModelProfileState {
   readonly embeddingDimensions: string;
   readonly disabled: boolean;
   readonly readOnly: boolean;
+  /** Host-required chat policy fields; omitted by older custom controllers. No HTTP DTO field. */
+  readonly requiredPolicyFields?: readonly ModelProfilePolicyField[];
   /** Increments when views must erase secret DOM values. */
   readonly credentialRevision: number;
 }

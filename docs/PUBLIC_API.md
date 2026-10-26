@@ -1178,7 +1178,7 @@ import {Avatar} from '@coffeehc/xui-react/avatar';
 
 公开 CSS 标记 xui-icon-container / data-icon=true 默认圆形，data-icon-shape=square 为显式例外；不自动添加背景、尺寸、按钮角色或焦点停靠。被动槽与紧凑导航由库内部统一接入，宿主按[组件合同](COMPONENTS.md#图标背景基础模型4237)选择公开选项，不用按资源类型复制 CSS。新增尺寸、背景、导航内距和绘制层四个基础 Token 及 Card 原 Token 兼容别名见[设计合同](DESIGN.md#图标背景的统一形状4237)。
 
-## 模型配置（4.2.40）
+## 模型配置（4.2.42）
 
 | import/script | 源码与导出 | 使用合同 | 示例 |
 | --- | --- | --- | --- |
@@ -1190,6 +1190,8 @@ import {Avatar} from '@coffeehc/xui-react/avatar';
 六个 Provider ID 与 agentCore 对应：openai_completions、openai_responses、openai_images、openai_embeddings、gemini、anthropic。目录支持前四种；Gemini/Anthropic保留手工真实模型名。向量专用测试输入 `{input:string[],dimensions?:number}` 属于单次测试，不能放进聊天 default_policy 或保存向量索引配置。已核对 agentCore `aeea6c2c7255021a0d77b7a3a0865a69031b5709` 的 llmprovider.Service：ListModels、TestModelProfile、Embed，以及 TestEmbeddingModelProfile。聊天/图片与向量测试各用对应入口；采用项目仍核对实际依赖，xui 不实现 SDK/测试协议。
 
 默认配置由 agentCore `llmprovider.Service.GetDefaultProfile(providerType, model)` 提供并由项目后端投影；model 可为空且默认值不能从产品私有模板复制。示例默认值全是合成 mock。配置合并、授权、并发版本和凭据存储均归项目后端。AgentCore 执行入口仅接收后端已合并、包含真实明文凭据的有效 Profile；不接收前端 patch、掩码或 profile_id 查库请求。详见[后端实施提示词](#模型配置后端实施提示词)。
+
+4.2.42：`ModelProfileControllerOptions.requiredPolicyFields?: readonly ModelProfilePolicyField[]` 以及同名 `controller.update` 配置声明宿主的聊天 test/save 必填规则；字段类型为 `max_context_tokens | max_completion_tokens | reasoning_effort`，默认空列表。`ModelProfileState.requiredPolicyFields?` 是只读展示投影，不进入 HTTP DTO。缺失/非法的规则字段通过既有 `errors` 分别反馈到对应字段，目录不受规则阻挡。表单的 `contextMissing` / `notSpecified` labels 区分未配置与实际值，保留旧 label 类型兼容；不推导上下文/推理强度或前端合并通用模板。完整规则、后端事实缺口见[随包 README](../packages/ui-react/model-profile/README.md#策略值未指定与宿主必填规则4242)。
 
 ### 模型配置后端实施提示词
 

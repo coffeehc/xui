@@ -478,4 +478,6 @@ BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 和 Chart 数据视�
 
 ### 模型配置定向接入
 
+4.2.42 升级还需按 MODEL-009～010 检查策略实际值与未知状态；要求正上下文/明确强度的宿主通过原 Controller 的 requiredPolicyFields 声明，不复制表单或增加默认值/DTO适配。已有后端缺少真实值时按[随包规则](../packages/ui-react/model-profile/README.md#策略值未指定与宿主必填规则4242)补事实，不能让前端猜测。
+
 仅有模型配置业务的项目使用公共ModelProfileForm/Editor，通过[模型配置slot合同](COMPONENTS.md#公共模型配置)和MODEL-001～008验收。默认Http client按[后端实施提示词](PUBLIC_API.md#模型配置后端实施提示词)接线，4.2.39起通过正式包提供组件及随包README。项目后端负责权限、读取旧配置、合并、六星号密钥解析、CAS及调用agentCore；AgentCore只接收完整明文Profile，不负责掩码、合并或存储；前端不加第二层DTO适配，不把默认值复制到config.json或组件。采用BaseService的项目由llmservice统一处理后端合同，宿主仅接权限/存储；缺少正式后端时可mock预览，不能声称产品接入完成。4.2.40保存结果按随包README区分提交与测试：宿主列表刷新使用onCommitted，onSaved只消费权威editor，避免双重刷新；已提交缺editor和真正未知分别处理，不能在前端私改503响应。

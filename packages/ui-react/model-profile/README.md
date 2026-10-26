@@ -105,6 +105,30 @@ export function EditModel() {
 
 密钥和 Header 值只在输入控件及单次请求作用域短暂持有，不进入 Controller 公开快照、URL、storage、普通日志或原始错误反馈。身份切换应立即 `clear()` 或卸载旧编辑器；后端必须在返回摘要和错误前脱敏。
 
+## 策略值、未指定与宿主必填规则（4.2.42）
+
+表单直接显示当前 `config.default_policy` / 草稿中的具体值。新增时的 `config`、或显式切换 Provider 后使用的 `defaults` 可以包含后端给出的模板值，这些值直接显示；现有记录缺字段时，前端不会从 `defaults`、模型名、Provider 名或 Demo 数字推导一个“实际生效值”，也不会因渲染/规则变化修改草稿或自动发请求。
+
+- 上下文缺失显示“未配置，请填写”；返回0等非正整数时保留原值并说明未配置有效容量，不假称0是可用窗口。实际容量由模型部署/后端事实决定。
+- 输出 tokens 有值直接显示；缺失显示“未指定”。
+- 推理强度有具体字符串直接选中；未确定显示“未指定”。`none` 是明确配置，和没有指定不同；选“未指定”删除草稿中的该键，并以既有整对象替换规则提交，不能伪称上游会采用 medium/high/none。
+- `labels.contextMissing` / `labels.notSpecified` 可热更新文字；旧 `providerDefault` label 保留以兼容覆盖对象，策略控件不再用它掩盖缺值。
+
+宿主如果要求聊天模型具备上下文容量或明确的推理强度，在原 Controller 声明可选规则：
+
+```ts
+const controller = createModelProfileController({
+  profileId,
+  requiredPolicyFields: ['max_context_tokens', 'reasoning_effort'],
+});
+// 规则热更新；[] 取消必填。保留同一个草稿、Controller 和请求 owner。
+controller.update({requiredPolicyFields: ['max_context_tokens']});
+```
+
+允许的 `ModelProfilePolicyField` 为 `max_context_tokens`、`max_completion_tokens`、`reasoning_effort`；默认空列表保持原有可选行为。规则只在聊天的 test/save 操作边界执行，不阻止目录读取，不适用于向量/图片协议，也不取消已经发出的操作。必填 tokens 必须为正安全整数，必填推理强度必须为非空字符串；不在 xui 猜测 Provider 的取值上限或新增统一强度默认。缺失/非法时零请求，错误关联到对应公开字段并聚焦；load/reset/clear保留宿主规则，规则更新不重置数据、草稿、目录或秘密。后端仍需独立校验。
+
+后端事实缺口：若只提供“输出16384”，没有当前记录/新增模板的上下文容量或推理强度，xui 无法从该响应显示一个可信的具体值。后端应在已确定时返回当前配置/模板的明确字段，未知继续缺省；特别是已有记录不能仅凭通用 Provider 模板宣称继承生效。不需要新增接口或前端适配层，仍使用已有 editor API 和后端合并规则。AgReady 等要求 `max_context_tokens > 0` 的项目应启用相应必填规则；某个 vLLM 实例的160000仅是该实例事实，不能变成公共默认。
+
 ## Provider、目录与测试
 
 | Provider ID | 协议类型 | 目录按钮 |

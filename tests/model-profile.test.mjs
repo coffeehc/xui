@@ -180,3 +180,46 @@ test('identity clear inside a commit observer cannot resurrect receipt or return
  controller.subscribe(()=>{if(!cleared&&controller.getState().saveReceipt?.status==='committed'){cleared=true;controller.clear();}});
  assert.equal(await controller.save(),undefined);assert.equal(controller.getState().data,null);assert.equal(controller.getState().saveReceipt,null);controller.destroy();
 });
+
+test('host-required policy blocks chat test/save without guessing defaults, but never blocks catalog', async () => {
+ const {controller,calls}=setup({}, {requiredPolicyFields:['max_context_tokens','reasoning_effort']});
+ const before=controller.getState().draft;
+ await controller.test();await controller.save();assert.equal(calls.length,0);
+ assert.deepEqual(controller.getState().errors,{max_context_tokens:'required',reasoning_effort:'required'});
+ assert.equal(controller.getState().draft,before);assert.deepEqual(before.default_policy,{});
+ await controller.catalog();assert.equal(calls.length,1);assert.equal(Object.hasOwn(calls[0].config,'default_policy'),false);
+ controller.setField('default_policy',{max_context_tokens:160000,max_completion_tokens:16384,reasoning_effort:'none'});
+ await controller.test();assert.deepEqual(calls[1].config.default_policy,{max_context_tokens:160000,max_completion_tokens:16384,reasoning_effort:'none'});
+ assert.deepEqual(controller.getState().errors,{});controller.destroy();
+});
+test('required token capacity is a positive safe integer; unspecified reasoning is distinct from none', async () => {
+ const {controller,calls}=setup({}, {requiredPolicyFields:['max_context_tokens','max_completion_tokens','reasoning_effort']});
+ for(const value of [0,-1,1.5,Number.MAX_SAFE_INTEGER+1,'160000']){
+  controller.setField('default_policy',{max_context_tokens:value,max_completion_tokens:16384,reasoning_effort:'none'});await controller.test();assert.equal(controller.getState().errors.max_context_tokens,'integer');
+ }
+ controller.setField('default_policy',{max_context_tokens:160000,max_completion_tokens:null,reasoning_effort:''});await controller.test();
+ assert.deepEqual(controller.getState().errors,{max_completion_tokens:'required',reasoning_effort:'required'});assert.equal(calls.length,0);
+ controller.setField('default_policy',{max_context_tokens:160000,max_completion_tokens:16384,reasoning_effort:'future-explicit-effort'});await controller.test();assert.equal(calls.length,1);controller.destroy();
+});
+test('required fields stay with the same owner across update, reset, load and clear without merging templates', async () => {
+ const input=data();input.defaults=input.defaults.map(item=>({...item,default_policy:item.provider_type==='openai_embeddings'?null:{max_context_tokens:999999,reasoning_effort:'high'}}));
+ const {controller,calls}=setup({}, {initial:input});controller.setField('model_name','Retained draft');const draft=controller.getState().draft,confirmed=controller.getState().data;
+ controller.update({requiredPolicyFields:['reasoning_effort','max_context_tokens']});
+ assert.equal(controller.getState().draft,draft);assert.equal(controller.getState().data,confirmed);assert.equal(calls.length,0);assert.deepEqual(draft.default_policy,{});
+ await controller.test();assert.equal(calls.length,0);assert.equal(controller.getState().errors.max_context_tokens,'required');
+ controller.update({requiredPolicyFields:[]});assert.deepEqual(controller.getState().errors,{});assert.equal(controller.getState().draft,draft);
+ controller.update({requiredPolicyFields:['max_context_tokens']});controller.reset();assert.deepEqual(controller.getState().requiredPolicyFields,['max_context_tokens']);
+ await controller.load();assert.deepEqual(controller.getState().requiredPolicyFields,['max_context_tokens']);controller.clear();assert.deepEqual(controller.getState().requiredPolicyFields,['max_context_tokens']);
+ await controller.load();await controller.test();assert.equal(controller.getState().errors.max_context_tokens,'required');
+ const state=controller.getState();assert.throws(()=>controller.update({requiredPolicyFields:['invented']}),TypeError);assert.equal(controller.getState(),state);assert(Object.isFrozen(state.requiredPolicyFields));controller.destroy();
+ assert.throws(()=>createModelProfileController({requiredPolicyFields:['invented']}),TypeError);
+});
+test('policy requirements apply to chat only and do not cancel a previously admitted operation', async () => {
+ const waiting=defer();const {controller,calls}=setup({test:async candidate=>{calls.push(candidate);return waiting.promise;}});
+ const job=controller.test();await Promise.resolve();const draft=controller.getState().draft;
+ controller.update({requiredPolicyFields:['max_context_tokens','reasoning_effort']});assert.equal(controller.getState().operation,'test');assert.equal(controller.getState().draft,draft);
+ waiting.resolve({schema_version:1,kind:'chat',passed:true,elapsed_ms:2,summary:'Passed'});await job;assert.equal(controller.getState().testResult.passed,true);
+ await controller.test();assert.equal(calls.length,1);controller.destroy();
+ const vector=setup({test:async candidate=>({schema_version:1,kind:'embedding',passed:true,elapsed_ms:1,summary:'Encoded',embedding:{count:1,dimensions:3}})}, {requiredPolicyFields:['max_context_tokens','reasoning_effort']});
+ vector.controller.setField('provider_type','openai_embeddings');vector.controller.setEmbeddingTest('Fixture','');await vector.controller.test();assert.equal(vector.controller.getState().testResult.passed,true);assert.deepEqual(vector.controller.getState().errors,{});vector.controller.destroy();
+});
