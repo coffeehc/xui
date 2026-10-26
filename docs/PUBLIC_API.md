@@ -605,6 +605,8 @@ Cookie mutation必须在外层事务确认后才发送新secret/Set-Cookie；unk
 
 wire metadata 为 id/name/prefix/permission_ids/created_at/expires_at/last_used_at/可选 last_used_at_pending/status/version/enabled/capabilities{update,revoke,delete_record}。nullable 字段必须明确 null，status 为 active/disabled/revoked/expired/unknown/null；version 必须为规范正 int64 十进制字符串（与 ID 编码独立），enabled 为明确 boolean。metadata 不允许 secret/token 等额外字段。内部公开 metadata 使用 camelCase，仅精确映射一次。
 
+截至 4.2.42，上表是官方 adapter 的完整 HTTP 操作集合，没有列表秘密读取方法，也不投影可复制能力。React `keyCopy.readValue` 是已有正式读取 owner 的扩展点，不是该 adapter 自动提供的 reader。BaseService 核心已有 GetSecret，但当前配套 webfacade 没有暴露该动作或逐行读取能力；只存哈希的记录无论升级与否都不能还原。缺少正式读取合同时保持 `keyCopy={false}`，不要猜 URL、把 create 的一次性值当列表缓存、返回 prefix/掩码或增加消费端私有适配层。待办、固定后端证据和双方接线顺序见 [维护清单](PUBLIC_REQUESTS.md#api-key-列表复制的官方读取合同2026-10-27待-baseservice)。
+
 默认 ID 编码 decimal，可显式 hex；列表/创建/响应确认/请求路径采用同一规范正 int64 编码，发送前拒绝非法目标。权限和期限代码不受影响，custom adapter 仍可使用不透明 ID。详情 [HTTP 与查询](PUBLIC_API.md#显式实体身份编码)。
 
 `last_used_at_pending:boolean` 只映射为 `lastUsedAtPending`。true 显示“待保存”，false/缺失各自保留；不从本机时间、nullable 时间或状态推断。访问元数据待保存不是写入事务 pending。分页完整收集预算30秒、每页最多200、默认最多5000条（显式可至100000）；拒绝变动 total、重复ID、缺页、超限，不承诺跨页原子快照。

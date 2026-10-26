@@ -1724,6 +1724,8 @@ ApiKeyManager 的 `prefix` 为独立列；名称仅显示名称，密钥列显�
 
 上述接口自 4.2.41 正式提供；真实后端是否可再次读取必须由业务合同确认。示例 [统一 Demo](../examples/pages-react/app.tsx) 只使用合成凭据。
 
+官方 BaseService 接线截至 4.2.42 **尚不能直接启用列表复制**：`createApiKeyHttpAdapter` 没有 reader/逐行复制能力，当前 webfacade 没有秘密回读动作。核心 GetSecret 的存在不能代替 HTTP 合同；`FormatHashOnly` 历史值不可恢复，也不能为复制自动轮换。使用该默认 facade 时保持 `keyCopy={false}`；已有独立正式授权读取 owner 的宿主可使用上述扩展。库端布局已交付、后端读取未交付和产品验收分别报告，详见 [待办与证据](PUBLIC_REQUESTS.md#api-key-列表复制的官方读取合同2026-10-27待-baseservice)。
+
 ## 默认完整页面与配套接线（4.2.23）
 
 四类业务启用且没有已确认特殊要求时，直接挂载现有完整页。品牌、文案、Logo、路由和公开扩展不要求复制页面；[默认选择规则](DESIGN.md#四类默认公共页面4223)由DESIGN定义。

@@ -1,5 +1,13 @@
 # 验证证据与限制
 
+## API Key 列表复制官方接线复核（2026-10-27，合同待补）
+
+本轮只补文档，不修改公共实现、类型、CSS、demo 或包版本。xui main `60ad071a921513487fbb9c12a38822cb09f66fce` / 4.2.42 已同步远端；BaseService 只读工作区与远端 main 均为 `01fc2c00b38a2a254aa3247968bad3e23a264f6a`，从来源 `3b5ec890` 至该提交的 apikeyservice 无差异。核对核心 Service/impl 的 GetSecret、FormatRecoverable/FormatHashOnly，及 webfacade 的 Register、Service、Action、Metadata/Capabilities：核心读取已有，facade 未公开读取路由或逐行复制能力。xui 正式 `/api-key-http` 类型只有严格 v2 CRUD/getConfiguration，无秘密 reader；React 现有 readValue/canCopy 不替代该合同。精确待办与依赖状态见 [维护项](PUBLIC_REQUESTS.md#api-key-列表复制的官方读取合同2026-10-27待-baseservice)，接入增加 KEY-COPY-004～005。
+
+定向 `node --test tests/docs.test.mjs tests/api-key.test.mjs tests/api-key-v2.test.mjs` **19/19 通过**，`git diff --check` 通过。复算当前构建输入 sourceGeneration 与已验收正式包相同：`2645e40f34cea6d78c01448e611eda0394f86a6f94f2e0b316739532e2a13def`。`pnpm archive:verify .artifacts/public-60ad071a921513487fbb9c12a38822cb09f66fce` 独立校验通过，保留三包4.2.42、115个正式入口和55项校验；SHA256SUMS 摘要 `9d546c254bf2255424d466006a3da806251395ce0131fd8078da60fdb6f93d68`。本轮复用该固定包，不为未实现的 reader 发布新版本或覆盖旧归档；归档与本次合同补充提交分别标识。
+
+没有修改视觉/交互或构建输入，未重复浏览器、全量unit、build/typecheck/consumer；4.2.41已有布局/合成复制的库级证据继续按原记录引用，不算本轮产品验收。未执行真实BaseService读取、xLead升级/页面、系统剪贴板或部署验收，未访问真实密钥，未转发消息。官方列表读取仍阻断，历史哈希记录仍不可恢复；本节不将本轮文档完成写成复制链路完成。
+
 ## 模型策略实际值与宿主必填规则（4.2.42，2026-10-26）
 
 仅修复 xui ModelProfileForm/Editor 及同一 Controller 的策略展示/校验，基于 main d27f1ba 三包递增至4.2.42；未修改 AgReady、AgentCore、BaseService、真实模型记录或部署。初始公开源码中 policyNumber 缺值和推理强度空选项均使用 providerDefault“协议默认”，本轮改为明确“未配置，请填写”/“未指定”。当前具体值直接展示，0容量保留原值并提示无有效容量，none与未指定区分；不把通用defaults回填为现有记录生效值，不猜160000或medium/high/none。后端未提供真实上下文/强度时只能保留未知、由宿主要求填写；已有editor API可表达明确值，无需新增端点或前端适配层。
