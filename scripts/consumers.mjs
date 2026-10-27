@@ -555,7 +555,7 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--preserveSymlinks','--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'http/app.tsx'], { cwd, stdio: 'inherit' });
     const keys = resolve(cwd, 'api-key'), keysOutput = resolve(`dist/api-key-${kind}`);
     await cp(`examples/api-key-${kind}`, keys, { recursive: true });
-    for (const file of ['api-key-model.ts', 'api-key-labels.json','api-key-showcase.ts'])
+    for (const file of ['api-key-model.ts', 'api-key-labels.json','api-key-showcase.ts','api-key-http-model.ts'])
         await copyFile(`examples/shared/${file}`, `${cwd}/shared/${file}`);
     const keysBuild = await build({ entryPoints: [`${keys}/app.${'tsx'}`], outdir: keysOutput, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, define: { 'process.env.NODE_ENV': '\"production\"' } });
     assert(Object.keys(keysBuild.metafile.inputs).every(file => resolve(file).startsWith(`${cwd}/`)), 'API key consumer escaped its standalone install');
@@ -564,6 +564,8 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'), `${keysOutput}/theme-init.js`);
     await writeFile(`${keysOutput}/metafile.json`, JSON.stringify(keysBuild.metafile, null, 2));
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--preserveSymlinks','--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', '--resolveJsonModule', 'api-key/app.tsx'], { cwd, stdio: 'inherit' });
+    await copyFile('tests/fixtures/api-key-v3-types.tsx', `${cwd}/api-key-v3-types.tsx`);
+    execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--preserveSymlinks','--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'api-key-v3-types.tsx'], { cwd, stdio: 'inherit' });
     const logs = resolve(cwd, 'log'), logsOutput = resolve(`dist/log-${kind}`);
     await cp(`examples/log-${kind}`, logs, { recursive: true });
     for (const file of ['log-model.ts', 'log-labels.json'])

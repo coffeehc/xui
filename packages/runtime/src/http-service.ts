@@ -1,4 +1,4 @@
-import {registerHttp,inspectHttp,authOperation,type AccessLease} from './http-auth-internal.js';
+import {registerHttp,inspectHttp,authOperation,requiresCurrentAccess,type AccessLease} from './http-auth-internal.js';
 /** JSON contract of coffeehc/httpx/httpxcommons. success is the business outcome; code remains required metadata. No data/msg aliases. */
 export interface AjaxResponse<T=unknown>{success:boolean;message:string;payload:T;request_id:string;code:number;redirect?:string}
 export type HttpErrorKind='cancel'|'network'|'timeout'|'http'|'parse'|'business';
@@ -119,13 +119,13 @@ export function buildHttpClient(options:HttpClientOptions,beforeRequest?:()=>voi
       if(retry.statuses?.some(status=>!Number.isInteger(status)||status<400||status>599))throw new TypeError('Invalid retry statuses');}
     let body=init.body;if('json' in init){try{body=JSON.stringify(init.json);}catch{throw new TypeError('JSON body must be serializable');}if(body===undefined)throw new TypeError('JSON body must be serializable');}
     beforeRequest?.();
-    const binding=inspectHttp(client)?.binding,managed=binding?.mode(url.pathname,method,authOperation(init));
+    const currentOnly=requiresCurrentAccess(init),binding=inspectHttp(client)?.binding,managed=binding?.mode(url.pathname,method,authOperation(init));
     if(managed&&(init.credentials!==undefined&&init.credentials!==(managed==='cookie'?'same-origin':'omit')||init.redirect!==undefined&&init.redirect!=='error'||retry))throw new TypeError('Managed authentication forbids credential overrides, redirects and generic retries');
     const controller=new AbortController();let epoch=authEpoch,lease:AccessLease|undefined;let stopKind:'cancel'|'timeout'='cancel',timer:ReturnType<typeof setTimeout>|undefined;
     let metadata:HttpMetadata={attempts:0,endpointId:init.endpointId};
     const stopped=()=>{const knownFailure=stopKind==='timeout'&&(metadata.status??0)>=400;return new HttpError(knownFailure?'http':stopKind,{...metadata,...(knownFailure?{readFailure:'timeout' as const}:{})});};
     const stop=(kind:'cancel'|'timeout')=>{if(controller.signal.aborted)return;stopKind=kind;controller.abort();};
-    const check=()=>{if(controller.signal.aborted)throw stopped();};
+    const check=()=>{if(controller.signal.aborted)throw stopped();if(currentOnly&&lease&&metadata.status!==401&&!binding!.current(lease.generation))throw new HttpError('cancel',metadata);};
     let rejectAbort:(error:HttpError)=>void=()=>{};const aborted=new Promise<never>((_,reject)=>{rejectAbort=reject;});
     const abort=()=>rejectAbort(stopped()),external=()=>stop('cancel'),dispose=()=>stop('cancel');
     controller.signal.addEventListener('abort',abort,{once:true});active.add(dispose);
@@ -139,7 +139,7 @@ export function buildHttpClient(options:HttpClientOptions,beforeRequest?:()=>voi
         metadata={attempts:attempt,endpointId:init.endpointId};check();
         try{
           const headers=new Headers(options.headers);const provided=await options.getHeaders?.();check();if(provided)new Headers(provided).forEach((value,key)=>headers.set(key,value));if(init.headers)new Headers(init.headers).forEach((value,key)=>headers.set(key,value));
-          if(managed){if(headers.has('authorization')||headers.has('cookie')||headers.has('x-api-key'))throw new HttpError('parse',{attempts:0,endpointId:init.endpointId});if(managed==='bearer'){lease=await binding!.acquire(controller.signal,authOperation(init));check();epoch=authEpoch;headers.set('Authorization',`Bearer ${lease.value}`);}}
+          if(managed){if(headers.has('authorization')||headers.has('cookie')||headers.has('x-api-key'))throw new HttpError('parse',{attempts:0,endpointId:init.endpointId});if(managed==='bearer'){lease=await binding!.acquire(controller.signal,authOperation(init),currentOnly);check();epoch=authEpoch;headers.set('Authorization',`Bearer ${lease.value}`);}}
           if(!headers.has('accept')&&(['ajax','json'].includes(mode)||mode==='blob'&&init.detectAjaxErrors))headers.set('accept','application/json');if('json' in init&&!headers.has('content-type'))headers.set('content-type','application/json');
           // Multipart boundaries must describe the platform's actual encoded body,
           // including when an application supplied a default JSON Content-Type.
@@ -147,7 +147,7 @@ export function buildHttpClient(options:HttpClientOptions,beforeRequest?:()=>voi
           const response=await send(url.href,{method,headers,body,signal:controller.signal,credentials:managed?(managed==='cookie'?'same-origin':'omit'):init.credentials??options.credentials??'same-origin',cache:init.cache,redirect:native||managed?'error':init.redirect});check();
           if((native||managed)&&response.url){let final:URL;try{final=new URL(response.url);}catch{throw new HttpError('network',{...metadata,status:response.status});}if(!sameOrigin(final)||final.username||final.password)throw new HttpError('network',{...metadata,status:response.status});}
           metadata={...metadata,status:response.status,headerRequestId:response.headers.get('X-Request-ID')??undefined,retryAfterMs:retryAfter(response.headers.get('Retry-After'))};
-          if(response.status===401&&notify401){if(lease)binding!.unauthorized(lease.generation);notifyUnauthorized(new HttpError('http',metadata),epoch);}
+          if(response.status===401&&notify401){if(lease)binding!.unauthorized(lease.generation,currentOnly);notifyUnauthorized(new HttpError('http',metadata),epoch);}
           const context:HttpResponseContext={status:response.status,headerRequestId:metadata.headerRequestId,endpointId:init.endpointId,attempts:attempt};
           const adapter=init.adapter??(init.response===undefined||mode===(options.response??'ajax')?options.adapter:undefined)??(mode==='ajax'?ajaxResponseAdapter:undefined);let adapted:AdaptedResponse<unknown>;
           if(!response.ok){

@@ -2,24 +2,12 @@
 
 ## API Key 列表复制的官方读取合同（2026-10-27，待 BaseService）
 
-来源：xLead 固定 xui 4.2.37 与 BaseService 3b5ec890；本轮核对 xui main `60ad071a921513487fbb9c12a38822cb09f66fce` / 4.2.42，以及 BaseService main `01fc2c00b38a2a254aa3247968bad3e23a264f6a`。BaseService 从来源基线至该 main 的 apikeyservice 无差异。本项只更新 xui 合同与接入检查，不修改消费项目、BaseService 或任何密钥。
+历史状态：xLead 固定4.2.37提出复制/列宽需求，4.2.41已交付独立列、掩码、紧凑时间和可选keyCopy；4.2.42仅有宿主reader扩展，官方HTTP连接当时缺失。本标题保留用于已有引用，当前后端依赖已由BaseService `f66724f44b5825143614ca2a9f2e0b15f3f3e140` 补齐，xui **4.2.43** 接入显式v3，不再列为未提供的HTTP能力。
 
-| 层次 | 已有事实 | 仍缺少的合同 / 结论 |
-| --- | --- | --- |
-| xui React | 4.2.41 已正式提供独立密钥列、掩码、列宽/紧凑时间与可选 `keyCopy.readValue`；见 [组件合同](COMPONENTS.md#api-key-列与复制4241) | 不重复改布局。reader 必须返回真实完整值，合成 demo 通过不证明产品已可读取 |
-| BaseService 核心 | `apikeyservice.Service.GetSecret(ctx, scope, id)` 已存在；`FormatRecoverable` 可解密，`FormatHashOnly` 返回 `ErrNotRecoverable` | 核心方法存在不等于 HTTP 可用；哈希历史记录无法还原，不得自动轮换或修改存储格式 |
-| BaseService webfacade | 当前仅 capabilities/list/create/update/revoke/delete_record；`Service` 接口没有 GetSecret，`Action` 与逐行 capabilities 没有秘密读取授权项 | **阻断**：尚无正式秘密读取路由、响应或逐行可复制能力。只读证据：[核心 Service](https://github.com/coffeehc/baseservice/blob/01fc2c00b38a2a254aa3247968bad3e23a264f6a/apikeyservice/service.go)、[facade 注册](https://github.com/coffeehc/baseservice/blob/01fc2c00b38a2a254aa3247968bad3e23a264f6a/apikeyservice/webfacade/facade.go)、[facade 类型](https://github.com/coffeehc/baseservice/blob/01fc2c00b38a2a254aa3247968bad3e23a264f6a/apikeyservice/webfacade/model.go) |
-| xui 官方 HTTP adapter | `createApiKeyHttpAdapter` 直接消费严格 v2 CRUD；见 [正式入口](PUBLIC_API.md#默认-http-adapter严格-v2) | **依赖阻断**：没有列表秘密 reader/可复制投影；不能猜 URL、从 prefix 推断可恢复性，或要求消费项目增加私有前端适配层 |
-
-交给 BaseService 维护者的待办（独立授权后实施；下面是需求，尚非已发布 URL/DTO）：
-
-1. 在现有 apikeyservice/webfacade 上提供独立的秘密读取管理动作，复用核心 GetSecret、原认证/可信 Actor/Scope/授权 owner。明确固定 method/path、schema_version、AjaxResponse payload、ID 编码和取消语义；请求按可信范围定位记录，响应须绑定目标 ID 与用于拒绝过期读取的权威记录版本。namespace/owner/tenant 不能来自前端自行授信。
-2. 列表投影明确区分“当前身份有秘密读取权限”与“该记录可恢复”，给前端确定的逐行可复制事实；缺失/未知不能当 true。不要由前端解析 token 前缀、状态或 enabled 推断。核心允许读取过期/撤销的 recoverable 密钥，facade 是否允许由明确管理策略决定，不能顺手改变核心规则。
-3. 只有已授权且可恢复的记录返回完整 secret；明确未授权、跨 Scope/不存在、版本变化、ErrNotRecoverable、KMS/存储失败的安全结果。哈希记录始终不可复制；不轮换、不创建新 key、不改变原有格式或现有客户端凭据。
-4. 响应与请求遵守秘密处理和 no-store 合同，不将完整值混入 list/metadata、错误、审计日志或缓存；后端每次读取重新鉴权，客户端取消不代表撤回已返回的秘密。明确 Cookie/CSRF 或现有 Bearer 接线，不新增认证 owner。读取不隐式触发写入、刷新认证或轮换；不自动重试或预取秘密。
-5. 明确严格 v2 的兼容演进与 capability 字段策略，并交付 decimal/hex 共享 fixtures、正式提交和测试。当前 xui v2 解析会拒绝额外字段，不可直接添加未知 copy/secret 字段再称旧消费者兼容。测试覆盖可恢复/哈希、有权/无权/跨 Scope、状态/版本变化、取消/失败与秘密不泄漏；保留 CRUD/CAS 和一次性创建值合同。
-
-BaseService 正式合同确认后，xui 再在原 `/api-key-http` 提供类型明确的官方 reader 与 capability 投影，直接连接同一 HttpClient/Auth owner，并能接入既有 `keyCopy`；补充目标/版本验证、权限默认拒绝、signal/迟到隔离和正式包端到端 mock 测试。不得要求每个产品复制读取/DTO 解析。**当前 4.2.42 没有交付这段 HTTP 连接**；接入项目保留默认被动掩码（`keyCopy={false}`），已有独立正式 reader 的宿主才可按公共扩展启用。来源 xLead 的哈希历史记录即使未来增加 facade 也仍不可恢复。产品升级、真实后端、系统剪贴板与实际页面验收单独完成，不能用库 demo 替代。
+- BaseService复用核心GetSecret与原认证/授权/Scope/最外层执行器，正式增加SchemaV3、逐行secret_access与POST `/api/v1/api-keys/{id}/secret`。默认SchemaV2严格保持原合同；v3必须显式注册，后端源码/合同：[交付提交](https://github.com/coffeehc/baseservice/commit/f66724f44b5825143614ca2a9f2e0b15f3f3e140)、[v3协议](https://github.com/coffeehc/baseservice/blob/f66724f44b5825143614ca2a9f2e0b15f3f3e140/docs/api-key-secret-read-v3.md)。没有修改或轮换已有密钥。
+- xui `createApiKeyHttpAdapter({http,schemaVersion:3})`提供`keyCopy`，可直接传给ApiKeyManager；官方parser保留只读secretAccess，reader绑定ID/版本，只借当前认证、不恢复或重放，取消/身份代次改变丢弃迟到值。默认v2没有reader；不自动探测或降级。接口与示例见[正式合同](PUBLIC_API.md#api-key-授权读取v34243)。
+- 哈希、无权和未知能力不发读取；expired/disabled/revoked的recoverable记录由后端明确管理授权，不能根据状态推断不可复制。FormatHashOnly历史记录仍无法还原；新增facade不能恢复已经丢失的秘密，不得为复制轮换、重签或改变格式。
+- 原逐行布局/公开扩展保持；共享decimal/hex v3 fixtures、正式包mock与实际产品验收分别记录在[验证记录](VALIDATION.md)。只修改xui，未修改或升级xLead/BaseService、未访问真实密钥/KMS、未部署；合成复制不表示真实产品已通过。
 
 ## 主题根节点与属性恢复（4.2.38，已解决）
 

@@ -24,7 +24,7 @@
 
 API Key 使用独立密钥列展示短前缀＋掩码，保留紧凑时间、完整时间弹层及创建/编辑/撤销。示例“点击密钥复制”开关控制 keyCopy 配置；关闭时密钥为被动文本，开启后点击/Enter/Space 复制完整合成凭据。列表复制只演示合成凭据；只存哈希的记录禁用后续复制，不能将 prefix 或掩码当作完整密钥。真实列表取密钥仍等待正式后端能力/权限合同，本预览不增加 URL、不缓存真实秘密，也不表示 BaseService 或产品已经支持。所有页面均为 mock，不连接业务后端。
 
-默认 BaseService facade 的具体阻断见 [官方读取维护项](PUBLIC_REQUESTS.md#api-key-列表复制的官方读取合同2026-10-27待-baseservice)：核心 GetSecret 已有，webfacade 与官方 xui adapter 的列表读取连接未提供。按 KEY-COPY-004～005 核对正式前置；当前保持 `keyCopy={false}`，不要要求消费项目为公共缺口自建读取 URL 或前端适配层。布局升级可独立进行，不能据此宣称历史哈希 key 已能复制。
+4.2.43新增官方v3读取：BaseService显式SchemaV3与`createApiKeyHttpAdapter({http,schemaVersion:3})`同步选择，将`adapter.keyCopy ?? false`传给原ApiKeyManager。按KEY-COPY-004～007核对正式前置、权限/版本、取消/身份代次和真实完整值；默认v2保持原行为，不自动探测/降级。详见[授权读取](PUBLIC_API.md#api-key-授权读取v34243)。历史哈希key仍不可恢复，不轮换；宿主无需自建读取URL或前端适配层，库mock不代替产品验收。
 
 4.2.41 统一交付上述公共能力和 demo；所有请求为合成 mock，库验收不等同于消费项目接入或部署完成。
 
@@ -57,7 +57,7 @@ runtime 原生 DOM UI exports 已从当前公开入口移除，原生 UI 示例�
 
 以4.2.1为基准只维护一条版本线，后续所有变更只递增末位，不再维护3.x兼容包或其他平行版本。目标版本以固定归档的manifest、三包及DESIGN为准，不从历史段落猜“最新版”。历史验证记录保留用于溯源，不是当前可用的兼容分发。三个包必须同版本、同sourceGeneration安装；版本递增不代表语义兼容，升级前核对实际迁移合同。runtime 基础 Service 不再导出 `create*` 工厂；消费者需在入口 bootstrap 后按窄模块导入稳定 Service 引用；4.0 的 bootstrap 不再加载所有实现，容器 getter 需先加载对应模块，`/services` 仅用于明确需要全量的隔离装配。须复核固定 ESM/CSS/types 与打包依赖。1.0.0 已移除 runtime DOM UI exports，2.0.0 进一步统一基础服务 owner；这些库版本变化不代表 XQuant、XLead 或其他消费项目已迁移或通过验收。消费项目逐页状态须以各自仓库实际源码和浏览器证据为准。2.0.1的公共认证页采用Stitch V3：品牌居于卡片外部，宿主只使用已有配置和slot，不补私有CSS。本轮 xui 当前验证见 [验证记录](VALIDATION.md)。
 
-HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共16项操作采用官方 client，并从 bootstrap 共享 service 获取依赖；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
+HTTP、认证、API Key 与日志能力可按需采用。选用固定 client/adapter 或完整页面时，真实服务必须满足对应合同；修改 baseURL 不能替代 DTO、认证或分页语义适配。公共17项操作采用官方 client，并从 bootstrap 共享 service 获取依赖；BaseService已有facade直接连接，其余由后端一次投影同一wire，禁止前端再设兼容转换。宿主决定其余领域接口及其适配边界，采用通用组件不自动要求重写所有业务 API、后端或产品流程。OAuth2/OIDC/SAML 和第三方接口继续遵循各自标准与合同，转换在宿主明确边界完成。
 
 ## 固定产物与可运行示例
 

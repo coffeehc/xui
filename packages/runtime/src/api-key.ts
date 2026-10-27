@@ -4,12 +4,15 @@ const API_KEY_WRITE_OUTCOME_UNKNOWN=50301;
 /** The commit is known, but follow-up work/response is incomplete. Never replay the mutation. */
 const API_KEY_WRITE_COMMITTED_FOLLOWUP_FAILED=50302;
 /** Public metadata only. The host supplies a display-safe prefix, never the full key. */
+export interface ApiKeySecretAccess {authorized:boolean;recoverable:boolean;canCopy:boolean}
 export interface ApiKeyMetadata {
   id:string; name:string; prefix:string|null; permissionIds:readonly string[];
   createdAt:string|null; expiresAt:string|null; lastUsedAt:string|null;
   /** Only an explicit backend fact; absence does not imply persisted access metadata. */
   lastUsedAtPending?:boolean;
   version?:string; enabled?:boolean;
+  /** Explicit authorized/recoverable facts; absence never enables official list copy. */
+  secretAccess?:Readonly<ApiKeySecretAccess>;
   status:'active'|'disabled'|'revoked'|'expired'|'unknown'|null;
   capabilities?:Readonly<{revoke:boolean;deleteRecord:boolean;update?:boolean}>;
 }
@@ -77,7 +80,9 @@ export function parseApiKeyMetadata(value:unknown):Readonly<ApiKeyMetadata>{
   if(row.version!==undefined&&(typeof row.version!=='string'||!row.version))throw new TypeError('Invalid API key version');
   if(row.enabled!==undefined&&typeof row.enabled!=='boolean')throw new TypeError('Invalid API key enabled fact');
   let capabilities:ApiKeyMetadata['capabilities'];if(row.capabilities!==undefined){const data=row.capabilities as Record<string,unknown>;if(!data||typeof data!=='object'||Object.values(Object.getOwnPropertyDescriptors(data)).some(field=>!('value'in field))||typeof data.revoke!=='boolean'||typeof data.deleteRecord!=='boolean'||data.update!==undefined&&typeof data.update!=='boolean')throw new TypeError('Invalid API key capabilities');capabilities=Object.freeze({revoke:data.revoke,deleteRecord:data.deleteRecord,...(data.update===undefined?{}:{update:data.update as boolean})});}
-  return Object.freeze({...(row.version===undefined?{}:{version:row.version as string}),...(row.enabled===undefined?{}:{enabled:row.enabled as boolean}),id:row.id,name:row.name,prefix:row.prefix as string|null,permissionIds:Object.freeze([...row.permissionIds] as string[]),createdAt:row.createdAt as string|null,expiresAt:row.expiresAt as string|null,lastUsedAt:row.lastUsedAt as string|null,status:row.status as ApiKeyMetadata['status'],...(row.lastUsedAtPending===undefined?{}:{lastUsedAtPending:row.lastUsedAtPending as boolean}),...(capabilities?{capabilities}:{})});
+  let secretAccess:Readonly<ApiKeySecretAccess>|undefined;
+  if(row.secretAccess!==undefined){const data=row.secretAccess as Record<string,unknown>;if(!data||typeof data!=='object'||Array.isArray(data)||![null,Object.prototype].includes(Object.getPrototypeOf(data))||Reflect.ownKeys(data).length!==3||Object.values(Object.getOwnPropertyDescriptors(data)).some(field=>!('value'in field))||typeof data.authorized!=='boolean'||typeof data.recoverable!=='boolean'||typeof data.canCopy!=='boolean'||data.canCopy!==(data.authorized&&data.recoverable))throw new TypeError('Invalid API key secret access');secretAccess=Object.freeze({authorized:data.authorized,recoverable:data.recoverable,canCopy:data.canCopy});}
+  return Object.freeze({...(secretAccess?{secretAccess}:{}),...(row.version===undefined?{}:{version:row.version as string}),...(row.enabled===undefined?{}:{enabled:row.enabled as boolean}),id:row.id,name:row.name,prefix:row.prefix as string|null,permissionIds:Object.freeze([...row.permissionIds] as string[]),createdAt:row.createdAt as string|null,expiresAt:row.expiresAt as string|null,lastUsedAt:row.lastUsedAt as string|null,status:row.status as ApiKeyMetadata['status'],...(row.lastUsedAtPending===undefined?{}:{lastUsedAtPending:row.lastUsedAtPending as boolean}),...(capabilities?{capabilities}:{})});
 }
 /** One owner for metadata, inflight actions and a transient one-time result. */
 export function createApiKeyManagerController(input:ApiKeyManagerOptions):ApiKeyManagerController {

@@ -4,8 +4,9 @@ export type AuthOperation = 'login' | 'refresh' | 'session' | 'logout' | 'passwo
 export interface AccessLease {value:string;generation:number}
 export interface HttpAuthBinding {
   mode:(path:string,method:string,operation:AuthOperation|undefined)=>'cookie'|'bearer'|undefined;
-  acquire:(signal:AbortSignal,operation?:AuthOperation)=>Promise<AccessLease>;
-  unauthorized:(generation:number)=>void;
+  acquire:(signal:AbortSignal,operation?:AuthOperation,currentOnly?:boolean)=>Promise<AccessLease>;
+  unauthorized:(generation:number,currentOnly?:boolean)=>void;
+  current:(generation:number)=>boolean;
   dispose:()=>void;
 }
 interface Registration {origin:string;binding?:HttpAuthBinding}
@@ -22,3 +23,8 @@ export function bindHttpAuth(client:HttpClient,binding:HttpAuthBinding){
 }
 export async function authRequest<T>(http:HttpClient,operation:AuthOperation,path:string,options:HttpRequestOptions<T>){operations.set(options,operation);return http.request<T>(path,options);}
 export function authOperation(options:object){return operations.get(options);}
+
+const currentAccessOnly=new WeakSet<object>();
+/** Sensitive reads borrow only current access; they never initiate recovery or replay. */
+export function currentAccessRequest<T>(http:HttpClient,path:string,options:HttpRequestOptions<T>){currentAccessOnly.add(options);return http.request<T>(path,options);}
+export function requiresCurrentAccess(options:object){return currentAccessOnly.has(options);}

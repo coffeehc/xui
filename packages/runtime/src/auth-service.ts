@@ -161,7 +161,7 @@ export function buildAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncodi
     }).finally(()=>{if(refreshFlight===flight){refreshFlight=undefined;refreshController=undefined;refreshVersion=undefined;}});
     refreshFlight=flight;emit({status:'unknown',user:null,busy:'refresh',error:null});return flight;
   };
-  const acquire=async(signal:AbortSignal,operation?:AuthOperation):Promise<AccessLease>=>{
+  const acquire=async(signal:AbortSignal,operation?:AuthOperation,currentOnly=false):Promise<AccessLease>=>{
     if(dead||signal.aborted)throw errorFor();
     if(active){
       if(operation==='password'&&active.operation==='password'&&active.lease&&!active.controller.signal.aborted)return active.lease;
@@ -169,7 +169,8 @@ export function buildAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncodi
       if(operation==='session'&&active.candidate&&!active.controller.signal.aborted&&active.candidate.expiry>Date.now())return active.candidate;
       throw errorFor();
     }
-    if(!access||access.expiry<=Date.now()+1000){
+    if(currentOnly&&(!access||access.expiry<=Date.now()))throw new HttpError('http',{attempts:0,status:401,code:authErrorCodes.required});
+    if(!currentOnly&&(!access||access.expiry<=Date.now()+1000)){
       if(!access&&bootstrapped&&state.status==='anonymous')throw new HttpError('http',{attempts:0,status:401,code:authErrorCodes.required});
       await wait(recover(),signal);
     }
@@ -187,7 +188,8 @@ export function buildAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncodi
       if(paths.some(prefix=>path===prefix||prefix.endsWith('/')&&path.startsWith(prefix))){if(/%(?:2f|5c|25)/i.test(path)||/[\\\u0000-\u0020\u007f]/.test(decoded))throw new TypeError('Ambiguous protected path');return 'bearer';}
       return undefined;
     },acquire,
-    unauthorized(observed){if(dead||!access||access.generation!==observed||active)return;clear();void recover().catch(()=>{});},
+    current:observed=>!dead&&!active&&access?.generation===observed&&access.expiry>Date.now(),
+    unauthorized(observed,currentOnly){if(dead||!access||access.generation!==observed||active)return;if(currentOnly){bootstrapped=true;invalidate('anonymous');return;}clear();void recover().catch(()=>{});},
     dispose(){client.destroy();},
   });
   const currentUser=(options:AuthRequestOptions={}):Promise<Readonly<AuthUser>|null>=>{

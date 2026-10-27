@@ -1,0 +1,646 @@
+{
+  "fixture_version": 3,
+  "cases": {
+    "api_key_capabilities": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys/capabilities",
+        "body_text": ""
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "can_create": true,
+            "permissions": [
+              {
+                "id": "read",
+                "label": "Read",
+                "description": null,
+                "disabled": false,
+                "required": true
+              },
+              {
+                "id": "write",
+                "label": "Write",
+                "description": "Synthetic write permission",
+                "disabled": false,
+                "required": false
+              }
+            ],
+            "expiry_options": [
+              {
+                "id": "30d",
+                "label": "30 days"
+              }
+            ],
+            "default_expiry_id": "30d",
+            "default_permission_ids": [],
+            "confirmation_label": "Confirm these permissions"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_list": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys",
+        "query": {
+          "page_index": "0",
+          "page_size": "100",
+          "return_total": "true",
+          "sort": "id",
+          "sort_id": "asc"
+        },
+        "body_text": ""
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "list": [
+              {
+                "id": "9007199254740993",
+                "version": "19",
+                "enabled": true,
+                "name": "Synthetic key",
+                "prefix": "FAKE",
+                "permission_ids": [
+                  "read"
+                ],
+                "created_at": "2026-10-12T01:00:00Z",
+                "expires_at": null,
+                "last_used_at": null,
+                "status": "active",
+                "capabilities": {
+                  "update": true,
+                  "revoke": true,
+                  "delete_record": false
+                },
+                "secret_access": {
+                  "authorized": true,
+                  "recoverable": false,
+                  "can_copy": false
+                }
+              }
+            ],
+            "total": 1
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_create": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys",
+        "body": {
+          "name": "Synthetic key",
+          "permission_ids": [
+            "read"
+          ],
+          "expiry_id": "30d",
+          "confirmed": true
+        },
+        "body_text": "{\"name\":\"Synthetic key\",\"permission_ids\":[\"read\"],\"expiry_id\":\"30d\",\"confirmed\":true}"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "metadata": {
+              "id": "9007199254740993",
+              "version": "19",
+              "enabled": true,
+              "name": "Synthetic key",
+              "prefix": "FAKE",
+              "permission_ids": [
+                "read"
+              ],
+              "created_at": "2026-10-12T01:00:00Z",
+              "expires_at": null,
+              "last_used_at": null,
+              "status": "active",
+              "capabilities": {
+                "update": true,
+                "revoke": true,
+                "delete_record": false
+              },
+              "secret_access": {
+                "authorized": true,
+                "recoverable": false,
+                "can_copy": false
+              }
+            },
+            "secret": "FAKE_CONTRACT_ONE_TIME_VALUE"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_revoke": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/revoke",
+        "body": {},
+        "body_text": "{}"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "id": "9007199254740993",
+            "operation": "revoke",
+            "completed": true
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_delete_record": {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/v1/api-keys/9007199254740993/record",
+        "body_text": ""
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "id": "9007199254740993",
+            "operation": "delete_record",
+            "completed": true
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_write_outcome_unknown": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys",
+        "body": {
+          "name": "Synthetic key",
+          "permission_ids": [
+            "read"
+          ],
+          "expiry_id": "30d",
+          "confirmed": true
+        },
+        "body_text": "{\"name\":\"Synthetic key\",\"permission_ids\":[\"read\"],\"expiry_id\":\"30d\",\"confirmed\":true}"
+      },
+      "response": {
+        "status": 503,
+        "body": {
+          "success": false,
+          "message": "API key write outcome is unknown",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 50301
+        }
+      }
+    },
+    "api_key_update": {
+      "request": {
+        "method": "PUT",
+        "path": "/api/v1/api-keys/9007199254740993",
+        "body": {
+          "expected_version": "19",
+          "name": "研究密钥",
+          "permission_ids": [
+            "read",
+            "write"
+          ],
+          "enabled": false
+        },
+        "body_text": "{\"expected_version\":\"19\",\"name\":\"研究密钥\",\"permission_ids\":[\"read\",\"write\"],\"enabled\":false}"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "id": "9007199254740993",
+            "operation": "update",
+            "completed": true,
+            "metadata": {
+              "id": "9007199254740993",
+              "version": "20",
+              "enabled": false,
+              "name": "研究密钥",
+              "prefix": "FAKE",
+              "permission_ids": [
+                "read"
+              ],
+              "created_at": "2026-10-12T01:00:00Z",
+              "expires_at": null,
+              "last_used_at": null,
+              "status": "disabled",
+              "capabilities": {
+                "update": true,
+                "revoke": true,
+                "delete_record": false
+              },
+              "secret_access": {
+                "authorized": true,
+                "recoverable": false,
+                "can_copy": false
+              }
+            }
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_secret_read": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "id": "9007199254740993",
+            "version": "19",
+            "secret": "FAKE_CONTRACT_RECOVERABLE_VALUE"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_secret_hash_only": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "success": false,
+          "message": "API key plaintext is not recoverable",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 42201
+        }
+      }
+    },
+    "api_key_secret_forbidden": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "success": false,
+          "message": "Permission was denied",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 40301
+        }
+      }
+    },
+    "api_key_secret_cross_scope": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 404,
+        "body": {
+          "success": false,
+          "message": "API key not found",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 40401
+        }
+      }
+    },
+    "api_key_secret_conflict": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "success": false,
+          "message": "API key request conflicts with current state",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 40901
+        }
+      }
+    },
+    "api_key_secret_unavailable": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 500,
+        "body": {
+          "success": false,
+          "message": "API key operation failed",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 50001
+        }
+      }
+    },
+    "api_key_secret_unconfirmed": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 503,
+        "body": {
+          "success": false,
+          "message": "API key secret read was not confirmed",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 50303
+        }
+      }
+    },
+    "api_key_secret_canceled": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 408,
+        "body": {
+          "success": false,
+          "message": "API key secret read was canceled",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 40801
+        }
+      }
+    },
+    "api_key_secret_expired": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "id": "9007199254740993",
+            "version": "19",
+            "secret": "FAKE_CONTRACT_RECOVERABLE_VALUE"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_secret_revoked": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "id": "9007199254740993",
+            "version": "19",
+            "secret": "FAKE_CONTRACT_RECOVERABLE_VALUE"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_secret_disabled": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "id": "9007199254740993",
+            "version": "19",
+            "secret": "FAKE_CONTRACT_RECOVERABLE_VALUE"
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_secret_duplicate_version": {
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/api-keys/9007199254740993/secret",
+        "body": {
+          "expected_version": "19"
+        },
+        "body_text": "{\"expected_version\":\"19\",\"expected_version\":\"19\"}"
+      },
+      "response": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "message": "Invalid API key request",
+          "payload": null,
+          "request_id": "fixture:request",
+          "code": 40001
+        }
+      }
+    },
+    "api_key_list_recoverable": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys",
+        "query": {
+          "page_index": "0",
+          "page_size": "100",
+          "return_total": "true",
+          "sort": "id",
+          "sort_id": "asc"
+        },
+        "body_text": ""
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "list": [
+              {
+                "id": "9007199254740993",
+                "version": "19",
+                "enabled": true,
+                "name": "Synthetic key",
+                "prefix": "FAKE",
+                "permission_ids": [
+                  "read"
+                ],
+                "created_at": "2026-10-12T01:00:00Z",
+                "expires_at": null,
+                "last_used_at": null,
+                "status": "active",
+                "capabilities": {
+                  "update": true,
+                  "revoke": true,
+                  "delete_record": false
+                },
+                "secret_access": {
+                  "authorized": true,
+                  "recoverable": true,
+                  "can_copy": true
+                }
+              }
+            ],
+            "total": 1
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    },
+    "api_key_list_read_denied": {
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/api-keys",
+        "query": {
+          "page_index": "0",
+          "page_size": "100",
+          "return_total": "true",
+          "sort": "id",
+          "sort_id": "asc"
+        },
+        "body_text": ""
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "",
+          "payload": {
+            "schema_version": 3,
+            "list": [
+              {
+                "id": "9007199254740993",
+                "version": "19",
+                "enabled": true,
+                "name": "Synthetic key",
+                "prefix": "FAKE",
+                "permission_ids": [
+                  "read"
+                ],
+                "created_at": "2026-10-12T01:00:00Z",
+                "expires_at": null,
+                "last_used_at": null,
+                "status": "active",
+                "capabilities": {
+                  "update": true,
+                  "revoke": true,
+                  "delete_record": false
+                },
+                "secret_access": {
+                  "authorized": false,
+                  "recoverable": true,
+                  "can_copy": false
+                }
+              }
+            ],
+            "total": 1
+          },
+          "request_id": "fixture:request",
+          "code": 1
+        }
+      }
+    }
+  }
+}

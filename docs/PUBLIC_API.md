@@ -611,6 +611,30 @@ wire metadata 为 id/name/prefix/permission_ids/created_at/expires_at/last_used_
 
 `last_used_at_pending:boolean` 只映射为 `lastUsedAtPending`。true 显示“待保存”，false/缺失各自保留；不从本机时间、nullable 时间或状态推断。访问元数据待保存不是写入事务 pending。分页完整收集预算30秒、每页最多200、默认最多5000条（显式可至100000）；拒绝变动 total、重复ID、缺页、超限，不承诺跨页原子快照。
 
+### API Key 授权读取（v3，4.2.43）
+
+`ApiKeyHttpOptions.schemaVersion?: 2 | 3`默认2，保留上方严格v2；显式3与BaseService `f66724f44b5825143614ca2a9f2e0b15f3f3e140`的`webfacade.SchemaV3`配套，不能只升级一端或自动回退。v3配置/创建/更新/撤销/删除响应schema_version=3；列表payload精确为`{schema_version:3,list,total}`。v3每条metadata必需`secret_access:{authorized,recoverable,can_copy}`，各项必须boolean且can_copy等于前两者与；缺失、未知、矛盾或额外字段拒绝。v2拒绝该额外字段。公开`ApiKeyMetadata.secretAccess?: Readonly<ApiKeySecretAccess>`投影为authorized/recoverable/canCopy；只保存能力，不保存secret。parser第三参数`parseApiKeyWireMetadata(value,idEncoding?,schemaVersion?)`与`parseApiKeyConfiguration(value,schemaVersion?)`默认仍为2。
+
+`ApiKeyHttpAdapter.keyCopy?: Readonly<ApiKeySecretReader>`仅显式v3提供；它的`canCopy(record)`在缺能力、无权、不可恢复、非法ID/版本时返回false。`readValue(record,{signal})`返回完整字符串，只在调用作用域短暂持有；调用前拒绝不可复制记录，不预取、不缓存。现有React `keyCopy`可直接使用该对象，无需宿主创建reader/解析器：
+
+```tsx
+const adapter = createApiKeyHttpAdapter({http, schemaVersion:3});
+const configuration = await adapter.getConfiguration({signal});
+const controller = createApiKeyManagerController({...configuration, adapter});
+// 同一页面生命周期保留controller；账号/租户/服务范围切换销毁旧owner。
+<ApiKeyManager controller={controller} keyCopy={adapter.keyCopy ?? false} />
+```
+
+| 操作 | method/path | 精确请求 / 成功payload |
+| --- | --- | --- |
+| 列表完整值授权读取 | POST /api/v1/api-keys/{id}/secret | JSON `{expected_version:"19"}`，无query；`{schema_version:3,id,version:"19",secret}` |
+
+ID按选定decimal/hex，version始终规范正int64十进制字符串，不经Number。reader同时验证schema、ID和version与请求一致；拒绝空、前缀、六星号和含CR/LF/NUL的值。HashOnly不能恢复；recoverable在active/disabled/expired/revoked状态下都由后端独立授权，不从状态或enabled猜能力。403/404/409/422/408/504/503/500均失败、不自动重试；冲突后用户显式刷新列表、重新确认再点击。既有CRUD/CAS、客户端完整集合分页和创建一次性值保持。
+
+所有读取no-store、redirect:error，经同一HttpClient/Auth owner的当前有效访问凭据；不会因复制触发refresh/session/login或重放请求。内部仅当前凭据策略不新增公开auth端点、token getter或认证owner；普通HTTP恢复行为保持。当前凭据缺失/过期时零网络失败；真实401由原owner清理当前身份且不自动refresh，旧代迟到结果丢弃。宿主仍负责正确配置protectedPaths和Cookie/CSRF/Origin。绑定原auth的请求在身份改变、销毁或读取期间到期时不返回旧秘密；React另在记录/版本/权限变化、刷新、卸载时取消，不把取消描述为撤回已发送字节或系统剪贴板。
+
+错误只保留安全状态/code/requestId，不将服务原始message/body/secret投影到公开错误、状态或Toast；复制结果仍为原Toast。共享[decimal](../tests/fixtures/api-key-contracts.v3.json)/[hex](../tests/fixtures/api-key-contracts.v3.hex.json)与BaseService固定提交逐字节一致。可运行mock示例`/api-key-react/?official`走正式adapter及同一Auth owner；不连接真实服务。公共合同和库mock通过不代替产品读取权限、真实KMS或系统剪贴板验收。
+
 ### 提交、超时与刷新
 
 controller 用当前页面的 `actionBusy` 防止重复提交；创建/保存按钮禁用并显示“正在创建／保存”，成功后展示真实结果。正常路径没有恢复会话预请求、持久 operation store、写入门禁或专用恢复弹窗。
@@ -795,13 +819,13 @@ cursor 最多 4096 UTF-8 字节，作为不透明值透传，绑定服务端 sco
 
 ## 默认适配器的服务前置
 
-本节约束已采用的16项公共服务操作：认证 login/refresh/session/logout；平台Key capabilities/list/create/update/revoke/deleteRecord；业务日志 list/detail；程序错误 groups/records/groupRecords/record。StructuredLog `records` 是可选能力：服务不提供时，适用检查记录为不适用，分组、组记录与详情仍须满足各自合同。采用BaseService时直接使用对应已有facade与xui官方client/HTTP adapter；未用BaseService时后端在单一facade实现同一wire，前端仍使用官方client。不得在前端再改字段、成功/错误、认证或分页语义，也不另建重试/通知owner。每项请求、成功事实和异常检查见 [接入检查清单](ADOPTION_CHECKLIST.md#16-个公共-api-操作逐项检查)。这是所选公共模块的验收前置，不要求不存在业务的模块全部接入；后端缺失须报告。普通领域/第三方接口和独立展示继续使用明确typed扩展，公开扩展类型不代表可绕开公共16项合同。唯一职责规则见 [DESIGN](DESIGN.md#规范强度与职责)。
+本节约束已采用的17项公共服务操作：认证 login/refresh/session/logout；平台Key capabilities/list/create/update/revoke/deleteRecord及显式v3 readSecret；业务日志 list/detail；程序错误 groups/records/groupRecords/record。StructuredLog `records` 是可选能力：服务不提供时，适用检查记录为不适用，分组、组记录与详情仍须满足各自合同。采用BaseService时直接使用对应已有facade与xui官方client/HTTP adapter；未用BaseService时后端在单一facade实现同一wire，前端仍使用官方client。不得在前端再改字段、成功/错误、认证或分页语义，也不另建重试/通知owner。每项请求、成功事实和异常检查见 [接入检查清单](ADOPTION_CHECKLIST.md#17-个公共-api-操作逐项检查)。这是所选公共模块的验收前置，不要求不存在业务的模块全部接入；后端缺失须报告。普通领域/第三方接口和独立展示继续使用明确typed扩展，公开扩展类型不代表可绕开公共17项合同。唯一职责规则见 [DESIGN](DESIGN.md#规范强度与职责)。
 
 | 选用能力 | 默认连接 | 服务前置与合同 owner |
 | --- | --- | --- |
 | HTTP ajax / webfacade query | `bootstrap` / `getHttpService`、serializeWebfacadeQuery | 明确 AjaxResponse success/message/payload/request_id/code/redirect 与 endpoint 页基数、上限、filter/sort codec；HTTP 状态和业务成功分开。响应模式、错误适配、列表三态及显式 ID 编码见 [HTTP 与查询](PUBLIC_API.md#http-与查询) |
 | ConfigurableLoginPage | bootstrap / `getAuthService`；POST `/api/v1/auth/login`、`refresh`、`logout`，GET `/api/v1/auth/session` | 固定 Bearer v2 DTO；access 仅内存，同源恢复 Cookie 与 session Bearer 分离。宿主注册 route、CSRF 和资源策略；不猜旧路由或仅改 baseURL。见 [登录与会话](PUBLIC_API.md#认证会话) |
-| ApiKeyManager 的默认 HTTP adapter | createApiKeyHttpAdapter；`/api/v1/api-keys` 及 capabilities/update/revoke/record 路径 | 严格 DTO v2、AjaxResponse/ListData，服务提供权限、期限、独立确认、expected_version CAS 与一次性 secret。未知结果普通列表核验一次，不重发写请求。完整路径、能力和 fixture 见 [API Key 管理](PUBLIC_API.md#api-key-管理) |
+| ApiKeyManager 的默认 HTTP adapter | createApiKeyHttpAdapter；`/api/v1/api-keys` 及 capabilities/update/revoke/record 路径 | 默认严格DTO v2，显式v3增加授权读取；AjaxResponse/ListData，服务提供权限、期限、独立确认、expected_version CAS 与一次性 secret。未知结果普通列表核验一次，不重发写请求。完整路径、能力和 fixture 见 [API Key 管理](PUBLIC_API.md#api-key-管理) |
 | BusinessLogExplorer 的默认 HTTP loader | createBusinessLogHttpLoader；GET `/api/v1/business-logs` 与 `/{id}` | 明确 offset query/ListData 与必需 total，公共记录字段、版本化授权 payload；服务负责身份/tenant、权限和脱敏。领域 cursor loader 依自己的明确合同，不伪造 snapshot。见 [业务日志](PUBLIC_API.md#业务日志) |
 | StructuredLogExplorer | 宿主声明三个必需 endpoints 与可选 records endpoint | 独立程序错误观察；服务实现明确 DTO、过滤、cursor、详情授权与保留期，不推断已有后端。缺失 records 时仅关闭跨组全量视图，不影响组/详情接口。见 [程序错误观察](PUBLIC_API.md#程序错误观察) |
 | AuthPage/AdminSetupPage、MenuLayout、布局、表格、字段与弹层 | 公开数据、props/parts/slots/controllers 与 callbacks | 业务 API、权威状态、路由、权限、查询范围和执行归宿主；无通用后端路由要求。管理员初始化见 [登录与会话](COMPONENTS.md#管理员初始化页) |

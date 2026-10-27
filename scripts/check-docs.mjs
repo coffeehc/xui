@@ -16,7 +16,7 @@ export function checkAdoptionChecklist(source) {
     if(columns.length!==5||columns.some(value=>!value)||!(/\[[^\]]+\]\([^)]+\)/.test(columns[4])))throw Error(`Incomplete adoption check: ${columns[0]}`);
     ids.add(columns[0]);
   }
-  const operations=['AUTH-LOGIN','AUTH-REFRESH','AUTH-SESSION','AUTH-LOGOUT','KEY-CAPS','KEY-LIST','KEY-CREATE','KEY-UPDATE','KEY-REVOKE','KEY-DELETE','BLOG-LIST','BLOG-DETAIL','LOG-GROUPS','LOG-RECORDS','LOG-GROUP-RECORDS','LOG-RECORD'];
+  const operations=['AUTH-LOGIN','AUTH-REFRESH','AUTH-SESSION','AUTH-LOGOUT','KEY-CAPS','KEY-LIST','KEY-CREATE','KEY-UPDATE','KEY-REVOKE','KEY-DELETE','KEY-SECRET','BLOG-LIST','BLOG-DETAIL','LOG-GROUPS','LOG-RECORDS','LOG-GROUP-RECORDS','LOG-RECORD'];
   for(const operation of operations)for(const outcome of ['REQ','OK','ERR'])if(!ids.has(`${operation}-${outcome}`))throw Error(`Missing adoption check: ${operation}-${outcome}`);
   return ids.size;
 }

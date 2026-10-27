@@ -1,5 +1,23 @@
 # 验证证据与限制
 
+## API Key 官方 v3 列表复制接线（4.2.43，2026-10-27）
+
+承接下方4.2.42文档待办，BaseService已交付 `f66724f44b5825143614ca2a9f2e0b15f3f3e140`，本轮只修改xui；原严格v2与默认schemaVersion=2保留。显式3提供逐行secretAccess与adapter.keyCopy，可直接传给原ApiKeyManager；POST secret精确携带expected_version，无query，严格验证响应schema/ID/版本/完整值与16384字节预算。无权/哈希/未知能力不发读取；expired/disabled/revoked的recoverable记录由原后端独立授权，不能按状态推断。现有Controller/分页/CRUD/CAS、权限/认证与ClipboardService/Toast owner保留，没有改动或轮换任何密钥。
+
+秘密读取使用HTTP/Auth内部的仅当前访问凭据策略，不新增公开token getter、认证端点或owner。缺凭据零网络失败，401清理当前身份且不触发refresh/session/login或重放；普通HTTP恢复行为保持。读取期间身份代次改变、销毁或到期丢弃旧值；React对同版本权限变化也立即取消等待。错误不透出原始message/body。正式mock示例 `/api-key-react/?official` 使用同一HttpClient/Auth和真实v3 adapter，不绕过为宿主私有reader。
+
+最终sourceGeneration：`ef3a556cfacea620c7887204bf80ac1c4efb53ddcf137d8e8af7f15fa4c70f08`。build、typecheck、446 Token/指纹与依赖图通过；CSS和默认Token值未改。完整Node **701/701通过，0失败/跳过**；包含新增8组v3用例、原v2、实体编码和全部HTTP/Auth回归。BaseService两份各21案例的decimal/hex fixture逐字节引入，SHA分别为 `860c76a1a8fe16359b42926a81850fa304d19574103a248039ad8ac63a629c78`、`c86ed83cc1c27c8760ba2cf2b0065bc2cb44f33f72c6b4f9f772d6333b82c256`；前端核对CRUD及秘密成功/失败请求响应，重复原始JSON版本字段的400案例由后端执行，前端只验证fixture结果并始终发单字段规范body，不冒称前端发送了重复JSON。
+
+最终独立正式三tarball的ESM/CSS/types与115入口消费通过，React/ReactDOM19.2.8、Base UI1.7.0单实例；无packages/src alias，无体积预算放宽。新增公开types fixture覆盖v3配置、能力与直接keyCopy接线，未知版本/错误能力类型拒绝。公共操作逐项门禁增加KEY-SECRET-REQ/OK/ERR，并同步KEY-COPY-004～007与17项操作清单；历史16项锚点保留跳转位置。
+
+最终Chromium **27/27通过，0失败/跳过/重试/flaky**：新增官方v3十二项及原API Key/v2十五项。覆盖指针/Enter/Space各一次、不可复制禁用、busy防重、权限/版本变化/卸载取消、迟到零剪贴板、失败无自动重试/认证恢复、状态无secret、刷新保行、六组实际light/dark/system桌面/390px+200%阅读、system媒体热切换，以及三模式真实Chrome200%缩放。两种缩放分别断言，不互相替代。截图已查看浅色桌面/窄屏与深色窄屏；完整值只经合成writer布尔比对，不出现在截图、状态或反馈中。
+
+过程保留：首轮定向Node **63/64**，失败是测试用includes空字符串检查秘密泄漏，运行时已按预期拒绝空secret；修正该断言后专项8/8，最终完整701/701。首轮浏览器27项交互均通过，但截图发现URL的mode未配置实际主题，因此不计为三主题验收。测试改用公开ThemeOptions并断言data-theme/effective和system热更新后，完整27项再次通过；没有修改CSS、force click、放宽断言或使用retry。前后报告分别保留。两轮浏览器仅进程生命周期使用caffeinate，结束即释放。
+
+证据：[checks.json](../.artifacts/api-key-v3-4.2.43/checks.json)、[正式包浏览器报告](../.artifacts/api-key-v3-4.2.43/browser-final.json)、[截图索引](../output/playwright/api-key-v3-4.2.43/evidence.json)；同目录含build/typecheck/tokens/unit/consumer日志和首轮报告。复现：`pnpm build && pnpm typecheck && pnpm check:tokens && pnpm test:unit && pnpm test:consumer`；`caffeinate -i pnpm exec playwright test tests/browser/api-key-v3.spec.mjs tests/browser/api-key.spec.mjs tests/browser/api-key-v2.spec.mjs --workers=1 --retries=0`。本地提交后通过既有archive与archive:verify自动生成、复算manifest/public-api.json/sourceGeneration/SHA256SUMS。
+
+未跑真实后端/PG/KMS、真实OS剪贴板、消费项目升级/页面/部署、Firefox/WebKit/移动OS/读屏器、整仓browser/watch/cold-start。库mock与正式包验收不能证明xLead或其他产品已支持复制；历史FormatHashOnly始终不可恢复。未修改BaseService或其他消费项目，未发布npm、打tag或部署，也未向其他项目发送消息。
+
 ## API Key 列表复制官方接线复核（2026-10-27，合同待补）
 
 本轮只补文档，不修改公共实现、类型、CSS、demo 或包版本。xui main `60ad071a921513487fbb9c12a38822cb09f66fce` / 4.2.42 已同步远端；BaseService 只读工作区与远端 main 均为 `01fc2c00b38a2a254aa3247968bad3e23a264f6a`，从来源 `3b5ec890` 至该提交的 apikeyservice 无差异。核对核心 Service/impl 的 GetSecret、FormatRecoverable/FormatHashOnly，及 webfacade 的 Register、Service、Action、Metadata/Capabilities：核心读取已有，facade 未公开读取路由或逐行复制能力。xui 正式 `/api-key-http` 类型只有严格 v2 CRUD/getConfiguration，无秘密 reader；React 现有 readValue/canCopy 不替代该合同。精确待办与依赖状态见 [维护项](PUBLIC_REQUESTS.md#api-key-列表复制的官方读取合同2026-10-27待-baseservice)，接入增加 KEY-COPY-004～005。

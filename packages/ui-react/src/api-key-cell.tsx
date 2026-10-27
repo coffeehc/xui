@@ -20,11 +20,11 @@ function CopyKeyCell({record,owner,copy,disabled,labels}:{record:Readonly<ApiKey
  const latest=React.useRef({record,owner,copy,disabled,labels});latest.current={record,owner,copy,disabled,labels};
  const allowed=(row:Readonly<ApiKeyMetadata>)=>{try{return copy.canCopy?.(row)??true;}catch{return false;}};
  const canCopy=!disabled&&allowed(record),text=record.prefix===null?labels.unknown:maskedApiKeyPrefix(record.prefix),messages={...labels,...copy.labels};
- React.useLayoutEffect(()=>{pending.current?.abort();pending.current=null;setBusy(false);return()=>{pending.current?.abort();};},[owner,record.id,record.version,record.prefix,record.status,disabled,copy.readValue,copy.canCopy]);
+ React.useLayoutEffect(()=>{pending.current?.abort();pending.current=null;setBusy(false);return()=>{pending.current?.abort();};},[owner,record.id,record.version,record.prefix,record.status,record.secretAccess?.authorized,record.secretAccess?.recoverable,record.secretAccess?.canCopy,disabled,copy.readValue,copy.canCopy]);
  const copyValue=async()=>{
   if(pending.current||!canCopy)return;
   const operation=new AbortController();pending.current=operation;setBusy(true);let secret:string|undefined;
-  const current=()=>!operation.signal.aborted&&latest.current.owner===owner&&!latest.current.disabled&&latest.current.record.id===record.id&&latest.current.record.version===record.version&&latest.current.record.status===record.status;
+  const current=()=>!operation.signal.aborted&&latest.current.owner===owner&&!latest.current.disabled&&latest.current.record.id===record.id&&latest.current.record.version===record.version&&latest.current.record.status===record.status&&allowed(latest.current.record);
   try{
    secret=await copy.readValue(record,{signal:operation.signal});
    if(!current())return;

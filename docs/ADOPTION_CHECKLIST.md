@@ -120,7 +120,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | MIG-006 | XLead 页面统一 React owner | 每个产品 UI 区域都由 React 页面/组件负责，没有同一可见区域继续由旧 DOM factory 持有 | React root 清单、旧调用扫描、节点身份与交互 owner 记录 | [DESIGN 生命周期](DESIGN.md#前端状态与资源生命周期) · [COMPONENTS](COMPONENTS.md) |
 | MIG-007 | 发布 XLead React 页面 | 实际存在的 web、desktop/embed 路由分别通过正式构建和真实浏览器验收；React island 之外的页面不能漏测 | 各目标 bundle manifest、路由清单、浏览器操作结果 | [ADOPTION 验收](ADOPTION.md#按授权范围迁移与验收) · [逐项浏览器矩阵](#逐项浏览器验收矩阵) |
 | MIG-008 | UI 迁移使用 runtime | 删除 UI factory 调用后仍保留业务实际使用的 HTTP/auth/query/theme/resource 服务、模型、解析器和工具 | runtime import 分类、编译结果与请求 owner 检查 | [ADOPTION React 唯一公共 UI](ADOPTION.md#react-是唯一公共-ui) · [PUBLIC_API](PUBLIC_API.md#全部正式入口) |
-| MIG-009 | 迁移页面使用公共业务 API | 迁移前后适用 API 的 method/path/query/body/凭据/DTO/权限及成功失败语义不变；不得新增前后端双层协议转换 | 前后 Network HAR、typed wire 断言与后端合同测试 | [PUBLIC_API 默认适配器的服务前置](PUBLIC_API.md#默认适配器的服务前置) · [16个公共API](#16-个公共-api-操作逐项检查) |
+| MIG-009 | 迁移页面使用公共业务 API | 迁移前后适用 API 的 method/path/query/body/凭据/DTO/权限及成功失败语义不变；不得新增前后端双层协议转换 | 前后 Network HAR、typed wire 断言与后端合同测试 | [PUBLIC_API 默认适配器的服务前置](PUBLIC_API.md#默认适配器的服务前置) · [17个公共API](#17-个公共-api-操作逐项检查) |
 | MIG-010 | 声明产品迁移完成 | 每个目标页面、正式构建和浏览器操作均有当前固定版本证据；未验环境、页面或状态明确列为未跑，不用 xui 示例或包升级代替 | 逐页报告矩阵、生产 SHA、路由和浏览器证据 | [ADOPTION 验收](ADOPTION.md#按授权范围迁移与验收) · [逐项浏览器矩阵](#逐项浏览器验收矩阵) |
 
 ## 业务界面信息与交互决策
@@ -440,15 +440,15 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 
 ## API 接入公共底座
 
-本清单的 16 项是 xui 已明确的公共业务操作，不代表所有业务/第三方 API 都须改造成这些 endpoint。OAuth/OIDC/SAML、上游模型、MCP、插件和其他领域接口继续遵循各自协议。BaseService 只能按该能力当前实际提供的 facade 使用，不能假称所有表格操作均已存在。
+本清单的 17 项是 xui 已明确的公共业务操作，不代表所有业务/第三方 API 都须改造成这些 endpoint。OAuth/OIDC/SAML、上游模型、MCP、插件和其他领域接口继续遵循各自协议。BaseService 只能按该能力当前实际提供的 facade 使用，不能假称所有表格操作均已存在。
 
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
-| API-BASE-001 | 某项目采用 xui 公共16项操作，且 BaseService 对应版本包含该项 facade | 按该能力实际存在的 BaseService 配套服务与 facade 接入，并由 xui 官方 client 发起；前端不再插入同协议转换/包装层 | 版本化服务依赖、路由注册、client 调用源码与 Network wire | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
+| API-BASE-001 | 某项目采用 xui 公共17项操作，且 BaseService 对应版本包含该项 facade | 按该能力实际存在的 BaseService 配套服务与 facade 接入，并由 xui 官方 client 发起；前端不再插入同协议转换/包装层 | 版本化服务依赖、路由注册、client 调用源码与 Network wire | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
 | API-BASE-002 | 某项目未采用 BaseService，或 BaseService 尚未提供该公共操作 | 由宿主后端在一个 facade 边界实现 PUBLIC_API wire；前端仍直接使用官方 xui client，不增加前端协议适配层 | 服务端 route/DTO projection、client 调用链与同一响应抓包 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
 | API-BASE-003 | 领域模型字段与 xui 已声明的公共 DTO 不同 | 最多在宿主后端 facade 投影一次；前端不再把领域 DTO 转成公共 DTO，也不让后端再次转换 | 唯一 mapper 调用链、前端网络 client 与响应 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
 | API-BASE-004 | 任一公共操作所需的真实服务能力不存在 | 逐项记宿主未接入/失败并标后端 owner；不以 mock、静态假响应、虚构数据或前端 adapter 记通过 | 后端路由/服务版本与逐项报告 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
-| API-BASE-005 | 前端调用任一这16项公共操作 | 由 xui 官方 client 承担 endpoint、method、query/body、envelope、解析与公开错误；不得重复实现 client 或协议解析 | 前端 call graph、模块 resolved path 与 fetch/Network 记录 | [PUBLIC_API HTTP 与查询](PUBLIC_API.md#http-与查询) · [正式入口](PUBLIC_API.md#全部正式入口) |
+| API-BASE-005 | 前端调用任一这17项公共操作 | 由 xui 官方 client 承担 endpoint、method、query/body、envelope、解析与公开错误；不得重复实现 client 或协议解析 | 前端 call graph、模块 resolved path 与 fetch/Network 记录 | [PUBLIC_API HTTP 与查询](PUBLIC_API.md#http-与查询) · [正式入口](PUBLIC_API.md#全部正式入口) |
 | API-BASE-006 | 核验任一公共操作请求 | 逐操作对照 PUBLIC_API 中该 operation 的 method/path/query/body/credentials/header；不猜别名，不要求业务/第三方 API 改造 | 该操作的 wire fixture 与抓包逐字段比较 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
 | API-BASE-007 | 任一 HTTP 2xx 响应包含 AjaxResponse envelope | 仅 `success=true` 才是 envelope 成功；`code` 依合同作为安全整数元数据，不猜固定成功码或 payload 别名 | HTTP 200 success true/false 夹具与 UI 状态 | [PUBLIC_API HTTP 与查询](PUBLIC_API.md#http-与查询) |
 | API-BASE-008 | 任一公共操作返回非2xx、业务失败或 parser 错误 | 按该 operation 的 PUBLIC_API/runtime error kind/status/code 分支；不能把所有 API 的 403/404/409/5xx 映射成相同文案 | 对应错误注入、HttpError/state 与用户可见反馈 | [PUBLIC_API 安全错误](PUBLIC_API.md#安全错误认证与重试) |
@@ -457,7 +457,9 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | API-BASE-011 | 列表返回 offset total 或 StructuredLog cursor/as_of | 只显示响应确认的 total、cursor、snapshot/as_of；API-Key 要求准确 total；BusinessLog default loader 要求 total 字段存在但 null 仍是未知；StructuredLog 不得虚构 total | 原始分页响应、多页游标及 UI page facts | [PUBLIC_API 分页合同](PUBLIC_API.md#列表元数据与受控游标分页) |
 | API-BASE-012 | 任何 mutation 返回超时、断线、取消或结果未知 | xui client 不自动重放写请求；只执行该 API 明确允许的普通读取核验或用户触发只读重试 | 请求次数、取消/超时轨迹及 API 专属核验请求 | [PUBLIC_API 默认服务前置](PUBLIC_API.md#默认适配器的服务前置) |
 
-## 16 个公共 API 操作逐项检查
+<a id="16-个公共-api-操作逐项检查"></a>
+
+## 17 个公共 API 操作逐项检查
 
 下列每个操作独立记录三项：请求接线、成功事实、异常/权限。默认适配器的实际字段、fixture、路径可配置项和业务语义只从对应固定版本 [PUBLIC_API.md](PUBLIC_API.md) 与 runtime parser 读取；本表不另造 DTO。没有真实服务时逐项报告未接入，不构造通过证据。
 
@@ -491,9 +493,14 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | KEY-LIST-001 | API Key Manager 使用本地分页 | 只对完整已确认rows分页；默认pageSize/options按公开合同，翻页或改页长不发请求；总数等于完整集合长度；显式false关闭分页 | rows/page状态、控制器请求计数、翻页前后行ID与total | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [COMPONENTS](COMPONENTS.md) |
 | KEY-COPY-001 | 列表密钥列 | 名称与API Key分列；keyCopy省略/false仅被动掩码，不触发读取或剪贴板；开关不重建原Controller/查询owner | 单元格DOM、读写计数、Controller身份 | [API Key复制](COMPONENTS.md#api-key-列与复制4241) |
 | KEY-COPY-002 | 显式启用keyCopy | 点击/Enter/Space均复制完整授权值；哈希不可恢复项禁用，不复制prefix/掩码；busy防重，反馈仅Toast | 合成完整值布尔比较、键盘、禁用与请求数 | [API Key复制](COMPONENTS.md#api-key-列与复制4241) |
-| KEY-COPY-003 | 复制中取消/卸载/记录或权限变化 | signal取消、迟到丢弃；秘密不进入state/metadata/URL/storage/日志/反馈；不增加取密钥API，实际后端读取能力单独验收 | 取消与迟到注入、秘密扫描及后端合同 | [API Key复制](COMPONENTS.md#api-key-列与复制4241) |
-| KEY-COPY-004 | 第一方列表复制接线前 | 逐项确认正式facade路由、目标/版本响应、可信Scope/授权、逐行可恢复与可读事实，以及官方adapter reader；截至4.2.42后两层尚缺，默认keyCopy=false，不猜URL或加私有前端适配层 | 固定双方SHA、正式HTTP/types与缺口状态；core GetSecret不计作HTTP已完成 | [官方读取待办](PUBLIC_REQUESTS.md#api-key-列表复制的官方读取合同2026-10-27待-baseservice) · [HTTP合同](PUBLIC_API.md#默认-http-adapter严格-v2) |
+| KEY-COPY-003 | 复制中取消/卸载/记录或权限变化 | signal取消、迟到丢弃；秘密不进入state/metadata/URL/storage/日志/反馈；仅按正式v3读取合同；实际后端读取能力单独验收 | 取消与迟到注入、秘密扫描及后端合同 | [API Key复制](COMPONENTS.md#api-key-列与复制4241) |
+| KEY-COPY-004 | 第一方列表复制接线前 | 逐项确认正式facade路由、目标/版本响应、可信Scope/授权、逐行可恢复与可读事实，以及官方adapter reader；4.2.43显式schemaVersion=3与BaseService SchemaV3配套，keyCopy=adapter.keyCopy；默认v2无reader，不自动探测/降级或加私有前端适配层 | 固定双方SHA、正式HTTP/types与缺口状态；core GetSecret不计作HTTP已完成 | [官方读取待办](PUBLIC_REQUESTS.md#api-key-列表复制的官方读取合同2026-10-27待-baseservice) · [HTTP合同](PUBLIC_API.md#默认-http-adapter严格-v2) |
 | KEY-COPY-005 | 产品声称列表已可复制 | 验真实后端完整值与实际系统剪贴板；FormatHashOnly不可恢复，不复制prefix/掩码/ID/摘要，不自动轮换；合成demo与产品结论分开 | 产品实际记录格式/能力、请求和完整值布尔比较；不保存或打印真实秘密，缺前置则报告阻断 | [官方读取待办](PUBLIC_REQUESTS.md#api-key-列表复制的官方读取合同2026-10-27待-baseservice) · [API Key复制](COMPONENTS.md#api-key-列与复制4241) |
+| KEY-COPY-006 | v3 reader请求/响应 | POST /api/v1/api-keys/{id}/secret，无query，精确expected_version；校验schema=3和ID/版本一致，拒绝非法完整值；无权/哈希/未知能力零读取 | Network目标/body、decimal/hex fixture、解析拒绝和取消/迟到；秘密不打印 | [授权读取](PUBLIC_API.md#api-key-授权读取v34243) |
+| KEY-COPY-007 | 复制遇身份改变、到期或401 | 只借当前Auth owner，零隐式refresh/session/login、零重放；旧代返回丢弃，真实401清当前身份；普通HTTP原恢复规则保持 | 原owner身份、请求次数、跨身份迟到及实际产品认证接线 | [授权读取](PUBLIC_API.md#api-key-授权读取v34243) |
+| KEY-SECRET-REQ | 用户明确复制且v3逐行能力允许 | 使用官方adapter.keyCopy，POST固定secret路径、当前expected_version、无query；只借当前凭据，不预取或重放 | 点击/Enter/Space各一次、busy防重、能力禁用零请求 | [授权读取](PUBLIC_API.md#api-key-授权读取v34243) |
+| KEY-SECRET-OK | 授权读取成功 | 严格v3响应ID/版本匹配当前行；完整值仅交本次ClipboardService，元数据/状态/日志/URL/storage不存secret；Toast不挤动列表 | 系统完整值布尔比较、无秘密扫描、行节点/几何 | [授权读取](PUBLIC_API.md#api-key-授权读取v34243) |
+| KEY-SECRET-ERR | 无权/不存在/冲突/哈希/未知/超时/取消/401或身份变化 | 失败不复制，不自动refresh/session/login或重发；旧代迟到丢弃，不轮换；冲突由用户明确刷新再操作 | 失败注入、认证与读取请求数、同owner/版本、迟到零写剪贴板 | [授权读取](PUBLIC_API.md#api-key-授权读取v34243) |
 | KEY-CREATE-REQ | 用户确认并提交 API Key 创建 | `POST /api/v1/api-keys` 精确发送 name/permission_ids/expiry_id/confirmed；required/disabled/confirmed 按能力控制请求 | Network body 与表单确认事实 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-CREATE-OK | 创建返回成功 metadata 与 secret | 一次性 secret 只可经 controller 的私有结果视图读取；不进入公开状态、列表缓存、URL、storage、日志或业务 payload；关闭/pagehide/卸载清 DOM 值 | response、状态/list cache/storage/log scan 与关闭后 DOM | [PUBLIC_API 一次性值与验证边界](PUBLIC_API.md#一次性值与验证边界) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
 | KEY-CREATE-ERR | 创建拒绝、超时、断网或写结果未知 | 不重发创建；未知结果仅普通 list 核验一次，普通读失败保留错误；不能以同名记录证明本次提交 | 写/读请求次数与实际页面状态 | [PUBLIC_API API Key 管理](PUBLIC_API.md#api-key-管理) · [runtime/api-key-http.ts](../packages/runtime/src/api-key-http.ts) |
