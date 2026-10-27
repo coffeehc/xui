@@ -1219,6 +1219,8 @@ import {Avatar} from '@coffeehc/xui-react/avatar';
 
 4.2.42：`ModelProfileControllerOptions.requiredPolicyFields?: readonly ModelProfilePolicyField[]` 以及同名 `controller.update` 配置声明宿主的聊天 test/save 必填规则；字段类型为 `max_context_tokens | max_completion_tokens | reasoning_effort`，默认空列表。`ModelProfileState.requiredPolicyFields?` 是只读展示投影，不进入 HTTP DTO。缺失/非法的规则字段通过既有 `errors` 分别反馈到对应字段，目录不受规则阻挡。表单的 `contextMissing` / `notSpecified` labels 区分未配置与实际值，保留旧 label 类型兼容；不推导上下文/推理强度或前端合并通用模板。完整规则、后端事实缺口见[随包 README](../packages/ui-react/model-profile/README.md#策略值未指定与宿主必填规则4242)。
 
+4.2.44：`ModelProfileState.errorReason?`可选安全分类为`version_conflict/network/timeout/cancelled/response/rejected/unavailable`或null，不含Error/message/凭据，原error/Controller/HTTP DTO保持。已确认409/40900在Test/Catalog/Save保留草稿与CAS/密钥/Headers事实；保存冲突不归unknown，取消/网络/超时未知保存仍沿原边界。失败测试Toast与自动展开的持续result读取正式安全summary，成功Toast使用当前tested。新增可选labels为`versionConflict/networkError/timeoutError/responseError/requestCancelled`；完整默认文字、504取消/超时合并事实、单Toast与显式重读规则见[随包README](../packages/ui-react/model-profile/README.md#模型错误反馈4244)。不透传任意HTTP.message，包含HTTP502仍使用安全通用回退。
+
 ### 模型配置后端实施提示词
 
 BaseService 固定提交 `16125c0b62a057922386176f4975eca09672c25b` 的 `llmservice.SaveFailure` / webfacade 提供上述保存分类，引用 AgentCore `aeea6c2c7255021a0d77b7a3a0865a69031b5709`；消费项目仍须验收实际固定依赖和接线。

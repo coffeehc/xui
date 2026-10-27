@@ -146,6 +146,37 @@ controller.update({requiredPolicyFields: ['max_context_tokens']});
 
 后端复用 AgentCore 的 `ListModels`、`TestModelProfile` 和 `Embed` 能力；接入时核对所用版本是否已提供按 Provider 获取默认 Profile 及统一向量测试入口，缺口交 AgentCore，不复制默认参数或探测算法。不能把不支持 embedding 的聊天测试直接用于向量协议。连接测试可能产生上游费用，但本 API 不持久化配置或测试状态；默认保存不隐式测试；宿主明确选择 BaseService `SaveWithTest` / `TestBeforeSave` 时，后端在事务外先测试再保存，前端仍只发一次保存请求。明确测试失败仍可保存为未测试；不能把“已保存”展示为“测试通过”。后端应在影响执行的配置变更后失效旧验证事实。
 
+## 模型错误反馈（4.2.44）
+
+`passed:false`是已取得的模型测试结果，不是网络失败。失败Toast使用正式`ModelProfileTestResult.summary`（空白回退为本地`testFailed`），最近结果的默认Disclosure自动展开并保留该摘要，直到输入变更、重置、重新读取或退出原作用域按既有合同清理。用户可手动折叠；改语言不强制重新展开。成功Toast继续使用当前`tested`，不以任意上游文字替代通用成功文案；持续结果保留权威测试事实。
+
+summary必须由后端脱敏、收敛并限制为4096个UTF-16单元，前端严格校验后按纯文本展示，不执行HTML。不将原始Error/message/cause/details或凭据自动改名为summary；XUI不能代替后端识别任意未知秘密。BaseService `56cd27a142563acdea71077723e2ba256f2edf8b`及后续`7a2688e60fd9f51a23984e0d945c08bbbb9da0e4`提供安全上游原因。此XUI版本只显示正式summary；HTTP502/50200即使后端message已脱敏，仍走安全通用回退，不直接透传HTTP.message。
+
+新增可选`ModelProfileState.errorReason?: ModelProfileErrorReason | null`，保留原`state.error`的操作分类；不改变任何HTTP DTO或Service方法。仅识别公开HttpError/受控本地取消、超时，任意`{status,message}`对象不能冒充正式冲突：
+
+| reason | 含义 / 行为 |
+| --- | --- |
+| version_conflict | HttpError的已确认409/40900（或有效business40900），无readFailure；Test/Catalog/Save均明确版本变化，保留草稿/旧ID与expected_version/密钥模式/Headers编辑事实。Save不是unknown，不自动重新保存 |
+| network | 当前网络请求失败，或响应正文读取的明确网络失败；读取可由用户手动重试 |
+| timeout | 本地HTTP/Controller等待预算耗尽，或后端504的“取消或超时”合并事实；后端未区分两者时不猜更具体原因 |
+| cancelled | 明确取消/AbortError；取消Test/Catalog保留草稿且不制造错误Toast；保存取消仍是未知结果 |
+| response | DTO/响应解析失败，或正文读取的parse失败；不将无效响应当结果 |
+| rejected / unavailable | 其他正式拒绝或未取得有效结果，使用原操作通用反馈，不透传错误正文 |
+
+保存的network/timeout/取消/响应不完整仍优先保持`save_unknown`与既有receipt/显式核对边界，不用普通“请重试”Toast误导重发。已提交的50311/50312事实仍优先使用原保存回执与文案，本轮不改动。编辑/重试/重置/读取时同步清理旧分类，旧代迟到错误不能覆盖新结果。
+
+公共可选labels（旧完整词典仍兼容）：
+
+| key | 默认文字 |
+| --- | --- |
+| versionConflict | 模型配置已变化，请重新读取最新版本。当前草稿已保留，重新读取会丢弃草稿。 |
+| networkError | 无法连接模型配置服务，请检查网络后重试。 |
+| timeoutError | 等待超时或服务端已取消请求，请核对后重试。 |
+| responseError | 未取得有效响应，请核对服务返回。 |
+| requestCancelled | 已停止等待，当前草稿已保留。 |
+
+Toast只在本次动作完成后发出一次，使用完成时的实时labels；语言重渲染不重发请求或Toast。已经入队的Toast保留发出时的文案。版本冲突Toast对已知对象提供`reload`动作；仅点击后才调用原`controller.load()`丢弃草稿并重读，身份/对象/错误已变化时旧动作失效。宿主不重挂Controller或增加并行错误/重试owner，临时提示不插入整块页面内容。原`testError/catalogError/saveError`保留为未知/旧自定义Controller的回退。
+
 ## 保存结果与 BaseService 合同（4.2.40）
 
 HTTP 200 / AjaxResponse `success:true` 仍返回原 `ModelProfileEditorData`。BaseService `llmservice` 的三个保存异常使用 HTTP 503 / `success:false`，安全 payload 为：

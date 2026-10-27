@@ -28,11 +28,13 @@ export const modelProfileLabels = {
   test: '测试连接', save: '保存模型', reset: '重置草稿', cancel: '停止等待', reload: '重新读取', close: '关闭', loading: '正在读取配置…',
   tooLong: '测试文本最多 16384 个字符。', required: '请填写此项。', url: '请输入不含账号、查询参数或锚点的 HTTP(S) 地址。', integer: '请输入符合范围的整数。', json: '请输入有效的 JSON 对象或 null。', credentials: '请输入新密钥或留空；****** 仅适用于已有密钥。',
   loadError: '无法读取配置，请重试。', catalogError: '模型目录读取失败，可重试或手动输入。', testError: '未取得测试结果，请检查连接后重试。', saveError: '保存被拒绝，请检查配置或重新读取最新版本。', unknown: '保存结果未知。请先核对后端记录，不要重复保存。',
+  versionConflict: '模型配置已变化，请重新读取最新版本。当前草稿已保留，重新读取会丢弃草稿。', networkError: '无法连接模型配置服务，请检查网络后重试。', timeoutError: '等待超时或服务端已取消请求，请核对后重试。', responseError: '未取得有效响应，请核对服务返回。', requestCancelled: '已停止等待，当前草稿已保留。',
   savedTestFailed: '模型已保存，但测试未通过。请检查配置后修改。', savedCompletionFailed: '模型已保存，但后续处理未完成。请核对状态，不要重复保存。', savedBothFailed: '模型已保存，但测试未通过，后续处理也未完成。请核对状态。', savedReload: '配置已保存。重新读取确认当前版本后才能继续编辑。',
   saved: '模型已保存', tested: '测试通过', testFailed: '测试未通过', result: '最近测试结果', elapsed: '耗时（毫秒）', vectorCount: '向量数量', dimensions: '向量维度',
   embedding: '向量测试', embeddingInput: '测试文本', embeddingDimensions: '请求维度（可选）', closeDirty: '关闭会丢弃未保存的草稿。', unsaved: '尚未保存的修改', keepEditing: '继续编辑', discard: '放弃并关闭', closeSaving: '保存已经发出，停止等待不能撤销保存。请在关闭后重新核对记录。',
 } as const;
-export type ModelProfileLabels = {[K in Exclude<keyof typeof modelProfileLabels, 'contextMissing' | 'notSpecified'>]: string} & {contextMissing?: string; notSpecified?: string};
+type OptionalModelProfileLabel = 'contextMissing' | 'notSpecified' | 'versionConflict' | 'networkError' | 'timeoutError' | 'responseError' | 'requestCancelled';
+export type ModelProfileLabels = {[K in Exclude<keyof typeof modelProfileLabels, OptionalModelProfileLabel>]: string} & {[K in OptionalModelProfileLabel]?: string};
 export interface ModelProfileSlotContext {controller: ModelProfileController; state: Readonly<ModelProfileState>}
 /** Extensions occupy their assigned region and borrow the same draft owner. */
 export interface ModelProfileSlots {
@@ -65,11 +67,13 @@ export function ModelProfileForm(props: ModelProfileFormProps) {
 }
 function ModelProfileFields({controller, labels: overrides, slots, disabled: viewDisabled = false, readOnly: viewReadOnly = false, onSaved, onCommitted, className}: Presentation & {controller: ModelProfileController}) {
   const state = React.useSyncExternalStore(controller.subscribe, controller.getState, controller.getState), labels = {...modelProfileLabels, ...overrides};
+  const latestLabels = React.useRef(labels); latestLabels.current = labels;
   const activeOwner = React.useRef(controller); activeOwner.current = controller;
   const root = React.useRef<HTMLFormElement>(null), key = React.useRef<HTMLInputElement>(null), keyControl = React.useRef<PasswordInputHandle>(null), headers = React.useRef<HTMLTextAreaElement>(null);
   const keyVisibility = useOwnedController(undefined, () => createPasswordInputController());
   const keyMask = state.data?.has_api_key ? modelProfileStoredKey : '';
-  const [advanced, setAdvanced] = React.useState(false), id = React.useId(), toast = Toast.useToastManager();
+  const [advanced, setAdvanced] = React.useState(false), [resultOpen, setResultOpen] = React.useState(false), id = React.useId(), toast = Toast.useToastManager();
+  React.useLayoutEffect(() => {if (!state.testResult) setResultOpen(false); else if (!state.testResult.passed) setResultOpen(true);}, [state.testResult]);
   const apiMode = state.apiKeyMode, headersMode = state.headersMode, latestModes = React.useRef({apiMode, headersMode}); latestModes.current = {apiMode, headersMode};
   React.useEffect(() => {if (!controller.getState().data && !controller.getState().operation) void controller.load();}, [controller]);
   React.useLayoutEffect(() => controller.bindCredentials(() => ({...(latestModes.current.apiMode === 'replace' ? {api_key: key.current?.value ?? ''} : {}), ...(latestModes.current.headersMode === 'replace' ? {headers: JSON.parse(headers.current?.value ?? '{}')} : {})})), [controller]);
@@ -84,13 +88,21 @@ function ModelProfileFields({controller, labels: overrides, slots, disabled: vie
   const context = {controller, state};
   const issue = (field: ModelProfileField) => state.errors[field] ? labels[state.errors[field]!] : undefined;
   const focusError = () => {const current = controller.getState(); if (current.errors.default_policy || current.errors.headers) setAdvanced(true); requestAnimationFrame(() => root.current?.querySelector<HTMLElement>('[aria-invalid="true"]:is(input,textarea,button,select)')?.focus());};
+  const actionTurn = React.useRef(0);
+  const feedback = (current: Readonly<ModelProfileState>, text = labels) => {
+    if (current.error === 'save_unknown') return text.unknown;
+    const reason = current.errorReason, name = reason === 'version_conflict' ? 'versionConflict' : reason === 'network' ? 'networkError' : reason === 'timeout' ? 'timeoutError' : reason === 'response' ? 'responseError' : reason === 'cancelled' ? 'requestCancelled' : undefined;
+    if (name) return text[name] ?? modelProfileLabels[name];
+    return current.error ? ({load: text.loadError, catalog: text.catalogError, test: text.testError, save: text.saveError})[current.error] : null;
+  };
   const action = async (operation: 'save' | 'test' | 'catalog') => {
-    const previous = controller.getState();
-    const receipt = await controller[operation](); if (activeOwner.current !== controller || !root.current?.isConnected) return; const current = controller.getState();
-    if (operation === 'save' && !receipt && current.data !== previous.data) return;
+    const previous = controller.getState(); if (previous.operation) return; const turn = ++actionTurn.current;
+    const receipt = await controller[operation](); if (turn !== actionTurn.current || activeOwner.current !== controller || !root.current?.isConnected) return; const current = controller.getState(), labels = latestLabels.current;
+    if (current.data !== previous.data && (operation !== 'save' || !receipt)) return;
     focusError();
-    if (current.error) {if (current.error !== 'save_unknown') toast.add({description: ({load: labels.loadError, catalog: labels.catalogError, test: labels.testError, save: labels.saveError})[current.error], type: 'error'}); return;}
     if (Object.keys(current.errors).length || current.operation) return;
+    if (current.error && current.error !== operation && !(operation === 'save' && current.error === 'save_unknown')) return;
+    if (current.error) {if (current.error !== 'save_unknown') toast.add({description: feedback(current, labels), type: 'error', ...(current.errorReason === 'version_conflict' && current.data?.profile_id ? {actionProps: {children: labels.reload, onClick: () => {if (activeOwner.current === controller && root.current?.isConnected && controller.getState().data === current.data && controller.getState().errorReason === 'version_conflict') void controller.load();}}} : {})}); return;}
     if (operation === 'save' && receipt?.status === 'committed' && current.saveReceipt === receipt) {
       const failed = receipt.test_failed || receipt.completion_failed;
       toast.add({description: receipt.test_failed && receipt.completion_failed ? labels.savedBothFailed : receipt.test_failed ? labels.savedTestFailed : receipt.completion_failed ? labels.savedCompletionFailed : labels.saved, type: failed ? 'error' : 'success'});
@@ -98,9 +110,9 @@ function ModelProfileFields({controller, labels: overrides, slots, disabled: vie
       try {onCommitted?.(receipt);} catch {/* Host observer owns its failure. */}
       if (receipt.editor && controller.getState().saveReceipt === receipt) try {onSaved?.(receipt.editor);} catch {/* Host observer owns its failure. */}
     }
-    if (operation === 'test' && current.testResult && current.testResult !== previous.testResult) toast.add({description: current.testResult.passed ? labels.tested : labels.testFailed, type: current.testResult.passed ? 'success' : 'error'});
+    if (operation === 'test' && current.testResult && current.testResult !== previous.testResult) toast.add({description: current.testResult.passed ? labels.tested : current.testResult.summary.trim() || labels.testFailed, type: current.testResult.passed ? 'success' : 'error'});
   };
-  if (!draft) return <Stack className={className}>{state.error ? <Alert tone="error">{labels.loadError}<Button onClick={() => void controller.load()}>{labels.reload}</Button></Alert> : <LoadingState>{labels.loading}</LoadingState>}</Stack>;
+  if (!draft) return <Stack className={className}>{state.error ? <Alert tone="error">{feedback(state)}<Button onClick={() => void controller.load()}>{labels.reload}</Button></Alert> : <LoadingState>{labels.loading}</LoadingState>}</Stack>;
   const provider = modelProfileProviders.find(item => item.id === draft.provider_type)!, chat = provider.kind === 'chat', embedding = provider.kind === 'embedding';
   const field = (name: 'model_name' | 'base_url') => <Field label={labels[name]} required error={issue(name)}><Input value={draft[name]} disabled={disabled} readOnly={locked} onChange={event => controller.setField(name, event.target.value)}/></Field>;
   let policyInvalid = false; try {JSON.parse(state.policyText);} catch {policyInvalid = true;}
@@ -109,7 +121,7 @@ function ModelProfileFields({controller, labels: overrides, slots, disabled: vie
     const value = policy[name], invalidContext = name === 'max_context_tokens' && typeof value === 'number' && (!Number.isSafeInteger(value) || value <= 0);
     return <Field label={label} required={requiredPolicyFields.includes(name)} error={issue(name)} help={invalidContext ? labels.contextMissing : undefined}><Input type="number" min={1} step={1} placeholder={name === 'max_context_tokens' ? labels.contextMissing : labels.notSpecified} value={typeof value === 'number' ? value : ''} disabled={locked || policyInvalid} onChange={event => {const next = {...policy}; if (event.target.value === '') delete next[name]; else next[name] = Number(event.target.value); controller.setField('default_policy', next);}}/></Field>;
   };
-  const errorMessage = state.error ? ({load: labels.loadError, catalog: labels.catalogError, test: labels.testError, save: labels.saveError, save_unknown: labels.unknown})[state.error] : null;
+  const errorMessage = feedback(state);
   return <form ref={root} className={cx('xui-model-profile', className)} aria-label={labels.title} noValidate onSubmit={event => {event.preventDefault(); if (!busy && !locked) void action('save');}}>
     <Fieldset legend={labels.identity} layout="stack"><FormGrid>
       {field('model_name')}
@@ -143,7 +155,7 @@ function ModelProfileFields({controller, labels: overrides, slots, disabled: vie
       {!embedding && <Field label={labels.default_policy} error={issue('default_policy')}><Textarea rows={5} value={state.policyText} disabled={disabled} readOnly={locked} onChange={event => controller.setPolicyText(event.target.value)}/></Field>}
       {slots?.advanced?.(context)}
     </Stack></Disclosure>
-    {state.testResult && <Disclosure title={labels.result}><div className="xui-model-profile-result" role="status">{slots?.result ? slots.result(context) : <><strong>{state.testResult.passed ? labels.tested : labels.testFailed}</strong><p>{state.testResult.summary}</p><dl><dt>{labels.elapsed}</dt><dd>{state.testResult.elapsed_ms}</dd>{state.testResult.embedding && <><dt>{labels.vectorCount}</dt><dd>{state.testResult.embedding.count}</dd><dt>{labels.dimensions}</dt><dd>{state.testResult.embedding.dimensions}</dd></>}</dl></>}</div></Disclosure>}
+    {state.testResult && <Disclosure title={labels.result} open={resultOpen} onOpenChange={setResultOpen}><div className="xui-model-profile-result" role="status">{slots?.result ? slots.result(context) : <><strong>{state.testResult.passed ? labels.tested : labels.testFailed}</strong><p>{state.testResult.summary}</p><dl><dt>{labels.elapsed}</dt><dd>{state.testResult.elapsed_ms}</dd>{state.testResult.embedding && <><dt>{labels.vectorCount}</dt><dd>{state.testResult.embedding.count}</dd><dt>{labels.dimensions}</dt><dd>{state.testResult.embedding.dimensions}</dd></>}</dl></>}</div></Disclosure>}
     {(state.error === 'save_unknown' || needsRead) && <Alert tone="error">{needsRead ? labels.savedReload : errorMessage}{(state.saveReceipt?.profile_id || state.data!.profile_id) && <Button type="button" variant="text" onClick={() => void controller.load()}>{labels.reload}</Button>}</Alert>}
     <FormActions secondary={<><Button type="button" variant="text" disabled={locked || busy || !state.dirty || state.error === 'save_unknown'} onClick={() => controller.reset()}>{labels.reset}</Button>{slots?.actions?.(context)}</>}>
       <Button type="button" variant="outline" disabled={locked || busy} aria-busy={state.operation === 'test'} onClick={() => void action('test')}>{state.operation === 'test'&&<Spinner/>}{labels.test}</Button>

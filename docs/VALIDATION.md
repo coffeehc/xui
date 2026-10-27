@@ -1,5 +1,21 @@
 # 验证证据与限制
 
+## 模型具体失败原因与版本冲突（4.2.44，2026-10-27）
+
+基于main 0fd9efc/4.2.43复核后，只修改xui的ModelProfile反馈，三包及规范只递增末位。BaseService安全summary合同引用56cd27a142563acdea71077723e2ba256f2edf8b及7a2688e60fd9f51a23984e0d945c08bbbb9da0e4；本轮不访问真实上游或模型数据。passed:false的正式有界summary用于失败Toast，并自动展开持续result；空白回退，HTML按纯文本显示，成功Toast仍本地化。HTTP502等原始message不透传。新增可选errorReason和五个可翻译labels，旧完整词典/自定义state保持类型兼容。
+
+Catalog/Test/Save的已确认409/40900显示版本冲突，保留草稿、ID/CAS、六星号和Headers编辑事实，Save冲突不归unknown；没有自动读取/保存。Toast仅在显式点击重新读取时调用原load，旧对象/草稿变化后旧动作失效。网络、预算超时、响应解析与明确取消区分；后端504合并“取消或超时”不猜具体原因。取消读取不制造失败Toast，未确认的保存继续沿save_unknown/receipt边界。语言热更新不重新请求，进行中动作完成用当前labels；新模型先目录冲突再触发其他动作本地校验，仍准确聚焦必填字段且零请求/零重复Toast。
+
+最终sourceGeneration：`49b5beda902180462bf002aa9169ec3f0917298af340e877f6c3688658c9c928`。build、typecheck、446 Token/指纹/依赖图通过，CSS与默认Token值未改。定向Node **43/43通过，0失败/跳过**，包含ModelProfile/保存回执/请求合同/文档与规范回归；本轮未重跑全仓Node。独立正式三tarball的ESM/CSS/types与115入口消费通过，React/ReactDOM19.2.8、Base UI1.7.0单实例，无packages/src alias或体积预算放宽；正式安装的types fixture验证旧词典/state兼容与新reason/labels。
+
+最终Chromium **51/51通过，0失败/跳过/重试/flaky**：新增反馈专项17项，原策略8项、原模型26项。覆盖具体summary、空白/超限/HTML、成功本地化、三入口冲突、CAS/密钥/Headers保留、仅显式重读、单Toast、迟到/取消/保存未知与提交回执、同Controller语言变化、必填回焦。包含light/dark/system桌面与390px+200%阅读长中文，以及三主题真实Chrome200%下的Sheet操作、Toast动作和关闭回焦。两种缩放分别断言。人工查看浅色桌面与深色窄屏200%截图；其他模式保留截图和自动交互/几何证据。
+
+过程记录：首轮50项中观察到4条测试交互失败后中断（exit130），一条把按钮引发的正常滚动误当布局位移，三条未关闭Combobox弹层便点击高级配置。测试改用文档坐标/同节点检查与Escape关闭弹层；首轮仅保留日志和当时诊断观察，中断未生成JSON，后续运行前未成功保留其trace/截图，不宣称这些原始证据仍在。修订后第二轮50/50通过，对应旧generation ce57c6b35f16；随后代码复核修正跨操作旧错误挡住必填回焦的顺序并增加一项用例，重建正式包后完成上述最终51项。两轮通过报告分开保留，不合并为同代验收；未用force click或retry绕过。caffeinate仅随浏览器进程存在。
+
+证据：[checks.json](../.artifacts/model-feedback-4.2.44/checks.json)、[最终正式包浏览器报告](../.artifacts/model-feedback-4.2.44/browser-final.json)、[过程记录](../.artifacts/model-feedback-4.2.44/process-history.json)、[截图索引](../output/playwright/model-feedback-4.2.44/evidence.json)。复现：`pnpm build && pnpm check:tokens && pnpm typecheck`；`node --test tests/model-profile*.test.mjs tests/docs.test.mjs tests/contract.test.mjs`；`pnpm test:consumer`；`caffeinate -i pnpm exec playwright test tests/browser/model-profile.spec.mjs tests/browser/model-profile-policy.spec.mjs tests/browser/model-profile-feedback.spec.mjs --workers=1 --retries=0`。本地提交后由既有archive/archive:verify自动绑定三包、manifest、public-api.json、sourceGeneration与SHA256SUMS。
+
+未跑全仓unit/browser/watch/cold-start、真实后端/上游、AgReady等消费项目升级/实际页面/88.7部署、Firefox/WebKit/移动OS/读屏器。库mock不能证明消费项目已显示真实上游原因或现场409；未修改AgReady、AgentCore、BaseService或实际模型配置，未发布npm、打tag或部署。
+
 ## API Key 官方 v3 列表复制接线（4.2.43，2026-10-27）
 
 承接下方4.2.42文档待办，BaseService已交付 `f66724f44b5825143614ca2a9f2e0b15f3f3e140`，本轮只修改xui；原严格v2与默认schemaVersion=2保留。显式3提供逐行secretAccess与adapter.keyCopy，可直接传给原ApiKeyManager；POST secret精确携带expected_version，无query，严格验证响应schema/ID/版本/完整值与16384字节预算。无权/哈希/未知能力不发读取；expired/disabled/revoked的recoverable记录由原后端独立授权，不能按状态推断。现有Controller/分页/CRUD/CAS、权限/认证与ClipboardService/Toast owner保留，没有改动或轮换任何密钥。

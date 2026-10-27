@@ -174,7 +174,8 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
         await copyFile(`${source}/index.html`, `${output}/index.html`);
         await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'), `${output}/theme-init.js`);
         await writeFile(`${output}/metafile.json`, JSON.stringify(result.metafile, null, 2));
-        execFileSync('node', [resolve('node_modules/typescript/bin/tsc'), '--preserveSymlinks', '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'model-profile/app.tsx'], {cwd, stdio: 'inherit'});
+        await copyFile('tests/fixtures/model-profile-policy-types.tsx', `${cwd}/model-profile-policy-types.tsx`);
+        execFileSync('node', [resolve('node_modules/typescript/bin/tsc'), '--preserveSymlinks', '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'model-profile/app.tsx', 'model-profile-policy-types.tsx'], {cwd, stdio: 'inherit'});
     }
 
     {

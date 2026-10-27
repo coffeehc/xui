@@ -26,6 +26,8 @@ API Key 使用独立密钥列展示短前缀＋掩码，保留紧凑时间、完
 
 4.2.43新增官方v3读取：BaseService显式SchemaV3与`createApiKeyHttpAdapter({http,schemaVersion:3})`同步选择，将`adapter.keyCopy ?? false`传给原ApiKeyManager。按KEY-COPY-004～007核对正式前置、权限/版本、取消/身份代次和真实完整值；默认v2保持原行为，不自动探测/降级。详见[授权读取](PUBLIC_API.md#api-key-授权读取v34243)。历史哈希key仍不可恢复，不轮换；宿主无需自建读取URL或前端适配层，库mock不代替产品验收。
 
+模型配置4.2.44定向升级只需保留原Controller/Client，按MODEL-011～014补入适用的可选反馈labels并验实际失败summary、409三入口、单Toast和显式重读；不复制错误解析或读取/保存owner。后端必须满足summary脱敏与长度合同，库mock不能代替上游真实原因验收，详见[随包README](../packages/ui-react/model-profile/README.md#模型错误反馈4244)。
+
 4.2.41 统一交付上述公共能力和 demo；所有请求为合成 mock，库验收不等同于消费项目接入或部署完成。
 
 xui 为新产品 UI 统一采用 React：公共组件从 `@coffeehc/xui-react` 导入，`@coffeehc/xui-runtime` 保持 TypeScript 的主题、服务、模型与工具能力。宿主项目负责业务页面、领域图形、产品布局与业务流程，以及领域数据、鉴权、路由和接口适配。项目局部差异先在宿主自有 React 组合中表达；只有可复用的通用能力缺口才反馈 xui，不把业务特例扩成公共 API。

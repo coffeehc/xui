@@ -873,6 +873,11 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | MODEL-008 | 模型配置Form/Editor | 同Controller切语言/主题/缩放不请求；键盘/浮层/Sheet关闭回焦、disabled/readOnly；成功反馈Toast，验真实页面及实际请求 | 组件实际页面、快照和请求记录 | [模型配置](COMPONENTS.md#公共模型配置) |
 | MODEL-009 | policy 展示/后端 editor | 当前已配置或已投影进新增模板的具体 tokens/推理强度直接显示；缺上下文、0容量、未指定强度各自明确；none与未指定区分；不从通用defaults/模型名猜当前生效值，不将某实例窗口硬编码成全局默认 | config/defaults/草稿对照、字段实际显示与请求payload | [随包策略合同](../packages/ui-react/model-profile/README.md#策略值未指定与宿主必填规则4242) |
 | MODEL-010 | 宿主要求上下文/强度必填 | 同Controller的requiredPolicyFields接线；test/save缺失或非法值零请求、对应字段aria-invalid/错误关联/焦点；catalog不受阻挡；规则更新保留草稿与原owner、零请求且不取消已发操作；load/reset/clear保留必填规则但遵守原数据/取消生命周期 | Controller身份、draft、请求次数、键盘和正式types | [随包策略合同](../packages/ui-react/model-profile/README.md#策略值未指定与宿主必填规则4242) |
+| MODEL-011 | Test返回passed:false | 使用正式有界安全summary作为失败Toast并自动展开持续result；空白回退、本地化成功、HTML纯文本；单动作单Toast、临时反馈不挤动原字段 | 正式payload、Toast/result、节点/几何与请求数；后端脱敏单独验证 | [错误反馈合同](../packages/ui-react/model-profile/README.md#模型错误反馈4244) |
+| MODEL-012 | Catalog/Test/Save返回已确认409/40900 | errorReason=version_conflict，明确重新读取建议；原草稿/ID/版本/六星号/Headers编辑事实保留；Save不是unknown，零自动重读/重写，仅显式reload丢弃 | 三入口请求body/CAS/state/DOM、重读前后计数；不显示原始Error/message | [错误反馈合同](../packages/ui-react/model-profile/README.md#模型错误反馈4244) |
+| MODEL-013 | 模型操作网络/超时/取消/解析或迟到 | 安全reason区分，不靠任意status/message对象猜；取消读取无失败Toast，保存未确认沿save_unknown/receipt边界；504合并取消/超时不臆断；旧代迟到不覆盖 | 实际预算/取消、错误注入、状态与零重放 | [错误反馈合同](../packages/ui-react/model-profile/README.md#模型错误反馈4244) |
+| MODEL-014 | 模型错误labels与同owner语言变化 | 5个可选公共反馈key按项目locale接入，旧词典仍可用；进行中动作完成用当前语言，已发Toast保留原语言，不因重渲染重复通知/请求；不重挂Controller或清草稿 | en/zh切换、Toast与请求数、同draft/Controller | [错误反馈合同](../packages/ui-react/model-profile/README.md#模型错误反馈4244) |
+
 
 ### 面包屑与走马灯逐项检查
 

@@ -1,5 +1,12 @@
 # 公共能力维护清单
 
+## ModelProfile 具体失败原因与版本冲突（4.2.44）
+
+AgReady消费正式4.2.42/60ad071反馈：测试HTTP200且passed:false的安全summary未用于Toast；Test/Catalog/Save的409/40900只表现为通用操作错误。最新4.2.43仍有同样公开缺口，本轮只修改xui。4.2.44复用同一Controller/Client/HTTP：失败Toast与自动展开的持续result使用正式summary，成功Toast本地化；新增可选errorReason与五个可翻译反馈key，不透传原始Error或HTTP.message。冲突保留草稿、CAS、六星号与Headers编辑事实，保存冲突不是unknown；仅用户显式重读覆盖，网络/超时/取消的保存未知边界保持。具体接口、默认文案与兼容性见[随包README](../packages/ui-react/model-profile/README.md#模型错误反馈4244)。
+
+BaseService提供安全原因的正式提交为56cd27a142563acdea71077723e2ba256f2edf8b及后续7a2688e60fd9f51a23984e0d945c08bbbb9da0e4；旧后端仍可能只返回固定summary，前端不猜真实原因。后端必须负责脱敏/4096 UTF-16长度，XUI只验证既定DTO并纯文本展示；502等HTTP.message仍通用回退。本轮合成测试、正式包浏览器证据及未跑范围见[验证记录](VALIDATION.md)，不等于AgReady现场或88.7部署完成。
+
+
 ## API Key 列表复制的官方读取合同（2026-10-27，待 BaseService）
 
 历史状态：xLead 固定4.2.37提出复制/列宽需求，4.2.41已交付独立列、掩码、紧凑时间和可选keyCopy；4.2.42仅有宿主reader扩展，官方HTTP连接当时缺失。本标题保留用于已有引用，当前后端依赖已由BaseService `f66724f44b5825143614ca2a9f2e0b15f3f3e140` 补齐，xui **4.2.43** 接入显式v3，不再列为未提供的HTTP能力。

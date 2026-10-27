@@ -93,6 +93,7 @@ export type ModelCredentialMode = 'keep' | 'replace' | 'clear';
 /** Read once at an explicit operation boundary. Never store these values in controller snapshots. */
 export interface ModelProfileCredentials {api_key?: string; headers?: Readonly<Record<string, string>>}
 export type ModelProfileOperation = 'load' | 'catalog' | 'test' | 'save';
+export type ModelProfileErrorReason = 'version_conflict' | 'network' | 'timeout' | 'cancelled' | 'response' | 'rejected' | 'unavailable';
 export type ModelProfileIssue = 'required' | 'url' | 'integer' | 'json' | 'credentials' | 'tooLong';
 /** Known chat policy controls. Missing values have no inferred upstream default. */
 export type ModelProfilePolicyField = 'max_context_tokens' | 'max_completion_tokens' | 'reasoning_effort';
@@ -109,6 +110,8 @@ export interface ModelProfileState {
   readonly saveReceipt: Readonly<ModelProfileSaveReceipt> | null;
   readonly errors: Readonly<Partial<Record<ModelProfileField, ModelProfileIssue>>>;
   readonly error: 'load' | 'catalog' | 'test' | 'save' | 'save_unknown' | null;
+  /** Safe classification only; no Error, HTTP message or credentials. Optional for older custom controllers. */
+  readonly errorReason?: ModelProfileErrorReason | null;
   readonly apiKeyMode: ModelCredentialMode;
   readonly headersMode: ModelCredentialMode;
   readonly embeddingInput: string;

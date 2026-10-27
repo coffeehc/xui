@@ -5,17 +5,24 @@ const saved: Record<string, ModelProfileEditorData> = {
   'example-chat': {schema_version: 1, profile_id: 'example-chat', version: '1', config: {...defaults[1], model_name: '团队日常助手', real_name: 'example-chat'}, defaults, has_api_key: true, header_names: ['X-Workspace'], can_save: true},
   'example-embedding': {schema_version: 1, profile_id: 'example-embedding', version: '1', config: {...defaults[3], model_name: '知识检索向量', real_name: 'example-embedding'}, defaults, has_api_key: true, header_names: [], can_save: true},
 };
+const held: (() => void)[] = [];
 export const mockModelAPI = {
-  behavior: 'success' as 'success' | 'empty' | 'failure' | 'slow' | 'unknown' | 'test_failed' | 'completion_failed' | 'both_failed' | 'committed_no_id',
-  requests: [] as {method: string; path: string; fields: string[]; usesSavedKey: boolean}[],
+  feedback: null as {status:number;code?:number;message?:string;summary?:string;hold?:boolean} | null,
+  releaseFeedback() {held.splice(0).forEach(resolve => resolve());},
+  behavior: 'success' as 'success' | 'empty' | 'failure' | 'slow' | 'unknown' | 'test_failed' | 'completion_failed' | 'both_failed' | 'committed_no_id' | 'conflict' | 'probe_failed' | 'network',
+  requests: [] as {method: string; path: string; fields: string[]; usesSavedKey: boolean; profileId?: string; expectedVersion?: string; headerKeys: string[]}[],
   /** Transport-level mock: the real public client still serializes, validates and handles HTTP errors. */
   fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input : input.url), method = init?.method ?? 'GET';
     const body = init?.body ? JSON.parse(String(init.body)) as ModelProfileCandidate : undefined;
-    mockModelAPI.requests.push({method, path: url.pathname, fields: Object.keys(body?.config ?? {}), usesSavedKey: !!body?.profile_id && (body?.config.api_key === modelProfileStoredKey || !Object.hasOwn(body?.config ?? {}, 'api_key'))});
-    const behavior = mockModelAPI.behavior;
+    mockModelAPI.requests.push({method, path: url.pathname, fields: Object.keys(body?.config ?? {}), profileId: body?.profile_id, expectedVersion: body?.expected_version, headerKeys: Object.keys(body?.config.headers ?? {}), usesSavedKey: !!body?.profile_id && (body?.config.api_key === modelProfileStoredKey || !Object.hasOwn(body?.config ?? {}, 'api_key'))});
+    const behavior = mockModelAPI.behavior, feedback = url.pathname.endsWith('/test') ? mockModelAPI.feedback : null;
+    if (feedback?.hold) await new Promise<void>(resolve => held.push(resolve));
     await new Promise<void>((resolve, reject) => {const timer = setTimeout(done, behavior === 'slow' ? 3000 : 400); function abort() {clearTimeout(timer); init?.signal?.removeEventListener('abort', abort); reject(new DOMException('Cancelled', 'AbortError'));} function done() {init?.signal?.removeEventListener('abort', abort); resolve();} if (init?.signal?.aborted) abort(); else init?.signal?.addEventListener('abort', abort, {once: true});});
-    const response = (payload: unknown, status = 200, code = status === 200 ? 1 : status === 503 ? 50301 : 40901) => new Response(JSON.stringify({success: status === 200, message: status === 200 ? '' : 'Mock rejection', payload, request_id: 'mock-model-request', code}), {status, headers: {'Content-Type': 'application/json'}});
+    const response = (payload: unknown, status = 200, code = status === 200 ? 1 : status === 503 ? 50301 : 40901) => new Response(JSON.stringify({success: status === 200, message: status === 200 ? '' : feedback?.message ?? 'Mock rejection', payload, request_id: 'mock-model-request', code}), {status, headers: {'Content-Type': 'application/json'}});
+    if (feedback && feedback.status !== 200) return response(null, feedback.status, feedback.code ?? feedback.status * 100);
+    if (behavior === 'conflict' && method !== 'GET') return response(null, 409, 40900);
+    if (behavior === 'network') throw new TypeError('SYNTHETIC_PRIVATE_NETWORK_ERROR');
     if (behavior === 'failure') return response(null, 409);
     if (method === 'GET') {
       const id = url.searchParams.get('profile_id');
@@ -28,6 +35,8 @@ export const mockModelAPI = {
     if (url.pathname.endsWith('/test')) {
       const kind = modelProfileProviders.find(item => item.id === effective.provider_type)!.kind;
       const request = body as ModelProfileCandidate & {embedding?: {input: string[]; dimensions?: number}};
+      if (feedback?.summary !== undefined) return response({schema_version: 1, kind, passed: false, elapsed_ms: 30, summary: feedback.summary});
+      if (behavior === 'probe_failed') return response({schema_version: 1, kind, passed: false, elapsed_ms: 30, summary: '上游拒绝 reasoning_effort=high；支持 xhigh（默认）、medium、low。'});
       return response({schema_version: 1, kind, passed: true, elapsed_ms: 428, summary: kind === 'embedding' ? '已完成文本编码，向量维度与请求一致。' : kind === 'image_generation' ? '图片生成协议返回有效结果。' : '已收到有效回复，连接可用。', ...(kind === 'embedding' ? {embedding: {count: request.embedding?.input.length ?? 1, dimensions: request.embedding?.dimensions ?? 768}} : {})});
     }
     const id = body!.profile_id ?? 'example-new', existing = saved[id];
