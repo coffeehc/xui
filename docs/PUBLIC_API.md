@@ -135,6 +135,7 @@
 | `@coffeehc/xui-react/api-key` <!-- public-entry: @coffeehc/xui-react/api-key --> | [源码](../packages/ui-react/src/api-key.tsx) | [合同](PUBLIC_API.md#api-key-管理) | [示例](../examples/api-key-react/app.tsx) |
 | `@coffeehc/xui-react/structured-log` <!-- public-entry: @coffeehc/xui-react/structured-log --> | [源码](../packages/ui-react/src/structured-log.tsx)：重导出GroupedStructuredLogAdapter与完整StructuredLogAdapter | [合同](PUBLIC_API.md#程序错误观察) | [示例](../examples/log-react/app.tsx) |
 | `@coffeehc/xui-react/business-log` <!-- public-entry: @coffeehc/xui-react/business-log --> | [源码](../packages/ui-react/src/business-log.tsx) | [合同](PUBLIC_API.md#业务日志) | [示例](../examples/business-log-react/app.tsx) |
+| `@coffeehc/xui-react/language` <!-- public-entry: @coffeehc/xui-react/language --> | [源码](../packages/ui-react/src/language.tsx) | [语言合同](COMPONENTS.md#统一登录语言与语言工具4247) | [验证](../tests/browser/login-i18n.spec.mjs) |
 | `@coffeehc/xui-react/login` <!-- public-entry: @coffeehc/xui-react/login --> | [源码](../packages/ui-react/src/login.tsx) | [合同](PUBLIC_API.md#认证会话) | [示例](../examples/login-react/app.tsx) |
 | `@coffeehc/xui-react/password` <!-- public-entry: @coffeehc/xui-react/password --> | [源码](../packages/ui-react/src/password.tsx) | [合同](COMPONENTS.md#密码输入) | [验证](../tests/browser/password-fields.spec.mjs) |
 | `@coffeehc/xui-react/choice-group` <!-- public-entry: @coffeehc/xui-react/choice-group --> | [源码](../packages/ui-react/src/choice-group.tsx) | [成组字段](COMPONENTS.md#成组选项) | [示例](../examples/choice-group-react/app.tsx) |
@@ -1287,3 +1288,9 @@ BaseService 固定提交 `16125c0b62a057922386176f4975eca09672c25b` 的 `llmserv
 `@coffeehc/xui-runtime/password`新增公开类型`PasswordStrengthEvaluator`与`PasswordStrengthEstimate`；`PasswordStrengthControllerOptions`/`NewPasswordFieldsControllerOptions`可选`evaluateStrength`、`evaluationTimeoutMs`，React `PasswordStrengthInput`/`NewPasswordFields`支持同名可选props。注入Controller时由Controller配置，View不得重复配置。默认使用无词典/无Worker/无网络的轻量长度与正则提示，现有score/state/meter接口保持，但评分算法不再承诺等于旧词典估算。不是抗猜测或泄露检测，不改变6–32码点校验、旧密码登录、认证或服务端约束。
 
 评分回调`(password,{signal}) => {score:0|1|2|3|4,hint?:PasswordStrengthHint} | Promise<...>`由宿主显式提供，可复用原HTTP/认证访问宿主评分API；xui无默认远程URL、secret store、第三方matcher或自动请求。默认150ms防抖，评估预算默认15000ms，可设1–60000整数；回调变化不自动重放密码，下一次输入/显式refresh才重算。错误/超时/非法结果unavailable且不自动回退成功；输入变化/清空/退出取消signal并隔离迟到结果。公共状态不存密码/原始响应/异常；回调必须传播signal、及时丢弃secret且不记录、缓存、放入URL或config。评分无论本地或远程，均不决定提交许可。详细规则、注入例子和完整页接线见[组件合同](COMPONENTS.md#可选宿主密码评分)。
+
+## 登录语言与持久化（4.2.47）
+
+`XuiConfig.i18n`新增可选persist（默认true）和storageKey（默认xui.locale），仅启用语言功能时恢复/写入localStorage的已声明locale；bootstrap首绘lang与同一I18nService保持一致。runtime/i18n公开defaultI18nStorageKey；关闭/存储异常/非法值、跨tab和dispose边界见[语言合同](COMPONENTS.md#统一登录语言与语言工具4247)。不会扫描任意项目存储key，也不改变主题/缩放的sessionStorage。
+
+React新增`@coffeehc/xui-react/language`的LanguageSelect/LanguageSelectProps，根入口同样导出；默认沿共享I18nService，也可借用HeaderLocaleOptions受控事实。AuthPage/ConfigurableLoginPage公开tools槽；完整登录页仅在i18n.enabled时默认放无框语言控件，普通AuthPage仍由宿主组合。resolveLoginPageConfig可选locale，LoginViewBinding可选i18n，useI18nService提供provider/application现有owner；均不创建第二份认证/语言服务。默认及注入Controller的中文/英文公共文案、显式覆盖优先级、状态热更新及焦点/草稿/请求连续性见同一组件合同。没有新增认证端点或调用。

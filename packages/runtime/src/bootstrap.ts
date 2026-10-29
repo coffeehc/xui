@@ -2,6 +2,7 @@ import {getThemeService} from './theme.js';
 import {resolveConfig,type XuiConfigOverrides,type XuiConfig,type ConfigReadonly} from './config.js';
 import {installXuiServices,disposeXuiServices,type XuiServices,type XuiServicesOptions} from './services-core.js';
 import {restoreInterfaceScale} from './interface-scale.js';
+import {readI18nLocale} from './i18n-preference.js';
 /** Release the Window registry and its owned services; safe to call repeatedly.
  * Borrowed services survive. A later bootstrap on this Window creates a fresh owner.
  * This narrow lifecycle export does not load feature service implementations. */
@@ -34,7 +35,7 @@ export function bootstrap(overrides:XuiConfigOverrides={},environment:BootstrapE
   // Only first-paint preferences are required here. Feature services load with their own module.
   try{
     getThemeService(win);
-    win.document.documentElement.lang=config.i18n.defaultLocale;
+    win.document.documentElement.lang=injected.i18n?.instance?.getState().locale??readI18nLocale(config.i18n,win);
     restoreInterfaceScale(win,config.theme.scale);
     if(config.app.title)win.document.title=config.app.title;
     const application=Object.freeze({config,services});applications.set(services,application);return application;

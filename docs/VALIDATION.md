@@ -1,5 +1,23 @@
 # 验证证据与限制
 
+## 登录语言偏好与无框语言工具（4.2.47，2026-10-30）
+
+核对基线 main `b5308917003dcce87c51341ca1c3f54ac7f8455a` / 4.2.46，原 I18nService 未持久保存语言，完整登录页也未自动投影当前语言。本轮复用同一 I18nService 与 LoginViewController：开启 `i18n.enabled` 后，bootstrap 首次绘制与按需服务均读取声明语言集合内的 localStorage 字符串，默认键 `xui.locale`；可配置 `i18n.storageKey`，默认 `persist:true`。关闭 i18n 或显式关闭持久化时不读取、写入或删除该偏好；拒绝存储仍可在内存切换。注入的服务继续拥有语言与持久化，不新增第二个 owner；主题和阅读缩放的 sessionStorage 合同不变。
+
+新增正式 `/language` 的 `LanguageSelect` / `LanguageSelectProps`，沿用公开 SimpleSelect 与主题交互样式；默认无边框，保留键盘焦点、禁用与高对比度表达。完整登录页在 `AuthPage.tools` 标题行尾 slot 默认放置该控件，仅开启 i18n 时显示；纯 AuthPage 保持无自动工具与请求。现有 HeaderLocaleSelect 复用同一控件并保留原受控合同。登录标题、字段、显隐名称及标准错误支持中英文和 `xui.login.*` catalog，宿主显式 labels、品牌、Logo 与业务说明优先；标准标题不被自定义提交按钮文案替代。切换语言保留同一表单、输入草稿、选区、Controller、认证过程与正在进行的提交，零额外认证请求。跨标签页同步不回写，删除偏好恢复配置默认语言。既有 resolved labels 手写对象无需补充新增可选字段。
+
+最终 sourceGeneration：`e4ffeacc8b7130e1373cd2499e76ab77f3960752ecdd790b895c9c96165be66f`。build、typecheck、446 Token 及默认 Token 指纹检查通过；定向 Node **90/90通过，0失败/跳过**，包括配置、模块渐进依赖、语言持久化、登录投影/认证与类型兼容。本轮未跑全仓 Node。独立正式三 tarball 的 **116** 个入口 ESM/CSS/types、正负类型 fixture、依赖图和包体检查通过；React/ReactDOM19.2.8、Base UI1.7.0 单实例，无 packages/src alias、新依赖或密码字典资源。
+
+体积变化按正式安装包复测：剪贴板最小服务 gzip 4560→4633 字节、主题服务4581→4655字节，critical+floating CSS 23265→23322字节。仅将受影响的窄服务上限4608→4672、CSS上限23296→23360，各增加64字节；其他 Button、首屏 JS 与图表门禁不变。密码最小入口仍为418296原始/136181 gzip字节，无 Worker/异步词典。上述是最小独立消费者结果，不代表消费项目整站体积。
+
+最终 Chromium **85/85通过，0失败/跳过/重试/flaky**，耗时48.1秒，与上述正式包同代。覆盖已存中英文冷启动、默认/注入 Controller、表单与认证身份连续、现有错误热翻译、提交中切换、Enter/Space/End/Escape及回焦、禁用 i18n、存储拒绝/自定义键/未知值、真实第二标签页同步/删除；回归原登录、导航交接、extensions与header controls。视觉覆盖 light/dark/system、1280/390px、长中文、窄屏200%阅读缩放、弹层滚动与三模式真实 Chrome200%缩放，分别确认浏览器 DPR/视口与字号条件。人工查看最终浅色桌面、深色窄屏及真实缩放截图；窄屏放大后可换行与纵向滚动，不以缩小文字或 force click 通过。
+
+过程单独保留：最初 Node44通过/1条旧结构断言失败，因新增标题工具行，更新结构断言后最终90通过；最初类型检查发现 demo 注入 Controller 同时传初始化 extensions，已仅在默认模式传初始化 props。首次消费者被4633/4608服务预算阻止，完成上述实测与有限调整后通过。首次浏览器82通过/3失败，其中修复标准标题错误复用自定义 submit 的实际问题；另两项在真实 login 派发前就读取请求基线，改为等待首个提交请求。第二轮84通过/1失败为选项可见早于初始焦点转入，诊断确认焦点仍在 combobox；测试等待当前/目标 option 聚焦后再发 End/Enter。随后及最终正式包均85通过，无实现键盘绕行、重试或 force click。前两轮报告、trace与截图保留在同证据目录，未混入最终通过数。
+
+证据：[checks.json](../.artifacts/login-i18n-4.2.47/checks.json)、[最终浏览器报告](../.artifacts/login-i18n-4.2.47/browser-final.json)、[截图索引](../output/playwright/login-language-4.2.47/evidence.json)；同目录含 build/typecheck/tokens/unit/consumer 日志及过程报告。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`；`node --test tests/login-i18n.test.mjs tests/config-services.test.mjs tests/service-modules.test.mjs tests/login-layout.test.mjs tests/auth-page.test.mjs tests/interaction-controller.test.mjs tests/auth.test.mjs tests/contract.test.mjs tests/docs.test.mjs`；`pnpm test:consumer`；`caffeinate -i pnpm exec playwright test tests/browser/login-i18n.spec.mjs tests/browser/login.spec.mjs tests/browser/login-navigation.spec.mjs tests/browser/login-extensions.spec.mjs tests/browser/header-controls.spec.mjs --workers=1 --retries=0`。既有4173预览原位复用，未另建源码版本。提交后沿用 archive/archive:verify 自动生成并校验 manifest、public-api.json、sourceGeneration 与 SHA256SUMS。
+
+未执行真实消费项目升级/部署、真实认证后端、全量 unit/browser/watch/cold-start、Firefox/WebKit或读屏器验收。未修改其他项目、认证协议与业务 API，未发跨会话消息或发布 npm/tag。库 mock 与正式包验收不代表产品已完成升级；非登录页及宿主业务文案仍由各自原语言合同负责。
+
 ## 轻量密码提示与可选宿主评分（4.2.46，2026-10-29）
 
 Quant以4.2.44/da780e3报告主脚本2,572,033字节，其中password-strength-worker-source贡献1,662,597字节；只读核对最新main 7b2ffd3/4.2.45仍有同一资源。本轮按用户后续明确选择，删除zxcvbn及common/en词典、Blob Worker与相关构建产物，默认只用轻量正则/长度提示。新增可选evaluateStrength回调和evaluationTimeoutMs；默认零评分网络/额外资源，宿主按需接自己的API。评分不决定提交许可，不改认证/服务端密码约束；基础正则不是抗猜测或泄露检测，分数与旧词典不保证一致。无新增后端、默认远程URL或新HTTP owner。

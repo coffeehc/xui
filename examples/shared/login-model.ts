@@ -28,5 +28,6 @@ export function createLoginExample(baseURL:string){
   if(parameters.get('logo')==='none')delete config.logo;
   else if(parameters.get('logo')==='decorative'&&config.logo)config.logo={...config.logo,alt:''};
   if(parameters.get('locale')==='en')config.labels=undefined;
+  if(parameters.has('i18n')){config.labels=undefined;config.description=undefined;}
   return {auth:pageAuth,http,services,config,repeatAuthNotification(){for(const listener of [...pageListeners])listener();},onAuthenticated,getHandoffCalls:()=>handoffCalls,setHandoffMode(value:string){handoffMode=value;},releaseHandoff(fail=false){pendingHandoffs.splice(0).forEach(pending=>fail?pending.reject():pending.resolve());},getDestinations:()=>destinations,getRequests:()=>requests,setMode(operation:string,mode:string){modes[operation]=mode;},setSession(value:AuthUser|null){session=value;},release(operation:string){for(const key of operation==='session'?['session','refresh']:[operation]){const pending=holds.get(key)??[];holds.delete(key);pending.forEach(resolve=>resolve());}},destroy(){services.dispose();}};
 }

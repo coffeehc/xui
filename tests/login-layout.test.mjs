@@ -28,7 +28,7 @@ test('public login separates configured brand from credentials without owning th
   const brand=section(markup,'xui-login-brand','header'),content=brand;
   assert.match(content,/<div class="xui-login-identity"><strong>产品名称<\/strong><\/div>/);
   assert.doesNotMatch(content,/xui-login-description/);
-  assert.match(section(markup,'xui-login-heading'),/<h1[^>]*>登录产品<\/h1><p class="xui-login-description">品牌说明<\/p>/);
+  assert.match(section(markup,'xui-login-heading'),/<h1[^>]*>登录产品<\/h1><\/div><p class="xui-login-description">品牌说明<\/p>/);
   assert.ok(markup.indexOf(brand)<markup.indexOf('class="xui-login-card'));
   assert.doesNotMatch(section(markup,'xui-login-card xui-surface','section'),/xui-login-brand/);
   assert.match(markup,/<h1[^>]*>登录产品<\/h1>/);

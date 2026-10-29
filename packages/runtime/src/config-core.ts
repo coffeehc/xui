@@ -21,7 +21,9 @@ export interface XuiConfig {
   /** Default full-page presentation only. Does not register routes, enable services or grant access. */
   pages?:DefaultPagesConfig;
   theme:{preset:ThemePreset;mode:ThemeMode;scale:InterfaceScale;persist:boolean};
-  i18n:{enabled:boolean;defaultLocale:string;fallbackLocale:string;locales:readonly {value:string;label:string}[];messages:Readonly<Record<string,Readonly<Record<string,string>>>>};
+  i18n:{enabled:boolean;defaultLocale:string;fallbackLocale:string;locales:readonly {value:string;label:string}[];messages:Readonly<Record<string,Readonly<Record<string,string>>>>;
+    /** Persist declared UI locales in localStorage when enabled; default true. */persist?:boolean;
+    /** Plain locale string, default xui.locale; may match a host's existing preference key. */storageKey?:string};
   menu:{label:string;labelKey:string|null;items:readonly ConfigMenuItem[]};
   /** Project-owned JSON. Projects validate their own business schema before use. Never store secrets here. */
   extensions:Readonly<Record<string,ConfigValue>>;
@@ -71,7 +73,7 @@ function validate(value:unknown):asserts value is XuiConfig {
       if(name==='apiKeys'&&(!Array.isArray(page.pageSizeOptions)||!page.pageSizeOptions.length||page.pageSizeOptions.some(size=>!Number.isSafeInteger(size)||size<1)||new Set(page.pageSizeOptions).size!==page.pageSizeOptions.length||!page.pageSizeOptions.includes(page.pageSize)))fail(`${path}.pageSizeOptions`);}
   }
   keys(theme,['preset','mode','scale','persist'],'theme');if(!isThemePreset(theme.preset))fail('theme.preset');if(!['light','dark','system'].includes(theme.mode as string))fail('theme.mode');if(![1,1.25,1.5,2].includes(theme.scale as number))fail('theme.scale');bool(theme.persist,'theme.persist');
-  keys(i18n,['enabled','defaultLocale','fallbackLocale','locales','messages'],'i18n');bool(i18n.enabled,'i18n.enabled');text(i18n.defaultLocale,'i18n.defaultLocale');text(i18n.fallbackLocale,'i18n.fallbackLocale');
+  keys(i18n,['enabled','defaultLocale','fallbackLocale','locales','messages','persist','storageKey'],'i18n');bool(i18n.enabled,'i18n.enabled');if(i18n.persist!==undefined)bool(i18n.persist,'i18n.persist');if(i18n.storageKey!==undefined){text(i18n.storageKey,'i18n.storageKey');if(i18n.storageKey.length>128||/[\u0000-\u001f\u007f]/.test(i18n.storageKey))fail('i18n.storageKey');}text(i18n.defaultLocale,'i18n.defaultLocale');text(i18n.fallbackLocale,'i18n.fallbackLocale');
   if(!Array.isArray(i18n.locales)||!i18n.locales.length)fail('i18n.locales');const locales=new Set<string>();
   for(const locale of i18n.locales){keys(locale,['value','label'],'i18n.locales');text(locale.value,'i18n.locales.value');text(locale.label,'i18n.locales.label');try{if(Intl.getCanonicalLocales(locale.value)[0]!==locale.value)fail('i18n.locales.value');}catch{fail('i18n.locales.value');}if(locales.has(locale.value))fail('i18n.locales.value');locales.add(locale.value);}
   if(!locales.has(i18n.defaultLocale)||!locales.has(i18n.fallbackLocale))fail('i18n default/fallback must be declared in locales');

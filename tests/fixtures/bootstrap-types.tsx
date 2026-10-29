@@ -59,3 +59,15 @@ if(false){
  // @ts-expect-error HTTP factory was removed from the public entry.
  import('@coffeehc/xui-runtime/http').then(module=>module.createHttpClient);
 }
+
+import {LanguageSelect,type LanguageSelectProps} from '@coffeehc/xui-react/language';
+import {AuthPage} from '@coffeehc/xui-react/login';
+import {defaultI18nStorageKey} from '@coffeehc/xui-runtime/i18n';
+const languageProps:LanguageSelectProps={locale:{enabled:true,value:'en',options:[{value:'en',label:'English'}],onValueChange(){}}};
+const languageTool=<AuthPage config={{productName:'Host',title:'Sign in'}} tools={<LanguageSelect {...languageProps}/>}/>;
+resolveConfig({i18n:{enabled:true,persist:true,storageKey:defaultI18nStorageKey}});void languageTool;
+
+import {resolveLoginPageConfig} from '@coffeehc/xui-runtime/auth';
+type ResolvedLoginLabels=ReturnType<typeof resolveLoginPageConfig>['labels'];
+declare const priorResolvedLabels:Omit<ResolvedLoginLabels,'extensionError'>;
+const preservedResolvedLabels:ResolvedLoginLabels=priorResolvedLabels;void preservedResolvedLabels;

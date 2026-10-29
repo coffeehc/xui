@@ -24,6 +24,9 @@
   .xui-login-form :is(input,select,textarea,button,a,[tabindex]) {scroll-margin:calc(var(--focus-width) + var(--focus-offset));}
   .xui-login-body {min-block-size:0;display:grid;grid-auto-rows:max-content;align-content:start;gap:var(--login-heading-fields-gap);overflow-wrap:anywhere;}
   .xui-login-heading {display:grid;gap:var(--login-heading-gap);}
+  .xui-login-heading-row {display:flex;flex-wrap:wrap;align-items:flex-start;gap:var(--space-control-gap);min-inline-size:0;}
+  .xui-login-heading-row>h1 {flex:1 1 auto;min-inline-size:0;max-inline-size:100%;}
+  .xui-login-tools {display:flex;align-items:center;flex:0 1 auto;margin-inline-start:auto;min-inline-size:0;max-inline-size:100%;}
   .xui-login-body h1 {margin:0;font:var(--font-weight-heading) var(--login-title-font-size)/var(--login-title-line-height) var(--font-heading);}
   .xui-login-body p {margin:0;}
   :is(.xui-login-body,.xui-admin-setup-form) .xui-label {font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);}

@@ -118,3 +118,15 @@ test('narrow bootstrap disposer removes the Window registry and preserves borrow
  assert.notEqual(bootstrap().services,next.services);disposeXuiServices(window);assert.equal(requests,0);owner.destroy();console.log('passed');
  `),/passed/);
 });
+
+test('bootstrap first-paint language matches the later lazy I18nService preference',async()=>{
+ assert.match(await isolated(`
+ import assert from 'node:assert/strict';
+ import {bootstrap,disposeXuiServices} from '@coffeehc/xui-runtime/bootstrap';
+ import {I18nService} from '@coffeehc/xui-runtime/i18n';
+ ${windowFixture}
+ const local=new Map([['xui.locale','en']]);window.localStorage={getItem:key=>local.get(key)??null,setItem:(key,value)=>local.set(key,value)};
+ bootstrap({i18n:{enabled:true}});assert.equal(window.document.documentElement.lang,'en');assert.equal(I18nService.getState().locale,'en');
+ disposeXuiServices(window);bootstrap({i18n:{enabled:false}});assert.equal(window.document.documentElement.lang,'zh-CN');assert.equal(I18nService.getState().locale,'zh-CN');assert.equal(local.get('xui.locale'),'en');disposeXuiServices(window);console.log('passed');
+ `),/passed/);
+});

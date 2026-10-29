@@ -912,3 +912,14 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | PASSWORD-STRENGTH-003 | 显式接宿主API | 仅evaluateStrength回调；稳定引用，原HTTP/认证owner，明确可信宿主URL；不新增通用远端/第三方评分、secret日志或缓存 | 实际请求次数、仅提交作用域持有密码、安全state及异常检查 | [回调合同](COMPONENTS.md#可选宿主密码评分) |
 | PASSWORD-STRENGTH-004 | 使用评分回调 | 150ms防抖、有限预算；输入/清空/退出取消，迟到隔离；回调更换不重放；异常/非法响应/超时不可评估且不自动回退成功 | 真实AbortSignal传播、挂起/迟到/失败/超时与恢复 | [回调合同](COMPONENTS.md#可选宿主密码评分) |
 | PASSWORD-STRENGTH-005 | 在完整初始化/改密页接线 | 通过同一Controller的passwordFields/newPassword更新配置；不重建认证/提交owner、不重复传View初始化参数 | 同Controller/DOM identity、密码清理、零重复提交及类型检查 | [回调合同](COMPONENTS.md#可选宿主密码评分) |
+
+## 统一登录语言与工具
+
+| ID | 适用范围 | 必须满足 | 证据 | 合同 |
+|---|---|---|---|---|
+| LOGIN-I18N-001 | 启用登录语言 | i18n.enabled显式true；首屏bootstrap与登录使用同一I18nService，读取声明locale的localStorage偏好；关闭时使用defaultLocale、无工具槽、不清原偏好 | 冷加载/重载、html lang、存储与服务快照 | [语言合同](COMPONENTS.md#统一登录语言与语言工具4247) |
+| LOGIN-I18N-002 | 持久化/已有宿主语言 | 默认xui.locale原始字符串，可配置storageKey/persist；只用一个owner；非法/拒绝存储回退且内存可切换，跨tab无回写循环、退出清监听 | storage读写次数、异常/自定义key/跨tab与dispose | [语言合同](COMPONENTS.md#统一登录语言与语言工具4247) |
+| LOGIN-I18N-003 | 右上角语言工具 | 公开LanguageSelect放AuthPage.tools；无可见常驻边框，复用SimpleSelect/Token；不塞actions/feedback或压住标题，关闭浮层回原触发器 | 指针/Enter/Space/Escape、焦点与slot/几何 | [布局](DESIGN.md#公共登录页布局与主题) |
+| LOGIN-I18N-004 | 登录文案 | 中/英内置字段、显隐、必填/错误/忙态/交接同步更新；显式业务文案由宿主维护，覆盖优先级明确，不冒称自动翻译业务copy | 默认/自定义覆盖及当前错误/忙态语言截图 | [语言合同](COMPONENTS.md#统一登录语言与语言工具4247) |
+| LOGIN-I18N-005 | 默认/注入Controller | 切换语言不重挂Controller/form/input，不丢草稿/选区，不额外login/refresh/session/logout或重复在途写；认证及清密合同不变 | node identity、原请求计数、挂起请求与草稿/选区 | [语言合同](COMPONENTS.md#统一登录语言与语言工具4247) |
+| LOGIN-I18N-006 | 界面验收 | light/dark/system、桌面/窄屏、长中文、200%阅读与真实浏览器缩放，浮层滚动/选项/字段都可达；Logo/已有主题保持 | 两种缩放分别记录的截图、视口/焦点/溢出 | [语言合同](COMPONENTS.md#统一登录语言与语言工具4247) |

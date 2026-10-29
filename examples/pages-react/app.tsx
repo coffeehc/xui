@@ -15,7 +15,7 @@ const pages=[
  {id:'business-log',label:'业务日志',icon:'document',path:'/business-log-react/?embed&activity'},
  {id:'structured-log',label:'结构化错误日志',icon:'warning',path:'/log-react/?embed'},
  {id:'model-profile',label:'模型配置',icon:'settings',path:'/model-profile-react/?embed'},
- {id:'login',label:'用户登录',icon:'user',path:'/login-react/?embed&productName=XUI%20Console'},
+ {id:'login',label:'用户登录',icon:'user',path:'/login-react/?embed&i18n&productName=XUI%20Console'},
  {id:'admin-setup',label:'管理员初始化',icon:'shield',path:'/admin-setup-react/?embed'},
  {id:'password-change',label:'修改密码',icon:'key',path:'/password-change-react/?embed'},
  {id:'buttons',label:'按钮与操作',icon:'settings',path:'/components-react/?embed&section=buttons'},

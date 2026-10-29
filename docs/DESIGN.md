@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.46。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.47。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1935,7 +1935,7 @@ Clipboard的HTTP回退使用不可见、脱离文档流的1×1 CSS px原生选�
 
 bootstrap 只完成配置注册及首绘主题、缩放、初始语言/标题；其余 Service 实现由对应窄模块导入，并在首用读取同一配置。导入不发请求、不启动查询或会话恢复；不通过全量 service 汇总入口隐式拉入所有功能。依赖按职责单向递进：Menu → I18n → Config，Upload/Download/Auth → 同一 HTTP，组件 View → Controller → Service。基础 Service 使用稳定单例引用；局部队列/草稿/分页仍逐实例，不设复制所有事实的 StateService。启用认证的 HTTP 首次请求必须先绑定唯一认证 owner，缺失模块在发送前明确失败。依赖与迁移的逐项检查见 SERVICE-010～013。
 
-主题、缩放已有 sessionStorage 偏好优先于配置默认值。语言开关关闭时使用配置默认语言且不展示全局切换入口；启用后通过公开语言服务订阅，菜单翻译和页面文案共同更新。已有显式宿主语言 owner 必须通过公开接口借用，不保留第二份语言状态。组件的 labels/locale 扩展继续有效，语言服务不代表已提供所有语言的全组件翻译资源。项目主题 CSS 仍按本规范语义 Token 生成，config 不引入任意控件皮肤或 CSS 覆盖入口。
+主题、缩放已有 sessionStorage 偏好优先于配置默认值。语言开关关闭时忽略已存偏好、使用配置默认语言且不展示语言入口；启用后I18nService从localStorage恢复已声明locale，默认key=xui.locale、persist=true，可显式配置storageKey或关闭持久化。读取失败或非法/未声明值回退defaultLocale，写入失败保留内存选择；跨tab存储更新不回写，dispose移除监听。bootstrap首绘lang和懒加载语言owner遵循同一解析，显式借用owner保持权威。菜单翻译与页面文案订阅同一语言服务更新。已有显式宿主语言 owner 必须通过公开接口借用，不保留第二份语言状态。组件的 labels/locale 扩展继续有效，语言服务不代表已提供所有语言的全组件翻译资源。项目主题 CSS 仍按本规范语义 Token 生成，config 不引入任意控件皮肤或 CSS 覆盖入口。
 
 路由统一使用 pathname 与 search，hash 仅用于文内锚点。导航不刷新文档、不以路由变化重建整个页面壳；部署必须为应用 URI 提供 HTML fallback，同时保留资源/API 的真实 404。返回、前进、外链、下载和修饰键遵守浏览器语义。MenuService 不拥有展开/收起、焦点、权限判断或业务请求，这些仍归导航实例 Controller 与宿主。SSR/嵌入隔离通过显式 `new XuiServices` 注入同一公开契约；只销毁容器自身创建的服务，不销毁借用实例。组件 Controller 工厂保持逐实例；基础 Service 的 `create*` 构造入口在 2.0 移除，具体迁移见 PUBLIC_API 与 ADOPTION。
 
@@ -2294,6 +2294,8 @@ UI是人类观察系统状态和数据、直接操作并介入Agent操作的入�
 
 默认layout=card采用layer-surface、surface-line的1px完整边界和login-card-radius（默认16px），无顶部青线、投影、渐变或光晕；主动作是页面唯一的大面积强调色。卡片默认418px：360px内容轨道（含四边focus余量）+两侧28px内距+边框；横向内距由login-card-inline-padding限制在28px派生值与8vw的较小值，文字/界面放大时不让内距挤占字段；纵向仍按缩放派生。窄屏收缩至可用宽度，390px视口默认外侧各16px、卡片358px。内容增加或视口变矮时整个组随文档自然滚动，不限制表单高度。fullscreen保留相同品牌/表单结构、尺度与顺序，只省略卡片表面和边框。禁止左右宣传面板、背景大图、虚构环境/安全状态、页脚及额外入口。
 
+完整登录页在标题同一行的逻辑末端放tools槽，默认是启用i18n时的无框LanguageSelect，点击打开标准Select选项；不启用或空tools不留占位，tools=null可明确省略。复用现有空间/字形/交互Token，长标题、语言名与放大时自然换行至可用宽度，不覆盖标题/字段。仅更新语言展示，保留同一Controller、输入DOM、草稿、焦点和正在进行的认证请求；不加key=locale。标准登录标题与内置字段/错误/忙态支持中文/英文，显式业务文案仍由宿主负责。
+
 卡片内层级顺序为任务标题→可选任务说明→常显标签/字段→唯一主动作→真实次级认证→局部反馈。标题使用login-title-font-size/line-height，默认26/32px、600，由page-title角色派生并分别尊重font-scale与line-height-scale；不改变普通页面标题。description使用body-sm 14/22px与muted-foreground，标题到说明8px、标题组到首字段20px。宿主标题建议“登录”或“创建管理员”，显式配置原样保留，不猜测删词。字段label、输入和主动作统一body-sm 14/22px、控件字重继承已有角色；label到input8px、字段间16px、末字段到主动作20px，字段和主动作同宽。login-control-height默认46px，由control-height-lg、space-text-gap及两条surface线派生；InputGroup外框也为46px，文字增大时自然增高。帮助、错误仍body-xs 13/20px；不新建认证调色板、字体栈或焦点规则。
 
 完整初始化页复用公共AdminSetupForm。检查到初始化阶段需要连续外壳时，宿主保留同一AuthPage，将检查内容切换为AdminSetupForm；外层省略form，表单自行拥有唯一语义form及字段/动作/反馈。Form沿用既有认证文字、控件、焦点和间距Token，不增加品牌/标题/卡片或另一套认证样式。
@@ -2399,7 +2401,7 @@ Dialog偏好layout-dialog-width-ratio=40%，min/max分别24rem/48rem；Confirm�
 
 ### 公共布局插槽与默认顶栏工具
 
-AppHeader/AppShell/MenuLayout在右侧默认提供一个主题图标按钮，light→dark→system→light循环；复用文档现有theme owner，不另建存储。语言入口只在locale.enabled显式true时显示，语言value/options/onValueChange与词典均由宿主现有i18n owner提供。顶栏主区域、工具组与独立账号区，以及sidebarHeader/sidebarFooter、pageHeader/pageToolbar/content/pageFooter的顺序和所有权见[公共布局插槽](COMPONENTS.md#布局与顶栏)。这些槽只消费公共var及布局原语，不授予产品动作、不放新业务内容默认值；空槽无视觉占位，更新保留正文与导航实例，导航抽屉仍只拥有一份侧栏。默认登录页继续仅继承外观，不新增这些顶栏工具。
+AppHeader/AppShell/MenuLayout在右侧默认提供一个主题图标按钮，light→dark→system→light循环；复用文档现有theme owner，不另建存储。语言入口只在locale.enabled显式true时显示，语言value/options/onValueChange与词典均由宿主现有i18n owner提供。顶栏主区域、工具组与独立账号区，以及sidebarHeader/sidebarFooter、pageHeader/pageToolbar/content/pageFooter的顺序和所有权见[公共布局插槽](COMPONENTS.md#布局与顶栏)。这些槽只消费公共var及布局原语，不授予产品动作、不放新业务内容默认值；空槽无视觉占位，更新保留正文与导航实例，导航抽屉仍只拥有一份侧栏。完整登录页仅在i18n.enabled时于AuthPage标题右侧tools槽提供同一LanguageSelect，无常驻边框；不增加主题工具或另一份语言owner。
 
 ### 有界工作区与平台前置安全区
 

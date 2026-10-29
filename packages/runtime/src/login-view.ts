@@ -1,8 +1,9 @@
 import {resolveLoginPageConfig,runLoginPageExtension,type AuthClient,type AuthUser,type LoginCredentials,type LoginPageConfig,type LoginPageExtensions,type LoginPageAction} from './auth.js';
+import type {I18nService} from './i18n-core.js';
 import {createPasswordInputController,type PasswordInputController} from './display.js';
 export interface LoginViewOptions {auth:AuthClient;config:LoginPageConfig;extensions?:LoginPageExtensions;onAuthenticated?:(user:Readonly<AuthUser>,returnTo:string)=>void|Promise<void>}
 /** Readers are bound only while a View exists. No credential is retained in the model. */
-export interface LoginViewBinding {readCredentials:()=>LoginCredentials;clearPassword:()=>void;focus:(target:'username'|'password'|'feedback')=>void;navigate:(returnTo:string)=>void}
+export interface LoginViewBinding {readCredentials:()=>LoginCredentials;clearPassword:()=>void;focus:(target:'username'|'password'|'feedback')=>void;navigate:(returnTo:string)=>void;/** Borrowed presentation language owner; never disposed by this Controller. */i18n?:I18nService}
 export interface LoginViewState {config:ReturnType<typeof resolveLoginPageConfig>;errors:Readonly<{username?:string;password?:string}>;operation:'session'|'login'|'extension'|null;extensionBusy:string|null;extensionError:boolean;navigationPhase:'idle'|'opening'|'failed';sessionFailed:boolean}
 export interface LoginViewController {
  readonly auth:AuthClient;readonly password:PasswordInputController;
@@ -14,9 +15,17 @@ export interface LoginViewController {
 }
 /** Login presentation orchestrates the existing AuthClient. It never creates or destroys auth. */
 export function createLoginViewController(initial:LoginViewOptions):LoginViewController {
- const auth=initial.auth,password=createPasswordInputController(),listeners=new Set<()=>void>();let options={...initial},binding:LoginViewBinding|undefined,off:(()=>void)|undefined,dead=false,active=false,revision=0,bindingRevision=0,navigationRevision=0,pending:AbortController|undefined,navigatedId:string|null=null;
+ const auth=initial.auth,password=createPasswordInputController(),listeners=new Set<()=>void>();let options={...initial},binding:LoginViewBinding|undefined,off:(()=>void)|undefined,offLanguage:(()=>void)|undefined,dead=false,active=false,revision=0,bindingRevision=0,navigationRevision=0,pending:AbortController|undefined,navigatedId:string|null=null;
  let state:Readonly<LoginViewState>=Object.freeze({config:resolveLoginPageConfig(options.config),errors:Object.freeze({}),operation:null,extensionBusy:null,extensionError:false,navigationPhase:'idle',sessionFailed:false});
  const emit=(patch:Partial<LoginViewState>)=>{if(dead)return;state=Object.freeze({...state,...patch});for(const listener of [...listeners])if(listeners.has(listener))listener();};
+ const localize=()=>{
+  const language=binding?.i18n;if(!language)return;
+  const locale=language.getState().locale,defaults=resolveLoginPageConfig(options.config,locale);
+  const labels=Object.fromEntries(Object.entries(defaults.labels).map(([key,value])=>{const translated=language.t(`xui.login.${key}`,{},value);return [key,options.config.labels?.[key as keyof typeof defaults.labels]??(translated&&translated.length<=300?translated:value)];}));
+  const config=resolveLoginPageConfig({...options.config,labels},locale);
+  if(JSON.stringify(config)===JSON.stringify(state.config))return;
+  emit({config,errors:Object.freeze({username:state.errors.username?config.labels.usernameRequired:undefined,password:state.errors.password?config.labels.passwordRequired:undefined}),...(state.operation==='login'&&state.extensionBusy!==null?{extensionBusy:config.labels.signingIn}:{})});
+ };
  const clear=()=>{password.markCleared();binding?.clearPassword();};
  const focus=(target:'username'|'password'|'feedback',epoch=revision)=>queueMicrotask(()=>{if(!dead&&active&&epoch===revision)binding?.focus(target);});
  const navigate=async(retry=false)=>{const current=auth.getState(),user=current.user;if(dead||!active||!binding||current.status!=='authenticated'||!user||current.busy||pending||state.sessionFailed||navigatedId===user.id&&(!retry||state.navigationPhase!=='failed'))return;navigatedId=user.id;const epoch=++navigationRevision;emit({navigationPhase:'opening'});clear();try{if(options.onAuthenticated)await options.onAuthenticated(user,state.config.returnTo);else binding.navigate(state.config.returnTo);}catch{const latest=auth.getState();if(!dead&&active&&epoch===navigationRevision&&navigatedId===user.id&&(!latest.user||latest.user.id===user.id)){emit({navigationPhase:'failed'});focus('feedback');}}};
@@ -42,16 +51,16 @@ export function createLoginViewController(initial:LoginViewOptions):LoginViewCon
  const resume=()=>{if(dead||!binding)return;active=true;navigatedId=null;emit({navigationPhase:'idle'});const current=auth.getState();if(current.busy==='session'||current.busy==='refresh'||current.status==='unknown'&&!current.busy&&!current.error)void run('session');else observe();};
  return {auth,password,getState:()=>state,getExtensions:()=>options.extensions,subscribe(listener){if(dead)return()=>{};listeners.add(listener);return()=>{listeners.delete(listener);};},
   bind(next){
-   if(dead)return()=>{};bindingRevision++;if(binding)pause();off?.();binding=next;off=auth.subscribe(observe);
+   if(dead)return()=>{};bindingRevision++;if(binding)pause();off?.();offLanguage?.();binding=next;off=auth.subscribe(observe);offLanguage=next.i18n?.subscribe(localize);localize();
    // StrictMode's synchronous release/rebind keeps the verified navigation and
    // its Promise. A genuine exit loses the DOM reader immediately, then pauses.
    if(active)observe();else resume();
-   return()=>{if(binding!==next)return;clear();off?.();off=undefined;binding=undefined;const token=++bindingRevision;queueMicrotask(()=>{if(!dead&&!binding&&token===bindingRevision)pause();});};
+   return()=>{if(binding!==next)return;clear();off?.();off=undefined;offLanguage?.();offLanguage=undefined;binding=undefined;const token=++bindingRevision;queueMicrotask(()=>{if(!dead&&!binding&&token===bindingRevision)pause();});};
   },
   async submit(){if(dead||!active||!binding||pending||auth.getState().busy||auth.getState().status==='authenticated')return;const credentials=binding.readCredentials(),errors={username:credentials.username.trim()?undefined:state.config.labels.usernameRequired,password:credentials.password?undefined:state.config.labels.passwordRequired};credentials.password='';emit({errors:Object.freeze(errors)});if(errors.username||errors.password){focus(errors.username?'username':'password');return;}await run('login');},
   checkSession:()=>run('session'),runAction:async(id)=>{const action=options.extensions?.actions?.find(action=>action.id===id);if(!action||action.disabled)return;clear();await run('extension',action);},retryNavigation:()=>navigate(true),
   clearFieldError(field){if(state.errors[field])emit({errors:Object.freeze({...state.errors,[field]:undefined})});},pause,resume,
-  update(next){if(dead)return;options={...options,...next};if(next.config)emit({config:resolveLoginPageConfig(next.config)});},
-  destroy(){if(dead)return;pause();dead=true;off?.();binding=undefined;password.destroy();listeners.clear();options={auth,config:initial.config};},
+  update(next){if(dead)return;options={...options,...next};if(next.config){if(binding?.i18n)localize();else emit({config:resolveLoginPageConfig(next.config)});}},
+  destroy(){if(dead)return;pause();dead=true;off?.();offLanguage?.();binding=undefined;password.destroy();listeners.clear();options={auth,config:initial.config};},
  };
 }

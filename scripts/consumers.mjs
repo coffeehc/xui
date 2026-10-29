@@ -132,7 +132,10 @@ await writeFile(`${archives}/public-api.json`, JSON.stringify({ entries: publicA
 // D3's pure calculation modules add about 12.5 KiB to the chart example.
 // Only its optional JS cap gains 8 KiB; foundation, Button, services and CSS keep their caps.
 // Optional chart motion/path reveal adds a bounded 2 KiB; foundation/Button/service budgets stay unchanged.
-const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 23296, reactInitialJsGzip: 161792, narrowServiceGzip: 4608,chartCssGzip:24576,chartJsGzip:172032 }, button: [], services: [], consumers: [] };
+// 4.2.47 adds the shared language tools and two JSON preference options.
+// Installed probes: CSS 23,265 -> 23,322 gzip; theme service 4,581 -> 4,655.
+// Allow only +64 bytes in each affected cap; retain Button, initial JS and chart caps.
+const performance = { budgets: { buttonMinified: 65536, buttonGzip: 16384, criticalCssGzip: 23360, reactInitialJsGzip: 161792, narrowServiceGzip: 4672,chartCssGzip:24576,chartJsGzip:172032 }, button: [], services: [], consumers: [] };
 await mkdir('.consumers', { recursive: true });
 // Recreate one generated cache so npm cannot reuse a stale same-version tarball.
 const runDirectory = resolve('.consumers/current');

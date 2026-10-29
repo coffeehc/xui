@@ -10,5 +10,7 @@ const noLocales=Object.freeze([]);
 const untranslated=(key:string,_params?:Readonly<Record<string,string|number>>,fallback?:string)=>fallback??key;
 const noSwitch=()=>false;
 export function ServicesProvider({menu,i18n,children}:{menu?:MenuService;i18n?:I18nService;children:React.ReactNode}){const value=React.useMemo(()=>({menu,i18n}),[menu,i18n]);return <ServicesContext.Provider value={value}>{children}</ServicesContext.Provider>;}
-export function useI18n(){const service=React.useContext(ServicesContext).i18n??(typeof window==='undefined'?undefined:getI18nService());const state=React.useSyncExternalStore(service?.subscribe??noSubscribe,service?.getState??serverSnapshot,service?.getState??serverSnapshot);return React.useMemo(()=>({...state,locales:service?.locales??noLocales,t:service?.t??untranslated,setLocale:service?.setLocale??noSwitch}),[state,service]);}
+/** Borrow the existing provider/application language owner; never create a page-specific owner. */
+export function useI18nService():I18nService|undefined{return React.useContext(ServicesContext).i18n??(typeof window==='undefined'?undefined:getI18nService());}
+export function useI18n(){const service=useI18nService();const state=React.useSyncExternalStore(service?.subscribe??noSubscribe,service?.getState??serverSnapshot,service?.getState??serverSnapshot);return React.useMemo(()=>({...state,locales:service?.locales??noLocales,t:service?.t??untranslated,setLocale:service?.setLocale??noSwitch}),[state,service]);}
 export function useMenu():Readonly<MenuServiceState>{const service=React.useContext(ServicesContext).menu??getMenuService();return React.useSyncExternalStore(service.subscribe,service.getState,service.getState);}

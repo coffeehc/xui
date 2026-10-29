@@ -7,7 +7,7 @@ import {createPortal} from 'react-dom';
 import { Dialog } from './dialog.js';
 import { Button } from './button.js';
 import {Icon} from './display.js';
-import {SimpleSelect} from './forms.js';
+import {LanguageSelect} from './language.js';
 import { cx,hasContent } from './shared.js';
 import {ThemeModeButton} from './theme.js';
 import type {ThemeController} from '@coffeehc/xui-runtime/theme';
@@ -44,8 +44,7 @@ export function Section({title,actions,children,className,...props}:SectionProps
 function HeaderLocaleSelect({locale}:{locale:HeaderLocaleOptions}){
  const mount=React.useRef<HTMLSpanElement>(null);
  React.useLayoutEffect(()=>{const node=mount.current!;return()=>{const active=node.ownerDocument.activeElement,popupId=node.querySelector('[role=combobox]')?.getAttribute('aria-controls');if(node.contains(active)||popupId&&node.ownerDocument.getElementById(popupId)?.contains(active))node.closest('.xui-app-header-controls')?.querySelector<HTMLButtonElement>('.xui-theme-mode-toggle')?.focus();};},[]);
- const known=locale.options.some(item=>item.value===locale.value);
- return <span className="xui-select-host" data-xui-header-locale="" ref={mount}><SimpleSelect className="xui-header-locale" aria-label={locale.label??'语言'} value={locale.value} disabled={locale.disabled} onChange={event=>{const value=event.currentTarget.value;if(locale.enabled&&!locale.disabled&&value!==locale.value&&locale.options.some(item=>item.value===value&&!item.disabled))locale.onValueChange(value);}}>{!known&&<option value={locale.value} hidden disabled/>}{locale.options.map(item=><option key={item.value} value={item.value} disabled={item.disabled}>{item.label}</option>)}</SimpleSelect></span>;
+ return <span data-xui-header-locale="" ref={mount}><LanguageSelect locale={locale} className="xui-header-locale"/></span>;
 }
 
 /** Product identity content; its region tracks the shell rail automatically. */

@@ -1,5 +1,6 @@
 export type {I18nState} from './i18n-core.js';
 export {getI18nService} from './i18n-access.js';
+export {defaultI18nStorageKey} from './i18n-preference.js';
 
 
 import type {I18nService as I18nServiceContract} from './i18n-core.js';

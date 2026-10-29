@@ -493,3 +493,9 @@ BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 和 Chart 数据视�
 仅涉及PasswordStrengthInput、NewPasswordFields、管理员初始化或自助改密新密码部分时执行本节及[PASSWORD-STRENGTH检查](ADOPTION_CHECKLIST.md)。升级三包并按原构建流程重建即可；默认不再携带zxcvbn/common/en词典或Worker，不要求开启splitting/复制资源。纯登录继续使用普通PasswordInput，旧密码不套新密码规则。基础提示分数可能与旧词典评估不同，不能作为安全等级或服务端接受事实。
 
 默认不接远程评分。确有宿主需求时使用公开evaluateStrength回调（可选evaluationTimeoutMs），稳定引用并复用同一HTTP/认证owner；URL和服务端业务合同由宿主定义，不自行改公共组件或加第二套请求层。只向可信宿主后端短暂提交密码，signal需传到真实请求，失败显示不可评估；API评分始终不控制密码提交许可。完整页通过原Controller.passwordFields/newPassword接线，具体路径见[组件合同](COMPONENTS.md#可选宿主密码评分)。实际产品需检验首次加载/输入的Network、单文件打包图和取消/清理，不拿库mock当后端验收。仅需基础提示的项目无需新增后端API。
+
+## 统一登录语言定向升级（4.2.47）
+
+只在使用完整登录页、LanguageSelect或改变i18n偏好时执行LOGIN-I18N-001～006与必要的语言顶栏回归。开启config.i18n.enabled后，登录页读取同一I18nService和localStorage（默认xui.locale），右上角有无框中英文选择；关闭时没有入口，且保持原已存偏好。项目已有语言key可配置storageKey，已有语言owner通过ServicesProvider/服务注入复用，不同时手写另一个登录页状态或存储监听。存储只接受声明列表里的原始locale字符串，不自动迁移i18next等其它格式；存储拒绝时验证内存切换可用。
+
+完整页公共文案自动中英文；旧的硬编码config.labels/description/自定义title仍是显式宿主覆盖，需要宿主随语言更新或改用公开xui.login资源，不能假称库会翻译任意业务文案。不改认证API、请求owner或密码清理，不以key=locale重建Controller/form。按[组件合同](COMPONENTS.md#统一登录语言与语言工具4247)逐项验冷启动/重载、键盘/回焦、草稿及在途请求、跨tab、浅深system/窄屏/阅读和真实浏览器200%。普通AuthPage/管理员初始化/改密没有因此获得全量自动翻译；不扩展无关页面改造。

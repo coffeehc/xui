@@ -731,7 +731,7 @@ Wails/Electron等drag/no-drag机制属于宿主桥接。仅对宿主自有非交
 
 未传受控 `ThemeOptions.mode` 时，文档owner使用非受控模式，默认持久化键为 `ui.theme.mode`；bootstrap config `theme.mode` 是默认，已有有效sessionStorage值优先，无值才回到config默认。无显式保存值和config覆盖时默认dark；显式system跟随系统变化，matchMedia不可用时effective为light，存储不可用仍可内存切换。显式注入 `ThemeOptions.mode` 是受控owner，`setMode`只请求，直到宿主 `syncMode` 才确认事实。公开init.js不创建主题owner；`bootstrap`/`getThemeService`取得同一文档owner。组件卸载只解除 `useTheme` 订阅，不销毁共享owner。默认共享owner在html替换或主题属性被清空后自动恢复当前模式/配色/缩放；useTheme不需要重挂或再次订阅，细节见[根节点恢复](PUBLIC_API.md#主题根节点恢复4238)。登录页继续只继承外观，不显示这个顶栏控件。
 
-locale由共享I18nService提供；config默认禁用，`defaultLocale`为启动语言、`locales`为可选项，宿主通过config messages或已声明locale的 `registerMessages` 加入翻译资源。xui不附带全量翻译词典。`useI18n`提供当前locale、locales、`t`与 `setLocale`；查找顺序为当前资源、fallback资源、显式fallback、原key。禁用切换或不支持的语言不改变locale；成功更新同步 `document.lang` 并通知订阅者。`ServicesProvider`注入的i18n实例由宿主持有，View只订阅，不自行存储语言。
+locale由共享I18nService提供；config默认禁用，`defaultLocale`为启动语言、`locales`为可选项，宿主通过config messages或已声明locale的 `registerMessages` 加入翻译资源。xui不附带全量翻译词典。`useI18n`提供当前locale、locales、`t`与 `setLocale`；查找顺序为当前资源、fallback资源、显式fallback、原key。禁用切换或不支持的语言不改变locale；成功更新同步 `document.lang` 并通知订阅者；启用时的localStorage恢复/持久化见下方[统一登录语言](#统一登录语言与语言工具4247)。`ServicesProvider`注入的i18n实例由宿主持有，View只订阅，不自行存储语言。
 
 可运行接线见 [React 顶栏示例](../examples/header-controls-react/app.tsx)。
 
@@ -1880,3 +1880,25 @@ import '@coffeehc/xui-theme/style.css';
 ### SSE 事件读取与页面状态
 
 事件页沿用既有Controller/Resource及DataRegion、LoadingState、Toast等公共slot，不新增SSE专用皮肤或事件状态owner。HTTPService.readEvents只管单连接传输、协议与取消，生命周期/领域投影由宿主按[公共SSE合同](PUBLIC_API.md#sse-读取4245)接线；示例/http-events-react/展示真实分片、停止、401/403及超限。实际大屏仅在已确认实时事件到达时点亮，历史补发、重连或样例动画不能冒充真实事件。
+
+## 统一登录语言与语言工具（4.2.47）
+
+完整`ConfigurableLoginPage`读取同一I18nService的当前语言，自动提供中文/英文公共登录文案。`i18n.enabled=true`时，在AuthPage标题右侧`tools`槽默认呈现无常驻边框的`LanguageSelect`；关闭则忽略存储偏好、使用defaultLocale且不生成工具槽。登录页不另建语言、认证或HTTP owner；普通AuthPage仍是request-free壳，不自动添加语言控件，可经tools显式组合。不扩展管理员初始化/改密/业务页面的全部翻译。
+
+```ts
+bootstrap({i18n:{enabled:true, defaultLocale:'zh-CN', fallbackLocale:'zh-CN',
+  locales:[{value:'zh-CN',label:'简体中文'},{value:'en',label:'English'}],
+  persist:true, storageKey:'xui.locale'}});
+```
+
+语言偏好使用localStorage，默认key公开为`defaultI18nStorageKey='xui.locale'`（runtime/i18n），值是已声明locale的原始字符串，例如`en`或`zh-CN`。配置`i18n.storageKey`可复用宿主已有key，但不猜测或迁移其它key/JSON格式，不接受未声明locale；storageKey须非空、最多128字符、无控制字符。persist=false不读写存储，禁用i18n也不读写/清除原偏好。不存在、非法值或存储访问失败回退defaultLocale；写失败仍保留内存选择。只有成功的显式语言变化写入，重复选择无通知/写入；其它tab的storage变化更新同一owner与document.lang、不回写，删除偏好恢复defaultLocale，dispose移除监听。bootstrap首绘lang与稍后懒加载I18nService复用同一读取规则；显式注入的语言实例仍归宿主，自行管理持久化，View不覆写或销毁它。
+
+React `/language`及根入口公开`LanguageSelect` / `LanguageSelectProps`。默认订阅provider/application语言owner；可选`locale:HeaderLocaleOptions`接受已有受控语言value/options/onValueChange/disabled，未确认的选择不抢写事实，也不隐式启动全局语言owner。AppHeader复用同一实现并保留原移除回焦。触发器使用现有字体/空间/hover/pressed/disabled角色，无可见边框；浮层复用公共SimpleSelect。Enter/Space打开，上下/Home/End选择，Escape关闭回触发器；窄屏/长名称/放大时自然换行和滚动，forced-colors沿现有控件合同保留可辨边界。
+
+`AuthPage.tools` / `ConfigurableLoginPage.tools`是标题逻辑末端工具槽。完整页省略tools使用默认语言工具，null/空内容明确省略；普通AuthPage省略时无占位。工具不放进表单actions/feedback，也不增加第二行无用说明。标题和工具沿自然布局换行，不绝对定位压住文字或输入。品牌Logo、名称、已有主题/缩放均保持。
+
+`resolveLoginPageConfig(input, locale?)`的可选locale选择内置中文（zh族）或英文，省略保留原英文默认；标准标题`Sign in`/`登录`在显式locale下随内置submit翻译，自定义标题/description/显式labels仍由宿主拥有。内置登录label可用I18nService的`xui.login.<LoginPageLabels字段>`资源覆盖，优先级为显式config.labels > 当前/fallback资源 > 内置文案；空或超过300字符的资源回退内置文案，不改变原config.labels的参数校验。新增可选labels.extensionError，旧完整labels类型仍兼容。其它业务文字不会自动翻译。
+
+LoginViewBinding可选i18n借用同一公开服务，React默认及注入Controller模式都会在绑定时接线。语言/资源更新仅投影标题、字段、显隐、必填错误、忙态、认证/交接反馈；不重建AuthClient/Controller/form/input，不重置草稿/选择/焦点，不调用login/refresh/session/logout，不重放在途写入或改变密码清理。关闭语言浮层回到同一触发器；真实退出才释放语言订阅，服务由其owner销毁。宿主需要自定义翻译时更新现有config/资源，禁止key=locale重挂页面。
+
+正式演示：`/login-react/?i18n`，`&injected`对比注入Controller，`&storageKey=project.locale`演示指定存储key；统一demo的“用户登录”已开启相同示例能力。全部请求仍为原合成mock，实际产品与现有宿主语言owner的同步须独立验收。

@@ -1,5 +1,9 @@
 # 公共能力维护清单
 
+## 登录语言偏好与无框语言工具（4.2.47）
+
+用户要求完整登录框读取localStorage的i18n偏好并在右上角点击选择中英文，且确认遵循i18n.enabled。基线4.2.46的共享语言服务没有持久化，完整登录文案仅由显式config/labels提供。本轮复用同一I18nService、SimpleSelect和AuthPage.tools，补默认xui.locale偏好、可配置key、首绘lang、无框LanguageSelect、中文/英文公共文案及默认/注入Controller热更新。关闭时无入口并保留存储；认证/请求/草稿owner不变。范围/实际证据见[VALIDATION](VALIDATION.md)。
+
 ## 密码强度体积与按需评分（4.2.46）
 
 Quant实测旧4.2.44主脚本中password-strength-worker-source贡献1,662,597字节；核对最新4.2.45仍内嵌同一词典，单文件构建不会将动态import分离。本轮按用户后续明确选择删除字典/Worker/高级默认评估，改为轻量正则提示，并增加可选宿主evaluateStrength API回调。默认零评分请求，不要求消费项目拆包或部署评分服务；已有认证和服务端密码校验保持。回调只返回有界score/hint并支持取消、超时、代次清理；实际端点由宿主定义。固定包体积及验证见[VALIDATION](VALIDATION.md)，不等于Quant已升级或线上延迟已改善。

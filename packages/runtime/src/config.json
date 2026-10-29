@@ -13,6 +13,8 @@
   "theme": {"preset": "violet", "mode": "dark", "scale": 1, "persist": true},
   "i18n": {
     "enabled": false,
+    "persist": true,
+    "storageKey": "xui.locale",
     "defaultLocale": "zh-CN",
     "fallbackLocale": "zh-CN",
     "locales": [{"value": "zh-CN", "label": "简体中文"}, {"value": "en", "label": "English"}],

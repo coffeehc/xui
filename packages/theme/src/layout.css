@@ -155,14 +155,14 @@
   .xui-app-header-auxiliary {overflow-wrap:anywhere;}
   .xui-app-header-auxiliary>* {min-inline-size:0;max-inline-size:100%;}
   .xui-app-header-auxiliary :is(button,a) {white-space:normal;overflow-wrap:anywhere;}
-  /* Header-only select chrome; ordinary .xui-select retains its input boundary. */
-  .xui-header-locale {appearance:none;inline-size:auto;max-inline-size:100%;padding-inline-start:var(--space-control-gap);padding-inline-end:var(--space-control-gap);border-color:transparent;background:transparent;color:var(--foreground);cursor:pointer;}
-  .xui-header-locale:focus {border-color:transparent;}
-  .xui-header-locale:hover:not(:disabled) {background:var(--interaction-hover);}
-  .xui-header-locale:active:not(:disabled) {background:var(--interaction-pressed);}
-  .xui-header-locale:disabled {background:var(--muted);color:var(--muted-foreground);cursor:not-allowed;}
+  /* Shared language-tool chrome; ordinary .xui-select retains its input boundary. */
+  :is(.xui-header-locale,.xui-language-select) {appearance:none;inline-size:auto;max-inline-size:100%;padding-inline-start:var(--space-control-gap);padding-inline-end:var(--space-control-gap);border-color:transparent;background:transparent;color:var(--foreground);cursor:pointer;}
+  :is(.xui-header-locale,.xui-language-select):focus {border-color:transparent;}
+  :is(.xui-header-locale,.xui-language-select):hover:not(:disabled) {background:var(--interaction-hover);}
+  :is(.xui-header-locale,.xui-language-select):active:not(:disabled) {background:var(--interaction-pressed);}
+  :is(.xui-header-locale,.xui-language-select):disabled {background:var(--muted);color:var(--muted-foreground);cursor:not-allowed;}
   @media(forced-colors:active) {
-    .xui-header-locale {border-color:var(--foreground);}
+    :is(.xui-header-locale,.xui-language-select) {border-color:var(--foreground);}
   }
   .xui-shell-sidebar-header {align-items:flex-start;max-block-size:var(--nav-sidebar-header-max);padding-block-end:var(--space-text-gap);margin-block-end:var(--space-text-gap);border-block-end:var(--line-width-surface) solid var(--separator-line);}
   /* The dedicated trailing Tabs slot hands the divider to the line List. */

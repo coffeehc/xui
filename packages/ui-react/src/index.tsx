@@ -51,3 +51,5 @@ export * from './upload.js';
 export * from './model-profile.js';
 
 export * from './carousel.js';
+
+export {LanguageSelect,type LanguageSelectProps} from './language.js';
