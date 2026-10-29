@@ -1281,3 +1281,9 @@ BaseService 固定提交 `16125c0b62a057922386176f4975eca09672c25b` 的 `llmserv
 > 秘密只在后端凭据存储和本次请求作用域短暂持有；配置ID、权限、默认模型、测试标记不允许从config覆盖。服务端校验Base URL、出口与凭据使用权限，禁止读取任意ID后把旧密钥发送到未经授权的目标。请求体与上游错误不得进入普通日志。以有限总预算传递取消；客户端取消不代表服务端写入回滚。按[保存结果合同](../packages/ui-react/model-profile/README.md#保存结果与-baseservice-合同4240)严格区分50310未知、50311已提交后置失败、50312已提交测试失败；50312包含安全editor，50311不含，二者不可当未知。超时/未识别503/响应丢失等保存结果未知需权威查询后处理；不盲目重试。明确拒绝返回400/403/409/422或已确认未提交的业务错误，其他不确定错误不能伪装成明确拒绝。
 >
 > 验收：六协议枚举一致；新增/修改、有旧密钥/替换/清空、headers删除、0/false、目录无需model、测试不保存、向量路径、版本冲突、越权ID、取消迟到、已提交测试失败、已提交后置失败（可同时测试失败）、已提交但响应丢失、新增ID与onCommitted/onSaved恰好一次、秘密脱敏与真实请求数量。当前xui demo全部mock，不代表任何项目或agentCore接口已完成接线。
+
+## 密码强度与可选评分（4.2.46）
+
+`@coffeehc/xui-runtime/password`新增公开类型`PasswordStrengthEvaluator`与`PasswordStrengthEstimate`；`PasswordStrengthControllerOptions`/`NewPasswordFieldsControllerOptions`可选`evaluateStrength`、`evaluationTimeoutMs`，React `PasswordStrengthInput`/`NewPasswordFields`支持同名可选props。注入Controller时由Controller配置，View不得重复配置。默认使用无词典/无Worker/无网络的轻量长度与正则提示，现有score/state/meter接口保持，但评分算法不再承诺等于旧词典估算。不是抗猜测或泄露检测，不改变6–32码点校验、旧密码登录、认证或服务端约束。
+
+评分回调`(password,{signal}) => {score:0|1|2|3|4,hint?:PasswordStrengthHint} | Promise<...>`由宿主显式提供，可复用原HTTP/认证访问宿主评分API；xui无默认远程URL、secret store、第三方matcher或自动请求。默认150ms防抖，评估预算默认15000ms，可设1–60000整数；回调变化不自动重放密码，下一次输入/显式refresh才重算。错误/超时/非法结果unavailable且不自动回退成功；输入变化/清空/退出取消signal并隔离迟到结果。公共状态不存密码/原始响应/异常；回调必须传播signal、及时丢弃secret且不记录、缓存、放入URL或config。评分无论本地或远程，均不决定提交许可。详细规则、注入例子和完整页接线见[组件合同](COMPONENTS.md#可选宿主密码评分)。

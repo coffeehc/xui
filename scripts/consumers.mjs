@@ -9,6 +9,7 @@ import { extract } from './tokens.mjs';
 import { gzipSync } from 'node:zlib';
 import { collectPublicAPI } from './public-api.mjs';
 import { sourceGeneration } from './source-generation.mjs';
+import {measurePasswordStrength} from './password-strength-budget.mjs';
 // Consumer sources reference the current main checkout; only package installs and
 // compiler output live in this cache. Never create a second source generation.
 const build=options=>bundle({...options,preserveSymlinks:true});
@@ -481,34 +482,14 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     const strength = resolve(cwd, 'password-strength'), strengthOutput = resolve(`dist/password-strength-${kind}`);
     await mkdir(strength, { recursive: true });
     await copyFile(`tests/fixtures/password-strength-${'react.tsx'}`, `${strength}/app.${'tsx'}`);
-    const strengthBuild = await build({ entryPoints: [`${strength}/app.${'tsx'}`], outdir: strengthOutput, bundle: true, splitting: true, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, chunkNames: 'chunks/[name]-[hash]', define: { 'process.env.NODE_ENV': '"production"' } });
+    const strengthBuild = await build({ entryPoints: [`${strength}/app.${'tsx'}`], outdir: strengthOutput, bundle: true, splitting: false, format: 'esm', platform: 'browser', target: 'es2022', jsx: 'automatic', minify: true, metafile: true, chunkNames: 'chunks/[name]-[hash]', define: { 'process.env.NODE_ENV': '"production"' } });
     assert(Object.keys(strengthBuild.metafile.inputs).every(file => resolve(file).startsWith(`${cwd}/`)), 'Password strength consumer escaped standalone install');
-    const strengthEngine = Object.entries(strengthBuild.metafile.outputs).find(([, value]) => value.entryPoint?.endsWith('/password-strength-worker.js'));
-    assert(strengthEngine, 'Strength engine must remain a separate lazy chunk');
-    const enginePath = resolve(strengthEngine[0]), engineGzip = gzipSync(await readFile(enginePath)).length;
-    assert(engineGzip < 900000, 'Review strength dictionary growth rather than loading it into the initial entry');
-    const initialStrength = Object.entries(strengthBuild.metafile.outputs).find(([file]) => file.endsWith('/app.js'));
-    assert(initialStrength && !Object.keys(initialStrength[1].inputs).some(file => file.includes('@zxcvbn-ts/')), 'Initial entry must not contain strength dictionaries');
-    const strengthOutputs = new Map(Object.entries(strengthBuild.metafile.outputs).map(([file, value]) => [resolve(file), value])), seenStrength = new Set();
-    let initialGzip = 0;
-    const checkInitialStrength = async (file) => {
-        if (seenStrength.has(file))
-            return;
-        seenStrength.add(file);
-        const output = strengthOutputs.get(file);
-        assert(output, 'Unknown initial strength dependency');
-        assert(!Object.keys(output.inputs).some(input => input.includes('@zxcvbn-ts/')), 'Static initial graph must not contain strength dictionaries');
-        initialGzip += gzipSync(await readFile(file)).length;
-        for (const imported of output.imports)
-            if (!imported.external && imported.kind !== 'dynamic-import')
-                await checkInitialStrength(resolve(imported.path));
-    };
-    await checkInitialStrength(resolve(initialStrength[0]));
-    assert(initialGzip < (150000), 'Strength UI initial graph exceeded its isolated budget');
-    execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--preserveSymlinks','--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', `password-strength/app.${'tsx'}`], { cwd, stdio: 'inherit' });
-    const strengthMetadata = { engine: strengthEngine[0], engineGzip, initialGzip };
+    assert(!Object.keys(strengthBuild.metafile.inputs).some(file=>file.includes('@zxcvbn-ts/')||file.includes('password-strength-worker')), 'Basic password input includes a removed heavy resource');
+    const strengthMetadata=await measurePasswordStrength(cwd);
+    performance.passwordStrength=strengthMetadata;
+    execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--preserveSymlinks','--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', `password-strength/app.tsx`], { cwd, stdio: 'inherit' });
     await writeFile(`${strengthOutput}/strength-bundle.json`, JSON.stringify(strengthMetadata, null, 2));
-    console.log(`${kind} lazy password strength: ${JSON.stringify(strengthMetadata)}`);
+    console.log(`${kind} basic password strength: ${JSON.stringify(strengthMetadata)}`);
     await writeFile(`${strengthOutput}/index.html`, '<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="./app.css"></head><body class="xui"><main id="app"></main><script type="module" src="./app.js"></script></body></html>');
     const workspace = resolve(cwd, 'workspace'), workspaceOutput = resolve(`dist/workspace-${kind}`);
     await cp(`examples/workspace-${kind}`, workspace, { recursive: true });

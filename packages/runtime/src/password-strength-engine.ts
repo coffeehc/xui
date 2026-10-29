@@ -1,18 +1,11 @@
-import {ZxcvbnFactory} from '@zxcvbn-ts/core';
-import {dictionary as common,adjacencyGraphs} from '@zxcvbn-ts/language-common';
-import {dictionary as english} from '@zxcvbn-ts/language-en';
-import type {PasswordStrengthState,PasswordStrengthHint} from './password-strength.js';
-const dictionary={...common,...english};
-/** Project only score and a fixed feedback category; discard raw result/sequence/password. */
+import type {PasswordStrengthState} from './password-strength.js';
+/** Basic length/composition feedback only. This is not a guess-resistance or entropy estimate. */
 export function estimatePasswordStrength(password:string):PasswordStrengthState {
- // Factory scoring retains its last password/sequence. Never keep a factory beyond one check.
- const result=new ZxcvbnFactory({dictionary,graphs:adjacencyGraphs}).check(password),score=result.score;
- const warning=result.feedback.warning;let hint:PasswordStrengthHint='longer';
- if(score>=3)hint='none';
- else if(['topTen','topHundred','common','similarToCommon','wordByItself'].includes(warning??''))hint='common';
- else if(['simpleRepeat','extendedRepeat'].includes(warning??''))hint='repeat';
- else if(warning==='sequences')hint='sequence';
- else if(['straightRow','keyPattern'].includes(warning??''))hint='keyboard';
- else if(['dates','recentYears','namesByThemselves','commonNames','userInputs'].includes(warning??''))hint='personal';
+ if(!password)return Object.freeze({status:'idle'});
+ const length=Array.from(password).length;
+ if(length<8||/^([\s\S]+)\1+$/u.test(password))return Object.freeze({status:'ready',score:0,level:'weak',hint:length<8?'longer':'repeat'});
+ const groups=[/\p{Ll}/u,/\p{Lu}/u,/\p{N}/u,/[^\p{L}\p{N}\s]/u].filter(pattern=>pattern.test(password)).length;
+ const score=(1+Number(length>=12)+Number(length>=16)+Number(groups>=3)) as 1|2|3|4;
+ const hint=score>=3?'none':'longer';
  return Object.freeze({status:'ready',score,level:score<=1?'weak':score===2?'medium':'strong',hint});
 }

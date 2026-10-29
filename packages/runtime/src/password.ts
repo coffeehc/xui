@@ -1,6 +1,6 @@
 import type {PasswordStrengthState} from './password-strength.js';
 export {createNewPasswordFieldsController,createPasswordStrengthController} from './password-strength.js';
-export type {NewPasswordFieldsController,NewPasswordFieldsControllerOptions,NewPasswordFieldsState,PasswordStrengthController,PasswordStrengthState,PasswordStrengthHint,PasswordStrengthControllerOptions} from './password-strength.js';
+export type {NewPasswordFieldsController,NewPasswordFieldsControllerOptions,NewPasswordFieldsState,PasswordStrengthController,PasswordStrengthState,PasswordStrengthHint,PasswordStrengthControllerOptions,PasswordStrengthEvaluator,PasswordStrengthEstimate} from './password-strength.js';
 /** 新设密码使用固定的 Unicode 码点范围，不接受项目配置。 */
 export const passwordMinimumCharacters=6;
 export const passwordMaximumCharacters=32;
@@ -25,7 +25,7 @@ export function validateNewPassword(password:string,confirmation:string):NewPass
   if(countPasswordCodePoints(confirmation)===null)return 'invalid_unicode';
   return password===confirmation?null:'confirmation_mismatch';
 }
-/** 本地文案可翻译，固定校验范围和估算器不由项目配置。 */
+/** 本地文案可翻译，labels不改变固定校验范围或评分来源。 */
 export interface NewPasswordLabels {
   /** Optional reveal labels shared by both fields; omitted labels retain English defaults. */
   showPassword?:string;hidePassword?:string;

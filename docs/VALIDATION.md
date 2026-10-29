@@ -1,5 +1,28 @@
 # 验证证据与限制
 
+## 轻量密码提示与可选宿主评分（4.2.46，2026-10-29）
+
+Quant以4.2.44/da780e3报告主脚本2,572,033字节，其中password-strength-worker-source贡献1,662,597字节；只读核对最新main 7b2ffd3/4.2.45仍有同一资源。本轮按用户后续明确选择，删除zxcvbn及common/en词典、Blob Worker与相关构建产物，默认只用轻量正则/长度提示。新增可选evaluateStrength回调和evaluationTimeoutMs；默认零评分网络/额外资源，宿主按需接自己的API。评分不决定提交许可，不改认证/服务端密码约束；基础正则不是抗猜测或泄露检测，分数与旧词典不保证一致。无新增后端、默认远程URL或新HTTP owner。
+
+固定sourceGeneration：`0f972382e5c3e258a14e98c0b34accf6ac024518b860637d5f44f978f86feebe`。build、typecheck、446 Token及不变CSS指纹通过；定向Node **63/63通过，0失败/跳过**，覆盖基础提示、原Unicode/确认校验、注入结果投影、防抖/取消/超时/迟到、回调替换不重放、安全state及原初始化/改密合同。本轮未重跑全仓Node。
+
+正式三tarball的115入口ESM/CSS/types独立安装消费通过，React/ReactDOM19.2.8、Base UI1.7.0单实例，原JS/Button/窄服务/CSS体积门禁未放宽。注入参数与结果类型正负fixture通过。按相同最小入口静态引用AdminSetupForm/PasswordChangeForm并渲染普通PasswordInput，esbuild preserveSymlinks使用安装包、write:false、minify、production define；比较如下（原始/gzip字节，不是Quant整站或CPU耗时）：
+
+| 最小消费构建 | 4.2.45首屏JS | 4.2.46首屏JS | 旧异步JS | 新异步JS |
+|---|---:|---:|---:|---:|
+| 单文件、无splitting | 2,079,074 / 987,140 | 418,036 / 136,105 | 0 / 0 | 0 / 0 |
+| ESM splitting | 415,443 / 135,698 | 418,036 / 136,105 | 1,663,595 / 851,531 | 0 / 0 |
+
+旧单文件的worker-source实际贡献1,662,598字节；默认新入口无词典/Worker，整个tarball也不再包含旧Worker文件。单文件首屏减少1,661,038原始字节、851,035 gzip字节。新增取消/评分扩展有少量代码，因此原拆包消费者的首屏小幅增加407 gzip字节，但不再需要下载851,531 gzip字节的评分块。消费者不必修改splitting设置/发布静态Worker；升级三包、原位重建并验收即可。真正服务端评分只有显式注入后才会请求，端点与权限由宿主负责，默认不依赖它。
+
+最终Chromium **38/38通过，0失败/跳过/重试/flaky**，七项新评分用例与原password-fields/admin-setup/password-change回归。真实浏览器验证默认初始/首次输入无字典或API请求、禁止worker/connect仍可本地提示；注入回调使用公共HTTPService和实际fetch（响应是Playwright合成mock），覆盖准确分数、原弱密码允许提交、失败/非法DTO不泄露响应、输入替换/清空/卸载中止请求、迟到响应、超时和显式移除回调恢复本地提示。原初始化/改密用例覆盖light/dark/system、390px+200%阅读和真实Chrome200%缩放、键盘/错误关联/回焦及清密；人工查看浅色窄屏200%最终截图。本轮未改CSS/Token。
+
+过程保留：最初体积探针用了错误的stdin入口标识，修正后才产生基线；初次构建由TypeScript发现score可能undefined，已加明确数值校验。首轮Node 62通过/1条旧版本断言失败，修订版本断言后63通过。首次新增fixture类型检查发现HttpResponse未解包payload，已修正。首轮浏览器34通过/4失败，原因是新增宿主API fixture未调用bootstrap，HTTPService未配置而未派发；仅补齐fixture公开启动接线，重跑正式消费者与完整定向浏览器后全部通过，无force click/重试。保留[首轮报告](../.artifacts/password-strength-4.2.46/browser-initial.json)及trace，未把原失败计入最终通过。
+
+证据：[checks](../.artifacts/password-strength-4.2.46/checks.json)、[优化前体积](../.artifacts/password-strength-4.2.46/before.json)、[优化后体积](../.artifacts/password-strength-4.2.46/after.json)、[浏览器报告](../.artifacts/password-strength-4.2.46/browser-final.json)。复现：`pnpm build`、`pnpm typecheck`、`pnpm check:tokens`、`node --test tests/password-strength.test.mjs tests/password.test.mjs tests/password-change.test.mjs tests/auth-password.test.mjs tests/admin-setup.test.mjs tests/contract.test.mjs tests/docs.test.mjs`、`pnpm test:consumer`、`node scripts/password-strength-budget.mjs`；浏览器为`caffeinate -i pnpm exec playwright test tests/browser/password-strength.spec.mjs tests/browser/password-fields.spec.mjs tests/browser/admin-setup.spec.mjs tests/browser/password-change.spec.mjs --workers=1 --retries=0`。归档使用既有archive/archive:verify自动生成并校验manifest/public-api/sourceGeneration/SHA256SUMS。
+
+未执行Quant升级/重建/部署、其线上字节或11秒链路复测、真实宿主评分API/密码数据/认证后端、全量unit/browser/watch/cold-start或其他浏览器。未修改Quant、其他项目或网络环境，未创建本地基础设施，未发跨会话消息。库mock和上述最小消费者不代表消费项目已完成升级或真实远端评分合同验收。
+
 ## 认证感知 SSE 读取（4.2.45，2026-10-29）
 
 Argus以4.2.35/c8fdb55提出GET /api/events/live缺口；只读核对main da780e3/4.2.44没有公开替代入口。本轮只修改xui，同一HttpClient/HTTPService新增readEvents及ServerSentEvent/SseReadOptions类型；原ResponseMode/request/Auth DTO和普通401恢复规则不变。固定GET/omit/no-store/error redirect，无body、自动重连或写入重放。会话流只借当前access，缺少/到期零网络；实际401由同Auth清身份，不触发refresh/session/login，403不退出。私有租约订阅在身份/代次/到期/销毁时即时取消，包括首字节前的挂起；API Key流沿原HTTP头配置，可显式ignore其独立401，不冒充session或吞掉session失效。

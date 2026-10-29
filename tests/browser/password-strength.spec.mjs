@@ -1,6 +1,5 @@
 import {test,expect} from '@playwright/test';
 
-const engine='**/password-strength-*/chunks/password-strength-worker-*.js';
 const fields=page=>({password:page.getByLabel(/^新密码(?:\s*\*)?$/),meter:page.locator('[data-xui-password-strength]'),status:page.locator('[data-xui-password-strength-status]')});
 const settle=page=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
 async function expectEmptyMeter(meter,summary){
@@ -18,31 +17,61 @@ async function expectNoVisibleLegacyGuidance(page){
 }
 
 for(const kind of ['react']){
- test(`${kind}: lazy local strength uses a five-step advisory meter and never gates a weak valid password`,async({page},info)=>{
-  const requests=[];page.on('request',request=>requests.push(request));await page.goto(`/password-strength-${kind}/`);const {password,meter,status}=fields(page);await expect(password).toBeVisible();await expectNoVisibleLegacyGuidance(page);await expectEmptyMeter(meter,'等待输入');await expect(status).toHaveText('等待输入');expect(requests.filter(request=>request.url().includes('/password-policy'))).toHaveLength(0);expect(requests.filter(request=>request.url().includes('/password-strength-worker-'))).toHaveLength(0);
-  const samples=[['password',0,'weak','弱'],['admin123',1,'weak','弱'],['December2025!',2,'medium','中'],['I love you',3,'strong','强'],['t7#Vz_9m+Lp2',4,'strong','强']];let timing;
-  await password.fill(samples[0][0]);await expect.poll(()=>meter.getAttribute('aria-valuenow')).toBe('1');await expectScore(meter,{score:0,level:'weak',summary:'弱'});await page.getByRole('button',{name:'Submit fixture'}).click();await expect(page.locator('[data-submit-result]')).toHaveText('accepted');
-  await page.evaluate(()=>{const samples={inputEvents:0,maxTimerDelay:0,longTasks:[]};let prior=performance.now();const timer=setInterval(()=>{const now=performance.now();samples.maxTimerDelay=Math.max(samples.maxTimerDelay,now-prior);prior=now;},16);const input=()=>samples.inputEvents++;document.addEventListener('input',input);const observer=new PerformanceObserver(list=>{for(const entry of list.getEntries())samples.longTasks.push(entry.duration);});observer.observe({type:'longtask',buffered:false});window.strengthTiming={finish:()=>{clearInterval(timer);observer.disconnect();document.removeEventListener('input',input);return samples;}};});
-  for(const [index,[value,score,level,summary]]of samples.entries()){
-   if(index===0)await password.pressSequentially(value,{delay:20});else await password.fill(value);
-   await expect.poll(()=>meter.getAttribute('aria-valuenow')).toBe(String(score+1));await settle(page);await expectScore(meter,{score,level,summary});await expect(status).toHaveText(summary);await expectNoVisibleLegacyGuidance(page);
+ test(`${kind}: basic regex feedback needs no Worker, API or asynchronous dictionary resource`,async({page},info)=>{
+  const requests=[];page.on('request',request=>requests.push(request));await page.goto(`/password-strength-${kind}/`);
+  const {password,meter,status}=fields(page);await expectEmptyMeter(meter,'等待输入');await expectNoVisibleLegacyGuidance(page);
+  const initial=requests.length;
+  for(const [value,score,level,summary]of [['password',1,'weak','弱'],['abcabcabcabc',0,'weak','弱'],['Password1!',2,'medium','中'],['t7#Vz_9m+Lp2&Q8!x',4,'strong','强']]){
+   await password.fill(value);await expectScore(meter,{score,level,summary});await expect(status).toHaveText(summary);
   }
-  timing=await page.evaluate(()=>window.strengthTiming.finish());expect(timing.inputEvents).toBeGreaterThan(0);expect(requests.filter(request=>request.url().includes('/password-policy'))).toHaveLength(0);expect(requests.filter(request=>new URL(request.url()).pathname.startsWith('/api/'))).toHaveLength(0);expect(requests.filter(request=>request.method()!=='GET')).toHaveLength(0);await info.attach(`${kind}-strength-meter.json`,{body:JSON.stringify({samples:samples.map(([password,score,level,summary])=>({password,score,level,summary})),timing,workerRequests:requests.filter(request=>request.url().includes('/password-strength-worker-')).map(request=>request.url())},null,2),contentType:'application/json'});
-  await page.evaluate(()=>window.passwordStrengthFixture.clear());await expect(password).toHaveValue('');await expectEmptyMeter(meter,'等待输入');await expect(status).toHaveText('等待输入');
+  expect(requests.slice(initial)).toHaveLength(0);expect(requests.some(request=>/password-strength-worker|zxcvbn|password-policy/.test(request.url()))).toBe(false);
+  await page.getByRole('button',{name:'Submit fixture'}).click();await expect(page.locator('[data-submit-result]')).toHaveText('accepted');
+  await page.evaluate(()=>window.passwordStrengthFixture.clear());await expect(password).toHaveValue('');await expectEmptyMeter(meter,'等待输入');
+  await info.attach('loading-boundary.json',{body:JSON.stringify({initialRequests:requests.map(request=>new URL(request.url()).pathname),requestsAfterInput:0}),contentType:'application/json'});
  });
 
- test(`${kind}: unavailable local estimator leaves an accessible empty meter and never blocks submission`,async({page})=>{
-  await page.route(engine,route=>route.abort('failed'));await page.goto(`/password-strength-${kind}/`);const {password,meter,status}=fields(page);await expectEmptyMeter(meter,'等待输入');await password.fill('password');await expect.poll(()=>meter.getAttribute('aria-valuetext')).toBe('暂不可评估');await expectEmptyMeter(meter,'暂不可评估');await expect(status).toHaveText('暂不可评估');await expectNoVisibleLegacyGuidance(page);await page.getByRole('button',{name:'Submit fixture'}).click();await expect(page.locator('[data-submit-result]')).toHaveText('accepted');
+ test(`${kind}: an explicitly injected host API uses the existing HTTP service, with no submission gate`,async({page})=>{
+  let calls=0;await page.route('**/api/xui-fixture/password-strength',route=>{calls++;expect(route.request().method()).toBe('POST');return route.fulfill({json:{score:0,hint:'common'}});});
+  await page.goto(`/password-strength-${kind}/`);await page.evaluate(()=>window.passwordStrengthFixture.useRemote());
+  const {password,meter}=fields(page);await password.fill('t7#Vz_9m+Lp2');await expectScore(meter,{score:0,level:'weak',summary:'弱'});expect(calls).toBe(1);
+  await page.getByRole('button',{name:'Submit fixture'}).click();await expect(page.locator('[data-submit-result]')).toHaveText('accepted');expect(calls).toBe(1);
  });
 
- test(`${kind}: a late dictionary load estimates only the latest input`,async({page})=>{
-  let held;await page.route(engine,route=>{held=route;});await page.goto(`/password-strength-${kind}/`);const {password,meter,status}=fields(page);await password.fill('password');await expect.poll(()=>!!held).toBe(true);await expect(meter).toHaveAttribute('aria-valuetext','评估中');await expectEmptyMeter(meter,'评估中');await expect(status).toHaveText('评估中');await password.fill('t7#Vz_9m+Lp2');await held.continue();await expect.poll(()=>meter.getAttribute('aria-valuenow')).toBe('5');await expectScore(meter,{score:4,level:'strong',summary:'强'});await expect(status).toHaveText('强');
+ test(`${kind}: failed or malformed host API results never create a score or expose response secrets`,async({page})=>{
+  let failed=true;await page.route('**/api/xui-fixture/password-strength',route=>route.fulfill(failed?{status:503,json:{message:'synthetic-secret'}}:{json:{score:4,password:'synthetic-secret'}}));
+  await page.goto(`/password-strength-${kind}/`);await page.evaluate(()=>window.passwordStrengthFixture.useRemote());
+  const {password,meter}=fields(page);await password.fill('synthetic-secret');await expectEmptyMeter(meter,'暂不可评估');
+  failed=false;await password.fill('synthetic-secret-2');await expectEmptyMeter(meter,'暂不可评估');
+  expect(JSON.stringify(await page.evaluate(()=>window.passwordStrengthFixture.state()))).not.toContain('synthetic-secret');
+  await page.getByRole('button',{name:'Submit fixture'}).click();await expect(page.locator('[data-submit-result]')).toHaveText('accepted');
  });
 
- test(`${kind}: teardown during a pending dictionary load ignores its late result`,async({page})=>{
-  let held;const errors=[];page.on('pageerror',error=>errors.push(error.message));await page.route(engine,route=>{held=route;});await page.goto(`/password-strength-${kind}/`);const {password}=fields(page);await password.fill('password');await expect.poll(()=>!!held).toBe(true);await page.evaluate(()=>window.passwordStrengthFixture.destroy());await held.continue();await page.waitForTimeout(200);await expect(page.locator('[data-xui-password-strength]')).toHaveCount(0);expect(errors).toEqual([]);
+ test(`${kind}: new input aborts the old request and a late response cannot replace the newer score`,async({page})=>{
+  const pending=[],failed=[];page.on('requestfailed',request=>failed.push(request.url()));
+  await page.route('**/api/xui-fixture/password-strength',route=>{pending.push(route);});await page.goto(`/password-strength-${kind}/`);await page.evaluate(()=>window.passwordStrengthFixture.useRemote());
+  const {password,meter}=fields(page);await password.fill('synthetic-first');await expect.poll(()=>pending.length).toBe(1);
+  await password.fill('synthetic-second');await expect.poll(()=>pending.length).toBe(2);await expect.poll(()=>failed.length).toBe(1);
+  await pending[1].fulfill({json:{score:2}});await expectScore(meter,{score:2,level:'medium',summary:'中'});await pending[0].fulfill({json:{score:4}}).catch(()=>{});await settle(page);await expect(meter).toHaveAttribute('aria-valuenow','3');
  });
- test(`${kind}: worker-src CSP blocks estimation without adding a password submission gate`,async({page})=>{
-  await page.route(`**/password-strength-${kind}/`,async route=>{const response=await route.fetch();await route.fulfill({response,headers:{...response.headers(),'content-security-policy':"worker-src 'none'"}});});await page.goto(`/password-strength-${kind}/`);const {password,meter,status}=fields(page);await password.fill('password');await expect.poll(()=>meter.getAttribute('aria-valuetext')).toBe('暂不可评估');await expectEmptyMeter(meter,'暂不可评估');await expect(status).toHaveText('暂不可评估');await expectNoVisibleLegacyGuidance(page);await page.getByRole('button',{name:'Submit fixture'}).click();await expect(page.locator('[data-submit-result]')).toHaveText('accepted');
+
+ test(`${kind}: clear and unmount abort host work, without late state or page errors`,async({page})=>{
+  const pending=[],failed=[],errors=[];page.on('requestfailed',request=>failed.push(request.url()));page.on('pageerror',error=>errors.push(error.message));
+  await page.route('**/api/xui-fixture/password-strength',route=>{pending.push(route);});await page.goto(`/password-strength-${kind}/`);await page.evaluate(()=>window.passwordStrengthFixture.useRemote());
+  const {password,meter}=fields(page);await password.fill('synthetic-first');await expect.poll(()=>pending.length).toBe(1);
+  await page.evaluate(()=>window.passwordStrengthFixture.clear());await expectEmptyMeter(meter,'等待输入');await expect.poll(()=>failed.length).toBe(1);
+  await password.fill('synthetic-second');await expect.poll(()=>pending.length).toBe(2);await page.evaluate(()=>window.passwordStrengthFixture.destroy());await expect.poll(()=>failed.length).toBe(2);
+  for(const route of pending)await route.fulfill({json:{score:4}}).catch(()=>{});await expect(meter).toHaveCount(0);expect(errors).toEqual([]);
+ });
+
+ test(`${kind}: custom evaluation timeout stops the request and explicit removal restores local feedback`,async({page})=>{
+  let pending;const failed=[];page.on('requestfailed',request=>failed.push(request.url()));await page.route('**/api/xui-fixture/password-strength',route=>{pending=route;});
+  await page.goto(`/password-strength-${kind}/`);await page.evaluate(()=>window.passwordStrengthFixture.useRemote(50));
+  const {password,meter}=fields(page);await password.fill('synthetic-first');await expectEmptyMeter(meter,'暂不可评估');await expect.poll(()=>failed.length).toBe(1);
+  await page.evaluate(()=>window.passwordStrengthFixture.useBasic());await expectEmptyMeter(meter,'等待输入');await password.fill('password');await expectScore(meter,{score:1,level:'weak',summary:'弱'});await pending.fulfill({json:{score:4}}).catch(()=>{});await expect(meter).toHaveAttribute('aria-valuenow','2');
+ });
+
+ test(`${kind}: blocking Worker and network connections leaves the built-in regex feedback available`,async({page})=>{
+  await page.route(`**/password-strength-${kind}/`,async route=>{const response=await route.fetch();await route.fulfill({response,headers:{...response.headers(),'content-security-policy':"worker-src 'none'; connect-src 'none'"}});});
+  await page.goto(`/password-strength-${kind}/`);const {password,meter}=fields(page);await password.fill('password');await expectScore(meter,{score:1,level:'weak',summary:'弱'});await expectNoVisibleLegacyGuidance(page);
  });
 }

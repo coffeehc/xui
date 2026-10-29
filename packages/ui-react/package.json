@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-react",
-  "version": "4.2.45",
+  "version": "4.2.46",
   "private": true,
   "type": "module",
   "files": [
@@ -205,7 +205,7 @@
   "types": "./dist/index.d.ts",
   "peerDependencies": {
     "@base-ui/react": ">=1.7.0 <2",
-    "@coffeehc/xui-runtime": "4.2.45",
+    "@coffeehc/xui-runtime": "4.2.46",
     "react": ">=19.2.8 <20",
     "react-dom": ">=19.2.8 <20"
   },

@@ -1,70 +1,81 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {estimatePasswordStrength} from '../packages/runtime/dist/password-strength-engine.js';
-import {createPasswordStrengthOwner,createPasswordStrengthController,createNewPasswordFieldsController} from '../packages/runtime/dist/password-strength.js';
+import {createPasswordStrengthController,createNewPasswordFieldsController} from '../packages/runtime/dist/password.js';
 import {validateNewPassword,validatePassword,getPasswordStrengthSummary} from '../packages/runtime/dist/password.js';
-const wait=()=>new Promise(resolve=>setTimeout(resolve,180));
-const ready=score=>({status:'ready',score,level:score<=1?'weak':score===2?'medium':'strong',hint:'none'});
-test('trusted dictionaries identify common, sequential, repeated and keyboard passwords without a composition gate',()=>{
- for(const fixture of ['password','Password1!','12345678','abcabcabc','qwertyuiop']){const result=estimatePasswordStrength(fixture);assert.equal(result.level,'weak',fixture);assert.ok(result.score<=1);assert.deepEqual(Object.keys(result).sort(),['hint','level','score','status']);}
- assert.equal(estimatePasswordStrength('abcabcabc').hint,'repeat');
- assert.equal(estimatePasswordStrength('t7#Vz_9m+Lp2').level,'strong');
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function settled(controller){for(let i=0;i<100&&controller.getState().status==='loading';i++)await wait(10);assert.notEqual(controller.getState().status,'loading');return controller.getState();}
+async function started(read){for(let i=0;i<100&&!read();i++)await wait(10);assert.ok(read());}
+
+test('the default is bounded regex/length advice, not a dictionary or submission policy',()=>{
+ for(const fixture of ['short','aaaaaaaaaaaa','abcabcabcabc','😀😀😀😀😀😀😀😀'])assert.equal(estimatePasswordStrength(fixture).score,0);
+ for(const [value,score]of [['abcdefgh',1],['Password1!',2],['t7#Vz_9m+Lp2',3],['t7#Vz_9m+Lp2&Q8!x',4],['中文内容用于长密码建议检查',2]])assert.equal(estimatePasswordStrength(value).score,score);
+ assert.equal(estimatePasswordStrength('').status,'idle');
  assert.equal(validatePassword('password'),null);assert.equal(validateNewPassword('password','password'),null);
  assert.deepEqual(['idle','loading','unavailable'].map(status=>getPasswordStrengthSummary({status})),['等待输入','评估中','暂不可评估']);
- for(const [score,level,summary]of [[0,'weak','弱'],[1,'weak','弱'],[2,'medium','中'],[3,'strong','强'],[4,'strong','强']]){assert.equal(ready(score).level,level);assert.equal(getPasswordStrengthSummary(ready(score)),summary);}
-});
-test('deferred loading reads only the current input and stale results cannot replace a newer generation',async()=>{
- let value='old-fixture',release,loads=0;const evaluated=[],states=[],loading=new Promise(resolve=>release=resolve),owner=createPasswordStrengthOwner({readPassword:()=>value,onChange:s=>states.push(s)},()=>{loads++;return loading;});
- owner.refresh();await wait();assert.equal(loads,1);value='new-fixture';owner.refresh();release(input=>{evaluated.push(input);return ready(2);});await wait();assert.deepEqual(evaluated,['new-fixture']);assert.equal(owner.getState().level,'medium');assert.ok(!JSON.stringify(states).includes('fixture'));owner.clear();assert.equal(owner.getState().status,'idle');owner.destroy();
-});
-test('unmount, clear and offline failure never authorize writes or retain an input snapshot',async()=>{
- let release,reads=0;const owner=createPasswordStrengthOwner({readPassword:()=>{reads++;return 'fixture';},onChange:()=>{}},()=>new Promise(resolve=>release=resolve));owner.refresh();await wait();owner.destroy();const before=reads;release(()=>{assert.fail('destroyed owner must not estimate');});await Promise.resolve();assert.equal(reads,before);assert.equal(owner.getState().status,'idle');
- const failed=createPasswordStrengthOwner({readPassword:()=> 'fixture',onChange:()=>{}},async()=>{throw Error('offline');});failed.refresh();await wait();assert.equal(failed.getState().status,'unavailable');assert.equal(getPasswordStrengthSummary(failed.getState()),'暂不可评估');failed.destroy();
- let loads=0;const large=createPasswordStrengthOwner({readPassword:()=> 'a'.repeat(257),onChange:()=>{}},async()=>{loads++;return ()=>ready(4);});large.refresh();await wait();assert.equal(loads,0);assert.equal(large.getState().status,'unavailable');large.destroy();
-});
-test('reentrant clear or destroy during loading prevents even a late module load',async()=>{
- for(const action of ['clear','destroy']){let loads=0,owner;owner=createPasswordStrengthOwner({readPassword:()=> 'fixture',onChange:state=>{if(state.status==='loading')owner[action]();}},async()=>{loads++;return ()=>ready(4);});owner.refresh();await wait();assert.equal(loads,0);assert.equal(owner.getState().status,'idle');owner.destroy();}
-});
-test('the long-lived engine retains dictionaries, never a factory carrying the last password',async()=>{
- const {readFile}=await import('node:fs/promises');const source=await readFile(new URL('../packages/runtime/src/password-strength-engine.ts',import.meta.url),'utf8');assert.doesNotMatch(source.split('export function estimatePasswordStrength')[0],/new ZxcvbnFactory/);assert.match(source,/new ZxcvbnFactory\(\{dictionary,graphs:adjacencyGraphs\}\)\.check\(password\)/);
-});
-test('an asynchronous local result cannot outlive a newer input or a destroyed owner',async()=>{
- let value='synthetic-first',finish;const estimate=()=>new Promise(resolve=>finish=resolve);let destroyed=0;estimate.destroy=()=>destroyed++;const owner=createPasswordStrengthOwner({readPassword:()=>value,onChange:()=>{}},async()=>estimate);owner.refresh();await wait();owner.clear();finish(ready(4));await Promise.resolve();await Promise.resolve();assert.equal(owner.getState().status,'idle');owner.destroy();assert.equal(destroyed,1);
 });
 
-test('public password controllers notify with secret-free snapshots and replace the current reader',async()=>{
- let value='synthetic-secret-one',changes=0;const owner=createPasswordStrengthController({readPassword:()=>value,onChange:()=>changes++}),states=[];owner.subscribe(()=>states.push(owner.getState()));
- assert.equal(typeof Worker,'undefined','Node unit tests do not provide the browser worker runtime');owner.refresh(()=>value);assert.equal(owner.getState().status,'loading');await wait();assert.equal(owner.getState().status,'unavailable');
- value='password';owner.refresh(()=>value);owner.update({onChange:()=>changes++});assert.equal(owner.getState().status,'loading');await wait();assert.equal(owner.getState().status,'unavailable');
- assert.ok(states.length>0);assert.doesNotMatch(JSON.stringify(owner.getState()),/synthetic-secret-one|password/);assert.doesNotMatch(JSON.stringify(states),/synthetic-secret-one|password/);assert.ok(changes>0);
- owner.inputController.setVisible(true);assert.equal(owner.inputController.getState().visible,true);owner.clear();assert.equal(owner.getState().status,'idle');assert.equal(owner.inputController.getState().visible,false);owner.destroy();
+test('public default controller works without Worker/fetch and reads the latest input after debounce',async()=>{
+ let value='first-secret',changes=0;const owner=createPasswordStrengthController({readPassword:()=>value,onChange:()=>changes++}),states=[];
+ owner.subscribe(()=>states.push(owner.getState()));owner.refresh();value='t7#Vz_9m+Lp2&Q8!x';assert.equal((await settled(owner)).score,4);
+ assert.ok(changes>0);assert.doesNotMatch(JSON.stringify(states),/first-secret|t7#Vz/);
+ owner.inputController.setVisible(true);owner.clear();assert.equal(owner.getState().status,'idle');assert.equal(owner.inputController.getState().visible,false);owner.destroy();
 });
 
-test('PasswordStrengthInput reader bindings are leased and stale releases cannot detach the replacement',()=>{
- let originalReads=0,readerAReads=0,readerBReads=0;
- const controller=createPasswordStrengthController({readPassword:()=>{originalReads++;return '';}});
- const releaseA=controller.bindReader(()=>{readerAReads++;return 'a'.repeat(300);});
- controller.refresh();assert.equal(controller.getState().status,'unavailable');assert.equal(readerAReads,1);
- const releaseB=controller.bindReader(()=>{readerBReads++;return 'b'.repeat(300);});
- controller.refresh();assert.equal(controller.getState().status,'unavailable');assert.equal(readerBReads,1);
- releaseA();controller.refresh();
- assert.equal(controller.getState().status,'unavailable','releasing the old view lease must not clear the current reader');
- assert.equal(readerBReads,2);assert.equal(readerAReads,1);
- releaseB();controller.refresh();
- assert.equal(controller.getState().status,'idle','after the last view lease, refresh returns to the original empty reader');
- assert.equal(originalReads,1);assert.equal(readerBReads,2);
- controller.destroy();
+test('empty, invalid reader and excessive input never invoke the optional API',async()=>{
+ let calls=0,value='';const owner=createPasswordStrengthController({readPassword:()=>value,evaluateStrength:()=>{calls++;return {score:4};}});
+ for(const next of ['',null,'a'.repeat(257)]){value=next;owner.refresh();await wait(160);assert.equal(calls,0);assert.equal(owner.getState().status,next===''?'idle':'unavailable');}owner.destroy();
 });
 
-test('new-password aggregate owns error, tip and both visibility states without storing secret values',()=>{
- const controller=createNewPasswordFieldsController(),states=[];controller.subscribe(()=>states.push(controller.getState()));controller.password.refresh(()=> 'synthetic-confirmation-secret');
- controller.setError('confirmation_mismatch');controller.setTipOpen(true);controller.password.inputController.setVisible(true);controller.confirmation.setVisible(true);
- const snapshot=controller.getState();assert.deepEqual(snapshot.error,'confirmation_mismatch');assert.equal(snapshot.tipOpen,true);assert.equal(controller.password.inputController.getState().visible,true);assert.equal(controller.confirmation.getState().visible,true);
- assert.doesNotMatch(JSON.stringify(snapshot)+JSON.stringify(states),/synthetic-confirmation-secret/);controller.clear();assert.deepEqual(controller.getState(),{error:null,tipOpen:false,strength:{status:'idle'}});assert.equal(controller.password.inputController.getState().visible,false);assert.equal(controller.confirmation.getState().visible,false);
- controller.destroy();controller.setTipOpen(true);assert.equal(controller.getState().tipOpen,false);
+test('reentrant clear or destroy during loading prevents the host callback',async()=>{
+ for(const action of ['clear','destroy']){let calls=0,owner;owner=createPasswordStrengthController({readPassword:()=> 'fixture',onChange:state=>{if(state.status==='loading')owner[action]();},evaluateStrength:()=>{calls++;return {score:4};}});owner.refresh();await wait(170);assert.equal(calls,0);assert.equal(owner.getState().status,'idle');owner.destroy();}
 });
 
+test('a new input aborts the old host API, and a late result cannot replace the current generation',async()=>{
+ let value='synthetic-old',calls=[];const owner=createPasswordStrengthController({readPassword:()=>value,evaluateStrength:(password,{signal})=>new Promise(resolve=>calls.push({password,signal,resolve}))});
+ owner.refresh();await started(()=>calls[0]);value='synthetic-new';owner.refresh();assert.equal(calls[0].signal.aborted,true);await started(()=>calls[1]);
+ calls[1].resolve({score:2,hint:'common'});assert.equal((await settled(owner)).score,2);calls[0].resolve({score:4});await wait(0);assert.equal(owner.getState().score,2);assert.equal(calls[1].signal.aborted,true);assert.doesNotMatch(JSON.stringify(owner.getState()),/synthetic/);owner.destroy();
+});
 
-test('aggregate cleanup preserves error callback deduplication',()=>{
- const changes=[],controller=createNewPasswordFieldsController({onErrorChange:value=>changes.push(value)});controller.clear();controller.setError('confirmation_mismatch');controller.clear();controller.clear();assert.deepEqual(changes,['confirmation_mismatch',null]);controller.destroy();
+test('clear, reader release and destroy cancel host IO and discard late results',async()=>{
+ for(const action of ['clear','release','destroy']){
+  let signal,finish;const owner=createPasswordStrengthController({readPassword:()=>'',evaluateStrength:(_password,context)=>{signal=context.signal;return new Promise(resolve=>finish=resolve);}});
+  const release=owner.bindReader(()=> 'synthetic-secret');owner.refresh();await started(()=>signal);if(action==='release')release();else owner[action]();assert.equal(signal.aborted,true);finish({score:4});await wait(0);assert.equal(owner.getState().status,'idle');owner.destroy();
+ }
+});
+
+test('timeout aborts a blocked evaluator and never falls back to a misleading successful score',async()=>{
+ let signal;const owner=createPasswordStrengthController({readPassword:()=> 'synthetic-secret',evaluationTimeoutMs:20,evaluateStrength:(_password,context)=>{signal=context.signal;return new Promise(()=>{});}});
+ owner.refresh();assert.equal((await settled(owner)).status,'unavailable');assert.equal(signal.aborted,true);owner.update({evaluateStrength:undefined});owner.refresh();assert.equal((await settled(owner)).status,'ready');owner.destroy();
+});
+
+test('invalid API data, getters and exceptions leave only a safe unavailable state',async()=>{
+ let getterCalls=0;
+ for(const result of [null,{score:9},{score:1.5},{score:0,hint:'unknown'},{score:4,password:'synthetic-secret'},{get score(){getterCalls++;return 4;}}]){
+  const owner=createPasswordStrengthController({readPassword:()=> 'synthetic-secret',evaluateStrength:()=>result});owner.refresh();assert.deepEqual(await settled(owner),{status:'unavailable'});owner.destroy();
+ }
+ const owner=createPasswordStrengthController({readPassword:()=> 'synthetic-secret',evaluateStrength:()=>{throw Error('synthetic-secret');}});owner.refresh();assert.deepEqual(await settled(owner),{status:'unavailable'});assert.equal(getterCalls,0);owner.destroy();
+});
+
+test('changing the evaluator aborts old IO without automatically replaying the password',async()=>{
+ let signal,calls=0;const owner=createPasswordStrengthController({readPassword:()=> 'synthetic-secret',evaluateStrength:(_password,context)=>{signal=context.signal;return new Promise(()=>{});}});
+ owner.refresh();await started(()=>signal);owner.update({evaluateStrength:()=>{calls++;return {score:1};}});assert.equal(signal.aborted,true);await wait(170);assert.equal(calls,0);assert.equal(owner.getState().status,'idle');owner.refresh();assert.equal((await settled(owner)).score,1);owner.destroy();
+});
+
+test('reader bindings are leased and an old release cannot detach the replacement',()=>{
+ let original=0,readsA=0,readsB=0;const owner=createPasswordStrengthController({readPassword:()=>{original++;return '';}});
+ const releaseA=owner.bindReader(()=>{readsA++;return 'a'.repeat(300);});owner.refresh();
+ const releaseB=owner.bindReader(()=>{readsB++;return 'b'.repeat(300);});owner.refresh();releaseA();owner.refresh();
+ assert.equal(readsA,1);assert.equal(readsB,2);releaseB();owner.refresh();assert.equal(original,1);assert.equal(owner.getState().status,'idle');owner.destroy();
+});
+
+test('aggregate controllers share optional evaluation, preserve callbacks and clear secret-free state',async()=>{
+ const changes=[],states=[],controller=createNewPasswordFieldsController({evaluateStrength:()=>({score:2}),onErrorChange:value=>changes.push(value)});
+ controller.subscribe(()=>states.push(controller.getState()));controller.password.refresh(()=> 'synthetic-secret');await settled(controller.password);assert.equal(controller.getState().strength.score,2);
+ controller.setError('confirmation_mismatch');controller.setTipOpen(true);controller.password.inputController.setVisible(true);controller.confirmation.setVisible(true);controller.clear();controller.clear();
+ assert.deepEqual(changes,['confirmation_mismatch',null]);assert.deepEqual(controller.getState(),{error:null,tipOpen:false,strength:{status:'idle'}});assert.doesNotMatch(JSON.stringify(states),/synthetic-secret/);controller.destroy();
+});
+
+test('invalid evaluator configuration is rejected before any evaluation',()=>{
+ for(const options of [{evaluateStrength:'bad'},{evaluationTimeoutMs:0},{evaluationTimeoutMs:NaN},{evaluationTimeoutMs:60001}])assert.throws(()=>createPasswordStrengthController({readPassword:()=>'',...options}),TypeError);
 });

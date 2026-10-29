@@ -121,7 +121,7 @@ ApiKeyManager 一次性值复制与 StructuredLogExplorer 标识复制统一复�
 | `DateTimePicker` | 原 `DateTimeOptions` 或 `DateTimeController`，工厂 `createDateTimeModel` | 整个日期时间草稿、开合、格式/required反馈；分钟墙上时间不变，时区/窗口归宿主。Calendar 是受控子日期视图，其日历键盘焦点归该子视图 |
 | `Copyable` | 原复制选项或 `CopyController`，工厂 `createCopyController` | value/disabled/status 可订阅；默认复用 runtime 剪贴板服务，显式 writer 保持兼容。普通可展示文本可进入此快照，密码和一次性 secret 使用自身秘密合同 |
 | `PasswordInput` | 默认安全显隐模型或 `PasswordInputController` | 仅 visible/cleared，不含秘密值；DOM/reset/pagehide/退出清理不可禁用，宿主受控密码仍由宿主持有 |
-| `PasswordStrengthInput` | 默认强度模型或 `PasswordStrengthController` | 无秘密强度摘要及其密码显隐子模型；DOM reader 在绑定期有效，worker/迟到结果按代次隔离 |
+| `PasswordStrengthInput` | 默认强度模型或 `PasswordStrengthController` | 无秘密强度摘要及其密码显隐子模型；DOM reader 在绑定期有效，评估/迟到结果按代次隔离 |
 | `PasswordChangeForm` | 默认借用AuthClient的独立PasswordChangeController，或互斥完整注入 | 只拥有改密展示/显隐/反馈与提交作用域，认证与会话仍归原AuthClient |
 | `NewPasswordFields` | 默认或 `NewPasswordFieldsController` | 安全错误码、提示开合、两个显隐/强度子实例；只在提交边界瞬时读取密码，快照不含密码或匹配词 |
 | `AdminSetupPage / AdminSetupForm` | 原 state/onSubmit/onCheck 或 `AdminSetupController` | 旧权威初始化状态与提交/核对合同保留，新增 form 聚合含用户名错误与密码字段展示子模型；不新建 auth/API |
@@ -273,7 +273,7 @@ value 字符串受控，clearLabel 默认 Clear search；可选 onClear、onSubm
 
 ## 密码输入
 
-普通 `PasswordInput` 基于公开 InputGroup（Input、前后缀和显隐按钮）；`PasswordStrengthInput` 在同一个普通密码输入 owner 下仅增加一条连续强度条。React提供相同能力，不请求密码策略 API，不允许项目替换长度或评分规则。
+普通 `PasswordInput` 基于公开 InputGroup（Input、前后缀和显隐按钮）；`PasswordStrengthInput` 在同一个普通密码输入 owner 下仅增加一条连续强度条。React提供相同能力，不请求密码策略 API，固定长度规则由公共校验拥有，可选评分回调只提供建议。
 
 新设密码固定为 **6–32 个 Unicode 码点**，不修剪、归一化或截断；拒绝孤立 UTF-16 代理项。中文、emoji 和组合符号按实际码点计数，不使用浏览器 UTF-16 minlength/maxlength 代替。强度低或估算器不可用都不增加提交门禁，服务端继续独立执行相同规则。
 
@@ -304,19 +304,30 @@ pagehide、clear、reset 与卸载/destroy 清空所属非受控输入及派生�
 
 #### 本地密码强度建议
 
-PasswordStrengthInput 与 NewPasswordFields 默认在输入暂停 150 ms 后本地估算。输入下方仅有一条 4px 连续 meter，以实际评分 0–4 映射五档 20/40/60/80/100% 长度；弱、中、强分别映射现有 error、warning、success 语义颜色。idle/loading/unavailable 保留空轨道，不画假分；无可见等待文案、规则段、字符计数或改进建议。meter 的 min=0/max=5，ready 时 now=score+1，aria-valuetext 与 sr-only live status 提供实际强弱或未就绪状态。使用 MIT 的 @zxcvbn-ts/core 4.2.0、language-common 4.1.3、language-en 4.1.1，识别常见密码、顺序、重复、键盘及常见个人信息模式，不按字符种类自行打分。固定映射：评分 0–1 为弱，2 为中，3–4 为强。强度仅供参考，任何分数都不参与 readValidatedPassword 的提交许可；强制规则固定为 6–32 个 Unicode 码点。
+4.2.46 起默认只做轻量正则与长度提示，不附带密码字典、zxcvbn、Worker、Blob 或动态资源。普通登录继续使用 PasswordInput，不做新密码评分。PasswordStrengthInput / NewPasswordFields 的强度是**基础组合提示，不是抗猜测、熵或泄露检测**；“强”仅表示满足这套基础提示，不能据此保证安全。此前词典估算结果不作为兼容基准，公共 score/state/level 和 meter 接口保持。所有分数都不参与 readValidatedPassword 的提交许可，强制规则仍为 6–32 个 Unicode 码点，后端约束与认证不变。
 
-引擎和 common/en 字典在包构建时编成自包含固定 worker 源码，以动态 import 首次输入时懒加载。库在本地 Blob worker 中执行，ready 后才读取最新输入并通过本地 postMessage 发送；主线程不解析字典或执行评分，评分实例只存在于单次 worker 调用中。宿主无需 worker 打包插件；正常 ESM 动态导入拆包保留懒加载，显式关闭代码拆分的 bundler 会把模块合并进初始脚本。正式独立 tarball 消费者分别记录引擎与初始静态 JS 图体积，精确结果写入 strength-bundle.json；初始图不得包含引擎和字典。构建产物体积不等于浏览器运行时延迟，入口静态依赖图与既有全库体积门禁继续检查。
+输入暂停150ms后在本地计算，最多256个UTF-16单元，超出不可评估且不截断密码。空值idle；不足8码点或完整重复片段为0分；其余从1分起，达到12码点、16码点各加1分，小写/大写/数字/非字母数字符号中至少3组再加1分，最多4分。组别采用Unicode正则；这不是字符种类必填规则。0–1弱、2中、3–4强。无常见词/人名/键盘/泄露字典，因此例如 Password1! 可能获得中档基础提示，不可将其解释为已抵抗字典攻击。
 
-首次离线、Worker 不可用、打包产物不可加载或宿主 CSP 禁止 blob worker 时，保留空轨道，可访问状态为“暂不可评估”，不影响提交。库不修改、不要求放宽 worker-src/CSP，不会假称强。字典以常见模式和英文为主，对其他语言、人名、产品上下文及新泄露密码的识别有限；“强”不保证安全。估算为限制同步 CPU 工作只处理最多 256 个 UTF-16 单元，超出显示无法评估，不截断密码，也不改变服务端策略校验。复杂 Unicode 的强制长度仍按上面的码点规则。
+输入下方保持单条4px等厚meter，0–4分映射五档20/40/60/80/100%。idle/loading/unavailable空轨道，不画假分；无可见规则段、字符计数或改进建议。meter min=0/max=5，ready now=score+1，aria-valuetext与sr-only状态提供真实提示；labels.strengthLabel/strengthSummary继续可翻译。默认零网络、零Worker，单文件打包也不会夹带高级评分资源，无须消费者拆包或复制资源。
 
-runtime/password 提供纯 TypeScript createPasswordStrengthController({readPassword,onChange})、PasswordStrengthState 和 getPasswordStrengthSummary。控制器 refresh/clear/destroy 只回传状态、评分、等级和提示分类，不返回密码、匹配词或猜测轨迹。单框直接使用 PasswordStrengthInput，密码确认组合使用 NewPasswordFields，无需另建评分 owner。NewPasswordLabels.strengthLabel 翻译 meter 名称，strengthSummary 翻译可访问状态；labels 不改变评分与校验。
+#### 可选宿主密码评分
 
-输入不上传、不进入 URL、日志或 storage，不使用远程泄露查询或网络 matcher。读取输入发生在引擎加载完成后，异步等待不保存密码快照；每次输入、clear 和卸载使旧 generation 失效，迟到加载或评分不能覆盖当前提示；卸载通过 AbortSignal 立即终止正在加载或工作的 worker。pagehide/clear/destroy 同步清除输入和显示状态。评分不用于旧账号登录密码限制。字典可缓存，但每次估算使用独立 Factory，避免其内部 scoring 缓存长期引用最近密码；JavaScript 字符串无法承诺物理内存清零。
+`PasswordStrengthInput`、`NewPasswordFields` 以及对应 Controller options 可选 `evaluateStrength: PasswordStrengthEvaluator`，签名 `(password, {signal}) => {score:0|1|2|3|4, hint?:PasswordStrengthHint} | Promise<...>`。未注入时使用上面的基础规则。回调是明确的密码读取边界：宿主可用既有 HTTPService / 后端实现按需评分；xui不规定或探测业务URL、不新增认证/HTTP owner、不自带远程评分服务，也不在config.json存函数或密码。示例：
 
-实现依据：[zxcvbn-ts 指南](https://zxcvbn-ts.github.io/zxcvbn/guide/)、[懒加载](https://zxcvbn-ts.github.io/zxcvbn/guide/lazy-loading/)、[4.x Factory](https://zxcvbn-ts.github.io/zxcvbn/guide/migration/)。回归覆盖常见/重复/顺序模式、有效弱密码允许提交、懒加载隔离、离线和迟到结果。浏览器应记录实际输入事件、LongTask 与计时器延迟，不能由构建或 worker 结构推断响应性能；实际执行范围见 [VALIDATION.md](VALIDATION.md)。
+```tsx
+const evaluateStrength: PasswordStrengthEvaluator = async (password, {signal}) => {
+  // appPasswordApi 是宿主现有的受保护API；须复用公共HTTP/认证，不做自动重试。
+  const result = await appPasswordApi.evaluate({password}, {signal});
+  return {score: result.score, hint: result.hint};
+};
+<NewPasswordFields evaluateStrength={evaluateStrength} evaluationTimeoutMs={15000} />
+```
 
-已移除无用的 count、strength、strengthAdvice 文案入口与 getPasswordStrengthMessage；没有第二份建议/计数布局或 Disclosure owner。清空保留空轨道，丢弃上次评分；短错误文案的 length/tooShort/tooLong/invalidUnicode/confirmationMismatch 入口继续可翻译。
+回调引用应稳定，可用模块函数/useCallback，或在已有Controller上update；不能每次渲染生成新回调以反复取消工作。注入Controller时不再给View传这两项初始化配置。完整管理员初始化页可对已有 `controller.form.passwordFields.update({evaluateStrength})` 接线；改密表单使用 `controller.newPassword.update({evaluateStrength})`，保留同一个提交/认证owner，不复制页面或新建并行评分Controller。
+
+只接收plain object的score/hint；非法分数/类别、访问器、额外字段、异常、超时均为unavailable，安全状态不保留异常正文或密码，也不自动回退显示本地成功评分。evaluationTimeoutMs默认15000，支持1–60000整数毫秒，从150ms防抖后实际评估开始计时。输入变化、clear、reader释放、pagehide、卸载/destroy、替换评分回调/预算均取消旧代；迟到结果不发布，完成后结束signal和计时器。更换评分回调只清提示/取消，不自动重发密码；下次输入或宿主显式refresh才再评分。预算到期结束等待，不自动重试；宿主必须把signal传给实际请求。远端忽略signal时xui只能隔离迟到结果，不能撤回已发送数据。
+
+只有显式注入的宿主回调可把密码发给宿主指定后端，使用受控的保密传输和现有认证；不进URL、日志、storage、全局状态或响应正文，不接第三方评分/泄露查询。提交和密码清理逻辑保持，远端结果仍是建议，不能代替服务端密码约束。JavaScript字符串不能承诺物理内存清零。默认基础提示、注入API的成功/失败/取消和正式包体积分别验收，见[VALIDATION](VALIDATION.md)。
 
 ## 成组选项
 

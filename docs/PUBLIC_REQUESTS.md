@@ -1,5 +1,9 @@
 # 公共能力维护清单
 
+## 密码强度体积与按需评分（4.2.46）
+
+Quant实测旧4.2.44主脚本中password-strength-worker-source贡献1,662,597字节；核对最新4.2.45仍内嵌同一词典，单文件构建不会将动态import分离。本轮按用户后续明确选择删除字典/Worker/高级默认评估，改为轻量正则提示，并增加可选宿主evaluateStrength API回调。默认零评分请求，不要求消费项目拆包或部署评分服务；已有认证和服务端密码校验保持。回调只返回有界score/hint并支持取消、超时、代次清理；实际端点由宿主定义。固定包体积及验证见[VALIDATION](VALIDATION.md)，不等于Quant已升级或线上延迟已改善。
+
 ## 认证感知 SSE 读取（4.2.45）
 
 Argus基于4.2.35/c8fdb55请求GET /api/events/live；核对最新4.2.44/da780e3仍只有已消费payload，无公开流入口。本轮在同一HttpClient增加readEvents与公开类型，复用HTTP/当前access租约，UTF8/多行/大小预算/取消/错误投影统一处理；无token暴露、自动刷新/重连/写入重放。解析与生命周期见[正式合同](PUBLIC_API.md#sse-读取4245)，产品按SSE-001～008接入。仅改xui，未修改或验收Argus/其事件后端，固定产物与本轮验证见[VALIDATION](VALIDATION.md)。

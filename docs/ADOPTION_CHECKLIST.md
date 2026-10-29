@@ -385,7 +385,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | STATE-OWNER-002 | 默认模式使用受控值 | 用户请求不提前发布未确认值；外部确认不触发回调循环，default仅初始化 | 拒绝/接受请求与动态值更新计数 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | STATE-OWNER-003 | 注入或替换Controller | 初始化/受控/callback互斥；实例切换退订旧实例，不destroy注入者、不覆盖其配置；DOM/焦点连续 | 正/负类型、JS冲突、订阅计数、旧实例动作与焦点 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | STATE-OWNER-004 | 默认实例生命周期或异步操作 | StrictMode不重复请求，不在effect replay永久销毁；真实退出取消所属等待并隔离迟到结果 | replay/卸载/切换、请求次数及迟到操作 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
-| STATE-OWNER-005 | 登录、密码、初始化、一次性Key | 秘密只在DOM/瞬时提交边界，安全快照无密码/匹配词/secret，退出清理；现有AuthClient与权限owner不替换 | 快照检查、扩展await前后读取及退出DOM/worker清理 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
+| STATE-OWNER-005 | 登录、密码、初始化、一次性Key | 秘密只在DOM/瞬时提交边界，安全快照无密码/匹配词/secret，退出清理；现有AuthClient与权限owner不替换 | 快照检查、扩展await前后读取及退出DOM/评分清理 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | STATE-OWNER-006 | ApiKey/业务日志/结构化日志View | 旧controller仅service；完整注入使用viewController且与service/options初始化互斥。默认依赖显式adapter/loader；展示草稿/客户端页不复制服务查询 | 三模式、请求次数、借用/所属销毁、取消/快照/刷新保行 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | STATE-OWNER-007 | 导航、选择与Overlay组合 | 同一导航树/选择组/Overlay共享所属语义实例；独立导航范围按NAV-OWNER逐项隔离，View/peer执行实际键盘/焦点/portal；路由、分组页、active事实归宿主 | 组合实例/受控拒绝、disabled、Escape和同树焦点 | [状态Controller](COMPONENTS.md#状态所有权与-controller-模式) |
 | AUTH-UI-001 | 采用完整登录、初始化或纯认证布局 | 统一使用AuthPage及其组合；品牌位于卡片外，title/description属于卡片内标题组，不用宿主DOM/CSS复刻 | 实际props/组件映射与三主题桌面/窄屏截图 | [认证布局](COMPONENTS.md#认证布局-slot-归属) |
@@ -902,3 +902,13 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | SSE-006 | 长连接/背压/超限 | connect/idle预算、显式0、行/块上限；超限结束不截断派发，无无界应用队列 | 边界字节/空闲/回调阻塞/清理 | [SSE](PUBLIC_API.md#sse-读取4245) |
 | SSE-007 | EOF/断线后恢复 | 无隐式重连/retry执行；显式Last-Event-ID仅在后端保证下使用；快照/去重/丢失窗口由领域owner披露 | 连前/断后请求数与服务端恢复合同 | [SSE](PUBLIC_API.md#sse-读取4245) |
 | SSE-008 | 产品完成声明 | 使用独立正式包与实际页面/事件API；库mock不替代产品验收；历史补发不触发真实到达动画 | 固定SHA/generation、产品请求/事件时序 | [SSE](PUBLIC_API.md#sse-读取4245) |
+
+## 密码强度提示与可选宿主评分
+
+| ID | 适用范围 | 必须满足 | 证据 | 合同 |
+|---|---|---|---|---|
+| PASSWORD-STRENGTH-001 | 使用新密码强度条 | 默认只做基础正则/长度提示，无词典、Worker或额外资源；默认无评分网络请求；普通登录用PasswordInput | 单文件和拆包metafile/原始gzip字节、首屏及首次输入Network | [组件合同](COMPONENTS.md#本地密码强度建议) |
+| PASSWORD-STRENGTH-002 | 解读或显示评分 | 0–4为基础提示，不是抗猜测/泄露事实；分数不拦截6–32码点及确认校验，不把旧词典分数当兼容要求 | 有效弱密码/Unicode/确认不一致及后端约束验收 | [公开接口](PUBLIC_API.md#密码强度与可选评分4246) |
+| PASSWORD-STRENGTH-003 | 显式接宿主API | 仅evaluateStrength回调；稳定引用，原HTTP/认证owner，明确可信宿主URL；不新增通用远端/第三方评分、secret日志或缓存 | 实际请求次数、仅提交作用域持有密码、安全state及异常检查 | [回调合同](COMPONENTS.md#可选宿主密码评分) |
+| PASSWORD-STRENGTH-004 | 使用评分回调 | 150ms防抖、有限预算；输入/清空/退出取消，迟到隔离；回调更换不重放；异常/非法响应/超时不可评估且不自动回退成功 | 真实AbortSignal传播、挂起/迟到/失败/超时与恢复 | [回调合同](COMPONENTS.md#可选宿主密码评分) |
+| PASSWORD-STRENGTH-005 | 在完整初始化/改密页接线 | 通过同一Controller的passwordFields/newPassword更新配置；不重建认证/提交owner、不重复传View初始化参数 | 同Controller/DOM identity、密码清理、零重复提交及类型检查 | [回调合同](COMPONENTS.md#可选宿主密码评分) |
