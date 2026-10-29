@@ -889,3 +889,16 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 | CAROUSEL-002 | 切换与内容 | 前后/指示器/键盘/RTL/触屏边界准确；非当前内容不可聚焦但草稿和高度保留；独立动作不误切换 | 浏览器焦点、inert/ARIA、内容节点和几何 | [走马灯](COMPONENTS.md#面包屑与走马灯4241) |
 | CAROUSEL-003 | 自动播放和生命周期 | 默认关闭；显式开始、焦点停止、悬停/隐藏暂停、减少动态效果停播；无控件无时钟；退出/销毁零旧计时动作 | 假时钟或有界真实时钟、媒体/焦点/卸载记录 | [走马灯](COMPONENTS.md#面包屑与走马灯4241) |
 | CAROUSEL-004 | 状态和视觉 | loading/空/错误/刷新保留内容与disabled各自准确；labels热更新，CSS正式分片，主题/窄屏/200%和长中文可达 | 正式包独立消费与真实截图/操作 | [走马灯](COMPONENTS.md#面包屑与走马灯4241) |
+
+### SSE 读取逐项检查
+
+| ID | 适用场景 | 验收要求 | 证据 | 合同 |
+| --- | --- | --- | --- | --- |
+| SSE-001 | 页面使用事件流 | 原HTTPService/readEvents，原Auth/protectedPaths；唯一owner，无token getter/手工session头/第二请求层 | 正式exports/types、实例与请求链 | [SSE](PUBLIC_API.md#sse-读取4245) |
+| SSE-002 | 启动session流 | 已确认currentUser后显式读取；只借当前access；缺失/到期零网络，不为连接再login/refresh | 请求方法/头/次数、同Auth状态 | [SSE](PUBLIC_API.md#sse-读取4245) |
+| SSE-003 | SSE分片/领域投影 | UTF8/CRLF/多行data、event/id语义正确；project真实校验，onEvent背压、异步后查signal | 实际fetch分片、顺序、原值、EOF | [SSE](PUBLIC_API.md#sse-读取4245) |
+| SSE-004 | 401/403/错误DTO/网络 | 401清当前身份不刷新/重放；403不退出；HTTP事实不被解析错误掩盖，无秘密回显；API Key流401归独立owner | HTTP/业务码、请求计数、Auth状态 | [SSE](PUBLIC_API.md#sse-读取4245) |
+| SSE-005 | 卸载/换范围/退出/身份或access变化 | AbortSignal及原Auth失效立即取消reader/回调；迟到不回流；计时器监听释放 | 真实fetch取消、silent流、到期与代次 | [SSE](PUBLIC_API.md#sse-读取4245) |
+| SSE-006 | 长连接/背压/超限 | connect/idle预算、显式0、行/块上限；超限结束不截断派发，无无界应用队列 | 边界字节/空闲/回调阻塞/清理 | [SSE](PUBLIC_API.md#sse-读取4245) |
+| SSE-007 | EOF/断线后恢复 | 无隐式重连/retry执行；显式Last-Event-ID仅在后端保证下使用；快照/去重/丢失窗口由领域owner披露 | 连前/断后请求数与服务端恢复合同 | [SSE](PUBLIC_API.md#sse-读取4245) |
+| SSE-008 | 产品完成声明 | 使用独立正式包与实际页面/事件API；库mock不替代产品验收；历史补发不触发真实到达动画 | 固定SHA/generation、产品请求/事件时序 | [SSE](PUBLIC_API.md#sse-读取4245) |

@@ -109,7 +109,8 @@ export function buildAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncodi
   const errorFor=(operation?:AuthOperation)=>new HttpError('cancel',{attempts:0,endpointId:operation?`auth.${operation}`:undefined});
   const normalize=(error:unknown,operation:AuthOperation)=>isHttpError(error)?new HttpError(error.kind,error.metadata):new HttpError('parse',{attempts:0,endpointId:`auth.${operation}`});
   const emit=(patch:Partial<AuthState>)=>{state=Object.freeze({...state,...patch});for(const listener of Array.from(listeners))if(listeners.has(listener))try{listener();}catch{/* Views cannot change credential handling. */}};
-  const clear=()=>{access=undefined;generation++;};
+  const accessWatchers=new Set<()=>void>();
+  const clear=()=>{access=undefined;generation++;for(const stop of [...accessWatchers])stop();};
   const current=(revision:number)=>!dead&&revision===version;
   const invalidate=(status:AuthState['status'],error:HttpError|null=null)=>{version++;clear();sessionController?.abort();refreshController?.abort();active?.controller.abort();active=undefined;emit({status,user:null,busy:null,error});};
   const coordination=createAuthCoordination(inspectHttp(http)!.origin,event=>{
@@ -189,6 +190,12 @@ export function buildAuthClient({http,timeoutMs=15000,protectedPaths=[],idEncodi
       return undefined;
     },acquire,
     current:observed=>!dead&&!active&&access?.generation===observed&&access.expiry>Date.now(),
+    watchAccess(observed,invalidated){
+      if(dead||active||access?.generation!==observed||access.expiry<=Date.now()){invalidated();return()=>{};}
+      let timer:ReturnType<typeof setTimeout>;const stop=()=>{clearTimeout(timer);accessWatchers.delete(stop);invalidated();};
+      const schedule=()=>{if(access?.generation!==observed||access.expiry<=Date.now())stop();else timer=setTimeout(schedule,Math.min(access.expiry-Date.now(),2147483647));};schedule();accessWatchers.add(stop);
+      return()=>{clearTimeout(timer);accessWatchers.delete(stop);};
+    },
     unauthorized(observed,currentOnly){if(dead||!access||access.generation!==observed||active)return;if(currentOnly){bootstrapped=true;invalidate('anonymous');return;}clear();void recover().catch(()=>{});},
     dispose(){client.destroy();},
   });

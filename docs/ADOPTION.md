@@ -1,5 +1,7 @@
 # xui 通用组件接入手册
 
+4.2.45的SSE定向接入复用HTTPService/HttpClient.readEvents及同一Auth owner，按SSE-001～008核对当前access、取消/到期、真实分片、错误与显式重连窗口；不读取token、不新增EventSource/fetch认证适配层。只验实际使用事件流的页面，详见[公开SSE合同](PUBLIC_API.md#sse-读取4245)。
+
 ## 内置页面对照 Demo（4.2.41）
 
 运行 `pnpm build`、`pnpm test:consumer` 和 `pnpm preview` 后，打开 `http://127.0.0.1:4173/pages-react/?page=api-key&mode=light`。统一导航的“内置页面”包含 API Key、业务日志、结构化错误日志、模型配置、登录、管理员初始化和修改密码；“基础组件”包含按钮、表单与选择（含日期时间）、状态与进度、Tabs 与容器、弹窗与浮层、菜单、文字与媒体、表格、面包屑、走马灯、图表和上传十二组；通过顶栏切换主题，通过侧栏底部调整阅读比例、重置当前演示或独立打开页面。演示源为 [pages-react](../examples/pages-react/app.tsx)，复用各独立示例和同一批正式包，嵌入时只省略重复的示例 Shell，不复制公共页面实现。主题/比例更新仅发送展示偏好，不重载当前表单或传递认证数据。

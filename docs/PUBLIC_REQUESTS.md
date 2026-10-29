@@ -1,5 +1,9 @@
 # 公共能力维护清单
 
+## 认证感知 SSE 读取（4.2.45）
+
+Argus基于4.2.35/c8fdb55请求GET /api/events/live；核对最新4.2.44/da780e3仍只有已消费payload，无公开流入口。本轮在同一HttpClient增加readEvents与公开类型，复用HTTP/当前access租约，UTF8/多行/大小预算/取消/错误投影统一处理；无token暴露、自动刷新/重连/写入重放。解析与生命周期见[正式合同](PUBLIC_API.md#sse-读取4245)，产品按SSE-001～008接入。仅改xui，未修改或验收Argus/其事件后端，固定产物与本轮验证见[VALIDATION](VALIDATION.md)。
+
 ## ModelProfile 具体失败原因与版本冲突（4.2.44）
 
 AgReady消费正式4.2.42/60ad071反馈：测试HTTP200且passed:false的安全summary未用于Toast；Test/Catalog/Save的409/40900只表现为通用操作错误。最新4.2.43仍有同样公开缺口，本轮只修改xui。4.2.44复用同一Controller/Client/HTTP：失败Toast与自动展开的持续result使用正式summary，成功Toast本地化；新增可选errorReason与五个可翻译反馈key，不透传原始Error或HTTP.message。冲突保留草稿、CAS、六星号与Headers编辑事实，保存冲突不是unknown；仅用户显式重读覆盖，网络/超时/取消的保存未知边界保持。具体接口、默认文案与兼容性见[随包README](../packages/ui-react/model-profile/README.md#模型错误反馈4244)。

@@ -147,7 +147,9 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
         dependencies[name] = config.devDependencies[name];
     await writeFile(`${cwd}/package.json`, JSON.stringify({ name: `xui-${kind}-consumer`, private: true, type: 'module', dependencies }, null, 2));
     // npm installs real packed files in a standalone directory, never workspace aliases.
-    execFileSync('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', '--cache', '/tmp/xui-npm-cache'], { cwd, stdio: 'inherit' });
+    // Keep this generated cache under xui's ownership; shared /tmp cache entries
+    // may disappear while another install is consuming their content index.
+    execFileSync('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', '--cache', resolve('.consumers/npm-cache')], { cwd, stdio: 'inherit' });
     await cp(`examples/${kind}`, cwd, { recursive: true });
     await mkdir(`${cwd}/shared`,{recursive:true});
     await copyFile('examples/shared/bootstrap-browser.ts',`${cwd}/shared/bootstrap-browser.ts`);
@@ -555,6 +557,15 @@ await writeFile('.consumers/latest.json', JSON.stringify({ runDirectory }, null,
     await writeFile(`${httpOutput}/metafile.json`, JSON.stringify(httpBuild.metafile, null, 2));
     execFileSync('node', [`${root}/node_modules/typescript/bin/tsc`, '--preserveSymlinks','--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--moduleResolution', 'bundler', '--module', 'esnext', '--jsx', 'react-jsx', 'http/app.tsx'], { cwd, stdio: 'inherit' });
     const keys = resolve(cwd, 'api-key'), keysOutput = resolve(`dist/api-key-${kind}`);
+    {
+      const input=resolve(cwd,'http-events'),output=resolve(`dist/http-events-${kind}`);await cp('examples/http-events-react',input,{recursive:true});
+      await copyFile('tests/fixtures/http-sse-types.tsx',`${cwd}/http-sse-types.tsx`);
+      const built=await build({entryPoints:[`${input}/app.tsx`],outdir:output,bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+      assert(Object.keys(built.metafile.inputs).every(file=>resolve(file).startsWith(`${cwd}/`)),'SSE consumer escaped its installed packages');
+      assert(!Object.keys(built.metafile.inputs).some(file=>file.endsWith('.css')&&!file.includes('/@coffeehc/xui-theme/')),'SSE consumer depends on private CSS');
+      await copyFile(`${input}/index.html`,`${output}/index.html`);await copyFile(require.resolve('@coffeehc/xui-runtime/init.js'),`${output}/theme-init.js`);await writeFile(`${output}/metafile.json`,JSON.stringify(built.metafile,null,2));
+      execFileSync('node',[`${root}/node_modules/typescript/bin/tsc`,'--preserveSymlinks','--noEmit','--strict','--skipLibCheck','--target','es2022','--moduleResolution','bundler','--module','esnext','--jsx','react-jsx','http-events/app.tsx','http-sse-types.tsx'],{cwd,stdio:'inherit'});
+    }
     await cp(`examples/api-key-${kind}`, keys, { recursive: true });
     for (const file of ['api-key-model.ts', 'api-key-labels.json','api-key-showcase.ts','api-key-http-model.ts'])
         await copyFile(`examples/shared/${file}`, `${cwd}/shared/${file}`);

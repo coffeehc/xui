@@ -1865,3 +1865,7 @@ import '@coffeehc/xui-theme/style.css';
 ```
 
 完整组合和适用状态见[统一 demo 源码](../examples/components-react/navigation-media.tsx)；图表沿用[公共图表](#公共图表)与同一 demo 导航。只读属于内容字段；未取得的数据路径不传入虚构条目。不能为了轮播获取数据而新增网络请求 owner。
+
+### SSE 事件读取与页面状态
+
+事件页沿用既有Controller/Resource及DataRegion、LoadingState、Toast等公共slot，不新增SSE专用皮肤或事件状态owner。HTTPService.readEvents只管单连接传输、协议与取消，生命周期/领域投影由宿主按[公共SSE合同](PUBLIC_API.md#sse-读取4245)接线；示例/http-events-react/展示真实分片、停止、401/403及超限。实际大屏仅在已确认实时事件到达时点亮，历史补发、重连或样例动画不能冒充真实事件。

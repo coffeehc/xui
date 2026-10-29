@@ -331,7 +331,45 @@ AjaxResponse 的 success 必须为 boolean，message/request_id 必须为 string
 
 响应为 payload/status/code/requestId/bodyRequestId/headerRequestId/redirect；非空 body id 优先 header，两者都保留，不伪造 traceId。redirect 只是数据，不触发应用导航。成功响应headers仅为冻结的contentType/contentDisposition/contentLength，超过长度或含控制字符的值为null；没有原始Response、完整Headers或请求对象，Authorization/Set-Cookie/WWW-Authenticate不会暴露。领域校验只在一次声明的 endpoint adapter；标准请求不把 null 改成其他字段。
 
-requestDownload默认120秒与detectAjaxErrors:true，保留 HTTP 200 Go 失败 envelope 检测；HttpClient 的 blob detectAjaxErrors 与默认 JSON AjaxResponse 复用同一 success 判定，合法 success=true/code=0/1/2 等仍返回原始 Blob，并在 HttpResponse 保留 code/request id/redirect 元数据，不拆包成 payload。success=false 的合法 envelope 是业务失败；明确attachment的JSON文件保持文件，不猜为错误。resolveDownloadFileName优先UTF-8 filename*，处理引号/重复参数/无效编码并清理路径、控制字符与方向控制字符；不是文件内容安全检查。saveDownload只在宿主明确用户动作中调用，临时link和URL释放且不改焦点。下载不是JS读取认证头的理由。无流式/SSE/WebSocket/protobuf、上传进度、断点续传或文件安全校验支持声明，这些协议另行明确接入。
+requestDownload默认120秒与detectAjaxErrors:true，保留 HTTP 200 Go 失败 envelope 检测；HttpClient 的 blob detectAjaxErrors 与默认 JSON AjaxResponse 复用同一 success 判定，合法 success=true/code=0/1/2 等仍返回原始 Blob，并在 HttpResponse 保留 code/request id/redirect 元数据，不拆包成 payload。success=false 的合法 envelope 是业务失败；明确attachment的JSON文件保持文件，不猜为错误。resolveDownloadFileName优先UTF-8 filename*，处理引号/重复参数/无效编码并清理路径、控制字符与方向控制字符；不是文件内容安全检查。saveDownload只在宿主明确用户动作中调用，临时link和URL释放且不改焦点。下载不是JS读取认证头的理由。SSE使用下方readEvents入口，不把blob下载当事件流；未声明通用原始stream/WebSocket/protobuf、上传进度、断点续传或文件安全校验支持。
+
+### SSE 读取（4.2.45）
+
+同一`HttpClient` / `HTTPService.readEvents(path, options): Promise<void>`提供单次GET的SSE读取；`ResponseMode`与`request()`的完整payload语义不变。公开`ServerSentEvent`/`SseReadOptions`从`@coffeehc/xui-runtime/http`导入。没有新的传输/认证Service或token getter。原调用不变；手写结构类型的HttpClient实现需补齐新增方法，不能用空实现冒充支持；由XuiServices返回的正式客户端自动获得该能力。解析参考[WHATWG SSE](https://html.spec.whatwg.org/multipage/server-sent-events.html#parsing-an-event-stream)，与原生EventSource的自动恢复行为有意区别：**不自动重连、不执行retry字段、不自动发送上次ID、不保证补发**。
+
+```ts
+import {HTTPService, type ServerSentEvent} from '@coffeehc/xui-runtime/http';
+import {AuthService} from '@coffeehc/xui-runtime/auth';
+
+await AuthService.currentUser(); // 宿主既有会话初始化边界，不是每次连接再登录。
+const stop = new AbortController();
+const completed = HTTPService.readEvents('/api/events/live', {
+  signal: stop.signal,
+  endpointId: 'events.live',
+  project(frame: ServerSentEvent) {
+    const value: unknown = JSON.parse(frame.data);
+    return validateEventRecord(value); // 宿主按真实领域合同校验，不只做类型断言。
+  },
+  onEvent(record, signal) {
+    if (!signal.aborted) applyDomainEvent(record);
+  },
+});
+// 页面卸载、对象/权限变化：stop.abort()；统一处理 completed 的完成/错误。
+```
+
+仅onEvent必填；没有project时收到冻结的`{event,id,data}`原始文本，声明不同T时必须提供同步project。多个data字段以LF连接，空data可派发；默认event为message，id跨块保留、空id清除、含NUL的id忽略。支持分片UTF-8、首个BOM及CR/LF/CRLF；注释/未知字段不派发，未以空行结束的最后事件丢弃。不猜JSON、不通用去重或合并，不把历史重放当实时活动。
+
+连接开始执行header provider、同源和认证检查；请求固定GET/Accept:text/event-stream、credentials:omit、cache:no-store、redirect:error，无body/重试。options不能设置method/body/json/retry/response/adapter/credentials/redirect；支持headers、signal、endpointId、errorAdapter和显式lastEventId。Last-Event-ID按UTF-8字节发送，不接受控制字符或超过8192字节的值；仅宿主确认服务器支持恢复协议后传入，不用前端时间戳掩盖丢失窗口。
+
+onOpen(context, signal)在200且有效text/event-stream/body时调用，context只含安全HTTP元数据。204正常停止，不调用onOpen/onEvent。非2xx复用原HTTP状态/错误DTO投影与安全错误；错误body在读取过程中限制65536字节，保留401/403事实及readFailure。200 JSON失败AjaxResponse仍为business；其他错误MIME/DTO/投影/消费回调失败为parse。读流/fetch故障为network，取消为cancel，等待预算耗尽为timeout；不透传原生异常、URL、正文或凭据。错误不撤回已经消费的事件。
+
+connectTimeoutMs包含header provider、fetch握手和错误正文，默认采用HTTP timeoutMs或30000毫秒；有效200握手后改用idleTimeoutMs（默认60000毫秒，显式0关闭）。每个收到的chunk重置空闲预算，注释心跳有效；等待消费回调也计入空闲预算。onEvent按顺序await形成背压，没有应用层无界队列；回调已产生的宿主副作用无法撤销，异步工作await后须再检查signal。Promise仅在EOF/204时resolve；取消/错误reject，退出时signal终止并释放reader、定时器和监听。
+
+maxLineBytes默认65536，maxEventBytes默认1048576，均为1～16777216整数；前者为每逻辑行的UTF-8字节（不含CR/LF），后者为每块所有非空行字节加每行一个分隔符，包含注释与未知字段。超限安全失败并取消body，不截断后继续派发；不额外缓冲整个响应。
+
+会话路径仍须在原Auth的protectedPaths声明。SSE只借用当前有效access：缺少/到期时零网络拒绝，不发refresh/session/login；真实401交同owner清当前身份，流本身不触发refresh或重放，403不退出。流绑定access代次；logout/login/改密/expire/cancel/destroy、跨tab身份事件、access轮换或到期立即停止，包括正等首字节的连接。宿主按新身份明确启动新读取；普通request原恢复规则不变。不被session保护的API Key订阅沿原HTTP显式headers/provider配置及AbortSignal，不能往session路径叠加第二凭据，不把API Key接入AuthClient。独立API Key/public流可显式unauthorized:ignore，将401归自己的凭据owner；session保护路径禁止ignore，不能绕过当前会话失效。
+
+宿主负责领域校验/权限、快照与增量协调、去重、显式重连及中断窗口披露；UI卸载/换范围必须abort。正式包示例`/http-events-react/`的认证DTO为合成mock、SSE正文使用真实fetch分片，不是Argus后端或产品升级证据。原生fetch bridge仅在提供ReadableStream body且遵守signal/redirect:error时可用，不新增原生UI。
 
 ### 安全错误、认证与重试
 

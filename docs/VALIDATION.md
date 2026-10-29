@@ -1,5 +1,21 @@
 # 验证证据与限制
 
+## 认证感知 SSE 读取（4.2.45，2026-10-29）
+
+Argus以4.2.35/c8fdb55提出GET /api/events/live缺口；只读核对main da780e3/4.2.44没有公开替代入口。本轮只修改xui，同一HttpClient/HTTPService新增readEvents及ServerSentEvent/SseReadOptions类型；原ResponseMode/request/Auth DTO和普通401恢复规则不变。固定GET/omit/no-store/error redirect，无body、自动重连或写入重放。会话流只借当前access，缺少/到期零网络；实际401由同Auth清身份，不触发refresh/session/login，403不退出。私有租约订阅在身份/代次/到期/销毁时即时取消，包括首字节前的挂起；API Key流沿原HTTP头配置，可显式ignore其独立401，不冒充session或吞掉session失效。
+
+协议解析支持UTF8分片/BOM、CR/LF/CRLF、event/id/多行及空data；心跳与未知字段不派发，EOF残块丢弃。Last-Event-ID由宿主显式提供，按UTF8发出并限制8192字节，无隐式恢复承诺。行/块和错误正文在读取期间限额；onEvent顺序await形成背压，connect/idle预算及signal/reader/监听/计时器均有结束边界。不公开access/raw Response，不透传原生错误或敏感URL。宿主继续拥有领域投影、快照/去重/丢失窗口及私有页面清理；新示例在身份失效时清空其合成记录。
+
+最终sourceGeneration：`600ea636c0a1c88d72dfebca9b5042842d9689a429efa06f19d3dede917f7f86`。build、typecheck、446 Token/指纹/依赖图和完整Node **720/720通过，0失败/跳过**；其中SSE专项16组，包含Unicode ID、边界字节/多行/心跳、网络/错误DTO/200失败、预算/阻塞回调、首字节前退出及迟到200/401、access到期/显式轮换、API Key 401归属、最终响应源拒绝与reader清理。没有修改CSS或默认Token值。正式三tarball全部115入口ESM/CSS/types独立消费、类型正负fixture、依赖图/体积门禁通过，React/ReactDOM19.2.8、Base UI1.7.0单实例，未使用packages/src alias或放宽peer/体积预算。
+
+最终Chromium **17/17通过，0失败/跳过/重试/flaky**，包括新增SSE八项、原Bearer三项、原HTTP六项。新示例使用同一真实公共HTTP/Auth，认证DTO为合成mock，事件正文由本地HTTP服务真实分片并经浏览器fetch读取；覆盖多行中文/emoji、ID继承/清空、EOF、停止/退出/expire/卸载的真实请求中止、401/403不意外刷新或重放、超限/网络失败及显式重读。原跨Document恢复与跨tab Web Locks回归仍通过。新示例只在公共Container使用现有宽度/内边距Token，完成独立已安装包的定向重编译/类型检查后完整17项再次通过；已人工查看最终默认主题截图，不冒称新增三主题/缩放视觉验收。
+
+过程单独保留：原型Node因测试fixture最后offset未截到字节长度、持续产出空chunk而中断，修正fixture后定向63/63通过，不算公共实现缺陷。正式消费者前两次分别为npm ERESOLVE与共享/tmp npm缓存内容缺失ENOENT；后续使用xui自有生成缓存，无force/legacy-peer或版本降级；协议复核期间中断过一次安装，最终按当前固定代全部通过。首轮浏览器3通过/2失败/12跳过或中断，失败是测试将下拉显示名当真实value；保留JSON/trace/截图并修正helper参数后完整通过，未以force click或retry绕过。旧代/中断结果不混入最终通过数，详见[过程记录](../.artifacts/http-sse-4.2.45/process-history.json)。
+
+证据：[checks.json](../.artifacts/http-sse-4.2.45/checks.json)、[最终浏览器报告](../.artifacts/http-sse-4.2.45/browser-final.json)、[截图索引](../output/playwright/http-sse-4.2.45/evidence.json)。复现：`pnpm build && pnpm typecheck && pnpm check:tokens && pnpm test:unit && pnpm test:consumer`。浏览器可启动`XUI_PREVIEW_PORT=4187 node scripts/serve.mjs`，再执行`XUI_EVENTS_BASE_URL=http://127.0.0.1:4187 caffeinate -i pnpm exec playwright test tests/browser/http-events.spec.mjs tests/browser/http.spec.mjs tests/browser/auth-bearer.spec.mjs --workers=1 --retries=0`；原4173由既有配置复用/启动。此次任务自有4187已停止，未重启现有4173。提交后按既有archive/archive:verify自动生成并校验manifest、public-api.json、sourceGeneration与SHA256SUMS。
+
+兼容性：现有正式HttpClient调用与唯一Auth owner保持，新增方法无需另建Service；手写结构化HttpClient实现需补齐readEvents，不能用空方法宣称支持。未运行Argus真实后端/事件或API Key订阅、产品升级/部署、真实认证设施、完整browser/watch/cold-start、其他引擎/原生bridge/读屏器/视觉放大矩阵。库mock不能证明产品事件准确到达或可靠补发；未修改Argus及其他项目、未发布npm或tag，未发跨会话消息。
+
 ## 模型具体失败原因与版本冲突（4.2.44，2026-10-27）
 
 基于main 0fd9efc/4.2.43复核后，只修改xui的ModelProfile反馈，三包及规范只递增末位。BaseService安全summary合同引用56cd27a142563acdea71077723e2ba256f2edf8b及7a2688e60fd9f51a23984e0d945c08bbbb9da0e4；本轮不访问真实上游或模型数据。passed:false的正式有界summary用于失败Toast，并自动展开持续result；空白回退，HTML按纯文本显示，成功Toast仍本地化。HTTP502等原始message不透传。新增可选errorReason和五个可翻译labels，旧完整词典/自定义state保持类型兼容。

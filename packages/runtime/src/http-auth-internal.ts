@@ -7,6 +7,8 @@ export interface HttpAuthBinding {
   acquire:(signal:AbortSignal,operation?:AuthOperation,currentOnly?:boolean)=>Promise<AccessLease>;
   unauthorized:(generation:number,currentOnly?:boolean)=>void;
   current:(generation:number)=>boolean;
+  /** Private lease lifetime, including expiry; no secret reaches the subscriber. */
+  watchAccess:(generation:number,invalidated:()=>void)=>()=>void;
   dispose:()=>void;
 }
 interface Registration {origin:string;binding?:HttpAuthBinding}
