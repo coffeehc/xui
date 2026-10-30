@@ -35,7 +35,7 @@ export interface ThemeOptions {
 export const DEFAULT_STORAGE_KEY = 'ui.theme.mode';
 // The default palette starts dark; an explicit saved or controlled preference wins.
 const defaultMode: ThemeMode = 'dark';
-function valid(value: unknown): value is ThemeMode { return value === 'light' || value === 'dark' || value === 'system'; }
+export function validThemeMode(value: unknown): value is ThemeMode { return ['light', 'dark', 'system'].includes(value as string); }
 
 /** Construct once per document. CSS owns colors; this controller owns mode and palette identity. */
 /** Internal factory; public consumers obtain the document/application owner from services.ts. */
@@ -46,9 +46,9 @@ export function buildThemeController(options: ThemeOptions = {}): ThemeControlle
   const controlled = options.mode !== undefined;
   let media: MediaQueryList | undefined;
   try { media = win?.matchMedia?.('(prefers-color-scheme: dark)'); } catch { /* Safe light fallback. */ }
-  let mode: ThemeMode = valid(options.mode) ? options.mode : valid(options.defaultMode) ? options.defaultMode : defaultMode;
+  let mode: ThemeMode = validThemeMode(options.mode) ? options.mode : validThemeMode(options.defaultMode) ? options.defaultMode : defaultMode;
   let preset:ThemePreset=isThemePreset(options.preset)?options.preset:'violet';
-  if (!controlled && options.persist !== false) try { const stored = win?.sessionStorage.getItem(key); if (valid(stored)) mode = stored; } catch { /* Memory choice stays usable. */ }
+  if (!controlled && options.persist !== false) try { const stored = win?.sessionStorage.getItem(key); if (validThemeMode(stored)) mode = stored; } catch { /* Memory choice stays usable. */ }
   let state: Readonly<ThemeState>;
   let destroyed = false;
   let observer:MutationObserver|undefined,observedRoot:Element|null|undefined;
@@ -92,13 +92,13 @@ export function buildThemeController(options: ThemeOptions = {}): ThemeControlle
     getState: () => state,
     setMode(value) {
       if (destroyed) return;
-      const next = valid(value) ? value : defaultMode;
+      const next = validThemeMode(value) ? value : defaultMode;
       if (controlled) { options.onModeChange?.(next); return; }
       mode = next;
       apply();
       if (options.persist !== false) try { win?.sessionStorage.setItem(key,mode); } catch { /* No logging or retry. */ }
     },
-    syncMode(value) { if (!destroyed) { mode = valid(value) ? value : defaultMode; apply(); } },
+    syncMode(value) { if (!destroyed) { mode = validThemeMode(value) ? value : defaultMode; apply(); } },
     setPreset(value) {if(!destroyed){preset=isThemePreset(value)?value:'violet';apply();}},
     isDestroyed: () => destroyed,
     subscribe(listener) { if (destroyed) return () => {}; listeners.add(listener); return () => { listeners.delete(listener); }; },

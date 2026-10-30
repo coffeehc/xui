@@ -5,6 +5,7 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {validateChartData,getChartDomain,scaleChartValue,getPieArcs} from '../packages/runtime/dist/chart.js';
 import {LineChart,BarChart,PieChart} from '../packages/ui-react/dist/chart.js';
 import {getCartesianGeometry,getPiePath} from '../packages/ui-react/dist/chart-geometry.js';
+import {scaleLinear} from '../packages/runtime/node_modules/d3-scale/src/index.js';
 import {interpolateChartFrame} from '../packages/ui-react/dist/chart-motion.js';
 import {getLineReveal} from '../packages/ui-react/dist/chart-line.js';
 const categories=[{id:'a',label:'甲'},{id:'b',label:'乙'}],series=[{id:'s',label:'值',values:[-10,20]}];
@@ -119,4 +120,37 @@ test('monotone interpolation stays within adjacent sample values and step change
  assert.equal(segments,4);
  const step=getCartesianGeometry(categories.slice(0,2),[{id:'s',label:'s',values:[1,4]}],{min:0,max:4,ticks:[0,2,4]},{...plot,width:200,height:100},'step').line([1,4]);
  assert.equal(step,'M50,75L100,75L100,0L150,0');
+});
+
+
+test('numeric-only Cartesian projections exactly retain D3 normalization and interpolation',()=>{
+ const domains=[[0,1],[-10,20],[20,-10],[7,7],[0,0],[-0,0],[1e-310,4e-310],
+  [-Number.MIN_VALUE,Number.MIN_VALUE],[-Number.MAX_VALUE,Number.MAX_VALUE],
+  [Number.MAX_VALUE,-Number.MAX_VALUE],[Number.MAX_VALUE/2,Number.MAX_VALUE],
+  [-.12,.45],[NaN,1],[1,NaN],[Infinity,Infinity]];
+ // Include JS callers outside the TypeScript boundary: runtime first divides
+ // its value, while geometry's ordinary scale preserves D3's null/NaN unknown.
+ const values=[-Infinity,-Number.MAX_VALUE,-10,-Number.MIN_VALUE,-0,0,Number.MIN_VALUE,.25,1,20,Number.MAX_VALUE,Infinity,NaN,null,undefined,'2','bad',false];
+ for(const [min,max] of domains){
+  const domain={min,max,ticks:[]},extent=Math.max(Math.abs(min),Math.abs(max));
+  const normalized=scaleLinear([min/extent,max/extent],[0,1]);
+  for(const value of [...values,min,max])assert.equal(scaleChartValue(value,domain),normalized(value/extent),`runtime ${min}..${max}, ${value}`);
+  for(const height of [0,200,1e-310,Number.MAX_VALUE]){
+   const geometry=getCartesianGeometry(categories,series,domain,{width:500,height,marker:3,band:.8,fill:.9});
+   const direct=scaleLinear([min,max],[height,0]);
+   for(const value of [...values,min,max]){
+    const expected=Number.isFinite(max-min)?direct(value):height*(1-normalized(value/extent));
+    assert.equal(geometry.y(value),expected,`geometry ${min}..${max}, height ${height}, ${value}`);
+   }
+  }
+ }
+ // A deterministic varied sample protects rounding, reversed domains and
+ // extrapolation; this is an exact comparison, not a widened tolerance.
+ for(let index=1;index<=200;index++){
+  const min=Math.sin(index)*10**(index%25-12),max=Math.cos(index)*10**(index%25-12),value=Math.sin(index*3)*10**(index%25-12);
+  const domain={min,max,ticks:[]},extent=Math.max(Math.abs(min),Math.abs(max));
+  assert.equal(scaleChartValue(value,domain),scaleLinear([min/extent,max/extent],[0,1])(value/extent));
+  const geometry=getCartesianGeometry(categories,series,domain,{width:500,height:237.25,marker:3,band:.8,fill:.9});
+  assert.equal(geometry.y(value),scaleLinear([min,max],[237.25,0])(value));
+ }
 });

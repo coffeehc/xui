@@ -1,4 +1,4 @@
-import {scaleBand,scaleLinear,scaleQuantize} from 'd3-scale';
+import {scaleBand,scaleQuantize} from 'd3-scale';
 import {arc,line,symbol,symbolCircle,symbolSquare,curveLinear,curveMonotoneX,curveStep} from 'd3-shape';
 import {scaleChartValue,type ChartCategory,type ChartSeries,type ChartDomain,type PieArc} from '@coffeehc/xui-runtime/chart';
 import type {LineChartCurve} from './chart.js';
@@ -10,7 +10,16 @@ export function getCartesianGeometry(categories:readonly ChartCategory[],series:
  if(curve!=='linear'&&curve!=='monotone'&&curve!=='step')throw new TypeError('LineChart curve must be linear, monotone or step');
  const category=scaleBand(categories.map(item=>item.id),[0,plot.width]);
  const group=scaleBand(series.map(item=>item.id),[0,category.bandwidth()*plot.band]);
- const linear=scaleLinear([domain.min,domain.max],[plot.height,0]);
+ // Numeric D3 bimap semantics: ascending normalization, midpoint for equal
+ // endpoints, unknown for missing/NaN inputs, and no extrapolation clamping.
+ let start=+domain.min,end=+domain.max,low=+plot.height,high=0;
+ if(end<start){[start,end]=[end,start];[low,high]=[high,low];}
+ const span=end-start;
+ const linear=(value:number)=>{
+  if(value==null||Number.isNaN(value=+value))return undefined!;
+  const t=span?(value-start)/span:Number.isNaN(span)?NaN:.5;
+  return low*(1-t)+high*t;
+ };
  // Reuse the runtime's normalized projection only when raw subtraction overflows.
  const y=Number.isFinite(domain.max-domain.min)?linear:(value:number)=>plot.height*(1-scaleChartValue(value,domain));
  const x=(index:number)=>(category(categories[index]?.id)??0)+category.bandwidth()/2;

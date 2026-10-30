@@ -499,3 +499,9 @@ BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 和 Chart 数据视�
 只在使用完整登录页、LanguageSelect或改变i18n偏好时执行LOGIN-I18N-001～006与必要的语言顶栏回归。开启config.i18n.enabled后，登录页读取同一I18nService和localStorage（默认xui.locale），右上角有无框中英文选择；关闭时没有入口，且保持原已存偏好。项目已有语言key可配置storageKey，已有语言owner通过ServicesProvider/服务注入复用，不同时手写另一个登录页状态或存储监听。存储只接受声明列表里的原始locale字符串，不自动迁移i18next等其它格式；存储拒绝时验证内存切换可用。
 
 完整页公共文案自动中英文；旧的硬编码config.labels/description/自定义title仍是显式宿主覆盖，需要宿主随语言更新或改用公开xui.login资源，不能假称库会翻译任意业务文案。不改认证API、请求owner或密码清理，不以key=locale重建Controller/form。按[组件合同](COMPONENTS.md#统一登录语言与语言工具4247)逐项验冷启动/重载、键盘/回焦、草稿及在途请求、跨tab、浅深system/窄屏/阅读和真实浏览器200%。普通AuthPage/管理员初始化/改密没有因此获得全量自动翻译；不扩展无关页面改造。
+
+## 可选统计定向接入（4.2.48）
+
+本轮仅增加 runtime 的 `/analytics` 子入口，不要求现有产品升级或启用。先决定产品独立资源/ID、正式域名、同意/撤回入口和静态事件目录；自部署默认关闭。已有路由在确认导航后调用 `page`，业务成功按结果调用，不能将默认控件点击全局上报。React StrictMode 重复 effect 使用同一 controller 与导航 key。GA 产品数据流关闭增强衡量与额外标签，避免绕过手动白名单；官网统计设置不是产品默认。
+
+按 [公开合同](PUBLIC_API.md#可选使用统计4248) 验证默认关闭、预览不采集、拒绝/撤回（含加载竞态）、重复导航、未知事件/敏感字段、标签失败、真实后台配置及请求。库模拟测试不等于真实消费项目或生产 GA 验收；不把测试访问当自然增长。

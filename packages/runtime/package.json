@@ -1,6 +1,6 @@
 {
   "name": "@coffeehc/xui-runtime",
-  "version": "4.2.47",
+  "version": "4.2.48",
   "private": true,
   "type": "module",
   "files": [
@@ -203,6 +203,10 @@
     "./carousel": {
       "types": "./dist/carousel.d.ts",
       "import": "./dist/carousel.js"
+    },
+    "./analytics": {
+      "types": "./dist/analytics.d.ts",
+      "import": "./dist/analytics.js"
     }
   },
   "types": "./dist/index.d.ts",

@@ -1,7 +1,6 @@
 import {registerService} from './service-resolvers.js';
-import {buildThemeController,type ThemeController,type ThemeOptions} from './theme-service.js';
+import {buildThemeController,validThemeMode,type ThemeController,type ThemeOptions} from './theme-service.js';
 import {browserState,optionsFor,sameValue,type RegistryState} from './service-state.js';
-function validThemeMode(value:unknown):value is ThemeOptions['defaultMode']{return value==='light'||value==='dark'||value==='system';}
 function attachTheme(win:Window,theme:ThemeController){const current=win.xuiTheme;if(current&&!current.isDestroyed()&&current!==theme)throw new Error('The document already has an xui theme owner');win.xuiTheme=theme;}
 export function resolveThemeService(state:RegistryState,win:Window|undefined=state.window):ThemeController{
     const entry=state.theme;

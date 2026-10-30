@@ -1,5 +1,4 @@
 import {extent,nice,ticks,sum} from 'd3-array';
-import {scaleLinear} from 'd3-scale';
 import {pie} from 'd3-shape';
 
 /** Categorical chart data. Values are already projected by the host; no date or unit conversion. */
@@ -46,7 +45,14 @@ export function getChartDomain(series:readonly ChartSeries[]):ChartDomain{
 /** Normalize before subtracting so opposite finite extremes do not overflow. */
 export function scaleChartValue(value:number,domain:ChartDomain):number{
   const extent=Math.max(Math.abs(domain.min),Math.abs(domain.max));
-  return scaleLinear([domain.min/extent,domain.max/extent],[0,1])(value/extent);
+  const x=value/extent;
+  // Preserve D3's unknown result and numeric interpolation arithmetic, without
+  // importing its unused color/string interpolators for a numeric-only range.
+  if(Number.isNaN(x))return undefined!;
+  let start=domain.min/extent,end=domain.max/extent,low=0,high=1;
+  if(end<start){[start,end]=[end,start];[low,high]=[high,low];}
+  const span=end-start,t=span?(x-start)/span:Number.isNaN(span)?NaN:.5;
+  return low*(1-t)+high*t;
 }
 /** Zero slices remain data but have no arc. Normalize before summing to avoid overflow. */
 export function getPieArcs(slices:readonly ChartSlice[]):readonly PieArc[]{

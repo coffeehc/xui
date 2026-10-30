@@ -59,6 +59,7 @@
 
 | import/script | 源码与导出 | 使用合同 | 示例 |
 | --- | --- | --- | --- |
+| `@coffeehc/xui-runtime/analytics` <!-- public-entry: @coffeehc/xui-runtime/analytics --> | [源码](../packages/runtime/src/analytics.ts) | [可选使用统计](#可选使用统计4248) | [类型示例](../tests/fixtures/analytics-types.tsx) |
 | `@coffeehc/xui-runtime/carousel` <!-- public-entry: @coffeehc/xui-runtime/carousel --> | [源码](../packages/runtime/src/carousel.ts) | [面包屑与走马灯](COMPONENTS.md#面包屑与走马灯4241) | [统一示例](../examples/components-react/navigation-media.tsx) |
 | `@coffeehc/xui-runtime` <!-- public-entry: @coffeehc/xui-runtime --> | [源码](../packages/runtime/src/index.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
 | `@coffeehc/xui-runtime/init.js` <!-- public-entry: @coffeehc/xui-runtime/init.js --> | [源码](../packages/runtime/src/init.ts) | [合同](ADOPTION.md#组件层次与扩展原则) | [示例](../examples/foundation-react/app.tsx) |
@@ -1294,3 +1295,44 @@ BaseService 固定提交 `16125c0b62a057922386176f4975eca09672c25b` 的 `llmserv
 `XuiConfig.i18n`新增可选persist（默认true）和storageKey（默认xui.locale），仅启用语言功能时恢复/写入localStorage的已声明locale；bootstrap首绘lang与同一I18nService保持一致。runtime/i18n公开defaultI18nStorageKey；关闭/存储异常/非法值、跨tab和dispose边界见[语言合同](COMPONENTS.md#统一登录语言与语言工具4247)。不会扫描任意项目存储key，也不改变主题/缩放的sessionStorage。
 
 React新增`@coffeehc/xui-react/language`的LanguageSelect/LanguageSelectProps，根入口同样导出；默认沿共享I18nService，也可借用HeaderLocaleOptions受控事实。AuthPage/ConfigurableLoginPage公开tools槽；完整登录页仅在i18n.enabled时默认放无框语言控件，普通AuthPage仍由宿主组合。resolveLoginPageConfig可选locale，LoginViewBinding可选i18n，useI18nService提供provider/application现有owner；均不创建第二份认证/语言服务。默认及注入Controller的中文/英文公共文案、显式覆盖优先级、状态热更新及焦点/草稿/请求连续性见同一组件合同。没有新增认证端点或调用。
+
+## 可选使用统计（4.2.48）
+
+`@coffeehc/xui-runtime/analytics`（根入口亦导出）提供 `createAnalytics`、`createGa4AnalyticsAdapter` 和对应类型；纯导入不产生 DOM、存储、网络请求，不加入默认 bootstrap。宿主在应用生命周期创建一次，React render/effect 不重新创建 controller/adapter。此模块不含品牌 ID，不替消费产品启用采集。
+
+- `enabled` 默认 false；仅显式 `enabled: true` 且 `environment: 'production'` 可启用。自部署由实例管理员选择自己的提供方/ID，默认不开；开发、测试、预览环境不向生产发送。
+- 宿主使用已有同意 UI/CMP 获取明确选择、负责保存/恢复及跨标签同步；`setConsent('granted')` 完成后才可发送，`unknown/denied` 与 `destroy()` 立即停止。模块不偷偷记忆 consent，不积压、补发同意前/加载中事件；同意并不自动制造 page_view。失败返回 false，不影响业务。
+- `routes` 是静态路由名称 → 公开路径模板（例如 `tasks: '/tasks/:task'`），`features/taskTypes` 是静态名称白名单。不能从账号名、提示词、文档名、实际记录 ID 或输入内容生成目录。运行时拒绝不在目录内的输入；不读取当前 URL/title/referrer。
+- `page(route, navigationKey?)` 由宿主路由 owner 在确认页面显示后调用。默认相同 route 的连续调用去重；明确导航实例传稳定 navigationKey，重复 effect 使用相同 key。返回访问其他页面后允许再次计数。query/hash 不作为 page 身份，不挂第二套 History listener。
+- `feature(name, eventKey?)`、`task('submitted'|'succeeded'|'failed', taskType, eventKey?)` 只发送产品、版本、环境与白名单名称。成功/失败由宿主依据真实业务结果明确调用；点击、超时、取消不推断为完成。可选 eventKey 仅本地去重，绝不发送，最多保留最近 128 项；不是跨刷新/跨端的业务幂等保证。
+- 不提供自由参数字典、user_id、错误正文、表单采集、URL 查询参数、文件/聊天内容采集。标识长度/字符规则不证明输入非敏感，目录必须经宿主审查。
+
+GA4 adapter 需产品独立数据流、有效 G- ID、HTTPS 与精确 `allowedHosts`；全部必需条件满足并获 consent 才加载 Google tag。已有 gtag/dataLayer/Google tag 或第二个 adapter 时拒绝接管，不能与第三方 CMP/Tag Manager 竞争；已有统计宿主可实现同一 `AnalyticsAdapter` 接口。一个文档仅一个 GA owner，销毁后不创建替代 owner，更新 ID/失败重试以新页面加载完成。脚本失败/超时不自动重试。
+
+**产品数据流必须在 GA 后台关闭 Enhanced Measurement（尤其 History、搜索、表单、外链）及额外关联标签**。代码使用 `send_page_view:false`，仅手动已审核事件；不能保证拦截后台错误开启的自动事件。官网已选择的增强衡量策略不自动沿用到产品后台。上线必须核验后台配置与真实请求，不能只凭代码测试宣称隐私验收通过。
+
+撤回先设置 `ga-disable-ID=true`，再通知 consent denied；广告存储、广告用户数据、广告个性化始终 denied，Google signals 关闭。已加载脚本不能卸载，已发出/在途数据不可撤回；模块不自动删除历史 GA cookies 或服务端数据，宿主按其披露和用户请求处理。重新同意复用已加载标签，无重复 config。自定义 adapter 必须兑现停止自动/手动发送、无旧队列重放、专属 ownership 等合同；库不证明外部实现安全。
+
+```ts
+import {createAnalytics, createGa4AnalyticsAdapter} from '@coffeehc/xui-runtime/analytics';
+// 配置来自宿主的非秘密部署设置；默认关闭，不使用官网 ID。
+const analytics = createAnalytics({
+  enabled: config.analyticsEnabled === true,
+  environment: config.environment,
+  product: 'example', version: '1.0.0',
+  routes: {home: '/', tasks: '/tasks'},
+  features: ['open_tasks'], taskTypes: ['research'],
+  adapter: createGa4AnalyticsAdapter({
+    measurementId: config.analyticsMeasurementId,
+    allowedHosts: ['product.example.invalid'],
+  }),
+});
+// 用户明确同意/宿主恢复已保存的有效选择后：
+if (await analytics.setConsent('granted')) analytics.page('home', 'navigation-1');
+// 路由确认与真实业务结果分别由其 owner 调用，而非按钮猜测。
+analytics.task('succeeded', 'research', 'local-operation-key');
+await analytics.setConsent('denied');
+// 应用卸载：analytics.destroy();
+```
+
+官方依据：[手动页面浏览](https://developers.google.com/analytics/devguides/collection/ga4/views)、[Consent Mode](https://developers.google.com/tag-platform/security/guides/consent)、[关闭 Google Analytics](https://developers.google.com/tag-platform/security/guides/privacy)。本模块未配置任何真实产品，也不向生产统计发送测试数据。

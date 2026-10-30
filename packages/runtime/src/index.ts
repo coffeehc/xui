@@ -54,3 +54,5 @@ export * from './chart.js';
 export * from './model-profile.js';
 
 export * from './carousel.js';
+
+export * from './analytics.js';
