@@ -190,7 +190,7 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 
 | ID | 触发条件 | 必须结果 | 证据 | 公共合同来源 |
 |---|---|---|---|---|
-| TYPE-001 | 任何公共组件内容 | 宿主非必要不自设字号；逐项定位font/font-size/family/line-height/weight、style及文字工具类覆盖 | 覆盖扫描、用途和限定范围 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-001 | 任何公共组件内容 | 正文/普通控件400、强调500、标题600；保留现有字体/字号/行高，核查实际字体回退；宿主非必要不自设字号；逐项定位font/font-size/family/line-height/weight、style及文字工具类覆盖 | 覆盖扫描、用途和限定范围 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-002 | AppHeader/HeaderBrand各文字slot | brand、路径、context、status、辅助及账号逐槽匹配公共映射，内嵌控件保持自身角色 | 逐slot四项computed与嵌套Button | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-003 | AppShell/MenuLayout侧栏 | header/footer裸说明为meta，控件保持自身control角色；slot不递归覆盖字体 | 默认展开/窄屏200%时三动作与导航、footer几何 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-004 | PageHeader/Section | title、description、meta、章节正文分别匹配page/section/body/meta，动作不被降字号 | 每个文字slot四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
@@ -199,9 +199,9 @@ React 是唯一公共 UI。runtime DOM UI exports 已在 1.0.0 breaking change �
 | TYPE-007 | Field/Fieldset/ChoiceGroup | label/legend、help、error及各选择标签分别匹配label/meta，错误不靠缩字避让 | 每字段及legend/错误四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-008 | Input/Textarea/Password/Select/Combobox | 输入值与trigger使用control，option/group使用label/meta；报告原生select平台行高差异 | 正式控件四项computed及原生高度/编辑验证 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-009 | InputGroup | Addon单位为meta，内部Input与Button仍为control，不能从小字号单位继承动作字重 | Addon/输入/嵌套动作四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
-| TYPE-010 | Button/IconButton/Toggle | 文字为control，既有size只按公开几何；放入sidebar/meta/footer不变成小字 | 跨slot及size的computed比较与键盘操作 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
-| TYPE-011 | Tabs/Disclosure/Accordion | Disclosure/Accordion trigger为control；Tab为body-sm，常规body400/选中heading600；panel/body为body，父标题或meta不改变trigger字体 | trigger与content四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
-| TYPE-012 | NavigationMenu/Nav/Breadcrumbs/Pagination | 主label为control、组标题为meta-heading、路径body、页码meta；主名称无自造副描述小字 | 主项、组、路径、页码、动作逐项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-010 | Button/IconButton/Toggle | 普通文字为control400，primary为emphasis500；既有size只按公开几何；放入sidebar/meta/footer不变成小字 | 跨slot及size的computed比较与键盘操作 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-011 | Tabs/Disclosure/Accordion | Disclosure/Accordion trigger为control；Tab为body-sm，常规body400/选中emphasis500；panel/body为body，父标题或meta不改变trigger字体 | trigger与content四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
+| TYPE-012 | NavigationMenu/Nav/Breadcrumbs/Pagination | 主label为control400、当前项emphasis500、组标题为meta-heading、路径body、页码meta；主名称无自造副描述小字 | 主项、组、路径、页码、动作逐项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-013 | Menu/ContextMenu/Command | item/submenu等为label，group为meta；tone和键盘状态不改文字尺寸 | 两类菜单各item和group四项computed | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-014 | Calendar/DateTimePicker | 月标题、weekday、day、时间输入/清空分别匹配映射；保留日期值与键盘语义 | 各文字part四项computed与键盘选日/焦点 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |
 | TYPE-015 | Dialog/Sheet/AlertDialog/Popover/Tooltip | 标题、说明、body、footer、提示各自角色，portals采用相同比例且不改变嵌套控件 | 逐part computed、长内容滚动及关闭回焦点 | [DESIGN 公共文字槽](DESIGN.md#公共文字槽验收) |

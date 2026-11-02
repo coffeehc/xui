@@ -9,6 +9,7 @@
     cursor: pointer; touch-action: manipulation; overflow-wrap: anywhere;
     transition: background-color var(--motion-duration-fast) var(--motion-easing), color var(--motion-duration-fast) var(--motion-easing), transform var(--motion-duration-fast) var(--motion-easing);
   }
+  .xui-button[data-variant="primary"] {font-weight:var(--font-weight-emphasis);}
   .xui-button:where(:hover):not(:disabled,[aria-disabled="true"],[data-disabled]) { background-color: var(--button-hover-background); }
   .xui-button:where(:active, [data-pressed="true"]):not(:disabled,[aria-disabled="true"],[data-disabled]) { background-color: var(--button-pressed-background); transform: scale(var(--motion-press-scale)); }
   .xui-button[data-variant="secondary"] { background-color: var(--muted); color: var(--foreground); }

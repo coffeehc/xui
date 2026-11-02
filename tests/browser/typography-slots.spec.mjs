@@ -2,12 +2,12 @@ import {test,expect,chromium} from '@playwright/test';
 import {chromiumLaunchOptions} from './chromium-launch-options.mjs';
 
 // The expected roles come from DESIGN, not from the selector declarations.
-const roles={tab:[14,22,400,'sans'],body:[14,22,400,'sans'],control:[14,22,500,'sans'],meta:[13,20,400,'sans'],label:[13,20,500,'sans'],page:[20,28,600,'heading'],section:[16,26,600,'heading'],'body-heading':[14,22,600,'sans'],'meta-heading':[13,20,600,'heading'],metric:[24,28,600,'mono'],code:[14,22,400,'mono']};
+const roles={tab:[14,22,400,'sans'],body:[14,22,400,'sans'],control:[14,22,400,'sans'],meta:[13,20,400,'sans'],label:[13,20,400,'sans'],page:[20,28,600,'heading'],section:[16,26,600,'heading'],'body-heading':[14,22,600,'sans'],'meta-heading':[13,20,600,'heading'],metric:[24,28,600,'mono'],code:[14,22,400,'mono']};
 const normalize=value=>value.replace(/["'\s]/g,'').toLowerCase();
-async function inspect(page,info,label,{controlWeight=500}={}){
+async function inspect(page,info,label,{controlWeight=400,emphasisWeight=500}={}){
  const records=await page.evaluate(()=>{
   const root=getComputedStyle(document.documentElement),fonts=Object.fromEntries(['sans','mono','heading'].map(name=>[name,root.getPropertyValue(`--font-${name}`)]));
-  const read=(node,id,role)=>{const s=getComputedStyle(node);return {id,role,selected:node.getAttribute('aria-selected')==='true',tag:node.tagName,family:s.fontFamily,size:s.fontSize,line:s.lineHeight,weight:s.fontWeight};};
+  const read=(node,id,role)=>{const s=getComputedStyle(node);return {id,role,selected:node.getAttribute('aria-selected')==='true',current:node.getAttribute('aria-current')==='page',primary:node.matches('.xui-button[data-variant="primary"]'),tag:node.tagName,family:s.fontFamily,size:s.fontSize,line:s.lineHeight,weight:s.fontWeight};};
   const items=[...document.querySelectorAll('[data-type-role]')].filter(n=>n.getClientRects().length).map(n=>read(n,n.dataset.typeId,n.dataset.typeRole));
   // Include library-generated parts; consumers do not need to label or style these.
   for(const [selector,role] of Object.entries({'.xui-card-title':'section','.xui-card-description':'body','.xui-card-meta':'meta','.xui-badge':'label','.xui-calendar-header>strong':'body-heading','.xui-calendar-day':'control','.xui-calendar-weekday':'meta','.xui-menu-group-title':'meta-heading','.xui-nav-item':'control','.xui-pagination>span':'meta','.xui-data-table-count':'meta','.xui-copyable-status':'meta','.xui-image-placeholder':'body'})){
@@ -20,7 +20,7 @@ async function inspect(page,info,label,{controlWeight=500}={}){
   const [size,line,weight,font]=roles[item.role],factor=records.root/16*records.text;
   expect(parseFloat(item.size),`${item.id} size`).toBeCloseTo(size*factor,1);
   expect(item.line,`${item.id} line`).toBe(item.tag==='SELECT'?'normal':`${line*factor}px`);
-  expect(Number(item.weight),`${item.id} weight`).toBe(item.role==='tab'&&item.selected?600:weight===500?controlWeight:weight);
+  expect(Number(item.weight),`${item.id} weight`).toBe((item.role==='tab'&&item.selected||item.current||item.primary)?emphasisWeight:['control','label'].includes(item.role)?controlWeight:weight);
   expect(normalize(item.family),`${item.id} family`).toBe(normalize(records.fonts[font]));
  }
  expect(records.documentWidth).toBeLessThanOrEqual(records.width+1);expect(records.zoom).toBe('1');
@@ -45,7 +45,7 @@ async function overlays(page,info){
  }
 }
 for(const theme of ['light','dark','system'])for(const [width,text,scale] of [[1280,1,1],[390,1,1],[1280,2,1],[390,2,1],[390,1,2]])test(`${theme} width${width} text${text} interface${scale} public typography slots`,async({page},info)=>{
- const errors=[];page.on('pageerror',error=>errors.push(error.message));await open(page,{theme,width,text,scale});await inspect(page,info,'default');
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));await open(page,{theme,width,text,scale});await inspect(page,info,'default');await info.attach('default-page.png',{body:await page.screenshot(),contentType:'image/png'});
  await page.getByRole('button',{name:'复制标识',exact:true}).click();await expect(page.locator('.xui-copyable-status')).toHaveText('已复制');await inspect(page,info,'copied');
  await overlays(page,info);
  await page.getByRole('button',{name:'打开菜单',exact:true}).click();await expect(page.locator('[data-type-id="menu-item"]')).toBeVisible();await inspect(page,info,'menu');await page.keyboard.press('Escape');
@@ -53,7 +53,8 @@ for(const theme of ['light','dark','system'])for(const [width,text,scale] of [[1
  await page.getByRole('button',{name:'显示通知',exact:true}).click();await expect(page.locator('[data-type-id="toast-title"]')).toBeVisible();await inspect(page,info,'toast');await page.keyboard.press('F6');await page.getByRole('button',{name:'关闭通知',exact:true}).click();
  const tooltip=page.getByRole('button',{name:'查看简短说明',exact:true});await tooltip.focus();await tooltip.hover();await expect(page.locator('[data-type-id="tooltip"]')).toBeVisible();await inspect(page,info,'tooltip');await page.keyboard.press('Tab');
  await page.evaluate(()=>document.documentElement.style.setProperty('--font-weight-control','700'));await inspect(page,info,'semantic-weight-update',{controlWeight:700});
- if(theme==='system'){await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');await inspect(page,info,'system-light',{controlWeight:700});}
+ await page.evaluate(()=>document.documentElement.style.setProperty('--font-weight-emphasis','550'));await inspect(page,info,'emphasis-weight-update',{controlWeight:700,emphasisWeight:550});
+ if(theme==='system'){await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme-effective','light');await inspect(page,info,'system-light',{controlWeight:700,emphasisWeight:550});}
  await page.locator('[data-type-id="page-title"]').scrollIntoViewIfNeeded();await info.attach('page.png',{body:await page.screenshot(),contentType:'image/png'});expect(errors).toEqual([]);
 });
 for(const theme of ['light','dark','system'])test(`${theme} actual browser zoom200 keeps typography roles and overlay focus`,async({},info)=>{

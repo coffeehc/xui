@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.48。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.49。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -203,7 +203,7 @@ Markdown 没有自动继承或合并机制。采用者和接入技能显式读�
 | 基础 | palette-* 主题调色板、base-font-*、base-weight-*、base-spacing、base-radius、base-line-* | Precision石墨/青蓝及冷灰白配对；Inter/Mono回退；400/500/600；4px间距/基础圆角、1/2px边线。只供主题编排，不让业务组件直读 |
 | 主题配方 | selected-weight/base、状态soft/line权重 | 浅深配方见CSS，合成不透明表面。它们是默认主题内部参数，不是页面API |
 | 语义颜色 | action-*、foreground、layer-*、interaction-*、status-*、input、separator/surface-line | 由基础调色板和配方派生，名称不随色相变化；产品优先覆盖这一层 |
-| 文字 | font-sans/mono/heading/document、font-weight-body/control/heading、font-size-*、line-height-* | 字体栈别名；400/500/600；七个角色的默认字号/行高。图表轴和图例引用文字角色 |
+| 文字 | font-sans/mono/heading/document、font-weight-body/control/emphasis/heading、font-size-*、line-height-* | 字体栈别名；400/400/500/600；七个角色的默认字号/行高。图表轴和图例引用文字角色 |
 | 共享尺度 | spacing、space-*、control-height[-xs/-sm/-lg]、control-icon-size[-xs]、radius-*、line-width-*、focus-* | gap4/8/12/16及图文6；高36/24/32/40；图标16/12；圆角2/4/6/8/8；线1/1/2；焦点清距Token保留2+2px |
 | 层级 | shadow-flat/subtle/surface/raised/overlay、z-shell/sticky/overlay/menu/notice | 普通none、浮层成对阴影；z为10/20/50/70/80。只在公共portal/层级适配中消费 |
 | 布局 | layout-content-inset[-narrow]/max、section/toolbar/field-gap、field[-long]-min、header-height、dialog/confirm/drawer-width、viewport-inset | 横20/16px，max none，gap16/8/16，字段240/288，顶栏48，弹层宽度按40%/30%/60%及各自rem上下限，视口边16；是可覆盖默认约束，不强制所有产品同一页面骨架 |
@@ -368,7 +368,8 @@ Button 的 link 变体默认使用 action-primary 与透明底；hover及悬停�
     --font-heading: var(--font-sans);
     --font-document: var(--font-sans);
     --font-weight-body: var(--base-weight-regular);
-    --font-weight-control: var(--base-weight-medium);
+    --font-weight-control: var(--base-weight-regular);
+    --font-weight-emphasis: var(--base-weight-medium);
     --font-weight-heading: var(--base-weight-semibold);
     /* typography-scale:start */
     --font-size-caption: max(.75rem, calc(.75rem * clamp(.5, var(--font-scale), 2)));
@@ -1532,15 +1533,17 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 
 ### 字体与文字角色
 
-默认 Sans 为 Inter Variable，使用系统中文 Sans 回退；代码、技术标识及适用数值使用 JetBrains Mono Variable 和系统 Mono 回退。推荐回退覆盖 PingFang SC、Microsoft YaHei、Noto Sans CJK SC；各项目记录实际可用字体，不假定所有环境均加载自定义字体。正文 400，控件/导航/label 500，标题/指标 600。尺寸用 rem，尊重浏览器缩放，不用负字距或缩小文字减轻视觉。
+默认 Sans 为 Inter Variable，使用系统中文 Sans 回退；代码、技术标识及适用数值使用 JetBrains Mono Variable 和系统 Mono 回退。推荐回退覆盖 PingFang SC、Microsoft YaHei、Noto Sans CJK SC；各项目记录实际可用字体，不假定所有环境均加载自定义字体。正文、普通控件/导航/label 400，选中导航/Tab及primary主操作500，标题/指标600。尺寸用 rem，尊重浏览器缩放，不用负字距或缩小文字减轻视觉。
+
+4.2.49减轻普通文字字重，沿用现有字体族、字号、行高、颜色和缩放合同。`font-weight-control`默认400；`font-weight-emphasis`默认500，仅供primary主操作与选中导航/Tab。输入、标签、普通按钮与菜单不因hover/focus/busy/disabled变粗；标题及显式Strong仍用heading600。宿主既有公开Token覆盖继续优先；若过去只覆盖control且要求主操作同步变粗，应同时配置emphasis，不统一设300或以缩字、降对比度模拟细笔画；已经为400的正文不重复减轻。
 
 以下按根字号16px给出默认字号/行高；前言与默认CSS一致，不要求采用系统实现用户可切换密度：
 
 | 角色/字号变量 | 默认px | 行高变量 | 用途 |
 | --- | --- | --- | --- |
 | caption / font-size-caption | 12 | line-height-caption：18px | 次要标识，普通UI文字下限12px |
-| body-xs / font-size-body-xs | 13 | line-height-body-xs：20px | 帮助、状态、单位；label500 |
-| body-sm / font-size-body-sm | 14 | line-height-body-sm：22px | 正文400，控件/导航500 |
+| body-xs / font-size-body-xs | 13 | line-height-body-xs：20px | 帮助、状态、单位；label400 |
+| body-sm / font-size-body-sm | 14 | line-height-body-sm：22px | 正文、普通控件/导航400 |
 | section-title / font-size-section-title | 16 | line-height-section-title：26px | 区域标题600 |
 | secondary-value / font-size-secondary-value | 18 | line-height-secondary-value：28px | 次级数值600 |
 | page-title / font-size-page-title | 20 | line-height-page-title：28px | 页面唯一h1，600 |
@@ -1554,7 +1557,7 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 
 继承链优先：`.xui` 和 `.xui-layer` 提供公共 Sans/body/400 基线；页面壳、顶栏、章节等布局容器沿用这条基线；资源卡片与表格等确需从其他文字槽切换的正文边界才确立本区正文角色。description、body、footer 等相同角色的裸文本自然继承，meta/help/error 只改所需字号和行高，label/标题只增加对应字重。链接、OverflowText 和行内反馈继承所属文字槽；例如 Card.footerMeta 中的链接/同步文案仍为 meta。Button、输入、日期和披露等可能从小字号槽切入的独立控件才建立自己的 control 角色，技术值/指标显式切换 Mono。不会用 `.slot *` 或对子控件逐个重设字体来替代继承；四项 computed 验收检查最终结果，不要求每个后代都声明四个属性。
 
-下表是文字归属的唯一映射。`body`=body-sm/正文400/Sans，`control`=body-sm/控件500/Sans，`meta`=body-xs/正文400/Sans，`label`=body-xs/控件500/Sans；`page`、`section` 分别为 page-title、section-title/标题600/Heading；`body-heading`=body-sm/标题600/Sans，`meta-heading`=body-xs/标题600/Heading；`code`=body-sm/正文400/Mono；`metric`=metric/标题600/Mono/tabular。每个尺寸的行高取同名 `line-height-*`，不另设像素值。既有 Heading 与 Sans 使用相同中文 Sans 回退；实际字体可用性与回退必须记录。
+下表是文字归属的唯一映射。`body`=body-sm/正文400/Sans，`control`=body-sm/普通控件400/Sans，`meta`=body-xs/正文400/Sans，`label`=body-xs/普通控件400/Sans；`page`、`section` 分别为 page-title、section-title/标题600/Heading；`body-heading`=body-sm/标题600/Sans，`meta-heading`=body-xs/标题600/Heading；`code`=body-sm/正文400/Mono；`metric`=metric/标题600/Mono/tabular。每个尺寸的行高取同名 `line-height-*`，不另设像素值。既有 Heading 与 Sans 使用相同中文 Sans 回退；实际字体可用性与回退必须记录。
 
 | 公共组件 | 文字 slot/part → 角色 | 组合边界 |
 | --- | --- | --- |
@@ -1572,10 +1575,10 @@ Canvas 和必须接受实际颜色的第三方渲染器通过集中解析器读�
 | InputGroup | Addon 裸单位/说明 → meta；Input/Textarea → control；Button → control | 单位不能把其中的动作降为 meta；一个输入边界 |
 | Checkbox / Radio / Switch / ChoiceGroup | 可见 label/组 label → label；help/error → meta | indicator 无文字；受控/只读/禁用不改变文字尺寸 |
 | PasswordStrength | 输入 → control；可见说明 → Field help/error 的 meta；meter 无文字 | 隐藏播报不为视觉另造字号 |
-| Button / IconButton | 文字 → control，所有既有 size 一致；纯图标无文字角色 | 按钮尺寸改变可用空间，不由侧栏或 footer 降字号；可访问名称仍必填 |
+| Button / IconButton | 文字 → control，primary主操作仅切换emphasis字重500；所有既有 size 一致；纯图标无文字角色 | 按钮尺寸改变可用空间，不由侧栏或 footer 降字号；可访问名称仍必填 |
 | Toggle / ToggleGroup | trigger → Button 的 control | pressed 只改语义状态与着色 |
-| Tabs | Tab → body-sm，常规body字重400、选中heading字重600；Icon继承Tab状态色、无独立文字角色；Panel裸文本 → body | Panel内组件保留自身角色 |
-| Nav / NavItem / NavigationMenu | 可操作主 label/renderLabel → control；group title → meta-heading/muted；emptyLabel → body/muted | renderLabel 现为主名称，尚无副说明 slot；branch/action 用 Button。缺副说明时提交公共缺口，不自写小字号 |
+| Tabs | Tab → body-sm，常规body字重400、选中emphasis字重500；Icon继承Tab状态色、无独立文字角色；Panel裸文本 → body | Panel内组件保留自身角色 |
+| Nav / NavItem / NavigationMenu | 可操作主 label/renderLabel → control，当前项仅切换emphasis字重500；group title → meta-heading/muted；emptyLabel → body/muted | renderLabel 现为主名称，尚无副说明 slot；branch/action 用 Button。缺副说明时提交公共缺口，不自写小字号 |
 | Breadcrumbs / Pagination | 路径 → body；页码/总页数说明 → meta；前后按钮 → control | 路径中的链接保留语义；页码不降按钮字号 |
 | Menu / ContextMenu | Item/LinkItem/CheckboxItem/RadioItem/SubmenuTrigger → label；GroupLabel → meta/muted | danger/disabled/highlight 改状态色，不另设字号；Icon 无文字角色 |
 | Command / GroupedCombobox | 搜索 → control；item → label；group → meta/muted；已选 Tag → label | 复用输入、菜单、Tag 角色，不增加第三套字号 |
@@ -2058,7 +2061,7 @@ Portal 和叠层由公共浮层适配定义明确角色；不逐页抬 z-index �
 | InputGroup D/H/F/X/E；S/B按内部控件 | 同输入，一层边界和焦点，addon/清除与内容gap8 | 外层映射内部真实focus/invalid，内部不重复border/ring；帮助和错误不撑偏相邻控件，不制造第二层皮肤 |
 | Combobox/自定义选择 D/H/S/F/X/B/E | 搜索复用输入、选项复用menu-item-*；弹层popover-width288、padding12 | 持续S与键盘活动项分开，活动项F只在键盘阶段存在。搜索输入保留焦点，方向键/Enter选择；无结果与错误不同，不自动选首项、不改查询防抖；NativeSelect由平台负责面板 |
 | Checkbox/Switch/Toggle D/H/S/F/X/E；B仅业务已有 | Checkbox默认16×16px（control-icon-size）、radius-sm、1px input-border-color；Switch宽28/高16.6px、拇指14.4px，圆形轨道；Toggle使用toggle-height默认28px、gap4，放大文字可自然增高 | S用action-primary及成对前景或interaction-selected-*，必须有真实checked；H不盖S，F仅改变已有边线颜色，E相关错误优先，X不可切换。Space/方向键遵循角色；不得仅换颜色模拟checked |
-| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 项至少control-height-sm32、轨道内padding3、项radius-md；label body-sm，常规body400、选中heading600；可选装饰图标16px、图文间距space-icon-gap，文字与图标颜色继承所属Tab | 轨道layer-support与一层surface-line，项间space-text-gap，默认按内容宽度且不越过容器；显式equal在单项上限内分配。未选文字muted-foreground，H用interaction-hover，S用layer-raised、surface-line细边界与action-primary形成内嵌选中层，非选中项预留同宽透明边界，F不新增边线或焦点环。没有额外selected外圈或左竖线；可选line移除外槽/项内框，项预留line-width-emphasis底边，只有当前项以currentColor着色；F同样不新增外框，H不覆盖当前文字/线，普通尺寸/文字继承不变。单项上限tabs-item-max-inline-size，Label复用OverflowText且只滚名称；方向键及panel关联完整，禁用项跳过，panel加载不禁用Tab |
+| Tabs D/H/S/F/X；B/E归panel，P/S不混同 | 项至少control-height-sm32、轨道内padding3、项radius-md；label body-sm，常规body400、选中emphasis500；可选装饰图标16px、图文间距space-icon-gap，文字与图标颜色继承所属Tab | 轨道layer-support与一层surface-line，项间space-text-gap，默认按内容宽度且不越过容器；显式equal在单项上限内分配。未选文字muted-foreground，H用interaction-hover，S用layer-raised、surface-line细边界与action-primary形成内嵌选中层，非选中项预留同宽透明边界，F不新增边线或焦点环。没有额外selected外圈或左竖线；可选line移除外槽/项内框，项预留line-width-emphasis底边，只有当前项以currentColor着色；F同样不新增外框，H不覆盖当前文字/线，普通尺寸/文字继承不变。单项上限tabs-item-max-inline-size，Label复用OverflowText且只滚名称；方向键及panel关联完整，禁用项跳过，panel加载不禁用Tab |
 | 表格/列表 D/H/S/F/B/E；X属于行控件 | cell padding8、动作gap4，表头body-xs/500、正文body-sm，分隔separator-line；opaque条纹 | H用interaction-hover，S/expanded用interaction-selected背景；sticky与整行不透明底一致。F只归焦点控件/确有键盘行，不给被动行造焦点。B/空/E保留所属状态和恢复入口，排序/分页真实禁用 |
 | Card/Section/连续Item | Card单层raised+surface-line、radius6、按三段消费card-padding14；图标tile的size/offset/background及Footer背景由组件Token定义，Footer仅一条separator-line；Section/连续Item不复制卡片分区 | Card可选plain图标/Footer，Badge有中性soft标签；默认自然高，公开stretch/equal让正文增长/Footer靠底。被动仅D/B/E，交互仍归内部控件；不加被动hover/伪按钮、不固定摘要行数或编造指标 |
 | 统计/指标 D/B/E；H/S仅已有tooltip或范围控件 | metric-padding12/gap4，label13/muted，主值24/600/tabular、单位13 | 0/未知/无数据/B/E分开，核心统计才进首屏；不以disabled表达缺数据。范围S沿选择器，tooltip H/F使用overlay；指标本体无按钮hover、焦点或选中 |

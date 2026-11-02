@@ -503,6 +503,8 @@ const noticeColor = 'var(--action-primary)';
 
 ### Typography
 
+4.2.49沿用原字体，普通控件、标签、菜单与未选中导航统一400；primary Button及选中导航/Tab使用公开`--font-weight-emphasis`（500），标题与Strong仍为600，正文仍为400。字重继承同一主题根及portal，不缩小字号、不降低对比度、不添加字体资源。已有`--font-weight-control`覆盖继续生效；强调项可独立覆盖`--font-weight-emphasis`，无需修改内部CSS。
+
 字体、字号、行高和字重由 xui 的[公共文字槽映射](DESIGN.md#公共文字槽验收)统一定义，消费项目非必要不得自行设置内容字号。Heading 分开指定 `level` 与 `visualRole`，Text 为正文、Link 继承所属文字槽，Code 为技术值；slot 的裸文本自动继承它的角色，嵌套 Button/Badge/Field 保留自身规则。不要在 meta 里包一层正文 Text 再用 CSS 改小；直接传字符串或无样式 span。
 
 4.2.24起，Typography.Link、LinkedText、xui/xui-layer范围内原生a及Button的link变体默认无下划线，hover/pressed/focus/visited不另加装饰。Link保留action-primary和原文字槽字体；Button link保留原hover成对前景/背景、禁用和点击区。键盘focus-visible不新增外框，无边框链接保持原外观，原生href/target/download/rel/修饰键与导航owner不变。访问后不切换到浏览器默认紫色，xui范围外HTML不受此规则覆盖。forced-colors的导航/控件选中下划线仍表示选中事实，不在本次删除范围；没有新增装饰props或要求消费者写私有CSS。
@@ -1062,7 +1064,7 @@ React Menu 沿用 peer 对 disabled 项的焦点合同：禁用项可被读取�
 
 React Menu.LinkItem透传固定peer的closeOnClick合同，默认false；需要点击后关闭时明确传true。
 
-Menu / ContextMenu 的 Item、LinkItem、CheckboxItem、RadioItem、SubmenuTrigger 统一使用显式菜单角色 body-xs/line-height-body-xs/font-weight-control（默认13px/20px/500）。该规则位于 `.xui-menu-item`，不改变 Portal 的 `.xui-layer` body-sm正文；Select/Combobox/Command 中共用该菜单项角色的选项同时得到相同文字合同。
+Menu / ContextMenu 的 Item、LinkItem、CheckboxItem、RadioItem、SubmenuTrigger 统一使用显式菜单角色 body-xs/line-height-body-xs/font-weight-control（默认13px/20px/400）。该规则位于 `.xui-menu-item`，不改变 Portal 的 `.xui-layer` body-sm正文；Select/Combobox/Command 中共用该菜单项角色的选项同时得到相同文字合同。
 
 `Menu.Icon` 与 `ContextMenu.Icon` 是同一公开装饰性 span slot，透传 span props/ref，默认 `aria-hidden=true`。示例 `<Menu.Item><Menu.Icon><Settings /></Menu.Icon>设置</Menu.Item>`。slot 与它的直接 SVG 子元素由库绑定 control-icon-size（默认16px）、不收缩；图文间距继续采用 menu-item-gap（默认8px）。SVG 自身24px属性不再改变菜单图标布局；未声明slot的普通嵌套插图不受此规则强制缩放。不要再全局覆写菜单中所有svg。
 
@@ -1465,7 +1467,7 @@ sidebarTabs不以内容改变整栏宽度。既有nav-sidebar-width需要可参�
 
 Tabs布局与图标部件从1.2.0提供；本版增强默认/选中对比，执行结果见[验证记录](VALIDATION.md)。固定1.1.3不包含新增部件。
 
-React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Label/Icon/Panel` 和 `TabsListProps/TabsLabelProps`。Root拥有受控value/defaultValue，并作为Flex/Grid子项允许收缩、不把长名称的最小内容宽度传给页面；List只管理轨道编排与键盘焦点；Tab的children承载名称，Icon只放装饰性图标，Panel承载对应内容。Tab拥有 body-sm 字号与行高，普通项字重400、选中项字重600；图标继承文字和状态色，Panel内公共组件保留自身文字角色。Icon不承载独立按钮、提示或业务状态，真实label不能只放在装饰槽。
+React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Label/Icon/Panel` 和 `TabsListProps/TabsLabelProps`。Root拥有受控value/defaultValue，并作为Flex/Grid子项允许收缩、不把长名称的最小内容宽度传给页面；List只管理轨道编排与键盘焦点；Tab的children承载名称，Icon只放装饰性图标，Panel承载对应内容。Tab拥有 body-sm 字号与行高，普通项字重400、选中项字重500；图标继承文字和状态色，Panel内公共组件保留自身文字角色。Icon不承载独立按钮、提示或业务状态，真实label不能只放在装饰槽。
 
 `Tabs.List.layout` 默认 `content`：轨道贴合标签组，不自动铺满父容器；轨道最大宽度为可用空间，项之间允许换行。每个Tab最大宽度由公共 `--tabs-item-max-inline-size` 统一约束，默认复用layout-field-min（根字号16px时240px），同时不超出父容器。显式 `equal` 才在该上限内等分可用宽度，不为铺满而超过单项上限；宽容器允许轨道末尾留白。依赖旧满宽轨道的采用方应明确选择equal，不通过宿主内部CSS或缩字号修补。图标保持公共尺寸与非收缩；纯文字不留图标空位。
 
@@ -1473,7 +1475,7 @@ React `/tabs`（及根入口）提供 `Tabs.Root/List/Tab/Label/Icon/Panel` 和 
 
 Tab直属字符串/数字自动进入公共Label文本槽；组合内容显式使用 `<Tabs.Label text={name}/>`，装饰Icon、计数和状态放在文本槽之外，不把整组内容一起滚动。Label复用OverflowText：支持精细鼠标且未减少动效时，长名称单行省略，Tab hover或已有键盘焦点停留后仅名称按共享速度单次滚至末端，离开且失焦复位；完整名称始终在DOM/可访问名称中，不依赖title，不新增Tab停靠或更改选择。触屏、减少动效、无动画/JS、不能键盘进入的disabled项保留完整静态折行，以保证所有人可读。短名称不动画，内容/宽度/语言更新重新测量且不重挂Tab/Panel；RTL沿相应方向揭示。自定义嵌套label不被库猜测和改写，应使用公开Label槽，不能套自己的截断/滚动CSS。
 
-显式segmented的普通项使用body 400文字；选中项使用raised底色、强调色文字/图标、heading 600和细边界，透明边框预留的线宽不会改变未选项几何。普通、选中、hover、键盘focus都清晰可辨。沿用peer的controlled、activateOnFocus、loop、RTL/orientation与panel关联；xui的键盘适配仍只负责跳过disabled。刷新、busy/error及草稿属于宿主或对应Panel，不因切换轨道布局而重挂Root或业务内容。
+显式segmented的普通项使用body 400文字；选中项使用raised底色、强调色文字/图标、emphasis 500和细边界，透明边框预留的线宽不会改变未选项几何。普通、选中、hover、键盘focus都清晰可辨。沿用peer的controlled、activateOnFocus、loop、RTL/orientation与panel关联；xui的键盘适配仍只负责跳过disabled。刷新、busy/error及草稿属于宿主或对应Panel，不因切换轨道布局而重挂Root或业务内容。
 
 ```tsx
 <Tabs.Root value={view} onValueChange={setView}>

@@ -2,6 +2,20 @@
 
 > 证据可用性：本文件保留历次执行记录；标注“历史本地路径”的报告与截图未随 Git 提供，不是可点击或可由干净检出复核的证据。历史通过结论不等于本次复验；当前验证范围与限制见对应日期章节。仍有相对链接的文件继续由文档检查严格核验。
 
+## 保留字体并减轻普通控件字重（4.2.49，2026-11-02）
+
+先快进同步 main `515361e6ad72e4bd58e4fc1b6f417c8741a16792` / 4.2.48，保留已有统计服务、图表及主题修订。本轮仅修改 xui：现有 `font-weight-control` 从 medium500切换至regular400，普通按钮、输入、字段标签、菜单与未选中导航共同继承；新增公开语义 `font-weight-emphasis` 为medium500，供primary Button、当前导航和选中Tab使用。选中Tab由600降为500，正文400与标题/显式Strong600保留。沿用所有字体族及中文回退，不下载或打包新字体，不缩小字号或降低对比度。默认Token差异探针确认仅上述两项变化，原字号、行高、色彩、间距和缩放值不变；组件只使用语义变量，无宿主/私有DOM补丁。
+
+最终 sourceGeneration：`661e72a418d37912d6b966cf53f9d0e141b96bd0cc7aa3e98811fb5d9e100b12`。build、typecheck及447 Token/指纹检查通过，定向Node **11/11通过，0失败/跳过**，涵盖公共合同、生成CSS、历史源复原与接入文档。独立正式三tarball的 **117** 个公开入口ESM/CSS/types消费及React/ReactDOM19.2.8、Base UI1.7.0单实例检查通过，无packages/src alias或新依赖；critical+floating CSS gzip为23346字节，原23360预算内，所有体积门禁未放宽。
+
+正式包Chromium **25/25通过，0失败/跳过/重试/flaky**，耗时53.6秒。既有文字槽矩阵逐part检查font-family、字号、行高和字重，并分别验证control700与emphasis550的公开覆盖不会串改正文/标题；覆盖表单、选择、卡片、表格、反馈、菜单、导航、Tabs及弹层组合，保留草稿、禁用、键盘与关闭回焦。light/dark/system、1280/390px、长中文、200%文字、200%界面比例及三模式真实Chrome200%浏览器缩放分别执行；原生select高度/编辑、菜单子层和Tab禁用路径回归通过。已人工查看浅色桌面与system深色窄屏200%文字截图，字号/颜色保持原合同，长标题按自然布局换行。
+
+首次正式消费者因React包的runtime精确peer仍为4.2.48而被npm ERESOLVE拒绝；同步既有peer至本轮4.2.49并重建后通过，没有force或legacy-peer绕过。浏览器首轮即全部通过。兼容影响是默认视觉字重及强调角色分离；宿主既有control覆盖继续用于普通控件，若过去要求primary随control覆盖同步，应同时配置emphasis，不修改内部选择器。业务富文本自身的Strong或消费方字重覆盖不会被库无条件清除。
+
+本地验收证据：`.artifacts/typography-weight-4.2.49/checks.json`、`token-diff.json`、`browser-final.json`及同目录build/typecheck/unit/consumer日志；截图索引 `output/playwright/typography-weight-4.2.49/evidence.json`。证据随本轮本地正式归档收录，不作为干净Git检出中已有的文件。复现：`pnpm build`、`pnpm typecheck`、`node --test tests/contract.test.mjs tests/docs.test.mjs`、`pnpm test:consumer`；`caffeinate -i pnpm exec playwright test tests/browser/typography-slots.spec.mjs tests/browser/input-typography-contract.spec.mjs tests/browser/layout-typography.spec.mjs tests/browser/tabs-overlay.spec.mjs --grep 'public typography slots|actual browser zoom200|input typography|menu, checkbox|field labels|line Tabs light 1280px default|explicit segmented' --workers=1 --retries=0`。按既有archive/archive:verify自动生成并校验manifest/public-api.json/sourceGeneration/SHA256SUMS。
+
+未跑全仓unit/browser/watch/cold-start、Firefox/WebKit/读屏器、真实认证后端，未修改或升级AgReady及其他消费项目，未执行部署。本轮库级合成示例不能证明截图产品正文已变细；产品仍须核对实际字体回退、computed字重与富文本语义。
+
 ## 登录语言偏好与无框语言工具（4.2.47，2026-10-30）
 
 核对基线 main `b5308917003dcce87c51341ca1c3f54ac7f8455a` / 4.2.46，原 I18nService 未持久保存语言，完整登录页也未自动投影当前语言。本轮复用同一 I18nService 与 LoginViewController：开启 `i18n.enabled` 后，bootstrap 首次绘制与按需服务均读取声明语言集合内的 localStorage 字符串，默认键 `xui.locale`；可配置 `i18n.storageKey`，默认 `persist:true`。关闭 i18n 或显式关闭持久化时不读取、写入或删除该偏好；拒绝存储仍可在内存切换。注入的服务继续拥有语言与持久化，不新增第二个 owner；主题和阅读缩放的 sessionStorage 合同不变。

@@ -165,8 +165,8 @@ for(const kind of kinds){
     }
     await trigger.click();await navItem(page,'settings').click();await expect(page.getByRole('dialog')).toBeHidden();await trigger.click();await expect(navItem(page,'settings')).toHaveAttribute('aria-current','page');
   });
-  test(`${kind} menu, checkbox, radio, submenu and context text use 13/20/500 with explicit 16px icons`,async({page},info)=>{
-    await setup(page,kind);const typography=async ids=>{for(const id of ids){const node=page.getByTestId(id);await expect(node).toBeVisible();expect(await bounds(node)).toMatchObject({fontSize:'13px',lineHeight:'20px',fontWeight:'500'});const icon=await bounds(node.locator('[data-menu-symbol]'));expect(icon.width).toBeCloseTo(16,1);expect(icon.height).toBeCloseTo(16,1);}};
+  test(`${kind} menu, checkbox, radio, submenu and context text use 13/20/400 with explicit 16px icons`,async({page},info)=>{
+    await setup(page,kind);const typography=async ids=>{for(const id of ids){const node=page.getByTestId(id);await expect(node).toBeVisible();expect(await bounds(node)).toMatchObject({fontSize:'13px',lineHeight:'20px',fontWeight:'400'});const icon=await bounds(node.locator('[data-menu-symbol]'));expect(icon.width).toBeCloseTo(16,1);expect(icon.height).toBeCloseTo(16,1);}};
     await page.getByRole('button',{name:'打开操作菜单',exact:true}).click();await typography(['ordinary-item','link-item','link-default-item','checkbox-item','radio-item','submenu-trigger']);expect(await bounds(page.getByTestId('ordinary-popup'))).toMatchObject({fontSize:'14px',lineHeight:'22px',fontWeight:'400'});
     expect((await bounds(page.getByTestId('illustration-item').locator('[data-illustration]'))).width).toBeCloseTo(24,1);await capture(page,info,'menu-typography');
     const more=page.getByTestId('submenu-trigger');await more.focus();await more.press('ArrowRight');await typography(['submenu-item']);await expect(page.getByTestId('submenu-item')).toBeFocused();await capture(page,info,'submenu-typography');await page.keyboard.press('Escape');await expect(more).toBeFocused();await page.keyboard.press('Escape');
@@ -178,13 +178,13 @@ for(const kind of kinds){
     const defaultLink=page.getByTestId('link-default-item');await expect(defaultLink).toHaveAttribute('href','#menu-link-default');await defaultLink.click();await expect(page).toHaveURL(/#menu-link-default$/);await expect(page.getByTestId('ordinary-popup')).toBeVisible();
     const link=page.getByTestId('link-item');await expect(link).toHaveAttribute('href','#menu-link');await link.click();await expect(page).toHaveURL(/#menu-link$/);await expect(page.getByTestId('ordinary-popup')).toBeHidden();
   });
-  test(`${kind} field labels use 13/20/500, preserve 8/4/4px gaps and accessible choice hit areas`,async({page},info)=>{
+  test(`${kind} field labels use 13/20/400, preserve 8/4/4px gaps and accessible choice hit areas`,async({page},info)=>{
     await setup(page,kind);const field=page.getByTestId('field'),label=field.locator('.xui-label'),input=field.locator('input'),help=field.locator('.xui-help'),error=field.locator('.xui-error');
-    const [l,i,h,e]=await Promise.all([label,input,help,error].map(bounds));expect(l).toMatchObject({fontSize:'13px',lineHeight:'20px',fontWeight:'500'});expect(i.y-l.bottom).toBeCloseTo(8,1);expect(h.y-i.bottom).toBeCloseTo(4,1);expect(e.y-h.bottom).toBeCloseTo(4,1);
+    const [l,i,h,e]=await Promise.all([label,input,help,error].map(bounds));expect(l).toMatchObject({fontSize:'13px',lineHeight:'20px',fontWeight:'400'});expect(i.y-l.bottom).toBeCloseTo(8,1);expect(h.y-i.bottom).toBeCloseTo(4,1);expect(e.y-h.bottom).toBeCloseTo(4,1);
     const id=await input.getAttribute('id');await expect(label).toHaveAttribute('for',id);await expect(input).toHaveAttribute('aria-invalid','true');await expect(input).toHaveAttribute('required','');
     const description=(await input.getAttribute('aria-describedby')).split(/\s+/);expect(description).toEqual([await help.getAttribute('id'),await error.getAttribute('id')]);
     await label.click();await expect(input).toBeFocused();expect(await input.evaluate(node=>getComputedStyle(node).outlineStyle)).toBe('none');
-    expect(await bounds(page.locator('legend.xui-label'))).toMatchObject({fontSize:'13px',lineHeight:'20px',fontWeight:'500'});
+    expect(await bounds(page.locator('legend.xui-label'))).toMatchObject({fontSize:'13px',lineHeight:'20px',fontWeight:'400'});
     for(const type of ['checkbox','radio','switch']){const text=page.getByTestId(`${type}-label-text`),choice=text.locator('..').locator('input');const hit=await bounds(text.locator('..'));expect(hit.height).toBeGreaterThanOrEqual(36);await expect(choice).not.toBeChecked();await text.click();await expect(choice).toBeChecked();}
     await capture(page,info,'field-spacing-and-choice-labels');
   });

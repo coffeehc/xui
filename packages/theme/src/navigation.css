@@ -11,7 +11,7 @@
     transition: background-color var(--motion-duration) var(--motion-easing), color var(--motion-duration) var(--motion-easing);
   }
   .xui-nav-item:where(:hover):not(:disabled, [aria-disabled="true"]) { background: var(--menu-item-hover-background); color: var(--menu-item-hover-foreground); }
-  .xui-nav-item[aria-current="page"] { background: var(--menu-item-selected-background); color: var(--menu-item-selected-foreground); }
+  .xui-nav-item[aria-current="page"] { background: var(--menu-item-selected-background); color: var(--menu-item-selected-foreground); font-weight:var(--font-weight-emphasis); }
   .xui-nav-item:is([aria-current="page"],[data-tone="warning"],[data-variant="text"]) :is(.xui-menu-label,.xui-navigation-label,.xui-text,.xui-code,.xui-icon) {color:inherit;}
   .xui-nav-item::before {
     content: ""; position: absolute; inset-inline-start: var(--nav-selected-indicator-inset); top: 50%; transform: translateY(-50%);
@@ -31,7 +31,7 @@
   .xui-tabs-list[data-orientation="vertical"] {flex-direction:column;align-items:stretch;}
   .xui-tab { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-icon-gap); min-inline-size:0; max-inline-size:min(100%,var(--tabs-item-max-inline-size)); background:transparent; color:var(--muted-foreground); min-height:var(--control-height-sm); padding:var(--space-text-gap) var(--space-control-gap); border:var(--line-width-surface) solid transparent; border-radius:var(--radius-md); cursor:pointer; overflow-wrap:anywhere; font:var(--font-weight-body) var(--font-size-body-sm)/var(--line-height-body-sm) var(--font-sans); transition:background-color var(--motion-duration) var(--motion-easing),color var(--motion-duration) var(--motion-easing); }
   .xui-tab:where(:hover):not(:disabled, [aria-disabled="true"]) { background: var(--interaction-hover); }
-  .xui-tab[aria-selected="true"] {background:var(--layer-raised);color:var(--action-primary);font-weight:var(--font-weight-heading);border-color:var(--surface-line);}
+  .xui-tab[aria-selected="true"] {background:var(--layer-raised);color:var(--action-primary);font-weight:var(--font-weight-emphasis);border-color:var(--surface-line);}
   /* One visual variant of the same semantic Tabs; selection never changes geometry. */
   .xui-tabs-list[data-variant="line"] {padding:0;background:transparent;border:0;border-radius:0;}
   .xui-tabs-list[data-variant="line"][data-orientation="horizontal"] {box-shadow:var(--tabs-line-baseline-shadow);}

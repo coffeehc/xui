@@ -176,7 +176,7 @@ CSS 分片中的共享选择样式由一个源码 part 生成：`critical.css` �
 | MenuLayout/NavigationMenu | 未受控时 collapsed=false、sidebarOpen=false、未指定展开集合为空，当前链接祖先自动展开。activeId 省略才按同源精确 pathname 选择；null/无匹配无 selected。无 navigation adapter 时保留 HTML link 导航，菜单键盘/drawer owner 由 React 组件提供 |
 | GroupedCombobox | 一个输入/listbox；查询/open/分页受控，预过滤数据由宿主；折叠和分页按钮在 listbox 外。选中默认 null；[合同](COMPONENTS.md#groupedcombobox-与-disclosure) |
 | Pagination/Disclosure | Pagination 默认第 1 页，pageCount 由宿主；受控 page 只请求确认。Disclosure 默认关闭，装饰性 chevron 与公开 DisclosureIndicator 复用相同 tokens。两者不发请求、不自动路由 |
-| Tabs | Root/List props 保留固定peer行为，方向键跳过disabled；1.2.0新增List.layout='content'（默认）/'equal'、TabsListProps及装饰性Tabs.Icon，见[布局与图标合同](COMPONENTS.md#tabs)。1.3.0明确普通项400与选中项600字重和raised/强调状态对比；手动/自动激活、loop、RTL与方向不变；固定1.1.3尚不包含新增部分 |
+| Tabs | Root/List props 保留固定peer行为，方向键跳过disabled；1.2.0新增List.layout='content'（默认）/'equal'、TabsListProps及装饰性Tabs.Icon，见[布局与图标合同](COMPONENTS.md#tabs)。1.3.0明确普通项与选中项的raised/强调状态对比；4.2.49普通项400、选中项emphasis500；手动/自动激活、loop、RTL与方向不变；固定1.1.3尚不包含新增部分 |
 | ApiKeyManager | `pagination` 默认本地 pageSize 10、选项 `[10,25,50]`，只分页完整 `rows`；显式 `false` 关闭分页。切页不发请求、total 仅取完整已确认集合长度；不改变 adapter、后端分页或请求 owner |
 | Dialog/Popover/Menu/Tooltip | 关闭不保存。受控 open 与可取消变化遵循各自 React peer 合同。Content portal/默认定位：Select bottom/start 且 alignItemWithTrigger=false，Combobox/Menu bottom/start，Popover bottom/center，Tooltip top/center；positionerProps 可覆盖。Dialog 为模态，非模态浮层不 trap；Tooltip 只放说明 |
 | Sheet/AlertDialog/ContextMenu | Sheet默认end，确认initialFocus由宿主或安全取消/中性节点；context rightclick/Shift+F10，checked状态宿主拥有；details.cancel/finalFocus/嵌套生命周期见[弹层与工具栏](COMPONENTS.md#弹层与工具栏) |
@@ -933,6 +933,8 @@ React `/display` 与根入口公开 `OverflowText` / `OverflowTextProps`。runti
 ### 集合视图纯模型
 
 `/collection-view`与runtime根入口提供统一状态/分页校验、稳定key校验和同回合请求防重入，不依赖React/DOM，不持有查询、缓存、HTTP或业务提交。DataTable既有导出的getDataTableState/createDataTableRequestGuard/dataTableDefaultLabels及对应DataTable类型分别保留为同一实现的别名；合法输入行为、分页基数、未知total和cursor合同兼容。非法集合配置继续抛TypeError，通用诊断现使用Collection前缀；列宽/列身份诊断仍归DataTable。React集合直接采用同一模型与footer，不能由消费者另加兼容分页或复制控件。
+
+4.2.49新增CSS语义Token `--font-weight-emphasis`（500）：primary主操作与选中导航/Tab使用；现有`--font-weight-control`默认从500降为400，正文400/标题600和全部字体族、字号、行高不变。既有主题覆盖保持，普通控件与强调可分别定制，无新增JS接口或字体资源。
 
 文字 slot 的字体族、字号、行高与字重由[DESIGN 唯一映射](DESIGN.md#公共文字槽验收)定义，属于正式 CSS 合同和 xui 发布验收；宿主非必要不自设字号。本轮不新增字体 API、字号档位或原生 UI 入口。
 
