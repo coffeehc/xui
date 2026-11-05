@@ -18,6 +18,7 @@ import chineseLabels from '../shared/business-log-labels.json';
 import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import {createBusinessLogExample} from '../shared/business-log-model';
 import '@coffeehc/xui-theme/critical.css';
+import '@coffeehc/xui-theme/table-resize.css';
 import '@coffeehc/xui-theme/floating.css';
 const query=new URLSearchParams(location.search),configured=query.has('defaults'),application=bootstrapBrowserExample(configured?{pages:{businessLog:{title:'公共业务日志',pageSize:3}}}:{}),pages=resolveDefaultPages(application.config);
 const example=createBusinessLogExample(location.href,configured?pages.businessLog.options:undefined),root=createRoot(document.getElementById('root')!);

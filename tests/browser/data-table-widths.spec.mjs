@@ -142,3 +142,22 @@ for(const kind of ['react']){
     }
   });
 }
+
+test('one or two columns with confirmed widths still fill the port without inventing a column',async({page},info)=>{
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('/data-table-react/?internal&size=20&resize=injected&widths&hide-column=id&hide-column=kind&hide-column=source&hide-column=scope');
+  await page.waitForFunction(()=>window.dataTableDemo?.owner.getState().status==='ready');
+  await page.evaluate(()=>window.dataTableSizingDemo.controller.update({widths:{name:220,actions:120}}));
+  const port=page.locator('#records-table .xui-data-table-body');
+  const sample=()=>port.evaluate(n=>({port:n.clientWidth,table:n.querySelector('table').getBoundingClientRect().width,cols:[...n.querySelectorAll('thead th')].map(c=>c.getBoundingClientRect().width)}));
+  await expect.poll(async()=>Math.abs((await sample()).cols[1]-120)).toBeLessThan(1);
+  const two=await sample();expect(two.table).toBeCloseTo(two.port,0);expect(two.cols[0]).toBeCloseTo(two.port-120,0);
+  await page.evaluate(()=>window.dataTableDemo.setColumnView('sized',['id','kind','scope','source','actions']));
+  await expect(port.locator('thead th')).toHaveCount(1);
+  for(const width of [1440,620,390]){
+    await page.setViewportSize({width,height:900});
+    await expect.poll(async()=>{const m=await sample();return Math.abs(m.cols[0]-m.port);}).toBeLessThan(1);
+  }
+  expect(await page.evaluate(()=>window.dataTableSizingDemo.controller.getState().widths)).toEqual({name:220,actions:120});
+  await info.attach('sparse-columns.json',{body:JSON.stringify({two,one:await sample()}),contentType:'application/json'});
+});

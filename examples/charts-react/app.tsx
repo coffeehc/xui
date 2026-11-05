@@ -11,6 +11,7 @@ import {createResource} from '@coffeehc/xui-runtime/loading';
 import {disposeXuiServices} from '@coffeehc/xui-runtime/bootstrap';
 import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/critical.css';
+import '@coffeehc/xui-theme/table-resize.css';
 import '@coffeehc/xui-theme/chart.css';
 
 const params=new URLSearchParams(location.search),theme=bootstrapBrowserExample().services.getThemeService();

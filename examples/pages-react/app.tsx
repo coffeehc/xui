@@ -9,6 +9,7 @@ import {ToggleGroup} from '@coffeehc/xui-react/toggle-group';
 import {ThemeService,setInterfaceScale,type InterfaceScale} from '@coffeehc/xui-runtime/theme';
 import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import '@coffeehc/xui-theme/critical.css';
+import '@coffeehc/xui-theme/table-resize.css';
 const icons:Record<string,{paths:string[]}>= {key:{paths:['M8 11a4 4 0 1 1 3-3l6 6-3 3-2-2 1-1-2-2-1 1z']},user:{paths:['M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M4 17v-1a6 6 0 0 1 12 0v1']},shield:{paths:['M10 2l6 3v5c0 4-6 8-6 8S4 14 4 10V5z','M7 10l2 2 4-4']},warning:{paths:['M10 3l8 14H2z','M10 7v4M10 14h.01']}};
 const pages=[
  {id:'api-key',label:'API Key 管理',icon:'key',path:'/api-key-react/?embed&showcase'},

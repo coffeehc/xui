@@ -227,7 +227,7 @@ ApiKeyManager 一次性值及 StructuredLogExplorer 标识复制的临时结果�
 
 本次命中的Toast、复制和BusinessLogExplorer列表，按[定向验收入口](#toast-与复制及业务日志列表定向升级)选择适用行；组件字段、通知归属和请求合同只由该行引用的原规范定义，不因验收重新实现公共组件或增加请求owner。
 
-DataTable在4.2.26修正无纵向溢出时的滚轮陷阱，现有props/布局无需改变。按TABLE-SCROLL-001～003，在实际受影响页把指针放在表格内部测试上下滚动：无独立纵向范围时应滚动页面所属内容；固定高度表体仍内部滚动并保留首末边界；横向滚动不能拖动整页，sticky和键盘入口保持。不要在消费方转发wheel、覆盖私有overscroll样式或新增滚动容器。此升级不改变请求、认证或分页owner，库示例不代替产品页面复验。
+DataTable在4.2.26修正无纵向溢出时的滚轮陷阱，现有props/布局无需改变。按TABLE-SCROLL-001～003，在实际受影响页把指针放在表格内部测试上下滚动：无独立纵向范围时应滚动页面所属内容；固定高度表体仍内部滚动并保留首末边界；横向滚动不能拖动整页，sticky和键盘入口保持。不要在消费方转发wheel、覆盖私有overscroll样式或新增滚动容器。4.2.50 起还需确认三个布局模式下长表均表内滚动：上下滚动列头不动，横滚时操作可见，少列（包括调宽、隐藏列后）仍铺满。短表不制造纵向滚动区。此升级不改变请求、认证或分页owner，库示例不代替产品页面复验。
 
 运行采用项目的真实构建、相关测试及[逐项浏览器矩阵](ADOPTION_CHECKLIST.md#逐项浏览器验收矩阵)，逐页、逐实例、逐 slot 填证据。覆盖适用的 light/dark/system 及系统实时切换、桌面/窄屏、长中文、200%文字与真实浏览器200%缩放、键盘/回焦、弹层指针命中与滚动；界面比例、用户文字放大与真实浏览器 page zoom 分别记录，不能相互替代。各实际支持的构建入口分别检查，dev 页面不能代表嵌入产物或 Desktop。
 
@@ -469,7 +469,7 @@ AppShell/MenuLayout 默认启用桌面 `sidebarRevealOnHover`，false 显式退�
 
 ### 组合数据表格定向升级（4.2.36）
 
-BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 和 Chart 数据视图均已由 DataTable 统一表体、行、状态与列宽调整。组合默认启用业务数据列手柄，内置详情/操作列固定；宿主继续使用原领域 Controller、过滤/分页与详情接线，不将请求移入 DataTable。库不提供“重置列宽”按钮。宿主自己的表格应使用公开 DataTable、显式 `columnSizing`，固定操作列用 `resize:false`，移除宿主自建的重置列宽按钮。
+BusinessLogExplorer、StructuredLogExplorer、ApiKeyManager 和 Chart 数据视图均已由 DataTable 统一表体、行、状态与列宽调整。组合默认启用业务数据列手柄，内置详情/操作列固定；宿主继续使用原领域 Controller、过滤/分页与详情接线，不将请求移入 DataTable。库不提供“重置列宽”按钮。宿主自己的表格应使用公开 DataTable、显式 `columnSizing`，固定在逻辑末端的操作列使用标准末列 `id:"actions"` 或显式 `sticky:"end"`；`resize:false` 只关闭调宽手柄，移除宿主自建的重置列宽按钮。
 
 需要列宽偏好时直接向组合传 `columnSizing` 的受控或注入配置，不新建第二个列宽 owner。业务日志用 `list.columns[].resize`；结构化日志用 `columnOptions` 的稳定语义 id 指定宽度/上下限，actions 仅固定。接口与 id 见[公共契约](PUBLIC_API.md#组合表格列宽4236)。只使用完整 style.css 时无需增加 CSS；按分片使用 table.css 的项目须同步加载 table-resize.css。
 

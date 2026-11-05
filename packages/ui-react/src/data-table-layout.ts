@@ -2,8 +2,7 @@
  * @internal One geometry owner per rendered DataTable. Writes the body's track,
  * component minimum, actual vertical scroll boundary and no-records loading offset below the measured header.
  * Focused body actions follow asynchronous column/font and cell geometry changes.
- * Host heights, column sizing,
- * pagination and full-content document flow stay outside this owner.
+ * Host heights, column sizing and pagination stay outside this owner.
  */
 export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, table: HTMLTableElement) {
   const win = table.ownerDocument.defaultView;
@@ -54,7 +53,7 @@ export function observeDataTableLayout(frame: HTMLElement, body: HTMLElement, ta
     const chrome = Array.from(frame.children).reduce((height, node) => height + (node === body || node === loading ? 0 : (node as HTMLElement).offsetHeight), 0);
     const frameEdges = number(frameStyle.borderTopWidth) + number(frameStyle.borderBottomWidth) + number(frameStyle.paddingTop) + number(frameStyle.paddingBottom);
     const componentMinimum = Math.ceil(chrome + frameEdges + minimum);
-    const rootMinimum = root.dataset.layout === 'document' ? originalMinimum : root.dataset.layout === 'workspace' ? `max(var(--data-table-min-block-size), ${componentMinimum}px)` : `${componentMinimum}px`;
+    const rootMinimum = root.dataset.layout === 'workspace' ? `max(var(--data-table-min-block-size), ${componentMinimum}px)` : `${componentMinimum}px`;
     const tracks = `auto minmax(${minimum}px, 1fr) auto`;
     if (frame.style.gridTemplateRows !== tracks) frame.style.gridTemplateRows = tracks;
     if (root.style.minBlockSize !== rootMinimum) root.style.minBlockSize = rootMinimum;

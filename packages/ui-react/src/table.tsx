@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {cx} from './shared.js';
-export function Table({className,striped,stickyHeader,...props}:React.ComponentProps<'table'>&{striped?:boolean;stickyHeader?:boolean}){return <table {...props} className={cx('xui-table',className)} data-striped={striped} data-sticky-header={stickyHeader}/>;}
+export function Table({className,striped,stickyHeader=true,...props}:React.ComponentProps<'table'>&{striped?:boolean;stickyHeader?:boolean}){return <table {...props} className={cx('xui-table',className)} data-striped={striped} data-sticky-header={stickyHeader}/>;}
 export function TableContainer({className,onFocus,...props}:React.ComponentProps<'div'>){return <div tabIndex={0} role="region" {...props} className={cx('xui-table-container',className)} onFocus={event=>{
  onFocus?.(event);if(event.defaultPrevented||event.target===event.currentTarget||!event.currentTarget.contains(event.target))return;
  // Chrome page zoom can focus a clipped cell action without revealing it.

@@ -60,7 +60,7 @@ export function BusinessLogExplorer({viewController:injected,controller:borrowed
   const lastTrigger=React.useRef<HTMLButtonElement|null>(null),refresh=React.useRef<HTMLButtonElement>(null),table=getBusinessLogTable(state,labels,list),detail=state.detail;
   const cells=new Map((list?.columns??defaultColumns(labels)).map(column=>{if(column.cell!=null&&typeof column.cell!=='function')throw new TypeError('Business log cell must be a function or null');return [column.id,column.cell] as const;}));
   const columns:readonly DataTableColumn<typeof table.rows[number]>[]=table.columns.map((column,index)=>({
-    id:column.id,header:column.header,width:column.width??(column.id==='detail'?'var(--layout-field-min)':undefined),resize:column.resize,
+    id:column.id,header:column.header,width:column.width??(column.id==='detail'?'min(var(--layout-field-min), 50%)':undefined),resize:column.resize,sticky:column.id==='detail'?'end':false,
     cellClassName:column.id==='summary'?'xui-table-primary':['action','occurred_at'].includes(column.id)?'xui-code xui-table-value':column.id==='detail'?undefined:'xui-table-label',
     cell:row=>{
       const detail=column.id==='detail',value=row.values[index],text=detail?labels.detail:value==null?'':typeof value==='object'?JSON.stringify(value):String(value);

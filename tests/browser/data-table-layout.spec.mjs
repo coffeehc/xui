@@ -397,77 +397,31 @@ for(const kind of kinds){
     await expect(search(page)).toBeFocused();
   });
 
-  for(const {layout,internal} of [{layout:'natural',internal:false},{layout:'natural',internal:true},{layout:'document',internal:true}]){
-    test(`${kind} ${layout}, auto-height parent, internal=${internal}: content grows and document scroll reaches footer`,async({page})=>{
-      await setup(page,kind,['unbounded','local','size=100',...(layout==='document'?['layout=document']:[]),...(internal?['internal']:[])]);
-      await expect(page.locator(selectors.shell)).toHaveAttribute('data-scroll-mode','document');
-      await expect(page.locator(selectors.outer)).toHaveAttribute('data-layout',layout);
-      await expect(rows(page)).toHaveCount(100);
-      const before=await capture(page,'unbounded-top');assertFrame(before);await assertControls(page,before,{internal});
-      for(const key of ['main','content','outer','frame','body'])noVerticalScroll(before,key);
-      noHorizontalEscape(before,'document');
-      expect(before.body.height,'an auto-height ancestor does not resolve the body to zero').toBeGreaterThan(before.viewport.height);
-      near(before.body.height,before.grid.height,'unbounded rows remain in natural flow');
-      expect(before.document.scrollHeight,'document owns the long scroll range').toBeGreaterThan(before.document.clientHeight);
-      expect(before.footer.y,'footer follows all rows below the viewport').toBeGreaterThan(before.viewport.height);
-      await assertFooter(page,before);
-      await page.locator(selectors.footer).scrollIntoViewIfNeeded();await settle(page);
-      const after=await capture(page,'unbounded-footer');
-      expect(after.document.scrollTop,'reaching the footer uses document scroll').toBeGreaterThan(0);
-      near(after.body.scrollTop,0,'body has not acquired a competing scroll offset');
-      for(const key of ['main','content'])near(after[key].scrollTop,0,`${key} remains an ordinary document section`);
-      expect(after.lastRow.bottom).toBeLessThanOrEqual(after.body.bottom+1.5);
-      await expect(rows(page).last()).toBeInViewport({ratio:1});
-      await expect(size(page)).toBeInViewport({ratio:1});await expect(next(page)).toBeInViewport({ratio:1});
-      // Removing most content must also shrink the document after it was scrolled.
-      await page.evaluate(()=>window.dataTableDemo.owner.filter('search','记录 125'));await ready(page);
-      const one=await capture(page,'unbounded-one');assertFrame(one);
-      await expect(rows(page)).toHaveCount(1);near(one.body.height,one.grid.height,'auto-height parent still follows one row');
-      expect(one.outer.height).toBeLessThan(before.outer.height);
-      noVerticalScroll(one,'body');await expect(size(page)).toBeInViewport({ratio:1});
-    });
-  }
-
-  for(const flexHost of [false,true])test(`${kind} explicit document with ${flexHost?'flex':'normal'} bounded host: no cap, reachable scroll fallback`,async({page})=>{
-    await setup(page,kind,['layout=document','local','size=100',...(flexHost?['flex-host']:[])]);
-    await expect(page.locator(selectors.shell)).toHaveAttribute('data-scroll-mode','workspace');
-    await expect(page.locator(selectors.outer)).toHaveAttribute('data-layout','document');
+  for(const layout of ['natural','document','workspace'])test(`${kind} ${layout} in an auto-height document: long rows scroll inside, one row stays natural`,async({page})=>{
+    await setup(page,kind,['unbounded','local','size=100','internal',`layout=${layout}`]);
     await expect(rows(page)).toHaveCount(100);
-    const before=await capture(page,'document-bounded-top');assertFrame(before);
-    if(flexHost){
-      expect(before.host.display,'fixture is an actual flex parent').toBe('flex');
-      expect(before.host.minBlockSize,'fixture allows its flex item to shrink').toBe('0px');
-      near(before.host.height,before.content.contentHeight,'flex parent has a definite bounded block size');
-    }
-    for(const key of ['document','main','outer','frame','body'])noVerticalScroll(before,key);
-    for(const key of ['document','main','content'])noHorizontalEscape(before,key);
-    expect(before.outer.height,'document mode does not inherit the bounded natural cap').toBeGreaterThan(before.content.clientHeight);
-    near(before.body.height,before.grid.height,'all rows participate in unbounded body flow');
-    expect(before.content.scrollHeight,'the public shell content owns a real fallback range').toBeGreaterThan(before.content.clientHeight);
-    expect(before.footer.y).toBeGreaterThan(before.content.bottom);
-    await page.locator(selectors.footer).scrollIntoViewIfNeeded();await settle(page);
-    const after=await capture(page,'document-bounded-footer');
-    expect(after.content.scrollTop,'footer is reached through the bounded shell content').toBeGreaterThan(0);
-    for(const key of ['document','main','body'])near(after[key].scrollTop,0,`${key} does not take the content fallback scroll`);
-    await expect(rows(page).last()).toBeInViewport({ratio:1});
-    await expect(size(page)).toBeInViewport({ratio:1});await expect(next(page)).toBeInViewport({ratio:1});
+    const before=await capture(page,'long-table');assertFrame(before);
+    expect(before.body.height).toBeLessThanOrEqual(before.viewport.height+1);
+    expect(before.body.scrollHeight).toBeGreaterThan(before.body.clientHeight+100);
+    await body(page).evaluate(node=>{node.scrollTop=node.scrollHeight;});await settle(page);
+    const after=await capture(page,'last-row');
+    near(after.stickyHeader.y,before.stickyHeader.y,'header stays fixed');
+    near(after.document.scrollTop,before.document.scrollTop,'table scroll does not move document');
+    expect(after.lastRow.bottom).toBeLessThanOrEqual(after.body.bottom+1.5);
     await page.evaluate(()=>window.dataTableDemo.owner.filter('search','记录 125'));await ready(page);
-    await assertShort(page,1,{label:'document-bounded-one'});
+    const one=await capture(page,'short-table');assertFrame(one);noVerticalScroll(one,'body');
+    expect(one.outer.height).toBeLessThan(before.outer.height);await expect(rows(page)).toHaveCount(1);
   });
 
-  test(`${kind} explicit workspace with an auto-height parent preserves its intrinsic floor and content flow`,async({page})=>{
-    await setup(page,kind,['unbounded','layout=workspace','local','empty','no-search','no-actions','no-pagination']);
-    for(const count of [0,100,1]){
-      if(count===100){await page.evaluate(()=>{window.dataTableDemo.owner.setEmpty(false);window.dataTableDemo.owner.pageSize(100);});await ready(page);}
-      if(count===1){await page.evaluate(()=>window.dataTableDemo.owner.filter('search','记录 125'));await ready(page);}
-      await expect(rows(page)).toHaveCount(count);
-      const m=await capture(page,`workspace-auto-${count}`);assertFrame(m);noVerticalScroll(m,'body');
-      const minimum=await page.locator(selectors.outer).evaluate(node=>parseFloat(getComputedStyle(node).minBlockSize));
-      expect(Number.isFinite(minimum),'the declared workspace intrinsic floor resolves in an auto-height parent').toBe(true);
-      expect(m.outer.height).toBeGreaterThanOrEqual(minimum-1.5);
-      expect(m.body.height).toBeGreaterThanOrEqual(m.grid.height-1.5);
-      if(count===100){expect(m.outer.height).toBeGreaterThan(m.viewport.height);await page.locator(selectors.footer).scrollIntoViewIfNeeded();await expect(page.locator(selectors.count)).toBeInViewport({ratio:1});}
-    }
+  for(const flexHost of [false,true])test(`${kind} document table respects a bounded ${flexHost?'flex':'block'} parent`,async({page})=>{
+    await setup(page,kind,['layout=document','local','size=100',...(flexHost?['flex-host']:[])]);
+    const before=await capture(page,'bounded-document');assertFrame(before);
+    expect(before.outer.height).toBeLessThanOrEqual(before.content.contentHeight+1.5);
+    expect(before.body.scrollHeight).toBeGreaterThan(before.body.clientHeight+100);
+    await body(page).evaluate(node=>{node.scrollTop=node.scrollHeight;});await settle(page);
+    const after=await capture(page,'bounded-end');sameRect(before,after,'footer');sameRect(before,after,'stickyHeader');
+    expect(after.lastRow.bottom).toBeLessThanOrEqual(after.body.bottom+1.5);
+    await expect(next(page)).toBeInViewport({ratio:1});
   });
 
   test(`${kind} explicit workspace keeps fill behavior for empty, one and long data`,async({page})=>{

@@ -902,6 +902,8 @@ Calendar 的 `CalendarProps` 公开受控 `month`/`onMonthChange`；runtime `/ca
 
 `DataTableRowContext`/`DataTableRowEvents` 是 React `/data-table` 的 typed 行事件合同，`DataTableProps<T>` 接受 row events；事件来源边界由 React 组件内部维护，runtime 不导出 DOM 行事件处理器。键盘可达性、独立 cell action 与分页行为见[数据表格](COMPONENTS.md#数据表格)。
 
+4.2.50：Table 与 DataTable 默认固定整组表头；TableContainer 与三种 DataTable 布局的长内容在表内滚动。DataTableColumn 的标准末列 `id:"actions"` 自动固定到逻辑末端；既有 `sticky:"end"` 适用于其他操作列，`sticky:false` 可明确取消。BusinessLogExplorer 的 detail、StructuredLogExplorer 和 ApiKeyManager 的 actions 默认固定；无操作列不生成或固定普通末列。确认列宽之和小于可视区时补齐余宽，传给 Controller 的宽度不变。见[滚动合同](COMPONENTS.md#页面标题筛选与滚动)。
+
 4.2.26仅修复DataTable实际纵向滚动边界：无纵向范围时纵向wheel交给祖先，有范围时保留表体contain，横向与sticky不变。公开ESM/types和props无新增入口，无宿主overscroll开关或请求改变；示例与边界降级见[滚动合同](COMPONENTS.md#页面标题筛选与滚动)。
 
 Table/DataTable的正式CSS默认全表仅行线，sticky不额外添加列分割线；原有列sticky配置不变，当前没有行列网格开关。详见[表格组件](COMPONENTS.md#数据表格)。

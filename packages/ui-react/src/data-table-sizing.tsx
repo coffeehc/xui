@@ -15,16 +15,22 @@ export function useDataTableColumnSizing(options:DataTableColumnSizingProps|unde
   return {controller,widths};
 }
 interface ResizeProps {
+  onCommitWidth:(id:string,width:number)=>void;
   columnId:string;label:string;bounds:DataTableColumnResizeOptions|false|undefined;blocked:boolean;
   controller:DataTableColumnSizingController;table:React.RefObject<HTMLTableElement|null>;ids:readonly string[];
   minimum:React.RefObject<HTMLDivElement|null>;maximum:React.RefObject<HTMLDivElement|null>;
 }
 /** One separator owns its pointer capture and temporary listeners. Controller owns the draft and confirmed widths. */
-export function ColumnResizeHandle({columnId,label,bounds,blocked,controller,table,ids,minimum,maximum}:ResizeProps){
+export function ColumnResizeHandle({onCommitWidth,columnId,label,bounds,blocked,controller,table,ids,minimum,maximum}:ResizeProps){
   const [,focusRevision]=React.useReducer(value=>value+1,0);
   const ref=React.useRef<HTMLDivElement>(null),gesture=React.useRef<{release:()=>void}|null>(null);
   const stop=()=>{const active=gesture.current;if(!active)return;gesture.current=null;active.release();};
   const cancel=()=>{if(gesture.current){stop();controller.cancel();}};
+  const commit=()=>{
+    const draft=controller.getState().resizing;
+    if(draft&&draft.width!==draft.startWidth)onCommitWidth(columnId,draft.width);
+    controller.commit();
+  };
   const lifetime=React.useRef({});useViewRelease(lifetime.current,cancel);
   React.useLayoutEffect(()=>()=>cancel(),[controller]);
   const signature=JSON.stringify([ids,bounds&&bounds.minWidth,bounds&&bounds.maxWidth]);
@@ -68,7 +74,7 @@ export function ColumnResizeHandle({columnId,label,bounds,blocked,controller,tab
       let frame=0,last=start;
       const apply=()=>controller.resizeTo(width+(last-start)/scale*(rtl?-1:1));
       const move=(next:PointerEvent)=>{if(next.pointerId!==id)return;last=next.clientX;if(!frame)frame=win.requestAnimationFrame(()=>{frame=0;apply();});};
-      const finish=(next:PointerEvent)=>{if(next.pointerId!==id)return;try{last=next.clientX;win.cancelAnimationFrame(frame);frame=0;apply();controller.commit();}finally{stop();}};
+      const finish=(next:PointerEvent)=>{if(next.pointerId!==id)return;try{last=next.clientX;win.cancelAnimationFrame(frame);frame=0;apply();commit();}finally{stop();}};
       const abort=(next:Event)=>{if(!('pointerId' in next)||next.pointerId===id)cancel();},key=(next:KeyboardEvent)=>{if(next.key==='Escape'){next.preventDefault();next.stopPropagation();cancel();}};
       const limits=new ResizeObserver(()=>{const next=context();if(next.min!==min||next.max!==max)cancel();});limits.observe(minimum.current!);limits.observe(maximum.current!);
       const release=()=>{win.cancelAnimationFrame(frame);limits.disconnect();win.removeEventListener('pointermove',move);win.removeEventListener('pointerup',finish);win.removeEventListener('pointercancel',abort);win.removeEventListener('blur',abort);win.removeEventListener('resize',abort);win.removeEventListener('keydown',key,true);node.removeEventListener('lostpointercapture',abort);if(node.hasPointerCapture(id))node.releasePointerCapture(id);};
@@ -77,6 +83,6 @@ export function ColumnResizeHandle({columnId,label,bounds,blocked,controller,tab
     onKeyDown={event=>{
       if(blocked||bounds===false||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)||event.ctrlKey||event.metaKey||event.altKey)return;
       event.preventDefault();event.stopPropagation();const {widths,min,max,rtl}=context();
-      if(controller.begin(columnId,widths,{minWidth:min,maxWidth:max},'keyboard')){const delta=(event.key==='ArrowRight'?1:-1)*(rtl?-1:1)*(event.shiftKey?10:1);controller.resizeTo(event.key==='Home'?min:event.key==='End'?max:widths[columnId]+delta);controller.commit();}
+      if(controller.begin(columnId,widths,{minWidth:min,maxWidth:max},'keyboard')){const delta=(event.key==='ArrowRight'?1:-1)*(rtl?-1:1)*(event.shiftKey?10:1);controller.resizeTo(event.key==='Home'?min:event.key==='End'?max:widths[columnId]+delta);commit();}
     }}/>
 }

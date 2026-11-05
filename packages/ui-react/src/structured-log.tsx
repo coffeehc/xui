@@ -46,7 +46,7 @@ function StructuredLogExplorerContent({viewController:injected,controller:borrow
   const setSubject=(key:'kind'|'id',value:string)=>{const subject={kind:draft.subject?.kind??'',id:draft.subject?.id??'',[key]:value};setDraft({...draft,subject:subject.kind||subject.id?subject:null});};
   const lastTrigger=React.useRef<HTMLElement|null>(null),refresh=React.useRef<HTMLButtonElement>(null),table=getStructuredLogTable(state,labels),detail=state.detail;
   const columns:readonly DataTableColumn<typeof table.rows[number]>[]=table.columnIds.map((id,index)=>({
-    id,header:table.headers[index],...columnOptions?.[id],width:columnOptions?.[id]?.width??(id==='actions'?'var(--layout-field-min)':undefined),resize:id==='actions'?false:columnOptions?.[id]?.resize,
+    id,header:table.headers[index],...columnOptions?.[id],width:columnOptions?.[id]?.width??(id==='actions'?'min(var(--layout-field-min), 50%)':undefined),resize:id==='actions'?false:columnOptions?.[id]?.resize,
     cellClassName:id==='summary'?'xui-table-primary':['entry_count','matched_entry_count','last_seen_at','occurred_at'].includes(id)?'xui-code xui-table-value':id==='actions'?undefined:'xui-table-label',
     cell:row=>id==='actions'?<Button variant="text" size="xs" aria-label={`${table.action} ${row.id}`} onClick={event=>{lastTrigger.current=event.currentTarget;void(state.view==='groups'?controller.showGroup(row.id):controller.openRecord(row.id));}}>{table.action}</Button>:row.cells[index],
   }));

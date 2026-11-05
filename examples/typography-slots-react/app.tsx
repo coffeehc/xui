@@ -67,7 +67,7 @@ function App(){
    </FormGrid><FormActions><Button data-type-id="button" data-type-role="control">保存任务</Button></FormActions>
   </Section>
   <Section title="列表与导航">
-   <DataTable label="合成记录" rows={[{id:'one',name:'记录一'}]} rowKey={row=>row.id} columns={[{id:'name',header:<Sample id="table-head" role="label">记录名称</Sample>,cell:row=><Sample id="table-cell">{row.name}</Sample>},{id:'action',header:'操作',cell:()=> <Button size="sm" data-type-id="cell-button" data-type-role="control">查看</Button>}]} footer={<Sample id="table-footer" role="meta">数据来自合成样板</Sample>}/>
+   <DataTable label="合成记录" rows={[{id:'one',name:'记录一'}]} rowKey={row=>row.id} columns={[{id:'name',header:<Sample id="table-head" role="label">记录名称</Sample>,cell:row=><Sample id="table-cell">{row.name}</Sample>},{id:'action',header:'操作',sticky:'end',cell:()=> <Button size="sm" data-type-id="cell-button" data-type-role="control">查看</Button>}]} footer={<Sample id="table-footer" role="meta">数据来自合成样板</Sample>}/>
    <Pagination pageCount={3}/>
    <NavigationMenu label="样板导航" items={[{id:'group',label:'团队',group:true,children:[{id:'tasks',label:'研究任务与很长的中文工作空间名称',href:'#tasks'}]}]}/>
    <RecordViews/>

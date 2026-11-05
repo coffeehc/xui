@@ -436,7 +436,7 @@ Icon/color参数从1.2.0提供；固定1.1.3消费方须先升级正式包再验
 
 | TABLE-SCROLL-001 | 自然高度表体无纵向溢出 | 指针位于单元格时，上下滚轮交给既有页面/内容owner；viewport的header/侧栏不随正文移动；不依赖表格外空白或wheel补丁 | 实际wheel输入、表体及祖先scrollTop/clientHeight/scrollHeight、header/侧栏矩形 | [DataTable滚动](COMPONENTS.md#页面标题筛选与滚动) |
 | TABLE-SCROLL-002 | 真实有界表体、少/多/空行及尺寸变化 | 有纵向范围时表体滚动且首末边界保留；范围消失后不阻断祖先；数据/字号/视口更新保留DOM和焦点 | 滚轮前中后范围、节点身份、两种200%、键盘入口 | [DataTable滚动](COMPONENTS.md#页面标题筛选与滚动) |
-| TABLE-SCROLL-003 | 表格横向溢出及sticky列 | 横向wheel仅滚动表体，页面不横向漂移；sticky列/表头对齐、分页和最后操作仍可达 | scrollLeft、sticky矩形、焦点与分页实际操作 | [DataTable列宽](COMPONENTS.md#页面标题筛选与滚动) |
+| TABLE-SCROLL-003 | 表格横向溢出及sticky列 | natural/workspace/document 各按实际使用验证：纵滚表头坐标不变；横滚只有数据移动，尾部操作持续可见可点，纯数据表不冻结末列；少列、调宽和隐藏列后铺满净宽，页脚可达 | 记录滚动前/中/末端 scrollLeft/Top、表头和操作单元格坐标、表宽与可视净宽；键盘和指针实际操作 | [DataTable列宽](COMPONENTS.md#页面标题筛选与滚动) |
 
 ## API 接入公共底座
 

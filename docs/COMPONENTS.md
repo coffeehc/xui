@@ -1158,11 +1158,11 @@ const sizing=createDataTableColumnSizingController();
 
 创建者销毁注入实例；View只订阅并清理自己的指针操作，不销毁注入者。`getState/subscribe/destroy`同既有observable合同；`begin(id,liveWidths,{minWidth,maxWidth},reason?)`开始、`resizeTo(px)`预览、`commit()`确认、`cancel()`无通知取消、`reset()`请求空widths恢复原布局、`update({widths,onWidthsChange})`接收确认/配置。模型不持DOM，View传入当前实际像素轨道。widths是只读`Record<稳定列id,正有限CSS像素数>`，不接受CSS字符串；初始列width继续支持rem/百分比/CSS数学式。数字是CSS像素而非设备像素，不做时区、查询或业务转换。
 
-指针开始时快照全部当前可见列的实际宽度；预览固定这些轨道，只改变目标列，避免浏览器将增量重新分摊。松开一次回调`onWidthsChange(widths,{columnId,reason:'pointer'|'keyboard'|'reset'})`，移动/受控update/零移动/取消不回调。确认后表格按精确总宽渲染，可大于或小于可视表体；其他列保持宽度、表体自身横滚，footer仍沿表体自然宽度。尚未确认的默认布局继续铺满。受控宿主若不确认则返回旧值；外部新确认值会取消旧草稿，同步回调确认优先。`reset()`不改变数据或页码。
+指针开始时快照全部当前可见列的实际宽度；仅目标列改变请求宽度；可视净宽超过轨道总宽时，由表格分配剩余空间。松开一次回调`onWidthsChange(widths,{columnId,reason:'pointer'|'keyboard'|'reset'})`，移动/受控update/零移动/取消不回调。4.2.50 起，确认宽度总和超过可视净宽则保留各轨道并表内横滚；不足时，余宽交给可调且未固定的数据列，优先选正在调整列之外最靠后的那一列；只有一个数据列时由它铺满，没有可调数据列才交给末列。即使只剩一列也铺满，不插入空白列，不改写 Controller 偏好。尚未确认的默认布局继续铺满。受控宿主若不确认则返回旧值；外部新确认值会取消旧草稿，同步回调确认优先。`reset()`不改变数据或页码。
 
 每列默认出现一个独立的focusable separator；`resize:false`排除。`resize.label`可本地化；默认名称使用字符串header或稳定id，不假设ReactNode能转成文字。header内容/排序按钮与separator是兄弟，拖动不触发排序。role=separator、vertical、aria-valuenow/min/max由真实宽度与交互范围维护。左右键每次1 CSS px，Shift为10；RTL反向，Home/End到交互上下限。Escape只取消本次拖动并保留焦点，不顺带关闭外层弹层。
 
-启用columnSizing后，初始轨道以已有width与resize.minWidth（缺省使用公共data-table-column-resize-min）中较大者为下限；没有width的列也获得此下限，避免窄屏弹性列被压到零宽。余宽仍由浏览器分配。maxWidth是调整上限，默认min/max为64/1920 CSS px并随文字尺度派生；初始弹性分配可能超过max，第一次有效调整会收敛。显式确认widths是正有限CSS像素快照；重置空记录恢复上述初始分配。未启用columnSizing的表格保持旧布局。指针拖动、键盘确认、独立配置、两种Controller遵守同一限制。触屏使用24px×表头高的独立拖动轨道和pointer capture；不将整个th或tr改成按钮。disabled/loading/refreshing时禁止列调整并取消在途草稿；保留已确认宽度、行与焦点。pointercancel、丢失capture、窗口失焦/resize、pagehide、bounds/列结构/Controller更换、卸载均取消并释放临时监听；字尺度导致默认上下限变化也取消。窄屏/缩放使用同一表体横滚，不刷新Document或重挂rows。
+启用columnSizing后，初始轨道以已有width与resize.minWidth（缺省使用公共data-table-column-resize-min）中较大者为下限；没有width的列也获得此下限，避免窄屏弹性列被压到零宽。余宽仍由浏览器分配。maxWidth是调整上限，默认min/max为64/1920 CSS px并随文字尺度派生；实际填满余宽的列可超过max；max限制请求宽度，不截断渲染所需的余宽。显式确认widths是正有限CSS像素快照；重置空记录恢复上述初始分配。未启用columnSizing的表格保持旧布局。指针拖动、键盘确认、独立配置、两种Controller遵守同一限制。触屏使用24px×表头高的独立拖动轨道和pointer capture；不将整个th或tr改成按钮。disabled/loading/refreshing时禁止列调整并取消在途草稿；保留已确认宽度、行与焦点。pointercancel、丢失capture、窗口失焦/resize、pagehide、bounds/列结构/Controller更换、卸载均取消并释放临时监听；字尺度导致默认上下限变化也取消。窄屏/缩放使用同一表体横滚，不刷新Document或重挂rows。
 
 ### 列宽与内容边界
 
@@ -1186,20 +1186,22 @@ const sizing=createDataTableColumnSizingController();
 
 ### 页面标题、筛选与滚动
 
+4.2.50：底层 `TableContainer` 和三种 DataTable 布局共用一个可聚焦的双轴滚动区。整组表头默认固定在纵向起始边，多行表头保持上下次序。横向滚动时只固定已声明的列；标准尾列 `id:'actions'` 自动固定在逻辑末端，自定义操作尾列用 `sticky:'end'`。不按标题或 cell 中是否含按钮猜测；纯数据表不冻结最后一个字段。基础 Table 在操作列对应的 TableHeaderCell 与 TableCell 上均传 `sticky="end"`。既有显式 `stickyHeader={false}` 和列 `sticky:false` 是有意退出；`resize:false` 只管列宽手柄。工具栏和分页留在表体外。
 
-- `natural`：零行、少量行时随内容自然收缩；有实际确定高度的父容器时，以 `max-block-size:100%` 为上限，多行才由表体独立滚动，内部 toolbar、反馈和 footer 保留在正常布局流。父容器高度为 auto 时，百分比上限不能创造可用视口，表格仍按文档流增长；要限制高度，先通过公开 shell 或宿主已知尺寸建立真实边界。
+
+- `natural`：零行、少量行时随内容自然收缩；有实际确定高度的父容器时，以 `max-block-size:100%` 为上限，多行才由表体独立滚动，内部 toolbar、反馈和 footer 保留在正常布局流。父容器高度为 auto 时，以动态视口高度为表体上限；少量行不填充额外高度。
 - `workspace`：显式保留旧有填满已分配正文高度和组件最小高度的行为，适合需要少量行也占满工作区的页面。
-- `document`：始终按无约束文档流增长，即使父容器有确定高度也不采用 natural 的高度上限；外层页面负责滚动可达性。
+- `document`：保持普通文档中的自然占位，不要求撑满父级。自 4.2.50 起也遵守有界父级与动态视口上限，长表在表体内滚动。
 
-4.2.26起，纵向滚动边界按表体实际`scrollHeight > clientHeight`建立，而非按layout/行数猜测。没有纵向溢出时，表格内的纵向滚轮自然传给既有祖先owner：`MenuLayout scrollMode="viewport"`由main滚动且header/侧栏保持，workspace由既有正文滚动区承担，document由文档承担。真正受限的表体仍内部纵滚，并在首末边界保持contain；横向contain、列宽、sticky、分页与焦点合同不变。现有同一布局观察器随内容/高度变化更新并在销毁时清理内部标记，不新增公开属性或wheel处理器；无布局测量时安全降级为纵向auto。此内部标记不是宿主配置接口。正式示例`/data-table-react/?viewport&size=50&no-search&no-actions`演示固定壳中的自然高度长表格；`?internal&size=50`演示有界表体。
+4.2.26起，纵向滚动边界按表体实际`scrollHeight > clientHeight`建立，而非按layout/行数猜测。没有纵向溢出时，表格内的纵向滚轮自然传给既有祖先owner：`MenuLayout scrollMode="viewport"`由main滚动且header/侧栏保持，workspace由既有正文滚动区承担，document由文档承担。真正受限的表体仍内部纵滚，并在首末边界保持contain；横向contain、列宽、sticky、分页与焦点合同不变。现有同一布局观察器随内容/高度变化更新并在销毁时清理内部标记，不新增公开属性或wheel处理器；无布局测量时安全降级为纵向auto。此内部标记不是宿主配置接口。正式示例`/data-table-react/?viewport&size=50&no-search&no-actions`演示固定壳中在表内滚动的长表；`?internal&size=50`演示有界表体。
 
 采用已有 `AppShell/MenuLayout` 的 `scrollMode="workspace"`、`pageHeader` 与正文可提供真实高度边界，没有第二套 PageLayout。下面让自然高度表格在 workspace 正文内按内容收缩，并把筛选放在同一表格外框内：
 
 组件内部的 toolbar、表体与 footer 共用一个 frame；已有行的状态反馈与自定义 feedback 放在 footer 的计数区域，未出现反馈时不在列头上方预留空行；只有表体 `TableContainer` 在高度受限时滚动，列头按原有 stickyHeader 合同默认启用。边框属于整体 frame，滚动容器不再叠一层外框；底栏有必要的信息分隔。组件使用真实可用高度，宿主无需测量 pageHeader 或减固定像素，也不 absolute/fixed 定位分页。
 
-极端字号或高工具条使全部 chrome 超过正文分配高度时，外框保留完整工具条/反馈/底栏和可读表体下限，交给既有祖先滚动，不让 footer 越出 frame。库内部只有一个稳定的布局观察器，以实际 table、thead、首末行高度和 computed scroll-padding/滚动条计算 `min(实际内容高度, 表头与首末行较高者的可读高度)`，将该值用于 Grid 的表体轨道，并与组件自身工具条/footer（含反馈）的实际高度、frame 边框相加，设置组件根的最小高度；不读取宿主页头或已分配的根/frame 高度作为下限。workspace 取该实测最小值与原 token 的较大者，document 不加此根下限。无固定表头数字、行数分类或新的宿主参数。短内容不会因此补出空白。观察器只观察内容输入节点，不观察写入尺寸的 root/frame；合并同帧读写、无变化不写、忽略隐藏时的零几何、恢复显示后重测，并在销毁时释放及恢复拥有的内联值；列宽测量与 colgroup 合同独立且不变。
+极端字号或高工具条使全部 chrome 超过正文分配高度时，外框保留完整工具条/反馈/底栏和可读表体下限，交给既有祖先滚动，不让 footer 越出 frame。库内部只有一个稳定的布局观察器，以实际 table、thead、首末行高度和 computed scroll-padding/滚动条计算 `min(实际内容高度, 表头与首末行较高者的可读高度)`，将该值用于 Grid 的表体轨道，并与组件自身工具条/footer（含反馈）的实际高度、frame 边框相加，设置组件根的最小高度；不读取宿主页头或已分配的根/frame 高度作为下限。workspace 取该实测最小值与原 token 的较大者，document 与 natural 取同一实测可读下限。无固定表头数字、行数分类或新的宿主参数。短内容不会因此补出空白。观察器只观察内容输入节点，不观察写入尺寸的 root/frame；合并同帧读写、无变化不写、忽略隐藏时的零几何、恢复显示后重测，并在销毁时释放及恢复拥有的内联值；列宽测量与 colgroup 合同独立且不变。
 
-这个下限保证边缘记录操作的可达空间，不保证任意高度的全部中间行都可完整同屏。自定义超高单元格仍由表体滚动访问；需要逐行长文档阅读时可选 `document`，或按已有 `stickyHeader={false}` / `{stickyHeader:false}` 关闭吸顶列头。父视口本身不足时使用祖先滚动，不裁切内容。
+这个下限保证边缘记录操作的可达空间，不保证任意高度的全部中间行都可完整同屏。自定义超高单元格仍由表体滚动访问；需要为特高记录留出表头所占阅读空间时，可按已有 `stickyHeader={false}` / `{stickyHeader:false}` 关闭吸顶列头。父视口本身不足时使用祖先滚动，不裁切内容。
 
 
 pageToolbar 容器原本就没有常驻下边框，和下方正文之间已有 `--layout-section-gap`。不要额外包整行 border-b；迁移时清理产品重复分隔及 footer/表体定位 CSS。表头、行和底栏必要边界保留。

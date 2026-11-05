@@ -2,6 +2,16 @@
 
 > 证据可用性：本文件保留历次执行记录；标注“历史本地路径”的报告与截图未随 Git 提供，不是可点击或可由干净检出复核的证据。历史通过结论不等于本次复验；当前验证范围与限制见对应日期章节。仍有相对链接的文件继续由文档检查严格核验。
 
+## 表格滚动、固定操作列与少列铺满（4.2.50，2026-11-05）
+
+4.2.49 正式消费者复现：无界 document 长表随整页滚；API Key 表横滚 100px 时操作列也离开 100px；净宽 1166px 的两列表确认 220/120px 偏好后仅占 340px。4.2.50 在公共 TableContainer 和 DataTable 的 natural / workspace / document 统一表内滚动，表头整组固定；短表不填充空行，标准操作尾列固定，纯数据尾列不冻结。未改变分页、请求或列宽 Controller。
+
+正式消费者安装三个 4.2.50 tarball，无源码别名。build、typecheck、111 项定向 Node 测试、117 个公开入口和既有体积门禁通过（critical+floating CSS gzip 23346/23360 字节）；React/ReactDOM 19.2.8、Base UI 1.7.0 单实例。sourceGeneration：`9dcc16bf091017d6c9a3c2bdae230416e8e4352a030911ec89147e13f4ba4b77`。
+
+Chromium 正式包表格回归 **198/198 通过，0 跳过、0 重试**。覆盖长表真实滚轮、短表向页面传递滚轮、分组表头、横向固定/无固定列、键盘调宽与焦点、触摸、RTL、分页和刷新，含浅/深/system、窄屏、200% 文字与真实 Chrome 200% 缩放。document 示例纵滚 370px 后表头仍在 y=323；API Key、业务日志和结构化日志在 390px / 200% 文字时，分别测量横滚起点、中点、终点的表头/单元格位置和操作按钮指针命中。两列表实际分配 1046+120=1166px，隐藏操作列后单列占满 348px 净宽，Controller 中仍保留原列宽偏好。验证中发现压窄的日期文本会越出末列，已修正换行并按正式分片重验。
+
+复现：`pnpm build && pnpm typecheck && pnpm test:consumer`；`pnpm exec playwright test tests/browser/composed-data-tables.spec.mjs tests/browser/data-table*.spec.mjs tests/browser/table-*.spec.mjs tests/browser/widgets.spec.mjs --grep 'table.*\.spec|sticky table composites' --workers=2 --retries=0`。本地正式归档的 `validation/evidence/` 收录测试摘要、滚动坐标、列宽及截图。未跑全仓套件、Firefox/WebKit 或消费项目实页，未部署。
+
 ## 保留字体并减轻普通控件字重（4.2.49，2026-11-02）
 
 先快进同步 main `515361e6ad72e4bd58e4fc1b6f417c8741a16792` / 4.2.48，保留已有统计服务、图表及主题修订。本轮仅修改 xui：现有 `font-weight-control` 从 medium500切换至regular400，普通按钮、输入、字段标签、菜单与未选中导航共同继承；新增公开语义 `font-weight-emphasis` 为medium500，供primary Button、当前导航和选中Tab使用。选中Tab由600降为500，正文400与标题/显式Strong600保留。沿用所有字体族及中文回退，不下载或打包新字体，不缩小字号或降低对比度。默认Token差异探针确认仅上述两项变化，原字号、行高、色彩、间距和缩放值不变；组件只使用语义变量，无宿主/私有DOM补丁。

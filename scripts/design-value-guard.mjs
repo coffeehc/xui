@@ -40,6 +40,7 @@ export function checkDesignDeclaration(property, input, context = '') {
   // on both sides. No general permission for multiplication by 2 is granted.
   rest = rest.replace(/calc\(\s*(?:-1\s*\*\s*TOKEN|TOKEN\s*\*\s*-1)\s*\)/gi, 'TOKEN');
   if (dimensional.test(prop)) rest = rest.replace(/calc\(\s*100(?:vw|dvh)\s*-\s*(?:TOKEN\s*\*\s*2|2\s*\*\s*TOKEN)\s*\)/gi, 'TOKEN');
+  if (prop === 'grid-template-rows' && rest === 'fit-content(100dvh)') rest = 'TRACK';
   if (/^grid-(?:template-(?:columns|rows)|auto-(?:columns|rows))$/.test(prop)) {
     // Two equal tracks divide the available container after one semantic gap.
     rest = rest.replace(/calc\(\s*\(\s*100%\s*-\s*TOKEN\s*\)\s*\/\s*2\s*\)/gi, 'TRACK');

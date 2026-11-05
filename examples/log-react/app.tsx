@@ -6,6 +6,7 @@ import {StructuredLogExplorer,createStructuredLogViewController} from '@coffeehc
 import {bootstrapBrowserExample} from '../shared/bootstrap-browser';
 import {createStructuredLogExample} from '../shared/log-model';
 import '@coffeehc/xui-theme/critical.css';
+import '@coffeehc/xui-theme/table-resize.css';
 import '@coffeehc/xui-theme/floating.css';
 bootstrapBrowserExample();
 const example=createStructuredLogExample(location.href),params=new URLSearchParams(location.search),viewController=params.has('injected')?createStructuredLogViewController({service:example.controller}):undefined,root=createRoot(document.getElementById('root')!);

@@ -121,7 +121,7 @@ components:
 
 采用 Overview、Colors、Typography、Layout、Elevation & Depth、Shapes、Components、Do's and Don'ts 八段及可选 YAML token 前言组织。此组织方式不要求安装组件库、外部服务、特定设计工具或格式 CLI。
 
-规范版本：4.2.49。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
+规范版本：4.2.50。以4.2.1为基准仅维护一条版本线，后续所有改动均递增末位（4.2.17、4.2.18…），不再分发或回补旧版本兼容包；架构变化也不递增前两位。版本号不承诺语义兼容，公共语义变化必须记录实际影响与迁移要求。三个包与规范同步版本，以固定源码 SHA、sourceGeneration 和正式产物核对交付。采用项目记录规范版本和产品扩展，不必搬迁原技术实现。
 
 ### React 唯一 UI 与运行时边界
 
@@ -1918,7 +1918,7 @@ layout 是从页面壳到控件内部的公共结构合同。每段内容先确�
 | 卡片集合 | CardGroup.rows/rowKey/renderCard、cardSizing、toolbar、emptyState/errorState/feedback/footer与受控pagination | renderCard返回Card公开配置，集合创建实例；所有资源类型共用同一呈现。默认natural兼容；资源列表显式equal，由当前网格完整内容计算共同卡高 | 单一body滚动，toolbar/footer在外；稳定key保草稿/焦点；equal伸展content、卡尾靠底，不固定像素高度，不裁正文/动作 |
 | 表格 | DataTable.toolbar/columns、emptyState/errorState/feedback/footer、受控 pagination | 对象主列、技术值、状态 Badge 与行操作按各自语义；唯一计数/分页 | 首次加载在数据区；刷新保留行；表内横滚和既有 sticky，不用外框遮罩 |
 
-DataTable表体仅在实际存在纵向滚动范围时保留纵向边界；自然高度长表格没有自己的纵向范围，鼠标位于单元格上时，纵向滚轮仍交给既有页面/内容滚动owner。不能要求用户移到表格外才能滚动，也不能由宿主添加wheel转发、私有CSS或第二个滚动owner。横向滚动继续归表体，真正有界表体在首末边界不意外带动外层。此判断由公共布局观察器随数据、字号和可用高度更新，不按行数或layout名称猜测，详见[组件滚动合同](COMPONENTS.md#页面标题筛选与滚动)。
+DataTable表体仅在实际存在纵向滚动范围时保留纵向边界；表格内容未溢出时，鼠标位于单元格上时，纵向滚轮仍交给既有页面/内容滚动owner。不能要求用户移到表格外才能滚动，也不能由宿主添加wheel转发、私有CSS或第二个滚动owner。横向滚动继续归表体，真正有界表体在首末边界不意外带动外层。此判断由公共布局观察器随数据、字号和可用高度更新，不按行数或layout名称猜测，详见[组件滚动合同](COMPONENTS.md#页面标题筛选与滚动)。
 | 弹层 | Dialog/Sheet.Header/Title/Description、Body、Footer | 标题与说明分开，body 负责长内容，footer 放所属 FormActions | 开关只改可见性；正常 body 滚动、极端高度公共回退；关闭返回真实触发入口 |
 | 导航/菜单 | NavigationMenu 的 items[].label/icon、renderLabel/renderAction 与公开渲染/事件扩展；Menu/ContextMenu 的 Item/Icon/Separator | 选中由真实 active/expanded，危险项使用 danger，图标继承语义色 | 独立分支和动作不导航；disabled 不执行；键盘及长名称由公共组件管理 |
 | 原子控件 | Button/Link/IconButton 的内容与事件；Checkbox/Switch/Toggle/Radio 的标签与状态；Select/Combobox/Command 的公开 parts | 动作、选中、禁用、只读、错误分别映射已有语义，不依靠颜色推断业务 | 不给所有控件添加同一套 slot；保留原生/peer 表单与键盘语义 |
@@ -2423,13 +2423,13 @@ headerSlots.leading是可选、默认空且不收缩的最前区域，位于自�
 
 ### 公共表格整体与紧凑顶栏工具
 
-完整DataTable复用Table/Toolbar/Field/Pagination/DataRegion原语。共享DataTableLayout明确natural/workspace/document；默认natural，少量/零行随内容自然收缩，以max-block-size:100%对实际有界父级限高，多行只滚动表体，真实计数、唯一每页条数和分页留在同一正常流底栏。父级高度为auto时仍按文档流增长，不自动创造视口边界。显式workspace保留旧填满正文和组件最小高度；document在有界父级也不采用高度上限。依赖旧默认填满的调用必须显式选workspace，shell的scrollMode默认不变。
+完整DataTable复用Table/Toolbar/Field/Pagination/DataRegion原语。共享DataTableLayout明确natural/workspace/document；默认natural，少量/零行随内容自然收缩，以max-block-size:100%对实际有界父级限高，多行只滚动表体，真实计数、唯一每页条数和分页留在同一正常流底栏。4.2.50 起，TableContainer（含 DataTable 表体）最高为动态视口高度，在没有确定高度的父级也能让长表在表内滚动；少量行按内容高度自然收缩。workspace 仍填满分配的工作区，document 不要求填满父级，但同样服从可用高度；短表不制造滚动条。依赖旧默认填满的调用必须显式选workspace，shell的scrollMode默认不变。
 
 标题/主操作可置于既有pageHeader；内部toolbar、表体与footer共用一层frame，已有行的反馈位于footer计数区域，无反馈不在thead上方预留空行，外部pageToolbar仍可放筛选但与内部toolbar二选一，不复制搜索或查询owner。保留列头、行和底栏信息边界，不额外复制工具条下边框、要求宿主测量pageHeader或定位分页。筛选采用data-table-filter-min，搜索可沿长字段尺度增长，窄屏自然换行。data-table-min-block-size保留为显式workspace组件下限，不强制natural填满，也不是固定表体高度。workspace shell的layout-workspace-content-min-block-size默认0px保留旧收缩语义；需要极端超高页头下非零正文视口的组合，须在shell公开style显式绑定为var(--data-table-min-block-size)。该下限受100dvh约束，main可自然滚动，不改变natural表格的内容高度。库不通过父级:has探测表格，不测量或固定页头高度。设计门禁仅允许这个精确语义alias赋值，不放宽任意token重定义、裸尺寸或fallback。
 
-DataTable以内部单一布局观察器测实际table/thead/首末行高度和computed scroll-padding/滚动条，取完整内容高与可读边缘行高度的较小值作为Grid表体轨道下限，再加组件自身toolbar/footer（含反馈）的实际高度与frame边界作为组件根的实测最小高度；workspace与原token取较大者，document不加根下限，不用CSS min-content查询替代实际chrome。只观察内容输入，不观察写入尺寸的root/frame；不按行数分类、不硬编码表头高、不新增宿主布局参数。超高chrome由完整frame自然撑起并由祖先滚动，footer始终属于外框。读写按帧合并、无变化不写、隐藏后恢复重测、销毁释放；不承诺任意超高中间行完整同屏，允许既有stickyHeader关闭或document布局。此高度owner不修改独立列宽observer与colgroup。
+DataTable以内部单一布局观察器测实际table/thead/首末行高度和computed scroll-padding/滚动条，取完整内容高与可读边缘行高度的较小值作为Grid表体轨道下限，再加组件自身toolbar/footer（含反馈）的实际高度与frame边界作为组件根的实测最小高度；workspace与原token取较大者，document与natural保留相同的可读下限，不用CSS min-content查询替代实际chrome。只观察内容输入，不观察写入尺寸的root/frame；不按行数分类、不硬编码表头高、不新增宿主布局参数。超高chrome由完整frame自然撑起并由祖先滚动，footer始终属于外框。读写按帧合并、无变化不写、隐藏后恢复重测、销毁释放；不承诺任意超高中间行完整同屏，允许既有stickyHeader关闭或document布局。此高度owner不修改独立列宽observer与colgroup。
 
-DataTable默认横向铺满，通常省略列宽；仅在列内容或用户尺寸配置确有需要时，通过公共width提供数字像素、CSS长度、百分比和calc()/clamp()下限。未配置列优先吸收余宽，全部配置时由浏览器在这些列间分配余宽；下限总和超出表体则在表体内横滚，不压缩已配置下限。这不是重定义品牌色、字体、间距或装饰token的许可。库用非交互、零高测量轨道让浏览器以表体可用宽度解析百分比表达式，再由同一colgroup统一表头与数据列；测量不得制造滚动范围、可访问节点或另一套宿主布局逻辑，更新/销毁必须释放观察。未配置宽度保持原有自动表格算法，完整迁移及长内容边界见DataTable合同。
+Table 与 DataTable 默认固定整个表头；纵滚不分拆或复制多行表头，横滚时尾部操作列固定在逻辑末端（RTL 镜像）。DataTable 的标准尾列 id=actions 默认固定，自定义操作列通过 sticky=end 声明；无操作列不冻结最后一列。列宽确认或隐藏列后仍铺满表体：有余宽优先给数据列，超过净宽只横滚表内。DataTable 默认横向铺满，通常省略列宽；仅在列内容或用户尺寸配置确有需要时，通过公共width提供数字像素、CSS长度、百分比和calc()/clamp()下限。未配置列优先吸收余宽，全部配置时由浏览器在这些列间分配余宽；下限总和超出表体则在表体内横滚，不压缩已配置下限。这不是重定义品牌色、字体、间距或装饰token的许可。库用非交互、零高测量轨道让浏览器以表体可用宽度解析百分比表达式，再由同一colgroup统一表头与数据列；测量不得制造滚动范围、可访问节点或另一套宿主布局逻辑，更新/销毁必须释放观察。未配置宽度保持原有自动表格算法，完整迁移及长内容边界见DataTable合同。
 
 通用记录页按任务把名称/摘要与真实状态前置，不重复页面标题作可见表题；表格仍有准确可访问名称。显式 xui-record-table 中的主列使用 table-primary-min-inline-size（默认复用字段最小宽度），短状态、行操作、时间和计数保留完整词组，次要列在表内横滚；不将此规则施加到普通 Table 或用户自定义长正文列。空反馈与隐藏辅助动作不预留占位，实际错误及风险仍完整可读。
 

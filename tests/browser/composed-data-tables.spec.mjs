@@ -11,6 +11,8 @@ async function resize(table,index=0,max=Infinity){
 }
 async function fixedActions(table,expectedHandles){
  await expect(table.getByRole('separator')).toHaveCount(expectedHandles);
+ await expect(table.locator('thead th').last()).toHaveAttribute('data-sticky','end');
+ await expect(table.locator('tbody tr').first().locator('td').last()).toHaveAttribute('data-sticky','end');
  await expect(table.locator('thead th').last().getByRole('separator')).toHaveCount(0);
  await expect(table.locator('thead th').last()).not.toHaveAttribute('data-resizable','true');
 }
@@ -20,13 +22,13 @@ for(const mode of ['light','dark','system']){
   await page.addInitScript(mode=>sessionStorage.setItem('ui.theme.mode',mode),mode);
   await page.goto('/business-log-react/?cells&labels');
   const table=page.getByRole('table');await expect(table.locator('tbody tr')).toHaveCount(2);
-  await page.evaluate(()=>window.businessLogDemo.setList({columns:[{id:'summary',header:'Summary',width:240,resize:{minWidth:100,maxWidth:320,label:'Resize summary'}},{id:'detail',header:'Detail',resize:{minWidth:100,maxWidth:500}}]}));
-  await fixedActions(table,1);const button=table.locator('tbody tr').first().getByRole('button');
+  await page.evaluate(()=>window.businessLogDemo.setList({columns:[{id:'summary',header:'Summary',width:240,resize:{minWidth:100,maxWidth:320,label:'Resize summary'}},{id:'actor',header:'Actor'},{id:'detail',header:'Detail',resize:{minWidth:100,maxWidth:500}}]}));
+  await fixedActions(table,2);const button=table.locator('tbody tr').first().getByRole('button');
   const saved=await button.elementHandle(),reads=await page.evaluate(()=>window.businessLogDemo.getRequests().length);
-  const {before,after}=await resize(table,0,320);expect(after[1]).toBeCloseTo(before[1],0);
+  const {before,after}=await resize(table,0,320);expect(after.at(-1)).toBeCloseTo(before.at(-1),0);
   expect(await page.evaluate(()=>window.businessLogDemo.getRequests().length)).toBe(reads);
   expect(await button.evaluate((node,saved)=>node===saved,saved)).toBe(true);
-  await table.getByRole('separator').press('End');await expect.poll(()=>table.locator('thead th').first().evaluate(n=>n.getBoundingClientRect().width)).toBeCloseTo(320,0);
+  await table.getByRole('separator',{name:'Resize summary'}).press('End');await expect.poll(()=>table.locator('thead th').first().evaluate(n=>n.getBoundingClientRect().width)).toBeCloseTo(320,0);
   await page.getByRole('button',{name:'刷新日志',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.businessLogDemo.getRequests().length)).toBe(reads+1);
   await expect.poll(()=>table.locator('thead th').first().evaluate(n=>n.getBoundingClientRect().width)).toBeCloseTo(320,0);
   await button.click();await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(button).toBeFocused();
@@ -57,3 +59,24 @@ test('API Key actions stay fixed and chart data views share DataTable resizing',
  expect(await page.evaluate(()=>window.chartDemo.calls)).toBe(calls);
  await expect(page.getByRole('button',{name:/重置列宽|Reset column widths/i})).toHaveCount(0);
 });
+
+for(const [path,heading] of [['/api-key-react/','API Key'],['/business-log-react/','business log'],['/log-react/','structured log']]){
+ test(`${heading}: horizontal scrolling keeps the action visible and hittable at 200% text`,async({page},info)=>{
+  await page.setViewportSize({width:390,height:844});await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto(path);const table=page.getByRole('table'),port=page.locator('.xui-data-table-body');
+  const action=table.locator('tbody tr').first().locator('td').last().getByRole('button').first();
+  await expect(action).toBeVisible();await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+  await expect.poll(()=>port.evaluate(n=>n.scrollWidth-n.clientWidth)).toBeGreaterThan(20);
+  await action.scrollIntoViewIfNeeded();await action.focus();
+  const measure=()=>port.evaluate(n=>{
+    const rect=e=>e.getBoundingClientRect(),p=rect(n),head=rect(n.querySelector('th:last-child')),cell=rect(n.querySelector('tbody td:last-child')),a=n.querySelector('tbody td:last-child button'),r=rect(a);
+    return {scroll:n.scrollLeft,end:p.left+n.clientLeft+n.clientWidth,head:head.right,action:cell.right,width:cell.width,port:n.clientWidth,hit:a.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))};
+  });
+  for(const ratio of [0,.5,1]){
+    await port.evaluate((n,r)=>n.scrollLeft=(n.scrollWidth-n.clientWidth)*r,ratio);
+    await expect.poll(async()=>{const m=await measure();return Math.max(Math.abs(m.head-m.end),Math.abs(m.action-m.end));}).toBeLessThan(2);
+    const m=await measure();expect(m.width).toBeLessThan(m.port);expect(m.hit).toBe(true);
+  }
+  await info.attach('pinned-action.png',{body:await page.screenshot(),contentType:'image/png'});
+ });
+}

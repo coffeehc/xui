@@ -140,7 +140,7 @@ test('component minimum follows measured chrome changes and preserves layout-spe
     assert.equal(f.observed.has(f.tools),false);assert.equal(f.observed.has(replacement),true);
     f.root.dataset.layout='workspace';owner.update();f.tick();
     assert.equal(f.root.style.minBlockSize,'max(var(--data-table-min-block-size), 234px)');
-    f.root.dataset.layout='document';owner.update();f.tick();assert.equal(f.root.style.minBlockSize,'');
+    f.root.dataset.layout='document';owner.update();f.tick();assert.equal(f.root.style.minBlockSize,'234px');
     f.root.dataset.layout='natural';owner.update();f.tick();assert.equal(f.root.style.minBlockSize,'234px');
   } finally {owner?.destroy();f.restore();}
 });

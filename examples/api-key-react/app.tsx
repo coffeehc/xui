@@ -14,6 +14,7 @@ import {createToastController} from '@coffeehc/xui-runtime/toast';
 import {createApiKeyHttpExample} from '../shared/api-key-http-model';
 import {createApiKeyExample} from '../shared/api-key-model';
 import '@coffeehc/xui-theme/critical.css';
+import '@coffeehc/xui-theme/table-resize.css';
 import '@coffeehc/xui-theme/floating.css';
 const configured=new URLSearchParams(location.search).has('defaults'),application=bootstrapBrowserExample(configured?{pages:{apiKeys:{title:'公共密钥管理',pageSize:1,pageSizeOptions:[1,2]}}}:{}),pages=resolveDefaultPages(application.config);
 const official=new URLSearchParams(location.search).has('official'),httpExample=official?await createApiKeyHttpExample():undefined;

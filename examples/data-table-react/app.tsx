@@ -69,7 +69,7 @@ function App(){
     {id:'kind',header:'类型',cell:row=>row.kind},
     {id:'scope',header:'范围',cell:row=>row.scope},
     {id:'source',header:'来源',cell:row=>row.source},
-    {id:'actions',header:'操作',sticky:sticky==='both'||sticky==='end'?'end':undefined,cell:row=><Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button>},
+    {id:'actions',header:'操作',sticky:sticky==='both'||sticky==='end'?undefined:false,cell:row=><Button variant="link" aria-label={`查看记录 ${row.id}`} data-row-id={row.id} onClick={()=>inspect(row)}>查看</Button>},
   ],[inspect]);
   const visibleColumns=React.useMemo(()=>columns.filter(column=>!columnView.hidden.includes(column.id)&&(!noActions||column.id!=='actions')).map(column=>({...column,width:columnView.mode==='auto'?undefined:column.id==='scope'?(columnView.mode==='sized'||query.has('fluid-content')?160:undefined):column.id==='name'&&columnView.mode==='mixed'&&query.has('fluid-content')?undefined:widths[column.id as keyof typeof widths],resize:resizeMode?(column.id==='actions'?false as const:{label:`调整${column.id}列宽`,maxWidth:700}):undefined})),[columns,columnView]);
   const toolbar=noSearch?undefined:<DataTableToolbar aria-label="记录筛选" data-testid="record-filters">
